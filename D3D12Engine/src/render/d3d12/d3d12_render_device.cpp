@@ -55,6 +55,10 @@ namespace render {
         create_material_resource_binder();
     }
 
+    D3D12RenderDevice::~D3D12RenderDevice() {
+        allocator->Release();
+    }
+
     void D3D12RenderDevice::enable_validation_layer() {
         const auto res = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
         if(SUCCEEDED(res)) {
@@ -267,5 +271,37 @@ namespace render {
         const auto descriptor_size = device->GetDescriptorHandleIncrementSize(descriptor_type);
 
         return {heap, descriptor_size};
+    }
+
+    static void* dma_allocate(size_t size, size_t /* alignment */, void* user_data) {
+        auto* allocator = static_cast<rx::memory::allocator*>(user_data);
+        return allocator->allocate(size);
+    }
+
+    static void dma_free(void* memory, void* user_data) {
+        auto* allocator = static_cast<rx::memory::allocator*>(user_data);
+        allocator->deallocate(memory);
+    }
+
+    void D3D12RenderDevice::initialize_dma() {
+        D3D12MA::ALLOCATOR_DESC allocator_desc{};
+        allocator_desc.pDevice = device.Get();
+        allocator_desc.pAdapter = adapter.Get();
+
+        D3D12MA::ALLOCATION_CALLBACKS allocation_callbacks{};
+        allocation_callbacks.pAllocate = dma_allocate;
+        allocation_callbacks.pFree = dma_free;
+        allocation_callbacks.pUserData = internal_allocator;
+
+        allocator_desc.pAllocationCallbacks = &allocation_callbacks;
+
+        const auto result = D3D12MA::CreateAllocator(&allocator_desc, &allocator);
+        if(FAILED(result)) {
+            rx::abort("Could not initialize DMA");
+        }
+    }
+
+    void D3D12RenderDevice::create_shader_compiler() {
+        
     }
 } // namespace render

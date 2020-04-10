@@ -4,3 +4,6 @@
 [submodule "D3D12Engine/extern/minitrace"]
 	path = D3D12Engine/extern/minitrace
 	url = https://github.com/hrydgard/minitrace.git
+[submodule "D3D12Engine/extern/D3D12MemoryAllocator"]
+	path = D3D12Engine/extern/D3D12MemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git

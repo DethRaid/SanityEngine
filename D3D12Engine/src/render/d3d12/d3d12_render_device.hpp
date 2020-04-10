@@ -1,13 +1,17 @@
 #pragma once
 
+#include <rx/core/assert.h>
+#define D3D12MA_ASSERT(cond) RX_ASSERT(cond)
+
+#include <D3D12MemAlloc.h>
 #include <d3d12.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
+#include <rx/core/utility/pair.h>
 #include <rx/math/vec2.h>
 #include <wrl/client.h>
 
 #include "../renderer.hpp"
-#include "rx/core/utility/pair.h"
 
 namespace render {
     using Microsoft::WRL::ComPtr;
@@ -49,13 +53,15 @@ namespace render {
         ComPtr<IDXGISwapChain3> swapchain;
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
-        UINT cbv_srv_uav_size;
+        UINT cbv_srv_uav_size{};
 
         ComPtr<ID3D12DescriptorHeap> rtv_heap;
-        UINT rtv_size;
+        UINT rtv_size{};
 
         ComPtr<ID3D12DescriptorHeap> dsv_heap;
-        UINT dsv_size;
+        UINT dsv_size{};
+
+        D3D12MA::Allocator* allocator;
 
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture
@@ -97,8 +103,12 @@ namespace render {
 
         void create_descriptor_heaps();
 
-        rx::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(
-            D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type, uint32_t num_descriptors) const;
+        [[nodiscard]] rx::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+                                                                                               uint32_t num_descriptors) const;
+
+        void initialize_dma();
+
+        void create_shader_compiler();
 #pragma endregion
     };
 } // namespace render

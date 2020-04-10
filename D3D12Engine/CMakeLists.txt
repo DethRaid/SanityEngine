@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 set(D3D12_ENGINE_SOURCE
     "${CMAKE_CURRENT_LIST_DIR}/extern/minitrace/minitrace.c"  
+    "${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp"
 
     "src/D3D12Engine.cpp" 
     "src/D3D12Engine.hpp" 
@@ -46,6 +47,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extern/rex_core)
 target_link_libraries(D3D12Engine rex)
 
 target_include_directories(D3D12Engine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/minitrace)
+target_include_directories(D3D12Engine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
 
 target_compile_options(D3D12Engine PRIVATE -Wno-deprecated-declarations)
 target_compile_definitions(D3D12Engine PRIVATE NOMINMAX)
