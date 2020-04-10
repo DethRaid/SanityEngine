@@ -302,6 +302,16 @@ namespace render {
     }
 
     void D3D12RenderDevice::create_shader_compiler() {
-        
+        MTR_SCOPE("D3D12RenderDevice", "create_shader_compiler");
+
+        auto hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library));
+        if(FAILED(hr)) {
+            rx::abort("Could not create DXC Library instance");
+        }
+
+        hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxc_compiler));
+        if(FAILED(hr)) {
+            rx::abort("Could not create DXC instance");
+        }
     }
 } // namespace render

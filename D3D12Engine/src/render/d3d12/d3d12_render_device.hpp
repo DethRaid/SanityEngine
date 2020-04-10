@@ -3,6 +3,7 @@
 #include <rx/core/assert.h>
 #define D3D12MA_ASSERT(cond) RX_ASSERT(cond)
 
+#include <dxcapi.h>
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
 #include <dxgi.h>
@@ -62,6 +63,10 @@ namespace render {
         UINT dsv_size{};
 
         D3D12MA::Allocator* allocator;
+
+        ComPtr<IDxcLibrary> dxc_library;
+
+        ComPtr<IDxcCompiler> dxc_compiler;
 
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture

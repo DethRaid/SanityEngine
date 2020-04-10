@@ -7,3 +7,6 @@
 [submodule "D3D12Engine/extern/D3D12MemoryAllocator"]
 	path = D3D12Engine/extern/D3D12MemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git
+[submodule "D3D12Engine/extern/dxc-wrapper"]
+	path = D3D12Engine/extern/dxc-wrapper
+	url = https://github.com/NovaMods/dxc-wrapper.git

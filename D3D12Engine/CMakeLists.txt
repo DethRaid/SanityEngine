@@ -7,6 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+# Dependencies with CMake files
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extern/rex_core)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extern/dxc-wrapper/extern/dxc)
+
 # Add source to this project's executable.
 
 set(D3D12_ENGINE_SOURCE
@@ -41,8 +47,6 @@ set(D3D12_ENGINE_SOURCE
     ${D3D12_BACKEND_SOURCE})
 
 add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE})
-
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extern/rex_core)
 
 target_link_libraries(D3D12Engine rex)
 
