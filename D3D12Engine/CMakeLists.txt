@@ -31,8 +31,7 @@ set(D3D12_ENGINE_SOURCE
     "src/render/command_list.hpp"
     "src/render/resource_command_list.hpp"
     "src/render/compute_command_list.hpp"
-    "src/render/graphics_command_list.hpp"
-)
+    "src/render/graphics_command_list.hpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_render_device.hpp"
@@ -42,11 +41,7 @@ set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/helpers.cpp"
     )
 
-set(D3D12_ENGINE_SOURCE 
-    ${D3D12_ENGINE_SOURCE}
-    ${D3D12_BACKEND_SOURCE})
-
-add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE})
+add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 
 target_link_libraries(D3D12Engine rex)
 

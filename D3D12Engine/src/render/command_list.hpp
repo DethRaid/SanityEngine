@@ -6,5 +6,6 @@ namespace render {
     /*!
      * \brief Generic implementation of a command list
      */
-    class CommandList : rx::concepts::interface {};
-}
+    class CommandList : rx::concepts::interface {
+    };
+} // namespace render

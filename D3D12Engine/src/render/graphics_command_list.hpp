@@ -4,19 +4,38 @@
 #include <rx/core/vector.h>
 
 #include "compute_command_list.hpp"
+#include "resources.hpp"
 
 namespace render {
+
+    class MeshDataStore;
+
     class GraphicsCommandList : public virtual ComputeCommandList {
         /*!
          * \brief Sets the render targets that draws will render to
          */
-        virtual void set_render_targets(const rx::vector<RenderTarget*>& color_targets,
-                                        rx::optional<RenderTarget*> depth_target = rx::nullopt) = 0;
+        virtual void set_render_targets(const rx::vector<Image*>& color_targets,
+                                        rx::optional<Image*> depth_target = rx::nullopt) = 0;
 
         /*!
          * \brief Sets the state of the graphics rendering pipeline
          */
         virtual void set_pipeline_state(const GraphicsPipelineState& state) = 0;
+
+        /*!
+         * \brief Sets the buffer to read camera matrices from
+         */
+        virtual void set_camera_buffer(const Buffer& camera_buffer) = 0;
+
+        /*!
+         * \brief Sets the buffer to read material data from
+         */
+        virtual void set_material_data_buffer(const Buffer& material_data_buffer) = 0;
+
+        /*!
+         * \brief Sets the array to read textures from
+         */
+        virtual void set_textures_array(const rx::vector<Image*>& textures) = 0;
 
         /*!
          * \brief Binds the provided mesh data to the command list. Subsequent drawcalls will render this mesh data, until you bind new mesh

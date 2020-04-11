@@ -14,6 +14,14 @@ namespace render
     class RenderDevice : rx::concepts::interface
     {
     public:
+        [[nodiscard]] virtual rx::ptr<Buffer> create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) = 0;
+
+        [[nodiscard]] virtual rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) = 0;
+
+        virtual void destroy_buffer(rx::ptr<Buffer> buffer) = 0;
+
+        virtual void destroy_image(rx::ptr<Image> image) = 0;
+
         [[nodiscard]] virtual rx::ptr<ResourceCommandList> get_resource_command_list() = 0;
 
         [[nodiscard]] virtual rx::ptr<ComputeCommandList> get_compute_command_list() = 0;

@@ -24,6 +24,14 @@ namespace render {
         ~D3D12RenderDevice() override;
 
 #pragma region RenderDevice
+        [[nodiscard]] rx::ptr<Buffer> create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) override;
+
+        [[nodiscard]] rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) override;
+
+        void destroy_buffer(rx::ptr<Buffer> buffer) override;
+
+        void destroy_image(rx::ptr<Image> image) override;
+
         [[nodiscard]] rx::ptr<ResourceCommandList> get_resource_command_list() override;
 
         [[nodiscard]] rx::ptr<ComputeCommandList> get_compute_command_list() override;
@@ -62,11 +70,13 @@ namespace render {
         ComPtr<ID3D12DescriptorHeap> dsv_heap;
         UINT dsv_size{};
 
-        D3D12MA::Allocator* allocator;
+        D3D12MA::Allocator* device_allocator;
 
         ComPtr<IDxcLibrary> dxc_library;
 
         ComPtr<IDxcCompiler> dxc_compiler;
+
+        ComPtr<ID3D12RootSignature> standard_root_signature;
 
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture
@@ -114,6 +124,12 @@ namespace render {
         void initialize_dma();
 
         void create_shader_compiler();
+
+        void create_standard_root_signature();
+
+        [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
+
+        void create_material_resource_binder();
 #pragma endregion
     };
 } // namespace render
