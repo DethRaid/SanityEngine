@@ -1,10 +1,13 @@
 ﻿#pragma once
+#include <rx/core/ptr.h>
+
+#include "debugging/renderdoc_app.h"
+#include "render/renderer.hpp"
 
 /*!
  * \brief Main class for my glorious engine
  */
-class D3D12Engine
-{
+class D3D12Engine {
 public:
     /*!
      * \brief Initializes the engine, including loading static data
@@ -22,7 +25,13 @@ public:
     void run();
 
 private:
-    void init_globals();
+    rx::ptr<RENDERDOC_API_1_3_0> renderdoc;
+
+    rx::ptr<render::RenderDevice> render_device;
+
+    rx::memory::allocator* internal_allocator;
+
+    void init_globals() const;
 
     void deinit_globals();
 

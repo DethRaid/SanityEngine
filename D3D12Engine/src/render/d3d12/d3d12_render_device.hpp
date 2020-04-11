@@ -13,6 +13,7 @@
 #include <wrl/client.h>
 
 #include "../renderer.hpp"
+#include "resources.hpp"
 
 namespace render {
     using Microsoft::WRL::ComPtr;
@@ -21,12 +22,20 @@ namespace render {
     public:
         D3D12RenderDevice(rx::memory::allocator& allocator, HWND window_handle, const rx::math::vec2i& window_size);
 
+        D3D12RenderDevice(const D3D12RenderDevice& other) = delete;
+        D3D12RenderDevice& operator=(const D3D12RenderDevice& other) = delete;
+
+        D3D12RenderDevice(D3D12RenderDevice&& old) noexcept = default;
+        D3D12RenderDevice& operator=(D3D12RenderDevice&& old) noexcept = default;
+
         ~D3D12RenderDevice() override;
 
 #pragma region RenderDevice
         [[nodiscard]] rx::ptr<Buffer> create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) override;
 
         [[nodiscard]] rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) override;
+
+        void* map_buffer(const Buffer& buffer) override;
 
         void destroy_buffer(rx::ptr<Buffer> buffer) override;
 
@@ -40,6 +49,12 @@ namespace render {
 
         void submit_command_list(rx::ptr<CommandList> commands) override;
 #pragma endregion
+
+        [[nodiscard]] bool has_separate_device_memory() const;
+
+        [[nodiscard]] rx::ptr<D3D12StagingBuffer> get_staging_buffer(size_t num_bytes);
+
+        void return_staging_buffer(rx::ptr<D3D12StagingBuffer> buffer);
 
     private:
         rx::memory::allocator* internal_allocator;

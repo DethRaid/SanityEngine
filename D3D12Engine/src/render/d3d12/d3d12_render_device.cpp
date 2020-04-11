@@ -5,13 +5,15 @@
 #include <rx/console/variable.h>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
+#include <rx/core/math/round.h>
 
 #include "../../core/constants.hpp"
 #include "../../core/cvar_names.hpp"
+#include "d3d12_resource_command_list.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "resources.hpp"
-#include "rx/core/math/round.h"
+
 RX_CONSOLE_BVAR(r_enable_debug_layers,
                 "r.EnableDebugLayers",
                 "Enable the D3D12 debug layers, allowing one to better debug new D3D12 code",
@@ -46,13 +48,13 @@ namespace render {
 
         create_descriptor_heaps();
 
-        initialize_swapchain_descriptors();
+        // initialize_swapchain_descriptors();
 
         initialize_dma();
 
         create_shader_compiler();
 
-        initialize_standard_resource_binding_mappings();
+        // initialize_standard_resource_binding_mappings();
 
         create_standard_root_signature();
 
@@ -62,6 +64,8 @@ namespace render {
     D3D12RenderDevice::~D3D12RenderDevice() { device_allocator->Release(); }
 
     rx::ptr<Buffer> D3D12RenderDevice::create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) {
+        MTR_SCOPE("D3D12RenderDevice", "create_buffer");
+
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
 
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
@@ -155,6 +159,21 @@ namespace render {
 
     void D3D12RenderDevice::destroy_buffer(rx::ptr<Buffer> /* buffer */) {
         // We don't need to do anything special, D3D12 has destructors
+    }
+
+    void D3D12RenderDevice::destroy_image(rx::ptr<Image> /* image */) {
+        // Again nothing to do, D3D12 still has destructors
+    }
+
+    rx::ptr<ResourceCommandList> D3D12RenderDevice::get_resource_command_list() {
+        MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
+        auto list = rx::make_ptr<D3D12ResourceCommandList>(*internal_allocator);
+
+        return list;
+    }
+
+    bool D3D12RenderDevice::has_separate_device_memory() const {
+        return !is_uma;
     }
 
     void D3D12RenderDevice::enable_validation_layer() {
@@ -298,6 +317,7 @@ namespace render {
     }
 
     void D3D12RenderDevice::create_swapchain(HWND window_handle, const rx::math::vec2i& window_size, const UINT num_images) {
+        MTR_SCOPE("D3D12RenderDevice", "create_swapchain");
         DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
         swapchain_desc.Width = window_size.x;
         swapchain_desc.Height = window_size.y;
@@ -342,6 +362,7 @@ namespace render {
     }
 
     void D3D12RenderDevice::create_descriptor_heaps() {
+        MTR_SCOPE("D3D12RenderDevice", "create_descriptor_heaps");
         const auto& [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                                                                65536);
         cbv_srv_uav_heap = new_cbv_srv_uav_heap;
@@ -371,7 +392,7 @@ namespace render {
         return {heap, descriptor_size};
     }
 
-    static void* dma_allocate(size_t size, size_t /* alignment */, void* user_data) {
+    static void* dma_allocate(const size_t size, size_t /* alignment */, void* user_data) {
         auto* allocator = static_cast<rx::memory::allocator*>(user_data);
         return allocator->allocate(size);
     }
@@ -382,6 +403,8 @@ namespace render {
     }
 
     void D3D12RenderDevice::initialize_dma() {
+        MTR_SCOPE("D3D12RenderDevice", "iniitialize_dma");
+        
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
         allocator_desc.pDevice = device.Get();
         allocator_desc.pAdapter = adapter.Get();
@@ -402,12 +425,12 @@ namespace render {
     void D3D12RenderDevice::create_shader_compiler() {
         MTR_SCOPE("D3D12RenderDevice", "create_shader_compiler");
 
-        auto hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library));
+        auto hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(dxc_library.GetAddressOf()));
         if(FAILED(hr)) {
             rx::abort("Could not create DXC Library instance");
         }
 
-        hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxc_compiler));
+        hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(dxc_compiler.GetAddressOf()));
         if(FAILED(hr)) {
             rx::abort("Could not create DXC instance");
         }

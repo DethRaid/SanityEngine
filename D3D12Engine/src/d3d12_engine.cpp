@@ -1,7 +1,7 @@
 ﻿// D3D12Engine.cpp : Defines the entry point for the application.
 //
 
-#include "D3D12Engine.hpp"
+#include "d3d12_engine.hpp"
 
 #include <minitrace.h>
 #include <rx/console/variable.h>
@@ -10,12 +10,15 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "logging/stdoutstream.hpp"
 #include "core/cvar_names.hpp"
+#include "debugging/renderdoc.hpp"
+#include "logging/stdoutstream.hpp"
 
 RX_CONSOLE_IVAR(e_num_in_flight_frames, NUM_IN_FLIGHT_FRAMES_NAME, "Maximum number of frames that can be in flight", 1, 5, 3);
 
-static rx::global_group g_nova_globals{"D3D12Engine"};
+RX_CONSOLE_BVAR(r_enable_renderdoc, ENABLE_RENDERDOC_NAME, "Enable the RenderDoc integration for better debugging of graphics code", true);
+
+static rx::global_group g_engine_globals{"D3D12Engine"};
 
 RX_LOG("D3D12Engine", logger);
 
@@ -27,7 +30,7 @@ int main() {
     engine.run();
 }
 
-void D3D12Engine::init_globals() {
+void D3D12Engine::init_globals() const {
     rx::globals::link();
 
     rx::global_group* system_group{rx::globals::find("system")};
@@ -46,12 +49,18 @@ void D3D12Engine::init_globals() {
     rx::globals::init();
 }
 
-D3D12Engine::D3D12Engine() {
+D3D12Engine::D3D12Engine() : internal_allocator{&rx::memory::system_allocator::instance()} {
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
     init_globals();
 
     logger->info("HELLO HUMAN");
+
+    if(*r_enable_renderdoc) {
+        renderdoc = load_renderdoc("C:/Users/gold1/bin/RenderDoc/RenderDoc_2020_02_06_fe30fa91_64/renderdoc.dll");
+    }
+
+    render_device = make_render_device(*internal_allocator, render::RenderBackend::D3D12);
 }
 
 void D3D12Engine::deinit_globals() {
