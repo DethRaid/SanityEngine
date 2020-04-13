@@ -9,7 +9,11 @@
 namespace render {
     class D3D12RenderDevice;
 
-    struct D3D12Material : Material {};
+    struct D3D12Material : Material {
+        explicit D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
+
+        rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
+    };
 
     struct D3D12Descriptor {
         enum class Type {
@@ -37,10 +41,17 @@ namespace render {
         UINT num_elements{0};
     };
 
+    /*!
+     * \brief Abstraction for binding material resources
+     *
+     * There's a big assumption here: no root descriptors. This makes my life easier but might need to change to enable better optimizations
+     * in the future
+     */
     class D3D12MaterialBuilder final : public virtual MaterialBuilder {
     public:
         explicit D3D12MaterialBuilder(rx::memory::allocator& allocator,
                                       rx::map<rx::string, D3D12Descriptor> descriptors_in,
+                                      rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                       D3D12RenderDevice& render_device_in);
 
         D3D12MaterialBuilder(const D3D12MaterialBuilder& other) = delete;
@@ -67,6 +78,8 @@ namespace render {
         rx::memory::allocator* internal_allocator;
 
         rx::map<rx::string, D3D12Descriptor> descriptors;
+
+        rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
 
         D3D12RenderDevice* render_device;
 

@@ -10,12 +10,16 @@ using rx::utility::move;
 
 namespace render {
     RX_LOG("D3D12MaterialBuilder", logger);
+    D3D12Material::D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
+        : descriptor_table_handles{move(descriptor_table_handles_in)} {}
 
     D3D12MaterialBuilder::D3D12MaterialBuilder(rx::memory::allocator& allocator,
                                                rx::map<rx::string, D3D12Descriptor> descriptors_in,
+                                               rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                                D3D12RenderDevice& render_device_in)
         : internal_allocator{&allocator},
           descriptors{move(descriptors_in)},
+          descriptor_table_handles{move(descriptor_table_handles_in)},
           render_device{&render_device_in},
           bound_buffers{allocator},
           bound_images{allocator} {
@@ -27,6 +31,7 @@ namespace render {
     D3D12MaterialBuilder::D3D12MaterialBuilder(D3D12MaterialBuilder&& old) noexcept
         : internal_allocator{old.internal_allocator},
           descriptors{move(old.descriptors)},
+          descriptor_table_handles{move(old.descriptor_table_handles)},
           render_device{old.render_device},
           bound_buffers{move(old.bound_buffers)},
           bound_images{move(old.bound_images)} {
@@ -36,6 +41,7 @@ namespace render {
     D3D12MaterialBuilder& D3D12MaterialBuilder::operator=(D3D12MaterialBuilder&& old) noexcept {
         internal_allocator = old.internal_allocator;
         descriptors = move(old.descriptors);
+        descriptor_table_handles = move(old.descriptor_table_handles);
         bound_buffers = move(old.bound_buffers);
         bound_images = move(old.bound_images);
         render_device = old.render_device;
@@ -98,7 +104,7 @@ namespace render {
     rx::ptr<Material> D3D12MaterialBuilder::build() {
         update_descriptors();
 
-        return rx::make_ptr<D3D12Material>(*internal_allocator);
+        return rx::make_ptr<D3D12Material>(*internal_allocator, descriptor_table_handles);
     }
 
     void D3D12MaterialBuilder::update_descriptors() {

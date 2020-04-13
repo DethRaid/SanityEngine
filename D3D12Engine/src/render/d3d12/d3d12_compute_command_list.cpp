@@ -4,7 +4,7 @@
 #include <rx/core/log.h>
 
 #include "../compute_pipeline_state.hpp"
-#include "../resource_binder.hpp"
+#include "d3d12_material.hpp"
 
 #ifdef interface
 #undef interface
@@ -43,12 +43,16 @@ namespace render {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::bind_compute_resources(Material& resources) {
+    void D3D12ComputeCommandList::bind_compute_material(const Material& material) {
         MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
 
-        if(should_do_validation && compute_pipeline == nullptr) {
-            logger->error("Can not bind compute resources to a command list before you bind a compute pipeline");
+        if(should_do_validation) {
+            RX_ASSERT(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
         }
+
+        const auto& d3d12_material = static_cast<const D3D12Material&>(material);
+        d3d12_material.descriptor_table_handles.each_pair(
+            [&](const UINT idx, const D3D12_GPU_DESCRIPTOR_HANDLE handle) { commands->SetComputeRootDescriptorTable(idx, handle); });
 
         are_compute_resources_bound = true;
 
@@ -59,9 +63,7 @@ namespace render {
         MTR_SCOPE("D3D12ComputeCommandList", "dispatch");
 
         if(should_do_validation) {
-            if(compute_pipeline == nullptr) {
-                logger->error("Can not dispatch a compute workgroup before binding a compute pipeline");
-            }
+            RX_ASSERT(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
 
             if(workgroup_x == 0) {
                 logger->warning("Your workgroup has a width of 0. Are you sure you want to do that?");

@@ -14,7 +14,7 @@ namespace render {
 
         void set_pipeline_state(const ComputePipelineState& state) override;
 
-        void bind_compute_resources(Material& resources) override;
+        void bind_compute_material(const Material& material) override;
 
         void dispatch(uint32_t workgroup_x, uint32_t workgroup_y, uint32_t workgroup_z) override;
 #pragma endregion

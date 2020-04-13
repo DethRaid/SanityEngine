@@ -27,7 +27,7 @@ namespace render
          *
          * MUST be called after `set_pipeline_state`
          */
-        virtual void bind_compute_resources(Material& resources) = 0;
+        virtual void bind_compute_material(const Material& resources) = 0;
 
         /*!
          * \brief Dispatches a compute workgroup to perform some work
