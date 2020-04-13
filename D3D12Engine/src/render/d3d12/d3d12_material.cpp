@@ -6,12 +6,17 @@
 #include "../../core/cvar_names.hpp"
 #include "d3d12_render_device.hpp"
 #include "d3dx12.hpp"
+
 using rx::utility::move;
 
 namespace render {
     RX_LOG("D3D12MaterialBuilder", logger);
-    D3D12Material::D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
-        : descriptor_table_handles{move(descriptor_table_handles_in)} {}
+    D3D12Material::D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+                                 rx::vector<const D3D12Image*> used_images_in,
+                                 rx::vector<const D3D12Buffer*> used_buffers_in)
+        : descriptor_table_handles{move(descriptor_table_handles_in)},
+          used_images{move(used_images_in)},
+          used_buffers{move(used_buffers_in)} {}
 
     D3D12MaterialBuilder::D3D12MaterialBuilder(rx::memory::allocator& allocator,
                                                rx::map<rx::string, D3D12Descriptor> descriptors_in,
@@ -102,13 +107,17 @@ namespace render {
     }
 
     rx::ptr<Material> D3D12MaterialBuilder::build() {
-        update_descriptors();
+        auto [images, buffers] = bind_resources_to_descriptors();
 
-        return rx::make_ptr<D3D12Material>(*internal_allocator, descriptor_table_handles);
+        return rx::make_ptr<D3D12Material>(*internal_allocator, descriptor_table_handles, move(images), move(buffers));
     }
 
-    void D3D12MaterialBuilder::update_descriptors() {
+    rx::pair<rx::vector<const D3D12Image*>, rx::vector<const D3D12Buffer*>> D3D12MaterialBuilder::bind_resources_to_descriptors() {
         ID3D12Device* device = render_device->get_d3d12_device();
+
+        rx::vector<const D3D12Image*> used_images{*internal_allocator};
+        rx::vector<const D3D12Buffer*> used_buffers{*internal_allocator};
+
         descriptors.each_pair([&](const rx::string& name, const D3D12Descriptor& descriptor) {
             if(const auto* buffer_slot = bound_buffers.find(name)) {
                 const auto* buffer = *buffer_slot;
@@ -117,6 +126,8 @@ namespace render {
                         D3D12_CONSTANT_BUFFER_VIEW_DESC desc{buffer->resource->GetGPUVirtualAddress(), static_cast<UINT>(buffer->size)};
 
                         device->CreateConstantBufferView(&desc, descriptor.handle);
+
+                        used_buffers.push_back(buffer);
                     } break;
 
                     case D3D12Descriptor::Type::SRV: {
@@ -129,6 +140,8 @@ namespace render {
                         desc.Buffer.StructureByteStride = descriptor.element_size;
 
                         device->CreateShaderResourceView(buffer->resource.Get(), &desc, descriptor.handle);
+
+                        used_buffers.push_back(buffer);
                     } break;
 
                     case D3D12Descriptor::Type::UAV: {
@@ -140,6 +153,8 @@ namespace render {
                         desc.Buffer.StructureByteStride = descriptor.element_size;
 
                         device->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &desc, descriptor.handle);
+
+                        used_buffers.push_back(buffer);
                     } break;
                 }
 
@@ -168,6 +183,8 @@ namespace render {
 
                         device->CreateShaderResourceView(image->resource.Get(), &desc, handle);
                         handle.Offset(render_device->get_shader_resource_descriptor_size());
+
+                        used_images.push_back(image);
                     });
 
                 } else if(descriptor.type == D3D12Descriptor::Type::UAV) {
@@ -180,6 +197,8 @@ namespace render {
 
                         device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &desc, handle);
                         handle.Offset(render_device->get_shader_resource_descriptor_size());
+
+                        used_images.push_back(image);
                     });
                 }
 
@@ -189,5 +208,7 @@ namespace render {
                 }
             }
         });
+
+        return {used_images, used_buffers};
     }
 } // namespace render

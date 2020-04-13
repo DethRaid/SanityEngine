@@ -54,6 +54,16 @@ namespace render {
         d3d12_material.descriptor_table_handles.each_pair(
             [&](const UINT idx, const D3D12_GPU_DESCRIPTOR_HANDLE handle) { commands->SetComputeRootDescriptorTable(idx, handle); });
 
+        // TODO: Store more granular information about resource usage in D3D12Material
+
+        d3d12_material.used_images.each_fwd([&](const D3D12Image* image) {
+            set_resource_state(*image, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        });
+
+        d3d12_material.used_buffers.each_fwd([&](const D3D12Buffer* buffer) {
+            set_resource_state(*buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        });
+
         are_compute_resources_bound = true;
 
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
@@ -75,6 +85,12 @@ namespace render {
 
             if(workgroup_z == 0) {
                 logger->warning("Your workgroup has a depth of 0. Are you sure you want to do that?");
+            }
+
+            if(!are_compute_resources_bound) {
+                // TODO: Disable this warning if it proves useless
+                // TODO: Promote to an error if it proves useful
+                logger->warning("Dispatching a compute job with no resource bound! Are you sure?");
             }
         }
 

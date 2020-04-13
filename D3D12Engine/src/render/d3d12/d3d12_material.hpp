@@ -10,9 +10,14 @@ namespace render {
     class D3D12RenderDevice;
 
     struct D3D12Material : Material {
-        explicit D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
+        explicit D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+                               rx::vector<const D3D12Image*> used_images_in,
+                               rx::vector<const D3D12Buffer*> used_buffers_in);
 
         rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
+
+        rx::vector<const D3D12Image*> used_images;
+        rx::vector<const D3D12Buffer*> used_buffers;
     };
 
     struct D3D12Descriptor {
@@ -72,7 +77,7 @@ namespace render {
         rx::ptr<Material> build() override;
 #pragma endregion
 
-        void update_descriptors();
+        [[nodiscard]] rx::pair<rx::vector<const D3D12Image*>, rx::vector<const D3D12Buffer*>> bind_resources_to_descriptors();
 
     private:
         rx::memory::allocator* internal_allocator;

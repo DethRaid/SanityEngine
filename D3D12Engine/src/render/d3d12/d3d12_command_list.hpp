@@ -16,6 +16,9 @@
 using Microsoft::WRL::ComPtr;
 
 namespace render {
+    struct D3D12Buffer;
+    struct D3D12Image;
+
     /*!
      * \brief Base class for D3D12 command lists
      *
@@ -38,7 +41,7 @@ namespace render {
         void add_completion_function(rx::function<void()> completion_func) override;
 #pragma endregion
 
-        [[nodiscard]] const auto& get_resource_states() const;
+        [[nodiscard]] const auto& get_final_resource_states() const;
 
         [[nodiscard]] const auto& get_used_command_types() const;
 
@@ -49,6 +52,7 @@ namespace render {
 
         ComPtr<ID3D12GraphicsCommandList> commands;
 
+        rx::map<ID3D12Resource*, D3D12_RESOURCE_STATES> initial_resource_states;
         rx::map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;
 
         /*!
@@ -57,5 +61,25 @@ namespace render {
         rx::set<D3D12_COMMAND_LIST_TYPE> command_types;
 
         bool should_do_validation = false;
+
+        /*!
+         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
+         */
+        void set_resource_state(const D3D12Image& image, D3D12_RESOURCE_STATES new_states);
+
+        /*!
+         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
+         */
+        void set_resource_state(const D3D12Buffer& buffer, D3D12_RESOURCE_STATES new_states);
+        
+        /*!
+         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
+         */
+        void set_resource_state(ID3D12Resource* resource, D3D12_RESOURCE_STATES new_states, bool is_buffer_or_simultaneous_access_texture);
+
+        /*!
+         * \brief Checks if we need a barrier between the old and new resource states
+         */
+        bool need_barrier_between_states(D3D12_RESOURCE_STATES old_states, D3D12_RESOURCE_STATES new_states, bool is_buffer_or_simultaneous_access_texture);
     };
 } // namespace render

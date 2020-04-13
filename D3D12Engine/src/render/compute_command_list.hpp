@@ -34,7 +34,7 @@ namespace render
          *
          * MUST be called after set_pipeline_state
          */
-        virtual void dispatch(uint32_t workgroup_x, uint32_t workgroup_y = 1, uint32_t workgroup_z = 1);
+        virtual void dispatch(uint32_t workgroup_x, uint32_t workgroup_y = 1, uint32_t workgroup_z = 1) = 0;
     };
 
 }

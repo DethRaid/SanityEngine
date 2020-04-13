@@ -37,16 +37,8 @@ namespace render {
 
         const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
 
-        if(auto* previous_state = most_recent_resource_states.find(d3d12_buffer.resource.Get())) {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12_buffer.resource.Get(),
-                                                                      *previous_state,
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST);
-            commands->ResourceBarrier(1, &barrier);
-
-            *previous_state = D3D12_RESOURCE_STATE_COPY_DEST;
-        } else {
-            most_recent_resource_states.insert(d3d12_buffer.resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
-        }
+        set_resource_state(*staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        set_resource_state(d3d12_buffer, D3D12_RESOURCE_STATE_COPY_DEST);
 
         commands->CopyBufferRegion(d3d12_buffer.resource.Get(), offset, staging_buffer->resource.Get(), 0, num_bytes);
 
@@ -68,6 +60,9 @@ namespace render {
         memcpy(staging_buffer->ptr, data, num_bytes);
 
         const auto& d3d12_image = static_cast<const D3D12Image&>(image);
+
+        set_resource_state(*staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        set_resource_state(d3d12_image, D3D12_RESOURCE_STATE_COPY_DEST);
 
         D3D12_SUBRESOURCE_DATA subresource;
         subresource.pData = data;
