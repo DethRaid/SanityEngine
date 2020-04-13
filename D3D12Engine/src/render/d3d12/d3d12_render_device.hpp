@@ -60,6 +60,10 @@ namespace render {
 
         void return_staging_buffer(rx::ptr<D3D12StagingBuffer> buffer);
 
+        [[nodiscard]] auto* get_d3d12_device() const;
+
+        [[nodiscard]] auto get_shader_resource_descriptor_size() const;
+
     private:
         rx::memory::allocator* internal_allocator;
 

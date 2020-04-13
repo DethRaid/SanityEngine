@@ -176,9 +176,13 @@ namespace render {
         return list;
     }
 
-    bool D3D12RenderDevice::has_separate_device_memory() const {
-        return !is_uma;
+    bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
+
+    auto D3D12RenderDevice::get_shader_resource_descriptor_size() const {
+        return cbv_srv_uav_size;
     }
+
+    auto* D3D12RenderDevice::get_d3d12_device() const { return device.Get(); }
 
     void D3D12RenderDevice::enable_validation_layer() {
         const auto res = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
@@ -408,7 +412,7 @@ namespace render {
 
     void D3D12RenderDevice::initialize_dma() {
         MTR_SCOPE("D3D12RenderDevice", "iniitialize_dma");
-        
+
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
         allocator_desc.pDevice = device.Get();
         allocator_desc.pAdapter = adapter.Get();
