@@ -55,7 +55,7 @@ namespace render {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::dispatch(uint32_t workgroup_x, uint32_t workgroup_y, uint32_t workgroup_z) {
+    void D3D12ComputeCommandList::dispatch(const uint32_t workgroup_x, const uint32_t workgroup_y, const uint32_t workgroup_z) {
         MTR_SCOPE("D3D12ComputeCommandList", "dispatch");
 
         if(should_do_validation) {
@@ -74,6 +74,10 @@ namespace render {
             if(workgroup_z == 0) {
                 logger->warning("Your workgroup has a depth of 0. Are you sure you want to do that?");
             }
+        }
+
+        if(compute_pipeline != nullptr) {
+            commands->Dispatch(workgroup_x, workgroup_y, workgroup_z);
         }
 
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
