@@ -35,7 +35,7 @@ set(D3D12_ENGINE_SOURCE
 
     "src/debugging/renderdoc.cpp" 
     "src/windows/windows_helpers.cpp" 
-    "src/render/renderer.cpp" )
+    "src/render/renderer.cpp"  "src/render/resources.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_render_device.hpp"

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <rx/core/map.h>
 #include <rx/core/vector.h>
 #include <wrl/client.h>
 
@@ -37,5 +38,7 @@ namespace render {
         rx::vector<rx::function<void()>> completion_functions;
 
         ComPtr<ID3D12GraphicsCommandList> commands;
+
+        rx::map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;
     };
 } // namespace render

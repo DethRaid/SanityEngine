@@ -6,7 +6,7 @@ using rx::utility::move;
 
 namespace render {
     D3D12CommandList::D3D12CommandList(rx::memory::allocator& allocator, ComPtr<ID3D12GraphicsCommandList> cmds)
-        : internal_allocator{&allocator}, commands{move(cmds)} {}
+        : internal_allocator{&allocator}, commands{move(cmds)}, most_recent_resource_states{allocator} {}
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& old) noexcept
         : internal_allocator{old.internal_allocator}, completion_functions{move(old.completion_functions)} {

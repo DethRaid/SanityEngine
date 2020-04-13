@@ -25,12 +25,7 @@ namespace render {
         size_t size{0};
     };
 
-    enum class ImageUsage {
-        RenderTarget,
-        DepthStencil,
-        SampledImage,
-        UnorderedAccess
-    };
+    enum class ImageUsage { RenderTarget, DepthStencil, SampledImage, UnorderedAccess };
 
     enum class ImageFormat {
         Rgba8,
@@ -40,6 +35,11 @@ namespace render {
     };
 
     struct Image {
+        size_t width{1};
+        size_t height{1};
+        size_t depth{1};
+
+        ImageFormat format{};
     };
 
     struct ImageCreateInfo {
@@ -48,8 +48,10 @@ namespace render {
         ImageUsage usage;
         ImageFormat format;
 
-        size_t width{0};
-        size_t height{0};
-        size_t depth{0};
+        size_t width{1};
+        size_t height{1};
+        size_t depth{1};
     };
+
+    [[nodiscard]] size_t size_in_bytes(ImageFormat format);
 } // namespace render

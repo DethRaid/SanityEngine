@@ -38,6 +38,6 @@ namespace render {
          * \param data The data to copy
          * \param image The image to copy data to
          */
-        virtual void dopy_data_to_image(void* data, const Image& image) = 0;
+        virtual void copy_data_to_image(void* data, const Image& image) = 0;
     };
 } // namespace render
