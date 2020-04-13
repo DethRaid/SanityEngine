@@ -1,11 +1,14 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 #include "resource_command_list.hpp"
 
 namespace render
 {
+    struct ComputePipelineState;
+    struct ResourceBinder;
+
     /*!
      * \brief A command list which can execute compute tasks
      */
@@ -24,7 +27,7 @@ namespace render
          *
          * MUST be called after `set_pipeline_state`
          */
-        virtual void bind(ResourceBinder& resources) = 0;
+        virtual void bind_compute_resources(ResourceBinder& resources) = 0;
 
         /*!
          * \brief Dispatches a compute workgroup to perform some work

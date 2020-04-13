@@ -3,13 +3,17 @@
 #include <rx/core/assert.h>
 #define D3D12MA_ASSERT(cond) RX_ASSERT(cond)
 
-#include <dxcapi.h>
+#define interface struct
+
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
+#include <dxcapi.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
 #include <rx/core/utility/pair.h>
 #include <rx/math/vec2.h>
+
+#define interface struct
 #include <wrl/client.h>
 
 #include "../renderer.hpp"

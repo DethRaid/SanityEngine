@@ -18,6 +18,8 @@ RX_CONSOLE_IVAR(e_num_in_flight_frames, NUM_IN_FLIGHT_FRAMES_NAME, "Maximum numb
 
 RX_CONSOLE_BVAR(r_enable_renderdoc, ENABLE_RENDERDOC_NAME, "Enable the RenderDoc integration for better debugging of graphics code", true);
 
+RX_CONSOLE_BVAR(r_validate_rhi, ENABLE_RHI_VALIDATION_NAME, "Enable runtime validation of the RHI", true);
+
 static rx::global_group g_engine_globals{"D3D12Engine"};
 
 RX_LOG("D3D12Engine", logger);

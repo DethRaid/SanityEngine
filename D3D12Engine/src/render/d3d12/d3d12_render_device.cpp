@@ -21,6 +21,10 @@ RX_CONSOLE_BVAR(r_enable_debug_layers,
 
 RX_LOG("D3D12RenderDevice", logger);
 
+#ifdef interface
+#undef interface
+#endif
+
 using rx::utility::move;
 
 namespace render {

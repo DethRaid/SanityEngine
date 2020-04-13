@@ -52,6 +52,8 @@ namespace render {
 
         add_completion_function(
             [staging_buffer{move(staging_buffer)}, this]() mutable { device->return_staging_buffer(move(staging_buffer)); });
+
+        command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
     }
 
     void D3D12ResourceCommandList::copy_data_to_image(void* data, const Image& image) {
@@ -76,5 +78,7 @@ namespace render {
 
         add_completion_function(
             [staging_buffer{move(staging_buffer)}, this]() mutable { device->return_staging_buffer(move(staging_buffer)); });
+
+        command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
     }
 } // namespace render

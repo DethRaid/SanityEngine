@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef interface
+#undef interface
+#endif
+
 #include <rx/core/concepts/interface.h>
 #include <rx/core/function.h>
 

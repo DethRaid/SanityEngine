@@ -1,8 +1,14 @@
 #pragma once
 
+#define interface struct
+
 #include <d3d12.h>
 #include <rx/core/map.h>
+#include <rx/core/set.h>
 #include <rx/core/vector.h>
+
+#define interface struct
+
 #include <wrl/client.h>
 
 #include "../command_list.hpp"
@@ -32,6 +38,10 @@ namespace render {
         void add_completion_function(rx::function<void()> completion_func) override;
 #pragma endregion
 
+        [[nodiscard]] const auto& get_resource_states() const;
+
+        [[nodiscard]] const auto& get_used_command_types() const;
+
     protected:
         rx::memory::allocator* internal_allocator;
 
@@ -40,5 +50,12 @@ namespace render {
         ComPtr<ID3D12GraphicsCommandList> commands;
 
         rx::map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;
+
+        /*!
+         * \brief Keeps track of all the types of commands that this command list uses
+         */
+        rx::set<D3D12_COMMAND_LIST_TYPE> command_types;
+
+        bool should_do_validation = false;
     };
 } // namespace render
