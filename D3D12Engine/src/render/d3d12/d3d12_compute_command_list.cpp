@@ -43,7 +43,7 @@ namespace render {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::bind_compute_resources(ResourceBinder& resources) {
+    void D3D12ComputeCommandList::bind_compute_resources(Material& resources) {
         MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
 
         if(should_do_validation && compute_pipeline == nullptr) {
