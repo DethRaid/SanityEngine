@@ -3,7 +3,7 @@
 #include <rx/core/ptr.h>
 
 #include "compute_command_list.hpp"
-#include "graphics_command_list.hpp"
+#include "render_command_list.hpp"
 #include "resource_command_list.hpp"
 
 namespace render {
@@ -30,7 +30,7 @@ namespace render {
 
         [[nodiscard]] virtual rx::ptr<ComputeCommandList> get_compute_command_list() = 0;
 
-        [[nodiscard]] virtual rx::ptr<GraphicsCommandList> get_graphics_command_list() = 0;
+        [[nodiscard]] virtual rx::ptr<RenderCommandList> get_graphics_command_list() = 0;
 
         void virtual submit_command_list(rx::ptr<CommandList> commands) = 0;
     };

@@ -10,12 +10,12 @@ namespace render {
 
     class MeshDataStore;
 
-    class GraphicsCommandList : public virtual ComputeCommandList {
+    class RenderCommandList : public virtual ComputeCommandList {
+    public:
         /*!
          * \brief Sets the render targets that draws will render to
          */
-        virtual void set_render_targets(const rx::vector<Image*>& color_targets,
-                                        rx::optional<Image*> depth_target = rx::nullopt) = 0;
+        virtual void set_render_targets(const rx::vector<Image*>& color_targets, Image* depth_target = nullptr) = 0;
 
         /*!
          * \brief Sets the state of the graphics rendering pipeline

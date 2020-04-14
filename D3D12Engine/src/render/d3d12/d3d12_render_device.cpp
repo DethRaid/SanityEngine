@@ -29,7 +29,7 @@ using rx::utility::move;
 
 namespace render {
     D3D12RenderDevice::D3D12RenderDevice(rx::memory::allocator& allocator, const HWND window_handle, const rx::math::vec2i& window_size)
-        : internal_allocator{&allocator} {
+        : internal_allocator{&allocator}, rtv_cache{allocator} {
         if(*r_enable_debug_layers) {
             enable_validation_layer();
         }
@@ -177,6 +177,45 @@ namespace render {
     }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderDevice::get_rtv_for_image(const D3D12Image& image) {
+        if(const auto* rtv_slot = rtv_cache.find(image.resource.Get())) {
+            return *rtv_slot;
+        }
+
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE handle{rtv_heap->GetCPUDescriptorHandleForHeapStart(), next_free_rtv, rtv_size};
+        next_free_rtv++;
+
+        D3D12_RENDER_TARGET_VIEW_DESC desc{};
+        desc.Format = image.format;
+        desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+        desc.Texture2D.MipSlice = 0;
+        desc.Texture2D.PlaneSlice = 0;
+        device->CreateRenderTargetView(image.resource.Get(), &desc, handle);
+
+        rtv_cache.insert(image.resource.Get(), handle);
+
+        return handle;
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderDevice::get_dsv_for_image(const D3D12Image& image) {
+        if(const auto* dsv_slot = dsv_cache.find(image.resource.Get())) {
+            return *dsv_slot;
+        }
+
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE handle{dsv_heap->GetCPUDescriptorHandleForHeapStart(), next_free_dsv, dsv_size};
+        next_free_dsv++;
+
+        D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
+        desc.Format = image.format;
+        desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        desc.Texture2D.MipSlice = 0;
+        device->CreateDepthStencilView(image.resource.Get(), &desc, handle);
+
+        dsv_cache.insert(image.resource.Get(), handle);
+
+        return handle;
+    }
 
     auto D3D12RenderDevice::get_shader_resource_descriptor_size() const {
         return cbv_srv_uav_size;

@@ -31,11 +31,12 @@ set(D3D12_ENGINE_SOURCE
     "src/render/command_list.hpp"
     "src/render/resource_command_list.hpp"
     "src/render/compute_command_list.hpp"
-    "src/render/graphics_command_list.hpp" 
+    "src/render/render_command_list.hpp" 
 
     "src/debugging/renderdoc.cpp" 
     "src/windows/windows_helpers.cpp" 
-    "src/render/renderer.cpp"  "src/render/resources.cpp" "src/render/d3d12/d3d12_material.cpp")
+    "src/render/renderer.cpp" 
+    "src/render/resources.cpp" )
 
 set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_render_device.hpp"
@@ -45,7 +46,9 @@ set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/helpers.cpp"
     "src/render/d3d12/d3d12_command_list.cpp"
     "src/render/d3d12/d3d12_resource_command_list.cpp"
-     "src/render/d3d12/d3d12_compute_command_list.cpp")
+    "src/render/d3d12/d3d12_compute_command_list.cpp"
+    "src/render/d3d12/d3d12_material.cpp" 
+    "src/render/d3d12/d3d12_render_command_list.cpp")
 
 add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 

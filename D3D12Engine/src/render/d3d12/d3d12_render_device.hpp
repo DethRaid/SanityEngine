@@ -10,6 +10,7 @@
 #include <dxcapi.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
+#include <rx/core/map.h>
 #include <rx/core/utility/pair.h>
 #include <rx/math/vec2.h>
 
@@ -49,7 +50,7 @@ namespace render {
 
         [[nodiscard]] rx::ptr<ComputeCommandList> get_compute_command_list() override;
 
-        [[nodiscard]] rx::ptr<GraphicsCommandList> get_graphics_command_list() override;
+        [[nodiscard]] rx::ptr<RenderCommandList> get_graphics_command_list() override;
 
         void submit_command_list(rx::ptr<CommandList> commands) override;
 #pragma endregion
@@ -63,6 +64,10 @@ namespace render {
         [[nodiscard]] auto* get_d3d12_device() const;
 
         [[nodiscard]] auto get_shader_resource_descriptor_size() const;
+
+        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_rtv_for_image(const D3D12Image& image);
+
+        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_dsv_for_image(const D3D12Image& image);
 
     private:
         rx::memory::allocator* internal_allocator;
@@ -89,9 +94,11 @@ namespace render {
 
         ComPtr<ID3D12DescriptorHeap> rtv_heap;
         UINT rtv_size{};
+        INT next_free_rtv{0};
 
         ComPtr<ID3D12DescriptorHeap> dsv_heap;
         UINT dsv_size{};
+        INT next_free_dsv{0};
 
         D3D12MA::Allocator* device_allocator;
 
@@ -126,6 +133,8 @@ namespace render {
 
         DXGI_FORMAT swapchain_format{DXGI_FORMAT_R8G8B8A8_UNORM};
 
+        rx::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> rtv_cache;
+        rx::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> dsv_cache;
 #pragma region initialization
         void enable_validation_layer();
 
