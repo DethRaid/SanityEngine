@@ -111,12 +111,12 @@ namespace render {
         d3d12_resources.descriptor_table_handles.each_pair(
             [&](const UINT idx, const D3D12_GPU_DESCRIPTOR_HANDLE handle) { commands->SetGraphicsRootDescriptorTable(idx, handle); });
 
-        d3d12_resources.used_buffers.each_fwd([&](const D3D12Buffer* buffer) {
-            set_resource_state(*buffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        d3d12_resources.used_buffers.each_fwd([&](const BoundResource<D3D12Buffer>& resource) {
+            set_resource_state(*resource.resource, resource.states);
         });
 
-        d3d12_resources.used_images.each_fwd([&](const D3D12Image* image) {
-            set_resource_state(*image, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        d3d12_resources.used_images.each_fwd([&](const BoundResource<D3D12Image>& resource) {
+            set_resource_state(*resource.resource, resource.states);
         });
 
         is_render_material_bound = true;

@@ -9,15 +9,21 @@
 namespace render {
     class D3D12RenderDevice;
 
+    template <typename ResourceType>
+    struct BoundResource {
+        const ResourceType* resource;
+        D3D12_RESOURCE_STATES states;
+    };
+
     struct D3D12BindGroup : BindGroup {
         explicit D3D12BindGroup(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                               rx::vector<const D3D12Image*> used_images_in,
-                               rx::vector<const D3D12Buffer*> used_buffers_in);
+                                rx::vector<const D3D12Image*> used_images_in,
+                                rx::vector<const D3D12Buffer*> used_buffers_in);
 
         rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
 
-        rx::vector<const D3D12Image*> used_images;
-        rx::vector<const D3D12Buffer*> used_buffers;
+        rx::vector<BoundResource<D3D12Image>> used_images;
+        rx::vector<BoundResource<D3D12Buffer>> used_buffers;
     };
 
     struct D3D12Descriptor {
@@ -46,6 +52,8 @@ namespace render {
         UINT num_elements{0};
     };
 
+    using BoundResources = rx::pair<rx::vector<BoundResource<D3D12Image>>, rx::vector<BoundResource<D3D12Buffer>>>;
+
     /*!
      * \brief Abstraction for binding resources
      *
@@ -55,9 +63,9 @@ namespace render {
     class D3D12BindGroupBuilder final : public virtual BindGroupBuilder {
     public:
         explicit D3D12BindGroupBuilder(rx::memory::allocator& allocator,
-                                      rx::map<rx::string, D3D12Descriptor> descriptors_in,
-                                      rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                                      D3D12RenderDevice& render_device_in);
+                                       rx::map<rx::string, D3D12Descriptor> descriptors_in,
+                                       rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+                                       D3D12RenderDevice& render_device_in);
 
         D3D12BindGroupBuilder(const D3D12BindGroupBuilder& other) = delete;
         D3D12BindGroupBuilder& operator=(const D3D12BindGroupBuilder& other) = delete;
@@ -77,7 +85,7 @@ namespace render {
         rx::ptr<BindGroup> build() override;
 #pragma endregion
 
-        [[nodiscard]] rx::pair<rx::vector<const D3D12Image*>, rx::vector<const D3D12Buffer*>> bind_resources_to_descriptors();
+        [[nodiscard]] BoundResources bind_resources_to_descriptors();
 
     private:
         rx::memory::allocator* internal_allocator;

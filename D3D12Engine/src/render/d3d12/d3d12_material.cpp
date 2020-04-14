@@ -12,16 +12,16 @@ using rx::utility::move;
 namespace render {
     RX_LOG("D3D12MaterialBuilder", logger);
     D3D12BindGroup::D3D12BindGroup(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                                 rx::vector<const D3D12Image*> used_images_in,
-                                 rx::vector<const D3D12Buffer*> used_buffers_in)
+                                   rx::vector<const D3D12Image*> used_images_in,
+                                   rx::vector<const D3D12Buffer*> used_buffers_in)
         : descriptor_table_handles{move(descriptor_table_handles_in)},
           used_images{move(used_images_in)},
           used_buffers{move(used_buffers_in)} {}
 
     D3D12BindGroupBuilder::D3D12BindGroupBuilder(rx::memory::allocator& allocator,
-                                               rx::map<rx::string, D3D12Descriptor> descriptors_in,
-                                               rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                                               D3D12RenderDevice& render_device_in)
+                                                 rx::map<rx::string, D3D12Descriptor> descriptors_in,
+                                                 rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+                                                 D3D12RenderDevice& render_device_in)
         : internal_allocator{&allocator},
           descriptors{move(descriptors_in)},
           descriptor_table_handles{move(descriptor_table_handles_in)},
@@ -112,11 +112,11 @@ namespace render {
         return rx::make_ptr<D3D12BindGroup>(*internal_allocator, descriptor_table_handles, move(images), move(buffers));
     }
 
-    rx::pair<rx::vector<const D3D12Image*>, rx::vector<const D3D12Buffer*>> D3D12BindGroupBuilder::bind_resources_to_descriptors() {
+    BoundResources D3D12BindGroupBuilder::bind_resources_to_descriptors() {
         ID3D12Device* device = render_device->get_d3d12_device();
 
-        rx::vector<const D3D12Image*> used_images{*internal_allocator};
-        rx::vector<const D3D12Buffer*> used_buffers{*internal_allocator};
+        rx::vector<BoundResource<D3D12Image>> used_images{*internal_allocator};
+        rx::vector<BoundResource<D3D12Buffer>> used_buffers{*internal_allocator};
 
         descriptors.each_pair([&](const rx::string& name, const D3D12Descriptor& descriptor) {
             if(const auto* buffer_slot = bound_buffers.find(name)) {
@@ -127,7 +127,10 @@ namespace render {
 
                         device->CreateConstantBufferView(&desc, descriptor.handle);
 
-                        used_buffers.push_back(buffer);
+                        used_buffers.emplace_back(buffer,
+                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
+                                                      D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                     } break;
 
                     case D3D12Descriptor::Type::SRV: {
@@ -141,7 +144,9 @@ namespace render {
 
                         device->CreateShaderResourceView(buffer->resource.Get(), &desc, descriptor.handle);
 
-                        used_buffers.push_back(buffer);
+                        used_buffers.emplace_back(buffer,
+                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
                     } break;
 
                     case D3D12Descriptor::Type::UAV: {
@@ -154,7 +159,10 @@ namespace render {
 
                         device->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &desc, descriptor.handle);
 
-                        used_buffers.push_back(buffer);
+                        used_buffers.emplace_back(buffer,
+                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
+                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
                     } break;
                 }
 
@@ -184,7 +192,9 @@ namespace render {
                         device->CreateShaderResourceView(image->resource.Get(), &desc, handle);
                         handle.Offset(render_device->get_shader_resource_descriptor_size());
 
-                        used_images.push_back(image);
+                        used_images.emplace_back(image,
+                                                 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
                     });
 
                 } else if(descriptor.type == D3D12Descriptor::Type::UAV) {
@@ -198,7 +208,10 @@ namespace render {
                         device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &desc, handle);
                         handle.Offset(render_device->get_shader_resource_descriptor_size());
 
-                        used_images.push_back(image);
+                        used_images.emplace_back(image,
+                                                 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
+                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
                     });
                 }
 
