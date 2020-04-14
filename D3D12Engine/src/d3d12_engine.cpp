@@ -1,4 +1,4 @@
-﻿// D3D12Engine.cpp : Defines the entry point for the application.
+﻿// D3D12Engine.cpp : Defines the entry point for the application
 //
 
 #include "d3d12_engine.hpp"
@@ -7,6 +7,7 @@
 #include <rx/console/variable.h>
 #include <rx/core/global.h>
 #include <rx/core/log.h>
+#include <rx/core/profiler.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -51,10 +52,30 @@ void D3D12Engine::init_globals() const {
     rx::globals::init();
 }
 
+void D3D12Engine::init_rex_profiler() {
+    profiler_adapter = rx::make_ptr<RexProfilerAdapter>(*internal_allocator);
+
+    rx::profiler::instance().bind_cpu({profiler_adapter.get(),
+                                       +[](void* context, const char* name) {
+                                           auto* profiler = static_cast<RexProfilerAdapter*>(context);
+                                           profiler->set_thread_name(name);
+                                       },
+                                       +[](void* context, const char* tag) {
+                                           auto* profiler = static_cast<RexProfilerAdapter*>(context);
+                                           profiler->begin_sample(tag);
+                                       },
+                                       +[](void* context) {
+                                           auto* profiler = static_cast<RexProfilerAdapter*>(context);
+                                           profiler->end_sample();
+                                       }});
+}
+
 D3D12Engine::D3D12Engine() : internal_allocator{&rx::memory::system_allocator::instance()} {
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
     init_globals();
+
+    init_rex_profiler();
 
     logger->info("HELLO HUMAN");
 

@@ -36,7 +36,7 @@ set(D3D12_ENGINE_SOURCE
     "src/debugging/renderdoc.cpp" 
     "src/windows/windows_helpers.cpp" 
     "src/render/renderer.cpp" 
-    "src/render/resources.cpp"  "src/render/mesh_data_store.cpp")
+    "src/render/resources.cpp"  "src/render/mesh_data_store.cpp" "src/core/rex_profiler_adapter.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_render_device.hpp"
@@ -48,7 +48,7 @@ set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_resource_command_list.cpp"
     "src/render/d3d12/d3d12_compute_command_list.cpp"
     "src/render/d3d12/d3d12_material.cpp" 
-    "src/render/d3d12/d3d12_render_command_list.cpp")
+    "src/render/d3d12/d3d12_render_command_list.cpp" "src/render/d3d12/d3d12_descriptor_allocator.cpp")
 
 add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 

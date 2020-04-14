@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <rx/core/ptr.h>
 
+#include "core/rex_profiler_adapter.hpp"
 #include "debugging/renderdoc_app.h"
 #include "render/renderer.hpp"
 
@@ -31,7 +32,11 @@ private:
 
     rx::memory::allocator* internal_allocator;
 
+    rx::ptr<RexProfilerAdapter> profiler_adapter;
+
     void init_globals() const;
+
+    void init_rex_profiler();
 
     void deinit_globals();
 
