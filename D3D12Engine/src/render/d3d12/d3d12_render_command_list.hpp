@@ -4,7 +4,7 @@
 #include "d3d12_render_pipeline_state.hpp"
 
 namespace render {
-    class D3D12RenderCommandList : public D3D12ComputeCommandList, public virtual RenderCommandList {
+    class D3D12RenderCommandList final : public D3D12ComputeCommandList, public virtual RenderCommandList {
     public:
         D3D12RenderCommandList(rx::memory::allocator& allocator, ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);
 
@@ -32,6 +32,8 @@ namespace render {
         void present_backbuffer() override;
 #pragma endregion
 
+        [[nodiscard]] bool should_present() const;
+
     protected:
         ComPtr<ID3D12GraphicsCommandList4> commands4;
 
@@ -40,5 +42,7 @@ namespace render {
         const D3D12RenderPipelineState* current_render_pipeline_state{nullptr};
 
         bool is_render_material_bound{false};
+        bool is_mesh_data_bound{false};
+        bool should_present_backbuffer{false};
     };
 } // namespace render

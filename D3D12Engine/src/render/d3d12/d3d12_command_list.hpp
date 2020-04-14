@@ -45,6 +45,8 @@ namespace render {
 
         [[nodiscard]] const auto& get_used_command_types() const;
 
+        [[nodiscard]] ID3D12CommandList* get_command_list() const;
+
     protected:
         rx::memory::allocator* internal_allocator;
 

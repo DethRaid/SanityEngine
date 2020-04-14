@@ -2,6 +2,7 @@
 
 #include <minitrace.h>
 
+#include "../mesh_data_store.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_material.hpp"
 #include "d3d12_render_pipeline_state.hpp"
@@ -22,19 +23,25 @@ namespace render {
           commands4{move(old.commands4)},
           in_render_pass{old.in_render_pass},
           current_render_pipeline_state{old.current_render_pipeline_state},
-          is_render_material_bound{old.is_render_material_bound} {}
+          is_render_material_bound{old.is_render_material_bound},
+          is_mesh_data_bound{old.is_mesh_data_bound},
+          should_present_backbuffer{old.should_present_backbuffer} {}
 
     D3D12RenderCommandList& D3D12RenderCommandList::operator=(D3D12RenderCommandList&& old) noexcept {
         commands4 = old.commands4;
         in_render_pass = old.in_render_pass;
         current_render_pipeline_state = old.current_render_pipeline_state;
         is_render_material_bound = old.is_render_material_bound;
+        is_mesh_data_bound = old.is_mesh_data_bound;
+        should_present_backbuffer = old.should_present_backbuffer;
 
         return static_cast<D3D12RenderCommandList&>(D3D12ComputeCommandList::operator=(move(old)));
     }
 
     void D3D12RenderCommandList::set_framebuffer(const Framebuffer& framebuffer) {
         MTR_SCOPE("D3D12RenderCommandList", "set_render_targets");
+
+        RX_ASSERT(!should_present_backbuffer, "Can not set render targets after presenting");
 
         const D3D12Framebuffer& d3d12_framebuffer = static_cast<const D3D12Framebuffer&>(framebuffer);
 
@@ -80,6 +87,10 @@ namespace render {
     }
 
     void D3D12RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
+        MTR_SCOPE("D3D12RenderCommandList", "set_pipeline_state");
+
+        RX_ASSERT(!should_present_backbuffer, "Can not set pipeline state after presenting");
+
         const auto& d3d12_state = static_cast<const D3D12RenderPipelineState&>(state);
 
         if(current_render_pipeline_state == nullptr) {
@@ -97,6 +108,11 @@ namespace render {
     }
 
     void D3D12RenderCommandList::bind_render_resources(const BindGroup& resources) {
+        MTR_SCOPE("D3D12RenderCommandList", "bind_render_resources");
+
+        RX_ASSERT(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
+        RX_ASSERT(!should_present_backbuffer, "Can not bind render resources after presenting");
+
         const auto& d3d12_resources = static_cast<const D3D12BindGroup&>(resources);
 
         d3d12_resources.descriptor_table_handles.each_pair(
@@ -113,5 +129,58 @@ namespace render {
         is_render_material_bound = true;
     }
 
-    void D3D12RenderCommandList::bind_mesh_data(const MeshDataStore& mesh_data) {}
+    void D3D12RenderCommandList::bind_mesh_data(const MeshDataStore& mesh_data) {
+        MTR_SCOPE("D3D12RenderCommandList", "bind_mesh_data");
+
+        RX_ASSERT(!should_present_backbuffer, "Can not bind mesh data after presenting");
+
+        const auto& vertex_bindings = mesh_data.get_vertex_bindings();
+
+        // If we have more than 16 vertex attributes, we probably have bigger problems
+        rx::array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views;
+        for(uint32_t i = 0; i < vertex_bindings.size(); i++) {
+            const auto& binding = vertex_bindings[i];
+            const auto* d3d12_buffer = static_cast<const D3D12Buffer*>(binding.buffer);
+
+            set_resource_state(*d3d12_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+            D3D12_VERTEX_BUFFER_VIEW view{};
+            view.BufferLocation = d3d12_buffer->resource->GetGPUVirtualAddress() + binding.offset;
+            view.SizeInBytes = d3d12_buffer->size - binding.offset;
+            view.StrideInBytes = binding.vertex_size;
+
+            vertex_buffer_views[i] = view;
+        }
+
+        commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
+
+        const auto& index_buffer = mesh_data.get_index_buffer();
+        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
+
+        set_resource_state(d3d12_index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+        D3D12_INDEX_BUFFER_VIEW index_view{};
+        index_view.BufferLocation = d3d12_index_buffer.resource->GetGPUVirtualAddress();
+        index_view.SizeInBytes = index_buffer.size;
+        index_view.Format = DXGI_FORMAT_R32_UINT;
+
+        commands->IASetIndexBuffer(&index_view);
+
+        is_mesh_data_bound = true;
+    }
+
+    void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
+        MTR_SCOPE("D3D12RenderCommandList", "draw");
+
+        RX_ASSERT(is_render_material_bound, "Must bind material data to issue drawcalls");
+        RX_ASSERT(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
+        RX_ASSERT(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
+        RX_ASSERT(!should_present_backbuffer, "Can not issue drawcalls after presenting");
+
+        commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
+    }
+
+    void D3D12RenderCommandList::present_backbuffer() { should_present_backbuffer = true; }
+
+    bool D3D12RenderCommandList::should_present() const { return should_present_backbuffer; }
 } // namespace render
