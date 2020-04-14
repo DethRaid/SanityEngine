@@ -9,6 +9,8 @@
 
 #include "../../core/constants.hpp"
 #include "../../core/cvar_names.hpp"
+#include "d3d12_compute_command_list.hpp"
+#include "d3d12_render_command_list.hpp"
 #include "d3d12_resource_command_list.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
@@ -29,7 +31,7 @@ using rx::utility::move;
 
 namespace render {
     D3D12RenderDevice::D3D12RenderDevice(rx::memory::allocator& allocator, const HWND window_handle, const rx::math::vec2i& window_size)
-        : internal_allocator{&allocator}, rtv_cache{allocator} {
+        : internal_allocator{&allocator}, rtv_cache{allocator}, command_list_done_fences{allocator} {
         if(*r_enable_debug_layers) {
             enable_validation_layer();
         }
@@ -169,18 +171,100 @@ namespace render {
         // Again nothing to do, D3D12 still has destructors
     }
 
-    rx::ptr<ResourceCommandList> D3D12RenderDevice::get_resource_command_list() {
+    rx::ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
-        auto list = rx::make_ptr<D3D12ResourceCommandList>(*internal_allocator);
 
-        return list;
+        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12CommandList> cmds;
+        const auto result = device->CreateCommandList(0,
+                                                      D3D12_COMMAND_LIST_TYPE_COPY,
+                                                      copy_command_allocator.Get(),
+                                                      nullptr,
+                                                      IID_PPV_ARGS(cmds.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not create resource command list");
+            return {};
+        }
+
+        cmds->QueryInterface(commands.GetAddressOf());
+
+        return rx::make_ptr<D3D12ResourceCommandList>(*internal_allocator, *internal_allocator, commands, *this);
+    }
+
+    rx::ptr<ComputeCommandList> D3D12RenderDevice::create_compute_command_list() {
+        MTR_SCOPE("D3D12RenderDevice", "get_compute_command_list");
+
+        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12CommandList> cmds;
+        const auto result = device->CreateCommandList(0,
+                                                      D3D12_COMMAND_LIST_TYPE_COMPUTE,
+                                                      compute_command_allocator.Get(),
+                                                      nullptr,
+                                                      IID_PPV_ARGS(cmds.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not create compute command list");
+            return {};
+        }
+
+        cmds->QueryInterface(commands.GetAddressOf());
+
+        return rx::make_ptr<D3D12ComputeCommandList>(*internal_allocator, *internal_allocator, commands, *this);
+    }
+
+    rx::ptr<RenderCommandList> D3D12RenderDevice::create_render_command_list() {
+        MTR_SCOPE("D3D12RenderDevice", "create_graphics_command_list");
+
+        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12CommandList> cmds;
+        const auto result = device->CreateCommandList(0,
+                                                      D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                      direct_command_allocator.Get(),
+                                                      nullptr,
+                                                      IID_PPV_ARGS(cmds.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not create render command list");
+            return {};
+        }
+
+        cmds->QueryInterface(commands.GetAddressOf());
+
+        return rx::make_ptr<D3D12RenderCommandList>(*internal_allocator, *internal_allocator, commands, *this);
+    }
+
+    void D3D12RenderDevice::submit_command_list(rx::ptr<CommandList> commands) {
+        rx::ptr<D3D12CommandList> d3d12_commands = move(commands);
+
+        auto* d3d12_command_list = d3d12_commands->get_command_list();
+
+        // First implementation - run everything on the same queue, because it's easy
+        // Eventually I'll come up with a fancy way to use multiple queues
+
+        direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
+
+        auto command_list_done_fence = get_next_command_list_done_fence();
+
+        direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+
+
     }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    auto D3D12RenderDevice::get_shader_resource_descriptor_size() const {
-        return cbv_srv_uav_size;
+    ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
+        if(!command_list_done_fences.is_empty()) {
+                auto fence = command_list_done_fences.last();
+            command_list_done_fences.pop_back();
+
+            return fence;
+        }
+
+        ComPtr<ID3D12Fence> fence;
+        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.GetAddressOf()));
+
+        return fence;
     }
+
+    auto D3D12RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
     auto* D3D12RenderDevice::get_d3d12_device() const { return device.Get(); }
 
@@ -358,12 +442,17 @@ namespace render {
     void D3D12RenderDevice::create_command_allocators() {
         MTR_SCOPE("D3D12RenderDevice", "create_command_allocators");
 
-        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&direct_command_queue));
+        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&direct_command_allocator));
         if(FAILED(result)) {
             rx::abort("Could not create direct command allocator");
         }
 
-        result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&async_copy_queue));
+        result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(compute_command_allocator.GetAddressOf()));
+        if(FAILED(result)) {
+            rx::abort("Could not create compute command allocator");
+        }
+
+        result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&copy_command_allocator));
         if(FAILED(result)) {
             rx::abort("Could not create copy command allocator");
         }

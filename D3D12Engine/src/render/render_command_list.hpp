@@ -39,10 +39,5 @@ namespace render {
          * This method MUST be called after bind_mesh_data
          */
         virtual void draw(uint32_t num_indices, uint32_t first_index = 0, uint32_t num_instances = 1) = 0;
-
-        /*!
-         * \brief Presents the current backbuffer to the screen
-         */
-        virtual void present_backbuffer() = 0;
     };
 } // namespace render

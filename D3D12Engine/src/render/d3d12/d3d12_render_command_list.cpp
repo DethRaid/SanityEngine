@@ -24,8 +24,7 @@ namespace render {
           in_render_pass{old.in_render_pass},
           current_render_pipeline_state{old.current_render_pipeline_state},
           is_render_material_bound{old.is_render_material_bound},
-          is_mesh_data_bound{old.is_mesh_data_bound},
-          should_present_backbuffer{old.should_present_backbuffer} {}
+          is_mesh_data_bound{old.is_mesh_data_bound} {}
 
     D3D12RenderCommandList& D3D12RenderCommandList::operator=(D3D12RenderCommandList&& old) noexcept {
         commands4 = old.commands4;
@@ -33,15 +32,12 @@ namespace render {
         current_render_pipeline_state = old.current_render_pipeline_state;
         is_render_material_bound = old.is_render_material_bound;
         is_mesh_data_bound = old.is_mesh_data_bound;
-        should_present_backbuffer = old.should_present_backbuffer;
 
         return static_cast<D3D12RenderCommandList&>(D3D12ComputeCommandList::operator=(move(old)));
     }
 
     void D3D12RenderCommandList::set_framebuffer(const Framebuffer& framebuffer) {
         MTR_SCOPE("D3D12RenderCommandList", "set_render_targets");
-
-        RX_ASSERT(!should_present_backbuffer, "Can not set render targets after presenting");
 
         const D3D12Framebuffer& d3d12_framebuffer = static_cast<const D3D12Framebuffer&>(framebuffer);
 
@@ -89,8 +85,6 @@ namespace render {
     void D3D12RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
         MTR_SCOPE("D3D12RenderCommandList", "set_pipeline_state");
 
-        RX_ASSERT(!should_present_backbuffer, "Can not set pipeline state after presenting");
-
         const auto& d3d12_state = static_cast<const D3D12RenderPipelineState&>(state);
 
         if(current_render_pipeline_state == nullptr) {
@@ -111,7 +105,6 @@ namespace render {
         MTR_SCOPE("D3D12RenderCommandList", "bind_render_resources");
 
         RX_ASSERT(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
-        RX_ASSERT(!should_present_backbuffer, "Can not bind render resources after presenting");
 
         const auto& d3d12_resources = static_cast<const D3D12BindGroup&>(resources);
 
@@ -131,8 +124,6 @@ namespace render {
 
     void D3D12RenderCommandList::bind_mesh_data(const MeshDataStore& mesh_data) {
         MTR_SCOPE("D3D12RenderCommandList", "bind_mesh_data");
-
-        RX_ASSERT(!should_present_backbuffer, "Can not bind mesh data after presenting");
 
         const auto& vertex_bindings = mesh_data.get_vertex_bindings();
 
@@ -175,12 +166,7 @@ namespace render {
         RX_ASSERT(is_render_material_bound, "Must bind material data to issue drawcalls");
         RX_ASSERT(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
         RX_ASSERT(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
-        RX_ASSERT(!should_present_backbuffer, "Can not issue drawcalls after presenting");
 
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
     }
-
-    void D3D12RenderCommandList::present_backbuffer() { should_present_backbuffer = true; }
-
-    bool D3D12RenderCommandList::should_present() const { return should_present_backbuffer; }
 } // namespace render

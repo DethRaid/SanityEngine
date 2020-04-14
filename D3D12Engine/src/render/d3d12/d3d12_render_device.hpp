@@ -46,11 +46,11 @@ namespace render {
 
         void destroy_image(rx::ptr<Image> image) override;
 
-        [[nodiscard]] rx::ptr<ResourceCommandList> get_resource_command_list() override;
+        [[nodiscard]] rx::ptr<ResourceCommandList> create_resource_command_list() override;
 
-        [[nodiscard]] rx::ptr<ComputeCommandList> get_compute_command_list() override;
+        [[nodiscard]] rx::ptr<ComputeCommandList> create_compute_command_list() override;
 
-        [[nodiscard]] rx::ptr<RenderCommandList> get_graphics_command_list() override;
+        [[nodiscard]] rx::ptr<RenderCommandList> create_render_command_list() override;
 
         void submit_command_list(rx::ptr<CommandList> commands) override;
 #pragma endregion
@@ -64,6 +64,8 @@ namespace render {
         [[nodiscard]] auto* get_d3d12_device() const;
 
         [[nodiscard]] auto get_shader_resource_descriptor_size() const;
+
+        [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
     private:
         rx::memory::allocator* internal_allocator;
@@ -82,6 +84,12 @@ namespace render {
         ComPtr<ID3D12CommandQueue> direct_command_queue;
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
+
+        ComPtr<ID3D12CommandAllocator> direct_command_allocator;
+
+        ComPtr<ID3D12CommandAllocator> compute_command_allocator;
+
+        ComPtr<ID3D12CommandAllocator> copy_command_allocator;
 
         ComPtr<IDXGISwapChain3> swapchain;
 
@@ -131,6 +139,9 @@ namespace render {
 
         rx::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> rtv_cache;
         rx::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> dsv_cache;
+
+        rx::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
+
 #pragma region initialization
         void enable_validation_layer();
 

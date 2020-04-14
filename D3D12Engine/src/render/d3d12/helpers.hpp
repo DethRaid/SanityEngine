@@ -5,6 +5,10 @@
 
 class ID3D12Object;
 
+constexpr uint64_t FENCE_UNSIGNALED = 0;
+constexpr uint64_t CPU_FENCE_SIGNALED = 32;
+constexpr uint64_t GPU_FENCE_SIGNALED = 64;
+
 namespace rx {
     struct string;
 }

@@ -28,11 +28,7 @@ namespace render {
         void bind_mesh_data(const MeshDataStore& mesh_data) override;
 
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
-
-        void present_backbuffer() override;
 #pragma endregion
-
-        [[nodiscard]] bool should_present() const;
 
     protected:
         ComPtr<ID3D12GraphicsCommandList4> commands4;
@@ -43,6 +39,5 @@ namespace render {
 
         bool is_render_material_bound{false};
         bool is_mesh_data_bound{false};
-        bool should_present_backbuffer{false};
     };
 } // namespace render
