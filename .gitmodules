@@ -1,6 +1,3 @@
-[submodule "D3D12Engine/extern/rex_core"]
-	path = D3D12Engine/extern/rex_core
-	url = https://github.com/NovaMods/rex_core.git
 [submodule "D3D12Engine/extern/minitrace"]
 	path = D3D12Engine/extern/minitrace
 	url = https://github.com/hrydgard/minitrace.git
