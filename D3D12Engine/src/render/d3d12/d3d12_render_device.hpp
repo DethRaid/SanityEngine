@@ -52,7 +52,7 @@ namespace render {
 
         void destroy_framebuffer(rx::ptr<Framebuffer> framebuffer) override;
 
-        [[nodiscard]] rx::ptr<ComputePipelineState> create_compute_pipeline_state() override;
+        [[nodiscard]] rx::ptr<ComputePipelineState> create_compute_pipeline_state(const rx::vector<uint8_t>& compute_shader) override;
 
         [[nodiscard]] rx::ptr<RenderPipelineState> create_render_pipeline_state() override;
 

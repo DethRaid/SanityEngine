@@ -1,11 +1,15 @@
 #include "d3d12_render_device.hpp"
 
+#define interface struct
+#include <d3dcompiler.h>
+#include <d3d12shader.h>
 #include <minitrace.h>
 #include <rx/console/interface.h>
 #include <rx/console/variable.h>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 #include <rx/core/math/round.h>
+
 
 #include "../../core/constants.hpp"
 #include "../../core/cvar_names.hpp"
@@ -32,7 +36,7 @@ using rx::utility::move;
 
 namespace render {
     D3D12RenderDevice::D3D12RenderDevice(rx::memory::allocator& allocator, const HWND window_handle, const rx::math::vec2i& window_size)
-        : internal_allocator{&allocator}, rtv_cache{allocator}, command_list_done_fences{allocator} {
+        : internal_allocator{&allocator}, command_list_done_fences{allocator} {
         if(*r_enable_debug_layers) {
             enable_validation_layer();
         }
@@ -227,7 +231,7 @@ namespace render {
         // Again nothing to do, D3D12 still has destructors
     }
 
-    void D3D12RenderDevice::destroy_framebuffer(rx::ptr<Framebuffer> framebuffer) {
+    void D3D12RenderDevice::destroy_framebuffer(const rx::ptr<Framebuffer> framebuffer) {
         auto* d3d12_framebuffer = static_cast<D3D12Framebuffer*>(framebuffer.get());
 
         d3d12_framebuffer->rtv_handles.each_fwd(
@@ -238,7 +242,21 @@ namespace render {
         }
     }
 
-    rx::ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state() {}
+    rx::ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state(const rx::vector<uint8_t>& compute_shader) {
+        auto compute_pipeline = rx::make_ptr<D3D12ComputePipelineState>(*internal_allocator);
+
+        
+
+        
+
+        D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
+        desc.CS.BytecodeLength = compute_shader.size();
+        desc.CS.pShaderBytecode = compute_shader.data();
+
+        device->CreateComputePipelineState(&desc, IID_PPV_ARGS(compute_pipeline->pso.GetAddressOf()));
+
+        return compute_pipeline;
+    }
 
     rx::ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");

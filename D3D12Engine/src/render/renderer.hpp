@@ -38,7 +38,7 @@ namespace render {
 #pragma endregion
 
 #pragma region Pipeline
-        [[nodiscard]] virtual rx::ptr<ComputePipelineState> create_compute_pipeline_state() = 0;
+        [[nodiscard]] virtual rx::ptr<ComputePipelineState> create_compute_pipeline_state(const rx::vector<uint8_t>& compute_shader) = 0;
 
         [[nodiscard]] virtual rx::ptr<RenderPipelineState> create_render_pipeline_state() = 0;
 
