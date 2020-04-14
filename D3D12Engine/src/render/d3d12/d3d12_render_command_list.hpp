@@ -10,7 +10,7 @@ namespace render {
 #pragma region RenderCommandList
         ~D3D12RenderCommandList() override = default;
 
-        void set_render_targets(const rx::vector<Image*>& color_targets, Image* depth_target) override;
+        void set_framebuffer(const Framebuffer& framebuffer) override;
 
         void set_camera_buffer(const Buffer& camera_buffer) override;
 
@@ -27,5 +27,7 @@ namespace render {
 
     protected:
         ComPtr<ID3D12GraphicsCommandList4> commands4;
+
+        bool in_render_pass{false};
     };
 } // namespace render

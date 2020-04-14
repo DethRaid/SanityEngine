@@ -7,7 +7,7 @@
 #include "resources.hpp"
 
 namespace render {
-
+    struct Framebuffer;
     class MeshDataStore;
 
     class RenderCommandList : public virtual ComputeCommandList {
@@ -15,7 +15,7 @@ namespace render {
         /*!
          * \brief Sets the render targets that draws will render to
          */
-        virtual void set_render_targets(const rx::vector<Image*>& color_targets, Image* depth_target = nullptr) = 0;
+        virtual void set_framebuffer(const Framebuffer& framebuffer) = 0;
 
         /*!
          * \brief Sets the state of the graphics rendering pipeline

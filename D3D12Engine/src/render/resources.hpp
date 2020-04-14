@@ -4,6 +4,8 @@
 namespace render {
     struct Buffer {
         size_t size{};
+
+        virtual ~Buffer() = default;
     };
 
     /*!
@@ -40,6 +42,8 @@ namespace render {
         size_t depth{1};
 
         ImageFormat format{};
+
+        virtual ~Image() = default;
     };
 
     struct ImageCreateInfo {

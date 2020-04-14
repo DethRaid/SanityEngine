@@ -1,6 +1,9 @@
 #include "d3d12_render_command_list.hpp"
 
-#include "minitrace.h"
+#include <minitrace.h>
+
+#include "d3d12_framebuffer.hpp"
+
 using rx::utility::move;
 
 namespace render {
@@ -11,26 +14,49 @@ namespace render {
         commands->QueryInterface(commands4.GetAddressOf());
     }
 
-    void D3D12RenderCommandList::set_render_targets(const rx::vector<Image*>& color_targets, Image* depth_target) {
+    void D3D12RenderCommandList::set_framebuffer(const Framebuffer& framebuffer) {
         MTR_SCOPE("D3D12RenderCommandList", "set_render_targets");
 
-            RX_ASSERT(color_targets.size() >= 8, "May only use eight color render targets at a single time");
+        const D3D12Framebuffer& d3d12_framebuffer = static_cast<const D3D12Framebuffer&>(framebuffer);
 
-        rx::array<D3D12_CPU_DESCRIPTOR_HANDLE[8]> rtvs;
+        if(commands4) {
+            // TODO: Decide if every framebuffer should be part of a separate renderpass
 
-        for(uint32_t i = 0; i < color_targets.size(); i++) {
-            D3D12Image* d3d12_image = static_cast<D3D12Image*>(color_targets[i]);
-            rtvs[i] = device->get_rtv_for_image(*d3d12_image);
+            RX_ASSERT(d3d12_framebuffer.rtv_handles.size() == d3d12_framebuffer.render_target_descriptions.size(),
+                      "Render target descriptions and rtv handles must have the same length");
+            RX_ASSERT(static_cast<bool>(d3d12_framebuffer.depth_stencil_desc) == static_cast<bool>(d3d12_framebuffer.dsv_handle),
+                      "If a framebuffer has a depth attachment, it must have both a DSV handle and a depth_stencil description");
+
+            if(in_render_pass) {
+                commands4->EndRenderPass();
+            }
+
+            if(d3d12_framebuffer.depth_stencil_desc) {
+                commands4->BeginRenderPass(static_cast<UINT>(d3d12_framebuffer.render_target_descriptions.size()),
+                                           d3d12_framebuffer.render_target_descriptions.data(),
+                                           &(*d3d12_framebuffer.depth_stencil_desc),
+                                           D3D12_RENDER_PASS_FLAG_NONE);
+            } else {
+                commands4->BeginRenderPass(static_cast<UINT>(d3d12_framebuffer.render_target_descriptions.size()),
+                                           d3d12_framebuffer.render_target_descriptions.data(),
+                                           nullptr,
+                                           D3D12_RENDER_PASS_FLAG_NONE);
+            }
+
+            in_render_pass = true;
         }
 
-        if(depth_target != nullptr) {
-            D3D12Image* d3d12_depth_target = static_cast<D3D12Image*>(depth_target);
-            const auto dsv = device->get_dsv_for_image(*d3d12_depth_target);
-
-            commands->OMSetRenderTargets(static_cast<UINT>(color_targets.size()), rtvs.data(), 0, &dsv);
+        if(d3d12_framebuffer.dsv_handle) {
+            commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
+                                         d3d12_framebuffer.rtv_handles.data(),
+                                         0,
+                                         &(*d3d12_framebuffer.dsv_handle));
 
         } else {
-            commands->OMSetRenderTargets(static_cast<UINT>(color_targets.size()), rtvs.data(), 0, nullptr);
+            commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
+                                         d3d12_framebuffer.rtv_handles.data(),
+                                         0,
+                                         nullptr);
         }
     }
 } // namespace render
