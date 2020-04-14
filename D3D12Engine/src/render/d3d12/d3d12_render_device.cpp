@@ -10,6 +10,7 @@
 #include "../../core/constants.hpp"
 #include "../../core/cvar_names.hpp"
 #include "d3d12_compute_command_list.hpp"
+#include "d3d12_framebuffer.hpp"
 #include "d3d12_render_command_list.hpp"
 #include "d3d12_resource_command_list.hpp"
 #include "d3dx12.hpp"
@@ -163,6 +164,44 @@ namespace render {
         return image;
     }
 
+    rx::ptr<Framebuffer> D3D12RenderDevice::create_framebuffer(const rx::vector<const Image*>& render_targets, const Image* depth_target) {
+        MTR_SCOPE("D3D12RenderDevice", "create_framebuffer");
+
+        auto framebuffer = rx::make_ptr<D3D12Framebuffer>(*internal_allocator);
+
+        framebuffer->rtv_handles.reserve(render_targets.size());
+        render_targets.each_fwd([&](const Image* image) {
+            const auto* d3d12_image = static_cast<const D3D12Image*>(image);
+
+            D3D12_RENDER_TARGET_VIEW_DESC desc{};
+            desc.Format = d3d12_image->format;
+            desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+            desc.Texture2D.PlaneSlice = 0;
+            desc.Texture2D.MipSlice = 0;
+
+            const auto handle = rtv_allocator->get_next_free_descriptor();
+
+            device->CreateRenderTargetView(d3d12_image->resource.Get(), &desc, handle);
+        });
+
+        return framebuffer;
+    }
+
+    void* D3D12RenderDevice::map_buffer(const Buffer& buffer) {
+        const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
+        MTR_SCOPE("D3D12RenderEngine", "map_buffer");
+
+        void* ptr;
+        D3D12_RANGE range{0, d3d12_buffer.size};
+        const auto result = d3d12_buffer.resource->Map(0, &range, &ptr);
+        if(FAILED(result)) {
+            logger->error("Could not map buffer");
+            return nullptr;
+        }
+
+        return ptr;
+    }
+
     void D3D12RenderDevice::destroy_buffer(rx::ptr<Buffer> /* buffer */) {
         // We don't need to do anything special, D3D12 has destructors
     }
@@ -244,15 +283,13 @@ namespace render {
         auto command_list_done_fence = get_next_command_list_done_fence();
 
         direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
-
-
     }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
     ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
         if(!command_list_done_fences.is_empty()) {
-                auto fence = command_list_done_fences.last();
+            auto fence = command_list_done_fences.last();
             command_list_done_fences.pop_back();
 
             return fence;
@@ -465,13 +502,11 @@ namespace render {
         cbv_srv_uav_heap = new_cbv_srv_uav_heap;
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
-        const auto& [new_rtv_heap, new_rtv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        rtv_heap = new_rtv_heap;
-        rtv_size = new_rtv_size;
+        const auto& [rtv_heap, rtv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
+        rtv_allocator = rx::make_ptr<D3D12DescriptorAllocator>(*internal_allocator, *internal_allocator, rtv_heap, rtv_size);
 
-        const auto& [new_dsv_heap, new_dsv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        dsv_heap = new_dsv_heap;
-        dsv_size = new_dsv_size;
+        const auto& [dsv_heap, dsv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
+        dsv_allocator = rx::make_ptr<D3D12DescriptorAllocator>(*internal_allocator, *internal_allocator, dsv_heap, dsv_size);
     }
 
     rx::pair<ComPtr<ID3D12DescriptorHeap>, UINT> D3D12RenderDevice::create_descriptor_allocator(

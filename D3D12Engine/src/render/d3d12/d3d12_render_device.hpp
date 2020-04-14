@@ -18,6 +18,7 @@
 #include <wrl/client.h>
 
 #include "../renderer.hpp"
+#include "d3d12_descriptor_allocator.hpp"
 #include "resources.hpp"
 
 namespace render {
@@ -30,8 +31,8 @@ namespace render {
         D3D12RenderDevice(const D3D12RenderDevice& other) = delete;
         D3D12RenderDevice& operator=(const D3D12RenderDevice& other) = delete;
 
-        D3D12RenderDevice(D3D12RenderDevice&& old) noexcept = default;
-        D3D12RenderDevice& operator=(D3D12RenderDevice&& old) noexcept = default;
+        D3D12RenderDevice(D3D12RenderDevice&& old) noexcept = delete;
+        D3D12RenderDevice& operator=(D3D12RenderDevice&& old) noexcept = delete;
 
         ~D3D12RenderDevice() override;
 
@@ -40,11 +41,24 @@ namespace render {
 
         [[nodiscard]] rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) override;
 
+        [[nodiscard]] rx::ptr<Framebuffer> create_framebuffer(const rx::vector<const Image*>& render_targets,
+                                                              const Image* depth_target) override;
+
         void* map_buffer(const Buffer& buffer) override;
 
         void destroy_buffer(rx::ptr<Buffer> buffer) override;
 
         void destroy_image(rx::ptr<Image> image) override;
+
+        void destroy_framebuffer(rx::ptr<Framebuffer> framebuffer) override;
+
+        [[nodiscard]] rx::ptr<ComputePipelineState> create_compute_pipeline_state() override;
+
+        [[nodiscard]] rx::ptr<RenderPipelineState> create_render_pipeline_state() override;
+
+        void destroy_compute_pipeline_state(rx::ptr<ComputePipelineState> pipeline_state) override;
+
+        void destroy_render_pipeline_state(rx::ptr<RenderPipelineState> pipeline_state) override;
 
         [[nodiscard]] rx::ptr<ResourceCommandList> create_resource_command_list() override;
 
@@ -53,6 +67,8 @@ namespace render {
         [[nodiscard]] rx::ptr<RenderCommandList> create_render_command_list() override;
 
         void submit_command_list(rx::ptr<CommandList> commands) override;
+
+        void begin_frame() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;
@@ -96,13 +112,9 @@ namespace render {
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
 
-        ComPtr<ID3D12DescriptorHeap> rtv_heap;
-        UINT rtv_size{};
-        INT next_free_rtv{0};
+        rx::ptr<D3D12DescriptorAllocator> rtv_allocator;
 
-        ComPtr<ID3D12DescriptorHeap> dsv_heap;
-        UINT dsv_size{};
-        INT next_free_dsv{0};
+        rx::ptr<D3D12DescriptorAllocator> dsv_allocator;
 
         D3D12MA::Allocator* device_allocator;
 

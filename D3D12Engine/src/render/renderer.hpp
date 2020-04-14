@@ -25,7 +25,8 @@ namespace render {
 
         [[nodiscard]] virtual rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) = 0;
 
-        [[nodiscard]] virtual rx::ptr<Framebuffer> create_framebuffer() = 0;
+        [[nodiscard]] virtual rx::ptr<Framebuffer> create_framebuffer(const rx::vector<const Image*>& render_targets,
+                                                                      const Image* depth_target = nullptr) = 0;
 
         [[nodiscard]] virtual void* map_buffer(const Buffer& buffer) = 0;
 
