@@ -9,12 +9,18 @@ namespace render {
     public:
         D3D12ComputeCommandList(rx::memory::allocator& allocator, ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);
 
+        D3D12ComputeCommandList(const D3D12ComputeCommandList& other) = delete;
+        D3D12ComputeCommandList& operator=(const D3D12ComputeCommandList& other) = delete;
+
+        D3D12ComputeCommandList(D3D12ComputeCommandList&& old) noexcept;
+        D3D12ComputeCommandList& operator=(D3D12ComputeCommandList&& old) noexcept;
+
 #pragma region ComputeCommandList
         ~D3D12ComputeCommandList() override = default;
 
         void set_pipeline_state(const ComputePipelineState& state) override;
 
-        void bind_compute_material(const Material& material) override;
+        void bind_compute_resources(const BindGroup& material) override;
 
         void dispatch(uint32_t workgroup_x, uint32_t workgroup_y, uint32_t workgroup_z) override;
 #pragma endregion

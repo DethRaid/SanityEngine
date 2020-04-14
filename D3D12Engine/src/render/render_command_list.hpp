@@ -1,17 +1,17 @@
 #pragma once
 
-#include <rx/core/optional.h>
-#include <rx/core/vector.h>
-
 #include "compute_command_list.hpp"
 #include "resources.hpp"
 
 namespace render {
+    struct RenderPipelineState;
     struct Framebuffer;
     class MeshDataStore;
 
     class RenderCommandList : public virtual ComputeCommandList {
     public:
+        using ComputeCommandList::set_pipeline_state;
+
         /*!
          * \brief Sets the render targets that draws will render to
          */
@@ -20,22 +20,12 @@ namespace render {
         /*!
          * \brief Sets the state of the graphics rendering pipeline
          */
-        virtual void set_pipeline_state(const GraphicsPipelineState& state) = 0;
+        virtual void set_pipeline_state(const RenderPipelineState& state) = 0;
 
         /*!
-         * \brief Sets the buffer to read camera matrices from
+         * \brief Sets the resources that rendering commands will use
          */
-        virtual void set_camera_buffer(const Buffer& camera_buffer) = 0;
-
-        /*!
-         * \brief Sets the buffer to read material data from
-         */
-        virtual void set_material_data_buffer(const Buffer& material_data_buffer) = 0;
-
-        /*!
-         * \brief Sets the array to read textures from
-         */
-        virtual void set_textures_array(const rx::vector<Image*>& textures) = 0;
+        virtual void bind_render_resources(const BindGroup& resources) = 0;
 
         /*!
          * \brief Binds the provided mesh data to the command list. Subsequent drawcalls will render this mesh data, until you bind new mesh

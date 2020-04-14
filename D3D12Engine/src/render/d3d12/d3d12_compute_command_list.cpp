@@ -20,6 +20,18 @@ namespace render {
                                                      D3D12RenderDevice& device_in)
         : D3D12ResourceCommandList{allocator, move(cmds), device_in} {}
 
+    D3D12ComputeCommandList::D3D12ComputeCommandList(D3D12ComputeCommandList&& old) noexcept
+        : D3D12ResourceCommandList(move(old)),
+          compute_pipeline{old.compute_pipeline},
+          are_compute_resources_bound{old.are_compute_resources_bound} {}
+
+    D3D12ComputeCommandList& D3D12ComputeCommandList::operator=(D3D12ComputeCommandList&& old) noexcept {
+        compute_pipeline = old.compute_pipeline;
+        are_compute_resources_bound = old.are_compute_resources_bound;
+
+        return static_cast<D3D12ComputeCommandList&>(D3D12ResourceCommandList::operator=(move(old)));
+    }
+
     void D3D12ComputeCommandList::set_pipeline_state(const ComputePipelineState& state) {
         MTR_SCOPE("D3D12ComputeCommandList", "set_pipeline_state");
 
@@ -43,14 +55,14 @@ namespace render {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::bind_compute_material(const Material& material) {
+    void D3D12ComputeCommandList::bind_compute_resources(const BindGroup& material) {
         MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
 
         if(should_do_validation) {
             RX_ASSERT(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
         }
 
-        const auto& d3d12_material = static_cast<const D3D12Material&>(material);
+        const auto& d3d12_material = static_cast<const D3D12BindGroup&>(material);
         d3d12_material.descriptor_table_handles.each_pair(
             [&](const UINT idx, const D3D12_GPU_DESCRIPTOR_HANDLE handle) { commands->SetComputeRootDescriptorTable(idx, handle); });
 

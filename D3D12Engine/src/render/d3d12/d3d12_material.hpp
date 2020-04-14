@@ -3,14 +3,14 @@
 #include <d3d12.h>
 #include <rx/core/map.h>
 
-#include "../material.hpp"
+#include "../bind_group.hpp"
 #include "resources.hpp"
 
 namespace render {
     class D3D12RenderDevice;
 
-    struct D3D12Material : Material {
-        explicit D3D12Material(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+    struct D3D12BindGroup : BindGroup {
+        explicit D3D12BindGroup(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                rx::vector<const D3D12Image*> used_images_in,
                                rx::vector<const D3D12Buffer*> used_buffers_in);
 
@@ -47,34 +47,34 @@ namespace render {
     };
 
     /*!
-     * \brief Abstraction for binding material resources
+     * \brief Abstraction for binding resources
      *
      * There's a big assumption here: no root descriptors. This makes my life easier but might need to change to enable better optimizations
      * in the future
      */
-    class D3D12MaterialBuilder final : public virtual MaterialBuilder {
+    class D3D12BindGroupBuilder final : public virtual BindGroupBuilder {
     public:
-        explicit D3D12MaterialBuilder(rx::memory::allocator& allocator,
+        explicit D3D12BindGroupBuilder(rx::memory::allocator& allocator,
                                       rx::map<rx::string, D3D12Descriptor> descriptors_in,
                                       rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                       D3D12RenderDevice& render_device_in);
 
-        D3D12MaterialBuilder(const D3D12MaterialBuilder& other) = delete;
-        D3D12MaterialBuilder& operator=(const D3D12MaterialBuilder& other) = delete;
+        D3D12BindGroupBuilder(const D3D12BindGroupBuilder& other) = delete;
+        D3D12BindGroupBuilder& operator=(const D3D12BindGroupBuilder& other) = delete;
 
-        D3D12MaterialBuilder(D3D12MaterialBuilder&& old) noexcept;
-        D3D12MaterialBuilder& operator=(D3D12MaterialBuilder&& old) noexcept;
+        D3D12BindGroupBuilder(D3D12BindGroupBuilder&& old) noexcept;
+        D3D12BindGroupBuilder& operator=(D3D12BindGroupBuilder&& old) noexcept;
 
 #pragma region MaterialBuilder
-        ~D3D12MaterialBuilder() override = default;
+        ~D3D12BindGroupBuilder() override = default;
 
-        MaterialBuilder& set_buffer(const rx::string& name, const Buffer& buffer) override;
+        BindGroupBuilder& set_buffer(const rx::string& name, const Buffer& buffer) override;
 
-        MaterialBuilder& set_image(const rx::string& name, const Image& image) override;
+        BindGroupBuilder& set_image(const rx::string& name, const Image& image) override;
 
-        MaterialBuilder& set_image_array(const rx::string& name, const rx::vector<const Image*>& images) override;
+        BindGroupBuilder& set_image_array(const rx::string& name, const rx::vector<const Image*>& images) override;
 
-        rx::ptr<Material> build() override;
+        rx::ptr<BindGroup> build() override;
 #pragma endregion
 
         [[nodiscard]] rx::pair<rx::vector<const D3D12Image*>, rx::vector<const D3D12Buffer*>> bind_resources_to_descriptors();

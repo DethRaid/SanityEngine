@@ -28,8 +28,6 @@ namespace render {
           commands{move(old.commands)},
           most_recent_resource_states{move(old.most_recent_resource_states)},
           command_types{move(old.command_types)} {
-
-        old.~D3D12CommandList();
     }
 
     D3D12CommandList& D3D12CommandList::operator=(D3D12CommandList&& old) noexcept {
@@ -38,8 +36,6 @@ namespace render {
         commands = move(old.commands);
         most_recent_resource_states = move(old.most_recent_resource_states);
         command_types = move(old.command_types);
-
-        old.~D3D12CommandList();
 
         return *this;
     }

@@ -65,10 +65,6 @@ namespace render {
 
         [[nodiscard]] auto get_shader_resource_descriptor_size() const;
 
-        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_rtv_for_image(const D3D12Image& image);
-
-        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_dsv_for_image(const D3D12Image& image);
-
     private:
         rx::memory::allocator* internal_allocator;
 
