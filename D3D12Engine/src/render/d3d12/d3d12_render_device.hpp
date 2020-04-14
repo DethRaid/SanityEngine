@@ -149,9 +149,6 @@ namespace render {
 
         DXGI_FORMAT swapchain_format{DXGI_FORMAT_R8G8B8A8_UNORM};
 
-        rx::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> rtv_cache;
-        rx::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> dsv_cache;
-
         rx::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
 #pragma region initialization

@@ -182,7 +182,24 @@ namespace render {
             const auto handle = rtv_allocator->get_next_free_descriptor();
 
             device->CreateRenderTargetView(d3d12_image->resource.Get(), &desc, handle);
+
+            framebuffer->rtv_handles.push_back(handle);
         });
+
+        if(depth_target != nullptr) {
+            const auto* d3d12_depth_target = static_cast<const D3D12Image*>(depth_target);
+
+            D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
+            desc.Format = d3d12_depth_target->format;
+            desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            desc.Texture2D.MipSlice = 0;
+
+            const auto handle = dsv_allocator->get_next_free_descriptor();
+
+            device->CreateDepthStencilView(d3d12_depth_target->resource.Get(), &desc, handle);
+
+            framebuffer->dsv_handle = handle;
+        }
 
         return framebuffer;
     }
@@ -209,6 +226,19 @@ namespace render {
     void D3D12RenderDevice::destroy_image(rx::ptr<Image> /* image */) {
         // Again nothing to do, D3D12 still has destructors
     }
+
+    void D3D12RenderDevice::destroy_framebuffer(rx::ptr<Framebuffer> framebuffer) {
+        auto* d3d12_framebuffer = static_cast<D3D12Framebuffer*>(framebuffer.get());
+
+        d3d12_framebuffer->rtv_handles.each_fwd(
+            [&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) { rtv_allocator->return_descriptor(handle); });
+
+        if(d3d12_framebuffer->dsv_handle) {
+            dsv_allocator->return_descriptor(*d3d12_framebuffer->dsv_handle);
+        }
+    }
+
+    rx::ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state() {}
 
     rx::ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
