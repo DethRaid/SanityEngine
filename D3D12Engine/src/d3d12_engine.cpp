@@ -16,9 +16,7 @@ int main() {
     engine.run();
 }
 
-static void error_callback(int error, const char* description) {
-    spdlog::error("{} (GLFW error {}}", description, error);
-}
+static void error_callback(int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
 
 D3D12Engine::D3D12Engine() {
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
@@ -35,21 +33,30 @@ D3D12Engine::D3D12Engine() {
 
     glfwSetErrorCallback(error_callback);
 
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(640, 480, "D3D12 Engine", nullptr, nullptr);
+    if(window == nullptr) {
+        critical_error("Could not create GLFW window");
+    }
 
     render_device = make_render_device(render::RenderBackend::D3D12, window);
 }
 
 D3D12Engine::~D3D12Engine() {
-    spdlog::warn("REMAIN INDOORS");
+    glfwDestroyWindow(window);
+
     glfwTerminate();
+
+    spdlog::warn("REMAIN INDOORS");
 }
 
 void D3D12Engine::run() {
     double last_frame_duration = 0;
 
-    while(true) {
+    while(!glfwWindowShouldClose(window)) {
         const auto start_time = clock();
+
+        glfwPollEvents();
 
         tick(last_frame_duration);
 
