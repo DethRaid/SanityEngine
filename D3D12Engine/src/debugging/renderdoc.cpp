@@ -1,9 +1,9 @@
 #include "renderdoc.hpp"
 
-#include <libloaderapi.h>
+#include <Windows.h>
 #include <spdlog/spdlog.h>
-#include "../windows/windows_helpers.hpp"
 
+#include "../windows/windows_helpers.hpp"
 
 std::unique_ptr<RENDERDOC_API_1_3_0> load_renderdoc(const std::string& renderdoc_dll_path) {
     HINSTANCE renderdoc_dll = LoadLibrary(renderdoc_dll_path.data());

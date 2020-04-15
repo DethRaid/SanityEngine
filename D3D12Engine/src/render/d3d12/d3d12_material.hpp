@@ -1,7 +1,10 @@
 #pragma once
 
+#include <unordered_map>
+#include <vector>
+
 #include <d3d12.h>
-#include <rx/core/map.h>
+#include <memory>
 
 #include "../bind_group.hpp"
 #include "resources.hpp"
@@ -17,8 +20,8 @@ namespace render {
 
     struct D3D12BindGroup : BindGroup {
         explicit D3D12BindGroup(std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                                std::vector<const D3D12Image*> used_images_in,
-                                std::vector<const D3D12Buffer*> used_buffers_in);
+                                std::vector < BoundResource<D3D12Image>> used_images_in,
+                                std::vector < BoundResource<D3D12Buffer>> used_buffers_in);
 
         std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
 
@@ -52,7 +55,7 @@ namespace render {
         UINT num_elements{0};
     };
 
-    using BoundResources = rx::pair<std::vector<BoundResource<D3D12Image>>, std::vector<BoundResource<D3D12Buffer>>>;
+    using BoundResources = std::pair<std::vector<BoundResource<D3D12Image>>, std::vector<BoundResource<D3D12Buffer>>>;
 
     /*!
      * \brief Abstraction for binding resources
@@ -62,8 +65,7 @@ namespace render {
      */
     class D3D12BindGroupBuilder final : public virtual BindGroupBuilder {
     public:
-        explicit D3D12BindGroupBuilder(rx::memory::allocator& allocator,
-                                       std::unordered_map<std::string, D3D12Descriptor> descriptors_in,
+        explicit D3D12BindGroupBuilder(std::unordered_map<std::string, D3D12Descriptor> descriptors_in,
                                        std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                        D3D12RenderDevice& render_device_in);
 
@@ -73,7 +75,7 @@ namespace render {
         D3D12BindGroupBuilder(D3D12BindGroupBuilder&& old) noexcept;
         D3D12BindGroupBuilder& operator=(D3D12BindGroupBuilder&& old) noexcept;
 
-#pragma region MaterialBuilder
+#pragma region BindGroupBuilder
         ~D3D12BindGroupBuilder() override = default;
 
         BindGroupBuilder& set_buffer(const std::string& name, const Buffer& buffer) override;
@@ -88,8 +90,6 @@ namespace render {
         [[nodiscard]] BoundResources bind_resources_to_descriptors();
 
     private:
-        rx::memory::allocator* internal_allocator;
-
         std::unordered_map<std::string, D3D12Descriptor> descriptors;
 
         std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;

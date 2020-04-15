@@ -1,5 +1,6 @@
 #pragma once
-#include "rx/core/string.h"
+
+#include <string>
 
 namespace render {
     struct Buffer {

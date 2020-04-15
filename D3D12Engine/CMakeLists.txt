@@ -37,7 +37,7 @@ set(D3D12_ENGINE_SOURCE
     "src/render/renderer.cpp" 
     "src/render/resources.cpp"  
     "src/render/mesh_data_store.cpp" 
-    "src/core/rex_profiler_adapter.cpp" "src/core/abort.cpp")
+    "src/core/rex_profiler_adapter.cpp" "src/core/abort.cpp" "src/core/ensure.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_render_device.hpp"
@@ -57,8 +57,10 @@ add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 target_include_directories(D3D12Engine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/minitrace)
 target_include_directories(D3D12Engine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
 
-target_compile_options(D3D12Engine PRIVATE -Wno-deprecated-declarations)
-target_compile_definitions(D3D12Engine PRIVATE NOMINMAX)
+target_compile_options(D3D12Engine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
+target_compile_definitions(D3D12Engine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+
+target_compile_definitions(D3D12Engine PRIVATE MTR_ENABLED)
 
 # Hook up dependencies
 

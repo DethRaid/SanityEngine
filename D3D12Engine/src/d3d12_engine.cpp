@@ -16,7 +16,7 @@ int main() {
     engine.run();
 }
 
-static void error_callback(int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
+static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
 
 D3D12Engine::D3D12Engine() {
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
@@ -48,6 +48,8 @@ D3D12Engine::~D3D12Engine() {
     glfwTerminate();
 
     spdlog::warn("REMAIN INDOORS");
+
+    mtr_flush();
 }
 
 void D3D12Engine::run() {
@@ -63,6 +65,8 @@ void D3D12Engine::run() {
         const auto end_time = clock();
 
         last_frame_duration = static_cast<double>(end_time - start_time) / static_cast<double>(CLOCKS_PER_SEC);
+
+        mtr_flush();
     }
 }
 
