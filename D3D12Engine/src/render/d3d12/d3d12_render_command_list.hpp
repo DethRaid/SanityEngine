@@ -6,7 +6,7 @@
 namespace render {
     class D3D12RenderCommandList final : public D3D12ComputeCommandList, public virtual RenderCommandList {
     public:
-        D3D12RenderCommandList(rx::memory::allocator& allocator, ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);
+        D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);
 
         D3D12RenderCommandList(const D3D12RenderCommandList& other) = delete;
         D3D12RenderCommandList& operator=(const D3D12RenderCommandList& other) = delete;

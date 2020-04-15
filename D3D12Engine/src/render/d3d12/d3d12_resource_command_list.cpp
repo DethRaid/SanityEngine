@@ -1,16 +1,14 @@
 #include "d3d12_resource_command_list.hpp"
 
 #include <minitrace.h>
-#include <rx/core/utility/move.h>
 
 #include "d3dx12.hpp"
-using rx::utility::move;
+
+using std::move;
 
 namespace render {
-    D3D12ResourceCommandList::D3D12ResourceCommandList(rx::memory::allocator& allocator,
-                                                       ComPtr<ID3D12GraphicsCommandList> cmds,
-                                                       D3D12RenderDevice& device_in)
-        : D3D12CommandList(allocator, move(cmds)), device{&device_in} {}
+    D3D12ResourceCommandList::D3D12ResourceCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
+        : D3D12CommandList{move(cmds)}, device{&device_in} {}
 
     D3D12ResourceCommandList::D3D12ResourceCommandList(D3D12ResourceCommandList&& old) noexcept
         : D3D12CommandList(move(old)), device{old.device} {

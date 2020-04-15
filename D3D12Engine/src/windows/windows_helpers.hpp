@@ -1,5 +1,5 @@
 #pragma once
 
-#include <rx/core/string.h>
+#include <string>
 
-rx::string get_last_windows_error();
+std::string get_last_windows_error();

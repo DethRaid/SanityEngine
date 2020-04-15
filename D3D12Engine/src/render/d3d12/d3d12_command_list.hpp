@@ -1,14 +1,8 @@
 #pragma once
 
-#define interface struct
+#include <set>
 
 #include <d3d12.h>
-#include <rx/core/map.h>
-#include <rx/core/set.h>
-#include <rx/core/vector.h>
-
-#define interface struct
-
 #include <wrl/client.h>
 
 #include "../command_list.hpp"
@@ -27,7 +21,7 @@ namespace render {
      */
     class D3D12CommandList : virtual public CommandList {
     public:
-        D3D12CommandList(rx::memory::allocator& allocator, ComPtr<ID3D12GraphicsCommandList> cmds);
+        explicit D3D12CommandList(const ComPtr<ID3D12GraphicsCommandList>& cmds);
 
         D3D12CommandList(const D3D12CommandList& other) = delete;
         D3D12CommandList& operator=(const D3D12CommandList& other) = delete;
@@ -38,7 +32,7 @@ namespace render {
 #pragma region CommandList
         ~D3D12CommandList() override;
 
-        void add_completion_function(rx::function<void()> completion_func) override;
+        void add_completion_function(std::function<void()> completion_func) override;
 #pragma endregion
 
         [[nodiscard]] const auto& get_final_resource_states() const;
@@ -48,19 +42,17 @@ namespace render {
         [[nodiscard]] ID3D12CommandList* get_command_list() const;
 
     protected:
-        rx::memory::allocator* internal_allocator;
-
-        rx::vector<rx::function<void()>> completion_functions;
+        std::vector<std::function<void()>> completion_functions;
 
         ComPtr<ID3D12GraphicsCommandList> commands;
 
-        rx::map<ID3D12Resource*, D3D12_RESOURCE_STATES> initial_resource_states;
-        rx::map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;
+        std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> initial_resource_states;
+        std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;
 
         /*!
          * \brief Keeps track of all the types of commands that this command list uses
          */
-        rx::set<D3D12_COMMAND_LIST_TYPE> command_types;
+        std::set<D3D12_COMMAND_LIST_TYPE> command_types;
 
         bool should_do_validation = false;
 
@@ -73,7 +65,7 @@ namespace render {
          * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
          */
         void set_resource_state(const D3D12Buffer& buffer, D3D12_RESOURCE_STATES new_states);
-        
+
         /*!
          * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
          */
@@ -82,6 +74,8 @@ namespace render {
         /*!
          * \brief Checks if we need a barrier between the old and new resource states
          */
-        bool need_barrier_between_states(D3D12_RESOURCE_STATES old_states, D3D12_RESOURCE_STATES new_states, bool is_buffer_or_simultaneous_access_texture);
+        bool need_barrier_between_states(D3D12_RESOURCE_STATES old_states,
+                                         D3D12_RESOURCE_STATES new_states,
+                                         bool is_buffer_or_simultaneous_access_texture);
     };
 } // namespace render

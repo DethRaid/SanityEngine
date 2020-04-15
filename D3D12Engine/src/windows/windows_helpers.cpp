@@ -2,10 +2,9 @@
 
 #include <apiquery2.h>
 #include <errhandlingapi.h>
-#include <rx/core/string.h>
 #include <winbase.h>
 
-rx::string get_last_windows_error()  {
+std::string get_last_windows_error() {
     const DWORD error_message_id = GetLastError();
     if(error_message_id == 0) {
         return {}; // No error message has been recorded
@@ -20,7 +19,7 @@ rx::string get_last_windows_error()  {
                                        0,
                                        nullptr);
 
-    rx::string message{message_buffer, size};
+    std::string message{message_buffer, size};
 
     // Free the buffer.
     LocalFree(message_buffer);

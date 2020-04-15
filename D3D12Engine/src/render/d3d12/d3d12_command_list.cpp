@@ -1,37 +1,21 @@
 #include "d3d12_command_list.hpp"
 
-#ifdef interface
-#undef interface
-#endif
-
-#include <rx/console/interface.h>
-#include <rx/console/variable.h>
-#include <rx/core/utility/move.h>
-
-#include "../../core/cvar_names.hpp"
 #include "d3dx12.hpp"
 #include "resources.hpp"
 
-using rx::utility::move;
+using std::move;
 
 namespace render {
-    D3D12CommandList::D3D12CommandList(rx::memory::allocator& allocator, ComPtr<ID3D12GraphicsCommandList> cmds)
-        : internal_allocator{&allocator}, commands{move(cmds)}, most_recent_resource_states{allocator}, command_types{allocator} {
-        if(const auto* enable_rhi_validation_var = rx::console::interface::find_variable_by_name(ENABLE_RHI_VALIDATION_NAME)) {
-            should_do_validation = enable_rhi_validation_var->cast<bool>()->get();
-        }
-    }
+    D3D12CommandList::D3D12CommandList(const ComPtr<ID3D12GraphicsCommandList>& cmds) : commands{cmds} {}
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& old) noexcept
-        : internal_allocator{old.internal_allocator},
-          completion_functions{move(old.completion_functions)},
+        : completion_functions{move(old.completion_functions)},
           commands{move(old.commands)},
           most_recent_resource_states{move(old.most_recent_resource_states)},
-          command_types{move(old.command_types)} {
-    }
+          command_types{move(old.command_types)} {}
 
     D3D12CommandList& D3D12CommandList::operator=(D3D12CommandList&& old) noexcept {
-        internal_allocator = old.internal_allocator;
+
         completion_functions = move(old.completion_functions);
         commands = move(old.commands);
         most_recent_resource_states = move(old.most_recent_resource_states);
@@ -41,16 +25,16 @@ namespace render {
     }
 
     D3D12CommandList::~D3D12CommandList() {
-        completion_functions.each_fwd([](const rx::function<void()>& func) { func(); });
+        for(const auto& func : completion_functions) {
+            func();
+        }
     }
 
-    void D3D12CommandList::add_completion_function(rx::function<void()> completion_func) {
+    void D3D12CommandList::add_completion_function(std::function<void()> completion_func) {
         completion_functions.push_back(move(completion_func));
     }
 
-    ID3D12CommandList* D3D12CommandList::get_command_list() const {
-        return commands.Get();
-    }
+    ID3D12CommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
 
     void D3D12CommandList::set_resource_state(const D3D12Image& image, const D3D12_RESOURCE_STATES new_states) {
         set_resource_state(image.resource.Get(), new_states, false);
@@ -72,8 +56,8 @@ namespace render {
             *resource_states = new_states;
 
         } else {
-            initial_resource_states.insert(resource, new_states);
-            most_recent_resource_states.insert(resource, new_states);
+            initial_resource_states.emplace(resource, new_states);
+            most_recent_resource_states.emplace(resource, new_states);
         }
     }
 

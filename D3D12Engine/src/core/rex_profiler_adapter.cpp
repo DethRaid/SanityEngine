@@ -1,10 +1,11 @@
 #include "rex_profiler_adapter.hpp"
 
+
 #include <minitrace.h>
 
-void RexProfilerAdapter::set_thread_name(const rx::string& new_thread_name) { thread_name = new_thread_name; }
+void RexProfilerAdapter::set_thread_name(const std::string& new_thread_name) { thread_name = new_thread_name; }
 
-void RexProfilerAdapter::begin_sample(const rx::string& tag) {
+void RexProfilerAdapter::begin_sample(const std::string& tag) {
     MTR_BEGIN(thread_name.data(), tag.data());
 
     tag_stack.push_back(tag);

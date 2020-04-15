@@ -1,5 +1,7 @@
 #include "d3d12_render_command_list.hpp"
 
+#include <array>
+#include <cassert>
 #include <minitrace.h>
 
 #include "../mesh_data_store.hpp"
@@ -7,14 +9,11 @@
 #include "d3d12_material.hpp"
 #include "d3d12_render_pipeline_state.hpp"
 
-using rx::utility::forward;
-using rx::utility::move;
+using std::move;
 
 namespace render {
-    D3D12RenderCommandList::D3D12RenderCommandList(rx::memory::allocator& allocator,
-                                                   ComPtr<ID3D12GraphicsCommandList> cmds,
-                                                   D3D12RenderDevice& device_in)
-        : D3D12ComputeCommandList{allocator, move(cmds), device_in} {
+    D3D12RenderCommandList::D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
+        : D3D12ComputeCommandList{move(cmds), device_in} {
         commands->QueryInterface(commands4.GetAddressOf());
     }
 
@@ -44,26 +43,11 @@ namespace render {
         if(commands4) {
             // TODO: Decide if every framebuffer should be a separate renderpass
 
-            RX_ASSERT(d3d12_framebuffer.rtv_handles.size() == d3d12_framebuffer.render_target_descriptions.size(),
-                      "Render target descriptions and rtv handles must have the same length");
-            RX_ASSERT(static_cast<bool>(d3d12_framebuffer.depth_stencil_desc) == static_cast<bool>(d3d12_framebuffer.dsv_handle),
-                      "If a framebuffer has a depth attachment, it must have both a DSV handle and a depth_stencil description");
-
             if(in_render_pass) {
                 commands4->EndRenderPass();
             }
 
-            if(d3d12_framebuffer.depth_stencil_desc) {
-                commands4->BeginRenderPass(static_cast<UINT>(d3d12_framebuffer.render_target_descriptions.size()),
-                                           d3d12_framebuffer.render_target_descriptions.data(),
-                                           &(*d3d12_framebuffer.depth_stencil_desc),
-                                           D3D12_RENDER_PASS_FLAG_NONE);
-            } else {
-                commands4->BeginRenderPass(static_cast<UINT>(d3d12_framebuffer.render_target_descriptions.size()),
-                                           d3d12_framebuffer.render_target_descriptions.data(),
-                                           nullptr,
-                                           D3D12_RENDER_PASS_FLAG_NONE);
-            }
+            // TODO: Renderpass
 
             in_render_pass = true;
         }
@@ -104,20 +88,21 @@ namespace render {
     void D3D12RenderCommandList::bind_render_resources(const BindGroup& resources) {
         MTR_SCOPE("D3D12RenderCommandList", "bind_render_resources");
 
-        RX_ASSERT(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
+        _ASSERT_EXPR(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
 
         const auto& d3d12_resources = static_cast<const D3D12BindGroup&>(resources);
 
-        d3d12_resources.descriptor_table_handles.each_pair(
-            [&](const UINT idx, const D3D12_GPU_DESCRIPTOR_HANDLE handle) { commands->SetGraphicsRootDescriptorTable(idx, handle); });
+        for(const auto& [idx, handle] : d3d12_resources.descriptor_table_handles) {
+            commands->SetGraphicsRootDescriptorTable(idx, handle);
+        }
 
-        d3d12_resources.used_buffers.each_fwd([&](const BoundResource<D3D12Buffer>& resource) {
+        for(const BoundResource<D3D12Buffer>& resource : d3d12_resources.used_buffers) {
             set_resource_state(*resource.resource, resource.states);
-        });
+        }
 
-        d3d12_resources.used_images.each_fwd([&](const BoundResource<D3D12Image>& resource) {
+        for(const BoundResource<D3D12Image>& resource : d3d12_resources.used_images) {
             set_resource_state(*resource.resource, resource.states);
-        });
+        }
 
         is_render_material_bound = true;
     }
@@ -128,7 +113,7 @@ namespace render {
         const auto& vertex_bindings = mesh_data.get_vertex_bindings();
 
         // If we have more than 16 vertex attributes, we probably have bigger problems
-        rx::array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views;
+        std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views;
         for(uint32_t i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
             const auto* d3d12_buffer = static_cast<const D3D12Buffer*>(binding.buffer);
@@ -163,9 +148,9 @@ namespace render {
     void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
         MTR_SCOPE("D3D12RenderCommandList", "draw");
 
-        RX_ASSERT(is_render_material_bound, "Must bind material data to issue drawcalls");
-        RX_ASSERT(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
-        RX_ASSERT(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
+        _ASSERT_EXPR(is_render_material_bound, "Must bind material data to issue drawcalls");
+        _ASSERT_EXPR(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
+        _ASSERT_EXPR(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
 
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
     }

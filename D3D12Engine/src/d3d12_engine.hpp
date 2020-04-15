@@ -1,9 +1,9 @@
 ﻿#pragma once
-#include <rx/core/ptr.h>
+#include <memory>
 
-#include "core/rex_profiler_adapter.hpp"
 #include "debugging/renderdoc_app.h"
 #include "render/renderer.hpp"
+#include "settings.hpp"
 
 /*!
  * \brief Main class for my glorious engine
@@ -26,19 +26,13 @@ public:
     void run();
 
 private:
-    rx::ptr<RENDERDOC_API_1_3_0> renderdoc;
+    Settings settings;
 
-    rx::ptr<render::RenderDevice> render_device;
+    std::unique_ptr<RENDERDOC_API_1_3_0> renderdoc;
 
-    rx::memory::allocator* internal_allocator;
+    std::unique_ptr<render::RenderDevice> render_device;
 
-    rx::ptr<RexProfilerAdapter> profiler_adapter;
-
-    void init_globals() const;
-
-    void init_rex_profiler();
-
-    void deinit_globals();
+    GLFWwindow* window;
 
     /*!
      * \brief Ticks the engine, advancing time by the specified amount

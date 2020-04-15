@@ -1,13 +1,12 @@
 #include "d3d12_descriptor_allocator.hpp"
 
 #include "d3dx12.hpp"
-using rx::utility::move;
+
+using std::move;
 
 namespace render {
-    D3D12DescriptorAllocator::D3D12DescriptorAllocator(rx::memory::allocator& allocator,
-                                                       ComPtr<ID3D12DescriptorHeap> heap_in,
-                                                       const UINT descriptor_size_in)
-        : heap{move(heap_in)}, descriptor_size{descriptor_size_in}, available_handles{allocator} {}
+    D3D12DescriptorAllocator::D3D12DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
+        : heap{move(heap_in)}, descriptor_size{descriptor_size_in} {}
 
     D3D12DescriptorAllocator::D3D12DescriptorAllocator(D3D12DescriptorAllocator&& old) noexcept
         : heap{move(old.heap)},
@@ -25,8 +24,8 @@ namespace render {
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE D3D12DescriptorAllocator::get_next_free_descriptor() {
-        if(!available_handles.is_empty()) {
-            const auto handle = available_handles.last();
+        if(!available_handles.empty()) {
+            const auto handle = *available_handles.end();
             available_handles.pop_back();
 
             return handle;
@@ -39,7 +38,5 @@ namespace render {
         return handle;
     }
 
-    void D3D12DescriptorAllocator::return_descriptor(const D3D12_CPU_DESCRIPTOR_HANDLE handle) {
-        available_handles.push_back(handle);
-    }
+    void D3D12DescriptorAllocator::return_descriptor(const D3D12_CPU_DESCRIPTOR_HANDLE handle) { available_handles.push_back(handle); }
 } // namespace render

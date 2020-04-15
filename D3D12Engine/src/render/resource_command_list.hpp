@@ -13,6 +13,8 @@ namespace render {
      */
     class ResourceCommandList : public virtual CommandList {
     public:
+        virtual ~ResourceCommandList() = default;
+
         /*!
          * \brief Copies data to a buffer
          *

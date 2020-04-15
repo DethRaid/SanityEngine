@@ -4,7 +4,7 @@
 
 #include <rx/core/string.h>
 
-void set_object_name(ID3D12Object& object, const rx::string& name) {
+void set_object_name(ID3D12Object& object, const std::string& name) {
     const auto wide_name = name.to_utf16();
 
     object.SetName(reinterpret_cast<LPCWSTR>(wide_name.data()));

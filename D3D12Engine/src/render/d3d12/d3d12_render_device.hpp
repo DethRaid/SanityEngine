@@ -1,32 +1,28 @@
 #pragma once
 
-#include <rx/core/assert.h>
-#define D3D12MA_ASSERT(cond) RX_ASSERT(cond)
-
-#define interface struct
-
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
 #include <dxcapi.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
-#include <rx/core/map.h>
-#include <rx/core/utility/pair.h>
-#include <rx/math/vec2.h>
-
-#define interface struct
 #include <wrl/client.h>
 
 #include "../renderer.hpp"
 #include "d3d12_descriptor_allocator.hpp"
 #include "resources.hpp"
 
+namespace DirectX {
+    struct XMINT2;
+}
+
+using DirectX::XMINT2;
+
 namespace render {
     using Microsoft::WRL::ComPtr;
 
     class D3D12RenderDevice : public virtual RenderDevice {
     public:
-        D3D12RenderDevice(rx::memory::allocator& allocator, HWND window_handle, const rx::math::vec2i& window_size);
+        D3D12RenderDevice(HWND window_handle, const XMINT2& window_size);
 
         D3D12RenderDevice(const D3D12RenderDevice& other) = delete;
         D3D12RenderDevice& operator=(const D3D12RenderDevice& other) = delete;
@@ -37,45 +33,46 @@ namespace render {
         ~D3D12RenderDevice() override;
 
 #pragma region RenderDevice
-        [[nodiscard]] rx::ptr<Buffer> create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) override;
+        [[nodiscard]] std::unique_ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) override;
 
-        [[nodiscard]] rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) override;
+        [[nodiscard]] std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info) override;
 
-        [[nodiscard]] rx::ptr<Framebuffer> create_framebuffer(const rx::vector<const Image*>& render_targets,
-                                                              const Image* depth_target) override;
+        [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
+                                                                      const Image* depth_target) override;
 
         void* map_buffer(const Buffer& buffer) override;
 
-        void destroy_buffer(rx::ptr<Buffer> buffer) override;
+        void destroy_buffer(std::unique_ptr<Buffer> buffer) override;
 
-        void destroy_image(rx::ptr<Image> image) override;
+        void destroy_image(std::unique_ptr<Image> image) override;
 
-        void destroy_framebuffer(rx::ptr<Framebuffer> framebuffer) override;
+        void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) override;
 
-        [[nodiscard]] rx::ptr<ComputePipelineState> create_compute_pipeline_state(const rx::vector<uint8_t>& compute_shader) override;
+        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
+            const std::vector<uint8_t>& compute_shader) override;
 
-        [[nodiscard]] rx::ptr<RenderPipelineState> create_render_pipeline_state() override;
+        [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state() override;
 
-        void destroy_compute_pipeline_state(rx::ptr<ComputePipelineState> pipeline_state) override;
+        void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) override;
 
-        void destroy_render_pipeline_state(rx::ptr<RenderPipelineState> pipeline_state) override;
+        void destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> pipeline_state) override;
 
-        [[nodiscard]] rx::ptr<ResourceCommandList> create_resource_command_list() override;
+        [[nodiscard]] std::unique_ptr<ResourceCommandList> create_resource_command_list() override;
 
-        [[nodiscard]] rx::ptr<ComputeCommandList> create_compute_command_list() override;
+        [[nodiscard]] std::unique_ptr<ComputeCommandList> create_compute_command_list() override;
 
-        [[nodiscard]] rx::ptr<RenderCommandList> create_render_command_list() override;
+        [[nodiscard]] std::unique_ptr<RenderCommandList> create_render_command_list() override;
 
-        void submit_command_list(rx::ptr<CommandList> commands) override;
+        void submit_command_list(std::unique_ptr<CommandList> commands) override;
 
         void begin_frame() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] rx::ptr<D3D12StagingBuffer> get_staging_buffer(size_t num_bytes);
+        [[nodiscard]] std::unique_ptr<D3D12StagingBuffer> get_staging_buffer(size_t num_bytes);
 
-        void return_staging_buffer(rx::ptr<D3D12StagingBuffer> buffer);
+        void return_staging_buffer(std::unique_ptr<D3D12StagingBuffer> buffer);
 
         [[nodiscard]] auto* get_d3d12_device() const;
 
@@ -84,8 +81,6 @@ namespace render {
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
     private:
-        rx::memory::allocator* internal_allocator;
-
         ComPtr<ID3D12Debug> debug_controller;
 
         ComPtr<IDXGIFactory4> factory;
@@ -112,9 +107,9 @@ namespace render {
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
 
-        rx::ptr<D3D12DescriptorAllocator> rtv_allocator;
+        std::unique_ptr<D3D12DescriptorAllocator> rtv_allocator;
 
-        rx::ptr<D3D12DescriptorAllocator> dsv_allocator;
+        std::unique_ptr<D3D12DescriptorAllocator> dsv_allocator;
 
         D3D12MA::Allocator* device_allocator;
 
@@ -149,7 +144,7 @@ namespace render {
 
         DXGI_FORMAT swapchain_format{DXGI_FORMAT_R8G8B8A8_UNORM};
 
-        rx::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
+        std::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
 #pragma region initialization
         void enable_validation_layer();
@@ -160,13 +155,13 @@ namespace render {
 
         void create_queues();
 
-        void create_swapchain(HWND window_handle, const rx::math::vec2i& window_size, UINT num_images);
+        void create_swapchain(HWND window_handle, const XMINT2& window_size, UINT num_images);
 
         void create_command_allocators();
 
         void create_descriptor_heaps();
 
-        [[nodiscard]] rx::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+        [[nodiscard]] std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
                                                                                                uint32_t num_descriptors) const;
 
         void initialize_dma();

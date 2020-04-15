@@ -1,15 +1,16 @@
 #pragma once
 
+#include <vector>
+
 #include <d3d12.h>
 #include <wrl/client.h>
 
-#include "rx/core/vector.h"
 using Microsoft::WRL::ComPtr;
 
 namespace render {
     class D3D12DescriptorAllocator {
     public:
-        D3D12DescriptorAllocator(rx::memory::allocator& allocator, ComPtr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);
+        D3D12DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);
 
         D3D12DescriptorAllocator(const D3D12DescriptorAllocator& other) = delete;
         D3D12DescriptorAllocator& operator=(const D3D12DescriptorAllocator& other) = delete;
@@ -30,6 +31,6 @@ namespace render {
 
         INT next_free_descriptor{0};
 
-        rx::vector<D3D12_CPU_DESCRIPTOR_HANDLE> available_handles;
+        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> available_handles;
     };
 } // namespace render

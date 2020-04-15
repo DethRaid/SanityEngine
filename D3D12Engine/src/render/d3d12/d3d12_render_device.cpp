@@ -1,18 +1,12 @@
 #include "d3d12_render_device.hpp"
 
-#define interface struct
+#include <DirectXMath.h>
 #include <d3dcompiler.h>
-#include <d3d12shader.h>
 #include <minitrace.h>
-#include <rx/console/interface.h>
-#include <rx/console/variable.h>
-#include <rx/core/abort.h>
-#include <rx/core/log.h>
-#include <rx/core/math/round.h>
-
+#include <spdlog/spdlog.h>
 
 #include "../../core/constants.hpp"
-#include "../../core/cvar_names.hpp"
+#include "../../core/abort.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_command_list.hpp"
@@ -21,25 +15,13 @@
 #include "helpers.hpp"
 #include "resources.hpp"
 
-RX_CONSOLE_BVAR(r_enable_debug_layers,
-                "r.EnableDebugLayers",
-                "Enable the D3D12 debug layers, allowing one to better debug new D3D12 code",
-                true);
-
-RX_LOG("D3D12RenderDevice", logger);
-
-#ifdef interface
-#undef interface
-#endif
-
-using rx::utility::move;
+using std::move;
 
 namespace render {
-    D3D12RenderDevice::D3D12RenderDevice(rx::memory::allocator& allocator, const HWND window_handle, const rx::math::vec2i& window_size)
-        : internal_allocator{&allocator}, command_list_done_fences{allocator} {
-        if(*r_enable_debug_layers) {
-            enable_validation_layer();
-        }
+    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size) {
+#ifndef NDEBUG
+        enable_validation_layer();
+#endif
 
         initialize_dxgi();
 
@@ -47,13 +29,7 @@ namespace render {
 
         create_queues();
 
-        auto* num_frames_ref = rx::console::interface::find_variable_by_name(NUM_IN_FLIGHT_FRAMES_NAME);
-        if(num_frames_ref == nullptr) {
-            const auto msg = rx::string::format("Can not find console variable %s", NUM_IN_FLIGHT_FRAMES_NAME);
-            rx::abort(msg.data());
-        }
-
-        create_swapchain(window_handle, window_size, num_frames_ref->cast<UINT>()->get());
+        create_swapchain(window_handle, window_size, 1);
 
         create_command_allocators();
 
@@ -74,7 +50,7 @@ namespace render {
 
     D3D12RenderDevice::~D3D12RenderDevice() { device_allocator->Release(); }
 
-    rx::ptr<Buffer> D3D12RenderDevice::create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) {
+    std::unique_ptr<Buffer> D3D12RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
 
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
@@ -102,7 +78,7 @@ namespace render {
                 break;
         }
 
-        auto buffer = rx::make_ptr<D3D12Buffer>(allocator);
+        auto buffer = std::make_unique<D3D12Buffer>();
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
@@ -110,7 +86,7 @@ namespace render {
                                                              &buffer->allocation,
                                                              IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
-            logger->error("Could not create buffer %s", create_info.name);
+            spdlog::error("Could not create buffer %s", create_info.name);
             return {};
         }
 
@@ -121,16 +97,16 @@ namespace render {
         return move(buffer);
     }
 
-    rx::ptr<Image> D3D12RenderDevice::create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) {
+    std::unique_ptr<Image> D3D12RenderDevice::create_image(const ImageCreateInfo& create_info) {
         MTR_SCOPE("D3D12RenderDevice", "create_image");
 
         const auto format = to_dxgi_format(create_info.format);
-        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format, rx::math::round(create_info.width), rx::math::round(create_info.height));
+        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format, round(create_info.width), round(create_info.height));
 
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
 
-        auto image = rx::make_ptr<D3D12Image>(allocator);
+        auto image = std::make_unique<D3D12Image>();
         image->format = format;
 
         const auto initial_state = [&] {
@@ -148,7 +124,7 @@ namespace render {
                     return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
             }
 
-            logger->warning("Unrecognized usage for image %s, defaulting to the common resource state", create_info.name);
+            spdlog::warn("Unrecognized usage for image {}, defaulting to the common resource state", create_info.name);
             return D3D12_RESOURCE_STATE_COMMON;
         }();
 
@@ -159,7 +135,7 @@ namespace render {
                                                              &image->allocation,
                                                              IID_PPV_ARGS(&image->resource));
         if(FAILED(result)) {
-            logger->error("Could not create image %s", create_info.name);
+            spdlog::error("Could not create image %s", create_info.name);
             return {};
         }
 
@@ -168,13 +144,14 @@ namespace render {
         return image;
     }
 
-    rx::ptr<Framebuffer> D3D12RenderDevice::create_framebuffer(const rx::vector<const Image*>& render_targets, const Image* depth_target) {
+    std::unique_ptr<Framebuffer> D3D12RenderDevice::create_framebuffer(const std::vector<const Image*>& render_targets,
+                                                                       const Image* depth_target) {
         MTR_SCOPE("D3D12RenderDevice", "create_framebuffer");
 
-        auto framebuffer = rx::make_ptr<D3D12Framebuffer>(*internal_allocator);
+        auto framebuffer = std::make_unique<D3D12Framebuffer>();
 
         framebuffer->rtv_handles.reserve(render_targets.size());
-        render_targets.each_fwd([&](const Image* image) {
+        for(const auto* image : render_targets) {
             const auto* d3d12_image = static_cast<const D3D12Image*>(image);
 
             D3D12_RENDER_TARGET_VIEW_DESC desc{};
@@ -188,7 +165,7 @@ namespace render {
             device->CreateRenderTargetView(d3d12_image->resource.Get(), &desc, handle);
 
             framebuffer->rtv_handles.push_back(handle);
-        });
+        }
 
         if(depth_target != nullptr) {
             const auto* d3d12_depth_target = static_cast<const D3D12Image*>(depth_target);
@@ -216,38 +193,35 @@ namespace render {
         D3D12_RANGE range{0, d3d12_buffer.size};
         const auto result = d3d12_buffer.resource->Map(0, &range, &ptr);
         if(FAILED(result)) {
-            logger->error("Could not map buffer");
+            spdlog::error("Could not map buffer");
             return nullptr;
         }
 
         return ptr;
     }
 
-    void D3D12RenderDevice::destroy_buffer(rx::ptr<Buffer> /* buffer */) {
+    void D3D12RenderDevice::destroy_buffer(std::unique_ptr<Buffer> /* buffer */) {
         // We don't need to do anything special, D3D12 has destructors
     }
 
-    void D3D12RenderDevice::destroy_image(rx::ptr<Image> /* image */) {
+    void D3D12RenderDevice::destroy_image(std::unique_ptr<Image> /* image */) {
         // Again nothing to do, D3D12 still has destructors
     }
 
-    void D3D12RenderDevice::destroy_framebuffer(const rx::ptr<Framebuffer> framebuffer) {
+    void D3D12RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) {
         auto* d3d12_framebuffer = static_cast<D3D12Framebuffer*>(framebuffer.get());
 
-        d3d12_framebuffer->rtv_handles.each_fwd(
-            [&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) { rtv_allocator->return_descriptor(handle); });
+        for(const D3D12_CPU_DESCRIPTOR_HANDLE handle : d3d12_framebuffer->rtv_handles) {
+            rtv_allocator->return_descriptor(handle);
+        }
 
         if(d3d12_framebuffer->dsv_handle) {
             dsv_allocator->return_descriptor(*d3d12_framebuffer->dsv_handle);
         }
     }
 
-    rx::ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state(const rx::vector<uint8_t>& compute_shader) {
-        auto compute_pipeline = rx::make_ptr<D3D12ComputePipelineState>(*internal_allocator);
-
-        
-
-        
+    std::unique_ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) {
+        auto compute_pipeline = std::make_unique<D3D12ComputePipelineState>();
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
         desc.CS.BytecodeLength = compute_shader.size();
@@ -258,7 +232,7 @@ namespace render {
         return compute_pipeline;
     }
 
-    rx::ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
+    std::unique_ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
 
         ComPtr<ID3D12GraphicsCommandList> commands;
@@ -269,16 +243,16 @@ namespace render {
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            logger->error("Could not create resource command list");
+            spdlog::error("Could not create resource command list");
             return {};
         }
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return rx::make_ptr<D3D12ResourceCommandList>(*internal_allocator, *internal_allocator, commands, *this);
+        return std::make_unique<D3D12ResourceCommandList>(commands, *this);
     }
 
-    rx::ptr<ComputeCommandList> D3D12RenderDevice::create_compute_command_list() {
+    std::unique_ptr<ComputeCommandList> D3D12RenderDevice::create_compute_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_compute_command_list");
 
         ComPtr<ID3D12GraphicsCommandList> commands;
@@ -289,16 +263,16 @@ namespace render {
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            logger->error("Could not create compute command list");
+            spdlog::error("Could not create compute command list");
             return {};
         }
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return rx::make_ptr<D3D12ComputeCommandList>(*internal_allocator, *internal_allocator, commands, *this);
+        return std::make_unique<D3D12ComputeCommandList>(commands, *this);
     }
 
-    rx::ptr<RenderCommandList> D3D12RenderDevice::create_render_command_list() {
+    std::unique_ptr<RenderCommandList> D3D12RenderDevice::create_render_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "create_graphics_command_list");
 
         ComPtr<ID3D12GraphicsCommandList> commands;
@@ -309,17 +283,17 @@ namespace render {
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            logger->error("Could not create render command list");
+            spdlog::error("Could not create render command list");
             return {};
         }
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return rx::make_ptr<D3D12RenderCommandList>(*internal_allocator, *internal_allocator, commands, *this);
+        return std::make_unique<D3D12RenderCommandList>(commands, *this);
     }
 
-    void D3D12RenderDevice::submit_command_list(rx::ptr<CommandList> commands) {
-        rx::ptr<D3D12CommandList> d3d12_commands = move(commands);
+    void D3D12RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
+        auto* d3d12_commands = static_cast<D3D12CommandList*>(commands.get());
 
         auto* d3d12_command_list = d3d12_commands->get_command_list();
 
@@ -336,8 +310,8 @@ namespace render {
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
     ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
-        if(!command_list_done_fences.is_empty()) {
-            auto fence = command_list_done_fences.last();
+        if(!command_list_done_fences.empty()) {
+            auto fence = *command_list_done_fences.end();
             command_list_done_fences.pop_back();
 
             return fence;
@@ -359,7 +333,7 @@ namespace render {
             debug_controller->EnableDebugLayer();
 
         } else {
-            logger->error("Could not enable the D3D12 validation layer");
+            spdlog::error("Could not enable the D3D12 validation layer");
         }
     }
 
@@ -369,12 +343,12 @@ namespace render {
         ComPtr<IDXGIFactory> basic_factory;
         auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
         if(FAILED(result)) {
-            rx::abort("Could not initialize DXGI");
+            critical_error("Could not initialize DXGI");
         }
 
         result = basic_factory->QueryInterface(factory.GetAddressOf());
         if(FAILED(result)) {
-            rx::abort("DXGI is not at a new enough version, please update your graphics drivers");
+            critical_error("DXGI is not at a new enough version, please update your graphics drivers");
         }
     }
 
@@ -385,7 +359,7 @@ namespace render {
         // - Not integrated, if possible
 
         // TODO: Figure out how to get the number of adapters in advance
-        rx::vector<ComPtr<IDXGIAdapter>> adapters{*internal_allocator};
+        std::vector<ComPtr<IDXGIAdapter>> adapters;
         adapters.reserve(5);
 
         {
@@ -399,13 +373,13 @@ namespace render {
 
         // TODO: Score adapters based on things like supported feature level and available vram
 
-        adapters.each_fwd([&](const ComPtr<IDXGIAdapter>& cur_adapter) {
+        for(const ComPtr<IDXGIAdapter>& cur_adapter : adapters) {
             DXGI_ADAPTER_DESC desc;
             cur_adapter->GetDesc(&desc);
 
             if(desc.VendorId == INTEL_PCI_VENDOR_ID && adapters.size() > 1) {
                 // Prefer something other then the Intel GPU
-                return RX_ITERATION_CONTINUE;
+                continue;
             }
 
             ComPtr<ID3D12Device> try_device;
@@ -419,7 +393,7 @@ namespace render {
                     // descriptor arrays, so we need it
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
-                    return RX_ITERATION_CONTINUE;
+                    continue;
                 }
 
                 adapter = cur_adapter;
@@ -442,22 +416,22 @@ namespace render {
                     has_raytracing = options5.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
                 }
 
-                if(*r_enable_debug_layers) {
-                    res = device->QueryInterface(info_queue.GetAddressOf());
-                    if(SUCCEEDED(res)) {
-                        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-                        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-                    }
+#ifndef DEBUG
+                res = device->QueryInterface(info_queue.GetAddressOf());
+                if(SUCCEEDED(res)) {
+                    info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+                    info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
                 }
+#endif
 
-                return RX_ITERATION_STOP;
+                break;
             }
 
-            return RX_ITERATION_CONTINUE;
-        });
+            continue;
+        }
 
         if(!device) {
-            rx::abort("Could not find a suitable D3D12 adapter");
+            critical_error("Could not find a suitable D3D12 adapter");
         }
 
         set_object_name(*device.Get(), "D3D12 Device");
@@ -472,7 +446,7 @@ namespace render {
 
         auto result = device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&direct_command_queue));
         if(FAILED(result)) {
-            rx::abort("Could not create graphics command queue");
+            critical_error("Could not create graphics command queue");
         }
 
         set_object_name(*direct_command_queue.Get(), "Direct Queue");
@@ -485,7 +459,7 @@ namespace render {
             dma_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
             result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(&async_copy_queue));
             if(FAILED(result)) {
-                logger->warning("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
+                spdlog::warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
             } else {
                 set_object_name(*async_copy_queue.Get(), "DMA queue");
@@ -493,11 +467,11 @@ namespace render {
         }
     }
 
-    void D3D12RenderDevice::create_swapchain(HWND window_handle, const rx::math::vec2i& window_size, const UINT num_images) {
+    void D3D12RenderDevice::create_swapchain(HWND window_handle, const XMINT2& window_size, const UINT num_images) {
         MTR_SCOPE("D3D12RenderDevice", "create_swapchain");
         DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
-        swapchain_desc.Width = window_size.x;
-        swapchain_desc.Height = window_size.y;
+        swapchain_desc.Width = static_cast<UINT>(window_size.x);
+        swapchain_desc.Height = static_cast<UINT>(window_size.y);
         swapchain_desc.Format = swapchain_format;
 
         swapchain_desc.SampleDesc = {1};
@@ -514,13 +488,13 @@ namespace render {
                                                   nullptr,
                                                   swapchain1.GetAddressOf());
         if(FAILED(hr)) {
-            const auto msg = rx::string::format("Could not create swapchain: %u", hr);
-            rx::abort(msg.data());
+            const auto msg = fmt::format("Could not create swapchain: {}", hr);
+            critical_error(msg.data());
         }
 
         hr = swapchain1->QueryInterface(swapchain.GetAddressOf());
         if(FAILED(hr)) {
-            rx::abort("Could not get new swapchain interface, please update your drivers");
+            critical_error("Could not get new swapchain interface, please update your drivers");
         }
     }
 
@@ -529,17 +503,17 @@ namespace render {
 
         auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&direct_command_allocator));
         if(FAILED(result)) {
-            rx::abort("Could not create direct command allocator");
+            critical_error("Could not create direct command allocator");
         }
 
         result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(compute_command_allocator.GetAddressOf()));
         if(FAILED(result)) {
-            rx::abort("Could not create compute command allocator");
+            critical_error("Could not create compute command allocator");
         }
 
         result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&copy_command_allocator));
         if(FAILED(result)) {
-            rx::abort("Could not create copy command allocator");
+            critical_error("Could not create copy command allocator");
         }
     }
 
@@ -551,13 +525,13 @@ namespace render {
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
         const auto& [rtv_heap, rtv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        rtv_allocator = rx::make_ptr<D3D12DescriptorAllocator>(*internal_allocator, *internal_allocator, rtv_heap, rtv_size);
+        rtv_allocator = std::make_unique<D3D12DescriptorAllocator>(rtv_heap, rtv_size);
 
         const auto& [dsv_heap, dsv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        dsv_allocator = rx::make_ptr<D3D12DescriptorAllocator>(*internal_allocator, *internal_allocator, dsv_heap, dsv_size);
+        dsv_allocator = std::make_unique<D3D12DescriptorAllocator>(dsv_heap, dsv_size);
     }
 
-    rx::pair<ComPtr<ID3D12DescriptorHeap>, UINT> D3D12RenderDevice::create_descriptor_allocator(
+    std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> D3D12RenderDevice::create_descriptor_allocator(
         const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type, const uint32_t num_descriptors) const {
         ComPtr<ID3D12DescriptorHeap> heap;
 
@@ -572,16 +546,6 @@ namespace render {
         return {heap, descriptor_size};
     }
 
-    static void* dma_allocate(const size_t size, size_t /* alignment */, void* user_data) {
-        auto* allocator = static_cast<rx::memory::allocator*>(user_data);
-        return allocator->allocate(size);
-    }
-
-    static void dma_free(void* memory, void* user_data) {
-        auto* allocator = static_cast<rx::memory::allocator*>(user_data);
-        allocator->deallocate(memory);
-    }
-
     void D3D12RenderDevice::initialize_dma() {
         MTR_SCOPE("D3D12RenderDevice", "iniitialize_dma");
 
@@ -589,16 +553,9 @@ namespace render {
         allocator_desc.pDevice = device.Get();
         allocator_desc.pAdapter = adapter.Get();
 
-        D3D12MA::ALLOCATION_CALLBACKS allocation_callbacks{};
-        allocation_callbacks.pAllocate = dma_allocate;
-        allocation_callbacks.pFree = dma_free;
-        allocation_callbacks.pUserData = internal_allocator;
-
-        allocator_desc.pAllocationCallbacks = &allocation_callbacks;
-
         const auto result = D3D12MA::CreateAllocator(&allocator_desc, &device_allocator);
         if(FAILED(result)) {
-            rx::abort("Could not initialize DMA");
+            critical_error("Could not initialize DMA");
         }
     }
 
@@ -607,19 +564,19 @@ namespace render {
 
         auto hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(dxc_library.GetAddressOf()));
         if(FAILED(hr)) {
-            rx::abort("Could not create DXC Library instance");
+            critical_error("Could not create DXC Library instance");
         }
 
         hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(dxc_compiler.GetAddressOf()));
         if(FAILED(hr)) {
-            rx::abort("Could not create DXC instance");
+            critical_error("Could not create DXC instance");
         }
     }
 
     void D3D12RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("D3D12RenderDevice", "create_standard_root_signature");
 
-        rx::vector<CD3DX12_ROOT_PARAMETER> root_parameters{*internal_allocator, 4};
+        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{4};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -631,7 +588,7 @@ namespace render {
         root_parameters[2].InitAsShaderResourceView(1);
 
         // Textures array
-        rx::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges{*internal_allocator};
+        std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
         D3D12_DESCRIPTOR_RANGE textures_array;
         textures_array.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         textures_array.NumDescriptors = MAX_NUM_TEXTURES;
@@ -642,7 +599,7 @@ namespace render {
 
         root_parameters[3].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
-        rx::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{*internal_allocator, 3};
+        std::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
         // Point sampler
         auto& point_sampler_desc = static_samplers[0];
@@ -677,7 +634,7 @@ namespace render {
 
         standard_root_signature = compile_root_signature(root_signature_desc);
         if(!standard_root_signature) {
-            rx::abort("Could not create standard root signature");
+            critical_error("Could not create standard root signature");
         }
 
         set_object_name(*standard_root_signature.Get(), "Standard Root Signature");
@@ -690,8 +647,8 @@ namespace render {
         ComPtr<ID3DBlob> error_blob;
         auto result = D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
-            const rx::string msg{*internal_allocator, reinterpret_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
-            logger->error("Could not create root signature: %s", msg);
+            const std::string msg{reinterpret_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
+            spdlog::error("Could not create root signature: %s", msg);
             return {};
         }
 
@@ -701,7 +658,7 @@ namespace render {
                                              root_signature_blob->GetBufferSize(),
                                              IID_PPV_ARGS(&sig));
         if(FAILED(result)) {
-            logger->error("Could not create root signature");
+            spdlog::error("Could not create root signature");
             return {};
         }
 

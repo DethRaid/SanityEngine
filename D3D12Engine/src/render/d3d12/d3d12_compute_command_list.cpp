@@ -1,24 +1,16 @@
 #include "d3d12_compute_command_list.hpp"
 
 #include <minitrace.h>
-#include <rx/core/log.h>
+#include <spdlog/spdlog.h>
 
 #include "../compute_pipeline_state.hpp"
 #include "d3d12_material.hpp"
 
-#ifdef interface
-#undef interface
-#endif
-
-using rx::utility::move;
+using std::move;
 
 namespace render {
-    RX_LOG("D3D12ComputeCommandList", logger);
-
-    D3D12ComputeCommandList::D3D12ComputeCommandList(rx::memory::allocator& allocator,
-                                                     ComPtr<ID3D12GraphicsCommandList> cmds,
-                                                     D3D12RenderDevice& device_in)
-        : D3D12ResourceCommandList{allocator, move(cmds), device_in} {}
+    D3D12ComputeCommandList::D3D12ComputeCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
+        : D3D12ResourceCommandList{move(cmds), device_in} {}
 
     D3D12ComputeCommandList::D3D12ComputeCommandList(D3D12ComputeCommandList&& old) noexcept
         : D3D12ResourceCommandList(move(old)),
@@ -59,22 +51,23 @@ namespace render {
         MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
 
         if(should_do_validation) {
-            RX_ASSERT(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
+            _ASSERT_EXPR(compute_pipeline != nullptr,
+                         "Can not bind compute resources to a command list before you bind a compute pipeline");
         }
 
         const auto& d3d12_material = static_cast<const D3D12BindGroup&>(material);
-        d3d12_material.descriptor_table_handles.each_pair(
-            [&](const UINT idx, const D3D12_GPU_DESCRIPTOR_HANDLE handle) { commands->SetComputeRootDescriptorTable(idx, handle); });
 
-        // TODO: Store more granular information about resource usage in D3D12Material
+        for(const auto& [idx, handle] : d3d12_material.descriptor_table_handles) {
+            commands->SetComputeRootDescriptorTable(idx, handle);
+        }
 
-        d3d12_material.used_images.each_fwd([&](const D3D12Image* image) {
-            set_resource_state(*image, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        });
+        for(const auto& image : d3d12_material.used_images) {
+            set_resource_state(*image.resource, image.states);
+        }
 
-        d3d12_material.used_buffers.each_fwd([&](const D3D12Buffer* buffer) {
-            set_resource_state(*buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        });
+        for(const auto& buffer : d3d12_material.used_buffers) {
+            set_resource_state(*buffer.resource, buffer.states);
+        }
 
         are_compute_resources_bound = true;
 
@@ -85,24 +78,24 @@ namespace render {
         MTR_SCOPE("D3D12ComputeCommandList", "dispatch");
 
         if(should_do_validation) {
-            RX_ASSERT(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
+            _ASSERT_EXPR(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
 
             if(workgroup_x == 0) {
-                logger->warning("Your workgroup has a width of 0. Are you sure you want to do that?");
+                spdlog::warn("Your workgroup has a width of 0. Are you sure you want to do that?");
             }
 
             if(workgroup_y == 0) {
-                logger->warning("Your workgroup has a height of 0. Are you sure you want to do that?");
+                spdlog::warn("Your workgroup has a height of 0. Are you sure you want to do that?");
             }
 
             if(workgroup_z == 0) {
-                logger->warning("Your workgroup has a depth of 0. Are you sure you want to do that?");
+                spdlog::warn("Your workgroup has a depth of 0. Are you sure you want to do that?");
             }
 
             if(!are_compute_resources_bound) {
                 // TODO: Disable this warning if it proves useless
                 // TODO: Promote to an error if it proves useful
-                logger->warning("Dispatching a compute job with no resource bound! Are you sure?");
+                spdlog::warn("Dispatching a compute job with no resource bound! Are you sure?");
             }
         }
 

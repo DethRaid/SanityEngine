@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "resources.hpp"
 
 namespace render {
@@ -25,7 +27,7 @@ namespace render {
 
     class MeshDataStore {
     public:
-        const rx::vector<VertexBufferBinding>& get_vertex_bindings() const;
+        const std::vector<VertexBufferBinding>& get_vertex_bindings() const;
         const Buffer& get_index_buffer() const;
     };
 } // namespace render

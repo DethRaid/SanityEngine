@@ -21,7 +21,7 @@ namespace render {
     };
 
     struct BufferCreateInfo {
-        rx::string name{};
+        std::string name{};
 
         BufferUsage usage;
         size_t size{0};
@@ -47,7 +47,7 @@ namespace render {
     };
 
     struct ImageCreateInfo {
-        rx::string name;
+        std::string name;
 
         ImageUsage usage;
         ImageFormat format;

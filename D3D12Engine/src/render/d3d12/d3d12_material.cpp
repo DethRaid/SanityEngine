@@ -11,16 +11,16 @@ using rx::utility::move;
 
 namespace render {
     RX_LOG("D3D12MaterialBuilder", logger);
-    D3D12BindGroup::D3D12BindGroup(rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                                   rx::vector<const D3D12Image*> used_images_in,
-                                   rx::vector<const D3D12Buffer*> used_buffers_in)
+    D3D12BindGroup::D3D12BindGroup(std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+                                   std::vector<const D3D12Image*> used_images_in,
+                                   std::vector<const D3D12Buffer*> used_buffers_in)
         : descriptor_table_handles{move(descriptor_table_handles_in)},
           used_images{move(used_images_in)},
           used_buffers{move(used_buffers_in)} {}
 
     D3D12BindGroupBuilder::D3D12BindGroupBuilder(rx::memory::allocator& allocator,
-                                                 rx::map<rx::string, D3D12Descriptor> descriptors_in,
-                                                 rx::map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
+                                                 std::unordered_map<std::string, D3D12Descriptor> descriptors_in,
+                                                 std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                                  D3D12RenderDevice& render_device_in)
         : internal_allocator{&allocator},
           descriptors{move(descriptors_in)},
@@ -56,7 +56,7 @@ namespace render {
         return *this;
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_buffer(const rx::string& name, const Buffer& buffer) {
+    BindGroupBuilder& D3D12BindGroupBuilder::set_buffer(const std::string& name, const Buffer& buffer) {
         if(should_do_validation) {
             RX_ASSERT(descriptors.find(name) != nullptr,
                       "Could not bind buffer to variable %s: that variable does not exist!",
@@ -74,7 +74,7 @@ namespace render {
         return *this;
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_image(const rx::string& name, const Image& image) {
+    BindGroupBuilder& D3D12BindGroupBuilder::set_image(const std::string& name, const Image& image) {
         if(should_do_validation) {
             RX_ASSERT(descriptors.find(name) != nullptr, "Could not bind image to variable %s: that variable does not exist!", name.data());
         }
@@ -82,7 +82,7 @@ namespace render {
         return set_image_array(name, rx::array{&image});
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_image_array(const rx::string& name, const rx::vector<const Image*>& images) {
+    BindGroupBuilder& D3D12BindGroupBuilder::set_image_array(const std::string& name, const std::vector<const Image*>& images) {
         if(should_do_validation) {
             RX_ASSERT(descriptors.find(name) != nullptr,
                       "Could not bind image array to variable %s: that variable does not exist!",
@@ -91,7 +91,7 @@ namespace render {
             RX_ASSERT(!images.is_empty(), "Can not bind an empty image array to variable %s", name.data());
         }
 
-        rx::vector<const D3D12Image*> d3d12_images{*internal_allocator};
+        std::vector<const D3D12Image*> d3d12_images{*internal_allocator};
         d3d12_images.reserve(images.size());
 
         images.each_fwd([&](const Image* image) { d3d12_images.push_back(static_cast<const D3D12Image*>(image)); });
@@ -106,19 +106,19 @@ namespace render {
         return *this;
     }
 
-    rx::ptr<BindGroup> D3D12BindGroupBuilder::build() {
+    std::unique_ptr<BindGroup> D3D12BindGroupBuilder::build() {
         auto [images, buffers] = bind_resources_to_descriptors();
 
-        return rx::make_ptr<D3D12BindGroup>(*internal_allocator, descriptor_table_handles, move(images), move(buffers));
+        return std::make_unique<D3D12BindGroup>(*internal_allocator, descriptor_table_handles, move(images), move(buffers));
     }
 
     BoundResources D3D12BindGroupBuilder::bind_resources_to_descriptors() {
         ID3D12Device* device = render_device->get_d3d12_device();
 
-        rx::vector<BoundResource<D3D12Image>> used_images{*internal_allocator};
-        rx::vector<BoundResource<D3D12Buffer>> used_buffers{*internal_allocator};
+        std::vector<BoundResource<D3D12Image>> used_images{*internal_allocator};
+        std::vector<BoundResource<D3D12Buffer>> used_buffers{*internal_allocator};
 
-        descriptors.each_pair([&](const rx::string& name, const D3D12Descriptor& descriptor) {
+        descriptors.each_pair([&](const std::string& name, const D3D12Descriptor& descriptor) {
             if(const auto* buffer_slot = bound_buffers.find(name)) {
                 const auto* buffer = *buffer_slot;
                 switch(descriptor.type) {

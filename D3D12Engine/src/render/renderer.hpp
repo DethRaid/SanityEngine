@@ -1,10 +1,9 @@
 #pragma once
 
-#ifdef interface
-#undef interface
-#endif
+#include <memory>
+#include <vector>
 
-#include <rx/core/ptr.h>
+#include <GLFW/glfw3.h>
 
 #include "compute_command_list.hpp"
 #include "render_command_list.hpp"
@@ -18,43 +17,46 @@ namespace render {
     /*
      * \brief A device which can be used to render
      */
-    class RenderDevice : rx::concepts::interface {
+    class RenderDevice {
     public:
+        virtual ~RenderDevice() = default;
+
 #pragma region Resources
-        [[nodiscard]] virtual rx::ptr<Buffer> create_buffer(rx::memory::allocator& allocator, const BufferCreateInfo& create_info) = 0;
+        [[nodiscard]] virtual std::unique_ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) = 0;
 
-        [[nodiscard]] virtual rx::ptr<Image> create_image(rx::memory::allocator& allocator, const ImageCreateInfo& create_info) = 0;
+        [[nodiscard]] virtual std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info) = 0;
 
-        [[nodiscard]] virtual rx::ptr<Framebuffer> create_framebuffer(const rx::vector<const Image*>& render_targets,
-                                                                      const Image* depth_target = nullptr) = 0;
+        [[nodiscard]] virtual std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
+                                                                              const Image* depth_target = nullptr) = 0;
 
         [[nodiscard]] virtual void* map_buffer(const Buffer& buffer) = 0;
 
-        virtual void destroy_buffer(rx::ptr<Buffer> buffer) = 0;
+        virtual void destroy_buffer(std::unique_ptr<Buffer> buffer) = 0;
 
-        virtual void destroy_image(rx::ptr<Image> image) = 0;
+        virtual void destroy_image(std::unique_ptr<Image> image) = 0;
 
-        virtual void destroy_framebuffer(rx::ptr<Framebuffer> framebuffer) = 0;
+        virtual void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) = 0;
 #pragma endregion
 
 #pragma region Pipeline
-        [[nodiscard]] virtual rx::ptr<ComputePipelineState> create_compute_pipeline_state(const rx::vector<uint8_t>& compute_shader) = 0;
+        [[nodiscard]] virtual std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
+            const std::vector<uint8_t>& compute_shader) = 0;
 
-        [[nodiscard]] virtual rx::ptr<RenderPipelineState> create_render_pipeline_state() = 0;
+        [[nodiscard]] virtual std::unique_ptr<RenderPipelineState> create_render_pipeline_state() = 0;
 
-        virtual void destroy_compute_pipeline_state(rx::ptr<ComputePipelineState> pipeline_state) = 0;
+        virtual void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) = 0;
 
-        virtual void destroy_render_pipeline_state(rx::ptr<RenderPipelineState> pipeline_state) = 0;
+        virtual void destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> pipeline_state) = 0;
 #pragma endregion
 
 #pragma region Command lists
-        [[nodiscard]] virtual rx::ptr<ResourceCommandList> create_resource_command_list() = 0;
+        [[nodiscard]] virtual std::unique_ptr<ResourceCommandList> create_resource_command_list() = 0;
 
-        [[nodiscard]] virtual rx::ptr<ComputeCommandList> create_compute_command_list() = 0;
+        [[nodiscard]] virtual std::unique_ptr<ComputeCommandList> create_compute_command_list() = 0;
 
-        [[nodiscard]] virtual rx::ptr<RenderCommandList> create_render_command_list() = 0;
+        [[nodiscard]] virtual std::unique_ptr<RenderCommandList> create_render_command_list() = 0;
 
-        void virtual submit_command_list(rx::ptr<CommandList> commands) = 0;
+        void virtual submit_command_list(std::unique_ptr<CommandList> commands) = 0;
 #pragma endregion
 
 #pragma region Rendering
@@ -67,5 +69,5 @@ namespace render {
 #pragma endregion
     };
 
-    [[nodiscard]] rx::ptr<RenderDevice> make_render_device(rx::memory::allocator& allocator, RenderBackend backend);
+    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window);
 } // namespace render

@@ -4,28 +4,11 @@
 #include "d3d12_engine.hpp"
 
 #include <minitrace.h>
-#include <rx/console/variable.h>
-#include <rx/core/global.h>
-#include <rx/core/log.h>
-#include <rx/core/profiler.h>
-#include <stdio.h>
+#include <spdlog/spdlog.h>
 #include <time.h>
 
-#include "core/cvar_names.hpp"
+#include "core/abort.hpp"
 #include "debugging/renderdoc.hpp"
-#include "logging/stdoutstream.hpp"
-
-RX_CONSOLE_IVAR(e_num_in_flight_frames, NUM_IN_FLIGHT_FRAMES_NAME, "Maximum number of frames that can be in flight", 1, 5, 3);
-
-RX_CONSOLE_BVAR(r_enable_renderdoc, ENABLE_RENDERDOC_NAME, "Enable the RenderDoc integration for better debugging of graphics code", true);
-
-RX_CONSOLE_BVAR(r_validate_rhi, ENABLE_RHI_VALIDATION_NAME, "Enable runtime validation of the RHI", true);
-
-static rx::global_group g_engine_globals{"D3D12Engine"};
-
-RX_LOG("D3D12Engine", logger);
-
-static rx::global<StdoutStream> stdout_stream{"system", "stdout_stream"};
 
 int main() {
     D3D12Engine engine;
@@ -33,73 +16,33 @@ int main() {
     engine.run();
 }
 
-void D3D12Engine::init_globals() const {
-    rx::globals::link();
-
-    rx::global_group* system_group{rx::globals::find("system")};
-
-    // Explicitly initialize globals that need to be initialized in a specific
-    // order for things to work.
-    system_group->find("allocator")->init();
-    stdout_stream.init();
-    system_group->find("logger")->init();
-
-    const auto subscribed = rx::log::subscribe(&stdout_stream);
-    if(!subscribed) {
-        fprintf(stderr, "Could not subscribe to logger");
-    }
-
-    rx::globals::init();
+static void error_callback(int error, const char* description) {
+    spdlog::error("{} (GLFW error {}}", description, error);
 }
 
-void D3D12Engine::init_rex_profiler() {
-    profiler_adapter = rx::make_ptr<RexProfilerAdapter>(*internal_allocator);
-
-    rx::profiler::instance().bind_cpu({profiler_adapter.get(),
-                                       +[](void* context, const char* name) {
-                                           auto* profiler = static_cast<RexProfilerAdapter*>(context);
-                                           profiler->set_thread_name(name);
-                                       },
-                                       +[](void* context, const char* tag) {
-                                           auto* profiler = static_cast<RexProfilerAdapter*>(context);
-                                           profiler->begin_sample(tag);
-                                       },
-                                       +[](void* context) {
-                                           auto* profiler = static_cast<RexProfilerAdapter*>(context);
-                                           profiler->end_sample();
-                                       }});
-}
-
-D3D12Engine::D3D12Engine() : internal_allocator{&rx::memory::system_allocator::instance()} {
+D3D12Engine::D3D12Engine() {
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
-    init_globals();
+    spdlog::info("HELLO HUMAN");
 
-    init_rex_profiler();
-
-    logger->info("HELLO HUMAN");
-
-    if(*r_enable_renderdoc) {
+    if(settings.enable_renderdoc) {
         renderdoc = load_renderdoc("C:/Users/gold1/bin/RenderDoc/RenderDoc_2020_02_06_fe30fa91_64/renderdoc.dll");
     }
 
-    render_device = make_render_device(*internal_allocator, render::RenderBackend::D3D12);
-}
+    if(!glfwInit()) {
+        critical_error("Could not initialize GLFW");
+    }
 
-void D3D12Engine::deinit_globals() {
-    rx::global_group* system_group{rx::globals::find("system")};
+    glfwSetErrorCallback(error_callback);
 
-    rx::globals::fini();
+    window = glfwCreateWindow(640, 480, "D3D12 Engine", nullptr, nullptr);
 
-    system_group->find("logger")->fini();
-    stdout_stream.fini();
-    system_group->find("allocator")->fini();
+    render_device = make_render_device(render::RenderBackend::D3D12, window);
 }
 
 D3D12Engine::~D3D12Engine() {
-    logger->warning("REMAIN INDOORS");
-
-    deinit_globals();
+    spdlog::warn("REMAIN INDOORS");
+    glfwTerminate();
 }
 
 void D3D12Engine::run() {
