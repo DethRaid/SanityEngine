@@ -66,4 +66,4 @@ target_compile_definitions(D3D12Engine PRIVATE MTR_ENABLED)
 
 target_include_directories(D3D12Engine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/DirectXMath/Inc")
 target_include_directories(D3D12Engine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include")
-target_link_libraries(D3D12Engine spdlog glfw3)
+target_link_libraries(D3D12Engine spdlog glfw d3d12 dxgi d3dcompiler)
