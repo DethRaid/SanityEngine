@@ -37,7 +37,7 @@ set(D3D12_ENGINE_SOURCE
     "src/render/renderer.cpp" 
     "src/render/resources.cpp"  
     "src/render/mesh_data_store.cpp" 
-    "src/core/rex_profiler_adapter.cpp" "src/core/abort.cpp" "src/core/ensure.cpp")
+     "src/core/abort.cpp" "src/core/ensure.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/render/d3d12/d3d12_render_device.hpp"

@@ -13,6 +13,6 @@ namespace render {
         /*!
          * \brief Adds a function to this command list, to be execute when the command list has finished executing on the GPU
          */
-        virtual void add_completion_function(std::function<void()> completion_func) = 0;
+        virtual void add_completion_function(std::function<void()>&& completion_func) = 0;
     };
 } // namespace render

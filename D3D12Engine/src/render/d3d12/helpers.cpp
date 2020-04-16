@@ -2,15 +2,25 @@
 
 #include <d3d12.h>
 
-#include <rx/core/string.h>
+std::wstring to_wide_string(const std::string& string) {
+    const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, nullptr, 0);
+    wchar_t* wide_char_string = new wchar_t[wide_string_length];
+    MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, wide_char_string, wide_string_length);
 
-void set_object_name(ID3D12Object& object, const std::string& name) {
-    const auto wide_name = name.to_utf16();
+    std::wstring wide_string{wide_char_string};
 
-    object.SetName(reinterpret_cast<LPCWSTR>(wide_name.data()));
+    delete[] wide_char_string;
+
+    return wide_string;
 }
 
- DXGI_FORMAT to_dxgi_format(const render::ImageFormat format) {
+void set_object_name(ID3D12Object& object, const std::string& name) {
+    const auto wide_name = to_wide_string(name);
+
+    object.SetName(reinterpret_cast<LPCWSTR>(wide_name.c_str()));
+}
+
+DXGI_FORMAT to_dxgi_format(const render::ImageFormat format) {
     switch(format) {
         case render::ImageFormat::Rgba32F:
             return DXGI_FORMAT_R32G32B32A32_FLOAT;

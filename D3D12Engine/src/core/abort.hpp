@@ -2,4 +2,4 @@
 
 #include <string>
 
-[[noreturn]] void critical_error(const std::string& message);
+void critical_error(const std::string& message);

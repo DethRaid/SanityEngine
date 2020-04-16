@@ -4,6 +4,7 @@
 #include <cassert>
 #include <minitrace.h>
 
+#include "../../core/ensure.hpp"
 #include "../mesh_data_store.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_material.hpp"
@@ -88,7 +89,7 @@ namespace render {
     void D3D12RenderCommandList::bind_render_resources(const BindGroup& resources) {
         MTR_SCOPE("D3D12RenderCommandList", "bind_render_resources");
 
-        _ASSERT_EXPR(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
+        ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
 
         const auto& d3d12_resources = static_cast<const D3D12BindGroup&>(resources);
 
@@ -148,9 +149,9 @@ namespace render {
     void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
         MTR_SCOPE("D3D12RenderCommandList", "draw");
 
-        _ASSERT_EXPR(is_render_material_bound, "Must bind material data to issue drawcalls");
-        _ASSERT_EXPR(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
-        _ASSERT_EXPR(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
+        ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
+        ENSURE(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
+        ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
 
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
     }

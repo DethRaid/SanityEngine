@@ -293,7 +293,7 @@ namespace render {
     }
 
     void D3D12RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
-        auto* d3d12_commands = static_cast<D3D12CommandList*>(commands.get());
+        auto* d3d12_commands = dynamic_cast<D3D12CommandList*>(commands.get());
 
         auto* d3d12_command_list = d3d12_commands->get_command_list();
 
@@ -323,9 +323,9 @@ namespace render {
         return fence;
     }
 
-    auto D3D12RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
+    UINT D3D12RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
-    auto* D3D12RenderDevice::get_d3d12_device() const { return device.Get(); }
+    ID3D12Device* D3D12RenderDevice::get_d3d12_device() const { return device.Get(); }
 
     void D3D12RenderDevice::enable_validation_layer() {
         const auto res = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));

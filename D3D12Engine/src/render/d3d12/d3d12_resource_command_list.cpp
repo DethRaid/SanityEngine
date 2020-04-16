@@ -31,14 +31,14 @@ namespace render {
         // TODO: Don't use a staging buffer on UMA, but that has a lot of sync implications and I'm scared
 
         auto staging_buffer = device->get_staging_buffer(num_bytes);
-        memcpy(staging_buffer->ptr, data, num_bytes);
+        memcpy(staging_buffer.ptr, data, num_bytes);
 
         const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
 
-        set_resource_state(*staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        set_resource_state(staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
         set_resource_state(d3d12_buffer, D3D12_RESOURCE_STATE_COPY_DEST);
 
-        commands->CopyBufferRegion(d3d12_buffer.resource.Get(), offset, staging_buffer->resource.Get(), 0, num_bytes);
+        commands->CopyBufferRegion(d3d12_buffer.resource.Get(), offset, staging_buffer.resource.Get(), 0, num_bytes);
 
         add_completion_function(
             [staging_buffer{move(staging_buffer)}, this]() mutable { device->return_staging_buffer(move(staging_buffer)); });
@@ -55,11 +55,11 @@ namespace render {
         // TODO: Don't use a staging buffer on UMA
 
         auto staging_buffer = device->get_staging_buffer(num_bytes);
-        memcpy(staging_buffer->ptr, data, num_bytes);
+        memcpy(staging_buffer.ptr, data, num_bytes);
 
         const auto& d3d12_image = static_cast<const D3D12Image&>(image);
 
-        set_resource_state(*staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        set_resource_state(staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
         set_resource_state(d3d12_image, D3D12_RESOURCE_STATE_COPY_DEST);
 
         D3D12_SUBRESOURCE_DATA subresource;
@@ -67,7 +67,7 @@ namespace render {
         subresource.RowPitch = d3d12_image.width * bytes_per_pixel;
         subresource.SlicePitch = d3d12_image.width * d3d12_image.height * bytes_per_pixel;
 
-        UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer->resource.Get(), 0, 0, 1, &subresource);
+        UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
 
         add_completion_function(
             [staging_buffer{move(staging_buffer)}, this]() mutable { device->return_staging_buffer(move(staging_buffer)); });

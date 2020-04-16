@@ -1,10 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 #include <d3d12.h>
-#include <memory>
 
 #include "../bind_group.hpp"
 #include "resources.hpp"
@@ -14,14 +14,21 @@ namespace render {
 
     template <typename ResourceType>
     struct BoundResource {
-        const ResourceType* resource;
-        D3D12_RESOURCE_STATES states;
+        BoundResource() = default;
+
+        BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in);
+
+        const ResourceType* resource{nullptr};
+        D3D12_RESOURCE_STATES states{};
     };
+
+    template <typename ResourceType>
+    BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in) : resource{resource_in}, states{states_in} {}
 
     struct D3D12BindGroup : BindGroup {
         explicit D3D12BindGroup(std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
-                                std::vector < BoundResource<D3D12Image>> used_images_in,
-                                std::vector < BoundResource<D3D12Buffer>> used_buffers_in);
+                                std::vector<BoundResource<D3D12Image>> used_images_in,
+                                std::vector<BoundResource<D3D12Buffer>> used_buffers_in);
 
         std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
 
@@ -98,7 +105,5 @@ namespace render {
 
         std::unordered_map<std::string, const D3D12Buffer*> bound_buffers;
         std::unordered_map<std::string, std::vector<const D3D12Image*>> bound_images;
-
-        bool should_do_validation = false;
     };
 } // namespace render

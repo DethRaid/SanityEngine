@@ -30,8 +30,8 @@ namespace render {
         }
     }
 
-    void D3D12CommandList::add_completion_function(std::function<void()> completion_func) {
-        completion_functions.push_back(move(completion_func));
+    void D3D12CommandList::add_completion_function(std::function<void()>&& completion_func) {
+        completion_functions.push_back(std::move(completion_func));
     }
 
     ID3D12CommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
@@ -47,13 +47,13 @@ namespace render {
     void D3D12CommandList::set_resource_state(ID3D12Resource* resource,
                                               const D3D12_RESOURCE_STATES new_states,
                                               const bool is_buffer_or_simultaneous_access_texture) {
-        if(auto* resource_states = most_recent_resource_states.find(resource)) {
-            if(need_barrier_between_states(*resource_states, new_states, is_buffer_or_simultaneous_access_texture)) {
-                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *resource_states, new_states);
+        if(const auto& resource_states = most_recent_resource_states.find(resource); resource_states != most_recent_resource_states.end()) {
+            if(need_barrier_between_states(resource_states->second, new_states, is_buffer_or_simultaneous_access_texture)) {
+                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, resource_states->second, new_states);
                 commands->ResourceBarrier(1, &barrier);
             }
 
-            *resource_states = new_states;
+            resource_states->second = new_states;
 
         } else {
             initial_resource_states.emplace(resource, new_states);

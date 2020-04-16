@@ -3,6 +3,7 @@
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 
+#include "../../core/ensure.hpp"
 #include "../compute_pipeline_state.hpp"
 #include "d3d12_material.hpp"
 
@@ -50,10 +51,7 @@ namespace render {
     void D3D12ComputeCommandList::bind_compute_resources(const BindGroup& material) {
         MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
 
-        if(should_do_validation) {
-            _ASSERT_EXPR(compute_pipeline != nullptr,
-                         "Can not bind compute resources to a command list before you bind a compute pipeline");
-        }
+        ENSURE(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
 
         const auto& d3d12_material = static_cast<const D3D12BindGroup&>(material);
 
@@ -77,8 +75,8 @@ namespace render {
     void D3D12ComputeCommandList::dispatch(const uint32_t workgroup_x, const uint32_t workgroup_y, const uint32_t workgroup_z) {
         MTR_SCOPE("D3D12ComputeCommandList", "dispatch");
 
-        if(should_do_validation) {
-            _ASSERT_EXPR(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
+        #ifndef NDEBUG
+            ENSURE(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
 
             if(workgroup_x == 0) {
                 spdlog::warn("Your workgroup has a width of 0. Are you sure you want to do that?");
@@ -97,7 +95,7 @@ namespace render {
                 // TODO: Promote to an error if it proves useful
                 spdlog::warn("Dispatching a compute job with no resource bound! Are you sure?");
             }
-        }
+        #endif
 
         if(compute_pipeline != nullptr) {
             commands->Dispatch(workgroup_x, workgroup_y, workgroup_z);

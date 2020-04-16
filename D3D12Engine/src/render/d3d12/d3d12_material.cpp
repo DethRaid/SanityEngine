@@ -33,7 +33,6 @@ namespace render {
     }
 
     D3D12BindGroupBuilder& D3D12BindGroupBuilder::operator=(D3D12BindGroupBuilder&& old) noexcept {
-
         descriptors = move(old.descriptors);
         descriptor_table_handles = move(old.descriptor_table_handles);
         bound_buffers = move(old.bound_buffers);
@@ -46,9 +45,7 @@ namespace render {
     }
 
     BindGroupBuilder& D3D12BindGroupBuilder::set_buffer(const std::string& name, const Buffer& buffer) {
-        ENSURE(descriptors.find(name) != descriptors.end(),
-                         "Could not bind buffer to variable {}: that variable does not exist!",
-                         name);
+        ENSURE(descriptors.find(name) != descriptors.end(), "Could not bind buffer to variable {}: that variable does not exist!", name);
 
         const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
         if(const auto& buffer_slot = bound_buffers.find(name); buffer_slot != bound_buffers.end()) {
@@ -68,7 +65,9 @@ namespace render {
     }
 
     BindGroupBuilder& D3D12BindGroupBuilder::set_image_array(const std::string& name, const std::vector<const Image*>& images) {
-        ENSURE(descriptors.find(name) != descriptors.end(), "Could not bind image array to variable {}: that variable does not exist!", name);\
+        ENSURE(descriptors.find(name) != descriptors.end(),
+               "Could not bind image array to variable {}: that variable does not exist!",
+               name);
         ENSURE(!images.empty(), "Can not bind an empty image array to variable {}", name);
 
         std::vector<const D3D12Image*> d3d12_images;
@@ -152,12 +151,10 @@ namespace render {
                 const auto& images = images_slot->second;
                 auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{descriptor.handle};
 
-                    ENSURE(descriptor.type != D3D12Descriptor::Type::CBV,
-                                 "Can not bind a texture to constant buffer variable {}",
-                                 name);
+                ENSURE(descriptor.type != D3D12Descriptor::Type::CBV, "Can not bind a texture to constant buffer variable {}", name);
 
-                    ENSURE(!images.empty(), "Can not bind an empty image array to variable {}", name);
-                
+                ENSURE(!images.empty(), "Can not bind an empty image array to variable {}", name);
+
                 if(descriptor.type == D3D12Descriptor::Type::SRV) {
                     for(const auto* image : images) {
                         D3D12_SHADER_RESOURCE_VIEW_DESC desc{};

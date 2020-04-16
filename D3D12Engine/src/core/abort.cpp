@@ -1,8 +1,6 @@
 #include "abort.hpp"
 
-#include <string>
-
-#include <debugapi.h>
+#include <Windows.h>
 #include <spdlog/spdlog.h>
 
 void critical_error(const std::string& message) {

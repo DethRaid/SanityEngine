@@ -1,8 +1,6 @@
 #include "windows_helpers.hpp"
 
-#include <apiquery2.h>
-#include <errhandlingapi.h>
-#include <winbase.h>
+#include <Windows.h>
 
 std::string get_last_windows_error() {
     const DWORD error_message_id = GetLastError();

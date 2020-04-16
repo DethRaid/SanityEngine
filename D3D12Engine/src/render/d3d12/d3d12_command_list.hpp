@@ -32,7 +32,7 @@ namespace render {
 #pragma region CommandList
         ~D3D12CommandList() override;
 
-        void add_completion_function(std::function<void()> completion_func) override;
+        void add_completion_function(std::function<void()>&& completion_func) override;
 #pragma endregion
 
         [[nodiscard]] const auto& get_final_resource_states() const;

@@ -70,13 +70,13 @@ namespace render {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] std::unique_ptr<D3D12StagingBuffer> get_staging_buffer(size_t num_bytes);
+        [[nodiscard]] D3D12StagingBuffer get_staging_buffer(size_t num_bytes);
 
-        void return_staging_buffer(std::unique_ptr<D3D12StagingBuffer> buffer);
+        void return_staging_buffer(D3D12StagingBuffer buffer);
 
-        [[nodiscard]] auto* get_d3d12_device() const;
+        [[nodiscard]] ID3D12Device* get_d3d12_device() const;
 
-        [[nodiscard]] auto get_shader_resource_descriptor_size() const;
+        [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
 
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
