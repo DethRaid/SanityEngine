@@ -24,17 +24,17 @@ namespace render {
         return *this;
     }
 
-    D3D12CommandList::~D3D12CommandList() {
-        for(const auto& func : completion_functions) {
-            func();
-        }
-    }
-
     void D3D12CommandList::add_completion_function(std::function<void()>&& completion_func) {
         completion_functions.push_back(std::move(completion_func));
     }
 
     ID3D12CommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
+
+    void D3D12CommandList::execute_completion_functions() {
+        for(const auto& func : completion_functions) {
+            func();
+        }
+    }
 
     void D3D12CommandList::set_resource_state(const D3D12Image& image, const D3D12_RESOURCE_STATES new_states) {
         set_resource_state(image.resource.Get(), new_states, false);

@@ -3,13 +3,15 @@
 #include <memory>
 #include <vector>
 
-#include <GLFW/glfw3.h>
-
 #include "compute_command_list.hpp"
 #include "render_command_list.hpp"
 #include "resource_command_list.hpp"
 
+struct GLFWwindow;
+
 namespace render {
+    struct RenderPipelineStateCreateInfo;
+
     enum class RenderBackend {
         D3D12,
     };
@@ -42,7 +44,7 @@ namespace render {
         [[nodiscard]] virtual std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
             const std::vector<uint8_t>& compute_shader) = 0;
 
-        [[nodiscard]] virtual std::unique_ptr<RenderPipelineState> create_render_pipeline_state() = 0;
+        [[nodiscard]] virtual std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) = 0;
 
         virtual void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) = 0;
 

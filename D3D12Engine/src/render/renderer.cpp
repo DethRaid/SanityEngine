@@ -3,6 +3,7 @@
 #include <DirectXMath.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
 #include "d3d12/d3d12_render_device.hpp"

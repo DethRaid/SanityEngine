@@ -30,7 +30,7 @@ namespace render {
         D3D12CommandList& operator=(D3D12CommandList&& old) noexcept;
 
 #pragma region CommandList
-        ~D3D12CommandList() override;
+        ~D3D12CommandList() override = default;
 
         void add_completion_function(std::function<void()>&& completion_func) override;
 #pragma endregion
@@ -40,6 +40,8 @@ namespace render {
         [[nodiscard]] const auto& get_used_command_types() const;
 
         [[nodiscard]] ID3D12CommandList* get_command_list() const;
+
+        void execute_completion_functions();
 
     protected:
         std::vector<std::function<void()>> completion_functions;

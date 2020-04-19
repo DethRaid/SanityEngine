@@ -1,5 +1,8 @@
 #pragma once
 
+#include <mutex>
+#include <queue>
+
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
 #include <dxcapi.h>
@@ -8,6 +11,7 @@
 #include <wrl/client.h>
 
 #include "../renderer.hpp"
+#include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
 #include "resources.hpp"
 
@@ -51,7 +55,8 @@ namespace render {
         [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
             const std::vector<uint8_t>& compute_shader) override;
 
-        [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state() override;
+        [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(
+            const RenderPipelineStateCreateInfo& create_info) override;
 
         void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) override;
 
@@ -72,7 +77,7 @@ namespace render {
 
         [[nodiscard]] D3D12StagingBuffer get_staging_buffer(size_t num_bytes);
 
-        void return_staging_buffer(D3D12StagingBuffer buffer);
+        void return_staging_buffer(D3D12StagingBuffer&& buffer);
 
         [[nodiscard]] ID3D12Device* get_d3d12_device() const;
 
@@ -119,6 +124,10 @@ namespace render {
 
         ComPtr<ID3D12RootSignature> standard_root_signature;
 
+        std::vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
+
+        std::vector<D3D12StagingBuffer> staging_buffers;
+
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture
          *
@@ -146,6 +155,15 @@ namespace render {
 
         std::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
+        std::mutex in_flight_command_lists_mutex;
+        std::condition_variable commands_lists_in_flight_cv;
+        std::queue<std::pair<ComPtr<ID3D12Fence>, std::unique_ptr<D3D12CommandList>>> in_flight_command_lists;
+
+        std::unique_ptr<std::thread> command_completion_thread;
+
+        std::mutex done_command_lists_mutex;
+        std::queue<std::unique_ptr<D3D12CommandList>> done_command_lists;
+
 #pragma region initialization
         void enable_validation_layer();
 
@@ -162,7 +180,7 @@ namespace render {
         void create_descriptor_heaps();
 
         [[nodiscard]] std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
-                                                                                               uint32_t num_descriptors) const;
+                                                                                                uint32_t num_descriptors) const;
 
         void initialize_dma();
 
@@ -173,6 +191,12 @@ namespace render {
         [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
 
         void create_material_resource_binder();
+
+        void create_standard_graphics_pipeline_input_layout();
 #pragma endregion
+
+        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(size_t num_bytes) const;
+
+        static void wait_for_command_lists(D3D12RenderDevice* render_device);
     };
 } // namespace render

@@ -5,8 +5,8 @@
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 
-#include "../../core/constants.hpp"
 #include "../../core/abort.hpp"
+#include "../../core/constants.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_command_list.hpp"
@@ -18,6 +18,7 @@
 using std::move;
 
 namespace render {
+
     D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size) {
 #ifndef NDEBUG
         enable_validation_layer();
@@ -41,11 +42,13 @@ namespace render {
 
         create_shader_compiler();
 
-        // initialize_standard_resource_binding_mappings();
-
         create_standard_root_signature();
 
         create_material_resource_binder();
+
+        create_standard_graphics_pipeline_input_layout();
+
+        command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() { device_allocator->Release(); }
@@ -232,6 +235,104 @@ namespace render {
         return compute_pipeline;
     }
 
+    std::unique_ptr<RenderPipelineState> D3D12RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
+
+        if(create_info.use_standard_material_layout) {
+            desc.pRootSignature = standard_root_signature.Get();
+        }
+
+        desc.VS.BytecodeLength = create_info.vertex_shader.size();
+        desc.VS.pShaderBytecode = create_info.vertex_shader.data();
+
+        if(create_info.pixel_shader) {
+            desc.PS.BytecodeLength = create_info.pixel_shader->size();
+            desc.PS.pShaderBytecode = create_info.pixel_shader->data();
+        }
+
+        desc.InputLayout.NumElements = static_cast<UINT>(standard_graphics_pipeline_input_layout.size());
+        desc.InputLayout.pInputElementDescs = standard_graphics_pipeline_input_layout.data();
+        desc.PrimitiveTopologyType = to_d3d12_primitive_topology_type(create_info.primitive_type);
+
+        // Rasterizer state
+        {
+            auto& output_rasterizer_state = desc.RasterizerState;
+            const auto& rasterizer_state = create_info.rasterizer_state;
+
+            output_rasterizer_state.FillMode = to_d3d12_fill_mode(rasterizer_state.fill_mode);
+            output_rasterizer_state.CullMode = to_d3d12_cull_mode(rasterizer_state.cull_mode);
+            output_rasterizer_state.FrontCounterClockwise = rasterizer_state.front_face_counter_clockwise ? 1 : 0;
+            output_rasterizer_state.DepthBias = rasterizer_state.depth_bias; // TODO: Figure out what the actual fuck D3D12 depth bias is
+            output_rasterizer_state.DepthBiasClamp = rasterizer_state.max_depth_bias;
+            output_rasterizer_state.SlopeScaledDepthBias = rasterizer_state.slope_scaled_depth_bias;
+            output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 0 ? 1 : 0;
+            output_rasterizer_state.AntialiasedLineEnable = rasterizer_state.enable_line_antialiasing;
+            output_rasterizer_state.ConservativeRaster = rasterizer_state.enable_conservative_rasterization ?
+                                                             D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON :
+                                                             D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+            desc.SampleDesc.Count = rasterizer_state.num_msaa_samples;
+        }
+
+        // Depth stencil state
+        {
+            auto& output_ds_state = desc.DepthStencilState;
+            const auto& ds_state = create_info.depth_stencil_state;
+
+            output_ds_state.DepthEnable = ds_state.enable_depth_test ? 1 : 0;
+            output_ds_state.DepthWriteMask = ds_state.enable_depth_write ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+            output_ds_state.DepthFunc = to_d3d12_comparison_func(ds_state.depth_func);
+
+            output_ds_state.StencilEnable = ds_state.enable_stencil_test ? 1 : 0;
+            output_ds_state.StencilReadMask = ds_state.stencil_read_mask;
+            output_ds_state.StencilWriteMask = ds_state.stencil_write_mask;
+            output_ds_state.FrontFace.StencilFailOp = to_d3d12_stencil_op(ds_state.front_face.fail_op);
+            output_ds_state.FrontFace.StencilDepthFailOp = to_d3d12_stencil_op(ds_state.front_face.depth_fail_op);
+            output_ds_state.FrontFace.StencilPassOp = to_d3d12_stencil_op(ds_state.front_face.pass_op);
+            output_ds_state.FrontFace.StencilFunc = to_d3d12_comparison_func(ds_state.front_face.compare_op);
+            output_ds_state.BackFace.StencilFailOp = to_d3d12_stencil_op(ds_state.back_face.fail_op);
+            output_ds_state.BackFace.StencilDepthFailOp = to_d3d12_stencil_op(ds_state.back_face.depth_fail_op);
+            output_ds_state.BackFace.StencilPassOp = to_d3d12_stencil_op(ds_state.back_face.pass_op);
+            output_ds_state.BackFace.StencilFunc = to_d3d12_comparison_func(ds_state.back_face.compare_op);
+        }
+
+        // Blend state
+        {
+            const auto& blend_state = create_info.blend_state;
+            desc.BlendState.AlphaToCoverageEnable = blend_state.enable_alpha_to_coverage ? 1 : 0;
+            for(uint32_t i = 0; i < blend_state.render_target_blends.size(); i++) {
+                auto& output_rt_blend = desc.BlendState.RenderTarget[i];
+                const auto& rt_blend = blend_state.render_target_blends[i];
+
+                output_rt_blend.BlendEnable = rt_blend.enabled ? 1 : 0;
+                output_rt_blend.SrcBlend = to_d3d12_blend(rt_blend.source_color_blend_factor);
+                output_rt_blend.DestBlend = to_d3d12_blend(rt_blend.destination_color_blend_factor);
+                output_rt_blend.BlendOp = to_d3d12_blend_op(rt_blend.color_blend_op);
+                output_rt_blend.SrcBlendAlpha = to_d3d12_blend(rt_blend.source_alpha_blend_factor);
+                output_rt_blend.DestBlendAlpha = to_d3d12_blend(rt_blend.destination_alpha_blend_factor);
+                output_rt_blend.BlendOpAlpha = to_d3d12_blend_op(rt_blend.alpha_blend_op);
+                output_rt_blend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            }
+        }
+
+        desc.NumRenderTargets = 1;
+        desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
+        auto pipeline = std::make_unique<D3D12RenderPipelineState>();
+        if(create_info.use_standard_material_layout) {
+            pipeline->root_signature = standard_root_signature;
+        }
+
+        device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipeline->pso));
+
+        return pipeline;
+    }
+
+    void D3D12RenderDevice::destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> /* pipeline_state */) {
+        // Nothing to explicitly do, the destructors will take care of us
+    }
+
     std::unique_ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
 
@@ -305,9 +406,55 @@ namespace render {
         auto command_list_done_fence = get_next_command_list_done_fence();
 
         direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+
+        {
+            std::lock_guard m{in_flight_command_lists_mutex};
+            in_flight_command_lists.emplace(command_list_done_fence, std::move(commands));
+        }
+
+        commands_lists_in_flight_cv.notify_one();
+    }
+
+    void D3D12RenderDevice::begin_frame() {
+        {
+            std::lock_guard l{done_command_lists_mutex};
+            while(!done_command_lists.empty()) {
+                done_command_lists.front()->execute_completion_functions();
+                done_command_lists.pop();
+            }
+        }
     }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
+
+    D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const size_t num_bytes) {
+        size_t best_fit_idx = staging_buffers.size();
+        for(size_t i = 0; i < staging_buffers.size(); i++) {
+            if(staging_buffers[i].size >= num_bytes) {
+                if(best_fit_idx >= staging_buffers.size()) {
+                    // This is the first suitable buffer we've found
+                    best_fit_idx = i;
+
+                } else if(staging_buffers[i].size < staging_buffers[best_fit_idx].size) {
+                    // The current buffer is more suitable than the previous best buffer
+                    best_fit_idx = i;
+                }
+            }
+        }
+
+        if(best_fit_idx < staging_buffers.size()) {
+            // We found a valid staging buffer!
+            auto buffer = std::move(staging_buffers[best_fit_idx]);
+            staging_buffers.erase(staging_buffers.begin() + best_fit_idx);
+            return buffer;
+
+        } else {
+            // No suitable buffer is available, let's make a new one
+            return create_staging_buffer(num_bytes);
+        }
+    }
+
+    void D3D12RenderDevice::return_staging_buffer(D3D12StagingBuffer&& buffer) { staging_buffers.push_back(std::move(buffer)); }
 
     ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
         if(!command_list_done_fences.empty()) {
@@ -666,4 +813,113 @@ namespace render {
     }
 
     void D3D12RenderDevice::create_material_resource_binder() {}
+
+    void D3D12RenderDevice::create_standard_graphics_pipeline_input_layout() {
+        standard_graphics_pipeline_input_layout.reserve(5);
+
+        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Position",
+                                                             /* .SemanticIndex = */ 0,
+                                                             /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
+                                                             /* .InputSlot = */ 0,
+                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                                             /* .InstanceStepRate = */ 0);
+
+        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Normal",
+                                                             /* .SemanticIndex = */ 0,
+                                                             /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
+                                                             /* .InputSlot = */ 0,
+                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                                             /* .InstanceStepRate = */ 0);
+
+        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Color",
+                                                             /* .SemanticIndex = */ 0,
+                                                             /* .Format = */ DXGI_FORMAT_R8G8B8A8_UNORM,
+                                                             /* .InputSlot = */ 0,
+                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                                             /* .InstanceStepRate = */ 0);
+
+        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Texcoord",
+                                                             /* .SemanticIndex = */ 0,
+                                                             /* .Format = */ DXGI_FORMAT_R32G32_FLOAT,
+                                                             /* .InputSlot = */ 0,
+                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                                             /* .InstanceStepRate = */ 0);
+
+        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "DoubleSided",
+                                                             /* .SemanticIndex = */ 0,
+                                                             /* .Format = */ DXGI_FORMAT_R32_UINT,
+                                                             /* .InputSlot = */ 0,
+                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                                             /* .InstanceStepRate = */ 0);
+    }
+
+    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const size_t num_bytes) const {
+        MTR_SCOPE("D3D12RenderDevice", "create_buffer");
+
+        const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
+
+        const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
+
+        D3D12MA::ALLOCATION_DESC alloc_desc{};
+        alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+
+        D3D12StagingBuffer buffer;
+        const auto result = device_allocator->CreateResource(&alloc_desc,
+                                                             &desc,
+                                                             initial_state,
+                                                             nullptr,
+                                                             &buffer.allocation,
+                                                             IID_PPV_ARGS(&buffer.resource));
+        if(FAILED(result)) {
+            spdlog::error("Could not create staging buffer");
+            return {};
+        }
+
+        buffer.size = num_bytes;
+        ;
+
+        set_object_name(*buffer.resource.Get(), "Staging Buffer");
+
+        return buffer;
+    }
+
+    void D3D12RenderDevice::wait_for_command_lists(D3D12RenderDevice* render_device) {
+        const HANDLE event = CreateEvent(nullptr, false, false, nullptr);
+
+        bool should_wait_for_cv = false;
+
+        while(true) {
+            if(should_wait_for_cv) {
+                std::unique_lock l{render_device->in_flight_command_lists_mutex};
+                render_device->commands_lists_in_flight_cv.wait(l, [&] { return !render_device->in_flight_command_lists.empty(); });
+
+                should_wait_for_cv = false;
+            }
+
+            std::pair<ComPtr<ID3D12Fence>, std::unique_ptr<D3D12CommandList>> cur_pair;
+            {
+                std::lock_guard l{render_device->in_flight_command_lists_mutex};
+                if(render_device->in_flight_command_lists.empty()) {
+                    should_wait_for_cv = true;
+                    continue;
+                }
+
+                cur_pair = std::move(render_device->in_flight_command_lists.front());
+                render_device->in_flight_command_lists.pop();
+            }
+
+            cur_pair.first->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+            WaitForSingleObject(event, 2000);
+
+            {
+                std::lock_guard l{render_device->done_command_lists_mutex};
+                render_device->done_command_lists.emplace(std::move(cur_pair.second));
+            }
+        }
+    }
 } // namespace render
