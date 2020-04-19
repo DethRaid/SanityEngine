@@ -14,6 +14,7 @@ namespace render {
     constexpr uint64_t FENCE_UNSIGNALED = 0;
     constexpr uint64_t CPU_FENCE_SIGNALED = 32;
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
+    constexpr uint32_t FRAME_COMPLETE = 128;
 
     std::wstring to_wide_string(const std::string& string);
 

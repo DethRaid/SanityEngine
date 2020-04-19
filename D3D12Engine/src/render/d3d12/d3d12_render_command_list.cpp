@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cassert>
+
 #include <minitrace.h>
 
 #include "../../core/ensure.hpp"
@@ -51,19 +52,19 @@ namespace render {
             // TODO: Renderpass
 
             in_render_pass = true;
-        }
-
-        if(d3d12_framebuffer.dsv_handle) {
-            commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
-                                         d3d12_framebuffer.rtv_handles.data(),
-                                         0,
-                                         &(*d3d12_framebuffer.dsv_handle));
-
         } else {
-            commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
-                                         d3d12_framebuffer.rtv_handles.data(),
-                                         0,
-                                         nullptr);
+            if(d3d12_framebuffer.dsv_handle) {
+                commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
+                                             d3d12_framebuffer.rtv_handles.data(),
+                                             0,
+                                             &(*d3d12_framebuffer.dsv_handle));
+
+            } else {
+                commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
+                                             d3d12_framebuffer.rtv_handles.data(),
+                                             0,
+                                             nullptr);
+            }
         }
     }
 
@@ -154,5 +155,13 @@ namespace render {
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
 
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
+    }
+
+    void D3D12RenderCommandList::prepare_for_submission() {
+        if(in_render_pass && commands4) {
+            commands4->EndRenderPass();
+        }
+
+        D3D12ComputeCommandList::prepare_for_submission();
     }
 } // namespace render

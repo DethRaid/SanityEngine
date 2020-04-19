@@ -30,6 +30,11 @@ namespace render {
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
 #pragma endregion
 
+        /*!
+         * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU, including ending any pending render passes
+         */
+        void prepare_for_submission() override;
+
     protected:
         ComPtr<ID3D12GraphicsCommandList4> commands4;
 

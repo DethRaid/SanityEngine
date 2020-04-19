@@ -12,6 +12,7 @@
 #include "../renderer.hpp"
 #include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
+#include "d3d12_framebuffer.hpp"
 #include "resources.hpp"
 
 namespace DirectX {
@@ -42,6 +43,8 @@ namespace render {
 
         [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
                                                                       const Image* depth_target) override;
+
+        Framebuffer* get_backbuffer_framebuffer() override;
 
         void* map_buffer(const Buffer& buffer) override;
 
@@ -107,6 +110,8 @@ namespace render {
         ComPtr<ID3D12CommandAllocator> copy_command_allocator;
 
         ComPtr<IDXGISwapChain3> swapchain;
+        std::vector<ComPtr<ID3D12Resource>> swapchain_images;
+        std::vector<D3D12Framebuffer> swapchain_framebuffers;
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
@@ -173,6 +178,8 @@ namespace render {
         void create_command_allocators();
 
         void create_descriptor_heaps();
+
+        void initialize_swapchain_descriptors();
 
         [[nodiscard]] std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
                                                                                                 uint32_t num_descriptors) const;

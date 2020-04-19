@@ -28,6 +28,10 @@ namespace render {
         completion_functions.push_back(std::move(completion_func));
     }
 
+    void D3D12CommandList::prepare_for_submission() {
+        commands->Close();
+    }
+
     ID3D12CommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
 
     void D3D12CommandList::execute_completion_functions() {

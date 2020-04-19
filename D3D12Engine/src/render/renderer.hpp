@@ -31,6 +31,8 @@ namespace render {
         [[nodiscard]] virtual std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
                                                                               const Image* depth_target = nullptr) = 0;
 
+        [[nodiscard]] virtual Framebuffer* get_backbuffer_framebuffer() = 0;
+
         [[nodiscard]] virtual void* map_buffer(const Buffer& buffer) = 0;
 
         virtual void destroy_buffer(std::unique_ptr<Buffer> buffer) = 0;

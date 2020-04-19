@@ -7,6 +7,7 @@
 
 #include "../../core/abort.hpp"
 #include "../../core/constants.hpp"
+#include "../../core/ensure.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_command_list.hpp"
@@ -36,7 +37,7 @@ namespace render {
 
         create_descriptor_heaps();
 
-        // initialize_swapchain_descriptors();
+        initialize_swapchain_descriptors();
 
         initialize_dma();
 
@@ -184,6 +185,14 @@ namespace render {
         }
 
         return framebuffer;
+    }
+
+    Framebuffer* D3D12RenderDevice::get_backbuffer_framebuffer() {
+        const auto cur_swapchain_index = swapchain->GetCurrentBackBufferIndex();
+
+        ENSURE(cur_swapchain_index < swapchain_framebuffers.size(), "Not enough swapchain framebuffers for current swapchain index {}", cur_swapchain_index);
+
+        return &swapchain_framebuffers[cur_swapchain_index];
     }
 
     void* D3D12RenderDevice::map_buffer(const Buffer& buffer) {
@@ -398,6 +407,8 @@ namespace render {
     void D3D12RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
         auto* d3d12_commands = dynamic_cast<D3D12CommandList*>(commands.get());
 
+        d3d12_commands->prepare_for_submission();
+
         auto* d3d12_command_list = d3d12_commands->get_command_list();
 
         // First implementation - run everything on the same queue, because it's easy
@@ -428,6 +439,9 @@ namespace render {
                 delete list;
             }
         }
+
+        // TODO: Submit a command list that transitions the current swapchain image to the PRESENT state
+        swapchain->Present(0, 0);
     }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
@@ -681,6 +695,26 @@ namespace render {
 
         const auto& [dsv_heap, dsv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
         dsv_allocator = std::make_unique<D3D12DescriptorAllocator>(dsv_heap, dsv_size);
+    }
+
+    void D3D12RenderDevice::initialize_swapchain_descriptors() {
+        DXGI_SWAP_CHAIN_DESC1 desc;
+        swapchain->GetDesc1(&desc);
+        swapchain_images.resize(desc.BufferCount);
+        swapchain_framebuffers.reserve(desc.BufferCount);
+
+        for(uint32_t i = 0; i < desc.BufferCount; i++) {
+            swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_images[i]));
+
+            const auto rtv_handle = rtv_allocator->get_next_free_descriptor();
+
+            device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle);
+
+            D3D12Framebuffer framebuffer;
+            framebuffer.rtv_handles.push_back(rtv_handle);
+
+            swapchain_framebuffers.push_back(std::move(framebuffer));
+        }
     }
 
     std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> D3D12RenderDevice::create_descriptor_allocator(

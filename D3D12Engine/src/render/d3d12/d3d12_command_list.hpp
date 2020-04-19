@@ -35,6 +35,11 @@ namespace render {
         void add_completion_function(std::function<void()>&& completion_func) override;
 #pragma endregion
 
+        /*!
+         * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU
+         */
+        virtual void prepare_for_submission();
+
         [[nodiscard]] const auto& get_final_resource_states() const;
 
         [[nodiscard]] const auto& get_used_command_types() const;
