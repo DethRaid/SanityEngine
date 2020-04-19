@@ -157,12 +157,12 @@ namespace render {
 
         std::mutex in_flight_command_lists_mutex;
         std::condition_variable commands_lists_in_flight_cv;
-        std::queue<std::pair<ComPtr<ID3D12Fence>, std::unique_ptr<D3D12CommandList>>> in_flight_command_lists;
+        std::queue<std::pair<ComPtr<ID3D12Fence>, D3D12CommandList*>> in_flight_command_lists;
 
         std::unique_ptr<std::thread> command_completion_thread;
 
         std::mutex done_command_lists_mutex;
-        std::queue<std::unique_ptr<D3D12CommandList>> done_command_lists;
+        std::queue<D3D12CommandList*> done_command_lists;
 
 #pragma region initialization
         void enable_validation_layer();

@@ -3,6 +3,7 @@
 
 #include "d3d12_engine.hpp"
 
+#include <GLFW/glfw3.h>
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 #include <time.h>

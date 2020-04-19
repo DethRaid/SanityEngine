@@ -333,6 +333,10 @@ namespace render {
         // Nothing to explicitly do, the destructors will take care of us
     }
 
+    void D3D12RenderDevice::destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> /* pipeline_state */) {
+        // Nothing to do, destructors will take care of it
+    }
+
     std::unique_ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
 
@@ -409,7 +413,7 @@ namespace render {
 
         {
             std::lock_guard m{in_flight_command_lists_mutex};
-            in_flight_command_lists.emplace(command_list_done_fence, std::move(commands));
+            in_flight_command_lists.emplace(command_list_done_fence, dynamic_cast<D3D12CommandList*>(commands.release()));
         }
 
         commands_lists_in_flight_cv.notify_one();
@@ -419,8 +423,11 @@ namespace render {
         {
             std::lock_guard l{done_command_lists_mutex};
             while(!done_command_lists.empty()) {
-                done_command_lists.front()->execute_completion_functions();
+                auto* list = done_command_lists.front();
                 done_command_lists.pop();
+
+                list->execute_completion_functions();
+                delete list;
             }
         }
     }
@@ -817,45 +824,50 @@ namespace render {
     void D3D12RenderDevice::create_standard_graphics_pipeline_input_layout() {
         standard_graphics_pipeline_input_layout.reserve(5);
 
-        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Position",
-                                                             /* .SemanticIndex = */ 0,
-                                                             /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
-                                                             /* .InputSlot = */ 0,
-                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                                             /* .InstanceStepRate = */ 0);
+        standard_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Position",
+                                     /* .SemanticIndex = */ 0,
+                                     /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
+                                     /* .InputSlot = */ 0,
+                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     /* .InstanceDataStepRate = */ 0});
 
-        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Normal",
-                                                             /* .SemanticIndex = */ 0,
-                                                             /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
-                                                             /* .InputSlot = */ 0,
-                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                                             /* .InstanceStepRate = */ 0);
+        standard_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Normal",
+                                     /* .SemanticIndex = */ 0,
+                                     /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
+                                     /* .InputSlot = */ 0,
+                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     /* .InstanceDataStepRate = */ 0});
 
-        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Color",
-                                                             /* .SemanticIndex = */ 0,
-                                                             /* .Format = */ DXGI_FORMAT_R8G8B8A8_UNORM,
-                                                             /* .InputSlot = */ 0,
-                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                                             /* .InstanceStepRate = */ 0);
+        standard_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Color",
+                                     /* .SemanticIndex = */ 0,
+                                     /* .Format = */ DXGI_FORMAT_R8G8B8A8_UNORM,
+                                     /* .InputSlot = */ 0,
+                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     /* .InstanceDataStepRate = */ 0});
 
-        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "Texcoord",
-                                                             /* .SemanticIndex = */ 0,
-                                                             /* .Format = */ DXGI_FORMAT_R32G32_FLOAT,
-                                                             /* .InputSlot = */ 0,
-                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                                             /* .InstanceStepRate = */ 0);
+        standard_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Texcoord",
+                                     /* .SemanticIndex = */ 0,
+                                     /* .Format = */ DXGI_FORMAT_R32G32_FLOAT,
+                                     /* .InputSlot = */ 0,
+                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     /* .InstanceDataStepRate = */ 0});
 
-        standard_graphics_pipeline_input_layout.emplace_back(/* .SemanticName = */ "DoubleSided",
-                                                             /* .SemanticIndex = */ 0,
-                                                             /* .Format = */ DXGI_FORMAT_R32_UINT,
-                                                             /* .InputSlot = */ 0,
-                                                             /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                                             /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                                             /* .InstanceStepRate = */ 0);
+        standard_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "DoubleSided",
+                                     /* .SemanticIndex = */ 0,
+                                     /* .Format = */ DXGI_FORMAT_R32_UINT,
+                                     /* .InputSlot = */ 0,
+                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
+                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     /* .InstanceDataStepRate = */ 0});
     }
 
     D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const size_t num_bytes) const {
@@ -901,7 +913,7 @@ namespace render {
                 should_wait_for_cv = false;
             }
 
-            std::pair<ComPtr<ID3D12Fence>, std::unique_ptr<D3D12CommandList>> cur_pair;
+            std::pair<ComPtr<ID3D12Fence>, D3D12CommandList*> cur_pair;
             {
                 std::lock_guard l{render_device->in_flight_command_lists_mutex};
                 if(render_device->in_flight_command_lists.empty()) {
