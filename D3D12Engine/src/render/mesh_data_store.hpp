@@ -1,11 +1,11 @@
 #pragma once
+
 #include <memory>
 #include <vector>
 
 #include <DirectXMath.h>
+
 #include "resources.hpp"
-
-
 
 namespace render {
     struct BveVertex {
@@ -41,7 +41,7 @@ namespace render {
         MeshDataStore(std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
-        MeshDataStore& operator= (const MeshDataStore& other) = delete;
+        MeshDataStore& operator=(const MeshDataStore& other) = delete;
 
         MeshDataStore(MeshDataStore&& old) noexcept = default;
         MeshDataStore& operator=(MeshDataStore&& old) noexcept = delete;

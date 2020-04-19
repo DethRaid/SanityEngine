@@ -40,8 +40,6 @@ namespace render {
 
         initialize_dma();
 
-        create_shader_compiler();
-
         create_standard_root_signature();
 
         create_material_resource_binder();
@@ -710,20 +708,6 @@ namespace render {
         const auto result = D3D12MA::CreateAllocator(&allocator_desc, &device_allocator);
         if(FAILED(result)) {
             critical_error("Could not initialize DMA");
-        }
-    }
-
-    void D3D12RenderDevice::create_shader_compiler() {
-        MTR_SCOPE("D3D12RenderDevice", "create_shader_compiler");
-
-        auto hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(dxc_library.GetAddressOf()));
-        if(FAILED(hr)) {
-            critical_error("Could not create DXC Library instance");
-        }
-
-        hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(dxc_compiler.GetAddressOf()));
-        if(FAILED(hr)) {
-            critical_error("Could not create DXC instance");
         }
     }
 

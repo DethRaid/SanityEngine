@@ -5,7 +5,6 @@
 
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
-#include <dxcapi.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
 #include <wrl/client.h>
@@ -118,10 +117,6 @@ namespace render {
 
         D3D12MA::Allocator* device_allocator;
 
-        ComPtr<IDxcLibrary> dxc_library;
-
-        ComPtr<IDxcCompiler> dxc_compiler;
-
         ComPtr<ID3D12RootSignature> standard_root_signature;
 
         std::vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
@@ -183,8 +178,6 @@ namespace render {
                                                                                                 uint32_t num_descriptors) const;
 
         void initialize_dma();
-
-        void create_shader_compiler();
 
         void create_standard_root_signature();
 
