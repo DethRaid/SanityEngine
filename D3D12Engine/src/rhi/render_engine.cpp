@@ -14,7 +14,7 @@ namespace rhi {
             case RenderBackend::D3D12: {
                 const auto hwnd = glfwGetWin32Window(window);
 
-                XMINT2 framebuffer_size;
+                XMINT2 framebuffer_size{};
                 glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
 
                 return std::make_unique<D3D12RenderDevice>(hwnd, framebuffer_size);
