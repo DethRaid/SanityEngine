@@ -32,7 +32,7 @@ namespace render {
         commands->Close();
     }
 
-    ID3D12CommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
+    ID3D12GraphicsCommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
 
     void D3D12CommandList::execute_completion_functions() {
         for(const auto& func : completion_functions) {

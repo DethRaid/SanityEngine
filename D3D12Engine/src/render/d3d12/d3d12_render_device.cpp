@@ -190,7 +190,9 @@ namespace render {
     Framebuffer* D3D12RenderDevice::get_backbuffer_framebuffer() {
         const auto cur_swapchain_index = swapchain->GetCurrentBackBufferIndex();
 
-        ENSURE(cur_swapchain_index < swapchain_framebuffers.size(), "Not enough swapchain framebuffers for current swapchain index {}", cur_swapchain_index);
+        ENSURE(cur_swapchain_index < swapchain_framebuffers.size(),
+               "Not enough swapchain framebuffers for current swapchain index {}",
+               cur_swapchain_index);
 
         return &swapchain_framebuffers[cur_swapchain_index];
     }
@@ -409,7 +411,7 @@ namespace render {
 
         d3d12_commands->prepare_for_submission();
 
-        auto* d3d12_command_list = d3d12_commands->get_command_list();
+        auto* d3d12_command_list = static_cast<ID3D12CommandList*>(d3d12_commands->get_command_list());
 
         // First implementation - run everything on the same queue, because it's easy
         // Eventually I'll come up with a fancy way to use multiple queues
@@ -440,7 +442,18 @@ namespace render {
             }
         }
 
-        // TODO: Submit a command list that transitions the current swapchain image to the PRESENT state
+        auto cmds = create_render_command_list();
+        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+
+        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
+        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                                   D3D12_RESOURCE_STATE_PRESENT);
+        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
+
+        submit_command_list(std::move(cmds));
+
         swapchain->Present(0, 0);
     }
 
