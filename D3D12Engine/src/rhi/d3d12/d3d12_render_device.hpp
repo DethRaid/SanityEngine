@@ -9,7 +9,7 @@
 #include <dxgi1_4.h>
 #include <wrl/client.h>
 
-#include "../renderer.hpp"
+#include "../render_engine.hpp"
 #include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
 #include "d3d12_framebuffer.hpp"

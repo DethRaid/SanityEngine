@@ -25,32 +25,35 @@ set(D3D12_ENGINE_SOURCE
     "src/d3d12_engine.hpp" 
 
     "src/core/constants.hpp"
+    "src/core/abort.cpp" 
+    "src/core/ensure.cpp"
 
-    "src/render/renderer.hpp"
-    "src/render/command_list.hpp"
-    "src/render/resource_command_list.hpp"
-    "src/render/compute_command_list.hpp"
-    "src/render/render_command_list.hpp" 
+    "src/rhi/render_engine.hpp"
+    "src/rhi/command_list.hpp"
+    "src/rhi/resource_command_list.hpp"
+    "src/rhi/compute_command_list.hpp"
+    "src/rhi/render_command_list.hpp" 
+    "src/rhi/render_engine.cpp" 
+    "src/rhi/resources.cpp"  
+    "src/rhi/mesh_data_store.cpp" 
 
     "src/debugging/renderdoc.cpp" 
     "src/windows/windows_helpers.cpp" 
-    "src/render/renderer.cpp" 
-    "src/render/resources.cpp"  
-    "src/render/mesh_data_store.cpp" 
-     "src/core/abort.cpp" "src/core/ensure.cpp")
+)
 
 set(D3D12_BACKEND_SOURCE
-    "src/render/d3d12/d3d12_render_device.hpp"
-    "src/render/d3d12/d3d12_render_device.cpp"
+    "src/rhi/d3d12/d3d12_render_device.hpp"
+    "src/rhi/d3d12/d3d12_render_device.cpp"
 
-    "src/render/d3d12/helpers.hpp"
-    "src/render/d3d12/helpers.cpp"
-    "src/render/d3d12/d3d12_command_list.cpp"
-    "src/render/d3d12/d3d12_resource_command_list.cpp"
-    "src/render/d3d12/d3d12_compute_command_list.cpp"
-    "src/render/d3d12/d3d12_material.cpp" 
-    "src/render/d3d12/d3d12_render_command_list.cpp"
-    "src/render/d3d12/d3d12_descriptor_allocator.cpp" "src/render/d3d12/shader_reflection.cpp")
+    "src/rhi/d3d12/helpers.hpp"
+    "src/rhi/d3d12/helpers.cpp"
+    "src/rhi/d3d12/d3d12_command_list.cpp"
+    "src/rhi/d3d12/d3d12_resource_command_list.cpp"
+    "src/rhi/d3d12/d3d12_compute_command_list.cpp"
+    "src/rhi/d3d12/d3d12_material.cpp" 
+    "src/rhi/d3d12/d3d12_render_command_list.cpp"
+    "src/rhi/d3d12/d3d12_descriptor_allocator.cpp" 
+    "src/rhi/d3d12/shader_reflection.cpp")
 
 add_executable(D3D12Engine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 

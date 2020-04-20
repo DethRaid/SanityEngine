@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "debugging/renderdoc_app.h"
-#include "render/renderer.hpp"
+#include "rhi/render_engine.hpp"
 #include "settings.hpp"
 
 /*!
