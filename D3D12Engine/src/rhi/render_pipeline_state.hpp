@@ -5,7 +5,7 @@
 
 #include "bind_group.hpp"
 
-namespace render {
+namespace rhi {
     enum class PrimitiveType { Points, Lines, Triangles };
 
     enum class BlendFactor {

@@ -4,7 +4,7 @@
 
 #include "resource_command_list.hpp"
 
-namespace render
+namespace rhi
 {
     struct ComputePipelineState;
     struct BindGroup;

@@ -10,7 +10,7 @@ namespace D3D12MA {
     class Allocation;
 }
 
-namespace render {
+namespace rhi {
     struct D3D12Buffer : Buffer {
         ComPtr<ID3D12Resource> resource;
 

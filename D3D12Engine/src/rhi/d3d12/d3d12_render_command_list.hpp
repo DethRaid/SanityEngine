@@ -3,7 +3,7 @@
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_render_pipeline_state.hpp"
 
-namespace render {
+namespace rhi {
     class D3D12RenderCommandList final : public D3D12ComputeCommandList, public virtual RenderCommandList {
     public:
         D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);

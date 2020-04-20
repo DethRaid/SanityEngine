@@ -30,7 +30,7 @@ private:
 
     std::unique_ptr<RENDERDOC_API_1_3_0> renderdoc;
 
-    std::unique_ptr<render::RenderDevice> render_device;
+    std::unique_ptr<rhi::RenderDevice> render_device;
 
     GLFWwindow* window;
 

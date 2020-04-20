@@ -9,7 +9,7 @@
 #include "../bind_group.hpp"
 #include "resources.hpp"
 
-namespace render {
+namespace rhi {
     class D3D12RenderDevice;
 
     template <typename ResourceType>

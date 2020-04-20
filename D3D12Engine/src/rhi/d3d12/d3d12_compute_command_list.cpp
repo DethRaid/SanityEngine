@@ -9,7 +9,7 @@
 
 using std::move;
 
-namespace render {
+namespace rhi {
     D3D12ComputeCommandList::D3D12ComputeCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
         : D3D12ResourceCommandList{move(cmds), device_in} {}
 

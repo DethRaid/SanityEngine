@@ -7,7 +7,7 @@
 
 #include "../framebuffer.hpp"
 
-namespace render {
+namespace rhi {
     struct D3D12Framebuffer : Framebuffer {
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
         std::optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;

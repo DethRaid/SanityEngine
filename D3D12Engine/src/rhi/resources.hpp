@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace render {
+namespace rhi {
     struct Buffer {
         size_t size{};
 

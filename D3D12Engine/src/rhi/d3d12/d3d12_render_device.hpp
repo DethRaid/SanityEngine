@@ -21,7 +21,7 @@ namespace DirectX {
 
 using DirectX::XMINT2;
 
-namespace render {
+namespace rhi {
     using Microsoft::WRL::ComPtr;
 
     class D3D12RenderDevice : public virtual RenderDevice {

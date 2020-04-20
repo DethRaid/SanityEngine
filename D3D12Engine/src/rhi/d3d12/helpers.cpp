@@ -2,7 +2,7 @@
 
 #include <d3d12.h>
 
-namespace render {
+namespace rhi {
 
     std::wstring to_wide_string(const std::string& string) {
         const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, nullptr, 0);

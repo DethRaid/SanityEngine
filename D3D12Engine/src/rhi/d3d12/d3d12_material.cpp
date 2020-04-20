@@ -8,7 +8,7 @@
 
 using std::move;
 
-namespace render {
+namespace rhi {
     D3D12BindGroup::D3D12BindGroup(std::unordered_map<UINT, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in,
                                    std::vector<BoundResource<D3D12Image>> used_images_in,
                                    std::vector<BoundResource<D3D12Buffer>> used_buffers_in)

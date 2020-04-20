@@ -4,7 +4,7 @@
 #include "d3d12_command_list.hpp"
 #include "d3d12_render_device.hpp"
 
-namespace render {
+namespace rhi {
     class D3D12ResourceCommandList : public D3D12CommandList,  public virtual ResourceCommandList {
     public:
         D3D12ResourceCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);

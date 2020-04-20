@@ -4,7 +4,7 @@
 
 using std::move;
 
-namespace render {
+namespace rhi {
     D3D12DescriptorAllocator::D3D12DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
         : heap{move(heap_in)}, descriptor_size{descriptor_size_in} {}
 

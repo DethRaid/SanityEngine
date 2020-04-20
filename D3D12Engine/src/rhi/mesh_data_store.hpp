@@ -7,7 +7,7 @@
 
 #include "resources.hpp"
 
-namespace render {
+namespace rhi {
     struct BveVertex {
         DirectX::XMFLOAT3 position;
         DirectX::XMFLOAT3 normal;

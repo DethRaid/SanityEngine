@@ -3,7 +3,7 @@
 #include "command_list.hpp"
 #include "resources.hpp"
 
-namespace render {
+namespace rhi {
     struct BufferCreateInfo;
 
     /*!

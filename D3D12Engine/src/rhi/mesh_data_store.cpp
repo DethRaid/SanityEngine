@@ -1,6 +1,6 @@
 #include "mesh_data_store.hpp"
 
-namespace render {
+namespace rhi {
     MeshDataStore::MeshDataStore(std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in)
         : vertex_buffer{std::move(vertex_buffer_in)}, index_buffer{std::move(index_buffer_in)} {
         vertex_bindings.reserve(5);

@@ -9,7 +9,7 @@
 
 struct GLFWwindow;
 
-namespace render {
+namespace rhi {
     struct RenderPipelineStateCreateInfo;
 
     enum class RenderBackend {

@@ -9,7 +9,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace render {
+namespace rhi {
     struct D3D12Buffer;
     struct D3D12Image;
 

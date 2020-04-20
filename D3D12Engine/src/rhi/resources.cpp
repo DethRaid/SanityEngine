@@ -1,6 +1,6 @@
 #include "resources.hpp"
 
-namespace render {
+namespace rhi {
     size_t size_in_bytes(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:

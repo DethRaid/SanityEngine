@@ -2,7 +2,7 @@
 
 #include <functional>
 
-namespace render {
+namespace rhi {
     /*!
      * \brief Generic implementation of a command list
      */

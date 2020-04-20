@@ -40,7 +40,7 @@ D3D12Engine::D3D12Engine() {
         critical_error("Could not create GLFW window");
     }
 
-    render_device = make_render_device(render::RenderBackend::D3D12, window);
+    render_device = make_render_device(rhi::RenderBackend::D3D12, window);
 }
 
 D3D12Engine::~D3D12Engine() {

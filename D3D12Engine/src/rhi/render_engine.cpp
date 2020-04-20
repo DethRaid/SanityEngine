@@ -8,7 +8,7 @@
 
 #include "d3d12/d3d12_render_device.hpp"
 
-namespace render {
+namespace rhi {
     std::unique_ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window) {
         switch(backend) {
             case RenderBackend::D3D12: {

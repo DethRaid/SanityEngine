@@ -13,7 +13,7 @@
 
 using std::move;
 
-namespace render {
+namespace rhi {
     D3D12RenderCommandList::D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
         : D3D12ComputeCommandList{move(cmds), device_in} {
         commands->QueryInterface(commands4.GetAddressOf());

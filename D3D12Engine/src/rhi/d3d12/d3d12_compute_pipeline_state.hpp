@@ -7,7 +7,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace render {
+namespace rhi {
     struct D3D12ComputePipelineState : ComputePipelineState {
         ComPtr<ID3D12PipelineState> pso;
         ComPtr<ID3D12RootSignature> root_signature;

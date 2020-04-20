@@ -3,7 +3,7 @@
 #include "compute_command_list.hpp"
 #include "resources.hpp"
 
-namespace render {
+namespace rhi {
     struct RenderPipelineState;
     struct Framebuffer;
     class MeshDataStore;

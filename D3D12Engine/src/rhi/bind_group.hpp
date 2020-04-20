@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace render {
+namespace rhi {
     struct Buffer;
     struct Image;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace render {
+namespace rhi {
     /*!
      * \brief The state of a compute pipeline
      */

@@ -2,7 +2,7 @@
 
 #include <DirectXMath.h>
 
-namespace render {
+namespace rhi {
     struct Framebuffer {
         virtual ~Framebuffer() = default;
     };

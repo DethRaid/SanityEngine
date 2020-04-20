@@ -5,7 +5,7 @@
 
 using std::move;
 
-namespace render {
+namespace rhi {
     D3D12CommandList::D3D12CommandList(const ComPtr<ID3D12GraphicsCommandList>& cmds) : commands{cmds} {}
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& old) noexcept

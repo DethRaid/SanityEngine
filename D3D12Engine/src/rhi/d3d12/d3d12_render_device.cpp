@@ -18,7 +18,7 @@
 
 using std::move;
 
-namespace render {
+namespace rhi {
 
     D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size) {
 #ifndef NDEBUG
