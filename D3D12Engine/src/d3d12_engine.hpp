@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <memory>
 
+#include <entt/entity/registry.hpp>
+
 #include "debugging/renderdoc_app.h"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
@@ -33,6 +35,10 @@ private:
     std::unique_ptr<renderer::Renderer> renderer;
 
     GLFWwindow* window;
+
+    entt::registry registry;
+
+    void create_debug_cube();
 
     /*!
      * \brief Ticks the engine, advancing time by the specified amount

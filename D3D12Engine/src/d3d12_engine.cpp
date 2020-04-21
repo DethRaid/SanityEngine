@@ -41,6 +41,8 @@ D3D12Engine::D3D12Engine() {
     }
 
     renderer = std::make_unique<renderer::Renderer>(window);
+
+    create_debug_cube();
 }
 
 D3D12Engine::~D3D12Engine() {
@@ -71,4 +73,12 @@ void D3D12Engine::run() {
     }
 }
 
-void D3D12Engine::tick(double delta_time) { MTR_SCOPE("D3D12Engine", "tick"); }
+void D3D12Engine::create_debug_cube() {
+    auto vertices = std::vector<BveVertex>{{/* .position = */ /* .normal = */ /* .color = */ /* .texcoord = */ /* .double_sided = */}};
+}
+
+void D3D12Engine::tick(double delta_time) {
+    MTR_SCOPE("D3D12Engine", "tick");
+
+    renderer->render_scene(registry);
+}

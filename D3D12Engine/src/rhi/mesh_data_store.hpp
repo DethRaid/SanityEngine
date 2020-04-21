@@ -5,18 +5,18 @@
 
 #include <DirectXMath.h>
 
-#include "resources.hpp"
 #include "render_device.hpp"
+#include "resources.hpp"
+
+struct BveVertex {
+    DirectX::XMFLOAT3 position;
+    DirectX::XMFLOAT3 normal;
+    DirectX::XMVECTORU8 color;
+    DirectX::XMFLOAT2 texcoord;
+    uint32_t double_sided;
+};
 
 namespace rhi {
-    struct BveVertex {
-        DirectX::XMFLOAT3 position;
-        DirectX::XMFLOAT3 normal;
-        DirectX::XMVECTORU8 color;
-        DirectX::XMFLOAT2 texcoord;
-        uint32_t double_sided;
-    };
-
     /*!
      * \brief Binding for a vertex buffer
      */

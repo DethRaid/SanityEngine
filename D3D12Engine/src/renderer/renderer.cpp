@@ -1,6 +1,6 @@
 #include "renderer.hpp"
 
-#include <entt/entt.hpp>
+#include <entt/entity/registry.hpp>
 
 #include "../core/components.hpp"
 #include "../rhi/render_device.hpp"
@@ -15,6 +15,8 @@ namespace renderer {
     }
 
     void Renderer::render_scene(entt::registry& registry) {
+        render_device->begin_frame();
+
         auto command_list = render_device->create_render_command_list();
 
         render_3d_scene(registry, *command_list);
@@ -22,10 +24,11 @@ namespace renderer {
         render_device->submit_command_list(std::move(command_list));
     }
 
-    StaticMeshRenderable Renderer::create_static_mesh(const std::vector<rhi::BveVertex>& vertices, const std::vector<uint32_t>& indices) const {
+    StaticMeshRenderable Renderer::create_static_mesh(const std::vector<rhi::BveVertex>& vertices,
+                                                      const std::vector<uint32_t>& indices) const {
         const auto mesh_start_idx = static_mesh_storage->add_mesh(vertices, indices);
 
-        StaticMeshRenderable renderable {};
+        StaticMeshRenderable renderable{};
         renderable.first_index = mesh_start_idx;
         renderable.num_indices = indices.size();
 
@@ -33,14 +36,14 @@ namespace renderer {
     }
 
     void Renderer::make_static_mesh_storage() {
-        rhi::BufferCreateInfo vertex_create_info {};
+        rhi::BufferCreateInfo vertex_create_info{};
         vertex_create_info.name = "Static Mesh Vertex Buffer";
         vertex_create_info.size = STATIC_MESH_VERTEX_BUFFER_SIZE;
         vertex_create_info.usage = rhi::BufferUsage::VertexBuffer;
 
         auto vertex_buffer = render_device->create_buffer(vertex_create_info);
 
-        rhi::BufferCreateInfo index_buffer_create_info {};
+        rhi::BufferCreateInfo index_buffer_create_info{};
         index_buffer_create_info.name = "Static Mesh Index Buffer";
         index_buffer_create_info.size = STATIC_MESH_INDEX_BUFFER_SIZE;
         index_buffer_create_info.usage = rhi::BufferUsage::IndexBuffer;

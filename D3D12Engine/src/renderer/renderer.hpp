@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entity/registry.hpp>
+#include <entt/fwd.hpp>
 
 #include "../rhi/mesh_data_store.hpp"
 #include "components.hpp"
