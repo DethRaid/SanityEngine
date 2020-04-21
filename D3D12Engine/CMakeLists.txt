@@ -15,6 +15,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/spdlog")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "No docs" FORCE)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/glfw")
 
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/entt")
+
 # Add source to this project's executable.
 
 set(D3D12_ENGINE_SOURCE
@@ -69,4 +71,4 @@ target_compile_definitions(D3D12Engine PRIVATE MTR_ENABLED)
 
 target_include_directories(D3D12Engine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/DirectXMath/Inc")
 target_include_directories(D3D12Engine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include")
-target_link_libraries(D3D12Engine spdlog glfw d3d12 dxgi d3dcompiler)
+target_link_libraries(D3D12Engine spdlog glfw d3d12 dxgi d3dcompiler EnTT)

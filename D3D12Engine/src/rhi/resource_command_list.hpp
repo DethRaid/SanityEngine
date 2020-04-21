@@ -29,7 +29,7 @@ namespace rhi {
          * \param buffer The buffer that will receive the data
          * \param offset The offset into the buffer to copy data to
          */
-        virtual void copy_data_to_buffer(void* data, size_t num_bytes, const Buffer& buffer, size_t offset) = 0;
+        virtual void copy_data_to_buffer(const void* data, size_t num_bytes, const Buffer& buffer, size_t offset) = 0;
 
         /*!
          * \brief Copies data to an image
@@ -40,6 +40,6 @@ namespace rhi {
          * \param data The data to copy
          * \param image The image to copy data to
          */
-        virtual void copy_data_to_image(void* data, const Image& image) = 0;
+        virtual void copy_data_to_image(const void* data, const Image& image) = 0;
     };
 } // namespace render

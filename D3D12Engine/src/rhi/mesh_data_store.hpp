@@ -6,6 +6,7 @@
 #include <DirectXMath.h>
 
 #include "resources.hpp"
+#include "render_device.hpp"
 
 namespace rhi {
     struct BveVertex {
@@ -38,7 +39,7 @@ namespace rhi {
 
     class MeshDataStore {
     public:
-        MeshDataStore(std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in);
+        MeshDataStore(RenderDevice& device_in, std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
         MeshDataStore& operator=(const MeshDataStore& other) = delete;
@@ -52,11 +53,27 @@ namespace rhi {
 
         [[nodiscard]] const Buffer& get_index_buffer() const;
 
+        [[nodiscard]] uint32_t add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices);
+
     private:
+        RenderDevice* device;
+
         std::unique_ptr<Buffer> vertex_buffer;
 
         std::unique_ptr<Buffer> index_buffer;
 
         std::vector<VertexBufferBinding> vertex_bindings{};
+
+        /*!
+         * \brief Index of the byte in the vertex buffer where the next mesh can be uploaded to
+         *
+         * I'll eventually need a way to unload meshes, but that's more complicated
+         */
+        uint32_t next_free_vertex_byte{0};
+
+        /*!
+         * \brief The next mesh index
+         */
+        uint32_t next_free_index{0};
     };
-} // namespace render
+} // namespace rhi
