@@ -1,13 +1,14 @@
 #pragma once
+
+#include <entt/entity/registry.hpp>
+
 #include "../rhi/mesh_data_store.hpp"
 #include "components.hpp"
-#include "entt/entity/registry.hpp"
 
 namespace rhi {
     class RenderCommandList;
     class RenderDevice;
-}
-
+} // namespace rhi
 
 struct GLFWwindow;
 
@@ -23,7 +24,8 @@ namespace renderer {
 
         void render_scene(entt::registry& registry);
 
-        [[nodiscard]] StaticMeshRenderable create_static_mesh(const std::vector<rhi::BveVertex>& vertices, const std::vector<uint32_t>& indices) const;
+        [[nodiscard]] StaticMeshRenderable create_static_mesh(const std::vector<rhi::BveVertex>& vertices,
+                                                              const std::vector<uint32_t>& indices) const;
 
     private:
         std::unique_ptr<rhi::RenderDevice> render_device;

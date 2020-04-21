@@ -23,7 +23,7 @@ namespace rhi {
         return static_cast<D3D12ResourceCommandList&>(D3D12CommandList::operator=(move(old)));
     }
 
-    void D3D12ResourceCommandList::copy_data_to_buffer(void* data, const size_t num_bytes, const Buffer& buffer, const size_t offset) {
+    void D3D12ResourceCommandList::copy_data_to_buffer(const void* data, const size_t num_bytes, const Buffer& buffer, const size_t offset) {
         MTR_SCOPE("D32D12ResourceCommandList", "copy_data_to_buffer");
 
         // Upload the data using a staging buffer
@@ -46,7 +46,7 @@ namespace rhi {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
     }
 
-    void D3D12ResourceCommandList::copy_data_to_image(void* data, const Image& image) {
+    void D3D12ResourceCommandList::copy_data_to_image(const void* data, const Image& image) {
         MTR_SCOPE("D3D12ResourceCommandList", "copy_data_to_image");
 
         const auto bytes_per_pixel = size_in_bytes(image.format);

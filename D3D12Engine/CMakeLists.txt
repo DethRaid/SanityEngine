@@ -30,12 +30,12 @@ set(D3D12_ENGINE_SOURCE
     "src/core/abort.cpp" 
     "src/core/ensure.cpp"
 
-    "src/rhi/render_engine.hpp"
+    "src/rhi/render_device.hpp"
     "src/rhi/command_list.hpp"
     "src/rhi/resource_command_list.hpp"
     "src/rhi/compute_command_list.hpp"
     "src/rhi/render_command_list.hpp" 
-    "src/rhi/render_engine.cpp" 
+    "src/rhi/render_device.cpp" 
     "src/rhi/resources.cpp"  
     "src/rhi/mesh_data_store.cpp" 
 

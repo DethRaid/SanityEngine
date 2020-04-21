@@ -9,7 +9,7 @@
 #include <dxgi1_4.h>
 #include <wrl/client.h>
 
-#include "../render_engine.hpp"
+#include "../render_device.hpp"
 #include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
 #include "d3d12_framebuffer.hpp"
@@ -199,4 +199,4 @@ namespace rhi {
 
         static void wait_for_command_lists(D3D12RenderDevice* render_device);
     };
-} // namespace render
+} // namespace rhi

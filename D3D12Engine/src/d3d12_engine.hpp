@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "debugging/renderdoc_app.h"
-#include "rhi/render_engine.hpp"
+#include "renderer/renderer.hpp"
 #include "settings.hpp"
 
 /*!
@@ -30,7 +30,7 @@ private:
 
     std::unique_ptr<RENDERDOC_API_1_3_0> renderdoc;
 
-    std::unique_ptr<rhi::RenderDevice> render_device;
+    std::unique_ptr<renderer::Renderer> renderer;
 
     GLFWwindow* window;
 
