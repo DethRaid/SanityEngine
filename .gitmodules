@@ -1,18 +1,18 @@
-[submodule "D3D12Engine/extern/minitrace"]
-	path = D3D12Engine/extern/minitrace
+[submodule "SanityEngine/extern/minitrace"]
+	path = SanityEngine/extern/minitrace
 	url = https://github.com/hrydgard/minitrace.git
-[submodule "D3D12Engine/extern/D3D12MemoryAllocator"]
-	path = D3D12Engine/extern/D3D12MemoryAllocator
+[submodule "SanityEngine/extern/D3D12MemoryAllocator"]
+	path = SanityEngine/extern/D3D12MemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git
-[submodule "D3D12Engine/extern/spdlog"]
-	path = D3D12Engine/extern/spdlog
+[submodule "SanityEngine/extern/spdlog"]
+	path = SanityEngine/extern/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "D3D12Engine/extern/DirectXMath"]
-	path = D3D12Engine/extern/DirectXMath
+[submodule "SanityEngine/extern/DirectXMath"]
+	path = SanityEngine/extern/DirectXMath
 	url = https://github.com/microsoft/DirectXMath.git
-[submodule "D3D12Engine/extern/glfw"]
-	path = D3D12Engine/extern/glfw
+[submodule "SanityEngine/extern/glfw"]
+	path = SanityEngine/extern/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "D3D12Engine/extern/entt"]
-	path = D3D12Engine/extern/entt
+[submodule "SanityEngine/extern/entt"]
+	path = SanityEngine/extern/entt
 	url = https://github.com/skypjack/entt.git
