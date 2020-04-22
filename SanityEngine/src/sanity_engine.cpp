@@ -71,7 +71,97 @@ void SanityEngine::run() {
 }
 
 void SanityEngine::create_debug_cube() {
-    auto vertices = std::vector<BveVertex>{{/* .position = */ /* .normal = */ /* .color = */ /* .texcoord = */ /* .double_sided = */}};
+    auto vertices = std::vector<BveVertex>{
+        // Front
+        {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+
+        // Right
+        {/* .position = */ {1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+
+        // Back
+        {/* .position = */ {1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+
+        // Left
+        {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+
+        // Top
+        {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+
+        // Bottom
+        {/* .position = */ {1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+    };
+
+    auto indices = std::vector<uint32_t>{// Front
+                                         0,
+                                         1,
+                                         2,
+                                         0,
+                                         2,
+                                         3,
+
+                                         // Right
+                                         4,
+                                         5,
+                                         6,
+                                         4,
+                                         6,
+                                         7,
+
+                                         // Back
+                                         8,
+                                         9,
+                                         10,
+                                         8,
+                                         10,
+                                         11,
+
+                                         // Left
+                                         12,
+                                         13,
+                                         14,
+                                         12,
+                                         14,
+                                         15,
+
+                                         // Top
+                                         16,
+                                         17,
+                                         18,
+                                         16,
+                                         18,
+                                         19,
+
+                                         // Bottom
+                                         20,
+                                         21,
+                                         22,
+                                         20,
+                                         22,
+                                         23};
+
+    auto cube_renderable = renderer->create_static_mesh(vertices, indices);
+
+    const auto cube_entity = registry.create();
+
+    registry.emplace<renderer::StaticMeshRenderable>(cube_entity, cube_renderable);
 }
 
 void SanityEngine::tick(double delta_time) {

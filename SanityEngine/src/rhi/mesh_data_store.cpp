@@ -34,6 +34,8 @@ namespace rhi {
 
         cmds->copy_data_to_buffer(offset_indices.data(), index_data_size, *index_buffer, next_free_index * sizeof(uint32_t));
 
+        device->submit_command_list(std::move(cmds));
+
         next_free_vertex_byte += vertex_data_size;
 
         const auto mesh_start_idx = next_free_index;
