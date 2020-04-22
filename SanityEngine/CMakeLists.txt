@@ -71,3 +71,15 @@ target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/DirectXMath/Inc")
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include")
 target_link_libraries(SanityEngine spdlog glfw d3d12 dxgi d3dcompiler EnTT)
+
+# Compile shaders
+
+find_package(Python3)
+if(NOT Python3_Interpreter_FOUND)
+    message(ERROR "Could not find Python3 interpreter")
+endif()
+
+add_custom_command(TARGET SanityEngine
+    PRE_BUILD
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/tools/compile_shaders.py" "${CMAKE_CURRENT_LIST_DIR}/data/shaders" "${CMAKE_BINARY_DIR}/data/shaders"
+)
