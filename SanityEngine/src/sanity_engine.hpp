@@ -10,17 +10,17 @@
 /*!
  * \brief Main class for my glorious engine
  */
-class D3D12Engine {
+class SanityEngine {
 public:
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    D3D12Engine();
+    SanityEngine();
 
     /*!
      * \brief De-initializes the engine, flushing all logs
      */
-    ~D3D12Engine();
+    ~SanityEngine();
 
     /*!
      * \brief Runs the main loop of the engine. This method eventually returns, after the user is finished playing their game

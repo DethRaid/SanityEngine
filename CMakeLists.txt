@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("D3D12Engine")
+project ("SanityEngine")
 
 # Include sub-projects.
-add_subdirectory ("D3D12Engine")
+add_subdirectory ("SanityEngine")

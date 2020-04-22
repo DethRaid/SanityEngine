@@ -1,7 +1,4 @@
-﻿// D3D12Engine.cpp : Defines the entry point for the application
-//
-
-#include "d3d12_engine.hpp"
+﻿#include "sanity_engine.hpp"
 
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
@@ -12,14 +9,14 @@
 #include "debugging/renderdoc.hpp"
 
 int main() {
-    D3D12Engine engine;
+    SanityEngine engine;
 
     engine.run();
 }
 
 static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
 
-D3D12Engine::D3D12Engine() {
+SanityEngine::SanityEngine() {
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
     spdlog::info("HELLO HUMAN");
@@ -45,7 +42,7 @@ D3D12Engine::D3D12Engine() {
     create_debug_cube();
 }
 
-D3D12Engine::~D3D12Engine() {
+SanityEngine::~SanityEngine() {
     glfwDestroyWindow(window);
 
     glfwTerminate();
@@ -55,7 +52,7 @@ D3D12Engine::~D3D12Engine() {
     mtr_flush();
 }
 
-void D3D12Engine::run() {
+void SanityEngine::run() {
     double last_frame_duration = 0;
 
     while(!glfwWindowShouldClose(window)) {
@@ -73,11 +70,11 @@ void D3D12Engine::run() {
     }
 }
 
-void D3D12Engine::create_debug_cube() {
+void SanityEngine::create_debug_cube() {
     auto vertices = std::vector<BveVertex>{{/* .position = */ /* .normal = */ /* .color = */ /* .texcoord = */ /* .double_sided = */}};
 }
 
-void D3D12Engine::tick(double delta_time) {
+void SanityEngine::tick(double delta_time) {
     MTR_SCOPE("D3D12Engine", "tick");
 
     renderer->render_scene(registry);
