@@ -1,9 +1,9 @@
 struct BveVertex {
-    float3 position;
-    float3 normal;
-    float4 color;
-    float2 texcoord;
-    int double_sided;
+    float3 position : Position;
+    float3 normal : Normal;
+    float4 color : Color;
+    float2 texcoord : Texcoord;
+    int double_sided : DoubleSided;
 };
 
 struct VertexOutput {

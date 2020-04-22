@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+# Don't warn about documentation D3D12_BACKEND_SOURCE, because GLFW doens't use doxygen properly ffs
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-documentation")
+
 # Dependencies
 
 set(SPDLOG_MASTER_PROJECT OFF)
@@ -79,7 +82,10 @@ if(NOT Python3_Interpreter_FOUND)
     message(ERROR "Could not find Python3 interpreter")
 endif()
 
-add_custom_command(TARGET SanityEngine
-    PRE_BUILD
+add_custom_target(CompileShaders
     COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/tools/compile_shaders.py" "${CMAKE_CURRENT_LIST_DIR}/data/shaders" "${CMAKE_BINARY_DIR}/data/shaders"
+    COMMENT "Compiling shaders"
+    VERBATIM
 )
+
+add_dependencies(SanityEngine CompileShaders)

@@ -3,5 +3,6 @@
         "directory",
         "dxil",
         "hlsl"
-    ]
+    ],
+    "cmake.configureOnOpen": true
 }

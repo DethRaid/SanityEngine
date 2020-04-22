@@ -11,18 +11,19 @@ import subprocess
 from pathlib import Path
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print('Usage: compile_shaders.py <HLSL directory> <output directory>')
         exit(1)
 
-    shader_compiler = str(sys.argv[1])
-    hlsl_directory = str(sys.argv[2])
-    dxil_directory = str(sys.argv[3])
+    hlsl_directory = str(sys.argv[1])
+    dxil_directory = str(sys.argv[2])
 
     if not os.path.exists(dxil_directory):
         os.makedirs(dxil_directory)
 
     hlsl_paths = Path(hlsl_directory).glob('**/*.hlsl')
+
+    any_failed = False
 
     for path in hlsl_paths:
         dxil_filename = path.stem + '.dxil'

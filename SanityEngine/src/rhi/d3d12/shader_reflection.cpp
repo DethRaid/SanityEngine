@@ -12,5 +12,5 @@ D3D12_ROOT_SIGNATURE_DESC1 get_compute_shader_root_signature(const std::vector<u
     D3D12_SHADER_DESC desc;
     reflection->GetDesc(&desc);
 
-    
+    return {};
 }
