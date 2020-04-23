@@ -1,7 +1,7 @@
 struct VertexOutput {
     float4 position : SV_POSITION;
     float3 normal : NORMAL;
-    float4 color : COLOR;
+    uint color : COLOR;
     float2 texcoord : TEXCOORD;
     int double_sided : DATA;
 };

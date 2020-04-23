@@ -26,7 +26,7 @@ if __name__ == '__main__':
     any_failed = False
 
     for path in hlsl_paths:
-        dxil_filename = path.stem + '.dxil'
+        dxil_filename = path.stem + '.dxbc'
         dxil_path = dxil_directory + '/' + dxil_filename
 
         if str(path).endswith('.pixel.hlsl'):
