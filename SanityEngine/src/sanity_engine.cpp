@@ -12,6 +12,8 @@ int main() {
     SanityEngine engine;
 
     engine.run();
+
+    spdlog::warn("REMAIN INDOORS");
 }
 
 static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
