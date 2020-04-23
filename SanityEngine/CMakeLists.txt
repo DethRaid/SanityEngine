@@ -43,7 +43,7 @@ set(D3D12_ENGINE_SOURCE
 
     "src/debugging/renderdoc.cpp" 
     "src/windows/windows_helpers.cpp" 
- "src/renderer/renderer.cpp")
+ "src/renderer/renderer.cpp" "src/core/errors.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"
@@ -83,7 +83,7 @@ if(NOT Python3_Interpreter_FOUND)
 endif()
 
 add_custom_target(CompileShaders
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/tools/compile_shaders.py" "${CMAKE_CURRENT_LIST_DIR}/data/shaders" "${CMAKE_BINARY_DIR}/data/shaders"
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/tools/compile_shaders.py" "${CMAKE_CURRENT_LIST_DIR}/data/shaders" "${CMAKE_BINARY_DIR}/SanityEngine/data/shaders"
     COMMENT "Compiling shaders"
     VERBATIM
 )
