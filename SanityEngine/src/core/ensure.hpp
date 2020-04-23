@@ -1,15 +1,15 @@
 #pragma once
 
+#include <Windows.h>
 #include <spdlog/spdlog.h>
-#include <assert.h>
 
 #ifndef NDEBUG
-#define ENSURE(cond, msg, ...)                  \
-    if(!(cond)) {                               \
-         spdlog::error(msg, __VA_ARGS__);       \
-         assert(false);                         \
+#define ENSURE(cond, msg, ...)                                                                                                             \
+    if(!(cond)) {                                                                                                                          \
+        spdlog::error(msg, __VA_ARGS__);                                                                                                   \
+        DebugBreak();                                                                                                                      \
     }
-   
+
 #else
 #define ENSURE(cond, msg, ...)
 #endif
