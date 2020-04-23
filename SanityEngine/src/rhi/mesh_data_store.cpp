@@ -13,6 +13,11 @@ namespace rhi {
         vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(BveVertex, double_sided), sizeof(BveVertex)});
     }
 
+    MeshDataStore::~MeshDataStore() {
+        device->destroy_buffer(std::move(vertex_buffer));
+        device->destroy_buffer(std::move(index_buffer));
+    }
+
     const std::vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }

@@ -19,6 +19,8 @@ int main() {
 static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
 
 SanityEngine::SanityEngine() {
+    mtr_init("SanityEngine.json");
+
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
     spdlog::info("HELLO HUMAN");
@@ -34,7 +36,7 @@ SanityEngine::SanityEngine() {
     glfwSetErrorCallback(error_callback);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    window = glfwCreateWindow(640, 480, "D3D12 Engine", nullptr, nullptr);
+    window = glfwCreateWindow(640, 480, "Sanity Engine", nullptr, nullptr);
     if(window == nullptr) {
         critical_error("Could not create GLFW window");
     }
@@ -51,8 +53,6 @@ SanityEngine::~SanityEngine() {
     glfwDestroyWindow(window);
 
     glfwTerminate();
-
-    spdlog::warn("REMAIN INDOORS");
 
     mtr_flush();
 }

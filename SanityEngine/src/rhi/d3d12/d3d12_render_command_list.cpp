@@ -50,8 +50,8 @@ namespace rhi {
             }
 
             // TODO: Renderpass
-
-            in_render_pass = true;
+            // in_render_pass = true;
+            
         } else {
             if(d3d12_framebuffer.dsv_handle) {
                 commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
@@ -144,13 +144,15 @@ namespace rhi {
 
         commands->IASetIndexBuffer(&index_view);
 
+        commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
         is_mesh_data_bound = true;
     }
 
     void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
         MTR_SCOPE("D3D12RenderCommandList", "draw");
 
-        ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
+       // ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
         ENSURE(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
 

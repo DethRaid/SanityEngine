@@ -21,7 +21,7 @@ using std::move;
 
 namespace rhi {
 
-    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size) {
+    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size) : should_thread_continue{true} {
 #ifndef NDEBUG
         enable_validation_layer();
 #endif
@@ -51,7 +51,16 @@ namespace rhi {
         command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
     }
 
-    D3D12RenderDevice::~D3D12RenderDevice() { device_allocator->Release(); }
+    D3D12RenderDevice::~D3D12RenderDevice() {
+        for(auto& buffer : staging_buffers) {
+            buffer.allocation->Release();
+        }
+
+        device_allocator->Release();
+
+        should_thread_continue.store(false);
+        command_completion_thread->join();
+    }
 
     std::unique_ptr<Buffer> D3D12RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
@@ -213,12 +222,14 @@ namespace rhi {
         return ptr;
     }
 
-    void D3D12RenderDevice::destroy_buffer(std::unique_ptr<Buffer> /* buffer */) {
-        // We don't need to do anything special, D3D12 has destructors
+    void D3D12RenderDevice::destroy_buffer(const std::unique_ptr<Buffer> buffer) {
+        auto* d3d12_buffer = static_cast<D3D12Buffer*>(buffer.get());
+        d3d12_buffer->allocation->Release();
     }
 
-    void D3D12RenderDevice::destroy_image(std::unique_ptr<Image> /* image */) {
-        // Again nothing to do, D3D12 still has destructors
+    void D3D12RenderDevice::destroy_image(const std::unique_ptr<Image> image) {
+        auto* d3d12_image = static_cast<D3D12Image*>(image.get());
+        d3d12_image->allocation->Release();
     }
 
     void D3D12RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) {
@@ -946,7 +957,7 @@ namespace rhi {
         }
 
         buffer.size = num_bytes;
-        D3D12_RANGE range {0, num_bytes};
+        D3D12_RANGE range{0, num_bytes};
         buffer.resource->Map(0, &range, &buffer.ptr);
 
         set_object_name(*buffer.resource.Get(), "Staging Buffer");
@@ -959,7 +970,11 @@ namespace rhi {
 
         bool should_wait_for_cv = false;
 
-        while(true) {
+        auto should_continue = render_device->should_thread_continue.load();
+        
+        while(should_continue) {
+            should_continue = render_device->should_thread_continue.load();
+
             if(should_wait_for_cv) {
                 std::unique_lock l{render_device->in_flight_command_lists_mutex};
                 render_device->commands_lists_in_flight_cv.wait(l, [&] { return !render_device->in_flight_command_lists.empty(); });
@@ -971,7 +986,7 @@ namespace rhi {
             {
                 std::lock_guard l{render_device->in_flight_command_lists_mutex};
                 if(render_device->in_flight_command_lists.empty()) {
-                    should_wait_for_cv = true;
+                    // should_wait_for_cv = true;
                     continue;
                 }
 

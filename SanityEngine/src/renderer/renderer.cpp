@@ -82,6 +82,8 @@ namespace renderer {
         debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/debug.vertex.dxbc");
         debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/debug.pixel.dxbc");
         debug_pipeline_create_info.rasterizer_state.num_msaa_samples = 1;
+        debug_pipeline_create_info.depth_stencil_state.enable_depth_test = false;
+        debug_pipeline_create_info.depth_stencil_state.enable_depth_write = false;
 
         debug_pipeline = render_device->create_render_pipeline_state(debug_pipeline_create_info);
 

@@ -47,7 +47,7 @@ namespace rhi {
         MeshDataStore(MeshDataStore&& old) noexcept = default;
         MeshDataStore& operator=(MeshDataStore&& old) noexcept = delete;
 
-        ~MeshDataStore() = default;
+        ~MeshDataStore();
 
         [[nodiscard]] const std::vector<VertexBufferBinding>& get_vertex_bindings() const;
 

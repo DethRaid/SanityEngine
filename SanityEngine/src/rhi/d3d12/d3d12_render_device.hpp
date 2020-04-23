@@ -1,5 +1,5 @@
 #pragma once
-
+#include <atomic>
 #include <mutex>
 #include <queue>
 
@@ -9,6 +9,7 @@
 #include <dxgi1_4.h>
 #include <wrl/client.h>
 
+#include "../../core/async/mutex.hpp"
 #include "../render_device.hpp"
 #include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
@@ -165,6 +166,8 @@ namespace rhi {
 
         std::mutex done_command_lists_mutex;
         std::queue<D3D12CommandList*> done_command_lists;
+
+        std::atomic<bool> should_thread_continue;
 
 #pragma region initialization
         void enable_validation_layer();
