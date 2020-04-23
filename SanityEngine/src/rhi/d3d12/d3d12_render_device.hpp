@@ -73,6 +73,8 @@ namespace rhi {
         void submit_command_list(std::unique_ptr<CommandList> commands) override;
 
         void begin_frame() override;
+
+        void end_frame() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;

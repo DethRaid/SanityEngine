@@ -70,6 +70,13 @@ namespace rhi {
          * This probably means waiting on the previous frame to complete on the GPU
          */
         virtual void begin_frame() = 0;
+
+        /*!
+         * \brief Performs all the actions necessary to end the frame
+         *
+         * This probably means presenting the backbuffer
+         */
+        virtual void end_frame() = 0;
 #pragma endregion
     };
 

@@ -18,6 +18,8 @@ namespace rhi {
                 XMINT2 framebuffer_size{};
                 glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
 
+                spdlog::info("Creating D3D12 backend");
+
                 return std::make_unique<D3D12RenderDevice>(hwnd, framebuffer_size);
             }
         }

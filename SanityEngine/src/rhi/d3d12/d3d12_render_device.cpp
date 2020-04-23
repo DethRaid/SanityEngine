@@ -8,6 +8,7 @@
 #include "../../core/abort.hpp"
 #include "../../core/constants.hpp"
 #include "../../core/ensure.hpp"
+#include "../../core/errors.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_command_list.hpp"
@@ -31,7 +32,7 @@ namespace rhi {
 
         create_queues();
 
-        create_swapchain(window_handle, window_size, 1);
+        create_swapchain(window_handle, window_size, 3);
 
         create_command_allocators();
 
@@ -274,7 +275,7 @@ namespace rhi {
             output_rasterizer_state.DepthBias = rasterizer_state.depth_bias; // TODO: Figure out what the actual fuck D3D12 depth bias is
             output_rasterizer_state.DepthBiasClamp = rasterizer_state.max_depth_bias;
             output_rasterizer_state.SlopeScaledDepthBias = rasterizer_state.slope_scaled_depth_bias;
-            output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 0 ? 1 : 0;
+            output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 1 ? 1 : 0;
             output_rasterizer_state.AntialiasedLineEnable = rasterizer_state.enable_line_antialiasing;
             output_rasterizer_state.ConservativeRaster = rasterizer_state.enable_conservative_rasterization ?
                                                              D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON :
@@ -352,8 +353,8 @@ namespace rhi {
         ComPtr<ID3D12GraphicsCommandList> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
-                                                      D3D12_COMMAND_LIST_TYPE_COPY,
-                                                      copy_command_allocator.Get(),
+                                                      D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                      direct_command_allocator.Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -372,8 +373,8 @@ namespace rhi {
         ComPtr<ID3D12GraphicsCommandList> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
-                                                      D3D12_COMMAND_LIST_TYPE_COMPUTE,
-                                                      compute_command_allocator.Get(),
+                                                      D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                      direct_command_allocator.Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -416,6 +417,7 @@ namespace rhi {
         // First implementation - run everything on the same queue, because it's easy
         // Eventually I'll come up with a fancy way to use multiple queues
 
+        // TODO: Actually figure out how to use multiple queues
         direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
 
         auto command_list_done_fence = get_next_command_list_done_fence();
@@ -442,6 +444,20 @@ namespace rhi {
             }
         }
 
+        auto cmds = create_render_command_list();
+        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+
+        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
+        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+                                                                                                   D3D12_RESOURCE_STATE_COMMON,
+                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET);
+        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
+
+        submit_command_list(std::move(cmds));
+    }
+
+    void D3D12RenderDevice::end_frame() {
         auto cmds = create_render_command_list();
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
 
@@ -497,7 +513,12 @@ namespace rhi {
         }
 
         ComPtr<ID3D12Fence> fence;
-        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.GetAddressOf()));
+        const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+        if(FAILED(result)) {
+            spdlog::error("Could not create fence: {}", to_string(result));
+            const auto removed_reason = device->GetDeviceRemovedReason();
+            spdlog::error("Device removed reason: {}", to_string(removed_reason));
+        }
 
         return fence;
     }
@@ -507,12 +528,12 @@ namespace rhi {
     ID3D12Device* D3D12RenderDevice::get_d3d12_device() const { return device.Get(); }
 
     void D3D12RenderDevice::enable_validation_layer() {
-        const auto res = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
-        if(SUCCEEDED(res)) {
+        const auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
+        if(SUCCEEDED(result)) {
             debug_controller->EnableDebugLayer();
 
         } else {
-            spdlog::error("Could not enable the D3D12 validation layer");
+            spdlog::error("Could not enable the D3D12 validation layer: {}", to_string(result));
         }
     }
 
@@ -653,7 +674,7 @@ namespace rhi {
         swapchain_desc.Height = static_cast<UINT>(window_size.y);
         swapchain_desc.Format = swapchain_format;
 
-        swapchain_desc.SampleDesc = {1};
+        swapchain_desc.SampleDesc = {1, 0};
         swapchain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapchain_desc.BufferCount = num_images;
 
@@ -667,7 +688,7 @@ namespace rhi {
                                                   nullptr,
                                                   swapchain1.GetAddressOf());
         if(FAILED(hr)) {
-            const auto msg = fmt::format("Could not create swapchain: {}", hr);
+            const auto msg = fmt::format("Could not create swapchain: {}", to_string(hr));
             critical_error(msg.data());
         }
 
@@ -816,6 +837,7 @@ namespace rhi {
         root_signature_desc.pParameters = root_parameters.data();
         root_signature_desc.NumStaticSamplers = static_cast<UINT>(static_samplers.size());
         root_signature_desc.pStaticSamplers = static_samplers.data();
+        root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
         standard_root_signature = compile_root_signature(root_signature_desc);
         if(!standard_root_signature) {
@@ -843,7 +865,7 @@ namespace rhi {
                                              root_signature_blob->GetBufferSize(),
                                              IID_PPV_ARGS(&sig));
         if(FAILED(result)) {
-            spdlog::error("Could not create root signature");
+            spdlog::error("Could not create root signature: {}", to_string(result));
             return {};
         }
 
@@ -876,7 +898,7 @@ namespace rhi {
         standard_graphics_pipeline_input_layout.push_back(
             D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Color",
                                      /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R8G8B8A8_UNORM,
+                                     /* .Format = */ DXGI_FORMAT_R32_UINT,
                                      /* .InputSlot = */ 0,
                                      /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
                                      /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
@@ -894,7 +916,7 @@ namespace rhi {
         standard_graphics_pipeline_input_layout.push_back(
             D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "DoubleSided",
                                      /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R32_UINT,
+                                     /* .Format = */ DXGI_FORMAT_R32_SINT,
                                      /* .InputSlot = */ 0,
                                      /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
                                      /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
@@ -924,7 +946,8 @@ namespace rhi {
         }
 
         buffer.size = num_bytes;
-        ;
+        D3D12_RANGE range {0, num_bytes};
+        buffer.resource->Map(0, &range, &buffer.ptr);
 
         set_object_name(*buffer.resource.Get(), "Staging Buffer");
 
@@ -965,4 +988,4 @@ namespace rhi {
             }
         }
     }
-} // namespace render
+} // namespace rhi
