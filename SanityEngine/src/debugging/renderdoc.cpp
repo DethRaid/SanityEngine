@@ -5,7 +5,7 @@
 
 #include "../windows/windows_helpers.hpp"
 
-std::unique_ptr<RENDERDOC_API_1_3_0> load_renderdoc(const std::string& renderdoc_dll_path) {
+RENDERDOC_API_1_3_0* load_renderdoc(const std::string& renderdoc_dll_path) {
     HINSTANCE renderdoc_dll = LoadLibrary(renderdoc_dll_path.data());
     if(!renderdoc_dll) {
         const auto error = get_last_windows_error();
@@ -32,6 +32,6 @@ std::unique_ptr<RENDERDOC_API_1_3_0> load_renderdoc(const std::string& renderdoc
         return {};
     }
 
-    spdlog::debug("Loaded RenderDoc 1.3 API");
-    return std::unique_ptr<RENDERDOC_API_1_3_0>{api};
+    spdlog::info("Loaded RenderDoc 1.3 API");
+    return api;
 }

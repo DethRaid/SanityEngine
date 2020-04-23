@@ -15,7 +15,7 @@ public:
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    SanityEngine();
+    explicit SanityEngine(const Settings& settings_in);
 
     /*!
      * \brief De-initializes the engine, flushing all logs
@@ -30,7 +30,7 @@ public:
 private:
     Settings settings;
 
-    std::unique_ptr<RENDERDOC_API_1_3_0> renderdoc;
+    RENDERDOC_API_1_3_0* renderdoc;
 
     std::unique_ptr<renderer::Renderer> renderer;
 

@@ -9,7 +9,10 @@
 #include "debugging/renderdoc.hpp"
 
 int main() {
-    SanityEngine engine;
+    Settings settings{};
+    settings.enable_renderdoc = true;
+
+    SanityEngine engine{settings};
 
     engine.run();
 
@@ -18,7 +21,7 @@ int main() {
 
 static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
 
-SanityEngine::SanityEngine() {
+SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in} {
     mtr_init("SanityEngine.json");
 
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
@@ -36,7 +39,7 @@ SanityEngine::SanityEngine() {
     glfwSetErrorCallback(error_callback);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    window = glfwCreateWindow(640, 480, "Sanity Engine", nullptr, nullptr);
+    window = glfwCreateWindow(1000, 480, "Sanity Engine", nullptr, nullptr);
     if(window == nullptr) {
         critical_error("Could not create GLFW window");
     }

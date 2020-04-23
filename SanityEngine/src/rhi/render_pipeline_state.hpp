@@ -66,7 +66,7 @@ namespace rhi {
         float max_depth_bias{0};
         float slope_scaled_depth_bias{0};
 
-        uint32_t num_msaa_samples{0};
+        uint32_t num_msaa_samples{1};
 
         bool enable_line_antialiasing{false};
 

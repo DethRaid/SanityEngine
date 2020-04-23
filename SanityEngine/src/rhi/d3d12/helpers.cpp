@@ -16,6 +16,15 @@ namespace rhi {
         return wide_string;
     }
 
+    std::string from_wide_string(const std::wstring& wide_string) {
+        const int string_length = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        std::string string;
+        string.resize(string_length);
+        WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, string.data(), string.size(), nullptr, nullptr);
+
+        return string;
+    }
+
     void set_object_name(ID3D12Object& object, const std::string& name) {
         const auto wide_name = to_wide_string(name);
 

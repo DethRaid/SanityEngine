@@ -618,6 +618,20 @@ namespace rhi {
                     // descriptor arrays, so we need it
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
+                    spdlog::warn("Ignoring adapter {} - Doesn't have the flexible resource binding that Sanity Engine needs",
+                                 from_wide_string(desc.Description));
+
+                    continue;
+                }
+
+                D3D12_FEATURE_DATA_SHADER_MODEL shader_model;
+                try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
+                if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_0) {
+                    // Only supports old-ass shaders
+
+                    spdlog::warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
+                                 from_wide_string(desc.Description));
+
                     continue;
                 }
 
@@ -650,6 +664,9 @@ namespace rhi {
 #endif
 
                 break;
+
+            } else {
+                spdlog::warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description));
             }
 
             continue;
