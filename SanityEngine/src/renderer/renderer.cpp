@@ -14,7 +14,7 @@ namespace renderer {
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
         auto* shader_file = fopen(shader_filename.c_str(), "rb");
         if(shader_file == nullptr) {
-            spdlog::error("Could not open shader file {}", shader_filename);
+            spdlog::error("Could not open shader file '{}'", shader_filename);
             return {};
         }
 
@@ -45,6 +45,8 @@ namespace renderer {
         render_3d_scene(registry, *command_list);
 
         render_device->submit_command_list(std::move(command_list));
+
+        render_device->end_frame();
     }
 
     StaticMeshRenderable Renderer::create_static_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) const {
@@ -77,10 +79,13 @@ namespace renderer {
 
     void Renderer::create_debug_pipeline() {
         rhi::RenderPipelineStateCreateInfo debug_pipeline_create_info{};
-        debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/debug.vertex.dxil");
-        debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/debug.pixel.dxil");
+        debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/debug.vertex.dxbc");
+        debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/debug.pixel.dxbc");
+        debug_pipeline_create_info.rasterizer_state.num_msaa_samples = 1;
 
         debug_pipeline = render_device->create_render_pipeline_state(debug_pipeline_create_info);
+
+        spdlog::info("Created debug pipeline");
     }
 
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list) const {

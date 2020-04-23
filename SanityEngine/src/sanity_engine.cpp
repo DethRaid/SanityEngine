@@ -37,7 +37,10 @@ SanityEngine::SanityEngine() {
         critical_error("Could not create GLFW window");
     }
 
+    spdlog::info("Created window");
+
     renderer = std::make_unique<renderer::Renderer>(window);
+    spdlog::info("Initialized renderer");
 
     create_debug_cube();
 }
@@ -71,7 +74,7 @@ void SanityEngine::run() {
 }
 
 void SanityEngine::create_debug_cube() {
-    auto vertices = std::vector<BveVertex>{
+    const auto vertices = std::vector<BveVertex>{
         // Front
         {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
         {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
@@ -109,53 +112,53 @@ void SanityEngine::create_debug_cube() {
         {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
     };
 
-    auto indices = std::vector<uint32_t>{// Front
-                                         0,
-                                         1,
-                                         2,
-                                         0,
-                                         2,
-                                         3,
+    const auto indices = std::vector<uint32_t>{// Front
+                                               0,
+                                               1,
+                                               2,
+                                               0,
+                                               2,
+                                               3,
 
-                                         // Right
-                                         4,
-                                         5,
-                                         6,
-                                         4,
-                                         6,
-                                         7,
+                                               // Right
+                                               4,
+                                               5,
+                                               6,
+                                               4,
+                                               6,
+                                               7,
 
-                                         // Back
-                                         8,
-                                         9,
-                                         10,
-                                         8,
-                                         10,
-                                         11,
+                                               // Back
+                                               8,
+                                               9,
+                                               10,
+                                               8,
+                                               10,
+                                               11,
 
-                                         // Left
-                                         12,
-                                         13,
-                                         14,
-                                         12,
-                                         14,
-                                         15,
+                                               // Left
+                                               12,
+                                               13,
+                                               14,
+                                               12,
+                                               14,
+                                               15,
 
-                                         // Top
-                                         16,
-                                         17,
-                                         18,
-                                         16,
-                                         18,
-                                         19,
+                                               // Top
+                                               16,
+                                               17,
+                                               18,
+                                               16,
+                                               18,
+                                               19,
 
-                                         // Bottom
-                                         20,
-                                         21,
-                                         22,
-                                         20,
-                                         22,
-                                         23};
+                                               // Bottom
+                                               20,
+                                               21,
+                                               22,
+                                               20,
+                                               22,
+                                               23};
 
     auto cube_renderable = renderer->create_static_mesh(vertices, indices);
 
