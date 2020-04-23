@@ -31,7 +31,8 @@ namespace renderer {
         return shader;
     }
 
-    Renderer::Renderer(GLFWwindow* window) : render_device{make_render_device(rhi::RenderBackend::D3D12, window)} {
+    Renderer::Renderer(GLFWwindow* window, uint32_t num_frames)
+        : render_device{make_render_device(rhi::RenderBackend::D3D12, window, num_frames)} {
         make_static_mesh_storage();
 
         create_debug_pipeline();

@@ -43,7 +43,7 @@ SanityEngine::SanityEngine() {
 
     spdlog::info("Created window");
 
-    renderer = std::make_unique<renderer::Renderer>(window);
+    renderer = std::make_unique<renderer::Renderer>(window, settings.num_in_flight_frames);
     spdlog::info("Initialized renderer");
 
     create_debug_cube();

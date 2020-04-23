@@ -80,5 +80,5 @@ namespace rhi {
 #pragma endregion
     };
 
-    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window);
+    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, uint32_t num_frames);
 } // namespace render

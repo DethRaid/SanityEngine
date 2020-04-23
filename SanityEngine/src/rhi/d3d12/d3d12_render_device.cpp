@@ -21,7 +21,8 @@ using std::move;
 
 namespace rhi {
 
-    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size) : should_thread_continue{true} {
+    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size, const uint32_t num_frames_in)
+        : num_frames{num_frames_in} {
 #ifndef NDEBUG
         enable_validation_layer();
 #endif
@@ -32,7 +33,7 @@ namespace rhi {
 
         create_queues();
 
-        create_swapchain(window_handle, window_size, 3);
+        create_swapchain(window_handle, window_size, num_frames);
 
         create_command_allocators();
 
@@ -52,6 +53,13 @@ namespace rhi {
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
+        for(uint32_t i = 0; i < num_frames; i++) {
+            wait_for_frame(i);
+            direct_command_queue->Wait(frame_fences[i].Get(), frame_fence_values[i]);
+        }
+
+        wait_gpu_idle(0);
+
         for(auto& buffer : staging_buffers) {
             buffer.allocation->Release();
         }
@@ -444,6 +452,7 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::begin_frame() {
+        MTR_SCOPE("D3D12RenderDevice", "begin_frame");
         {
             std::lock_guard l{done_command_lists_mutex};
             while(!done_command_lists.empty()) {
@@ -455,10 +464,13 @@ namespace rhi {
             }
         }
 
+        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
+        wait_for_frame(cur_swapchain_idx);
+        frame_fence_values[cur_swapchain_idx]++;
+
         auto cmds = create_render_command_list();
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
 
-        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                    D3D12_RESOURCE_STATE_COMMON,
@@ -480,6 +492,8 @@ namespace rhi {
         swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
 
         submit_command_list(std::move(cmds));
+
+        direct_command_queue->Signal(frame_fences[cur_swapchain_idx].Get(), frame_fence_values[cur_swapchain_idx]);
 
         swapchain->Present(0, 0);
     }
@@ -707,6 +721,12 @@ namespace rhi {
         if(FAILED(hr)) {
             critical_error("Could not get new swapchain interface, please update your drivers");
         }
+
+        frame_fence_values.resize(num_images);
+        frame_fences.resize(num_images);
+        for(uint32_t i = 0; i < num_images; i++) {
+            device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences[i]));
+        }
     }
 
     void D3D12RenderDevice::create_command_allocators() {
@@ -759,6 +779,9 @@ namespace rhi {
             framebuffer.rtv_handles.push_back(rtv_handle);
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
+
+            const auto image_name = fmt::format("Swapchain image {}", i);
+            set_object_name(*swapchain_images[i].Get(), image_name);
         }
     }
 
@@ -934,7 +957,26 @@ namespace rhi {
                                      /* .InstanceDataStepRate = */ 0});
     }
 
-    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const size_t num_bytes) const {
+    void D3D12RenderDevice::wait_for_frame(const uint32_t frame_index) {
+        const auto desired_fence_value = frame_fence_values[frame_index];
+        auto fence = frame_fences[frame_index];
+
+        if(fence->GetCompletedValue() < desired_fence_value) {
+            // If the fence's most recent value is not the value we want, then the GPU has not finished executing the frame and we need to
+            // explicitly wait
+
+            fence->SetEventOnCompletion(desired_fence_value, frame_event);
+            WaitForSingleObject(frame_event, INFINITE);
+        }
+    }
+
+    void D3D12RenderDevice::wait_gpu_idle(const uint64_t frame_index) {
+        frame_fence_values[frame_index]++;
+        direct_command_queue->Signal(frame_fences[frame_index].Get(), frame_fence_values[frame_index]);
+        wait_for_frame(frame_index);
+    }
+
+    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const size_t num_bytes) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
 
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
@@ -960,7 +1002,9 @@ namespace rhi {
         D3D12_RANGE range{0, num_bytes};
         buffer.resource->Map(0, &range, &buffer.ptr);
 
-        set_object_name(*buffer.resource.Get(), "Staging Buffer");
+        const auto staging_buffer_name = fmt::format("Staging Buffer {}", staging_buffer_idx);
+        staging_buffer_idx++;
+        set_object_name(*buffer.resource.Get(), staging_buffer_name);
 
         return buffer;
     }
@@ -971,7 +1015,7 @@ namespace rhi {
         bool should_wait_for_cv = false;
 
         auto should_continue = render_device->should_thread_continue.load();
-        
+
         while(should_continue) {
             should_continue = render_device->should_thread_continue.load();
 

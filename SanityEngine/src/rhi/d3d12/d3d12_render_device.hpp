@@ -27,7 +27,7 @@ namespace rhi {
 
     class D3D12RenderDevice : public virtual RenderDevice {
     public:
-        D3D12RenderDevice(HWND window_handle, const XMINT2& window_size);
+        D3D12RenderDevice(HWND window_handle, const XMINT2& window_size, uint32_t num_frames_in);
 
         D3D12RenderDevice(const D3D12RenderDevice& other) = delete;
         D3D12RenderDevice& operator=(const D3D12RenderDevice& other) = delete;
@@ -116,6 +116,10 @@ namespace rhi {
         std::vector<ComPtr<ID3D12Resource>> swapchain_images;
         std::vector<D3D12Framebuffer> swapchain_framebuffers;
 
+        HANDLE frame_event;
+        std::vector<ComPtr<ID3D12Fence>> frame_fences;
+        std::vector<uint32_t> frame_fence_values;
+
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
 
@@ -129,6 +133,7 @@ namespace rhi {
 
         std::vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
 
+        uint64_t staging_buffer_idx{0};
         std::vector<D3D12StagingBuffer> staging_buffers;
 
         /*!
@@ -167,8 +172,9 @@ namespace rhi {
         std::mutex done_command_lists_mutex;
         std::queue<D3D12CommandList*> done_command_lists;
 
-        std::atomic<bool> should_thread_continue;
+        std::atomic<bool> should_thread_continue{true};
 
+        uint32_t num_frames;
 #pragma region initialization
         void enable_validation_layer();
 
@@ -200,7 +206,11 @@ namespace rhi {
         void create_standard_graphics_pipeline_input_layout();
 #pragma endregion
 
-        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(size_t num_bytes) const;
+        void wait_for_frame(uint32_t frame_index);
+
+        void wait_gpu_idle(uint64_t frame_index);
+
+        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(size_t num_bytes);
 
         static void wait_for_command_lists(D3D12RenderDevice* render_device);
     };

@@ -21,7 +21,7 @@ namespace renderer {
      */
     class Renderer {
     public:
-        explicit Renderer(GLFWwindow* window);
+        explicit Renderer(GLFWwindow* window, uint32_t num_frames);
 
         void render_scene(entt::registry& registry);
 
