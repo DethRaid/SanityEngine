@@ -66,6 +66,13 @@ namespace rhi {
                                              nullptr);
             }
         }
+
+        // TODO: Set viewport and scissor rect
+        D3D12_VIEWPORT viewport{};
+        viewport.MaxDepth = 1;
+        viewport.Width = d3d12_framebuffer.width;
+        viewport.Height = d3d12_framebuffer.height;
+        commands->RSSetViewports(1, &viewport);
     }
 
     void D3D12RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {

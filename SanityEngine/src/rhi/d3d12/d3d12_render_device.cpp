@@ -170,9 +170,33 @@ namespace rhi {
 
         auto framebuffer = std::make_unique<D3D12Framebuffer>();
 
+        float width = 0;
+        float height = 0;
+
         framebuffer->rtv_handles.reserve(render_targets.size());
+        uint32_t i{0};
         for(const auto* image : render_targets) {
             const auto* d3d12_image = static_cast<const D3D12Image*>(image);
+
+            if(width != 0 && width != d3d12_image->width) {
+                spdlog::error(
+                    "Render target {} has width {}, which is different from the width {} of the previous render target. All render targets must have the same width",
+                    i,
+                    d3d12_image->width,
+                    width);
+            }
+
+            width = d3d12_image->width;
+
+            if(height != 0 && height != d3d12_image->height) {
+                spdlog::error(
+                    "Render target {} has height {}, which is different from the height {} of the previous render target. All render targets must have the same height",
+                    i,
+                    d3d12_image->height,
+                    height);
+            }
+
+            height = d3d12_image->height;
 
             D3D12_RENDER_TARGET_VIEW_DESC desc{};
             desc.Format = d3d12_image->format;
@@ -185,10 +209,32 @@ namespace rhi {
             device->CreateRenderTargetView(d3d12_image->resource.Get(), &desc, handle);
 
             framebuffer->rtv_handles.push_back(handle);
+
+            i++;
         }
 
         if(depth_target != nullptr) {
             const auto* d3d12_depth_target = static_cast<const D3D12Image*>(depth_target);
+
+            if(width != 0 && width != d3d12_depth_target->width) {
+                spdlog::error(
+                    "Depth target has width {}, which is different from the width {} of the render targets. The depth target must have the same width as the render targets",
+                    i,
+                    d3d12_depth_target->width,
+                    width);
+            }
+
+            width = d3d12_depth_target->width;
+
+            if(height != 0 && height != d3d12_depth_target->height) {
+                spdlog::error(
+                    "Depth target has height {}, which is different from the height {} of the render targets. The depth target must have the same height as the render targets",
+                    i,
+                    d3d12_depth_target->height,
+                    height);
+            }
+
+            height = d3d12_depth_target->height;
 
             D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
             desc.Format = d3d12_depth_target->format;
@@ -201,6 +247,9 @@ namespace rhi {
 
             framebuffer->dsv_handle = handle;
         }
+
+        framebuffer->width = width;
+        framebuffer->height = height;
 
         return framebuffer;
     }
@@ -624,9 +673,16 @@ namespace rhi {
                     continue;
                 }
 
-                D3D12_FEATURE_DATA_SHADER_MODEL shader_model;
-                try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
-                if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_0) {
+                D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_4};
+                res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
+                if(FAILED(res)) {
+                    spdlog::warn("Ignoring adapter {} - Could not check the supported shader model: {}",
+                                 from_wide_string(desc.Description),
+                                 to_string(res));
+
+                    continue;
+
+                } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_0) {
                     // Only supports old-ass shaders
 
                     spdlog::warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
