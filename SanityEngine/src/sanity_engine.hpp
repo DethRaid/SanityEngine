@@ -3,7 +3,6 @@
 
 #include <entt/entity/registry.hpp>
 
-#include "debugging/renderdoc_app.h"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
 
@@ -29,8 +28,6 @@ public:
 
 private:
     Settings settings;
-
-    RENDERDOC_API_1_3_0* renderdoc;
 
     std::unique_ptr<renderer::Renderer> renderer;
 

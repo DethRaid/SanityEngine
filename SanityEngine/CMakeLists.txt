@@ -41,7 +41,6 @@ set(D3D12_ENGINE_SOURCE
     "src/rhi/resources.cpp"  
     "src/rhi/mesh_data_store.cpp" 
 
-    "src/debugging/renderdoc.cpp" 
     "src/windows/windows_helpers.cpp" 
  "src/renderer/renderer.cpp" "src/core/errors.cpp")
 

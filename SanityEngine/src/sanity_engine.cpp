@@ -6,11 +6,9 @@
 #include <time.h>
 
 #include "core/abort.hpp"
-#include "debugging/renderdoc.hpp"
 
 int main() {
-    Settings settings{};
-    settings.enable_renderdoc = true;
+    const Settings settings{};
 
     SanityEngine engine{settings};
 
@@ -27,10 +25,6 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in} 
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
     spdlog::info("HELLO HUMAN");
-
-    if(settings.enable_renderdoc) {
-        renderdoc = load_renderdoc("C:/Users/gold1/bin/RenderDoc/RenderDoc_2020_02_06_fe30fa91_64/renderdoc.dll");
-    }
 
     if(!glfwInit()) {
         critical_error("Could not initialize GLFW");
