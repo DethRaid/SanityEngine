@@ -6,6 +6,7 @@
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../rhi/render_device.hpp"
+#include "camera_matrix_buffer.hpp"
 #include "components.hpp"
 
 namespace renderer {
@@ -39,10 +40,14 @@ namespace renderer {
     void Renderer::render_scene(entt::registry& registry) {
         render_device->begin_frame();
 
+        const auto frame_idx = render_device->get_cur_backbuffer_idx();
+
         auto command_list = render_device->create_render_command_list();
         command_list->set_debug_name("Main Render Command List");
 
-        render_3d_scene(registry, *command_list);
+        update_cameras(registry, *command_list, frame_idx);
+
+        render_3d_scene(registry, *command_list, frame_idx);
 
         render_device->submit_command_list(std::move(command_list));
 
@@ -92,7 +97,21 @@ namespace renderer {
         spdlog::info("Created debug pipeline");
     }
 
-    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list) const {
+    void Renderer::update_cameras(const entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) {
+        auto camera_view = registry.view<TransformComponent, CameraComponent>();
+        for(const auto entity : camera_view) {
+            const auto& transform = registry.get<TransformComponent>(entity);
+            const auto& camera = registry.get<CameraComponent>(entity);
+
+            CameraMatrices matrices;
+            matrices.calculate_view_matrix(transform);
+            matrices.calculate_projection_matrix(camera);
+
+            camera_matrix_buffers->set_camera_matrices(camera.idx, matrices);
+        }
+    }
+
+    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
         const auto framebuffer = render_device->get_backbuffer_framebuffer();
 
         command_list.set_framebuffer(*framebuffer);
@@ -103,7 +122,7 @@ namespace renderer {
 
         auto static_mesh_view = registry.view<StaticMeshRenderable>();
 
-        for(auto entity : static_mesh_view) {
+        for(const auto entity : static_mesh_view) {
             const auto mesh_renderable = registry.get<StaticMeshRenderable>(entity);
 
             command_list.draw(mesh_renderable.num_indices, mesh_renderable.first_index);

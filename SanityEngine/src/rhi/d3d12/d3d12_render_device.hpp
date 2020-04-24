@@ -76,6 +76,8 @@ namespace rhi {
         void begin_frame() override;
 
         void end_frame() override;
+
+         uint32_t get_cur_backbuffer_idx() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;

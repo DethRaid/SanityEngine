@@ -4,6 +4,7 @@
 
 #include "../rhi/mesh_data_store.hpp"
 #include "../rhi/render_pipeline_state.hpp"
+#include "camera_matrix_buffer.hpp"
 #include "components.hpp"
 
 namespace rhi {
@@ -35,7 +36,7 @@ namespace renderer {
 
         std::unique_ptr<rhi::RenderPipelineState> debug_pipeline;
 
-
+        std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
 #pragma region Initialization
         void make_static_mesh_storage();
@@ -43,8 +44,10 @@ namespace renderer {
         void create_debug_pipeline();
 #pragma endregion
 
+        void update_cameras(const entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx);
+
 #pragma region 3D Scene
-        void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list) const;
+        void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx) const;
 #pragma endregion
     };
 } // namespace renderer

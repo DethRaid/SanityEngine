@@ -6,8 +6,10 @@
 #include <DirectXMath.h>
 #include <stdint.h>
 
+#include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../rhi/resources.hpp"
+#include "components.hpp"
 
 namespace rhi {
     class RenderDevice;
@@ -17,6 +19,10 @@ namespace renderer {
     struct CameraMatrices {
         DirectX::XMFLOAT4X4 view_matrix;
         DirectX::XMFLOAT4X4 projection_matrix;
+
+        void calculate_view_matrix(const TransformComponent& transform);
+
+        void calculate_projection_matrix(const CameraComponent& camera);
     };
 
     /*!

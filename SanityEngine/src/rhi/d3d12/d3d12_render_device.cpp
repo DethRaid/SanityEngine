@@ -544,6 +544,8 @@ namespace rhi {
         swapchain->Present(0, 0);
     }
 
+    uint32_t D3D12RenderDevice::get_cur_backbuffer_idx() { return swapchain->GetCurrentBackBufferIndex(); }
+
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
     D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const size_t num_bytes) {

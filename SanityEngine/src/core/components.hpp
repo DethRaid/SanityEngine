@@ -2,6 +2,6 @@
 
 #include <DirectXMath.h>
 
-struct Transform {
+struct TransformComponent {
     DirectX::XMFLOAT3 position;
 };

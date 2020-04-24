@@ -4,6 +4,23 @@
 #include "../rhi/render_device.hpp"
 
 namespace renderer {
+    void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
+        // Use an infinite projection matrix
+        // Math from http://www.terathon.com/gdc07_lengyel.pdf
+
+        const auto e = 1.0 / tan(camera.fov / 2.0);
+
+        // Reset the projection matrix, just to be sure
+        projection_matrix = {};
+
+        // Infinite projection matrix
+        projection_matrix.m[0][0] = static_cast<float>(e);
+        projection_matrix.m[1][1] = static_cast<float>(e / camera.aspect_ratio);
+        projection_matrix.m[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
+        projection_matrix.m[2][3] = -1.0f;
+        projection_matrix.m[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+    }
+
     CameraMatrixBuffer::CameraMatrixBuffer(rhi::RenderDevice& device_in, const uint32_t num_in_flight_frames) : device{&device_in} {
         device_data.reserve(num_in_flight_frames);
 
