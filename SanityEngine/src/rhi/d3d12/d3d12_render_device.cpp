@@ -343,6 +343,7 @@ namespace rhi {
                                                              D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON :
                                                              D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
+            desc.SampleMask = UINT_MAX;
             desc.SampleDesc.Count = rasterizer_state.num_msaa_samples;
         }
 
@@ -512,6 +513,7 @@ namespace rhi {
         frame_fence_values[cur_swapchain_idx]++;
 
         auto cmds = create_render_command_list();
+        cmds->set_debug_name("Transition Swapchain to Render Target");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
@@ -525,6 +527,7 @@ namespace rhi {
 
     void D3D12RenderDevice::end_frame() {
         auto cmds = create_render_command_list();
+        cmds->set_debug_name("Transition Swapchain to Presentable");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
 
         const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
@@ -850,6 +853,8 @@ namespace rhi {
 
             D3D12Framebuffer framebuffer;
             framebuffer.rtv_handles.push_back(rtv_handle);
+            framebuffer.width = desc.Width;
+            framebuffer.height = desc.Height;
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
@@ -983,7 +988,7 @@ namespace rhi {
     void D3D12RenderDevice::create_material_resource_binder() {}
 
     void D3D12RenderDevice::create_standard_graphics_pipeline_input_layout() {
-        standard_graphics_pipeline_input_layout.reserve(5);
+        standard_graphics_pipeline_input_layout.reserve(4);
 
         standard_graphics_pipeline_input_layout.push_back(
             D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Position",
@@ -1006,7 +1011,7 @@ namespace rhi {
         standard_graphics_pipeline_input_layout.push_back(
             D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Color",
                                      /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R32_UINT,
+                                     /* .Format = */ DXGI_FORMAT_R8G8B8A8_UNORM,
                                      /* .InputSlot = */ 0,
                                      /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
                                      /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
@@ -1016,15 +1021,6 @@ namespace rhi {
             D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Texcoord",
                                      /* .SemanticIndex = */ 0,
                                      /* .Format = */ DXGI_FORMAT_R32G32_FLOAT,
-                                     /* .InputSlot = */ 0,
-                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                     /* .InstanceDataStepRate = */ 0});
-
-        standard_graphics_pipeline_input_layout.push_back(
-            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "DoubleSided",
-                                     /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R32_SINT,
                                      /* .InputSlot = */ 0,
                                      /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
                                      /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,

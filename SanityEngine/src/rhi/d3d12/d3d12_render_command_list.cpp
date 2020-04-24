@@ -42,7 +42,7 @@ namespace rhi {
 
         const D3D12Framebuffer& d3d12_framebuffer = static_cast<const D3D12Framebuffer&>(framebuffer);
 
-        if(commands4) {
+        if(commands4 && false) {
             // TODO: Decide if every framebuffer should be a separate renderpass
 
             if(in_render_pass) {
@@ -68,6 +68,7 @@ namespace rhi {
         }
 
         D3D12_VIEWPORT viewport{};
+        viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
         viewport.Width = d3d12_framebuffer.width;
         viewport.Height = d3d12_framebuffer.height;

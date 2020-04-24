@@ -75,89 +75,91 @@ void SanityEngine::run() {
 void SanityEngine::create_debug_cube() {
     const auto vertices = std::vector<BveVertex>{
         // Front
-        {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
 
         // Right
-        {/* .position = */ {1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-
-        // Back
-        {/* .position = */ {1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
 
         // Left
-        {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+
+        // Back
+        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
 
         // Top
-        {/* .position = */ {-1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, -1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, 1, 1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
 
         // Bottom
-        {/* .position = */ {1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, 1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
-        {/* .position = */ {-1, -1, -1}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}, /* .double_sided = */ {}},
+        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {}, /* .color = */ {}, /* .texcoord = */ {}},
     };
 
-    const auto indices = std::vector<uint32_t>{// Front
-                                               0,
-                                               1,
-                                               2,
-                                               0,
-                                               2,
-                                               3,
+    const auto indices = std::vector<uint32_t>{
+        // front face
+        0,
+        1,
+        2, // first triangle
+        0,
+        3,
+        1, // second triangle
 
-                                               // Right
-                                               4,
-                                               5,
-                                               6,
-                                               4,
-                                               6,
-                                               7,
+        // left face
+        4,
+        5,
+        6, // first triangle
+        4,
+        7,
+        5, // second triangle
 
-                                               // Back
-                                               8,
-                                               9,
-                                               10,
-                                               8,
-                                               10,
-                                               11,
+        // right face
+        8,
+        9,
+        10, // first triangle
+        8,
+        11,
+        9, // second triangle
 
-                                               // Left
-                                               12,
-                                               13,
-                                               14,
-                                               12,
-                                               14,
-                                               15,
+        // back face
+        12,
+        13,
+        14, // first triangle
+        12,
+        15,
+        13, // second triangle
 
-                                               // Top
-                                               16,
-                                               17,
-                                               18,
-                                               16,
-                                               18,
-                                               19,
+        // top face
+        16,
+        17,
+        18, // first triangle
+        16,
+        19,
+        17, // second triangle
 
-                                               // Bottom
-                                               20,
-                                               21,
-                                               22,
-                                               20,
-                                               22,
-                                               23};
+        // bottom face
+        20,
+        21,
+        22, // first triangle
+        20,
+        23,
+        21, // second triangle
+    };
 
     auto cube_renderable = renderer->create_static_mesh(vertices, indices);
 

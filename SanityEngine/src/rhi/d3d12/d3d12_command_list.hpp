@@ -32,6 +32,8 @@ namespace rhi {
 #pragma region CommandList
         ~D3D12CommandList() override = default;
 
+        void set_debug_name(const std::string& name) override;
+
         void add_completion_function(std::function<void()>&& completion_func) override;
 #pragma endregion
 

@@ -13,7 +13,6 @@ struct BveVertex {
     DirectX::XMFLOAT3 normal;
     uint32_t color;
     DirectX::XMFLOAT2 texcoord;
-    uint32_t double_sided;
 };
 
 namespace rhi {

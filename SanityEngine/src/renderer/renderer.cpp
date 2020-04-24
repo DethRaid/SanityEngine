@@ -42,6 +42,7 @@ namespace renderer {
         render_device->begin_frame();
 
         auto command_list = render_device->create_render_command_list();
+        command_list->set_debug_name("Main Render Command List");
 
         render_3d_scene(registry, *command_list);
 

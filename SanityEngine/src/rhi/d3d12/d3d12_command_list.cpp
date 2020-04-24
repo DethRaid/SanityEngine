@@ -1,6 +1,9 @@
 #include "d3d12_command_list.hpp"
+
 #include <utility>
+
 #include "d3dx12.hpp"
+#include "helpers.hpp"
 #include "minitrace.h"
 #include "resources.hpp"
 
@@ -24,6 +27,8 @@ namespace rhi {
 
         return *this;
     }
+
+    void D3D12CommandList::set_debug_name(const std::string& name) { set_object_name(*commands.Get(), name); }
 
     void D3D12CommandList::add_completion_function(std::function<void()>&& completion_func) {
         MTR_SCOPE("D3D12CommandList", "add_completion_function");
@@ -100,4 +105,4 @@ namespace rhi {
     const auto& D3D12CommandList::get_final_resource_states() const { return most_recent_resource_states; }
 
     const auto& D3D12CommandList::get_used_command_types() const { return command_types; }
-} // namespace render
+} // namespace rhi
