@@ -4,13 +4,11 @@
 #include <spdlog/spdlog.h>
 
 #include "../core/components.hpp"
+#include "../core/constants.hpp"
 #include "../rhi/render_device.hpp"
 #include "components.hpp"
 
 namespace renderer {
-    constexpr uint32_t STATIC_MESH_VERTEX_BUFFER_SIZE = 64 << 20;
-    constexpr uint32_t STATIC_MESH_INDEX_BUFFER_SIZE = 64 << 20;
-
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
         auto* shader_file = fopen(shader_filename.c_str(), "rb");
         if(shader_file == nullptr) {

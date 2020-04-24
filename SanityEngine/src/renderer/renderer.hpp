@@ -35,6 +35,8 @@ namespace renderer {
 
         std::unique_ptr<rhi::RenderPipelineState> debug_pipeline;
 
+
+
 #pragma region Initialization
         void make_static_mesh_storage();
 

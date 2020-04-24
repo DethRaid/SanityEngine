@@ -42,7 +42,7 @@ set(D3D12_ENGINE_SOURCE
     "src/rhi/mesh_data_store.cpp" 
 
     "src/windows/windows_helpers.cpp" 
- "src/renderer/renderer.cpp" "src/core/errors.cpp")
+ "src/renderer/renderer.cpp" "src/core/errors.cpp" "src/renderer/camera_matrix_buffer.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"
