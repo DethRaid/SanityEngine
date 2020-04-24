@@ -165,7 +165,7 @@ void SanityEngine::create_debug_cube() {
 
     const auto cube_entity = registry.create();
 
-    registry.emplace<renderer::StaticMeshRenderable>(cube_entity, cube_renderable);
+    registry.emplace<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
 }
 
 void SanityEngine::tick(double delta_time) {

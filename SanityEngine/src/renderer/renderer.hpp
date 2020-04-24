@@ -26,7 +26,7 @@ namespace renderer {
 
         void render_scene(entt::registry& registry);
 
-        [[nodiscard]] StaticMeshRenderable create_static_mesh(const std::vector<BveVertex>& vertices,
+        [[nodiscard]] StaticMeshRenderableComponent create_static_mesh(const std::vector<BveVertex>& vertices,
                                                               const std::vector<uint32_t>& indices) const;
 
     private:

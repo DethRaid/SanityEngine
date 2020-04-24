@@ -2,8 +2,13 @@
 
 #include "../core/ensure.hpp"
 #include "../rhi/render_device.hpp"
+#include "../core/components.hpp"
 
 namespace renderer {
+    void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
+        view_matrix = DirectX::XMMatrixTranslation(transform.position.x, transform.position.y, transform.position.z);
+    }
+
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
         // Use an infinite projection matrix
         // Math from http://www.terathon.com/gdc07_lengyel.pdf

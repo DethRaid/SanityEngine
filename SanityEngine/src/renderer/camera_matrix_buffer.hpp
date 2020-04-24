@@ -17,7 +17,7 @@ namespace rhi {
 
 namespace renderer {
     struct CameraMatrices {
-        DirectX::XMFLOAT4X4 view_matrix;
+        DirectX::XMMATRIX view_matrix;
         DirectX::XMFLOAT4X4 projection_matrix;
 
         void calculate_view_matrix(const TransformComponent& transform);

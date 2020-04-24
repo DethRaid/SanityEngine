@@ -54,10 +54,10 @@ namespace renderer {
         render_device->end_frame();
     }
 
-    StaticMeshRenderable Renderer::create_static_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) const {
+    StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) const {
         const auto mesh_start_idx = static_mesh_storage->add_mesh(vertices, indices);
 
-        StaticMeshRenderable renderable{};
+        StaticMeshRenderableComponent renderable{};
         renderable.first_index = mesh_start_idx;
         renderable.num_indices = indices.size();
 
@@ -120,10 +120,10 @@ namespace renderer {
 
         command_list.bind_mesh_data(*static_mesh_storage);
 
-        auto static_mesh_view = registry.view<StaticMeshRenderable>();
+        auto static_mesh_view = registry.view<StaticMeshRenderableComponent>();
 
         for(const auto entity : static_mesh_view) {
-            const auto mesh_renderable = registry.get<StaticMeshRenderable>(entity);
+            const auto mesh_renderable = registry.get<StaticMeshRenderableComponent>(entity);
 
             command_list.draw(mesh_renderable.num_indices, mesh_renderable.first_index);
         }
