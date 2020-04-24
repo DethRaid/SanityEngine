@@ -1,12 +1,13 @@
 #include "d3d12_command_list.hpp"
-
+#include <utility>
 #include "d3dx12.hpp"
+#include "minitrace.h"
 #include "resources.hpp"
 
 using std::move;
 
 namespace rhi {
-    D3D12CommandList::D3D12CommandList(const ComPtr<ID3D12GraphicsCommandList>& cmds) : commands{cmds} {}
+    D3D12CommandList::D3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmds) : commands{std::move(cmds)} {}
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& old) noexcept
         : completion_functions{move(old.completion_functions)},
@@ -25,26 +26,31 @@ namespace rhi {
     }
 
     void D3D12CommandList::add_completion_function(std::function<void()>&& completion_func) {
+        MTR_SCOPE("D3D12CommandList", "add_completion_function");
         completion_functions.push_back(std::move(completion_func));
     }
 
     void D3D12CommandList::prepare_for_submission() {
+        MTR_SCOPE("D3D12CommandList", "prepare_for_submission");
         commands->Close();
     }
 
     ID3D12GraphicsCommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
 
     void D3D12CommandList::execute_completion_functions() {
+        MTR_SCOPE("D3D12CommandList", "execute_completion_functions");
         for(const auto& func : completion_functions) {
             func();
         }
     }
 
     void D3D12CommandList::set_resource_state(const D3D12Image& image, const D3D12_RESOURCE_STATES new_states) {
+        MTR_SCOPE("D3D12CommandList", "set_resource_state(D3D12Image)");
         set_resource_state(image.resource.Get(), new_states, false);
     }
 
     void D3D12CommandList::set_resource_state(const D3D12Buffer& buffer, const D3D12_RESOURCE_STATES new_states) {
+        MTR_SCOPE("D3D12CommandList", "set_resource_state(D3D12Buffer)");
         set_resource_state(buffer.resource.Get(), new_states, true);
     }
 

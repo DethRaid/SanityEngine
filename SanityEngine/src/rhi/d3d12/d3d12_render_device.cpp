@@ -198,15 +198,9 @@ namespace rhi {
 
             height = d3d12_image->height;
 
-            D3D12_RENDER_TARGET_VIEW_DESC desc{};
-            desc.Format = d3d12_image->format;
-            desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-            desc.Texture2D.PlaneSlice = 0;
-            desc.Texture2D.MipSlice = 0;
-
             const auto handle = rtv_allocator->get_next_free_descriptor();
 
-            device->CreateRenderTargetView(d3d12_image->resource.Get(), &desc, handle);
+            device->CreateRenderTargetView(d3d12_image->resource.Get(), nullptr, handle);
 
             framebuffer->rtv_handles.push_back(handle);
 
@@ -741,6 +735,9 @@ namespace rhi {
         // One graphics queue and one optional DMA queue
         D3D12_COMMAND_QUEUE_DESC graphics_queue_desc{};
         graphics_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+        graphics_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+        graphics_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        graphics_queue_desc.NodeMask = 0;
 
         auto result = device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&direct_command_queue));
         if(FAILED(result)) {
@@ -755,6 +752,9 @@ namespace rhi {
             // No need to care about DMA on UMA cause we can just map everything
             D3D12_COMMAND_QUEUE_DESC dma_queue_desc{};
             dma_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+            dma_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+            dma_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+            dma_queue_desc.NodeMask = 0;
             result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(&async_copy_queue));
             if(FAILED(result)) {
                 spdlog::warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
@@ -867,6 +867,7 @@ namespace rhi {
         heap_desc.NumDescriptors = num_descriptors;
         heap_desc.Flags = (descriptor_type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE :
                                                                                        D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
+        heap_desc.NodeMask = 0;
         device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
         const auto descriptor_size = device->GetDescriptorHandleIncrementSize(descriptor_type);
 

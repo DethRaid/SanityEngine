@@ -67,12 +67,16 @@ namespace rhi {
             }
         }
 
-        // TODO: Set viewport and scissor rect
         D3D12_VIEWPORT viewport{};
         viewport.MaxDepth = 1;
         viewport.Width = d3d12_framebuffer.width;
         viewport.Height = d3d12_framebuffer.height;
         commands->RSSetViewports(1, &viewport);
+
+        D3D12_RECT scissor_rect {};
+        scissor_rect.right = d3d12_framebuffer.width;
+        scissor_rect.bottom = d3d12_framebuffer.height;
+        commands->RSSetScissorRects(1, &scissor_rect);
     }
 
     void D3D12RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
@@ -167,6 +171,7 @@ namespace rhi {
     }
 
     void D3D12RenderCommandList::prepare_for_submission() {
+        MTR_SCOPE("D3D12RenderCommandList", "prepare_for_submission");
         if(in_render_pass && commands4) {
             commands4->EndRenderPass();
         }

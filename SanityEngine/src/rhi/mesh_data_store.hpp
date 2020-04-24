@@ -11,7 +11,7 @@
 struct BveVertex {
     DirectX::XMFLOAT3 position;
     DirectX::XMFLOAT3 normal;
-    DirectX::XMVECTORU8 color;
+    uint32_t color;
     DirectX::XMFLOAT2 texcoord;
     uint32_t double_sided;
 };

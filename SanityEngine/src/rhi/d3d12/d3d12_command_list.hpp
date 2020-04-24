@@ -21,7 +21,7 @@ namespace rhi {
      */
     class D3D12CommandList : virtual public CommandList {
     public:
-        explicit D3D12CommandList(const ComPtr<ID3D12GraphicsCommandList>& cmds);
+        explicit D3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmds);
 
         D3D12CommandList(const D3D12CommandList& other) = delete;
         D3D12CommandList& operator=(const D3D12CommandList& other) = delete;
