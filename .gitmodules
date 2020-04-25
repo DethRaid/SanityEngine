@@ -7,9 +7,6 @@
 [submodule "SanityEngine/extern/spdlog"]
 	path = SanityEngine/extern/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "SanityEngine/extern/DirectXMath"]
-	path = SanityEngine/extern/DirectXMath
-	url = https://github.com/microsoft/DirectXMath.git
 [submodule "SanityEngine/extern/glfw"]
 	path = SanityEngine/extern/glfw
 	url = https://github.com/glfw/glfw.git
