@@ -65,20 +65,20 @@ SanityEngine::~SanityEngine() {
 }
 
 void SanityEngine::run() {
-    double last_frame_duration = 0;
+    float last_frame_duration = 0;
 
     clock_t last_frame_end_time{0};
 
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        update_player_movement(last_frame_duration);
+        player_controller->update_player_position(last_frame_duration);
 
         tick(last_frame_duration);
 
         const auto end_time = clock();
 
-        last_frame_duration = static_cast<double>(end_time - last_frame_end_time) / static_cast<double>(CLOCKS_PER_SEC);
+        last_frame_duration = static_cast<float>(static_cast<double>(end_time - last_frame_end_time) / static_cast<double>(CLOCKS_PER_SEC));
         last_frame_end_time = end_time;
 
         mtr_flush();
@@ -181,34 +181,8 @@ void SanityEngine::create_debug_cube() {
     registry.emplace<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
 }
 
-void SanityEngine::update_player_movement(const double delta_time) {
-    auto& player_transform = registry.get<TransformComponent>(player);
-    const auto forward = player_transform.get_forward_vector();
 
-    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        // Move the player entity in its forward direction
-        player_transform.position += forward * delta_time;
-
-    } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        // Move the player entity in its backward direction
-    }
-
-    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        // Move the player entity in its right direction
-
-    } else if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        // Move the player entity in its left direction
-    }
-
-    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        // Move the player entity along the global up direction
-
-    } else if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        // Move the player along the global down direction
-    }
-}
-
-void SanityEngine::tick(double delta_time) {
+void SanityEngine::tick(float delta_time) {
     MTR_SCOPE("D3D12Engine", "tick");
 
     renderer->render_scene(registry);

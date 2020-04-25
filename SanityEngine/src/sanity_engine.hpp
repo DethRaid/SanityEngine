@@ -4,6 +4,7 @@
 #include <entt/entity/registry.hpp>
 
 #include "input/input_manager.hpp"
+#include "player/flycam_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
 
@@ -47,21 +48,17 @@ private:
      */
     entt::entity player;
 
+    std::unique_ptr<FlycamController> player_controller;
+
 #pragma region Debug
     void create_debug_cube();
 #pragma endregion
 
 #pragma region Tick
-    /*!
-     * \brief Updates the movement of the player entity
-     *
-     * Eventually I'll want to split this out into something... eventually. For now it can be part of the engine class
-     */
-    void update_player_movement(double delta_time);
 
     /*!
      * \brief Ticks the engine, advancing time by the specified amount
      */
-    void tick(double delta_time);
+    void tick(float delta_time);
 #pragma endregion
 };

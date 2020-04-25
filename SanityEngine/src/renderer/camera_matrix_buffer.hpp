@@ -3,7 +3,7 @@
 #include <array>
 #include <vector>
 
-#include <DirectXMath.h>
+#include <glm/glm.hpp>
 #include <stdint.h>
 
 #include "../core/components.hpp"
@@ -16,12 +16,10 @@ namespace rhi {
     class RenderDevice;
 }
 
-using DirectX::XMFLOAT4X4;
-
 namespace renderer {
     struct CameraMatrices {
-        XMFLOAT4X4 view_matrix;
-        XMFLOAT4X4 projection_matrix;
+        glm::mat4 view_matrix;
+        glm::mat4 projection_matrix;
 
         void calculate_view_matrix(const TransformComponent& transform);
 

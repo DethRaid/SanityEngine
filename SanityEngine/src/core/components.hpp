@@ -1,21 +1,18 @@
 #pragma once
 
-#include <DirectXMath.h>
-
-using DirectX::XMFLOAT3;
-using DirectX::XMFLOAT4;
+#include <glm/glm.hpp>
 
 struct TransformComponent {
-    XMFLOAT4 position;
+    glm::vec3 position;
 
-    XMFLOAT3 rotation;
+    glm::vec3 rotation;
 
-    XMFLOAT3 scale;
+    glm::vec3 scale;
 
-    [[nodiscard]] __forceinline XMFLOAT3 get_forward_vector() const;
+    [[nodiscard]] __forceinline glm::vec3 get_forward_vector() const;
 };
 
-inline XMFLOAT3 TransformComponent::get_forward_vector() const {
+inline glm::vec3 TransformComponent::get_forward_vector() const {
     const auto cos_pitch = cos(rotation.x);
 
     return {cos_pitch * sin(rotation.z), cos_pitch * cos(rotation.z), sin(rotation.z)};

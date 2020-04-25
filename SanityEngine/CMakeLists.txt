@@ -20,6 +20,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/glfw")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/entt")
 
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/glm")
+
 # Add source to this project's executable.
 
 set(D3D12_ENGINE_SOURCE
@@ -42,7 +44,7 @@ set(D3D12_ENGINE_SOURCE
     "src/rhi/mesh_data_store.cpp" 
 
     "src/windows/windows_helpers.cpp" 
- "src/renderer/renderer.cpp" "src/core/errors.cpp" "src/renderer/camera_matrix_buffer.cpp" "src/input/input_manager.cpp")
+ "src/renderer/renderer.cpp" "src/core/errors.cpp" "src/renderer/camera_matrix_buffer.cpp" "src/input/input_manager.cpp" "src/player/flycam_controller.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"
@@ -64,7 +66,7 @@ target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
 
 target_compile_options(SanityEngine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
-target_compile_definitions(SanityEngine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+target_compile_definitions(SanityEngine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN GLM_FORCE_LEFT_HANDED)
 
 target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)
 
@@ -72,7 +74,7 @@ target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)
 
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/DirectXMath/Inc")
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include")
-target_link_libraries(SanityEngine spdlog glfw d3d12 dxgi d3dcompiler EnTT)
+target_link_libraries(SanityEngine spdlog glfw d3d12 dxgi d3dcompiler EnTT glm)
 
 # Compile shaders
 
