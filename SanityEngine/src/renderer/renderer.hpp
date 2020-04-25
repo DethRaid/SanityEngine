@@ -24,7 +24,7 @@ namespace renderer {
     public:
         explicit Renderer(GLFWwindow* window, uint32_t num_frames);
 
-        void render_scene(entt::registry& registry);
+        void render_scene(entt::registry& registry) const;
 
         [[nodiscard]] StaticMeshRenderableComponent create_static_mesh(const std::vector<BveVertex>& vertices,
                                                               const std::vector<uint32_t>& indices) const;
@@ -44,7 +44,7 @@ namespace renderer {
         void create_debug_pipeline();
 #pragma endregion
 
-        void update_cameras(const entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx);
+        void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;
 
 #pragma region 3D Scene
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx) const;

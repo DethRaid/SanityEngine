@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 
 #include <entt/entity/registry.hpp>
+#include <minitrace.h>
 #include <spdlog/spdlog.h>
 
 #include "../core/components.hpp"
@@ -11,6 +12,7 @@
 
 namespace renderer {
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
+        MTR_SCOPE("Renderer", "load_shader");
         auto* shader_file = fopen(shader_filename.c_str(), "rb");
         if(shader_file == nullptr) {
             spdlog::error("Could not open shader file '{}'", shader_filename);
@@ -30,14 +32,17 @@ namespace renderer {
         return shader;
     }
 
-    Renderer::Renderer(GLFWwindow* window, uint32_t num_frames)
-        : render_device{make_render_device(rhi::RenderBackend::D3D12, window, num_frames)} {
+    Renderer::Renderer(GLFWwindow* window, const uint32_t num_frames)
+        : render_device{make_render_device(rhi::RenderBackend::D3D12, window, num_frames)},
+          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, num_frames)} {
+        MTR_SCOPE("Renderer", "Renderer");
         make_static_mesh_storage();
 
         create_debug_pipeline();
     }
 
-    void Renderer::render_scene(entt::registry& registry) {
+    void Renderer::render_scene(entt::registry& registry) const {
+        MTR_SCOPE("Renderer", "render_scene");
         render_device->begin_frame();
 
         const auto frame_idx = render_device->get_cur_backbuffer_idx();
@@ -54,7 +59,9 @@ namespace renderer {
         render_device->end_frame();
     }
 
-    StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) const {
+    StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
+                                                               const std::vector<uint32_t>& indices) const {
+        MTR_SCOPE("Renderer", "create_static_mesh");
         const auto mesh_start_idx = static_mesh_storage->add_mesh(vertices, indices);
 
         StaticMeshRenderableComponent renderable{};
@@ -97,8 +104,9 @@ namespace renderer {
         spdlog::info("Created debug pipeline");
     }
 
-    void Renderer::update_cameras(const entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) {
-        auto camera_view = registry.view<TransformComponent, CameraComponent>();
+    void Renderer::update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) const {
+        MTR_SCOPE("Renderer", "update_cameras");
+        const auto camera_view = registry.view<TransformComponent, CameraComponent>();
         for(const auto entity : camera_view) {
             const auto& transform = registry.get<TransformComponent>(entity);
             const auto& camera = registry.get<CameraComponent>(entity);
@@ -109,9 +117,12 @@ namespace renderer {
 
             camera_matrix_buffers->set_camera_matrices(camera.idx, matrices);
         }
+
+        camera_matrix_buffers->record_data_upload(commands, frame_idx);
     }
 
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
+        MTR_SCOPE("Renderer", "render_3d_scene");
         const auto framebuffer = render_device->get_backbuffer_framebuffer();
 
         command_list.set_framebuffer(*framebuffer);

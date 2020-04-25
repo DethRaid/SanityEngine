@@ -51,7 +51,7 @@ SanityEngine::~SanityEngine() {
 
     glfwTerminate();
 
-    mtr_flush();
+    mtr_shutdown();
 }
 
 void SanityEngine::run() {

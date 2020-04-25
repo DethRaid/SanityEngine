@@ -3,6 +3,7 @@
 #include "../core/components.hpp"
 #include "../core/ensure.hpp"
 #include "../rhi/render_device.hpp"
+#include "../rhi/resource_command_list.hpp"
 
 using namespace DirectX;
 
@@ -74,4 +75,11 @@ namespace renderer {
     }
 
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
+
+    void CameraMatrixBuffer::record_data_upload(rhi::ResourceCommandList& commands, const uint32_t frame_idx) const {
+        commands.copy_data_to_buffer(host_data.data(),
+                                     host_data.size() * sizeof(CameraMatrices),
+                                     get_device_buffer_for_frame(frame_idx),
+                                     0);
+    }
 } // namespace renderer

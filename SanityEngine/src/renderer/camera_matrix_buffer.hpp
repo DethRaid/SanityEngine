@@ -8,6 +8,7 @@
 
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
+#include "../rhi/render_command_list.hpp"
 #include "../rhi/resources.hpp"
 #include "components.hpp"
 
@@ -47,6 +48,11 @@ namespace renderer {
         [[nodiscard]] rhi::Buffer& get_device_buffer_for_frame(uint32_t frame_idx) const;
 
         [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
+
+        /*!
+         * \brief Records a command to upload the host buffer to the device buffer for the provided frame
+         */
+        void record_data_upload(rhi::ResourceCommandList& commands, uint32_t frame_idx) const;
 
     private:
         rhi::RenderDevice* device;

@@ -15,6 +15,8 @@ namespace rhi {
         ComPtr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
+
+        void* mapped_ptr{nullptr};
     };
 
     struct D3D12StagingBuffer : D3D12Buffer {
@@ -28,4 +30,4 @@ namespace rhi {
 
         DXGI_FORMAT format;
     };
-} // namespace render
+} // namespace rhi

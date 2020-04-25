@@ -76,6 +76,7 @@ namespace rhi {
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
 
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
+        bool should_map = false;
 
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         switch(create_info.usage) {
@@ -84,6 +85,7 @@ namespace rhi {
             case BufferUsage::ConstantBuffer:
                 alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
                 initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
+                should_map = true;
                 break;
 
             case BufferUsage::IndirectCommands:
@@ -108,6 +110,11 @@ namespace rhi {
         if(FAILED(result)) {
             spdlog::error("Could not create buffer %s", create_info.name);
             return {};
+        }
+
+        if(should_map) {
+            D3D12_RANGE mapped_range{0, create_info.size};
+            buffer->resource->Map(0, &mapped_range, &buffer->mapped_ptr);
         }
 
         buffer->size = create_info.size;
