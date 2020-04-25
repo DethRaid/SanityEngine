@@ -1,12 +1,24 @@
 #include "camera_matrix_buffer.hpp"
 
+#include "../core/components.hpp"
 #include "../core/ensure.hpp"
 #include "../rhi/render_device.hpp"
-#include "../core/components.hpp"
+
+using namespace DirectX;
 
 namespace renderer {
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
-        view_matrix = DirectX::XMMatrixTranslation(transform.position.x, transform.position.y, transform.position.z);
+        const auto position = XMLoadFloat4(&transform.position);
+        const auto translation_matrix = XMMatrixTranslationFromVector(position);
+
+        const auto rotation_x = XMMatrixRotationX(transform.rotation.x);
+        const auto rotation_y = XMMatrixRotationY(transform.rotation.y);
+        const auto rotation_z = XMMatrixRotationZ(transform.rotation.z);
+
+        // Cameras ignore their transform's scale
+
+        const auto view = rotation_x * rotation_y * rotation_z * translation_matrix;
+        XMStoreFloat4x4(&view_matrix, view);
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {

@@ -15,10 +15,12 @@ namespace rhi {
     class RenderDevice;
 }
 
+using DirectX::XMFLOAT4X4;
+
 namespace renderer {
     struct CameraMatrices {
-        DirectX::XMMATRIX view_matrix;
-        DirectX::XMFLOAT4X4 projection_matrix;
+        XMFLOAT4X4 view_matrix;
+        XMFLOAT4X4 projection_matrix;
 
         void calculate_view_matrix(const TransformComponent& transform);
 
@@ -49,7 +51,7 @@ namespace renderer {
     private:
         rhi::RenderDevice* device;
 
-        std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data;
+        std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data{};
 
         std::vector<rhi::Buffer*> device_data;
     };
