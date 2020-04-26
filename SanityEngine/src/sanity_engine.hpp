@@ -54,6 +54,10 @@ private:
     void create_debug_cube();
 #pragma endregion
 
+#pragma region Spawning
+    void create_flycam_player();
+#pragma endregion
+
 #pragma region Tick
 
     /*!

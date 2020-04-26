@@ -54,6 +54,8 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
     spdlog::info("Initialized renderer");
 
     create_debug_cube();
+
+    create_flycam_player();
 }
 
 SanityEngine::~SanityEngine() {
@@ -181,6 +183,14 @@ void SanityEngine::create_debug_cube() {
     registry.emplace<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
 }
 
+void SanityEngine::create_flycam_player() {
+    player = registry.create();
+
+    registry.emplace<TransformComponent>(player);
+    registry.emplace<renderer::CameraComponent>(player);
+
+    player_controller = std::make_unique<FlycamController>(window, player, registry);
+}
 
 void SanityEngine::tick(float delta_time) {
     MTR_SCOPE("D3D12Engine", "tick");

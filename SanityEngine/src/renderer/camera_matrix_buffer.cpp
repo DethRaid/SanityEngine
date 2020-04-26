@@ -5,21 +5,18 @@
 #include "../rhi/render_device.hpp"
 #include "../rhi/resource_command_list.hpp"
 
-using namespace DirectX;
+#include <glm/gtx/quaternion.hpp>
 
 namespace renderer {
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
-        const auto position = XMLoadFloat4(&transform.position);
-        const auto translation_matrix = XMMatrixTranslationFromVector(position);
+        view_matrix = {};
 
-        const auto rotation_x = XMMatrixRotationX(transform.rotation.x);
-        const auto rotation_y = XMMatrixRotationY(transform.rotation.y);
-        const auto rotation_z = XMMatrixRotationZ(transform.rotation.z);
+        // TODO: Does this have to be negative?
+        view_matrix = glm::translate(view_matrix, transform.position);
 
-        // Cameras ignore their transform's scale
+        const auto rotation_matrix = glm::toMat4(transform.rotation);
 
-        const auto view = rotation_x * rotation_y * rotation_z * translation_matrix;
-        XMStoreFloat4x4(&view_matrix, view);
+        view_matrix *= rotation_matrix;
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
@@ -32,11 +29,11 @@ namespace renderer {
         projection_matrix = {};
 
         // Infinite projection matrix
-        projection_matrix.m[0][0] = static_cast<float>(e);
-        projection_matrix.m[1][1] = static_cast<float>(e / camera.aspect_ratio);
-        projection_matrix.m[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
-        projection_matrix.m[2][3] = -1.0f;
-        projection_matrix.m[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+        projection_matrix[0][0] = static_cast<float>(e);
+        projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);
+        projection_matrix[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
+        projection_matrix[2][3] = -1.0f;
+        projection_matrix[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
     }
 
     CameraMatrixBuffer::CameraMatrixBuffer(rhi::RenderDevice& device_in, const uint32_t num_in_flight_frames) : device{&device_in} {
