@@ -920,7 +920,7 @@ namespace rhi {
         D3D12_DESCRIPTOR_RANGE textures_array;
         textures_array.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         textures_array.NumDescriptors = MAX_NUM_TEXTURES;
-        textures_array.BaseShaderRegister = 3;
+        textures_array.BaseShaderRegister = 2;
         textures_array.RegisterSpace = 0;
         textures_array.OffsetInDescriptorsFromTableStart = 0;
         descriptor_table_ranges.push_back(move(textures_array));

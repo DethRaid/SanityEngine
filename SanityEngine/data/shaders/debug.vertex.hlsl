@@ -12,10 +12,16 @@ struct VertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
+struct MaterialData {};
+
+#include "inc/standard_root_signature.hlsl"
+
 VertexOutput main(BveVertex input) {
     VertexOutput output;
 
-    output.position  = float4(input.position, 1);
+    Camera camera = cameras.Load(constants.camera_index);
+
+    output.position = mul(float4(input.position, 1), mul(camera.view, camera.projection));
     output.normal = input.normal;
     output.color = input.color;
     output.texcoord = input.texcoord;
