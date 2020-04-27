@@ -131,6 +131,5 @@ namespace rhi {
     };
 
     struct RenderPipelineState {
-        BindGroupBuilder* bind_group_builder;
     };
 } // namespace render
