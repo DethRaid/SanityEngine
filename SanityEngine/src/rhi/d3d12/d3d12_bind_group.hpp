@@ -38,6 +38,11 @@ namespace rhi {
          */
         void bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds);
 
+        /*!
+         * \brief Binds this bind group to the active compute root signature
+         */
+        void bind_to_compute_signature(ID3D12GraphicsCommandList& cmds);
+
         std::vector<RootParameter> root_parameters;
     };
 

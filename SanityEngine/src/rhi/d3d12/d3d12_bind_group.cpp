@@ -35,6 +35,35 @@ namespace rhi {
         }
     }
 
+    void D3D12BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) {
+        MTR_SCOPE("D3D12BindGroup", "bind_to_compute_signature");
+
+        for(uint32_t i = 0; i < root_parameters.size(); i++) {
+            const auto& param = root_parameters[i];
+            switch(param.type) {
+                case RootParameterType::Resource: {
+                    switch(param.resource.type) {
+                        case RootResourceType::ConstantBuffer:
+                            cmds.SetComputeRootConstantBufferView(i, param.resource.address);
+                            break;
+
+                        case RootResourceType::ShaderResource:
+                            cmds.SetComputeRootShaderResourceView(i, param.resource.address);
+                            break;
+
+                        case RootResourceType::UnorderedAccess:
+                            cmds.SetComputeRootUnorderedAccessView(i, param.resource.address);
+                            break;
+                    }
+                } break;
+
+                case RootParameterType::DescriptorTable:
+                    cmds.SetComputeRootDescriptorTable(i, param.table.handle);
+                    break;
+            }
+        }
+    }
+
     BindGroupBuilder& D3D12BindGroupBuilder::set_buffer(const std::string& name, const Buffer& buffer) {
         auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
         bound_buffers.insert_or_assign(name, &d3d12_buffer);
