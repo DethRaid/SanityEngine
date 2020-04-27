@@ -18,8 +18,11 @@ namespace rhi {
 
 namespace renderer {
     struct CameraMatrices {
-        glm::mat4 view_matrix;
-        glm::mat4 projection_matrix;
+        glm::mat4 view_matrix{};
+        glm::mat4 projection_matrix{};
+
+        glm::mat4 previous_view_matrix{};
+        glm::mat4 previous_projection_matrix{};
 
         void calculate_view_matrix(const TransformComponent& transform);
 

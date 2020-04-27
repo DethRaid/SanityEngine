@@ -111,6 +111,8 @@ namespace renderer {
             const auto& transform = registry.get<TransformComponent>(entity);
             const auto& camera = registry.get<CameraComponent>(entity);
 
+            // TODO: Make this stateful, so we can save the previous frame's camera matrices
+
             CameraMatrices matrices;
             matrices.calculate_view_matrix(transform);
             matrices.calculate_projection_matrix(camera);
@@ -123,6 +125,9 @@ namespace renderer {
 
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_3d_scene");
+
+        auto*& material_bind_group = render_device->
+
         const auto framebuffer = render_device->get_backbuffer_framebuffer();
 
         command_list.set_framebuffer(*framebuffer);

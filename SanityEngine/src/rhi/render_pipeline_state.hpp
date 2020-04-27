@@ -131,6 +131,6 @@ namespace rhi {
     };
 
     struct RenderPipelineState {
-        std::unique_ptr<BindGroupBuilder> bind_group_builder;
+        BindGroupBuilder* bind_group_builder;
     };
 } // namespace render

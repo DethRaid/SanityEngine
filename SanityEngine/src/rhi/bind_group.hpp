@@ -8,7 +8,17 @@ namespace rhi {
     struct Buffer;
     struct Image;
 
-    struct BindGroup {};
+    struct BindGroup {
+        BindGroup() = default;
+
+        BindGroup(const BindGroup& other) = default;
+        BindGroup& operator=(const BindGroup& other) = default;
+
+        BindGroup(BindGroup&& old) noexcept = default;
+        BindGroup& operator=(BindGroup&& old) noexcept = default;
+
+        virtual ~BindGroup() = default;
+    };
 
     class BindGroupBuilder {
     public:

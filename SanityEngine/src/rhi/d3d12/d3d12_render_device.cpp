@@ -402,6 +402,7 @@ namespace rhi {
         auto pipeline = std::make_unique<D3D12RenderPipelineState>();
         if(create_info.use_standard_material_layout) {
             pipeline->root_signature = standard_root_signature;
+            pipeline->bind_group_builder = material_bind_group_builder.get();
         }
 
         device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipeline->pso));
@@ -994,7 +995,9 @@ namespace rhi {
         return sig;
     }
 
-    void D3D12RenderDevice::create_material_resource_binder() {}
+    void D3D12RenderDevice::create_material_resource_binder() {
+        
+    }
 
     void D3D12RenderDevice::create_standard_graphics_pipeline_input_layout() {
         standard_graphics_pipeline_input_layout.reserve(4);

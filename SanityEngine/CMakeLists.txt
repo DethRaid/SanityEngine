@@ -58,7 +58,7 @@ set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_material.cpp" 
     "src/rhi/d3d12/d3d12_render_command_list.cpp"
     "src/rhi/d3d12/d3d12_descriptor_allocator.cpp" 
-    "src/rhi/d3d12/shader_reflection.cpp")
+    "src/rhi/d3d12/shader_reflection.cpp" "src/rhi/d3d12/d3d12_bind_group.cpp")
 
 add_executable(SanityEngine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 

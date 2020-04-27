@@ -10,6 +10,7 @@
 #include <wrl/client.h>
 
 #include "../../core/async/mutex.hpp"
+#include "../bind_group.hpp"
 #include "../render_device.hpp"
 #include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
@@ -177,6 +178,9 @@ namespace rhi {
         std::atomic<bool> should_thread_continue{true};
 
         uint32_t num_frames;
+
+        std::unique_ptr<BindGroupBuilder> material_bind_group_builder;
+
 #pragma region initialization
         void enable_validation_layer();
 
