@@ -74,6 +74,8 @@ namespace rhi {
 
         void submit_command_list(std::unique_ptr<CommandList> commands) override;
 
+        BindGroupBuilder& get_material_bind_group_builder() override;
+
         void begin_frame() override;
 
         void end_frame() override;

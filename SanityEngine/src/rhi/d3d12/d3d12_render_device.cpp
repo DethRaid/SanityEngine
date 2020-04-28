@@ -9,6 +9,7 @@
 #include "../../core/constants.hpp"
 #include "../../core/ensure.hpp"
 #include "../../core/errors.hpp"
+#include "d3d12_bind_group.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_command_list.hpp"
@@ -402,7 +403,6 @@ namespace rhi {
         auto pipeline = std::make_unique<D3D12RenderPipelineState>();
         if(create_info.use_standard_material_layout) {
             pipeline->root_signature = standard_root_signature;
-            pipeline->bind_group_builder = material_bind_group_builder.get();
         }
 
         device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipeline->pso));
@@ -501,6 +501,11 @@ namespace rhi {
         }
 
         commands_lists_in_flight_cv.notify_one();
+    }
+
+    BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder() {
+        // TODO: Something something per frame resources?
+        return *material_bind_group_builder.get();
     }
 
     void D3D12RenderDevice::begin_frame() {
@@ -996,7 +1001,24 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::create_material_resource_binder() {
-        
+        std::unordered_map<std::string, RootDescriptorDescription> root_descriptors;
+        root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
+        root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
+
+        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
+        // Textures array _always_ is at the start of the descriptor heap
+        descriptor_tables.emplace("textures",
+                                  DescriptorTableDescriptorDescription{DescriptorType::ShaderResource,
+                                                                       cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart()});
+
+        std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
+        descriptor_tables.emplace(3, cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart());
+
+        material_bind_group_builder = std::make_unique<D3D12BindGroupBuilder>(*device.Get(),
+                                                                              cbv_srv_uav_size,
+                                                                              std::move(root_descriptors),
+                                                                              std::move(descriptor_tables),
+                                                                              std::move(descriptor_table_gpu_handles));
     }
 
     void D3D12RenderDevice::create_standard_graphics_pipeline_input_layout() {

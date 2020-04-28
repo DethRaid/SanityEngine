@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "bind_group.hpp"
 #include "compute_command_list.hpp"
 #include "render_command_list.hpp"
 #include "resource_command_list.hpp"
@@ -64,6 +65,8 @@ namespace rhi {
 #pragma endregion
 
 #pragma region Rendering
+        [[nodiscard]] virtual BindGroupBuilder& get_material_bind_group_builder() = 0;
+
         /*!
          * \brief Sets up the render device to render the next frame
          *
