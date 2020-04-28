@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "../../core/ensure.hpp"
+#include "d3dx12.hpp"
 #include "minitrace.h"
 
 namespace rhi {
@@ -177,8 +178,49 @@ namespace rhi {
                     } break;
                 }
             } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
+                switch(desc.type) {
+                    case DescriptorType::ConstantBuffer: {
+                        spdlog::warn("Can not bind images to constant buffer {}", name);
+                    } break;
 
+                    case DescriptorType::ShaderResource: {
+                        ENSURE(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array {}", name);
+                        ENSURE(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array {}", name);
 
+                        CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
+
+                        for(const auto* image : image_itr->second) {
+                            D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+                            srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                            srv_desc.Format = image->format;
+                            srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                            srv_desc.Texture2D.MostDetailedMip = 0;
+                            srv_desc.Texture2D.MipLevels = 0xFFFFFFFF;
+                            srv_desc.Texture2D.PlaneSlice = 0;
+                            srv_desc.Texture2D.ResourceMinLODClamp = 0;
+
+                            device->CreateShaderResourceView(image->resource.Get(), &srv_desc, handle);
+
+                            handle.Offset(descriptor_size);
+                        }
+                    } break;
+
+                    case DescriptorType::UnorderedAccess: {
+                        CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
+
+                        for(const auto* image : image_itr->second) {
+                            D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc{};
+                            uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+                            uav_desc.Format = image->format;
+                            uav_desc.Texture2D.MipSlice = 0;
+                            uav_desc.Texture2D.PlaneSlice = 0;
+
+                            device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &uav_desc, handle);
+
+                            handle.Offset(descriptor_size);
+                        }
+                    } break;
+                }
             } else {
                 spdlog::warn("No resource bound to descriptor {}", name);
             }
