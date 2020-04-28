@@ -16,15 +16,15 @@ namespace rhi {
             switch(param.type) {
                 case RootParameterType::Descriptor: {
                     switch(param.descriptor.type) {
-                        case RootDescriptorType::ConstantBuffer:
+                        case DescriptorType::ConstantBuffer:
                             cmds.SetGraphicsRootConstantBufferView(i, param.descriptor.address);
                             break;
 
-                        case RootDescriptorType::ShaderResource:
+                        case DescriptorType::ShaderResource:
                             cmds.SetGraphicsRootShaderResourceView(i, param.descriptor.address);
                             break;
 
-                        case RootDescriptorType::UnorderedAccess:
+                        case DescriptorType::UnorderedAccess:
                             cmds.SetGraphicsRootUnorderedAccessView(i, param.descriptor.address);
                             break;
                     }
@@ -42,35 +42,36 @@ namespace rhi {
 
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
-            switch(param.type) {
-                case RootParameterType::Descriptor: {
-                    switch(param.descriptor.type) {
-                        case RootDescriptorType::ConstantBuffer:
-                            cmds.SetComputeRootConstantBufferView(i, param.descriptor.address);
-                            break;
+            if(param.type == RootParameterType::Descriptor) {
+                switch(param.descriptor.type) {
+                    case DescriptorType::ConstantBuffer:
+                        cmds.SetComputeRootConstantBufferView(i, param.descriptor.address);
+                        break;
 
-                        case RootDescriptorType::ShaderResource:
-                            cmds.SetComputeRootShaderResourceView(i, param.descriptor.address);
-                            break;
+                    case DescriptorType::ShaderResource:
+                        cmds.SetComputeRootShaderResourceView(i, param.descriptor.address);
+                        break;
 
-                        case RootDescriptorType::UnorderedAccess:
-                            cmds.SetComputeRootUnorderedAccessView(i, param.descriptor.address);
-                            break;
-                    }
-                } break;
+                    case DescriptorType::UnorderedAccess:
+                        cmds.SetComputeRootUnorderedAccessView(i, param.descriptor.address);
+                        break;
+                }
 
-                case RootParameterType::DescriptorTable:
-                    cmds.SetComputeRootDescriptorTable(i, param.table.handle);
-                    break;
+            } else if(param.type == RootParameterType::DescriptorTable) {
+                cmds.SetComputeRootDescriptorTable(i, param.table.handle);
             }
         }
     }
 
     D3D12BindGroupBuilder::D3D12BindGroupBuilder(
+        ID3D12Device& device_in,
+        const UINT descriptor_size_in,
         std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions_in,
-        std::unordered_map<std::string, D3D12_CPU_DESCRIPTOR_HANDLE> descriptor_table_descriptor_mappings_in,
+        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
         std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
-        : root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
+        : device{&device_in},
+          descriptor_size{descriptor_size_in},
+          root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
           descriptor_table_handles{std::move(descriptor_table_handles_in)} {
         bound_buffers.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
@@ -138,6 +139,50 @@ namespace rhi {
         }
 
         // Bind resources to descriptor table descriptors
+        for(const auto& [name, desc] : descriptor_table_descriptor_mappings) {
+            if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
+                auto* buffer = buffer_itr->second;
+                switch(desc.type) {
+                    case DescriptorType::ConstantBuffer: {
+                        D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};
+                        cbv_desc.SizeInBytes = buffer->size;
+                        cbv_desc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
+
+                        device->CreateConstantBufferView(&cbv_desc, desc.handle);
+                    } break;
+
+                    case DescriptorType::ShaderResource: {
+                        D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+                        srv_desc.Format = DXGI_FORMAT_R8_UNORM;
+                        srv_desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                        srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                        srv_desc.Buffer.FirstElement = 0;
+                        srv_desc.Buffer.NumElements = desc.num_structured_buffer_elements;
+                        srv_desc.Buffer.StructureByteStride = desc.structured_buffer_element_size;
+                        srv_desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+                        device->CreateShaderResourceView(buffer->resource.Get(), &srv_desc, desc.handle);
+                    } break;
+
+                    case DescriptorType::UnorderedAccess: {
+                        D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc{};
+                        uav_desc.Format = DXGI_FORMAT_R8_UNORM;
+                        uav_desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+                        uav_desc.Buffer.FirstElement = 0;
+                        uav_desc.Buffer.NumElements = desc.num_structured_buffer_elements;
+                        uav_desc.Buffer.StructureByteStride = desc.structured_buffer_element_size;
+                        uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+                        device->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &uav_desc, desc.handle);
+                    } break;
+                }
+            } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
+
+
+            } else {
+                spdlog::warn("No resource bound to descriptor {}", name);
+            }
+        }
 
         return std::make_unique<D3D12BindGroup>(std::move(root_parameters));
     }

@@ -7,10 +7,10 @@
 namespace rhi {
     enum class RootParameterType { Empty, Descriptor, DescriptorTable };
 
-    enum class RootDescriptorType { ConstantBuffer, ShaderResource, UnorderedAccess };
+    enum class DescriptorType { ConstantBuffer, ShaderResource, UnorderedAccess };
 
     struct RootDescriptor {
-        RootDescriptorType type{};
+        DescriptorType type{};
 
         D3D12_GPU_VIRTUAL_ADDRESS address;
     };
@@ -46,13 +46,30 @@ namespace rhi {
         std::vector<RootParameter> root_parameters;
     };
 
-    using RootDescriptorDescription = std::pair<uint32_t, RootDescriptorType>;
+    using RootDescriptorDescription = std::pair<uint32_t, DescriptorType>;
+
+    struct DescriptorTableDescriptorDescription {
+        DescriptorType type;
+        D3D12_CPU_DESCRIPTOR_HANDLE handle;
+
+        /*!
+         * \brief Number of elements in the array, if this descriptor is for a structures buffer that holds an array
+         */
+        uint32_t num_structured_buffer_elements{1};
+
+        /*!
+         * \brief Size of one element in the structured buffer, if this binding is for a structured buffer
+         */
+        uint32_t structured_buffer_element_size{0};
+    };
 
     class D3D12BindGroupBuilder final : public virtual BindGroupBuilder {
     public:
         /*!
          * \brief Initializes a D3D12BindGroupBuilder with information about how to bind resources
          *
+         * \param device_in Device that will use this bind group
+         * \param descriptor_size_in Size of a descriptor, used for binding image arrays
          * \param root_descriptor_descriptions_in Mapping from the string name of each root descriptor to the index and type of that
          * descriptor
          * \param descriptor_table_descriptor_mappings_in Mapping from the string name of each descriptor that's part of a descriptor table
@@ -60,9 +77,12 @@ namespace rhi {
          * \param descriptor_table_handles_in Mapping from the index of each descriptor table in the root signature to the GPU handle for
          * the start of that descriptor table
          */
-        explicit D3D12BindGroupBuilder(std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions_in,
-                                       std::unordered_map<std::string, D3D12_CPU_DESCRIPTOR_HANDLE> descriptor_table_descriptor_mappings_in,
-                                       std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
+        explicit D3D12BindGroupBuilder(
+            ID3D12Device& device_in,
+            UINT descriptor_size_in,
+            std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions_in,
+            std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
+            std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
 
         D3D12BindGroupBuilder(const D3D12BindGroupBuilder& other) = delete;
         D3D12BindGroupBuilder& operator=(const D3D12BindGroupBuilder& other) = delete;
@@ -81,12 +101,15 @@ namespace rhi {
         std::unique_ptr<BindGroup> build() override;
 
     private:
+        ID3D12Device* device;
+        UINT descriptor_size;
+
         std::unordered_map<std::string, const D3D12Buffer*> bound_buffers{};
 
         std::unordered_map<std::string, std::vector<const D3D12Image*>> bound_images{};
 
         std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions;
-        std::unordered_map<std::string, D3D12_CPU_DESCRIPTOR_HANDLE> descriptor_table_descriptor_mappings;
+        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;
         std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
     };
 } // namespace rhi

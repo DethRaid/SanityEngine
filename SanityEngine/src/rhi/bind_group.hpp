@@ -32,4 +32,4 @@ namespace rhi {
 
         virtual std::unique_ptr<BindGroup> build() = 0;
     };
-} // namespace render
+} // namespace rhi
