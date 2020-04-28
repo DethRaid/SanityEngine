@@ -103,5 +103,42 @@ namespace rhi {
 
     std::unique_ptr<BindGroup> D3D12BindGroupBuilder::build() {
         MTR_SCOPE("D3D12BindGroupBuilder", "build");
+
+        // D3D12 has a maximum root signature size of 64 descriptor tables
+        std::vector<RootParameter> root_parameters{64};
+
+        // Save descriptor table information
+        for(const auto& [idx, handle] : descriptor_table_handles) {
+            ENSURE(idx < 64, "May not have more than 64 descriptor tables in a single bind group");
+
+            root_parameters[idx].type = RootParameterType::DescriptorTable;
+            root_parameters[idx].table.handle = handle;
+        }
+
+        // Save root descriptor information
+        for(const auto& [name, desc] : root_descriptor_descriptions) {
+            const auto& [idx, type] = desc;
+            ENSURE(idx < 32, "May not have more than 32 root descriptors in a single bind group");
+
+            ENSURE(root_parameters[idx].type == RootParameterType::Empty, "Root parameter index {} already used", idx);
+
+            root_parameters[idx].type = RootParameterType::Descriptor;
+            root_parameters[idx].descriptor.type = type;
+
+            if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
+                root_parameters[idx].descriptor.address = buffer_itr->second->resource->GetGPUVirtualAddress();
+
+            } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
+                ENSURE(image_itr->second.size() == 1, "May only bind a single image to a root descriptor");
+                root_parameters[idx].descriptor.address = image_itr->second[0]->resource->GetGPUVirtualAddress();
+
+            } else {
+                spdlog::warn("No resources bound to root descriptor {}", name);
+            }
+        }
+
+        // Bind resources to descriptor table descriptors
+
+        return std::make_unique<D3D12BindGroup>(std::move(root_parameters));
     }
 } // namespace rhi

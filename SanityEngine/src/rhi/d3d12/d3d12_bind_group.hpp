@@ -5,12 +5,12 @@
 #include "resources.hpp"
 
 namespace rhi {
-    enum class RootParameterType { Descriptor, DescriptorTable };
+    enum class RootParameterType { Empty, Descriptor, DescriptorTable };
 
     enum class RootDescriptorType { ConstantBuffer, ShaderResource, UnorderedAccess };
 
     struct RootDescriptor {
-        RootDescriptorType type{RootDescriptorType::ConstantBuffer};
+        RootDescriptorType type{};
 
         D3D12_GPU_VIRTUAL_ADDRESS address;
     };
@@ -20,7 +20,7 @@ namespace rhi {
     };
 
     struct RootParameter {
-        RootParameterType type{RootParameterType::Descriptor};
+        RootParameterType type{};
 
         union {
             RootDescriptor descriptor{};
