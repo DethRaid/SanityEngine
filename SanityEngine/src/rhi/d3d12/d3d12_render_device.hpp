@@ -81,7 +81,7 @@ namespace rhi {
 
         void end_frame() override;
 
-         uint32_t get_cur_backbuffer_idx() override;
+        uint32_t get_cur_backbuffer_idx() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;
@@ -201,8 +201,8 @@ namespace rhi {
 
         void initialize_swapchain_descriptors();
 
-        [[nodiscard]] std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
-                                                                                                uint32_t num_descriptors) const;
+        [[nodiscard]] std::pair<ID3D12DescriptorHeap*, UINT> create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+                                                                                    uint32_t num_descriptors) const;
 
         void initialize_dma();
 

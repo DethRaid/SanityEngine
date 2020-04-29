@@ -455,6 +455,8 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
+        commands->SetDescriptorHeaps(1, cbv_srv_uav_heap.GetAddressOf());
+
         return std::make_unique<D3D12ComputeCommandList>(commands, *this);
     }
 
@@ -474,6 +476,8 @@ namespace rhi {
         }
 
         cmds->QueryInterface(commands.GetAddressOf());
+
+        commands->SetDescriptorHeaps(1, cbv_srv_uav_heap.GetAddressOf());
 
         return std::make_unique<D3D12RenderCommandList>(commands, *this);
     }
@@ -844,15 +848,15 @@ namespace rhi {
 
     void D3D12RenderDevice::create_descriptor_heaps() {
         MTR_SCOPE("D3D12RenderDevice", "create_descriptor_heaps");
-        const auto& [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                                                               65536);
+        const auto [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536);
+
         cbv_srv_uav_heap = new_cbv_srv_uav_heap;
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
-        const auto& [rtv_heap, rtv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
+        const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
         rtv_allocator = std::make_unique<D3D12DescriptorAllocator>(rtv_heap, rtv_size);
 
-        const auto& [dsv_heap, dsv_size] = create_descriptor_allocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
+        const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
         dsv_allocator = std::make_unique<D3D12DescriptorAllocator>(dsv_heap, dsv_size);
     }
 
@@ -881,9 +885,9 @@ namespace rhi {
         }
     }
 
-    std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> D3D12RenderDevice::create_descriptor_allocator(
-        const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type, const uint32_t num_descriptors) const {
-        ComPtr<ID3D12DescriptorHeap> heap;
+    std::pair<ID3D12DescriptorHeap*, UINT> D3D12RenderDevice::create_descriptor_heap(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+                                                                                     const uint32_t num_descriptors) const {
+        ID3D12DescriptorHeap* heap;
 
         D3D12_DESCRIPTOR_HEAP_DESC heap_desc{};
         heap_desc.Type = descriptor_type;
@@ -891,7 +895,13 @@ namespace rhi {
         heap_desc.Flags = (descriptor_type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE :
                                                                                        D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
         heap_desc.NodeMask = 0;
-        device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
+        const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
+        if(FAILED(result)) {
+            spdlog::error("Could not create descriptor heap: {}", to_string(result));
+
+            return {{}, 0};
+        }
+
         const auto descriptor_size = device->GetDescriptorHandleIncrementSize(descriptor_type);
 
         return {heap, descriptor_size};
