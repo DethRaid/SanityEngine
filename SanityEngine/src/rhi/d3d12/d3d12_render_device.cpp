@@ -504,8 +504,11 @@ namespace rhi {
     }
 
     BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder() {
-        // TODO: Something something per frame resources?
-        return *material_bind_group_builder.get();
+        const auto cur_frame_idx = swapchain->GetCurrentBackBufferIndex();
+
+        ENSURE(cur_frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
+
+        return material_bind_group_builder[cur_frame_idx];
     }
 
     void D3D12RenderDevice::begin_frame() {
@@ -1005,20 +1008,29 @@ namespace rhi {
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
 
-        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
-        // Textures array _always_ is at the start of the descriptor heap
-        descriptor_tables.emplace("textures",
-                                  DescriptorTableDescriptorDescription{DescriptorType::ShaderResource,
-                                                                       cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart()});
+        CD3DX12_CPU_DESCRIPTOR_HANDLE textures_cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart()};
+        CD3DX12_GPU_DESCRIPTOR_HANDLE textures_heap_gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart()};
 
-        std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-        descriptor_tables.emplace(3, cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart());
+        material_bind_group_builder.reserve(num_frames);
 
-        material_bind_group_builder = std::make_unique<D3D12BindGroupBuilder>(*device.Get(),
-                                                                              cbv_srv_uav_size,
-                                                                              std::move(root_descriptors),
-                                                                              std::move(descriptor_tables),
-                                                                              std::move(descriptor_table_gpu_handles));
+        for(uint32_t i = 0; i < num_frames; i++) {
+            std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
+            // Textures array _always_ is at the start of the descriptor heap
+            descriptor_tables.emplace("textures",
+                                      DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, textures_cpu_handle});
+
+            std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
+            descriptor_tables.emplace(3, textures_heap_gpu_handle);
+
+            material_bind_group_builder.emplace_back(*device.Get(),
+                                                     cbv_srv_uav_size,
+                                                     std::move(root_descriptors),
+                                                     std::move(descriptor_tables),
+                                                     std::move(descriptor_table_gpu_handles));
+
+            textures_cpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
+            textures_heap_gpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
+        }
     }
 
     void D3D12RenderDevice::create_standard_graphics_pipeline_input_layout() {

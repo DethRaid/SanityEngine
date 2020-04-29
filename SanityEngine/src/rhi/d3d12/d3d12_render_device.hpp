@@ -12,6 +12,7 @@
 #include "../../core/async/mutex.hpp"
 #include "../bind_group.hpp"
 #include "../render_device.hpp"
+#include "d3d12_bind_group.hpp"
 #include "d3d12_command_list.hpp"
 #include "d3d12_descriptor_allocator.hpp"
 #include "d3d12_framebuffer.hpp"
@@ -181,7 +182,7 @@ namespace rhi {
 
         uint32_t num_frames;
 
-        std::unique_ptr<BindGroupBuilder> material_bind_group_builder;
+        std::vector<D3D12BindGroupBuilder> material_bind_group_builder;
 
 #pragma region initialization
         void enable_validation_layer();
