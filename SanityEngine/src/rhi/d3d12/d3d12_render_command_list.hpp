@@ -23,7 +23,7 @@ namespace rhi {
 
         void set_pipeline_state(const RenderPipelineState& state) override;
 
-        void bind_render_resources(const BindGroup& resources) override;
+        void bind_render_resources(const BindGroup& bind_group) override;
 
         void bind_mesh_data(const MeshDataStore& mesh_data) override;
 

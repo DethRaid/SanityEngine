@@ -7,9 +7,14 @@
 #include "minitrace.h"
 
 namespace rhi {
-    D3D12BindGroup::D3D12BindGroup(std::vector<RootParameter> root_parameters_in) : root_parameters{std::move(root_parameters_in)} {}
+    D3D12BindGroup::D3D12BindGroup(std::vector<RootParameter> root_parameters_in,
+                                   std::vector<BoundResource<D3D12Image>> used_images_in,
+                                   std::vector<BoundResource<D3D12Buffer>> used_buffers_in)
+        : root_parameters{std::move(root_parameters_in)},
+          used_images{std::move(used_images_in)},
+          used_buffers{std::move(used_buffers_in)} {}
 
-    void D3D12BindGroup::bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) {
+    void D3D12BindGroup::bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const {
         MTR_SCOPE("D3D12BindGroup", "bind_to_graphics_signature");
 
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
@@ -38,7 +43,7 @@ namespace rhi {
         }
     }
 
-    void D3D12BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) {
+    void D3D12BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const {
         MTR_SCOPE("D3D12BindGroup", "bind_to_compute_signature");
 
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
@@ -117,6 +122,9 @@ namespace rhi {
             root_parameters[idx].table.handle = handle;
         }
 
+        std::vector<BoundResource<D3D12Image>> used_images;
+        std::vector<BoundResource<D3D12Buffer>> used_buffers;
+
         // Save root descriptor information
         for(const auto& [name, desc] : root_descriptor_descriptions) {
             const auto& [idx, type] = desc;
@@ -130,9 +138,29 @@ namespace rhi {
             if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
                 root_parameters[idx].descriptor.address = buffer_itr->second->resource->GetGPUVirtualAddress();
 
+                auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+                if(type == DescriptorType::ConstantBuffer) {
+                    states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+
+                } else if(type == DescriptorType::UnorderedAccess) {
+                    states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+                }
+
+                used_buffers.emplace_back(buffer_itr->second, states);
+
             } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
                 ENSURE(image_itr->second.size() == 1, "May only bind a single image to a root descriptor");
                 root_parameters[idx].descriptor.address = image_itr->second[0]->resource->GetGPUVirtualAddress();
+
+                auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+                if(type == DescriptorType::ConstantBuffer) {
+                    states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+
+                } else if(type == DescriptorType::UnorderedAccess) {
+                    states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+                }
+
+                used_images.emplace_back(image_itr->second[0], states);
 
             } else {
                 spdlog::warn("No resources bound to root descriptor {}", name);
@@ -143,6 +171,9 @@ namespace rhi {
         for(const auto& [name, desc] : descriptor_table_descriptor_mappings) {
             if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
                 auto* buffer = buffer_itr->second;
+
+                auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
                         D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};
@@ -150,6 +181,8 @@ namespace rhi {
                         cbv_desc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
 
                         device->CreateConstantBufferView(&cbv_desc, desc.handle);
+
+                        states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
                     } break;
 
                     case DescriptorType::ShaderResource: {
@@ -175,8 +208,13 @@ namespace rhi {
                         uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
                         device->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &uav_desc, desc.handle);
+
+                        states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                     } break;
                 }
+
+                used_buffers.emplace_back(buffer, states);
+
             } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {

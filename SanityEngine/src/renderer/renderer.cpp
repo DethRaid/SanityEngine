@@ -126,13 +126,17 @@ namespace renderer {
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
-        auto*& material_bind_group = render_device->
+        auto& material_bind_group_builder = render_device->get_material_bind_group_builder();
+        material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
+
+        auto material_bind_group = material_bind_group_builder.build();
 
         const auto framebuffer = render_device->get_backbuffer_framebuffer();
 
         command_list.set_framebuffer(*framebuffer);
 
         command_list.set_pipeline_state(*debug_pipeline);
+        command_list.bind_render_resources(*material_bind_group);
 
         command_list.bind_mesh_data(*static_mesh_storage);
 

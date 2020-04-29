@@ -20,7 +20,7 @@ namespace rhi {
 
         void set_pipeline_state(const ComputePipelineState& state) override;
 
-        void bind_compute_resources(const BindGroup& material) override;
+        void bind_compute_resources(const BindGroup& bind_group) override;
 
         void dispatch(uint32_t workgroup_x, uint32_t workgroup_y, uint32_t workgroup_z) override;
 #pragma endregion

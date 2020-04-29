@@ -5,7 +5,6 @@
 
 #include "../../core/ensure.hpp"
 #include "../compute_pipeline_state.hpp"
-#include "d3d12_material.hpp"
 
 using std::move;
 
@@ -48,24 +47,22 @@ namespace rhi {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::bind_compute_resources(const BindGroup& material) {
+    void D3D12ComputeCommandList::bind_compute_resources(const BindGroup& bind_group) {
         MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
 
         ENSURE(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
 
-        const auto& d3d12_material = static_cast<const D3D12BindGroup&>(material);
+        const auto& d3d12_bind_group = static_cast<const D3D12BindGroup&>(bind_group);
 
-        for(const auto& [idx, handle] : d3d12_material.descriptor_table_handles) {
-            commands->SetComputeRootDescriptorTable(idx, handle);
-        }
-
-        for(const auto& image : d3d12_material.used_images) {
+        for(const auto& image : d3d12_bind_group.used_images) {
             set_resource_state(*image.resource, image.states);
         }
 
-        for(const auto& buffer : d3d12_material.used_buffers) {
+        for(const auto& buffer : d3d12_bind_group.used_buffers) {
             set_resource_state(*buffer.resource, buffer.states);
         }
+
+        d3d12_bind_group.bind_to_compute_signature(*commands.Get());
 
         are_compute_resources_bound = true;
 

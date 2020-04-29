@@ -7,8 +7,8 @@
 
 #include "../../core/ensure.hpp"
 #include "../mesh_data_store.hpp"
+#include "d3d12_bind_group.hpp"
 #include "d3d12_framebuffer.hpp"
-#include "d3d12_material.hpp"
 #include "d3d12_render_pipeline_state.hpp"
 
 using std::move;
@@ -51,7 +51,7 @@ namespace rhi {
 
             // TODO: Renderpass
             // in_render_pass = true;
-            
+
         } else {
             if(d3d12_framebuffer.dsv_handle) {
                 commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
@@ -74,7 +74,7 @@ namespace rhi {
         viewport.Height = d3d12_framebuffer.height;
         commands->RSSetViewports(1, &viewport);
 
-        D3D12_RECT scissor_rect {};
+        D3D12_RECT scissor_rect{};
         scissor_rect.right = d3d12_framebuffer.width;
         scissor_rect.bottom = d3d12_framebuffer.height;
         commands->RSSetScissorRects(1, &scissor_rect);
@@ -85,11 +85,7 @@ namespace rhi {
 
         const auto& d3d12_state = static_cast<const D3D12RenderPipelineState&>(state);
 
-        if(current_render_pipeline_state == nullptr) {
-            commands->SetGraphicsRootSignature(d3d12_state.root_signature.Get());
-            is_render_material_bound = false;
-
-        } else if(current_render_pipeline_state->root_signature != d3d12_state.root_signature) {
+        if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != d3d12_state.root_signature) {
             commands->SetGraphicsRootSignature(d3d12_state.root_signature.Get());
             is_render_material_bound = false;
         }
@@ -99,24 +95,21 @@ namespace rhi {
         current_render_pipeline_state = &d3d12_state;
     }
 
-    void D3D12RenderCommandList::bind_render_resources(const BindGroup& resources) {
+    void D3D12RenderCommandList::bind_render_resources(const BindGroup& bind_group) {
         MTR_SCOPE("D3D12RenderCommandList", "bind_render_resources");
 
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
 
-        const auto& d3d12_resources = static_cast<const D3D12BindGroup&>(resources);
-
-        for(const auto& [idx, handle] : d3d12_resources.descriptor_table_handles) {
-            commands->SetGraphicsRootDescriptorTable(idx, handle);
-        }
-
-        for(const BoundResource<D3D12Buffer>& resource : d3d12_resources.used_buffers) {
+        const auto& d3d12_bind_group = static_cast<const D3D12BindGroup&>(bind_group);
+        for(const BoundResource<D3D12Buffer>& resource : d3d12_bind_group.used_buffers) {
             set_resource_state(*resource.resource, resource.states);
         }
 
-        for(const BoundResource<D3D12Image>& resource : d3d12_resources.used_images) {
+        for(const BoundResource<D3D12Image>& resource : d3d12_bind_group.used_images) {
             set_resource_state(*resource.resource, resource.states);
         }
+
+        d3d12_bind_group.bind_to_graphics_signature(*commands.Get());
 
         is_render_material_bound = true;
     }
@@ -164,7 +157,7 @@ namespace rhi {
     void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
         MTR_SCOPE("D3D12RenderCommandList", "draw");
 
-       // ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
+        // ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
         ENSURE(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
 
@@ -179,4 +172,4 @@ namespace rhi {
 
         D3D12ComputeCommandList::prepare_for_submission();
     }
-} // namespace render
+} // namespace rhi

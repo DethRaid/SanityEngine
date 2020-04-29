@@ -28,22 +28,42 @@ namespace rhi {
         };
     };
 
-    struct D3D12BindGroup final : virtual BindGroup {
-        explicit D3D12BindGroup(std::vector<RootParameter> root_parameters_in);
+    template <typename ResourceType>
+    struct BoundResource {
+        BoundResource() = default;
+
+        BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in);
+
+        const ResourceType* resource{nullptr};
+        D3D12_RESOURCE_STATES states{};
+    };
+
+    template <typename ResourceType>
+    BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in)
+        : resource{resource_in}, states{states_in} {}
+
+
+    struct D3D12BindGroup final : BindGroup {
+        explicit D3D12BindGroup(std::vector<RootParameter> root_parameters_in,
+                                std::vector<BoundResource<D3D12Image>> used_images_in,
+                                std::vector<BoundResource<D3D12Buffer>> used_buffers_in);
 
         ~D3D12BindGroup() override = default;
 
         /*!
          * \brief Binds this bind group to the active graphics root signature
          */
-        void bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds);
+        void bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const;
 
         /*!
          * \brief Binds this bind group to the active compute root signature
          */
-        void bind_to_compute_signature(ID3D12GraphicsCommandList& cmds);
+        void bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const;
 
         std::vector<RootParameter> root_parameters;
+
+        std::vector<BoundResource<D3D12Image>> used_images;
+        std::vector<BoundResource<D3D12Buffer>> used_buffers;
     };
 
     using RootDescriptorDescription = std::pair<uint32_t, DescriptorType>;

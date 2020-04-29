@@ -44,7 +44,11 @@ set(D3D12_ENGINE_SOURCE
     "src/rhi/mesh_data_store.cpp" 
 
     "src/windows/windows_helpers.cpp" 
- "src/renderer/renderer.cpp" "src/core/errors.cpp" "src/renderer/camera_matrix_buffer.cpp" "src/input/input_manager.cpp" "src/player/flycam_controller.cpp")
+    "src/renderer/renderer.cpp" 
+    "src/core/errors.cpp" 
+    "src/renderer/camera_matrix_buffer.cpp" 
+    "src/input/input_manager.cpp" 
+    "src/player/flycam_controller.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"
@@ -55,10 +59,10 @@ set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_command_list.cpp"
     "src/rhi/d3d12/d3d12_resource_command_list.cpp"
     "src/rhi/d3d12/d3d12_compute_command_list.cpp"
-    "src/rhi/d3d12/d3d12_material.cpp" 
     "src/rhi/d3d12/d3d12_render_command_list.cpp"
     "src/rhi/d3d12/d3d12_descriptor_allocator.cpp" 
-    "src/rhi/d3d12/shader_reflection.cpp" "src/rhi/d3d12/d3d12_bind_group.cpp")
+    "src/rhi/d3d12/shader_reflection.cpp" 
+    "src/rhi/d3d12/d3d12_bind_group.cpp")
 
 add_executable(SanityEngine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
 
