@@ -36,7 +36,7 @@ if __name__ == '__main__':
             target = 'vs_6_0'
 
         else:
-            print('Could not determine shading stage for shader `%s`, skipping', str(path))
+            print('Could not determine shading stage for shader `', str(path), '`, skipping')
             continue
 
         output = subprocess.run(['dxc', '-E', 'main', '-T', target, str(path), '-Fo', dxil_path], capture_output=True, text=True)

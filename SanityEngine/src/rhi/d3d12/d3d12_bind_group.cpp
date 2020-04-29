@@ -7,6 +7,8 @@
 #include "minitrace.h"
 
 namespace rhi {
+    RootParameter::RootParameter() : type{RootParameterType::Empty}, descriptor{} {}
+
     D3D12BindGroup::D3D12BindGroup(std::vector<RootParameter> root_parameters_in,
                                    std::vector<BoundResource<D3D12Image>> used_images_in,
                                    std::vector<BoundResource<D3D12Buffer>> used_buffers_in)
@@ -19,26 +21,23 @@ namespace rhi {
 
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
-            switch(param.type) {
-                case RootParameterType::Descriptor: {
-                    switch(param.descriptor.type) {
-                        case DescriptorType::ConstantBuffer:
-                            cmds.SetGraphicsRootConstantBufferView(i, param.descriptor.address);
-                            break;
+            if(param.type == RootParameterType::Descriptor) {
+                switch(param.descriptor.type) {
+                    case DescriptorType::ConstantBuffer:
+                        cmds.SetGraphicsRootConstantBufferView(i, param.descriptor.address);
+                        break;
 
-                        case DescriptorType::ShaderResource:
-                            cmds.SetGraphicsRootShaderResourceView(i, param.descriptor.address);
-                            break;
+                    case DescriptorType::ShaderResource:
+                        cmds.SetGraphicsRootShaderResourceView(i, param.descriptor.address);
+                        break;
 
-                        case DescriptorType::UnorderedAccess:
-                            cmds.SetGraphicsRootUnorderedAccessView(i, param.descriptor.address);
-                            break;
-                    }
-                } break;
+                    case DescriptorType::UnorderedAccess:
+                        cmds.SetGraphicsRootUnorderedAccessView(i, param.descriptor.address);
+                        break;
+                }
 
-                case RootParameterType::DescriptorTable:
-                    cmds.SetGraphicsRootDescriptorTable(i, param.table.handle);
-                    break;
+            } else if(param.type == RootParameterType::DescriptorTable) {
+                cmds.SetGraphicsRootDescriptorTable(i, param.table.handle);
             }
         }
     }
@@ -103,7 +102,7 @@ namespace rhi {
             d3d12_images.push_back(static_cast<const D3D12Image*>(image));
         }
 
-        bound_buffers.insert_or_assign(name, d3d12_images);
+        bound_images.insert_or_assign(name, d3d12_images);
 
         return *this;
     }
@@ -264,6 +263,6 @@ namespace rhi {
             }
         }
 
-        return std::make_unique<D3D12BindGroup>(std::move(root_parameters));
+        return std::make_unique<D3D12BindGroup>(std::move(root_parameters), std::move(used_images), std::move(used_buffers));
     }
 } // namespace rhi

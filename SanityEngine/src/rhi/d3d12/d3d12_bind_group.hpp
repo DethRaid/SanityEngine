@@ -26,6 +26,8 @@ namespace rhi {
             RootDescriptor descriptor{};
             RootDescriptorTable table;
         };
+
+        RootParameter();
     };
 
     template <typename ResourceType>

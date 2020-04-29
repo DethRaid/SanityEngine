@@ -1020,7 +1020,7 @@ namespace rhi {
                                       DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, textures_cpu_handle});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_tables.emplace(3, textures_heap_gpu_handle);
+            descriptor_table_gpu_handles.emplace(3, textures_heap_gpu_handle);
 
             material_bind_group_builder.emplace_back(*device.Get(),
                                                      cbv_srv_uav_size,
