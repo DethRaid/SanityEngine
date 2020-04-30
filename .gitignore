@@ -405,3 +405,4 @@ MigrationBackup/
 
 out/
 /build
+/SanityEngine/extern/aftermath

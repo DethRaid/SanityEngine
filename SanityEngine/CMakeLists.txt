@@ -48,7 +48,7 @@ set(D3D12_ENGINE_SOURCE
     "src/core/errors.cpp" 
     "src/renderer/camera_matrix_buffer.cpp" 
     "src/input/input_manager.cpp" 
-    "src/player/flycam_controller.cpp")
+    "src/player/flycam_controller.cpp" "src/rhi/d3d12/aftermath/gpu_crash_tracker.cpp" "src/rhi/d3d12/aftermath/shader_database.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"
@@ -79,6 +79,10 @@ target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/DirectXMath/Inc")
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include")
 target_link_libraries(SanityEngine spdlog glfw d3d12 dxgi d3dcompiler EnTT glm)
+
+target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/aftermath/include")
+target_link_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/aftermath/lib/x64")
+target_link_libraries(SanityEngine GFSDK_Aftermath_Lib)
 
 # Compile shaders
 
