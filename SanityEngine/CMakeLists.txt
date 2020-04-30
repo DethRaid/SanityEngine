@@ -24,7 +24,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/extern/glm")
 
 # Add source to this project's executable.
 
-set(D3D12_ENGINE_SOURCE
+set(SANITY_ENGINE_SOURCE
     "${CMAKE_CURRENT_LIST_DIR}/extern/minitrace/minitrace.c"  
     "${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp"
 
@@ -48,7 +48,7 @@ set(D3D12_ENGINE_SOURCE
     "src/core/errors.cpp" 
     "src/renderer/camera_matrix_buffer.cpp" 
     "src/input/input_manager.cpp" 
-    "src/player/flycam_controller.cpp" "src/rhi/d3d12/aftermath/gpu_crash_tracker.cpp" "src/rhi/d3d12/aftermath/shader_database.cpp")
+    "src/player/flycam_controller.cpp")
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"
@@ -64,7 +64,10 @@ set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/shader_reflection.cpp" 
     "src/rhi/d3d12/d3d12_bind_group.cpp")
 
-add_executable(SanityEngine ${D3D12_ENGINE_SOURCE} ${D3D12_BACKEND_SOURCE})
+# TODO: If I ever support multiple D3D12_BACKEND_SOURCE, only add the source for the selected backend
+set(SANITY_ENGINE_SOURCE "${SANITY_ENGINE_SOURCE}" "${D3D12_BACKEND_SOURCE}")
+
+add_executable(SanityEngine ${SANITY_ENGINE_SOURCE})
 
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/minitrace)
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
@@ -98,3 +101,10 @@ add_custom_target(CompileShaders
 )
 
 add_dependencies(SanityEngine CompileShaders)
+
+# Set up VS filters
+foreach(source IN LISTS SANITY_ENGINE_SOURCE)
+    get_filename_component(source_path "${source}" PATH)
+    string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+    source_group("${source_path_msvc}" FILES "${source}")
+endforeach()
