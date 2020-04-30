@@ -9,10 +9,12 @@
 namespace rhi {
     RootParameter::RootParameter() : type{RootParameterType::Empty}, descriptor{} {}
 
-    D3D12BindGroup::D3D12BindGroup(std::vector<RootParameter> root_parameters_in,
+    D3D12BindGroup::D3D12BindGroup(ID3D12DescriptorHeap& heap_in,
+                                   std::vector<RootParameter> root_parameters_in,
                                    std::vector<BoundResource<D3D12Image>> used_images_in,
                                    std::vector<BoundResource<D3D12Buffer>> used_buffers_in)
-        : root_parameters{std::move(root_parameters_in)},
+        : heap{&heap_in},
+          root_parameters{std::move(root_parameters_in)},
           used_images{std::move(used_images_in)},
           used_buffers{std::move(used_buffers_in)} {}
 
@@ -70,11 +72,13 @@ namespace rhi {
 
     D3D12BindGroupBuilder::D3D12BindGroupBuilder(
         ID3D12Device& device_in,
+        ID3D12DescriptorHeap& heap_in,
         const UINT descriptor_size_in,
         std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions_in,
         std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
         std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
         : device{&device_in},
+          heap{&heap_in},
           descriptor_size{descriptor_size_in},
           root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
@@ -263,6 +267,6 @@ namespace rhi {
             }
         }
 
-        return std::make_unique<D3D12BindGroup>(std::move(root_parameters), std::move(used_images), std::move(used_buffers));
+        return std::make_unique<D3D12BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
     }
 } // namespace rhi

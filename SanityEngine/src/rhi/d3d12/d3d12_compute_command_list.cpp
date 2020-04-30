@@ -62,6 +62,11 @@ namespace rhi {
             set_resource_state(*buffer.resource, buffer.states);
         }
 
+        if(current_descriptor_heap != d3d12_bind_group.heap) {
+            commands->SetDescriptorHeaps(1, &d3d12_bind_group.heap);
+            current_descriptor_heap = d3d12_bind_group.heap;
+        }
+
         d3d12_bind_group.bind_to_compute_signature(*commands.Get());
 
         are_compute_resources_bound = true;

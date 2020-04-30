@@ -22,8 +22,10 @@ using std::move;
 
 namespace rhi {
 
-    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle, const XMINT2& window_size, const uint32_t num_frames_in)
-        : num_frames{num_frames_in} {
+    D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle,
+                                         const XMINT2& window_size,
+                                         const uint32_t num_frames_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
+        : num_in_flight_frames{num_frames_in} {
 #ifndef NDEBUG
         enable_validation_layer();
 #endif
@@ -34,7 +36,7 @@ namespace rhi {
 
         create_queues();
 
-        create_swapchain(window_handle, window_size, num_frames);
+        create_swapchain(window_handle, window_size, num_in_flight_frames);
 
         create_command_allocators();
 
@@ -54,7 +56,7 @@ namespace rhi {
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
-        for(uint32_t i = 0; i < num_frames; i++) {
+        for(uint32_t i = 0; i < num_in_flight_frames; i++) {
             wait_for_frame(i);
             direct_command_queue->Wait(frame_fences[i].Get(), frame_fence_values[i]);
         }
@@ -455,8 +457,6 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        commands->SetDescriptorHeaps(1, cbv_srv_uav_heap.GetAddressOf());
-
         return std::make_unique<D3D12ComputeCommandList>(commands, *this);
     }
 
@@ -476,8 +476,6 @@ namespace rhi {
         }
 
         cmds->QueryInterface(commands.GetAddressOf());
-
-        commands->SetDescriptorHeaps(1, cbv_srv_uav_heap.GetAddressOf());
 
         return std::make_unique<D3D12RenderCommandList>(commands, *this);
     }
@@ -546,11 +544,12 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::end_frame() {
+        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
+
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Presentable");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
 
-        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                    D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -762,7 +761,6 @@ namespace rhi {
         graphics_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         graphics_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
         graphics_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        graphics_queue_desc.NodeMask = 0;
 
         auto result = device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&direct_command_queue));
         if(FAILED(result)) {
@@ -779,7 +777,7 @@ namespace rhi {
             dma_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
             dma_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
             dma_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-            dma_queue_desc.NodeMask = 0;
+
             result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(&async_copy_queue));
             if(FAILED(result)) {
                 spdlog::warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
@@ -848,10 +846,14 @@ namespace rhi {
 
     void D3D12RenderDevice::create_descriptor_heaps() {
         MTR_SCOPE("D3D12RenderDevice", "create_descriptor_heaps");
-        const auto [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536);
 
-        cbv_srv_uav_heap = new_cbv_srv_uav_heap;
-        cbv_srv_uav_size = new_cbv_srv_uav_size;
+        for(uint32_t i = 0; i < num_in_flight_frames; i++) {
+            const auto [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                                                                                             MAX_NUM_TEXTURES * 2);
+
+            cbv_srv_uav_heaps.push_back(new_cbv_srv_uav_heap);
+            cbv_srv_uav_size = new_cbv_srv_uav_size;
+        }
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
         rtv_allocator = std::make_unique<D3D12DescriptorAllocator>(rtv_heap, rtv_size);
@@ -894,7 +896,7 @@ namespace rhi {
         heap_desc.NumDescriptors = num_descriptors;
         heap_desc.Flags = (descriptor_type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE :
                                                                                        D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-        heap_desc.NodeMask = 0;
+
         const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
         if(FAILED(result)) {
             spdlog::error("Could not create descriptor heap: {}", to_string(result));
@@ -973,7 +975,7 @@ namespace rhi {
         trilinear_sampler.MaxAnisotropy = 8;
         trilinear_sampler.RegisterSpace = 2;
 
-        D3D12_ROOT_SIGNATURE_DESC root_signature_desc{};
+        D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
         root_signature_desc.NumParameters = static_cast<UINT>(root_parameters.size());
         root_signature_desc.pParameters = root_parameters.data();
         root_signature_desc.NumStaticSamplers = static_cast<UINT>(static_samplers.size());
@@ -1018,28 +1020,26 @@ namespace rhi {
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE textures_cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart()};
-        CD3DX12_GPU_DESCRIPTOR_HANDLE textures_heap_gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart()};
+        material_bind_group_builder.reserve(num_in_flight_frames);
 
-        material_bind_group_builder.reserve(num_frames);
+        for(uint32_t i = 0; i < num_in_flight_frames; i++) {
+            // TODO: Store the descriptor heaps in the material bind group, so we never bind the wrong one
 
-        for(uint32_t i = 0; i < num_frames; i++) {
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.emplace("textures",
-                                      DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, textures_cpu_handle});
+                                      DescriptorTableDescriptorDescription{DescriptorType::ShaderResource,
+                                                                           cbv_srv_uav_heaps[i]->GetCPUDescriptorHandleForHeapStart()});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(3, textures_heap_gpu_handle);
+            descriptor_table_gpu_handles.emplace(3, cbv_srv_uav_heaps[i]->GetGPUDescriptorHandleForHeapStart());
 
             material_bind_group_builder.emplace_back(*device.Get(),
+                                                     *cbv_srv_uav_heaps[i].Get(),
                                                      cbv_srv_uav_size,
                                                      std::move(root_descriptors),
                                                      std::move(descriptor_tables),
                                                      std::move(descriptor_table_gpu_handles));
-
-            textures_cpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
-            textures_heap_gpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
         }
     }
 
@@ -1136,7 +1136,7 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::wait_for_command_lists(D3D12RenderDevice* render_device) {
-        const HANDLE event = CreateEvent(nullptr, false, false, nullptr);
+        HANDLE event = CreateEvent(nullptr, false, false, nullptr);
 
         bool should_wait_for_cv = false;
 

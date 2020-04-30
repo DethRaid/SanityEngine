@@ -28,6 +28,8 @@ namespace rhi {
     protected:
         const D3D12ComputePipelineState* compute_pipeline{nullptr};
 
+        ID3D12DescriptorHeap* current_descriptor_heap{nullptr};
+
         bool are_compute_resources_bound{false};
     };
 } // namespace render

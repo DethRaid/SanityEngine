@@ -126,7 +126,7 @@ namespace rhi {
         std::vector<ComPtr<ID3D12Fence>> frame_fences;
         std::vector<uint32_t> frame_fence_values;
 
-        ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
+        std::vector<ComPtr<ID3D12DescriptorHeap>> cbv_srv_uav_heaps;
         UINT cbv_srv_uav_size{};
 
         std::unique_ptr<D3D12DescriptorAllocator> rtv_allocator;
@@ -180,7 +180,7 @@ namespace rhi {
 
         std::atomic<bool> should_thread_continue{true};
 
-        uint32_t num_frames;
+        uint32_t num_in_flight_frames;
 
         std::vector<D3D12BindGroupBuilder> material_bind_group_builder;
 

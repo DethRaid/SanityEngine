@@ -44,9 +44,9 @@ namespace rhi {
     BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in)
         : resource{resource_in}, states{states_in} {}
 
-
     struct D3D12BindGroup final : BindGroup {
-        explicit D3D12BindGroup(std::vector<RootParameter> root_parameters_in,
+        explicit D3D12BindGroup(ID3D12DescriptorHeap& heap_in,
+                                std::vector<RootParameter> root_parameters_in,
                                 std::vector<BoundResource<D3D12Image>> used_images_in,
                                 std::vector<BoundResource<D3D12Buffer>> used_buffers_in);
 
@@ -61,6 +61,8 @@ namespace rhi {
          * \brief Binds this bind group to the active compute root signature
          */
         void bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const;
+
+        ID3D12DescriptorHeap* heap;
 
         std::vector<RootParameter> root_parameters;
 
@@ -101,6 +103,7 @@ namespace rhi {
          */
         explicit D3D12BindGroupBuilder(
             ID3D12Device& device_in,
+            ID3D12DescriptorHeap& heap_in,
             UINT descriptor_size_in,
             std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions_in,
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
@@ -124,6 +127,9 @@ namespace rhi {
 
     private:
         ID3D12Device* device;
+
+        ID3D12DescriptorHeap* heap;
+
         UINT descriptor_size;
 
         std::unordered_map<std::string, const D3D12Buffer*> bound_buffers{};
