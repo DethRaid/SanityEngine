@@ -1074,9 +1074,9 @@ namespace rhi {
             material_bind_group_builder.emplace_back(*device.Get(),
                                                      *cbv_srv_uav_heaps[i].Get(),
                                                      cbv_srv_uav_size,
-                                                     std::move(root_descriptors),
-                                                     std::move(descriptor_tables),
-                                                     std::move(descriptor_table_gpu_handles));
+                                                     root_descriptors,
+                                                     descriptor_tables,
+                                                     descriptor_table_gpu_handles);
         }
     }
 
