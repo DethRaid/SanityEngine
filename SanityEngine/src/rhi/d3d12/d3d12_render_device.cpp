@@ -124,6 +124,8 @@ namespace rhi {
 
         buffer->size = create_info.size;
 
+        buffer->name = create_info.name;
+
         set_object_name(*buffer->resource.Get(), create_info.name);
 
         return move(buffer);
@@ -170,6 +172,8 @@ namespace rhi {
             spdlog::error("Could not create image %s", create_info.name);
             return {};
         }
+
+        image->name = create_info.name;
 
         set_object_name(*image->resource.Get(), create_info.name);
 
@@ -1218,17 +1222,16 @@ namespace rhi {
         D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT breadcrumbs;
         result = dred->GetAutoBreadcrumbsOutput(&breadcrumbs);
         if(FAILED(result)) {
-            spdlog::error("Could not retrieve DRED breadcrumbs");
             return;
         }
 
         D3D12_DRED_PAGE_FAULT_OUTPUT page_faults;
         result = dred->GetPageFaultAllocationOutput(&page_faults);
         if(FAILED(result)) {
-            spdlog::error("Could not retrieve DRED page faults");
             return;
         }
 
         spdlog::error(breadcrumb_output_to_string(breadcrumbs));
+        spdlog::error(page_fault_output_to_string(page_faults));
     }
 } // namespace rhi

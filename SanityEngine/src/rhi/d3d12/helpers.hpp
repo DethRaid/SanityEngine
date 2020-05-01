@@ -41,5 +41,9 @@ namespace rhi {
 
     std::string breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
 
+    std::string allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type);
+
     std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs);
+
+    std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
 } // namespace rhi

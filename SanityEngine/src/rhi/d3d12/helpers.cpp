@@ -252,7 +252,6 @@ namespace rhi {
 
                 if(cur_node->BreadcrumbCount > 0) {
                     ss << ", and ";
-
                 }
             }
 
@@ -266,6 +265,43 @@ namespace rhi {
             ss << "\n";
 
             cur_node = cur_node->pNext;
+        }
+
+        return ss.str();
+    }
+
+    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE* head, std::stringstream& ss) {
+        const auto* allocation = head;
+        while(allocation != nullptr) {
+            ss << "\n\t";
+            if(allocation->ObjectNameA != nullptr) {
+                ss << allocation->ObjectNameA;
+
+            } else if(allocation->ObjectNameW != nullptr) {
+                ss << from_wide_string(allocation->ObjectNameW);
+
+            } else {
+                ss << "Unnamed allocation";
+            }
+            ss << " (" << allocation_type_to_string(allocation->AllocationType) << ")";
+
+            allocation = allocation->pNext;
+        }
+    }
+
+    std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output) {
+        std::stringstream ss;
+
+        ss << "Page fault at GPU virtual address " << page_fault_output.PageFaultVA;
+
+        if(page_fault_output.pHeadExistingAllocationNode != nullptr) {
+            ss << "\nActive allocations:";
+            print_allocation_chain(page_fault_output.pHeadExistingAllocationNode, ss);
+        }
+
+        if(page_fault_output.pHeadRecentFreedAllocationNode != nullptr) {
+            ss << "\nRecently freed allocations:";
+            print_allocation_chain(page_fault_output.pHeadRecentFreedAllocationNode, ss);
         }
 
         return ss.str();
@@ -404,6 +440,94 @@ namespace rhi {
 
             default:
                 return "Unknown breadcrumb";
+        }
+    }
+
+    std::string allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type) {
+        switch(type) {
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_QUEUE:
+                return "Command queue";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_ALLOCATOR:
+                return "Command allocator";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PIPELINE_STATE:
+                return "Pipeline state";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_LIST:
+                return "Command list";
+
+            case D3D12_DRED_ALLOCATION_TYPE_FENCE:
+                return "Fence";
+
+            case D3D12_DRED_ALLOCATION_TYPE_DESCRIPTOR_HEAP:
+                return "Descriptor heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_HEAP:
+                return "Heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_QUERY_HEAP:
+                return "Query heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_SIGNATURE:
+                return "Command signature";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PIPELINE_LIBRARY:
+                return "Pipeline library";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_DECODER:
+                return "Video decoder";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_PROCESSOR:
+                return "Video processor";
+
+            case D3D12_DRED_ALLOCATION_TYPE_RESOURCE:
+                return "Resource";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PASS:
+                return "Pass";
+
+            case D3D12_DRED_ALLOCATION_TYPE_CRYPTOSESSION:
+                return "Crypto session";
+
+            case D3D12_DRED_ALLOCATION_TYPE_CRYPTOSESSIONPOLICY:
+                return "Crypto session policy";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PROTECTEDRESOURCESESSION:
+                return "Protected resource session";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_DECODER_HEAP:
+                return "Video decoder heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_POOL:
+                return "Command pool";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_RECORDER:
+                return "Command recorder";
+
+            case D3D12_DRED_ALLOCATION_TYPE_STATE_OBJECT:
+                return "State object";
+
+            case D3D12_DRED_ALLOCATION_TYPE_METACOMMAND:
+                return "Meta command";
+
+            case D3D12_DRED_ALLOCATION_TYPE_SCHEDULINGGROUP:
+                return "Scheduling group";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_MOTION_ESTIMATOR:
+                return "Video motion estimator";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_MOTION_VECTOR_HEAP:
+                return "Motion vector heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_EXTENSION_COMMAND:
+                return "Video extension command";
+
+            case D3D12_DRED_ALLOCATION_TYPE_INVALID:
+                return "Invalid";
+
+            default:
+                return "Unknown object type";
         }
     }
 } // namespace rhi

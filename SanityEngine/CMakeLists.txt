@@ -72,7 +72,7 @@ add_executable(SanityEngine ${SANITY_ENGINE_SOURCE})
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/minitrace)
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
 
-target_compile_options(SanityEngine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
+# target_compile_options(SanityEngine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
 target_compile_definitions(SanityEngine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN GLM_FORCE_LEFT_HANDED)
 
 target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)

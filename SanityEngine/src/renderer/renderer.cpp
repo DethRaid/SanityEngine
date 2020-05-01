@@ -124,6 +124,8 @@ namespace renderer {
         }
 
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
+
+        spdlog::info("Recorded camera data upload");
     }
 
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
@@ -132,7 +134,7 @@ namespace renderer {
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder();
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
 
-        auto material_bind_group = material_bind_group_builder.build();
+        const auto material_bind_group = material_bind_group_builder.build();
 
         const auto framebuffer = render_device->get_backbuffer_framebuffer();
 
@@ -151,5 +153,7 @@ namespace renderer {
 
             command_list.draw(mesh_renderable.num_indices, mesh_renderable.first_index);
         }
+
+        spdlog::info("Recorded 3D scene render");
     }
 } // namespace renderer

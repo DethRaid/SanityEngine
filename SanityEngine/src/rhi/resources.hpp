@@ -4,6 +4,8 @@
 
 namespace rhi {
     struct Buffer {
+        std::string name;
+
         size_t size{};
 
         virtual ~Buffer() = default;
@@ -38,6 +40,8 @@ namespace rhi {
     };
 
     struct Image {
+        std::string name;
+
         size_t width{1};
         size_t height{1};
         size_t depth{1};

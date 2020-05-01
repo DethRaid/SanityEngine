@@ -141,6 +141,11 @@ namespace rhi {
             if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
                 root_parameters[idx].descriptor.address = buffer_itr->second->resource->GetGPUVirtualAddress();
 
+                spdlog::info("Binding buffer {} (GPU virtual address {}) to root descriptor {}",
+                             buffer_itr->second->name,
+                             buffer_itr->second->resource->GetGPUVirtualAddress(),
+                             name);
+
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
                     states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
@@ -154,6 +159,11 @@ namespace rhi {
             } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
                 ENSURE(image_itr->second.size() == 1, "May only bind a single image to a root descriptor");
                 root_parameters[idx].descriptor.address = image_itr->second[0]->resource->GetGPUVirtualAddress();
+
+                spdlog::info("Binding image {} (GPU virtual address {}) to root descriptor {}",
+                             image_itr->second[0]->name,
+                             image_itr->second[0]->resource->GetGPUVirtualAddress(),
+                             name);
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
