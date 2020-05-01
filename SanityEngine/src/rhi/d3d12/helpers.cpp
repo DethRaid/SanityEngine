@@ -1,5 +1,7 @@
 #include "helpers.hpp"
 
+#include <sstream>
+
 #include <d3d12.h>
 
 namespace rhi {
@@ -228,4 +230,180 @@ namespace rhi {
                 return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         }
     }
-} // namespace render
+
+    std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs) {
+        std::stringstream ss;
+
+        const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
+
+        while(cur_node != nullptr) {
+            const auto command_list_name = cur_node->pCommandListDebugNameW != nullptr ?
+                                               from_wide_string(cur_node->pCommandListDebugNameW) :
+                                               "Unknown command list";
+
+            const auto command_queue_name = cur_node->pCommandQueueDebugNameW != nullptr ?
+                                                from_wide_string(cur_node->pCommandQueueDebugNameW) :
+                                                "Unknown command queue";
+
+            ss << "Command list [" << command_list_name << "] executing on command queue [" << command_queue_name << "] ";
+
+            if(cur_node->pLastBreadcrumbValue != nullptr) {
+                ss << "has completed " << *cur_node->pLastBreadcrumbValue << " render operations";
+
+                if(cur_node->BreadcrumbCount > 0) {
+                    ss << ", and ";
+
+                }
+            }
+
+            if(cur_node->BreadcrumbCount > 0) {
+                ss << "has " << cur_node->BreadcrumbCount << " breadcrumbs:";
+                for(uint32_t i = 0; i < cur_node->BreadcrumbCount; i++) {
+                    ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]);
+                }
+            }
+
+            ss << "\n";
+
+            cur_node = cur_node->pNext;
+        }
+
+        return ss.str();
+    }
+
+    std::string breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
+        switch(op) {
+            case D3D12_AUTO_BREADCRUMB_OP_SETMARKER:
+                return "Set marker";
+
+            case D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT:
+                return "Begin event";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ENDEVENT:
+                return "End event";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DRAWINSTANCED:
+                return "Draw instanced";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DRAWINDEXEDINSTANCED:
+                return "Draw indexed instanced";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEINDIRECT:
+                return "Execute indirect";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DISPATCH:
+                return "Dispatch";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYBUFFERREGION:
+                return "Copy buffer region";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYTEXTUREREGION:
+                return "Copy texture region";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYRESOURCE:
+                return "Copy resource";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYTILES:
+                return "Copy tiles";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCE:
+                return "Resolve subresource";
+
+            case D3D12_AUTO_BREADCRUMB_OP_CLEARRENDERTARGETVIEW:
+                return "Clear render target view";
+
+            case D3D12_AUTO_BREADCRUMB_OP_CLEARUNORDEREDACCESSVIEW:
+                return "Clear unordered access view";
+
+            case D3D12_AUTO_BREADCRUMB_OP_CLEARDEPTHSTENCILVIEW:
+                return "Clear depth stencil view";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOURCEBARRIER:
+                return "Resource barrier";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEBUNDLE:
+                return "Execute bundle";
+
+            case D3D12_AUTO_BREADCRUMB_OP_PRESENT:
+                return "Present";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVEQUERYDATA:
+                return "Resolve query data";
+
+            case D3D12_AUTO_BREADCRUMB_OP_BEGINSUBMISSION:
+                return "Begin submission";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ENDSUBMISSION:
+                return "End submission";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME:
+                return "Decode frame";
+
+            case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES:
+                return "Process frames";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT:
+                return "Atomic copy buffer uint";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT64:
+                return "Atomic copy buffer uint64";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCEREGION:
+                return "Resolve subresource region";
+
+            case D3D12_AUTO_BREADCRUMB_OP_WRITEBUFFERIMMEDIATE:
+                return "Write buffer immediate";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME1:
+                return "Decode frame 1";
+
+            case D3D12_AUTO_BREADCRUMB_OP_SETPROTECTEDRESOURCESESSION:
+                return "Set protected resource session";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME2:
+                return "Decode frame 2";
+
+            case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES1:
+                return "Process frames 1";
+
+            case D3D12_AUTO_BREADCRUMB_OP_BUILDRAYTRACINGACCELERATIONSTRUCTURE:
+                return "Build raytracing acceleration structure";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EMITRAYTRACINGACCELERATIONSTRUCTUREPOSTBUILDINFO:
+                return "Emit raytracing acceleration structure post build info";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYRAYTRACINGACCELERATIONSTRUCTURE:
+                return "Copy raytracing acceleration structure";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DISPATCHRAYS:
+                return "Dispatch rays";
+
+            case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEMETACOMMAND:
+                return "Initialize meta command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEMETACOMMAND:
+                return "Execute meta command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ESTIMATEMOTION:
+                return "Estimate motion";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVEMOTIONVECTORHEAP:
+                return "Resolve motion vector heap";
+
+            case D3D12_AUTO_BREADCRUMB_OP_SETPIPELINESTATE1:
+                return "Set pipeline state 1";
+
+            case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEEXTENSIONCOMMAND:
+                return "Initialize extension command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEEXTENSIONCOMMAND:
+                return "Execute extension command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DISPATCHMESH:
+                return "Dispatch mesh";
+
+            default:
+                return "Unknown breadcrumb";
+        }
+    }
+} // namespace rhi

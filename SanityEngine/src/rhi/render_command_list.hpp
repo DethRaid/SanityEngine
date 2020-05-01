@@ -28,6 +28,13 @@ namespace rhi {
         virtual void bind_render_resources(const BindGroup& resources) = 0;
 
         /*!
+         * \brief Sets the index of the camera to render with
+         *
+         * MUST be called after set_pipeline_state because of how the D3D12 backend works
+         */
+        virtual void set_camera_idx(uint32_t camera_idx) = 0;
+
+        /*!
          * \brief Binds the provided mesh data to the command list. Subsequent drawcalls will render this mesh data, until you bind new mesh
          * data
          */

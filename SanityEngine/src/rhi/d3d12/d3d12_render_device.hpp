@@ -98,6 +98,7 @@ namespace rhi {
 
     private:
         ComPtr<ID3D12Debug> debug_controller;
+        ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
 
         ComPtr<IDXGIFactory4> factory;
 
@@ -185,7 +186,7 @@ namespace rhi {
         std::vector<D3D12BindGroupBuilder> material_bind_group_builder;
 
 #pragma region initialization
-        void enable_validation_layer();
+        void enable_debugging();
 
         void initialize_dxgi();
 
@@ -222,5 +223,7 @@ namespace rhi {
         [[nodiscard]] D3D12StagingBuffer create_staging_buffer(size_t num_bytes);
 
         static void wait_for_command_lists(D3D12RenderDevice* render_device);
+
+        void retrieve_dred_report();
     };
 } // namespace rhi

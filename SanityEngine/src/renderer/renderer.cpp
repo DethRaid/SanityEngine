@@ -43,6 +43,9 @@ namespace renderer {
 
     void Renderer::render_scene(entt::registry& registry) const {
         MTR_SCOPE("Renderer", "render_scene");
+
+        spdlog::info("Beginning frame");
+
         render_device->begin_frame();
 
         const auto frame_idx = render_device->get_cur_backbuffer_idx();
@@ -136,6 +139,7 @@ namespace renderer {
         command_list.set_framebuffer(*framebuffer);
 
         command_list.set_pipeline_state(*debug_pipeline);
+        command_list.set_camera_idx(0);
         command_list.bind_render_resources(*material_bind_group);
 
         command_list.bind_mesh_data(*static_mesh_storage);

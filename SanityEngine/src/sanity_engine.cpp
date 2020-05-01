@@ -30,6 +30,8 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
+    spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
+
     spdlog::info("HELLO HUMAN");
 
     if(!glfwInit()) {
@@ -181,6 +183,8 @@ void SanityEngine::create_debug_cube() {
     const auto cube_entity = registry.create();
 
     registry.emplace<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
+
+    spdlog::info("Created cube");
 }
 
 void SanityEngine::create_flycam_player() {
@@ -190,6 +194,8 @@ void SanityEngine::create_flycam_player() {
     registry.emplace<renderer::CameraComponent>(player);
 
     player_controller = std::make_unique<FlycamController>(window, player, registry);
+
+    spdlog::info("Created flycam");
 }
 
 void SanityEngine::tick(float delta_time) {

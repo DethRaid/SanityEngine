@@ -83,10 +83,6 @@ target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/exter
 target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include")
 target_link_libraries(SanityEngine spdlog glfw d3d12 dxgi d3dcompiler EnTT glm)
 
-target_include_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/aftermath/include")
-target_link_directories(SanityEngine PRIVATE "${CMAKE_CURRENT_LIST_DIR}/extern/aftermath/lib/x64")
-target_link_libraries(SanityEngine GFSDK_Aftermath_Lib)
-
 # Compile shaders
 
 find_package(Python3)
@@ -101,10 +97,3 @@ add_custom_target(CompileShaders
 )
 
 add_dependencies(SanityEngine CompileShaders)
-
-# Set up VS filters
-foreach(source IN LISTS SANITY_ENGINE_SOURCE)
-    get_filename_component(source_path "${source}" PATH)
-    string(REPLACE "/" "\\" source_path_msvc "${source_path}")
-    source_group("${source_path_msvc}" FILES "${source}")
-endforeach()

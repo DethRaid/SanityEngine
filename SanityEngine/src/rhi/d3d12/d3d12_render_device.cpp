@@ -27,7 +27,7 @@ namespace rhi {
                                          const uint32_t num_frames_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : num_in_flight_frames{num_frames_in} {
 #ifndef NDEBUG
-        enable_validation_layer();
+        enable_debugging();
 #endif
 
         initialize_dxgi();
@@ -52,7 +52,7 @@ namespace rhi {
 
         create_standard_graphics_pipeline_input_layout();
 
-        command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
+        // command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
@@ -69,8 +69,10 @@ namespace rhi {
 
         device_allocator->Release();
 
-        should_thread_continue.store(false);
-        command_completion_thread->join();
+        if(command_completion_thread) {
+            should_thread_continue.store(false);
+            command_completion_thread->join();
+        }
     }
 
     std::unique_ptr<Buffer> D3D12RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
@@ -497,12 +499,21 @@ namespace rhi {
 
         direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
 
+        auto event = CreateEvent(nullptr, false, false, nullptr);
+        command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+
+        WaitForSingleObject(event, INFINITE);
+
+        retrieve_dred_report();
+
+        /*
         {
             std::lock_guard m{in_flight_command_lists_mutex};
             in_flight_command_lists.emplace(command_list_done_fence, dynamic_cast<D3D12CommandList*>(commands.release()));
         }
 
         commands_lists_in_flight_cv.notify_one();
+        */
     }
 
     BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder() {
@@ -560,7 +571,13 @@ namespace rhi {
 
         direct_command_queue->Signal(frame_fences[cur_swapchain_idx].Get(), frame_fence_values[cur_swapchain_idx]);
 
-        swapchain->Present(0, 0);
+        const auto result = swapchain->Present(0, 0);
+        if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
+            spdlog::error("Device lost on present :(");
+#ifndef NDEBUG
+            retrieve_dred_report();
+#endif
+        }
     }
 
     uint32_t D3D12RenderDevice::get_cur_backbuffer_idx() { return swapchain->GetCurrentBackBufferIndex(); }
@@ -619,13 +636,29 @@ namespace rhi {
 
     ID3D12Device* D3D12RenderDevice::get_d3d12_device() const { return device.Get(); }
 
-    void D3D12RenderDevice::enable_validation_layer() {
-        const auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
+    void D3D12RenderDevice::enable_debugging() {
+        auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
         if(SUCCEEDED(result)) {
             debug_controller->EnableDebugLayer();
 
         } else {
             spdlog::error("Could not enable the D3D12 validation layer: {}", to_string(result));
+        }
+
+        result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
+        if(FAILED(result)) {
+            spdlog::error("Could not enable DRED");
+
+        } else {
+            dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            // dred_settings->SetWatsonDumpEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+
+            ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred1_settings;
+            dred_settings->QueryInterface(dred1_settings.GetAddressOf());
+            if(dred1_settings) {
+                dred1_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            }
         }
     }
 
@@ -729,7 +762,7 @@ namespace rhi {
                     has_raytracing = options5.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
                 }
 
-#ifndef DEBUG
+#ifndef NDEBUG
                 res = device->QueryInterface(info_queue.GetAddressOf());
                 if(SUCCEEDED(res)) {
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
@@ -1160,7 +1193,7 @@ namespace rhi {
                     continue;
                 }
 
-                cur_pair = std::move(render_device->in_flight_command_lists.front());
+                cur_pair = render_device->in_flight_command_lists.front();
                 render_device->in_flight_command_lists.pop();
             }
 
@@ -1172,5 +1205,30 @@ namespace rhi {
                 render_device->done_command_lists.emplace(std::move(cur_pair.second));
             }
         }
+    }
+
+    void D3D12RenderDevice::retrieve_dred_report() {
+        ComPtr<ID3D12DeviceRemovedExtendedData> dred;
+        auto result = device->QueryInterface(IID_PPV_ARGS(&dred));
+        if(FAILED(result)) {
+            spdlog::error("Could not retrieve DRED report");
+            return;
+        }
+
+        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT breadcrumbs;
+        result = dred->GetAutoBreadcrumbsOutput(&breadcrumbs);
+        if(FAILED(result)) {
+            spdlog::error("Could not retrieve DRED breadcrumbs");
+            return;
+        }
+
+        D3D12_DRED_PAGE_FAULT_OUTPUT page_faults;
+        result = dred->GetPageFaultAllocationOutput(&page_faults);
+        if(FAILED(result)) {
+            spdlog::error("Could not retrieve DRED page faults");
+            return;
+        }
+
+        spdlog::error(breadcrumb_output_to_string(breadcrumbs));
     }
 } // namespace rhi

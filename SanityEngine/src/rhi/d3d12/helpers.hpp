@@ -4,6 +4,7 @@
 
 #include <d3d12.h>
 #include <dxgi.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "../render_pipeline_state.hpp"
 #include "../resources.hpp"
@@ -37,4 +38,8 @@ namespace rhi {
     D3D12_STENCIL_OP to_d3d12_stencil_op(StencilOp op);
 
     D3D12_PRIMITIVE_TOPOLOGY_TYPE to_d3d12_primitive_topology_type(PrimitiveType topology);
-} // namespace render
+
+    std::string breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
+
+    std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs);
+} // namespace rhi

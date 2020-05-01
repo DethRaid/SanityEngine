@@ -25,6 +25,8 @@ namespace rhi {
 
         void bind_render_resources(const BindGroup& bind_group) override;
 
+        void set_camera_idx(uint32_t camera_idx) override;
+
         void bind_mesh_data(const MeshDataStore& mesh_data) override;
 
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
