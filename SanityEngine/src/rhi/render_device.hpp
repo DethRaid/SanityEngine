@@ -87,7 +87,7 @@ namespace rhi {
          */
         virtual void end_frame() = 0;
 
-        [[nodiscard]] virtual uint32_t get_cur_backbuffer_idx() = 0;
+        [[nodiscard]] virtual uint32_t get_cur_gpu_frame_idx() = 0;
 #pragma endregion
     };
 

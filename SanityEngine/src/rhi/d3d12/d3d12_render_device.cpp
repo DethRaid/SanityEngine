@@ -429,7 +429,7 @@ namespace rhi {
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocators[cur_swapchain_idx].Get(),
+                                                      direct_command_allocators[cur_gpu_frame_idx].Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -449,7 +449,7 @@ namespace rhi {
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocators[cur_swapchain_idx].Get(),
+                                                      direct_command_allocators[cur_gpu_frame_idx].Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -469,7 +469,7 @@ namespace rhi {
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocators[cur_swapchain_idx].Get(),
+                                                      direct_command_allocators[cur_gpu_frame_idx].Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -525,10 +525,13 @@ namespace rhi {
         MTR_SCOPE("D3D12RenderDevice", "begin_frame");
 
         cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
-        wait_for_frame(cur_swapchain_idx);
-        frame_fence_values[cur_swapchain_idx]++;
+        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_frames;
+
+        wait_for_frame(cur_gpu_frame_idx);
+        frame_fence_values[cur_gpu_frame_idx]++;
 
         return_staging_buffers_for_current_frame();
+
         reset_command_allocators_for_current_frame();
 
         auto cmds = create_render_command_list();
@@ -557,7 +560,7 @@ namespace rhi {
 
         submit_command_list(std::move(cmds));
 
-        direct_command_queue->Signal(frame_fences[cur_swapchain_idx].Get(), frame_fence_values[cur_swapchain_idx]);
+        direct_command_queue->Signal(frame_fences[cur_gpu_frame_idx].Get(), frame_fence_values[cur_gpu_frame_idx]);
 
         const auto result = swapchain->Present(0, 0);
         if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
@@ -569,7 +572,7 @@ namespace rhi {
         }
     }
 
-    uint32_t D3D12RenderDevice::get_cur_backbuffer_idx() { return cur_swapchain_idx; }
+    uint32_t D3D12RenderDevice::get_cur_gpu_frame_idx() { return cur_gpu_frame_idx; }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
@@ -601,7 +604,7 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::return_staging_buffer(D3D12StagingBuffer&& buffer) {
-        staging_buffers_to_free[cur_swapchain_idx].push_back(std::move(buffer));
+        staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer));
     }
 
     UINT D3D12RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
@@ -830,6 +833,7 @@ namespace rhi {
         frame_fences.resize(num_images);
         for(uint32_t i = 0; i < num_images; i++) {
             device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences[i]));
+            set_object_name(*frame_fences[i].Get(), fmt::format("Frame Synchronization Fence {}", i));
         }
     }
 
@@ -906,8 +910,7 @@ namespace rhi {
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
-            const auto image_name = fmt::format("Swapchain image {}", i);
-            set_object_name(*swapchain_images[i].Get(), image_name);
+            set_object_name(*swapchain_images[i].Get(), fmt::format("Swapchain image {}", i));
         }
     }
 
@@ -1108,9 +1111,9 @@ namespace rhi {
     void D3D12RenderDevice::return_staging_buffers_for_current_frame() {}
 
     void D3D12RenderDevice::reset_command_allocators_for_current_frame() {
-        direct_command_allocators[cur_swapchain_idx]->Reset();
-        copy_command_allocators[cur_swapchain_idx]->Reset();
-        compute_command_allocators[cur_swapchain_idx]->Reset();
+        direct_command_allocators[cur_gpu_frame_idx]->Reset();
+        copy_command_allocators[cur_gpu_frame_idx]->Reset();
+        compute_command_allocators[cur_gpu_frame_idx]->Reset();
     }
 
     void D3D12RenderDevice::wait_for_frame(const uint64_t frame_index) {
@@ -1121,16 +1124,9 @@ namespace rhi {
             // If the fence's most recent value is not the value we want, then the GPU has not finished executing the frame and we need to
             // explicitly wait
 
-            spdlog::info("Waiting for frame {}", frame_index);
-
             fence->SetEventOnCompletion(desired_fence_value, frame_event);
             WaitForSingleObject(frame_event, INFINITE);
 
-        } else {
-            spdlog::info("Frame {} is already done - it's completed value, {}, is the desired value {}",
-                         frame_index,
-                         fence->GetCompletedValue(),
-                         desired_fence_value);
         }
     }
 

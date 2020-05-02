@@ -82,7 +82,7 @@ namespace rhi {
 
         void end_frame() override;
 
-        uint32_t get_cur_backbuffer_idx() override;
+        uint32_t get_cur_gpu_frame_idx() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;
@@ -179,7 +179,15 @@ namespace rhi {
 
         std::vector<D3D12BindGroupBuilder> material_bind_group_builder;
 
+        /*!
+         * \brief Index of the swapchain image we're currently rendering to
+         */
         UINT cur_swapchain_idx{0};
+
+        /*!
+         * \brief Index of the GPU frame we're currently recording
+         */
+        uint32_t cur_gpu_frame_idx{0};
 
 #pragma region initialization
         void enable_debugging();

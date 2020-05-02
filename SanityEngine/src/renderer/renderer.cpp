@@ -46,7 +46,7 @@ namespace renderer {
     void Renderer::render_scene(entt::registry& registry) const {
         MTR_SCOPE("Renderer", "render_scene");
 
-        const auto frame_idx = render_device->get_cur_backbuffer_idx();
+        const auto frame_idx = render_device->get_cur_gpu_frame_idx();
 
         auto command_list = render_device->create_render_command_list();
         command_list->set_debug_name("Main Render Command List");
