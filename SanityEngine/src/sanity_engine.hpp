@@ -7,6 +7,7 @@
 #include "player/flycam_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
+#include "stats/framerate_tracker.hpp"
 
 /*!
  * \brief Main class for my glorious engine
@@ -36,6 +37,8 @@ private:
     std::unique_ptr<InputManager> input_manager;
 
     std::unique_ptr<renderer::Renderer> renderer;
+
+    FramerateTracker framerate_tracker{1000};
 
     GLFWwindow* window;
 

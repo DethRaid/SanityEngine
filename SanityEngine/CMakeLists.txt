@@ -76,8 +76,11 @@ set(SANITY_ENGINE_SOURCE
     "src/rhi/resources.hpp"
     "src/rhi/resources.cpp"
 
-    "src/windows/windows_helpers.cpp"
+    "src/stats/framerate_tracker.hpp"
+    "src/stats/framerate_tracker.cpp"
+
     "src/windows/windows_helpers.hpp"
+    "src/windows/windows_helpers.cpp"
     )
 
 set(D3D12_BACKEND_SOURCE

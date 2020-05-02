@@ -29,7 +29,8 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     MTR_SCOPE("D3D12Engine", "D3D12Engine");
 
-    spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
+    // spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
+    spdlog::set_pattern("[%n] [%^%l%$] %v");
 
     spdlog::info("HELLO HUMAN");
 
@@ -95,8 +96,10 @@ void SanityEngine::run() {
                                                         .count();
             last_frame_duration = static_cast<float>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
 
+            framerate_tracker.add_frame_time(last_frame_duration);
+
             if(frame_count % 100 == 0) {
-                spdlog::info("Frame {} took {} ms", frame_count, last_frame_duration * 1000);
+                framerate_tracker.log_framerate_stats();
             }
 
             frame_count++;
