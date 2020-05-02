@@ -47,7 +47,7 @@ namespace rhi {
 
         ENSURE(d3d12_framebuffer.rtv_handles.size() == render_target_accesses.size(),
                "Must have the same number of render targets and render target accesses");
-        ENSURE(d3d12_framebuffer.dsv_handle == depth_access,
+        ENSURE(d3d12_framebuffer.dsv_handle.has_value() == depth_access.has_value(),
                "There must be either both a DSV handle and a depth target access, or neither");
 
         if(commands4) {
@@ -103,6 +103,8 @@ namespace rhi {
                                              0,
                                              nullptr);
             }
+
+            spdlog::warn("Render passes not available - falling back to something lame");
         }
 
         D3D12_VIEWPORT viewport{};
