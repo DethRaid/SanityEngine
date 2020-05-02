@@ -18,6 +18,7 @@
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "resources.hpp"
+#include "../../windows/windows_helpers.hpp"
 
 using std::move;
 
@@ -484,6 +485,8 @@ namespace rhi {
             return {};
         }
 
+        // logger->debug("Creating a render command list with command allocator {}", fmt::ptr(direct_command_allocators[cur_gpu_frame_idx].Get()));
+
         cmds->QueryInterface(commands.GetAddressOf());
 
         return std::make_unique<D3D12RenderCommandList>(commands, *this);
@@ -536,8 +539,6 @@ namespace rhi {
 
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
-
-        // logger->debug("Beginning GPU frame {}, which will render to swapchain idx {}", cur_gpu_frame_idx, cur_swapchain_idx);
 
         return_staging_buffers_for_frame(cur_gpu_frame_idx);
 
@@ -841,6 +842,8 @@ namespace rhi {
         frame_fence_values.resize(num_images);
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
         set_object_name(*frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
+
+        frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
 
     void D3D12RenderDevice::create_command_allocators() {
@@ -1127,20 +1130,25 @@ namespace rhi {
 
     void D3D12RenderDevice::wait_for_frame(const uint64_t frame_index) {
         const auto desired_fence_value = frame_fence_values[frame_index];
+        const auto initial_fence_value = frame_fences->GetCompletedValue();
 
-        if(frame_fences->GetCompletedValue() < desired_fence_value) {
+        if(initial_fence_value < desired_fence_value) {
             // If the fence's most recent value is not the value we want, then the GPU has not finished executing the frame and we need to
             // explicitly wait
 
-            logger->debug("Waiting for fence for frame {} to have value {}", frame_index, desired_fence_value);
-
             frame_fences->SetEventOnCompletion(desired_fence_value, frame_event);
-            WaitForSingleObject(frame_event, INFINITE);
+            const auto result = WaitForSingleObject(frame_event, INFINITE);
+            if(result == WAIT_ABANDONED) {
+                logger->error("Waiting for GPU frame {} was abandoned", frame_index);
 
-        } else {
-            logger->debug("GPU frame {} has finished on the GPU - fence already has value {} - no need to wait",
-                          frame_index,
-                          desired_fence_value);
+            } else if(result == WAIT_TIMEOUT) {
+                logger->error("Waiting for GPU frame {} timed out", frame_index);
+
+            } else if(result == WAIT_FAILED) {
+                logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error());    
+            }
+
+            ENSURE(result == WAIT_OBJECT_0, "Waiting for frame {} failed", frame_index);
         }
     }
 
