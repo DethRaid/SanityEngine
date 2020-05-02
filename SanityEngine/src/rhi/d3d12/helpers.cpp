@@ -4,6 +4,8 @@
 
 #include <d3d12.h>
 
+#include "../framebuffer.hpp"
+
 namespace rhi {
 
     std::wstring to_wide_string(const std::string& string) {
@@ -229,6 +231,57 @@ namespace rhi {
             default:
                 return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         }
+    }
+
+    D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d12_beginning_access(const RenderTargetBeginningAccess& access, const bool is_color) {
+        D3D12_RENDER_PASS_BEGINNING_ACCESS d3d12_access = {};
+
+        switch(access.type) {
+            case RenderTargetBeginningAccessType::Preserve:
+                d3d12_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE;
+                break;
+
+            case RenderTargetBeginningAccessType::Clear:
+                d3d12_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR;
+                d3d12_access.Clear.ClearValue.Format = to_dxgi_format(access.format);
+                if(is_color) {
+                    d3d12_access.Clear.ClearValue.Color[0] = access.clear_color.x;
+                    d3d12_access.Clear.ClearValue.Color[1] = access.clear_color.y;
+                    d3d12_access.Clear.ClearValue.Color[2] = access.clear_color.z;
+                    d3d12_access.Clear.ClearValue.Color[3] = access.clear_color.w;
+                } else {
+                    d3d12_access.Clear.ClearValue.DepthStencil.Depth = access.clear_color.x;
+                    d3d12_access.Clear.ClearValue.DepthStencil.Stencil = 0;
+                }
+                break;
+
+            case RenderTargetBeginningAccessType::Discard:
+                d3d12_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD;
+                break;
+        }
+
+        return d3d12_access;
+    }
+
+    D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access) {
+        D3D12_RENDER_PASS_ENDING_ACCESS d3d12_access{};
+
+        switch(access.type) {
+            case RenderTargetEndingAccessType::Preserve:
+                d3d12_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE;
+                break;
+
+            case RenderTargetEndingAccessType::Resolve:
+                d3d12_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_RESOLVE;
+                // TODO: Deal with this later
+                break;
+
+            case RenderTargetEndingAccessType::Discard:
+                d3d12_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD;
+                break;
+        }
+
+        return d3d12_access;
     }
 
     std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs) {

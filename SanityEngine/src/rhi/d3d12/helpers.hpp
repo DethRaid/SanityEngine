@@ -12,6 +12,9 @@
 class ID3D12Object;
 
 namespace rhi {
+    struct RenderTargetBeginningAccess;
+    struct RenderTargetEndingAccess;
+
     constexpr uint64_t FENCE_UNSIGNALED = 0;
     constexpr uint64_t CPU_FENCE_SIGNALED = 32;
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
@@ -38,6 +41,11 @@ namespace rhi {
     D3D12_STENCIL_OP to_d3d12_stencil_op(StencilOp op);
 
     D3D12_PRIMITIVE_TOPOLOGY_TYPE to_d3d12_primitive_topology_type(PrimitiveType topology);
+
+    D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d12_beginning_access(const RenderTargetBeginningAccess& access,
+                                                                 bool is_color = true);
+
+    D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access);
 
     std::string breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
 

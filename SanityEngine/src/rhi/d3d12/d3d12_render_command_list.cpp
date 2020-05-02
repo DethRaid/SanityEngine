@@ -10,6 +10,7 @@
 #include "d3d12_bind_group.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_pipeline_state.hpp"
+#include "helpers.hpp"
 
 using std::move;
 
@@ -37,20 +38,57 @@ namespace rhi {
         return static_cast<D3D12RenderCommandList&>(D3D12ComputeCommandList::operator=(move(old)));
     }
 
-    void D3D12RenderCommandList::set_framebuffer(const Framebuffer& framebuffer) {
+    void D3D12RenderCommandList::set_framebuffer(const Framebuffer& framebuffer,
+                                                 std::vector<RenderTargetAccess> render_target_accesses,
+                                                 std::optional<RenderTargetAccess> depth_access) {
         MTR_SCOPE("D3D12RenderCommandList", "set_render_targets");
 
         const D3D12Framebuffer& d3d12_framebuffer = static_cast<const D3D12Framebuffer&>(framebuffer);
 
-        if(commands4 && false) {
+        ENSURE(d3d12_framebuffer.rtv_handles.size() == render_target_accesses.size(),
+               "Must have the same number of render targets and render target accesses");
+        ENSURE(d3d12_framebuffer.dsv_handle == depth_access,
+               "There must be either both a DSV handle and a depth target access, or neither");
+
+        if(commands4) {
             // TODO: Decide if every framebuffer should be a separate renderpass
 
             if(in_render_pass) {
                 commands4->EndRenderPass();
             }
 
-            // TODO: Renderpass
-            // in_render_pass = true;
+            std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> render_target_descriptions;
+            render_target_descriptions.reserve(render_target_accesses.size());
+
+            for(uint32_t i = 0; i < render_target_accesses.size(); i++) {
+                D3D12_RENDER_PASS_RENDER_TARGET_DESC desc{};
+                desc.cpuDescriptor = d3d12_framebuffer.rtv_handles[i];
+                desc.BeginningAccess = to_d3d12_beginning_access(render_target_accesses[i].begin);
+                desc.EndingAccess = to_d3d12_ending_access(render_target_accesses[i].end);
+
+                render_target_descriptions.emplace_back(desc);
+            }
+
+            if(depth_access) {
+                D3D12_RENDER_PASS_DEPTH_STENCIL_DESC desc{};
+                desc.DepthBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
+                desc.DepthEndingAccess = to_d3d12_ending_access(depth_access->end);
+                desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
+                desc.StencilEndingAccess = to_d3d12_ending_access(depth_access->end);
+
+                commands4->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
+                                           render_target_descriptions.data(),
+                                           &desc,
+                                           D3D12_RENDER_PASS_FLAG_NONE);
+
+            } else {
+                commands4->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
+                                           render_target_descriptions.data(),
+                                           nullptr,
+                                           D3D12_RENDER_PASS_FLAG_NONE);
+            }
+
+            in_render_pass = true;
 
         } else {
             if(d3d12_framebuffer.dsv_handle) {

@@ -19,7 +19,9 @@ namespace rhi {
 #pragma region RenderCommandList
         ~D3D12RenderCommandList() override = default;
 
-        void set_framebuffer(const Framebuffer& framebuffer) override;
+        void set_framebuffer(const Framebuffer& framebuffer,
+                             std::vector<RenderTargetAccess> render_target_accesses,
+                             std::optional<RenderTargetAccess> depth_access) override;
 
         void set_pipeline_state(const RenderPipelineState& state) override;
 

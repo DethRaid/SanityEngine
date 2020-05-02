@@ -1,6 +1,9 @@
 #pragma once
 
+#include <optional>
+
 #include "compute_command_list.hpp"
+#include "framebuffer.hpp"
 #include "resources.hpp"
 
 namespace rhi {
@@ -15,7 +18,9 @@ namespace rhi {
         /*!
          * \brief Sets the render targets that draws will render to
          */
-        virtual void set_framebuffer(const Framebuffer& framebuffer) = 0;
+        virtual void set_framebuffer(const Framebuffer& framebuffer,
+                                     std::vector<RenderTargetAccess> render_target_accesses,
+                                     std::optional<RenderTargetAccess> depth_access) = 0;
 
         /*!
          * \brief Sets the state of the graphics rendering pipeline
@@ -47,4 +52,4 @@ namespace rhi {
          */
         virtual void draw(uint32_t num_indices, uint32_t first_index = 0, uint32_t num_instances = 1) = 0;
     };
-} // namespace render
+} // namespace rhi

@@ -21,7 +21,7 @@ namespace rhi {
         /*!
          * Don't care what's in the render target
          */
-        DontCare
+        Discard
     };
 
     struct RenderTargetBeginningAccess {
@@ -34,6 +34,8 @@ namespace rhi {
          * Color to clear a render target to. Only relevant if `type` is `RenderTargetBeginningAccessType::Clear
          */
         DirectX::XMFLOAT4 clear_color{};
+
+        ImageFormat format{};
     };
 
     enum class RenderTargetEndingAccessType {
@@ -50,7 +52,7 @@ namespace rhi {
         /*!
          * \brief Don't care what happens to the render target contents
          */
-        DontCare
+        Discard
     };
 
     /*!
@@ -68,7 +70,7 @@ namespace rhi {
         bool preserve_resolve_source{false};
     };
 
-    struct RenderTargetsEndingAccess {
+    struct RenderTargetEndingAccess {
         /*!
          * \brief What to do with the render target
          */
@@ -78,5 +80,10 @@ namespace rhi {
          * \brief How to resolve the render target. Only relevant if `type` is `RenderTargetEndingAccessType::Resolve`
          */
         RenderTargetResolveParameters resolve_params{};
+    };
+
+    struct RenderTargetAccess {
+        RenderTargetBeginningAccess begin;
+        RenderTargetEndingAccess end;
     };
 } // namespace render
