@@ -32,19 +32,19 @@ namespace renderer {
         return shader;
     }
 
-    Renderer::Renderer(GLFWwindow* window, const uint32_t num_frames)
-        : render_device{make_render_device(rhi::RenderBackend::D3D12, window, num_frames)},
-          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, num_frames)} {
+    Renderer::Renderer(GLFWwindow* window, const Settings& settings)
+        : render_device{make_render_device(rhi::RenderBackend::D3D12, window, settings)},
+          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, settings.num_in_flight_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
         make_static_mesh_storage();
 
         create_debug_pipeline();
     }
 
+    void Renderer::begin_frame() { render_device->begin_frame(); }
+
     void Renderer::render_scene(entt::registry& registry) const {
         MTR_SCOPE("Renderer", "render_scene");
-
-        render_device->begin_frame();
 
         const auto frame_idx = render_device->get_cur_backbuffer_idx();
 
@@ -56,9 +56,9 @@ namespace renderer {
         render_3d_scene(registry, *command_list, frame_idx);
 
         render_device->submit_command_list(std::move(command_list));
-
-        render_device->end_frame();
     }
+
+    void Renderer::end_frame() { render_device->end_frame(); }
 
     StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
                                                                const std::vector<uint32_t>& indices) const {

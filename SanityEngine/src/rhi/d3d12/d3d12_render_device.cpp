@@ -24,8 +24,8 @@ namespace rhi {
 
     D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle,
                                          const XMINT2& window_size,
-                                         const uint32_t num_frames_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
-        : num_in_flight_frames{num_frames_in} {
+                                         const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
+        : settings{settings_in}, staging_buffers_to_free{settings.num_in_flight_frames} {
 #ifndef NDEBUG
         enable_debugging();
 #endif
@@ -36,7 +36,7 @@ namespace rhi {
 
         create_queues();
 
-        create_swapchain(window_handle, window_size, num_in_flight_frames);
+        create_swapchain(window_handle, window_size, settings.num_in_flight_frames);
 
         create_command_allocators();
 
@@ -51,12 +51,10 @@ namespace rhi {
         create_material_resource_binder();
 
         create_standard_graphics_pipeline_input_layout();
-
-        command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
-        for(uint32_t i = 0; i < num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             wait_for_frame(i);
             direct_command_queue->Wait(frame_fences[i].Get(), frame_fence_values[i]);
         }
@@ -68,11 +66,6 @@ namespace rhi {
         }
 
         device_allocator->Release();
-
-        if(command_completion_thread) {
-            should_thread_continue.store(false);
-            command_completion_thread->join();
-        }
     }
 
     std::unique_ptr<Buffer> D3D12RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
@@ -433,7 +426,7 @@ namespace rhi {
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocator.Get(),
+                                                      direct_command_allocators[cur_swapchain_idx].Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -453,7 +446,7 @@ namespace rhi {
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocator.Get(),
+                                                      direct_command_allocators[cur_swapchain_idx].Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -473,7 +466,7 @@ namespace rhi {
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocator.Get(),
+                                                      direct_command_allocators[cur_swapchain_idx].Get(),
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
@@ -499,17 +492,20 @@ namespace rhi {
         // TODO: Actually figure out how to use multiple queues
         direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
 
-        auto command_list_done_fence = get_next_command_list_done_fence();
+        if(settings.enable_gpu_crash_reporting) {
+            auto command_list_done_fence = get_next_command_list_done_fence();
 
-        direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
-        
-        {
-            std::lock_guard m{in_flight_command_lists_mutex};
-            in_flight_command_lists.emplace(command_list_done_fence, dynamic_cast<D3D12CommandList*>(commands.release()));
+            direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+
+            auto event = CreateEvent(nullptr, false, false, nullptr);
+            command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+
+            WaitForSingleObject(event, INFINITE);
+
+            retrieve_dred_report();
+
+            command_list_done_fences.push_back(command_list_done_fence);
         }
-
-        commands_lists_in_flight_cv.notify_one();
-        
     }
 
     BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder() {
@@ -522,20 +518,13 @@ namespace rhi {
 
     void D3D12RenderDevice::begin_frame() {
         MTR_SCOPE("D3D12RenderDevice", "begin_frame");
-        {
-            std::lock_guard l{done_command_lists_mutex};
-            while(!done_command_lists.empty()) {
-                auto* list = done_command_lists.front();
-                done_command_lists.pop();
 
-                list->execute_completion_functions();
-                delete list;
-            }
-        }
-
-        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
+        cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
         wait_for_frame(cur_swapchain_idx);
         frame_fence_values[cur_swapchain_idx]++;
+
+        return_staging_buffers_for_current_frame();
+        reset_command_allocators_for_current_frame();
 
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Render Target");
@@ -551,8 +540,6 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::end_frame() {
-        const auto cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
-
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Presentable");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
@@ -576,7 +563,7 @@ namespace rhi {
         }
     }
 
-    uint32_t D3D12RenderDevice::get_cur_backbuffer_idx() { return swapchain->GetCurrentBackBufferIndex(); }
+    uint32_t D3D12RenderDevice::get_cur_backbuffer_idx() { return cur_swapchain_idx; }
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
@@ -607,25 +594,8 @@ namespace rhi {
         }
     }
 
-    void D3D12RenderDevice::return_staging_buffer(D3D12StagingBuffer&& buffer) { staging_buffers.push_back(std::move(buffer)); }
-
-    ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
-        if(!command_list_done_fences.empty()) {
-            auto fence = *command_list_done_fences.end();
-            command_list_done_fences.pop_back();
-
-            return fence;
-        }
-
-        ComPtr<ID3D12Fence> fence;
-        const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-        if(FAILED(result)) {
-            spdlog::error("Could not create fence: {}", to_string(result));
-            const auto removed_reason = device->GetDeviceRemovedReason();
-            spdlog::error("Device removed reason: {}", to_string(removed_reason));
-        }
-
-        return fence;
+    void D3D12RenderDevice::return_staging_buffer(D3D12StagingBuffer&& buffer) {
+        staging_buffers_to_free[cur_swapchain_idx].push_back(std::move(buffer));
     }
 
     UINT D3D12RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
@@ -641,21 +611,22 @@ namespace rhi {
             spdlog::error("Could not enable the D3D12 validation layer: {}", to_string(result));
         }
 
-        // result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
-        // if(FAILED(result)) {
-        //     spdlog::error("Could not enable DRED");
-        // 
-        // } else {
-        //     dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-        //     dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-        //     // dred_settings->SetWatsonDumpEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-        // 
-        //     ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred1_settings;
-        //     dred_settings->QueryInterface(dred1_settings.GetAddressOf());
-        //     if(dred1_settings) {
-        //         dred1_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-        //     }
-        // }
+        if(settings.enable_gpu_crash_reporting) {
+            result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
+            if(FAILED(result)) {
+                spdlog::error("Could not enable DRED");
+
+            } else {
+                dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+                dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+
+                ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred1_settings;
+                dred_settings->QueryInterface(dred1_settings.GetAddressOf());
+                if(dred1_settings) {
+                    dred1_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+                }
+            }
+        }
     }
 
     void D3D12RenderDevice::initialize_dxgi() {
@@ -759,10 +730,12 @@ namespace rhi {
                 }
 
 #ifndef NDEBUG
-                res = device->QueryInterface(info_queue.GetAddressOf());
-                if(SUCCEEDED(res)) {
-                    info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-                    info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+                if(!settings.enable_gpu_crash_reporting) {
+                    res = device->QueryInterface(info_queue.GetAddressOf());
+                    if(SUCCEEDED(res)) {
+                        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+                        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+                    }
                 }
 #endif
 
@@ -857,26 +830,36 @@ namespace rhi {
     void D3D12RenderDevice::create_command_allocators() {
         MTR_SCOPE("D3D12RenderDevice", "create_command_allocators");
 
-        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&direct_command_allocator));
-        if(FAILED(result)) {
-            critical_error("Could not create direct command allocator");
-        }
+        HRESULT result;
 
-        result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(compute_command_allocator.GetAddressOf()));
-        if(FAILED(result)) {
-            critical_error("Could not create compute command allocator");
-        }
+        direct_command_allocators.resize(settings.num_in_flight_frames);
+        compute_command_allocators.resize(settings.num_in_flight_frames);
+        copy_command_allocators.resize(settings.num_in_flight_frames);
 
-        result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&copy_command_allocator));
-        if(FAILED(result)) {
-            critical_error("Could not create copy command allocator");
+        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                    IID_PPV_ARGS(direct_command_allocators[i].GetAddressOf()));
+            if(FAILED(result)) {
+                critical_error(fmt::format("Could not create direct command allocator for frame {}", i));
+            }
+
+            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
+                                                    IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
+            if(FAILED(result)) {
+                critical_error(fmt::format("Could not create compute command allocator for frame {}", i));
+            }
+
+            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
+            if(FAILED(result)) {
+                critical_error(fmt::format("Could not create copy command allocator for frame {}", i));
+            }
         }
     }
 
     void D3D12RenderDevice::create_descriptor_heaps() {
         MTR_SCOPE("D3D12RenderDevice", "create_descriptor_heaps");
 
-        for(uint32_t i = 0; i < num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             const auto [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                                                              MAX_NUM_TEXTURES * 2);
 
@@ -1049,9 +1032,9 @@ namespace rhi {
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
 
-        material_bind_group_builder.reserve(num_in_flight_frames);
+        material_bind_group_builder.reserve(settings.num_in_flight_frames);
 
-        for(uint32_t i = 0; i < num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.emplace("textures",
@@ -1110,6 +1093,14 @@ namespace rhi {
                                      /* .InstanceDataStepRate = */ 0});
     }
 
+    void D3D12RenderDevice::return_staging_buffers_for_current_frame() {}
+
+    void D3D12RenderDevice::reset_command_allocators_for_current_frame() {
+        direct_command_allocators[cur_swapchain_idx]->Reset();
+        copy_command_allocators[cur_swapchain_idx]->Reset();
+        compute_command_allocators[cur_swapchain_idx]->Reset();
+    }
+
     void D3D12RenderDevice::wait_for_frame(const uint32_t frame_index) {
         const auto desired_fence_value = frame_fence_values[frame_index];
         auto fence = frame_fences[frame_index];
@@ -1162,43 +1153,23 @@ namespace rhi {
         return buffer;
     }
 
-    void D3D12RenderDevice::wait_for_command_lists(D3D12RenderDevice* render_device) {
-        HANDLE event = CreateEvent(nullptr, false, false, nullptr);
+    ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
+        if(!command_list_done_fences.empty()) {
+            auto fence = command_list_done_fences[command_list_done_fences.size() - 1];
+            command_list_done_fences.pop_back();
 
-        bool should_wait_for_cv = false;
-
-        auto should_continue = render_device->should_thread_continue.load();
-
-        while(should_continue) {
-            should_continue = render_device->should_thread_continue.load();
-
-            if(should_wait_for_cv) {
-                std::unique_lock l{render_device->in_flight_command_lists_mutex};
-                render_device->commands_lists_in_flight_cv.wait(l, [&] { return !render_device->in_flight_command_lists.empty(); });
-
-                should_wait_for_cv = false;
-            }
-
-            std::pair<ComPtr<ID3D12Fence>, D3D12CommandList*> cur_pair;
-            {
-                std::lock_guard l{render_device->in_flight_command_lists_mutex};
-                if(render_device->in_flight_command_lists.empty()) {
-                    // should_wait_for_cv = true;
-                    continue;
-                }
-
-                cur_pair = render_device->in_flight_command_lists.front();
-                render_device->in_flight_command_lists.pop();
-            }
-
-            cur_pair.first->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
-            WaitForSingleObject(event, 2000);
-
-            {
-                std::lock_guard l{render_device->done_command_lists_mutex};
-                render_device->done_command_lists.emplace(std::move(cur_pair.second));
-            }
+            return fence;
         }
+
+        ComPtr<ID3D12Fence> fence;
+        const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+        if(FAILED(result)) {
+            spdlog::error("Could not create fence: {}", to_string(result));
+            const auto removed_reason = device->GetDeviceRemovedReason();
+            spdlog::error("Device removed reason: {}", to_string(removed_reason));
+        }
+
+        return fence;
     }
 
     void D3D12RenderDevice::retrieve_dred_report() {

@@ -7,8 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+# Global settings
+
 # Don't warn about documentation D3D12_BACKEND_SOURCE, because GLFW doens't use doxygen properly ffs
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-documentation")
+
+add_compile_definitions(GLM_FORCE_LEFT_HANDED)
 
 # Dependencies
 
@@ -63,7 +67,8 @@ set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_command_list.cpp"
     "src/rhi/d3d12/d3d12_descriptor_allocator.cpp" 
     "src/rhi/d3d12/shader_reflection.cpp" 
-    "src/rhi/d3d12/d3d12_bind_group.cpp")
+    "src/rhi/d3d12/d3d12_bind_group.cpp"
+    )
 
 # TODO: If I ever support multiple D3D12_BACKEND_SOURCE, only add the source for the selected backend
 set(SANITY_ENGINE_SOURCE "${SANITY_ENGINE_SOURCE}" "${D3D12_BACKEND_SOURCE}")
@@ -74,7 +79,7 @@ target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
 
 target_compile_options(SanityEngine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
-target_compile_definitions(SanityEngine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN GLM_FORCE_LEFT_HANDED)
+target_compile_definitions(SanityEngine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
 
 target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)
 

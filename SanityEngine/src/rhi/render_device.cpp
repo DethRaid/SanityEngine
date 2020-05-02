@@ -10,7 +10,7 @@
 #include "d3d12/d3d12_render_device.hpp"
 
 namespace rhi {
-    std::unique_ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const uint32_t num_frames) {
+    std::unique_ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const Settings& settings) {
         switch(backend) {
             case RenderBackend::D3D12: {
                 const auto hwnd = glfwGetWin32Window(window);
@@ -20,7 +20,7 @@ namespace rhi {
 
                 spdlog::info("Creating D3D12 backend");
 
-                return std::make_unique<D3D12RenderDevice>(hwnd, framebuffer_size, num_frames);
+                return std::make_unique<D3D12RenderDevice>(hwnd, framebuffer_size, settings);
             }
         }
 

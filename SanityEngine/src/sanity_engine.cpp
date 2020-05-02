@@ -8,7 +8,8 @@
 #include "core/abort.hpp"
 
 int main() {
-    const Settings settings{};
+    Settings settings{};
+    settings.enable_gpu_crash_reporting = true;
 
     SanityEngine engine{settings};
 
@@ -52,12 +53,8 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     glfwSetKeyCallback(window, key_func);
 
-    renderer = std::make_unique<renderer::Renderer>(window, settings.num_in_flight_frames);
+    renderer = std::make_unique<renderer::Renderer>(window, settings);
     spdlog::info("Initialized renderer");
-
-    create_debug_cube();
-
-    create_flycam_player();
 }
 
 SanityEngine::~SanityEngine() {
@@ -79,10 +76,20 @@ void SanityEngine::run() {
             MTR_SCOPE("SanityEngine", "tick");
             const auto frame_start_time = clock.now();
             glfwPollEvents();
+            renderer->begin_frame();
+
+            // Hackily spawn entities on the first frame, because mesh uploading is hard
+            if(frame_count == 0) {
+                create_debug_cube();
+
+                create_flycam_player();
+            }
 
             player_controller->update_player_position(last_frame_duration);
 
             renderer->render_scene(registry);
+
+            renderer->end_frame();
 
             const auto frame_end_time = clock.now();
 

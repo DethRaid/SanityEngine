@@ -78,8 +78,7 @@ namespace rhi {
 
         UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
 
-        add_completion_function(
-            [staging_buffer{move(staging_buffer)}, this]() mutable { device->return_staging_buffer(move(staging_buffer)); });
+        device->return_staging_buffer(move(staging_buffer));
 
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
     }

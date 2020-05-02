@@ -8,6 +8,7 @@
 #include "render_command_list.hpp"
 #include "resource_command_list.hpp"
 
+struct Settings;
 struct GLFWwindow;
 
 namespace rhi {
@@ -19,6 +20,10 @@ namespace rhi {
 
     /*
      * \brief A device which can be used to render
+     *
+     * A render device - and by extension the CPU - may only record commands for a single frame at a time. However, the GPU may be executing
+     * one frame for each image in the swapchain. Most of the synchronization concerns should be hidden behind this interface, but be aware
+     * that the frame that the GPU may be several frames behind the CPU
      */
     class RenderDevice {
     public:
@@ -47,7 +52,8 @@ namespace rhi {
         [[nodiscard]] virtual std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
             const std::vector<uint8_t>& compute_shader) = 0;
 
-        [[nodiscard]] virtual std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) = 0;
+        [[nodiscard]] virtual std::unique_ptr<RenderPipelineState> create_render_pipeline_state(
+            const RenderPipelineStateCreateInfo& create_info) = 0;
 
         virtual void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) = 0;
 
@@ -85,5 +91,5 @@ namespace rhi {
 #pragma endregion
     };
 
-    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, uint32_t num_frames);
-} // namespace render
+    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
+} // namespace rhi

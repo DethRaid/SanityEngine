@@ -4,6 +4,7 @@
 
 #include "../rhi/mesh_data_store.hpp"
 #include "../rhi/render_pipeline_state.hpp"
+#include "../settings.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "components.hpp"
 
@@ -22,12 +23,16 @@ namespace renderer {
      */
     class Renderer {
     public:
-        explicit Renderer(GLFWwindow* window, uint32_t num_frames);
+        explicit Renderer(GLFWwindow* window, const Settings& settings);
+
+        void begin_frame();
 
         void render_scene(entt::registry& registry) const;
 
+        void end_frame();
+
         [[nodiscard]] StaticMeshRenderableComponent create_static_mesh(const std::vector<BveVertex>& vertices,
-                                                              const std::vector<uint32_t>& indices) const;
+                                                                       const std::vector<uint32_t>& indices) const;
 
     private:
         std::unique_ptr<rhi::RenderDevice> render_device;

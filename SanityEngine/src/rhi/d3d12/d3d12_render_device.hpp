@@ -10,6 +10,7 @@
 #include <wrl/client.h>
 
 #include "../../core/async/mutex.hpp"
+#include "../../settings.hpp"
 #include "../bind_group.hpp"
 #include "../render_device.hpp"
 #include "d3d12_bind_group.hpp"
@@ -29,7 +30,7 @@ namespace rhi {
 
     class D3D12RenderDevice : public virtual RenderDevice {
     public:
-        D3D12RenderDevice(HWND window_handle, const XMINT2& window_size, uint32_t num_frames_in);
+        D3D12RenderDevice(HWND window_handle, const XMINT2& window_size, const Settings& settings_in);
 
         D3D12RenderDevice(const D3D12RenderDevice& other) = delete;
         D3D12RenderDevice& operator=(const D3D12RenderDevice& other) = delete;
@@ -94,9 +95,9 @@ namespace rhi {
 
         [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
 
-        [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
-
     private:
+        Settings settings;
+
         ComPtr<ID3D12Debug> debug_controller;
         ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
 
@@ -113,11 +114,11 @@ namespace rhi {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        ComPtr<ID3D12CommandAllocator> direct_command_allocator;
+        std::vector<ComPtr<ID3D12CommandAllocator>> direct_command_allocators;
 
-        ComPtr<ID3D12CommandAllocator> compute_command_allocator;
+        std::vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
-        ComPtr<ID3D12CommandAllocator> copy_command_allocator;
+        std::vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
         ComPtr<IDXGISwapChain3> swapchain;
         std::vector<ComPtr<ID3D12Resource>> swapchain_images;
@@ -142,6 +143,12 @@ namespace rhi {
 
         uint64_t staging_buffer_idx{0};
         std::vector<D3D12StagingBuffer> staging_buffers;
+
+        /*!
+         * \brief Array of array of staging buffers to free on a frame. index 0 gets freed on the next frame 0, index 1 gets freed on the
+         * next frame 1, etc
+         */
+        std::vector<std::vector<D3D12StagingBuffer>> staging_buffers_to_free;
 
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture
@@ -170,20 +177,9 @@ namespace rhi {
 
         std::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
-        std::mutex in_flight_command_lists_mutex;
-        std::condition_variable commands_lists_in_flight_cv;
-        std::queue<std::pair<ComPtr<ID3D12Fence>, D3D12CommandList*>> in_flight_command_lists;
-
-        std::unique_ptr<std::thread> command_completion_thread;
-
-        std::mutex done_command_lists_mutex;
-        std::queue<D3D12CommandList*> done_command_lists;
-
-        std::atomic<bool> should_thread_continue{true};
-
-        uint32_t num_in_flight_frames;
-
         std::vector<D3D12BindGroupBuilder> material_bind_group_builder;
+
+        UINT cur_swapchain_idx{0};
 
 #pragma region initialization
         void enable_debugging();
@@ -216,13 +212,17 @@ namespace rhi {
         void create_standard_graphics_pipeline_input_layout();
 #pragma endregion
 
+        void return_staging_buffers_for_current_frame();
+
+        void reset_command_allocators_for_current_frame();
+
         void wait_for_frame(uint32_t frame_index);
 
         void wait_gpu_idle(uint64_t frame_index);
 
         [[nodiscard]] D3D12StagingBuffer create_staging_buffer(size_t num_bytes);
 
-        static void wait_for_command_lists(D3D12RenderDevice* render_device);
+        [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
         void retrieve_dred_report();
     };
