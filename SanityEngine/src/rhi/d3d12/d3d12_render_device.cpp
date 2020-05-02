@@ -502,14 +502,6 @@ namespace rhi {
         auto command_list_done_fence = get_next_command_list_done_fence();
 
         direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
-
-        //auto event = CreateEvent(nullptr, false, false, nullptr);
-        //command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
-
-        //WaitForSingleObject(event, INFINITE);
-
-        //retrieve_dred_report();
-
         
         {
             std::lock_guard m{in_flight_command_lists_mutex};

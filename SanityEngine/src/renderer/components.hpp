@@ -10,7 +10,7 @@ namespace renderer {
         uint32_t idx;
 
         double fov{90};
-        double aspect_ratio{16.0f / 9.0f};
+        double aspect_ratio{9.0f / 16.0f};
         double near_clip_plane{0.01};
     };
 } // namespace renderer
