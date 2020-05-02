@@ -44,6 +44,8 @@ namespace rhi {
 
         create_swapchain(window_handle, window_size, settings.num_in_flight_frames);
 
+        create_gpu_frame_synchronization_objects();
+
         create_command_allocators();
 
         create_descriptor_heaps();
@@ -838,8 +840,11 @@ namespace rhi {
         if(FAILED(hr)) {
             critical_error("Could not get new swapchain interface, please update your drivers");
         }
+    }
 
-        frame_fence_values.resize(num_images);
+    void D3D12RenderDevice::create_gpu_frame_synchronization_objects() {
+        frame_fence_values.resize(settings.num_in_flight_frames);
+
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
         set_object_name(*frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
 

@@ -203,6 +203,8 @@ namespace rhi {
 
         void create_swapchain(HWND window_handle, const XMINT2& window_size, UINT num_images);
 
+        void create_gpu_frame_synchronization_objects();
+
         void create_command_allocators();
 
         void create_descriptor_heaps();
