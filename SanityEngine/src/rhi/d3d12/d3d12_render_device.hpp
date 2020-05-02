@@ -7,6 +7,7 @@
 #include <d3d12.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
+#include <spdlog/logger.h>
 #include <wrl/client.h>
 
 #include "../../core/async/mutex.hpp"
@@ -78,7 +79,7 @@ namespace rhi {
 
         BindGroupBuilder& get_material_bind_group_builder() override;
 
-        void begin_frame() override;
+        void begin_frame(uint64_t frame_count) override;
 
         void end_frame() override;
 
@@ -97,6 +98,8 @@ namespace rhi {
 
     private:
         Settings settings;
+
+        std::shared_ptr<spdlog::logger> logger;
 
         ComPtr<ID3D12Debug> debug_controller;
         ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
@@ -125,7 +128,7 @@ namespace rhi {
         std::vector<D3D12Framebuffer> swapchain_framebuffers;
 
         HANDLE frame_event;
-        std::vector<ComPtr<ID3D12Fence>> frame_fences;
+        ComPtr<ID3D12Fence> frame_fences;
         std::vector<uint32_t> frame_fence_values;
 
         std::vector<ComPtr<ID3D12DescriptorHeap>> cbv_srv_uav_heaps;
@@ -220,9 +223,9 @@ namespace rhi {
         void create_standard_graphics_pipeline_input_layout();
 #pragma endregion
 
-        void return_staging_buffers_for_current_frame();
+        void return_staging_buffers_for_frame(uint32_t frame_idx);
 
-        void reset_command_allocators_for_current_frame();
+        void reset_command_allocators_for_frame(uint32_t frame_idx);
 
         void wait_for_frame(uint64_t frame_index);
 

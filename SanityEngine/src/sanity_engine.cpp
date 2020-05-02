@@ -66,7 +66,7 @@ SanityEngine::~SanityEngine() {
 
 void SanityEngine::run() {
     auto clock = std::chrono::high_resolution_clock{};
-    uint64_t frame_count = 0;
+    uint64_t frame_count = 1;
 
     float last_frame_duration = 0;
 
@@ -75,10 +75,10 @@ void SanityEngine::run() {
             MTR_SCOPE("SanityEngine", "tick");
             const auto frame_start_time = clock.now();
             glfwPollEvents();
-            renderer->begin_frame();
+            renderer->begin_frame(frame_count);
 
             // Hackily spawn entities on the first frame, because mesh uploading is hard
-            if(frame_count == 0) {
+            if(frame_count == 1) {
                 create_debug_cube();
 
                 create_flycam_player();

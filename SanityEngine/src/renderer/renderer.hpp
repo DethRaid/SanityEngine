@@ -25,7 +25,7 @@ namespace renderer {
     public:
         explicit Renderer(GLFWwindow* window, const Settings& settings);
 
-        void begin_frame();
+        void begin_frame(uint64_t frame_count);
 
         void render_scene(entt::registry& registry) const;
 

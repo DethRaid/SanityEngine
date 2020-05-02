@@ -42,10 +42,10 @@ void FlycamController::update_player_position(const float delta_time) const {
 
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         // Move the player entity along the global up direction
-        player_transform.position -= glm::vec3{0, delta_time, 0};
+        player_transform.position += glm::vec3{0, delta_time, 0};
 
     } else if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         // Move the player along the global down direction
-        player_transform.position += glm::vec3{0, delta_time, 0};
+        player_transform.position -= glm::vec3{0, delta_time, 0};
     }
 }

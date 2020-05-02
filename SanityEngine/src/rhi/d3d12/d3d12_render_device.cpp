@@ -3,6 +3,7 @@
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
 #include <minitrace.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include "../../core/abort.hpp"
@@ -25,9 +26,13 @@ namespace rhi {
     D3D12RenderDevice::D3D12RenderDevice(const HWND window_handle,
                                          const XMINT2& window_size,
                                          const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
-        : settings{settings_in}, staging_buffers_to_free{settings.num_in_flight_frames} {
+        : settings{settings_in},
+          logger{spdlog::stdout_color_mt("D3D12RenderDevice")},
+          staging_buffers_to_free{settings.num_in_flight_frames} {
 #ifndef NDEBUG
         enable_debugging();
+
+        logger->set_level(spdlog::level::debug);
 #endif
 
         initialize_dxgi();
@@ -51,12 +56,14 @@ namespace rhi {
         create_material_resource_binder();
 
         create_standard_graphics_pipeline_input_layout();
+
+        logger->info("Initialized D3D12 render device");
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
         for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             wait_for_frame(i);
-            direct_command_queue->Wait(frame_fences[i].Get(), frame_fence_values[i]);
+            direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
         }
 
         wait_gpu_idle(0);
@@ -106,7 +113,7 @@ namespace rhi {
                                                              &buffer->allocation,
                                                              IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
-            spdlog::error("Could not create buffer %s", create_info.name);
+            logger->error("Could not create buffer %s", create_info.name);
             return {};
         }
 
@@ -153,7 +160,7 @@ namespace rhi {
                     return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
             }
 
-            spdlog::warn("Unrecognized usage for image {}, defaulting to the common resource state", create_info.name);
+            logger->warn("Unrecognized usage for image {}, defaulting to the common resource state", create_info.name);
             return D3D12_RESOURCE_STATE_COMMON;
         }();
 
@@ -164,7 +171,7 @@ namespace rhi {
                                                              &image->allocation,
                                                              IID_PPV_ARGS(&image->resource));
         if(FAILED(result)) {
-            spdlog::error("Could not create image %s", create_info.name);
+            logger->error("Could not create image %s", create_info.name);
             return {};
         }
 
@@ -190,7 +197,7 @@ namespace rhi {
             const auto* d3d12_image = static_cast<const D3D12Image*>(image);
 
             if(width != 0 && width != d3d12_image->width) {
-                spdlog::error(
+                logger->error(
                     "Render target {} has width {}, which is different from the width {} of the previous render target. All render targets must have the same width",
                     i,
                     d3d12_image->width,
@@ -200,7 +207,7 @@ namespace rhi {
             width = static_cast<float>(d3d12_image->width);
 
             if(height != 0 && height != d3d12_image->height) {
-                spdlog::error(
+                logger->error(
                     "Render target {} has height {}, which is different from the height {} of the previous render target. All render targets must have the same height",
                     i,
                     d3d12_image->height,
@@ -222,7 +229,7 @@ namespace rhi {
             const auto* d3d12_depth_target = static_cast<const D3D12Image*>(depth_target);
 
             if(width != 0 && width != d3d12_depth_target->width) {
-                spdlog::error(
+                logger->error(
                     "Depth target has width {}, which is different from the width {} of the render targets. The depth target must have the same width as the render targets",
                     i,
                     d3d12_depth_target->width,
@@ -232,7 +239,7 @@ namespace rhi {
             width = static_cast<float>(d3d12_depth_target->width);
 
             if(height != 0 && height != d3d12_depth_target->height) {
-                spdlog::error(
+                logger->error(
                     "Depth target has height {}, which is different from the height {} of the render targets. The depth target must have the same height as the render targets",
                     i,
                     d3d12_depth_target->height,
@@ -277,7 +284,7 @@ namespace rhi {
         D3D12_RANGE range{0, d3d12_buffer.size};
         const auto result = d3d12_buffer.resource->Map(0, &range, &ptr);
         if(FAILED(result)) {
-            spdlog::error("Could not map buffer");
+            logger->error("Could not map buffer");
             return nullptr;
         }
 
@@ -433,7 +440,7 @@ namespace rhi {
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            spdlog::error("Could not create resource command list");
+            logger->error("Could not create resource command list");
             return {};
         }
 
@@ -453,7 +460,7 @@ namespace rhi {
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            spdlog::error("Could not create compute command list");
+            logger->error("Could not create compute command list");
             return {};
         }
 
@@ -473,7 +480,7 @@ namespace rhi {
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            spdlog::error("Could not create render command list");
+            logger->error("Could not create render command list");
             return {};
         }
 
@@ -521,18 +528,20 @@ namespace rhi {
         return material_bind_group_builder[cur_frame_idx];
     }
 
-    void D3D12RenderDevice::begin_frame() {
+    void D3D12RenderDevice::begin_frame(const uint64_t frame_count) {
         MTR_SCOPE("D3D12RenderDevice", "begin_frame");
 
         cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_frames;
 
         wait_for_frame(cur_gpu_frame_idx);
-        frame_fence_values[cur_gpu_frame_idx]++;
+        frame_fence_values[cur_gpu_frame_idx] = frame_count;
 
-        return_staging_buffers_for_current_frame();
+        // logger->debug("Beginning GPU frame {}, which will render to swapchain idx {}", cur_gpu_frame_idx, cur_swapchain_idx);
 
-        reset_command_allocators_for_current_frame();
+        return_staging_buffers_for_frame(cur_gpu_frame_idx);
+
+        reset_command_allocators_for_frame(cur_gpu_frame_idx);
 
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Render Target");
@@ -560,11 +569,11 @@ namespace rhi {
 
         submit_command_list(std::move(cmds));
 
-        direct_command_queue->Signal(frame_fences[cur_gpu_frame_idx].Get(), frame_fence_values[cur_gpu_frame_idx]);
+        direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
 
         const auto result = swapchain->Present(0, 0);
         if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
-            spdlog::error("Device lost on present :(");
+            logger->error("Device lost on present :(");
 
             if(settings.enable_gpu_crash_reporting) {
                 retrieve_dred_report();
@@ -617,13 +626,13 @@ namespace rhi {
             debug_controller->EnableDebugLayer();
 
         } else {
-            spdlog::error("Could not enable the D3D12 validation layer: {}", to_string(result));
+            logger->error("Could not enable the D3D12 validation layer: {}", to_string(result));
         }
 
         if(settings.enable_gpu_crash_reporting) {
             result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
             if(FAILED(result)) {
-                spdlog::error("Could not enable DRED");
+                logger->error("Could not enable DRED");
 
             } else {
                 dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
@@ -694,7 +703,7 @@ namespace rhi {
                     // descriptor arrays, so we need it
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
-                    spdlog::warn("Ignoring adapter {} - Doesn't have the flexible resource binding that Sanity Engine needs",
+                    logger->warn("Ignoring adapter {} - Doesn't have the flexible resource binding that Sanity Engine needs",
                                  from_wide_string(desc.Description));
 
                     continue;
@@ -703,7 +712,7 @@ namespace rhi {
                 D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_4};
                 res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
                 if(FAILED(res)) {
-                    spdlog::warn("Ignoring adapter {} - Could not check the supported shader model: {}",
+                    logger->warn("Ignoring adapter {} - Could not check the supported shader model: {}",
                                  from_wide_string(desc.Description),
                                  to_string(res));
 
@@ -712,7 +721,7 @@ namespace rhi {
                 } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_0) {
                     // Only supports old-ass shaders
 
-                    spdlog::warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
+                    logger->warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
                                  from_wide_string(desc.Description));
 
                     continue;
@@ -751,7 +760,7 @@ namespace rhi {
                 break;
 
             } else {
-                spdlog::warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description));
+                logger->warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description));
             }
 
             continue;
@@ -791,7 +800,7 @@ namespace rhi {
 
             result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(&async_copy_queue));
             if(FAILED(result)) {
-                spdlog::warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
+                logger->warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
             } else {
                 set_object_name(*async_copy_queue.Get(), "DMA queue");
@@ -830,11 +839,8 @@ namespace rhi {
         }
 
         frame_fence_values.resize(num_images);
-        frame_fences.resize(num_images);
-        for(uint32_t i = 0; i < num_images; i++) {
-            device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences[i]));
-            set_object_name(*frame_fences[i].Get(), fmt::format("Frame Synchronization Fence {}", i));
-        }
+        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
+        set_object_name(*frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
     }
 
     void D3D12RenderDevice::create_command_allocators() {
@@ -926,7 +932,7 @@ namespace rhi {
 
         const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
         if(FAILED(result)) {
-            spdlog::error("Could not create descriptor heap: {}", to_string(result));
+            logger->error("Could not create descriptor heap: {}", to_string(result));
 
             return {{}, 0};
         }
@@ -1025,7 +1031,7 @@ namespace rhi {
         auto result = D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
             const std::string msg{reinterpret_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
-            spdlog::error("Could not create root signature: %s", msg);
+            logger->error("Could not create root signature: %s", msg);
             return {};
         }
 
@@ -1035,7 +1041,7 @@ namespace rhi {
                                              root_signature_blob->GetBufferSize(),
                                              IID_PPV_ARGS(&sig));
         if(FAILED(result)) {
-            spdlog::error("Could not create root signature: {}", to_string(result));
+            logger->error("Could not create root signature: {}", to_string(result));
             return {};
         }
 
@@ -1108,31 +1114,39 @@ namespace rhi {
                                      /* .InstanceDataStepRate = */ 0});
     }
 
-    void D3D12RenderDevice::return_staging_buffers_for_current_frame() {}
+    void D3D12RenderDevice::return_staging_buffers_for_frame(const uint32_t frame_idx) {
+        auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
+        staging_buffers.insert(staging_buffers.end(), staging_buffers_for_frame.begin(), staging_buffers_for_frame.begin());
+    }
 
-    void D3D12RenderDevice::reset_command_allocators_for_current_frame() {
-        direct_command_allocators[cur_gpu_frame_idx]->Reset();
-        copy_command_allocators[cur_gpu_frame_idx]->Reset();
-        compute_command_allocators[cur_gpu_frame_idx]->Reset();
+    void D3D12RenderDevice::reset_command_allocators_for_frame(const uint32_t frame_idx) {
+        direct_command_allocators[frame_idx]->Reset();
+        copy_command_allocators[frame_idx]->Reset();
+        compute_command_allocators[frame_idx]->Reset();
     }
 
     void D3D12RenderDevice::wait_for_frame(const uint64_t frame_index) {
         const auto desired_fence_value = frame_fence_values[frame_index];
-        auto fence = frame_fences[frame_index];
 
-        if(fence->GetCompletedValue() < desired_fence_value) {
+        if(frame_fences->GetCompletedValue() < desired_fence_value) {
             // If the fence's most recent value is not the value we want, then the GPU has not finished executing the frame and we need to
             // explicitly wait
 
-            fence->SetEventOnCompletion(desired_fence_value, frame_event);
+            logger->debug("Waiting for fence for frame {} to have value {}", frame_index, desired_fence_value);
+
+            frame_fences->SetEventOnCompletion(desired_fence_value, frame_event);
             WaitForSingleObject(frame_event, INFINITE);
 
+        } else {
+            logger->debug("GPU frame {} has finished on the GPU - fence already has value {} - no need to wait",
+                          frame_index,
+                          desired_fence_value);
         }
     }
 
     void D3D12RenderDevice::wait_gpu_idle(const uint64_t frame_index) {
-        frame_fence_values[frame_index]++;
-        direct_command_queue->Signal(frame_fences[frame_index].Get(), frame_fence_values[frame_index]);
+        frame_fence_values[frame_index] += 3;
+        direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[frame_index]);
         wait_for_frame(frame_index);
     }
 
@@ -1154,7 +1168,7 @@ namespace rhi {
                                                              &buffer.allocation,
                                                              IID_PPV_ARGS(&buffer.resource));
         if(FAILED(result)) {
-            spdlog::error("Could not create staging buffer");
+            logger->error("Could not create staging buffer");
             return {};
         }
 
@@ -1180,9 +1194,9 @@ namespace rhi {
         ComPtr<ID3D12Fence> fence;
         const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
         if(FAILED(result)) {
-            spdlog::error("Could not create fence: {}", to_string(result));
+            logger->error("Could not create fence: {}", to_string(result));
             const auto removed_reason = device->GetDeviceRemovedReason();
-            spdlog::error("Device removed reason: {}", to_string(removed_reason));
+            logger->error("Device removed reason: {}", to_string(removed_reason));
         }
 
         return fence;
@@ -1192,7 +1206,7 @@ namespace rhi {
         ComPtr<ID3D12DeviceRemovedExtendedData> dred;
         auto result = device->QueryInterface(IID_PPV_ARGS(&dred));
         if(FAILED(result)) {
-            spdlog::error("Could not retrieve DRED report");
+            logger->error("Could not retrieve DRED report");
             return;
         }
 
@@ -1208,7 +1222,7 @@ namespace rhi {
             return;
         }
 
-        spdlog::error("Command history:\n{}", breadcrumb_output_to_string(breadcrumbs));
-        spdlog::error(page_fault_output_to_string(page_faults));
+        logger->error("Command history:\n{}", breadcrumb_output_to_string(breadcrumbs));
+        logger->error(page_fault_output_to_string(page_faults));
     }
 } // namespace rhi

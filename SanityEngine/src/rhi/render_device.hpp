@@ -78,7 +78,7 @@ namespace rhi {
          *
          * This probably means waiting on the previous frame to complete on the GPU
          */
-        virtual void begin_frame() = 0;
+        virtual void begin_frame(uint64_t frame_count) = 0;
 
         /*!
          * \brief Performs all the actions necessary to end the frame

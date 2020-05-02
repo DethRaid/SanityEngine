@@ -41,7 +41,7 @@ namespace renderer {
         create_debug_pipeline();
     }
 
-    void Renderer::begin_frame() { render_device->begin_frame(); }
+    void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
 
     void Renderer::render_scene(entt::registry& registry) const {
         MTR_SCOPE("Renderer", "render_scene");
