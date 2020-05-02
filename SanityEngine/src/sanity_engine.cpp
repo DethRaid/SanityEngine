@@ -203,7 +203,7 @@ void SanityEngine::create_flycam_player() {
     player = registry.create();
 
     auto& transform = registry.emplace<TransformComponent>(player);
-    transform.position.z = -50;
+    transform.position.z = 50;
     registry.emplace<renderer::CameraComponent>(player);
 
     player_controller = std::make_unique<FlycamController>(window, player, registry);

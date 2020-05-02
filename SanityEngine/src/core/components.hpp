@@ -18,16 +18,16 @@ struct TransformComponent {
 };
 
 inline glm::vec3 TransformComponent::get_forward_vector() const {
-    constexpr auto global_forward = glm::vec3{0, 1, 0};
+    constexpr auto global_forward = glm::vec3{0, 0, 1};
     return rotation * global_forward;
 }
 
 inline glm::vec3 TransformComponent::get_right_vector() const {
-    constexpr auto global_right = glm::vec3{-1, 0, 0};
+    constexpr auto global_right = glm::vec3{1, 0, 0};
     return rotation * global_right;
 }
 
 inline glm::vec3 TransformComponent::get_up_vector() const {
-    constexpr auto global_up = glm::vec3{0, 0, 1};
+    constexpr auto global_up = glm::vec3{0, 1, 0};
     return rotation * global_up;
 }

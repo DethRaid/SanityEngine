@@ -24,11 +24,11 @@ void FlycamController::update_player_position(const float delta_time) const {
 
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         // Move the player entity in its forward direction
-        player_transform.position += forward * delta_time;
+        player_transform.position -= forward * delta_time;
 
     } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         // Move the player entity in its backward direction
-        player_transform.position -= forward * delta_time;
+        player_transform.position += forward * delta_time;
     }
 
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
@@ -42,10 +42,10 @@ void FlycamController::update_player_position(const float delta_time) const {
 
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         // Move the player entity along the global up direction
-        player_transform.position += glm::vec3{0, 0, delta_time};
+        player_transform.position -= glm::vec3{0, delta_time, 0};
 
     } else if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         // Move the player along the global down direction
-        player_transform.position -= glm::vec3{0, 0, delta_time};
+        player_transform.position += glm::vec3{0, delta_time, 0};
     }
 }

@@ -11,8 +11,7 @@ namespace renderer {
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
         view_matrix = glm::mat4{1};
 
-        // TODO: Does this have to be negative?
-        view_matrix = glm::translate(view_matrix, transform.position);
+        view_matrix = glm::translate(view_matrix, -transform.position);
 
         const auto rotation_matrix = glm::toMat4(transform.rotation);
 
