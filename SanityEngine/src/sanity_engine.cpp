@@ -69,23 +69,23 @@ SanityEngine::~SanityEngine() {
 }
 
 void SanityEngine::run() {
+    auto clock = std::chrono::high_resolution_clock{};
     uint64_t frame_count = 0;
 
     float last_frame_duration = 0;
 
-    clock_t last_frame_end_time{0};
-
     while(!glfwWindowShouldClose(window)) {
+        const auto frame_start_time = clock.now();
         glfwPollEvents();
 
         player_controller->update_player_position(last_frame_duration);
 
         tick(last_frame_duration);
 
-        const auto end_time = clock();
+        const auto frame_end_time = clock.now();
 
-        last_frame_duration = static_cast<float>(static_cast<double>(end_time - last_frame_end_time) / static_cast<double>(CLOCKS_PER_SEC));
-        last_frame_end_time = end_time;
+        const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time).count();
+        last_frame_duration = static_cast<double>(microsecond_frame_duration) / 1000000.0;
 
         if(frame_count % 100 == 0) {
             spdlog::info("Frame {} took {} ms", frame_count, last_frame_duration * 1000);
