@@ -44,8 +44,6 @@ namespace renderer {
     void Renderer::render_scene(entt::registry& registry) const {
         MTR_SCOPE("Renderer", "render_scene");
 
-        spdlog::info("Beginning frame");
-
         render_device->begin_frame();
 
         const auto frame_idx = render_device->get_cur_backbuffer_idx();
@@ -114,18 +112,14 @@ namespace renderer {
             const auto& transform = registry.get<TransformComponent>(entity);
             const auto& camera = registry.get<CameraComponent>(entity);
 
-            // TODO: Make this stateful, so we can save the previous frame's camera matrices
-
-            CameraMatrices matrices;
+            auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
+            matrices.previous_projection_matrix = matrices.projection_matrix;
+            matrices.previous_view_matrix = matrices.view_matrix;
             matrices.calculate_view_matrix(transform);
             matrices.calculate_projection_matrix(camera);
-
-            camera_matrix_buffers->set_camera_matrices(camera.idx, matrices);
         }
 
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
-
-        spdlog::info("Recorded camera data upload");
     }
 
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
@@ -153,7 +147,5 @@ namespace renderer {
 
             command_list.draw(mesh_renderable.num_indices, mesh_renderable.first_index);
         }
-
-        spdlog::info("Recorded 3D scene render");
     }
 } // namespace renderer

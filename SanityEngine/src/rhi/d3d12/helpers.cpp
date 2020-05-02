@@ -251,12 +251,11 @@ namespace rhi {
                 ss << "has completed " << *cur_node->pLastBreadcrumbValue << " render operations";
 
                 if(cur_node->BreadcrumbCount > 0) {
-                    ss << ", and ";
+                    ss << ":";
                 }
             }
 
             if(cur_node->BreadcrumbCount > 0) {
-                ss << "has " << cur_node->BreadcrumbCount << " breadcrumbs:";
                 for(uint32_t i = 0; i < cur_node->BreadcrumbCount; i++) {
                     ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]);
                 }

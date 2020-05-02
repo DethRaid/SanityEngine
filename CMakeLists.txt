@@ -7,4 +7,3 @@ project ("SanityEngine")
 
 # Include sub-projects.
 add_subdirectory ("SanityEngine")
-

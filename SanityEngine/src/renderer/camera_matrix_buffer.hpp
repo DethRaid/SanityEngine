@@ -44,6 +44,10 @@ namespace renderer {
 
         ~CameraMatrixBuffer();
 
+        [[nodiscard]] CameraMatrices& get_camera_matrices(uint32_t idx);
+
+        [[nodiscard]] const CameraMatrices& get_camera_matrices(uint32_t idx) const;
+
         void set_camera_matrices(uint32_t camera_idx, const CameraMatrices& matrices);
 
         [[nodiscard]] rhi::Buffer& get_device_buffer_for_frame(uint32_t frame_idx) const;

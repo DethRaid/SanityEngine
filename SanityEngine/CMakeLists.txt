@@ -48,7 +48,8 @@ set(SANITY_ENGINE_SOURCE
     "src/core/errors.cpp" 
     "src/renderer/camera_matrix_buffer.cpp" 
     "src/input/input_manager.cpp" 
-    "src/player/flycam_controller.cpp")
+    "src/player/flycam_controller.cpp"
+    )
 
 set(D3D12_BACKEND_SOURCE
     "src/rhi/d3d12/d3d12_render_device.hpp"

@@ -1,11 +1,11 @@
 #include "camera_matrix_buffer.hpp"
 
+#include <glm/gtx/quaternion.hpp>
+
 #include "../core/components.hpp"
 #include "../core/ensure.hpp"
 #include "../rhi/render_device.hpp"
 #include "../rhi/resource_command_list.hpp"
-
-#include <glm/gtx/quaternion.hpp>
 
 namespace renderer {
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
@@ -56,6 +56,18 @@ namespace renderer {
         }
     }
 
+    CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) {
+        ENSURE(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
+
+        return host_data[idx];
+    }
+
+    const CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) const {
+        ENSURE(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
+
+        return host_data[idx];
+    }
+
     void CameraMatrixBuffer::set_camera_matrices(const uint32_t camera_idx, const CameraMatrices& matrices) {
         ENSURE(camera_idx < MAX_NUM_CAMERAS, "Camera index {} must be less than MAX_NUM_CAMERAS ({})", camera_idx, MAX_NUM_CAMERAS);
 
@@ -74,10 +86,6 @@ namespace renderer {
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
 
     void CameraMatrixBuffer::record_data_upload(rhi::ResourceCommandList& commands, const uint32_t frame_idx) const {
-        spdlog::info("Copying the camera matrix host data to device buffer for frame {}", frame_idx);
-        commands.copy_data_to_buffer(host_data.data(),
-                                     host_data.size() * sizeof(CameraMatrices),
-                                     get_device_buffer_for_frame(frame_idx),
-                                     0);
+        commands.copy_data_to_buffer(host_data.data(), host_data.size() * sizeof(CameraMatrices), *device_data[frame_idx], 0);
     }
 } // namespace renderer

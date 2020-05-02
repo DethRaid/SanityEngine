@@ -69,6 +69,8 @@ SanityEngine::~SanityEngine() {
 }
 
 void SanityEngine::run() {
+    uint64_t frame_count = 0;
+
     float last_frame_duration = 0;
 
     clock_t last_frame_end_time{0};
@@ -84,6 +86,12 @@ void SanityEngine::run() {
 
         last_frame_duration = static_cast<float>(static_cast<double>(end_time - last_frame_end_time) / static_cast<double>(CLOCKS_PER_SEC));
         last_frame_end_time = end_time;
+
+        if(frame_count % 100 == 0) {
+            spdlog::info("Frame {} took {} ms", frame_count, last_frame_duration * 1000);
+        }
+
+        frame_count++;
 
         mtr_flush();
     }

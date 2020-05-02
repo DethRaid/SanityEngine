@@ -88,7 +88,7 @@ namespace rhi {
     }
 
     BindGroupBuilder& D3D12BindGroupBuilder::set_buffer(const std::string& name, const Buffer& buffer) {
-        auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
+        const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
         bound_buffers.insert_or_assign(name, &d3d12_buffer);
 
         return *this;
@@ -141,11 +141,6 @@ namespace rhi {
             if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
                 root_parameters[idx].descriptor.address = buffer_itr->second->resource->GetGPUVirtualAddress();
 
-                spdlog::info("Binding buffer {} (GPU virtual address {}) to root descriptor {}",
-                             buffer_itr->second->name,
-                             buffer_itr->second->resource->GetGPUVirtualAddress(),
-                             name);
-
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
                     states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
@@ -160,11 +155,6 @@ namespace rhi {
                 ENSURE(image_itr->second.size() == 1, "May only bind a single image to a root descriptor");
                 root_parameters[idx].descriptor.address = image_itr->second[0]->resource->GetGPUVirtualAddress();
 
-                spdlog::info("Binding image {} (GPU virtual address {}) to root descriptor {}",
-                             image_itr->second[0]->name,
-                             image_itr->second[0]->resource->GetGPUVirtualAddress(),
-                             name);
-
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
                     states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
@@ -176,7 +166,7 @@ namespace rhi {
                 used_images.emplace_back(image_itr->second[0], states);
 
             } else {
-                spdlog::warn("No resources bound to root descriptor {}", name);
+                // spdlog::warn("No resources bound to root descriptor {}", name);
             }
         }
 
@@ -273,7 +263,7 @@ namespace rhi {
                     } break;
                 }
             } else {
-                spdlog::warn("No resource bound to descriptor {}", name);
+                // spdlog::warn("No resource bound to descriptor {}", name);
             }
         }
 

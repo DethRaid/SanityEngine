@@ -1060,8 +1060,6 @@ namespace rhi {
         material_bind_group_builder.reserve(num_in_flight_frames);
 
         for(uint32_t i = 0; i < num_in_flight_frames; i++) {
-            // TODO: Store the descriptor heaps in the material bind group, so we never bind the wrong one
-
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.emplace("textures",
@@ -1231,7 +1229,7 @@ namespace rhi {
             return;
         }
 
-        spdlog::error(breadcrumb_output_to_string(breadcrumbs));
+        spdlog::error("Command history:\n{}", breadcrumb_output_to_string(breadcrumbs));
         spdlog::error(page_fault_output_to_string(page_faults));
     }
 } // namespace rhi
