@@ -57,12 +57,4 @@ private:
 #pragma region Spawning
     void create_flycam_player();
 #pragma endregion
-
-#pragma region Tick
-
-    /*!
-     * \brief Ticks the engine, advancing time by the specified amount
-     */
-    void tick(float delta_time);
-#pragma endregion
 };

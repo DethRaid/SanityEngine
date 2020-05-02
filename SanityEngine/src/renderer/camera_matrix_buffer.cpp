@@ -12,11 +12,14 @@ namespace renderer {
         view_matrix = glm::mat4{1};
 
         // TODO: Does this have to be negative?
+        spdlog::info("Camera position: ({}, {}, {})", transform.position.x, transform.position.y, transform.position.z);
         view_matrix = glm::translate(view_matrix, transform.position);
 
         const auto rotation_matrix = glm::toMat4(transform.rotation);
 
         view_matrix *= rotation_matrix;
+
+        view_matrix = glm::transpose(view_matrix);
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
