@@ -52,7 +52,7 @@ namespace rhi {
 
         create_standard_graphics_pipeline_input_layout();
 
-        // command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
+        command_completion_thread = std::make_unique<std::thread>(&D3D12RenderDevice::wait_for_command_lists, this);
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
@@ -503,21 +503,21 @@ namespace rhi {
 
         direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
 
-        auto event = CreateEvent(nullptr, false, false, nullptr);
-        command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+        //auto event = CreateEvent(nullptr, false, false, nullptr);
+        //command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
 
-        WaitForSingleObject(event, INFINITE);
+        //WaitForSingleObject(event, INFINITE);
 
-        retrieve_dred_report();
+        //retrieve_dred_report();
 
-        /*
+        
         {
             std::lock_guard m{in_flight_command_lists_mutex};
             in_flight_command_lists.emplace(command_list_done_fence, dynamic_cast<D3D12CommandList*>(commands.release()));
         }
 
         commands_lists_in_flight_cv.notify_one();
-        */
+        
     }
 
     BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder() {
@@ -649,21 +649,21 @@ namespace rhi {
             spdlog::error("Could not enable the D3D12 validation layer: {}", to_string(result));
         }
 
-        result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
-        if(FAILED(result)) {
-            spdlog::error("Could not enable DRED");
-
-        } else {
-            dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            // dred_settings->SetWatsonDumpEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-
-            ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred1_settings;
-            dred_settings->QueryInterface(dred1_settings.GetAddressOf());
-            if(dred1_settings) {
-                dred1_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            }
-        }
+        // result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
+        // if(FAILED(result)) {
+        //     spdlog::error("Could not enable DRED");
+        // 
+        // } else {
+        //     dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+        //     dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+        //     // dred_settings->SetWatsonDumpEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+        // 
+        //     ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred1_settings;
+        //     dred_settings->QueryInterface(dred1_settings.GetAddressOf());
+        //     if(dred1_settings) {
+        //         dred1_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+        //     }
+        // }
     }
 
     void D3D12RenderDevice::initialize_dxgi() {
