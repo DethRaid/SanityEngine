@@ -3,13 +3,11 @@
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
-#include <time.h>
 
 #include "core/abort.hpp"
 
 int main() {
-    Settings settings{};
-    settings.enable_gpu_crash_reporting = true;
+    const Settings settings{};
 
     SanityEngine engine{settings};
 

@@ -128,7 +128,9 @@ namespace rhi {
         MTR_SCOPE("D3D12RenderDevice", "create_image");
 
         const auto format = to_dxgi_format(create_info.format);
-        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format, static_cast<uint32_t>(round(create_info.width)), static_cast<uint32_t>(round(create_info.height)));
+        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
+                                                       static_cast<uint32_t>(round(create_info.width)),
+                                                       static_cast<uint32_t>(round(create_info.height)));
 
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
@@ -343,7 +345,8 @@ namespace rhi {
             output_rasterizer_state.FillMode = to_d3d12_fill_mode(rasterizer_state.fill_mode);
             output_rasterizer_state.CullMode = to_d3d12_cull_mode(rasterizer_state.cull_mode);
             output_rasterizer_state.FrontCounterClockwise = rasterizer_state.front_face_counter_clockwise ? 1 : 0;
-            output_rasterizer_state.DepthBias = static_cast<UINT>(rasterizer_state.depth_bias); // TODO: Figure out what the actual fuck D3D12 depth bias is
+            output_rasterizer_state.DepthBias = static_cast<UINT>(
+                rasterizer_state.depth_bias); // TODO: Figure out what the actual fuck D3D12 depth bias is
             output_rasterizer_state.DepthBiasClamp = rasterizer_state.max_depth_bias;
             output_rasterizer_state.SlopeScaledDepthBias = rasterizer_state.slope_scaled_depth_bias;
             output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 1 ? 1 : 0;
@@ -505,6 +508,8 @@ namespace rhi {
             retrieve_dred_report();
 
             command_list_done_fences.push_back(command_list_done_fence);
+
+            CloseHandle(event);
         }
     }
 
@@ -557,9 +562,10 @@ namespace rhi {
         const auto result = swapchain->Present(0, 0);
         if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
             spdlog::error("Device lost on present :(");
-#ifndef NDEBUG
-            retrieve_dred_report();
-#endif
+
+            if(settings.enable_gpu_crash_reporting) {
+                retrieve_dred_report();
+            }
         }
     }
 
@@ -843,16 +849,22 @@ namespace rhi {
                 critical_error(fmt::format("Could not create direct command allocator for frame {}", i));
             }
 
+            set_object_name(*direct_command_allocators[i].Get(), fmt::format("Direct Command Allocator {}", i));
+
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                     IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
                 critical_error(fmt::format("Could not create compute command allocator for frame {}", i));
             }
 
+            set_object_name(*compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i));
+
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
                 critical_error(fmt::format("Could not create copy command allocator for frame {}", i));
             }
+
+            set_object_name(*copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i));
         }
     }
 
@@ -1109,8 +1121,16 @@ namespace rhi {
             // If the fence's most recent value is not the value we want, then the GPU has not finished executing the frame and we need to
             // explicitly wait
 
+            spdlog::info("Waiting for frame {}", frame_index);
+
             fence->SetEventOnCompletion(desired_fence_value, frame_event);
             WaitForSingleObject(frame_event, INFINITE);
+
+        } else {
+            spdlog::info("Frame {} is already done - it's completed value, {}, is the desired value {}",
+                         frame_index,
+                         fence->GetCompletedValue(),
+                         desired_fence_value);
         }
     }
 

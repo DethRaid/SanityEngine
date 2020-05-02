@@ -34,45 +34,77 @@ set(SANITY_ENGINE_SOURCE
     "${CMAKE_CURRENT_LIST_DIR}/extern/minitrace/minitrace.c"  
     "${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp"
 
+    "src/sanity_engine.hpp"
     "src/sanity_engine.cpp"
+    "src/settings.hpp"
 
+    "src/core/components.hpp"
     "src/core/constants.hpp"
-    "src/core/abort.cpp" 
-    "src/core/ensure.cpp"
+    "src/core/abort.hpp"
+    "src/core/abort.cpp"
+    "src/core/ensure.hpp"
+    "src/core/ensure.cpp"    
+    "src/core/errors.hpp"
+    "src/core/errors.cpp"
+    "src/core/async/mutex.hpp"
 
-    "src/rhi/render_device.hpp"
-    "src/rhi/command_list.hpp"
-    "src/rhi/resource_command_list.hpp"
-    "src/rhi/compute_command_list.hpp"
-    "src/rhi/render_command_list.hpp" 
-    "src/rhi/render_device.cpp" 
-    "src/rhi/resources.cpp"  
-    "src/rhi/mesh_data_store.cpp" 
+    "src/input/input_manager.hpp"
+    "src/input/input_manager.cpp"
 
-    "src/windows/windows_helpers.cpp" 
-    "src/renderer/renderer.cpp" 
-    "src/core/errors.cpp" 
-    "src/renderer/camera_matrix_buffer.cpp" 
-    "src/input/input_manager.cpp" 
+    "src/player/flycam_controller.hpp"
     "src/player/flycam_controller.cpp"
+    "src/player/components.hpp"
+
+    "src/renderer/components.hpp"
+    "src/renderer/renderer.hpp"
+    "src/renderer/renderer.cpp"
+    "src/renderer/camera_matrix_buffer.hpp"
+    "src/renderer/camera_matrix_buffer.cpp"
+
+    "src/rhi/bind_group.hpp"
+    "src/rhi/command_list.hpp"
+    "src/rhi/compute_command_list.hpp"
+    "src/rhi/compute_pipeline_state.hpp"
+    "src/rhi/framebuffer.hpp"
+    "src/rhi/mesh_data_store.hpp"
+    "src/rhi/mesh_data_store.cpp"
+    "src/rhi/render_command_list.hpp"
+    "src/rhi/render_device.hpp"
+    "src/rhi/render_device.cpp"
+    "src/rhi/render_pipeline_state.hpp"
+    "src/rhi/resource_command_list.hpp"
+    "src/rhi/resources.hpp"
+    "src/rhi/resources.cpp"
+
+    "src/windows/windows_helpers.cpp"
+    "src/windows/windows_helpers.hpp"
     )
 
 set(D3D12_BACKEND_SOURCE
+    "src/rhi/d3d12/d3d12_bind_group.hpp"
+    "src/rhi/d3d12/d3d12_bind_group.cpp"
+    "src/rhi/d3d12/d3d12_command_list.hpp"
+    "src/rhi/d3d12/d3d12_command_list.cpp"
+    "src/rhi/d3d12/d3d12_compute_command_list.hpp"
+    "src/rhi/d3d12/d3d12_compute_command_list.cpp"
+    "src/rhi/d3d12/d3d12_descriptor_allocator.hpp" 
+    "src/rhi/d3d12/d3d12_descriptor_allocator.cpp" 
+    "src/rhi/d3d12/d3d12_framebuffer.hpp"
+    "src/rhi/d3d12/d3d12_render_command_list.hpp"
+    "src/rhi/d3d12/d3d12_render_command_list.cpp"
     "src/rhi/d3d12/d3d12_render_device.hpp"
     "src/rhi/d3d12/d3d12_render_device.cpp"
-
+    "src/rhi/d3d12/d3d12_render_pipeline_state.hpp"
+    "src/rhi/d3d12/d3d12_resource_command_list.hpp"
+    "src/rhi/d3d12/d3d12_resource_command_list.cpp"
     "src/rhi/d3d12/helpers.hpp"
     "src/rhi/d3d12/helpers.cpp"
-    "src/rhi/d3d12/d3d12_command_list.cpp"
-    "src/rhi/d3d12/d3d12_resource_command_list.cpp"
-    "src/rhi/d3d12/d3d12_compute_command_list.cpp"
-    "src/rhi/d3d12/d3d12_render_command_list.cpp"
-    "src/rhi/d3d12/d3d12_descriptor_allocator.cpp" 
+    "src/rhi/d3d12/resources.hpp"
+    "src/rhi/d3d12/shader_reflection.hpp" 
     "src/rhi/d3d12/shader_reflection.cpp" 
-    "src/rhi/d3d12/d3d12_bind_group.cpp"
     )
 
-# TODO: If I ever support multiple D3D12_BACKEND_SOURCE, only add the source for the selected backend
+# TODO: If I ever support multiple backends, only add the source for the selected backend
 set(SANITY_ENGINE_SOURCE "${SANITY_ENGINE_SOURCE}" "${D3D12_BACKEND_SOURCE}")
 
 add_executable(SanityEngine ${SANITY_ENGINE_SOURCE})
@@ -107,3 +139,11 @@ add_custom_target(CompileShaders
 )
 
 add_dependencies(SanityEngine CompileShaders)
+
+# Visual Studio is stupid. Is it really that hard to use filesystem directories to organize code like literally
+ # everyone else?
+ foreach(source IN LISTS SANITY_ENGINE_SOURCE)
+     get_filename_component(source_path "${source}" PATH)
+     string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+     source_group("${source_path_msvc}" FILES "${source}")
+ endforeach()
