@@ -24,7 +24,7 @@ namespace rhi {
         const int string_length = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, nullptr, 0, nullptr, nullptr);
         std::string string;
         string.resize(string_length);
-        WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, string.data(), string.size(), nullptr, nullptr);
+        WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, string.data(), static_cast<int>(string.size()), nullptr, nullptr);
 
         return string;
     }

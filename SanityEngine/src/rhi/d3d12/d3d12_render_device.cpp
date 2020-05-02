@@ -128,7 +128,7 @@ namespace rhi {
         MTR_SCOPE("D3D12RenderDevice", "create_image");
 
         const auto format = to_dxgi_format(create_info.format);
-        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format, round(create_info.width), round(create_info.height));
+        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format, static_cast<uint32_t>(round(create_info.width)), static_cast<uint32_t>(round(create_info.height)));
 
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
@@ -195,7 +195,7 @@ namespace rhi {
                     width);
             }
 
-            width = d3d12_image->width;
+            width = static_cast<float>(d3d12_image->width);
 
             if(height != 0 && height != d3d12_image->height) {
                 spdlog::error(
@@ -205,7 +205,7 @@ namespace rhi {
                     height);
             }
 
-            height = d3d12_image->height;
+            height = static_cast<float>(d3d12_image->height);
 
             const auto handle = rtv_allocator->get_next_free_descriptor();
 
@@ -227,7 +227,7 @@ namespace rhi {
                     width);
             }
 
-            width = d3d12_depth_target->width;
+            width = static_cast<float>(d3d12_depth_target->width);
 
             if(height != 0 && height != d3d12_depth_target->height) {
                 spdlog::error(
@@ -237,7 +237,7 @@ namespace rhi {
                     height);
             }
 
-            height = d3d12_depth_target->height;
+            height = static_cast<float>(d3d12_depth_target->height);
 
             D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
             desc.Format = d3d12_depth_target->format;
@@ -343,7 +343,7 @@ namespace rhi {
             output_rasterizer_state.FillMode = to_d3d12_fill_mode(rasterizer_state.fill_mode);
             output_rasterizer_state.CullMode = to_d3d12_cull_mode(rasterizer_state.cull_mode);
             output_rasterizer_state.FrontCounterClockwise = rasterizer_state.front_face_counter_clockwise ? 1 : 0;
-            output_rasterizer_state.DepthBias = rasterizer_state.depth_bias; // TODO: Figure out what the actual fuck D3D12 depth bias is
+            output_rasterizer_state.DepthBias = static_cast<UINT>(rasterizer_state.depth_bias); // TODO: Figure out what the actual fuck D3D12 depth bias is
             output_rasterizer_state.DepthBiasClamp = rasterizer_state.max_depth_bias;
             output_rasterizer_state.SlopeScaledDepthBias = rasterizer_state.slope_scaled_depth_bias;
             output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 1 ? 1 : 0;
@@ -567,7 +567,7 @@ namespace rhi {
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const size_t num_bytes) {
+    D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
         size_t best_fit_idx = staging_buffers.size();
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
@@ -889,8 +889,8 @@ namespace rhi {
 
             D3D12Framebuffer framebuffer;
             framebuffer.rtv_handles.push_back(rtv_handle);
-            framebuffer.width = desc.Width;
-            framebuffer.height = desc.Height;
+            framebuffer.width = static_cast<float>(desc.Width);
+            framebuffer.height = static_cast<float>(desc.Height);
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
@@ -1101,7 +1101,7 @@ namespace rhi {
         compute_command_allocators[cur_swapchain_idx]->Reset();
     }
 
-    void D3D12RenderDevice::wait_for_frame(const uint32_t frame_index) {
+    void D3D12RenderDevice::wait_for_frame(const uint64_t frame_index) {
         const auto desired_fence_value = frame_fence_values[frame_index];
         auto fence = frame_fences[frame_index];
 
@@ -1120,7 +1120,7 @@ namespace rhi {
         wait_for_frame(frame_index);
     }
 
-    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const size_t num_bytes) {
+    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
 
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);

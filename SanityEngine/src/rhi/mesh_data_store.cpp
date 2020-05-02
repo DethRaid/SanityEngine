@@ -22,8 +22,8 @@ namespace rhi {
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
     uint32_t MeshDataStore::add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) {
-        const auto vertex_data_size = vertices.size() * sizeof(BveVertex);
-        const auto index_data_size = indices.size() * sizeof(uint32_t);
+        const auto vertex_data_size = static_cast<uint32_t>(vertices.size() * sizeof(BveVertex));
+        const auto index_data_size = static_cast<uint32_t>(indices.size() * sizeof(uint32_t));
 
         // Offset the indices so they'll refer to the right vertex
         std::vector<uint32_t> offset_indices;
@@ -43,7 +43,7 @@ namespace rhi {
         next_free_vertex_byte += vertex_data_size;
 
         const auto mesh_start_idx = next_free_index;
-        next_free_index += indices.size();
+        next_free_index += static_cast<uint32_t>(indices.size());
 
         return mesh_start_idx;
     }

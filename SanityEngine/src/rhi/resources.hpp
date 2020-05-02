@@ -6,7 +6,7 @@ namespace rhi {
     struct Buffer {
         std::string name;
 
-        size_t size{};
+        uint32_t size{};
 
         virtual ~Buffer() = default;
     };
@@ -27,7 +27,7 @@ namespace rhi {
         std::string name{};
 
         BufferUsage usage;
-        size_t size{0};
+        uint32_t size{0};
     };
 
     enum class ImageUsage { RenderTarget, DepthStencil, SampledImage, UnorderedAccess };
@@ -42,9 +42,9 @@ namespace rhi {
     struct Image {
         std::string name;
 
-        size_t width{1};
-        size_t height{1};
-        size_t depth{1};
+        uint32_t width{1};
+        uint32_t height{1};
+        uint32_t depth{1};
 
         ImageFormat format{};
 
@@ -57,10 +57,10 @@ namespace rhi {
         ImageUsage usage;
         ImageFormat format;
 
-        size_t width{1};
-        size_t height{1};
-        size_t depth{1};
+        uint32_t width{1};
+        uint32_t height{1};
+        uint32_t depth{1};
     };
 
-    [[nodiscard]] size_t size_in_bytes(ImageFormat format);
+    [[nodiscard]] uint32_t size_in_bytes(ImageFormat format);
 } // namespace render

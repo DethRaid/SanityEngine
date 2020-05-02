@@ -87,6 +87,6 @@ namespace renderer {
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
 
     void CameraMatrixBuffer::record_data_upload(rhi::ResourceCommandList& commands, const uint32_t frame_idx) const {
-        commands.copy_data_to_buffer(host_data.data(), host_data.size() * sizeof(CameraMatrices), *device_data[frame_idx], 0);
+        commands.copy_data_to_buffer(host_data.data(), static_cast<uint32_t>(host_data.size()) * sizeof(CameraMatrices), *device_data[frame_idx], 0);
     }
 } // namespace renderer

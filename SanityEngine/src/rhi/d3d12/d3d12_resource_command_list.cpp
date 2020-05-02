@@ -24,9 +24,9 @@ namespace rhi {
     }
 
     void D3D12ResourceCommandList::copy_data_to_buffer(const void* data,
-                                                       const size_t num_bytes,
+                                                       const uint32_t num_bytes,
                                                        const Buffer& buffer,
-                                                       const size_t offset) {
+                                                       const uint32_t offset) {
         MTR_SCOPE("D32D12ResourceCommandList", "copy_data_to_buffer");
 
         const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);

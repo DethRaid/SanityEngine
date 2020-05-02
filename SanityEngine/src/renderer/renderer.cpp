@@ -67,7 +67,7 @@ namespace renderer {
 
         StaticMeshRenderableComponent renderable{};
         renderable.first_index = mesh_start_idx;
-        renderable.num_indices = indices.size();
+        renderable.num_indices = static_cast<uint32_t>(indices.size());
 
         return renderable;
     }

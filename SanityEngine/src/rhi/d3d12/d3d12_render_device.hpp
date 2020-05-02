@@ -87,7 +87,7 @@ namespace rhi {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] D3D12StagingBuffer get_staging_buffer(size_t num_bytes);
+        [[nodiscard]] D3D12StagingBuffer get_staging_buffer(uint32_t num_bytes);
 
         void return_staging_buffer(D3D12StagingBuffer&& buffer);
 
@@ -216,11 +216,11 @@ namespace rhi {
 
         void reset_command_allocators_for_current_frame();
 
-        void wait_for_frame(uint32_t frame_index);
+        void wait_for_frame(uint64_t frame_index);
 
         void wait_gpu_idle(uint64_t frame_index);
 
-        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(size_t num_bytes);
+        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(uint32_t num_bytes);
 
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 

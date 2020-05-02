@@ -109,8 +109,8 @@ namespace rhi {
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
 
-        D3D12BindGroupBuilder(const D3D12BindGroupBuilder& other) = delete;
-        D3D12BindGroupBuilder& operator=(const D3D12BindGroupBuilder& other) = delete;
+        D3D12BindGroupBuilder(const D3D12BindGroupBuilder& other) = default;
+        D3D12BindGroupBuilder& operator=(const D3D12BindGroupBuilder& other) = default;
 
         D3D12BindGroupBuilder(D3D12BindGroupBuilder&& old) noexcept = default;
         D3D12BindGroupBuilder& operator=(D3D12BindGroupBuilder&& old) noexcept = default;

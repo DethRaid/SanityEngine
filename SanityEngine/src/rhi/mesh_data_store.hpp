@@ -28,12 +28,12 @@ namespace rhi {
         /*!
          * \brief Offset in bytes where the relevant data starts
          */
-        size_t offset;
+        uint32_t offset;
 
         /*!
          * \brief Size of a vertex, in bytes
          */
-        size_t vertex_size;
+        uint32_t vertex_size;
     };
 
     class MeshDataStore {

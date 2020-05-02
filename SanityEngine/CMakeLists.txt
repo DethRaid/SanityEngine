@@ -9,8 +9,10 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 # Global settings
 
-# Don't warn about documentation D3D12_BACKEND_SOURCE, because GLFW doens't use doxygen properly ffs
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-documentation")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # Don't warn about documentation D3D12_BACKEND_SOURCE, because GLFW doens't use doxygen properly ffs
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-documentation")
+endif()
 
 add_compile_definitions(GLM_FORCE_LEFT_HANDED)
 
@@ -78,10 +80,12 @@ add_executable(SanityEngine ${SANITY_ENGINE_SOURCE})
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/minitrace)
 target_include_directories(SanityEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/extern/D3D12MemoryAllocator/src)
 
-target_compile_options(SanityEngine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
 target_compile_definitions(SanityEngine PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
-
 target_compile_definitions(SanityEngine PRIVATE MTR_ENABLED)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(SanityEngine PRIVATE -Wno-deprecated-declarations -Wno-documentation)
+endif()
 
 # Hook up dependencies
 

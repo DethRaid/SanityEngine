@@ -18,7 +18,7 @@ namespace rhi {
 #pragma region ResourceCommandList
         ~D3D12ResourceCommandList() override = default;
 
-        void copy_data_to_buffer(const void* data, size_t num_bytes, const Buffer& buffer, size_t offset) override;
+        void copy_data_to_buffer(const void* data, uint32_t num_bytes, const Buffer& buffer, uint32_t offset) override;
 
         void copy_data_to_image(const void* data, const Image& image) override;
 #pragma endregion

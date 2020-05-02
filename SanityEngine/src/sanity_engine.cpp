@@ -95,7 +95,7 @@ void SanityEngine::run() {
 
             const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time)
                                                         .count();
-            last_frame_duration = static_cast<double>(microsecond_frame_duration) / 1000000.0;
+            last_frame_duration = static_cast<float>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
 
             if(frame_count % 100 == 0) {
                 spdlog::info("Frame {} took {} ms", frame_count, last_frame_duration * 1000);

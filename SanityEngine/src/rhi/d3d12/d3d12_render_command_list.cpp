@@ -115,8 +115,8 @@ namespace rhi {
         commands->RSSetViewports(1, &viewport);
 
         D3D12_RECT scissor_rect{};
-        scissor_rect.right = d3d12_framebuffer.width;
-        scissor_rect.bottom = d3d12_framebuffer.height;
+        scissor_rect.right = static_cast<LONG>(d3d12_framebuffer.width);
+        scissor_rect.bottom = static_cast<LONG>(d3d12_framebuffer.height);
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 

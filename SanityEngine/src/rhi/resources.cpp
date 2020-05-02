@@ -1,7 +1,7 @@
 #include "resources.hpp"
 
 namespace rhi {
-    size_t size_in_bytes(const ImageFormat format) {
+    uint32_t size_in_bytes(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:
                 return 128;

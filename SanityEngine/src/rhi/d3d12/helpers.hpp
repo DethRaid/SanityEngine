@@ -9,7 +9,7 @@
 #include "../render_pipeline_state.hpp"
 #include "../resources.hpp"
 
-class ID3D12Object;
+interface ID3D12Object;
 
 namespace rhi {
     struct RenderTargetBeginningAccess;
