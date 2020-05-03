@@ -1,9 +1,6 @@
 [submodule "SanityEngine/extern/minitrace"]
 	path = SanityEngine/extern/minitrace
 	url = https://github.com/hrydgard/minitrace.git
-[submodule "SanityEngine/extern/D3D12MemoryAllocator"]
-	path = SanityEngine/extern/D3D12MemoryAllocator
-	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git
 [submodule "SanityEngine/extern/spdlog"]
 	path = SanityEngine/extern/spdlog
 	url = https://github.com/gabime/spdlog.git
