@@ -137,7 +137,7 @@ namespace rhi {
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
-        uint32_t next_free_cbv_srv_uav_descriptor{0};
+        INT next_free_cbv_srv_uav_descriptor{0};
 
         std::unique_ptr<D3D12DescriptorAllocator> rtv_allocator;
 

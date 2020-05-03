@@ -537,6 +537,10 @@ namespace rhi {
         descriptors.reserve(bindings.size());
 
         for(const auto& binding : bindings) {
+            if(binding.Dimension == D3D_SRV_DIMENSION_BUFFER) {
+                logger->warn("Binding {} in pipeline {} uses a SRV buffer, but I don't know how to handle that. Bespoke pipelines are currently not allowed to use buffers because I don't know how to reflect their struct size", create_info.name, binding.Name);
+            }
+
             auto desc = DescriptorTableDescriptorDescription{
                 .type = to_descriptor_type(binding.Type),
                 .handle = cpu_handle,
