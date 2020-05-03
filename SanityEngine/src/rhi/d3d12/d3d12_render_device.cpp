@@ -375,8 +375,6 @@ namespace rhi {
 
     std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>> D3D12RenderDevice::
         create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
-        auto pipeline_state = create_render_pipeline_state(create_info);
-
         auto bindings = get_bindings_from_shader(create_info.vertex_shader);
         if(create_info.pixel_shader) {
             auto pixel_shader_bindings = get_bindings_from_shader(create_info.pixel_shader.value());
@@ -410,25 +408,71 @@ namespace rhi {
                                                         next_free_cbv_srv_uav_descriptor,
                                                         cbv_srv_uav_size};
 
+        const auto table_start_offset = next_free_cbv_srv_uav_descriptor;
+
         std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptors;
         descriptors.reserve(bindings.size());
 
+        std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
+        std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_ranges;
+
         for(const auto& binding : bindings) {
-            if(binding.Dimension == D3D_SRV_DIMENSION_BUFFER) {
-                logger->warn(
-                    "Binding {} in pipeline {} uses a SRV buffer, but I don't know how to handle that. Bespoke pipelines are currently not allowed to use buffers because I don't know how to reflect their struct size",
-                    create_info.name,
-                    binding.Name);
+            if(binding.Type == D3D_SIT_SAMPLER) {
+                // In Sanity Engine, all samplers are root samplers
+
+                if(binding.Name == "point_sampler") {
+                    auto sampler_desc = point_sampler_desc;
+                    sampler_desc.ShaderRegister = binding.BindPoint;
+                    sampler_desc.RegisterSpace = binding.Space;
+                    samplers.push_back(sampler_desc);
+
+                } else if(binding.Name == "linear_sampler") {
+                    auto sampler_desc = linear_sampler_desc;
+                    sampler_desc.ShaderRegister = binding.BindPoint;
+                    sampler_desc.RegisterSpace = binding.Space;
+                    samplers.push_back(sampler_desc);
+                }
+
+            } else {
+                if(binding.Dimension == D3D_SRV_DIMENSION_BUFFER) {
+                    logger->warn(
+                        "Binding {} in pipeline {} uses a SRV buffer, but I don't know how to handle that. Bespoke pipelines are currently not allowed to use buffers because I don't know how to reflect their struct size",
+                        create_info.name,
+                        binding.Name);
+                }
+
+                auto desc = DescriptorTableDescriptorDescription{
+                    .type = to_descriptor_type(binding.Type),
+                    .handle = cpu_handle,
+                };
+
+                auto range = D3D12_DESCRIPTOR_RANGE{
+                    .NumDescriptors = binding.BindCount,
+                    .BaseShaderRegister = binding.BindPoint,
+                    .RegisterSpace = binding.Space,
+                    .OffsetInDescriptorsFromTableStart = next_free_cbv_srv_uav_descriptor - table_start_offset,
+                };
+                switch(desc.type) {
+                    case DescriptorType::ConstantBuffer:
+                        range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+                        break;
+
+                    case DescriptorType::ShaderResource:
+                        range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+                        break;
+
+                    case DescriptorType::UnorderedAccess:
+                        range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+                        break;
+                }
+
+                descriptors.emplace(binding.Name, desc);
+                descriptor_ranges.push_back(range);
+
+                cpu_handle.Offset(binding.BindCount, cbv_srv_uav_size);
+
+                next_free_cbv_srv_uav_descriptor += binding.BindCount;
             }
-
-            auto desc = DescriptorTableDescriptorDescription{
-                .type = to_descriptor_type(binding.Type),
-                .handle = cpu_handle,
-            };
-
-            cpu_handle.Offset(binding.BindCount, cbv_srv_uav_size);
-
-            next_free_cbv_srv_uav_descriptor += binding.BindCount;
         }
 
         auto bind_group_builder = std::make_unique<D3D12BindGroupBuilder>(*device.Get(),
@@ -438,6 +482,19 @@ namespace rhi {
                                                                           descriptors,
                                                                           std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>{
                                                                               {0, gpu_handle}});
+
+        auto root_param = D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+                                               .DescriptorTable = {.NumDescriptorRanges = static_cast<UINT>(descriptor_ranges.size()),
+                                                                   .pDescriptorRanges = descriptor_ranges.data()}};
+
+        auto signature = D3D12_ROOT_SIGNATURE_DESC{.NumParameters = 1,
+                                                   .pParameters = &root_param,
+                                                   .NumStaticSamplers = static_cast<UINT>(samplers.size()),
+                                                   .pStaticSamplers = samplers.data()};
+
+        auto root_signature = compile_root_signature(signature);
+
+        auto pipeline_state = create_pipeline_state(create_info, *root_signature.Get());
 
         return {std::move(pipeline_state), std::move(bind_group_builder)};
     }

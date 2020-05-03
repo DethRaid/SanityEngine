@@ -197,6 +197,16 @@ namespace rhi {
          */
         uint32_t cur_gpu_frame_idx{0};
 
+        /*!
+         * \brief Description for a point sampler
+         */
+        D3D12_STATIC_SAMPLER_DESC point_sampler_desc;
+
+        /*!
+         * \brief Description for a linear sampler
+         */
+        D3D12_STATIC_SAMPLER_DESC linear_sampler_desc;
+
 #pragma region initialization
         void enable_debugging();
 
