@@ -421,9 +421,47 @@ namespace rhi {
             pipeline->root_signature = standard_root_signature;
         }
 
-        device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipeline->pso));
+        device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
 
         return pipeline;
+    }
+
+    std::vector<D3D12_SHADER_INPUT_BIND_DESC> D3D12RenderDevice::get_bindings_from_shader(const std::vector<uint8_t>& shader) const {
+        ComPtr<ID3D12ShaderReflection> reflection;
+        auto result = D3DReflect(shader.data(), shader.size(), IID_PPV_ARGS(reflection.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not retrieve shader reflection information");
+        }
+
+        D3D12_SHADER_DESC desc;
+        result = reflection->GetDesc(&desc);
+        if(FAILED(result)) {
+            logger->error("Could not get shader description");
+        }
+
+        std::vector<D3D12_SHADER_INPUT_BIND_DESC> input_descs(desc.BoundResources);
+
+        for(uint32_t i = 0; i < desc.BoundResources; i++) {
+            result = reflection->GetResourceBindingDesc(i, &input_descs[i]);
+            if(FAILED(result)) {
+                logger->error("Could not get binding information for resource idx {}", i);
+            }
+        }
+
+        return input_descs;
+    }
+
+    std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>> D3D12RenderDevice::
+        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
+        auto pipeline_state = create_render_pipeline_state(create_info);
+
+        auto bindings = get_bindings_from_shader(create_info.vertex_shader);
+        if(create_info.pixel_shader) {
+            auto pixel_shader_bindings = get_bindings_from_shader(create_info.pixel_shader.value());
+            bindings.insert(bindings.end(), pixel_shader_bindings.begin(), pixel_shader_bindings.end());
+        }
+
+        TODO: Construct the binding definitions for everything
     }
 
     void D3D12RenderDevice::destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> /* pipeline_state */) {

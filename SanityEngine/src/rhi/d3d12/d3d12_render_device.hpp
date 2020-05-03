@@ -5,6 +5,7 @@
 
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
+#include <d3d12shader.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
 #include <spdlog/logger.h>
@@ -64,6 +65,9 @@ namespace rhi {
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(
             const RenderPipelineStateCreateInfo& create_info) override;
+
+        [[nodiscard]] std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>>
+        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) override;
 
         void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) override;
 
@@ -224,6 +228,8 @@ namespace rhi {
 
         void create_standard_graphics_pipeline_input_layout();
 #pragma endregion
+
+        std::vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const std::vector<uint8_t>& shader) const;
 
         void return_staging_buffers_for_frame(uint32_t frame_idx);
 
