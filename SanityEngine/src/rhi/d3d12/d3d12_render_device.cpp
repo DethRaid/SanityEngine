@@ -10,6 +10,7 @@
 #include "../../core/constants.hpp"
 #include "../../core/ensure.hpp"
 #include "../../core/errors.hpp"
+#include "../../windows/windows_helpers.hpp"
 #include "d3d12_bind_group.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
@@ -18,7 +19,6 @@
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "resources.hpp"
-#include "../../windows/windows_helpers.hpp"
 
 using std::move;
 
@@ -138,9 +138,9 @@ namespace rhi {
         MTR_SCOPE("D3D12RenderDevice", "create_image");
 
         const auto format = to_dxgi_format(create_info.format);
-        const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
-                                                       static_cast<uint32_t>(round(create_info.width)),
-                                                       static_cast<uint32_t>(round(create_info.height)));
+        auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
+                                                 static_cast<uint32_t>(round(create_info.width)),
+                                                 static_cast<uint32_t>(round(create_info.height)));
 
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
@@ -148,24 +148,26 @@ namespace rhi {
         auto image = std::make_unique<D3D12Image>();
         image->format = format;
 
-        const auto initial_state = [&] {
-            switch(create_info.usage) {
-                case ImageUsage::RenderTarget:
-                    return D3D12_RESOURCE_STATE_RENDER_TARGET;
+        D3D12_RESOURCE_STATES initial_state;
+        switch(create_info.usage) {
+            case ImageUsage::RenderTarget:
+                initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+                break;
 
-                case ImageUsage::SampledImage:
-                    return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+            case ImageUsage::SampledImage:
+                initial_state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+                break;
 
-                case ImageUsage::DepthStencil:
-                    return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+            case ImageUsage::DepthStencil:
+                initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+                break;
 
-                case ImageUsage::UnorderedAccess:
-                    return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-            }
-
-            logger->warn("Unrecognized usage for image {}, defaulting to the common resource state", create_info.name);
-            return D3D12_RESOURCE_STATE_COMMON;
-        }();
+            case ImageUsage::UnorderedAccess:
+                initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+                break;
+        }
 
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
@@ -487,7 +489,8 @@ namespace rhi {
             return {};
         }
 
-        // logger->debug("Creating a render command list with command allocator {}", fmt::ptr(direct_command_allocators[cur_gpu_frame_idx].Get()));
+        // logger->debug("Creating a render command list with command allocator {}",
+        // fmt::ptr(direct_command_allocators[cur_gpu_frame_idx].Get()));
 
         cmds->QueryInterface(commands.GetAddressOf());
 
@@ -1150,7 +1153,7 @@ namespace rhi {
                 logger->error("Waiting for GPU frame {} timed out", frame_index);
 
             } else if(result == WAIT_FAILED) {
-                logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error());    
+                logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error());
             }
 
             ENSURE(result == WAIT_OBJECT_0, "Waiting for frame {} failed", frame_index);

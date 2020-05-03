@@ -10,6 +10,7 @@
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "components.hpp"
+#include "../core/ensure.hpp"
 
 namespace renderer {
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
@@ -41,7 +42,12 @@ namespace renderer {
 
         create_standard_pipeline();
 
-        create_scene_framebuffer();
+        ENSURE(settings.render_scale > 0, "Render scale may not be 0 or less");
+
+        int framebuffer_width;
+        int framebuffer_height;
+        glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+        create_scene_framebuffer(glm::uvec2{framebuffer_width * settings.render_scale, framebuffer_height * settings.render_scale});
     }
 
     void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
@@ -151,13 +157,13 @@ namespace renderer {
                              /* .format = */ rhi::ImageFormat::Rgba8},
              /* .end = */ {/* .type = */ rhi::RenderTargetEndingAccessType::Preserve, /* .resolve_params = */ {}}}};
 
-        auto depth_access = rhi::RenderTargetAccess{/* .begin = */
-                                                    {/* .type = */ rhi::RenderTargetBeginningAccessType::Clear,
-                                                     /* .clear_color = */ {0, 0, 0, 0},
-                                                     /* .format = */ rhi::ImageFormat::Depth32},
-                                                    /* .end = */ {/* .type = */
-                                                                  rhi::RenderTargetEndingAccessType::Preserve,
-                                                                  /* .resolve_params = */ {}}};
+        static auto depth_access = rhi::RenderTargetAccess{/* .begin = */
+                                                           {/* .type = */ rhi::RenderTargetBeginningAccessType::Clear,
+                                                            /* .clear_color = */ {0, 0, 0, 0},
+                                                            /* .format = */ rhi::ImageFormat::Depth32},
+                                                           /* .end = */ {/* .type = */
+                                                                         rhi::RenderTargetEndingAccessType::Discard,
+                                                                         /* .resolve_params = */ {}}};
 
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder();
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));

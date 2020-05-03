@@ -71,6 +71,7 @@ namespace rhi {
 
             if(depth_access) {
                 D3D12_RENDER_PASS_DEPTH_STENCIL_DESC desc{};
+                desc.cpuDescriptor = *d3d12_framebuffer.dsv_handle;
                 desc.DepthBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
                 desc.DepthEndingAccess = to_d3d12_ending_access(depth_access->end);
                 desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);

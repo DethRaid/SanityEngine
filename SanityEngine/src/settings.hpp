@@ -12,4 +12,9 @@ struct Settings {
      * This has a significant performance cost, so it should only be enabled when you know you need it
      */
     bool enable_gpu_crash_reporting{false};
+
+    /*!
+     * Scale of the internal render resolution relative to the screen resolution
+     */
+    float render_scale{1.0f};
 };
