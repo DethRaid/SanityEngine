@@ -331,130 +331,7 @@ namespace rhi {
     }
 
     std::unique_ptr<RenderPipelineState> D3D12RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
-
-        if(create_info.use_standard_material_layout) {
-            desc.pRootSignature = standard_root_signature.Get();
-        }
-
-        desc.VS.BytecodeLength = create_info.vertex_shader.size();
-        desc.VS.pShaderBytecode = create_info.vertex_shader.data();
-
-        if(create_info.pixel_shader) {
-            desc.PS.BytecodeLength = create_info.pixel_shader->size();
-            desc.PS.pShaderBytecode = create_info.pixel_shader->data();
-        }
-
-        desc.InputLayout.NumElements = static_cast<UINT>(standard_graphics_pipeline_input_layout.size());
-        desc.InputLayout.pInputElementDescs = standard_graphics_pipeline_input_layout.data();
-        desc.PrimitiveTopologyType = to_d3d12_primitive_topology_type(create_info.primitive_type);
-
-        // Rasterizer state
-        {
-            auto& output_rasterizer_state = desc.RasterizerState;
-            const auto& rasterizer_state = create_info.rasterizer_state;
-
-            output_rasterizer_state.FillMode = to_d3d12_fill_mode(rasterizer_state.fill_mode);
-            output_rasterizer_state.CullMode = to_d3d12_cull_mode(rasterizer_state.cull_mode);
-            output_rasterizer_state.FrontCounterClockwise = rasterizer_state.front_face_counter_clockwise ? 1 : 0;
-            output_rasterizer_state.DepthBias = static_cast<UINT>(
-                rasterizer_state.depth_bias); // TODO: Figure out what the actual fuck D3D12 depth bias is
-            output_rasterizer_state.DepthBiasClamp = rasterizer_state.max_depth_bias;
-            output_rasterizer_state.SlopeScaledDepthBias = rasterizer_state.slope_scaled_depth_bias;
-            output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 1 ? 1 : 0;
-            output_rasterizer_state.AntialiasedLineEnable = rasterizer_state.enable_line_antialiasing;
-            output_rasterizer_state.ConservativeRaster = rasterizer_state.enable_conservative_rasterization ?
-                                                             D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON :
-                                                             D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-            desc.SampleMask = UINT_MAX;
-            desc.SampleDesc.Count = rasterizer_state.num_msaa_samples;
-        }
-
-        // Depth stencil state
-        {
-            auto& output_ds_state = desc.DepthStencilState;
-            const auto& ds_state = create_info.depth_stencil_state;
-
-            output_ds_state.DepthEnable = ds_state.enable_depth_test ? 1 : 0;
-            output_ds_state.DepthWriteMask = ds_state.enable_depth_write ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
-            output_ds_state.DepthFunc = to_d3d12_comparison_func(ds_state.depth_func);
-
-            output_ds_state.StencilEnable = ds_state.enable_stencil_test ? 1 : 0;
-            output_ds_state.StencilReadMask = ds_state.stencil_read_mask;
-            output_ds_state.StencilWriteMask = ds_state.stencil_write_mask;
-            output_ds_state.FrontFace.StencilFailOp = to_d3d12_stencil_op(ds_state.front_face.fail_op);
-            output_ds_state.FrontFace.StencilDepthFailOp = to_d3d12_stencil_op(ds_state.front_face.depth_fail_op);
-            output_ds_state.FrontFace.StencilPassOp = to_d3d12_stencil_op(ds_state.front_face.pass_op);
-            output_ds_state.FrontFace.StencilFunc = to_d3d12_comparison_func(ds_state.front_face.compare_op);
-            output_ds_state.BackFace.StencilFailOp = to_d3d12_stencil_op(ds_state.back_face.fail_op);
-            output_ds_state.BackFace.StencilDepthFailOp = to_d3d12_stencil_op(ds_state.back_face.depth_fail_op);
-            output_ds_state.BackFace.StencilPassOp = to_d3d12_stencil_op(ds_state.back_face.pass_op);
-            output_ds_state.BackFace.StencilFunc = to_d3d12_comparison_func(ds_state.back_face.compare_op);
-        }
-
-        // Blend state
-        {
-            const auto& blend_state = create_info.blend_state;
-            desc.BlendState.AlphaToCoverageEnable = blend_state.enable_alpha_to_coverage ? 1 : 0;
-            for(uint32_t i = 0; i < blend_state.render_target_blends.size(); i++) {
-                auto& output_rt_blend = desc.BlendState.RenderTarget[i];
-                const auto& rt_blend = blend_state.render_target_blends[i];
-
-                output_rt_blend.BlendEnable = rt_blend.enabled ? 1 : 0;
-                output_rt_blend.SrcBlend = to_d3d12_blend(rt_blend.source_color_blend_factor);
-                output_rt_blend.DestBlend = to_d3d12_blend(rt_blend.destination_color_blend_factor);
-                output_rt_blend.BlendOp = to_d3d12_blend_op(rt_blend.color_blend_op);
-                output_rt_blend.SrcBlendAlpha = to_d3d12_blend(rt_blend.source_alpha_blend_factor);
-                output_rt_blend.DestBlendAlpha = to_d3d12_blend(rt_blend.destination_alpha_blend_factor);
-                output_rt_blend.BlendOpAlpha = to_d3d12_blend_op(rt_blend.alpha_blend_op);
-                output_rt_blend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-            }
-        }
-
-        desc.NumRenderTargets = 1;
-        desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-
-        auto pipeline = std::make_unique<D3D12RenderPipelineState>();
-        if(create_info.use_standard_material_layout) {
-            pipeline->root_signature = standard_root_signature;
-        }
-
-        const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
-        if(FAILED(result)) {
-            logger->error("Could not create render pipeline {}: {}", create_info.name, to_string(result));
-            return {};
-        }
-
-        set_object_name(*pipeline->pso.Get(), create_info.name);
-
-        return pipeline;
-    }
-
-    std::vector<D3D12_SHADER_INPUT_BIND_DESC> D3D12RenderDevice::get_bindings_from_shader(const std::vector<uint8_t>& shader) const {
-        ComPtr<ID3D12ShaderReflection> reflection;
-        auto result = D3DReflect(shader.data(), shader.size(), IID_PPV_ARGS(reflection.GetAddressOf()));
-        if(FAILED(result)) {
-            logger->error("Could not retrieve shader reflection information");
-        }
-
-        D3D12_SHADER_DESC desc;
-        result = reflection->GetDesc(&desc);
-        if(FAILED(result)) {
-            logger->error("Could not get shader description");
-        }
-
-        std::vector<D3D12_SHADER_INPUT_BIND_DESC> input_descs(desc.BoundResources);
-
-        for(uint32_t i = 0; i < desc.BoundResources; i++) {
-            result = reflection->GetResourceBindingDesc(i, &input_descs[i]);
-            if(FAILED(result)) {
-                logger->error("Could not get binding information for resource idx {}", i);
-            }
-        }
-
-        return input_descs;
+        return create_pipeline_state(create_info, *standard_root_signature.Get());
     }
 
     DescriptorType to_descriptor_type(const D3D_SHADER_INPUT_TYPE type) {
@@ -538,7 +415,10 @@ namespace rhi {
 
         for(const auto& binding : bindings) {
             if(binding.Dimension == D3D_SRV_DIMENSION_BUFFER) {
-                logger->warn("Binding {} in pipeline {} uses a SRV buffer, but I don't know how to handle that. Bespoke pipelines are currently not allowed to use buffers because I don't know how to reflect their struct size", create_info.name, binding.Name);
+                logger->warn(
+                    "Binding {} in pipeline {} uses a SRV buffer, but I don't know how to handle that. Bespoke pipelines are currently not allowed to use buffers because I don't know how to reflect their struct size",
+                    create_info.name,
+                    binding.Name);
             }
 
             auto desc = DescriptorTableDescriptorDescription{
@@ -556,7 +436,8 @@ namespace rhi {
                                                                           cbv_srv_uav_size,
                                                                           std::unordered_map<std::string, RootDescriptorDescription>{},
                                                                           descriptors,
-                                                                          std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>{{0, gpu_handle}});
+                                                                          std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>{
+                                                                              {0, gpu_handle}});
 
         return {std::move(pipeline_state), std::move(bind_group_builder)};
     }
@@ -1265,6 +1146,130 @@ namespace rhi {
                                      .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
                                      .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
                                      .InstanceDataStepRate = 0});
+    }
+
+    std::vector<D3D12_SHADER_INPUT_BIND_DESC> D3D12RenderDevice::get_bindings_from_shader(const std::vector<uint8_t>& shader) const {
+        ComPtr<ID3D12ShaderReflection> reflection;
+        auto result = D3DReflect(shader.data(), shader.size(), IID_PPV_ARGS(reflection.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not retrieve shader reflection information");
+        }
+
+        D3D12_SHADER_DESC desc;
+        result = reflection->GetDesc(&desc);
+        if(FAILED(result)) {
+            logger->error("Could not get shader description");
+        }
+
+        std::vector<D3D12_SHADER_INPUT_BIND_DESC> input_descs(desc.BoundResources);
+
+        for(uint32_t i = 0; i < desc.BoundResources; i++) {
+            result = reflection->GetResourceBindingDesc(i, &input_descs[i]);
+            if(FAILED(result)) {
+                logger->error("Could not get binding information for resource idx {}", i);
+            }
+        }
+
+        return input_descs;
+    }
+
+    std::unique_ptr<RenderPipelineState> D3D12RenderDevice::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
+                                                                                  ID3D12RootSignature& root_signature) {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
+
+        desc.pRootSignature = &root_signature;
+
+        desc.VS.BytecodeLength = create_info.vertex_shader.size();
+        desc.VS.pShaderBytecode = create_info.vertex_shader.data();
+
+        if(create_info.pixel_shader) {
+            desc.PS.BytecodeLength = create_info.pixel_shader->size();
+            desc.PS.pShaderBytecode = create_info.pixel_shader->data();
+        }
+
+        desc.InputLayout.NumElements = static_cast<UINT>(standard_graphics_pipeline_input_layout.size());
+        desc.InputLayout.pInputElementDescs = standard_graphics_pipeline_input_layout.data();
+        desc.PrimitiveTopologyType = to_d3d12_primitive_topology_type(create_info.primitive_type);
+
+        // Rasterizer state
+        {
+            auto& output_rasterizer_state = desc.RasterizerState;
+            const auto& rasterizer_state = create_info.rasterizer_state;
+
+            output_rasterizer_state.FillMode = to_d3d12_fill_mode(rasterizer_state.fill_mode);
+            output_rasterizer_state.CullMode = to_d3d12_cull_mode(rasterizer_state.cull_mode);
+            output_rasterizer_state.FrontCounterClockwise = rasterizer_state.front_face_counter_clockwise ? 1 : 0;
+            output_rasterizer_state.DepthBias = static_cast<UINT>(
+                rasterizer_state.depth_bias); // TODO: Figure out what the actual fuck D3D12 depth bias is
+            output_rasterizer_state.DepthBiasClamp = rasterizer_state.max_depth_bias;
+            output_rasterizer_state.SlopeScaledDepthBias = rasterizer_state.slope_scaled_depth_bias;
+            output_rasterizer_state.MultisampleEnable = rasterizer_state.num_msaa_samples > 1 ? 1 : 0;
+            output_rasterizer_state.AntialiasedLineEnable = rasterizer_state.enable_line_antialiasing;
+            output_rasterizer_state.ConservativeRaster = rasterizer_state.enable_conservative_rasterization ?
+                                                             D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON :
+                                                             D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+            desc.SampleMask = UINT_MAX;
+            desc.SampleDesc.Count = rasterizer_state.num_msaa_samples;
+        }
+
+        // Depth stencil state
+        {
+            auto& output_ds_state = desc.DepthStencilState;
+            const auto& ds_state = create_info.depth_stencil_state;
+
+            output_ds_state.DepthEnable = ds_state.enable_depth_test ? 1 : 0;
+            output_ds_state.DepthWriteMask = ds_state.enable_depth_write ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+            output_ds_state.DepthFunc = to_d3d12_comparison_func(ds_state.depth_func);
+
+            output_ds_state.StencilEnable = ds_state.enable_stencil_test ? 1 : 0;
+            output_ds_state.StencilReadMask = ds_state.stencil_read_mask;
+            output_ds_state.StencilWriteMask = ds_state.stencil_write_mask;
+            output_ds_state.FrontFace.StencilFailOp = to_d3d12_stencil_op(ds_state.front_face.fail_op);
+            output_ds_state.FrontFace.StencilDepthFailOp = to_d3d12_stencil_op(ds_state.front_face.depth_fail_op);
+            output_ds_state.FrontFace.StencilPassOp = to_d3d12_stencil_op(ds_state.front_face.pass_op);
+            output_ds_state.FrontFace.StencilFunc = to_d3d12_comparison_func(ds_state.front_face.compare_op);
+            output_ds_state.BackFace.StencilFailOp = to_d3d12_stencil_op(ds_state.back_face.fail_op);
+            output_ds_state.BackFace.StencilDepthFailOp = to_d3d12_stencil_op(ds_state.back_face.depth_fail_op);
+            output_ds_state.BackFace.StencilPassOp = to_d3d12_stencil_op(ds_state.back_face.pass_op);
+            output_ds_state.BackFace.StencilFunc = to_d3d12_comparison_func(ds_state.back_face.compare_op);
+        }
+
+        // Blend state
+        {
+            const auto& blend_state = create_info.blend_state;
+            desc.BlendState.AlphaToCoverageEnable = blend_state.enable_alpha_to_coverage ? 1 : 0;
+            for(uint32_t i = 0; i < blend_state.render_target_blends.size(); i++) {
+                auto& output_rt_blend = desc.BlendState.RenderTarget[i];
+                const auto& rt_blend = blend_state.render_target_blends[i];
+
+                output_rt_blend.BlendEnable = rt_blend.enabled ? 1 : 0;
+                output_rt_blend.SrcBlend = to_d3d12_blend(rt_blend.source_color_blend_factor);
+                output_rt_blend.DestBlend = to_d3d12_blend(rt_blend.destination_color_blend_factor);
+                output_rt_blend.BlendOp = to_d3d12_blend_op(rt_blend.color_blend_op);
+                output_rt_blend.SrcBlendAlpha = to_d3d12_blend(rt_blend.source_alpha_blend_factor);
+                output_rt_blend.DestBlendAlpha = to_d3d12_blend(rt_blend.destination_alpha_blend_factor);
+                output_rt_blend.BlendOpAlpha = to_d3d12_blend_op(rt_blend.alpha_blend_op);
+                output_rt_blend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            }
+        }
+
+        desc.NumRenderTargets = 1;
+        desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
+        auto pipeline = std::make_unique<D3D12RenderPipelineState>();
+        pipeline->root_signature = &root_signature;
+
+        const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not create render pipeline {}: {}", create_info.name, to_string(result));
+            return {};
+        }
+
+        set_object_name(*pipeline->pso.Get(), create_info.name);
+
+        return pipeline;
     }
 
     void D3D12RenderDevice::return_staging_buffers_for_frame(const uint32_t frame_idx) {

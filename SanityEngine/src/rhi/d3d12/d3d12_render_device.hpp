@@ -232,6 +232,9 @@ namespace rhi {
 
         [[nodiscard]] std::vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const std::vector<uint8_t>& shader) const;
 
+        [[nodiscard]] std::unique_ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
+                                                                                 ID3D12RootSignature& root_signature);
+
         void return_staging_buffers_for_frame(uint32_t frame_idx);
 
         void reset_command_allocators_for_frame(uint32_t frame_idx);
