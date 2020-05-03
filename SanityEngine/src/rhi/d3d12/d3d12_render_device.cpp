@@ -54,6 +54,8 @@ namespace rhi {
 
         initialize_dma();
 
+        create_static_sampler_descriptions();
+
         create_standard_root_signature();
 
         create_material_resource_binders();
@@ -1034,6 +1036,30 @@ namespace rhi {
         if(FAILED(result)) {
             critical_error("Could not initialize DMA");
         }
+    }
+
+    void D3D12RenderDevice::create_static_sampler_descriptions() {
+        point_sampler_desc = D3D12_STATIC_SAMPLER_DESC{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+                                                       .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                       .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                       .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                       .MipLODBias = 0,
+                                                       .MaxAnisotropy = 0,
+                                                       .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+                                                       .MinLOD = 0,
+                                                       .MaxLOD = D3D12_FLOAT32_MAX,
+                                                       .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
+
+        linear_sampler_desc = D3D12_STATIC_SAMPLER_DESC{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+                                                        .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                        .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                        .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                        .MipLODBias = 0,
+                                                        .MaxAnisotropy = 0,
+                                                        .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+                                                        .MinLOD = 0,
+                                                        .MaxLOD = D3D12_FLOAT32_MAX,
+                                                        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
     }
 
     void D3D12RenderDevice::create_standard_root_signature() {

@@ -231,6 +231,8 @@ namespace rhi {
 
         void initialize_dma();
 
+        void create_static_sampler_descriptions();
+
         void create_standard_root_signature();
 
         [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
