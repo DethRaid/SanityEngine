@@ -7,9 +7,6 @@
 [submodule "SanityEngine/extern/glfw"]
 	path = SanityEngine/extern/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "SanityEngine/extern/entt"]
-	path = SanityEngine/extern/entt
-	url = https://github.com/skypjack/entt.git
 [submodule "SanityEngine/extern/glm"]
 	path = SanityEngine/extern/glm
 	url = https://github.com/g-truc/glm.git
