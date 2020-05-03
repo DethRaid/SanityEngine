@@ -42,6 +42,8 @@ namespace renderer {
 
         create_standard_pipeline();
 
+        create_backbuffer_output_pipeline();
+
         ENSURE(settings.render_scale > 0, "Render scale may not be 0 or less");
 
         int framebuffer_width;
@@ -100,14 +102,27 @@ namespace renderer {
     }
 
     void Renderer::create_standard_pipeline() {
-        rhi::RenderPipelineStateCreateInfo standard_pipeline_create_info{};
-        standard_pipeline_create_info.name = "Standard material pipeline";
-        standard_pipeline_create_info.vertex_shader = load_shader("data/shaders/standard.vertex.dxil");
-        standard_pipeline_create_info.pixel_shader = load_shader("data/shaders/standard.pixel.dxil");
+        const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
+            .name = "Standard material pipeline",
+            .vertex_shader = load_shader("data/shaders/standard.vertex"),
+            .pixel_shader = load_shader("data/shaders/standard.pixel"),
+        };
 
         standard_pipeline = render_device->create_render_pipeline_state(standard_pipeline_create_info);
 
         spdlog::info("Created standard pipeline");
+    }
+
+    void Renderer::create_backbuffer_output_pipeline() {
+        const auto create_info = rhi::RenderPipelineStateCreateInfo {
+            .name = "Backbuffer output",
+            .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
+            .pixel_shader = load_shader("data/shaders/backbuffer_output.pixel"),
+        };
+
+        auto [new_backbuffer_output_pipeline, new_backbuffer_output_bind_group_builder] = render_device->create_bespoke_render_pipeline_state(create_info);
+        backbuffer_output_pipeline = std::move(new_backbuffer_output_pipeline);
+        backbuffer_output_bind_group_builder = std::move(new_backbuffer_output_bind_group_builder);
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
@@ -130,6 +145,10 @@ namespace renderer {
         depth_target = render_device->create_image(depth_target_create_info);
 
         scene_framebuffer = render_device->create_framebuffer({color_render_target.get()}, depth_target.get());
+
+        // Bind the scene output color target to everything that needs it
+        backbuffer_output_bind_group_builder->set_image("scene_output", *color_render_target);
+        backbuffer_output_bind_group = backbuffer_output_bind_group_builder->build();
     }
 
     void Renderer::update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) const {
@@ -184,5 +203,10 @@ namespace renderer {
         }
 
         const auto* framebuffer = render_device->get_backbuffer_framebuffer();
+        command_list.set_framebuffer(*framebuffer, {render_target_accesses});
+        command_list.set_pipeline_state(*backbuffer_output_pipeline);
+        command_list.bind_render_resources(*backbuffer_output_bind_group);
+
+        command_list.draw(3);
     }
 } // namespace renderer

@@ -47,11 +47,17 @@ namespace renderer {
         std::unique_ptr<rhi::Image> depth_target;
         std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
 
+        std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
+        std::unique_ptr<rhi::BindGroupBuilder> backbuffer_output_bind_group_builder;
+        std::unique_ptr<rhi::BindGroup> backbuffer_output_bind_group;
+
 
 #pragma region Initialization
         void make_static_mesh_storage();
 
         void create_standard_pipeline();
+        
+        void create_backbuffer_output_pipeline();
 
         void create_scene_framebuffer(glm::uvec2 size);
 #pragma endregion

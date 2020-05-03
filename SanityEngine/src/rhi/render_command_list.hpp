@@ -20,7 +20,7 @@ namespace rhi {
          */
         virtual void set_framebuffer(const Framebuffer& framebuffer,
                                      std::vector<RenderTargetAccess> render_target_accesses,
-                                     std::optional<RenderTargetAccess> depth_access) = 0;
+                                     std::optional<RenderTargetAccess> depth_access = std::nullopt) = 0;
 
         /*!
          * \brief Sets the state of the graphics rendering pipeline
