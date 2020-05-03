@@ -1,3 +1,0 @@
-[submodule "SanityEngine/extern/spdlog"]
-	path = SanityEngine/extern/spdlog
-	url = https://github.com/gabime/spdlog.git
