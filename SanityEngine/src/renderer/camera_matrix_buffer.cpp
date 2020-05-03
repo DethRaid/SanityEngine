@@ -1,5 +1,6 @@
 #include "camera_matrix_buffer.hpp"
 
+#define GLM_FORCE_LEFT_HANDED
 #include <glm/gtx/quaternion.hpp>
 
 #include "../core/components.hpp"

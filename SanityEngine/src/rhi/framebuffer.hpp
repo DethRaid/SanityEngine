@@ -1,6 +1,8 @@
 #pragma once
 
-#include <DirectXMath.h>
+#define GLM_FORCE_LEFT_HANDED
+
+#include <glm/vec4.hpp>
 
 namespace rhi {
     struct Framebuffer {
@@ -33,7 +35,7 @@ namespace rhi {
         /*!
          * Color to clear a render target to. Only relevant if `type` is `RenderTargetBeginningAccessType::Clear
          */
-        DirectX::XMFLOAT4 clear_color{};
+        glm::vec4 clear_color{};
 
         ImageFormat format{};
     };

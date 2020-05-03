@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLM_FORCE_LEFT_HANDED
+
 #include <GLFW/glfw3.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>

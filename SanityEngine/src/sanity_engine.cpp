@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
+#define GLM_FORCE_LEFT_HANDED
 #include <glm/ext/quaternion_trigonometric.inl>
 #include <spdlog/spdlog.h>
 
@@ -87,9 +88,9 @@ void SanityEngine::run() {
 
             // Hackily spawn entities on the first frame, because mesh uploading is hard
             if(frame_count == 1) {
-                create_debug_cube();
-
                 create_debug_plane();
+
+                create_debug_cube();
 
                 create_flycam_player();
             }
@@ -123,28 +124,28 @@ void SanityEngine::run() {
 void SanityEngine::create_debug_cube() {
     const auto vertices = std::vector<BveVertex>{
         // Front
-        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
 
         // Right
-        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {0, 0, 1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {-1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
 
         // Left
-        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
 
         // Back
-        {/* .position = */ {0.5f, 0.5f, 0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {-0.5f, -0.5f, 0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {0.5f, -0.5f, 0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
-        {/* .position = */ {-0.5f, 0.5f, 0.5f}, /* .normal = */ {1, 0, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, 0.5f, -0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, -0.5f, -0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {0.5f, -0.5f, -0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
+        {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {0, 0, -1}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
 
         // Top
         {/* .position = */ {-0.5f, 0.5f, -0.5f}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFFCDCDCD, /* .texcoord = */ {}},
@@ -220,10 +221,10 @@ void SanityEngine::create_debug_cube() {
 
 void SanityEngine::create_debug_plane() {
     const auto vertices = std::vector<BveVertex>{
-        {/* .position = */ {-5, -5, -1}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-        {/* .position = */ {5, 5, -1}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-        {/* .position = */ {5, -5, -1}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-        {/* .position = */ {-5, 5, -1}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
+        {/* .position = */ {-5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
+        {/* .position = */ {5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
+        {/* .position = */ {5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
+        {/* .position = */ {-5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
     };
 
     const auto indices = std::vector<uint32_t>{0, 1, 2, 0, 3, 1};

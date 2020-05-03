@@ -3,16 +3,21 @@
 #include <memory>
 #include <vector>
 
-#include <DirectXMath.h>
+#define GLM_FORCE_LEFT_HANDED
+
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <spdlog/logger.h>
+
 
 #include "render_device.hpp"
 #include "resources.hpp"
 
 struct BveVertex {
-    DirectX::XMFLOAT3 position;
-    DirectX::XMFLOAT3 normal;
+    glm::vec3 position;
+    glm::vec3 normal;
     uint32_t color;
-    DirectX::XMFLOAT2 texcoord;
+    glm::vec2 texcoord;
 };
 
 namespace rhi {
@@ -55,6 +60,8 @@ namespace rhi {
         [[nodiscard]] uint32_t add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices);
 
     private:
+        std::shared_ptr<spdlog::logger> logger;
+
         RenderDevice* device;
 
         std::unique_ptr<Buffer> vertex_buffer;
@@ -71,8 +78,13 @@ namespace rhi {
         uint32_t next_free_vertex_byte{0};
 
         /*!
-         * \brief The next mesh index
+         * \brief The offset in the vertex buffer, in vertices, where the next mesh's vertex data should start
          */
-        uint32_t next_free_index{0};
+        uint32_t next_vertex_offset{0};
+
+        /*!
+         * \brief The offset in the index buffer where the next mesh's indices should start
+         */
+        uint32_t next_index_offset{0};
     };
 } // namespace rhi
