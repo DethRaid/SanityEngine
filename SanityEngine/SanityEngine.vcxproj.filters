@@ -84,6 +84,9 @@
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="extern\minitrace\src\minitrace.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
