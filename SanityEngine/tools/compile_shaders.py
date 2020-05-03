@@ -32,7 +32,7 @@ if __name__ == '__main__':
         any_processed = True
         print('Compiling', str(path))
 
-        dxil_filename = path.stem + '.dxil'
+        dxil_filename = path.stem
         dxil_path = dxil_directory + '/' + dxil_filename
 
         if str(path).endswith('.pixel.hlsl'):
