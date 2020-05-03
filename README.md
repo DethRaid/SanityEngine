@@ -12,5 +12,5 @@ A 3D video game engine made to increase my sanity
 
 - Python 3
 - `dxc` must be in your PATH
-- clang - I set up Visual Studio to use clang to compile this engine, I recommend you do the same
+- Visual Studio 16.5
 - Windows Kit 10.0.19042.0
