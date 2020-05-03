@@ -1,7 +1,5 @@
 #pragma once
 
-#define GLM_FORCE_LEFT_HANDED
-
 #include <glm/vec4.hpp>
 
 namespace rhi {

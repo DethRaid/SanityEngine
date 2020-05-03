@@ -1,6 +1,5 @@
 #pragma once
 
-#define GLM_FORCE_LEFT_HANDED
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/glm.hpp>
 

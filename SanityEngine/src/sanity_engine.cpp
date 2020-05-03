@@ -2,7 +2,6 @@
 
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
-#define GLM_FORCE_LEFT_HANDED
 #include <glm/ext/quaternion_trigonometric.inl>
 #include <spdlog/spdlog.h>
 
@@ -214,7 +213,7 @@ void SanityEngine::create_debug_cube() {
 
     const auto cube_entity = registry.create();
 
-    registry.emplace<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
+    registry.assign<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
 
     spdlog::info("Created cube");
 }
@@ -233,7 +232,7 @@ void SanityEngine::create_debug_plane() {
 
     const auto plane_entity = registry.create();
 
-    registry.emplace<renderer::StaticMeshRenderableComponent>(plane_entity, plane_renderable);
+    registry.assign<renderer::StaticMeshRenderableComponent>(plane_entity, plane_renderable);
 
     spdlog::info("Created plane");
 }
@@ -241,10 +240,10 @@ void SanityEngine::create_debug_plane() {
 void SanityEngine::create_flycam_player() {
     player = registry.create();
 
-    auto& transform = registry.emplace<TransformComponent>(player);
+    auto& transform = registry.assign<TransformComponent>(player);
     transform.position.z = 50;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-    registry.emplace<renderer::CameraComponent>(player);
+    registry.assign<renderer::CameraComponent>(player);
 
     player_controller = std::make_unique<FlycamController>(window, player, registry);
 

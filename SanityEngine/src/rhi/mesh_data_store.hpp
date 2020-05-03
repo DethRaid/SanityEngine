@@ -3,8 +3,6 @@
 #include <memory>
 #include <vector>
 
-#define GLM_FORCE_LEFT_HANDED
-
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <spdlog/logger.h>
