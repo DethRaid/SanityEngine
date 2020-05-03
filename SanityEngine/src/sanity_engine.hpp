@@ -55,6 +55,8 @@ private:
 
 #pragma region Debug
     void create_debug_cube();
+
+    void create_debug_plane();
 #pragma endregion
 
 #pragma region Spawning

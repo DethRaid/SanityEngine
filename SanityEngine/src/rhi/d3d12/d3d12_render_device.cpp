@@ -28,7 +28,7 @@ namespace rhi {
                                          const XMINT2& window_size,
                                          const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : settings{settings_in},
-          logger{spdlog::stdout_color_mt("D3D12RenderDevice")},
+          logger{spdlog::stdout_color_st("D3D12RenderDevice")},
           staging_buffers_to_free{settings.num_in_flight_frames} {
 #ifndef NDEBUG
         enable_debugging();

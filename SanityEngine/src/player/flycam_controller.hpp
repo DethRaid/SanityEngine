@@ -2,6 +2,8 @@
 
 #include <GLFW/glfw3.h>
 #include <entt/entity/fwd.hpp>
+#include <glm/vec2.hpp>
+#include <spdlog/logger.h>
 
 /*!
  * \brief Simple controller for a simple flycam
@@ -10,9 +12,10 @@ class FlycamController {
 public:
     explicit FlycamController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
 
-    void update_player_position(float delta_time) const;
+    void update_player_transform(float delta_time);
 
 private:
+    std::shared_ptr<spdlog::logger> logger;
     /*!
      * \brief Window that will receive input
      */
@@ -27,4 +30,6 @@ private:
      * \brief Registry where all the player's components are stored
      */
     entt::registry* registry;
+
+    glm::dvec2 last_mouse_pos;
 };

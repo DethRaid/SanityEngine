@@ -95,8 +95,6 @@ namespace renderer {
         debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/debug.vertex.dxil");
         debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/debug.pixel.dxil");
 
-        debug_pipeline_create_info.rasterizer_state.cull_mode = rhi::CullMode::None;
-
         debug_pipeline_create_info.depth_stencil_state.enable_depth_test = false;
         debug_pipeline_create_info.depth_stencil_state.enable_depth_write = false;
 
