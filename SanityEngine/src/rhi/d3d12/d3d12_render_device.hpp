@@ -135,8 +135,9 @@ namespace rhi {
         ComPtr<ID3D12Fence> frame_fences;
         std::vector<uint32_t> frame_fence_values;
 
-        std::vector<ComPtr<ID3D12DescriptorHeap>> cbv_srv_uav_heaps;
+        ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
+        uint32_t next_free_cbv_srv_uav_descriptor{0};
 
         std::unique_ptr<D3D12DescriptorAllocator> rtv_allocator;
 
@@ -224,12 +225,12 @@ namespace rhi {
 
         [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
 
-        void create_material_resource_binder();
+        void create_material_resource_binders();
 
         void create_standard_graphics_pipeline_input_layout();
 #pragma endregion
 
-        std::vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const std::vector<uint8_t>& shader) const;
+        [[nodiscard]] std::vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const std::vector<uint8_t>& shader) const;
 
         void return_staging_buffers_for_frame(uint32_t frame_idx);
 

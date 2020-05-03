@@ -7,10 +7,10 @@
 
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
+#include "../core/ensure.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "components.hpp"
-#include "../core/ensure.hpp"
 
 namespace renderer {
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
@@ -100,13 +100,14 @@ namespace renderer {
     }
 
     void Renderer::create_standard_pipeline() {
-        rhi::RenderPipelineStateCreateInfo debug_pipeline_create_info{};
-        debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/standard.vertex.dxil");
-        debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/standard.pixel.dxil");
+        rhi::RenderPipelineStateCreateInfo standard_pipeline_create_info{};
+        standard_pipeline_create_info.name = "Standard material pipeline";
+        standard_pipeline_create_info.vertex_shader = load_shader("data/shaders/standard.vertex.dxil");
+        standard_pipeline_create_info.pixel_shader = load_shader("data/shaders/standard.pixel.dxil");
 
-        standard_pipeline = render_device->create_render_pipeline_state(debug_pipeline_create_info);
+        standard_pipeline = render_device->create_render_pipeline_state(standard_pipeline_create_info);
 
-        spdlog::info("Created debug pipeline");
+        spdlog::info("Created standard pipeline");
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
@@ -151,19 +152,15 @@ namespace renderer {
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
-        static std::vector<rhi::RenderTargetAccess> render_target_accesses = {
-            {/* .begin = */ {/* .type = */ rhi::RenderTargetBeginningAccessType::Clear,
-                             /* .clear_color = */ {0, 0, 0, 0},
-                             /* .format = */ rhi::ImageFormat::Rgba8},
-             /* .end = */ {/* .type = */ rhi::RenderTargetEndingAccessType::Preserve, /* .resolve_params = */ {}}}};
+        static auto render_target_accesses = std::vector<rhi::RenderTargetAccess>{
+            {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
+             .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
 
-        static auto depth_access = rhi::RenderTargetAccess{/* .begin = */
-                                                           {/* .type = */ rhi::RenderTargetBeginningAccessType::Clear,
-                                                            /* .clear_color = */ {0, 0, 0, 0},
-                                                            /* .format = */ rhi::ImageFormat::Depth32},
-                                                           /* .end = */ {/* .type = */
-                                                                         rhi::RenderTargetEndingAccessType::Discard,
-                                                                         /* .resolve_params = */ {}}};
+        static auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
+                                                                     .clear_color = {0, 0, 0, 0},
+                                                                     .format = rhi::ImageFormat::Depth32},
+                                                           .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
+                                                                   .resolve_params = {}}};
 
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder();
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));

@@ -115,6 +115,8 @@ namespace rhi {
     };
 
     struct RenderPipelineStateCreateInfo {
+        std::string name;
+
         bool use_standard_material_layout{true};
 
         std::vector<uint8_t> vertex_shader{};

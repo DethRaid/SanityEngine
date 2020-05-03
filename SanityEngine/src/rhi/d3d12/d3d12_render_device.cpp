@@ -56,7 +56,7 @@ namespace rhi {
 
         create_standard_root_signature();
 
-        create_material_resource_binder();
+        create_material_resource_binders();
 
         create_standard_graphics_pipeline_input_layout();
 
@@ -421,7 +421,13 @@ namespace rhi {
             pipeline->root_signature = standard_root_signature;
         }
 
-        device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
+        const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
+        if(FAILED(result)) {
+            logger->error("Could not create render pipeline {}: {}", create_info.name, to_string(result));
+            return {};
+        }
+
+        set_object_name(*pipeline->pso.Get(), create_info.name);
 
         return pipeline;
     }
@@ -451,6 +457,45 @@ namespace rhi {
         return input_descs;
     }
 
+    DescriptorType to_descriptor_type(const D3D_SHADER_INPUT_TYPE type) {
+        switch(type) {
+            case D3D_SIT_CBUFFER:
+                return DescriptorType::ConstantBuffer;
+
+            case D3D_SIT_TBUFFER:
+                [[fallthrough]];
+            case D3D_SIT_TEXTURE:
+                [[fallthrough]];
+            case D3D_SIT_STRUCTURED:
+                return DescriptorType::ShaderResource;
+
+            case D3D_SIT_UAV_RWTYPED:
+                [[fallthrough]];
+            case D3D_SIT_UAV_RWSTRUCTURED:
+                return DescriptorType::UnorderedAccess;
+
+            case D3D_SIT_SAMPLER:
+                [[fallthrough]];
+            case D3D_SIT_BYTEADDRESS:
+                [[fallthrough]];
+            case D3D_SIT_UAV_RWBYTEADDRESS:
+                [[fallthrough]];
+            case D3D_SIT_UAV_APPEND_STRUCTURED:
+                [[fallthrough]];
+            case D3D_SIT_UAV_CONSUME_STRUCTURED:
+                [[fallthrough]];
+            case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
+                [[fallthrough]];
+            case D3D_SIT_RTACCELERATIONSTRUCTURE:
+                [[fallthrough]];
+            case D3D_SIT_UAV_FEEDBACKTEXTURE:
+                [[fallthrough]];
+            default:
+                spdlog::error("Unknown descriptor type, defaulting to UAV");
+                return DescriptorType::UnorderedAccess;
+        }
+    }
+
     std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>> D3D12RenderDevice::
         create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
         auto pipeline_state = create_render_pipeline_state(create_info);
@@ -458,10 +503,58 @@ namespace rhi {
         auto bindings = get_bindings_from_shader(create_info.vertex_shader);
         if(create_info.pixel_shader) {
             auto pixel_shader_bindings = get_bindings_from_shader(create_info.pixel_shader.value());
+
+            // Remove all bindings that are present in the vertex shader
+            // Eventually I'll get cool enough to track which bindings are pixel shader-only and which aren't, and use that for smarter
+            // barriers, but for now this works
+            for(const auto& binding : bindings) {
+                const auto itr = std::remove_if(pixel_shader_bindings.begin(),
+                                                pixel_shader_bindings.end(),
+                                                [&](const D3D12_SHADER_INPUT_BIND_DESC& pixel_shader_binding) {
+                                                    return pixel_shader_binding.Name == binding.Name ||
+                                                           strcmp(pixel_shader_binding.Name, binding.Name) == 0;
+                                                });
+                pixel_shader_bindings.erase(itr, pixel_shader_bindings.end());
+            }
+
             bindings.insert(bindings.end(), pixel_shader_bindings.begin(), pixel_shader_bindings.end());
         }
 
-        TODO: Construct the binding definitions for everything
+        if(bindings.empty()) {
+            // No bindings! I don't like this cause I like all my code to be the same
+            logger->error("No bindings found in pipeline {}! This isn't something I really want to support", create_info.name);
+            return {};
+        }
+
+        auto cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
+                                                        next_free_cbv_srv_uav_descriptor,
+                                                        cbv_srv_uav_size};
+        auto gpu_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
+                                                        next_free_cbv_srv_uav_descriptor,
+                                                        cbv_srv_uav_size};
+
+        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptors;
+        descriptors.reserve(bindings.size());
+
+        for(const auto& binding : bindings) {
+            auto desc = DescriptorTableDescriptorDescription{
+                .type = to_descriptor_type(binding.Type),
+                .handle = cpu_handle,
+            };
+
+            cpu_handle.Offset(binding.BindCount, cbv_srv_uav_size);
+
+            next_free_cbv_srv_uav_descriptor += binding.BindCount;
+        }
+
+        auto bind_group_builder = std::make_unique<D3D12BindGroupBuilder>(*device.Get(),
+                                                                          *cbv_srv_uav_heap.Get(),
+                                                                          cbv_srv_uav_size,
+                                                                          std::unordered_map<std::string, RootDescriptorDescription>{},
+                                                                          descriptors,
+                                                                          std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>{{0, gpu_handle}});
+
+        return {std::move(pipeline_state), std::move(bind_group_builder)};
     }
 
     void D3D12RenderDevice::destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> /* pipeline_state */) {
@@ -895,15 +988,13 @@ namespace rhi {
     void D3D12RenderDevice::create_command_allocators() {
         MTR_SCOPE("D3D12RenderDevice", "create_command_allocators");
 
-        HRESULT result;
-
         direct_command_allocators.resize(settings.num_in_flight_frames);
         compute_command_allocators.resize(settings.num_in_flight_frames);
         copy_command_allocators.resize(settings.num_in_flight_frames);
 
         for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
-            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                    IID_PPV_ARGS(direct_command_allocators[i].GetAddressOf()));
+            HRESULT result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                            IID_PPV_ARGS(direct_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
                 critical_error(fmt::format("Could not create direct command allocator for frame {}", i));
             }
@@ -930,13 +1021,12 @@ namespace rhi {
     void D3D12RenderDevice::create_descriptor_heaps() {
         MTR_SCOPE("D3D12RenderDevice", "create_descriptor_heaps");
 
-        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
-            const auto [new_cbv_srv_uav_heap, new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                                                             MAX_NUM_TEXTURES * 2);
+        const auto [new_cbv_srv_uav_heap,
+                    new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                                                                   MAX_NUM_TEXTURES * 2 * settings.num_in_flight_frames);
 
-            cbv_srv_uav_heaps.push_back(new_cbv_srv_uav_heap);
-            cbv_srv_uav_size = new_cbv_srv_uav_size;
-        }
+        cbv_srv_uav_heap = new_cbv_srv_uav_heap;
+        cbv_srv_uav_size = new_cbv_srv_uav_size;
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
         rtv_allocator = std::make_unique<D3D12DescriptorAllocator>(rtv_heap, rtv_size);
@@ -1097,29 +1187,39 @@ namespace rhi {
         return sig;
     }
 
-    void D3D12RenderDevice::create_material_resource_binder() {
+    void D3D12RenderDevice::create_material_resource_binders() {
         std::unordered_map<std::string, RootDescriptorDescription> root_descriptors;
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_frames);
 
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
+                                                 next_free_cbv_srv_uav_descriptor,
+                                                 cbv_srv_uav_size};
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
+                                                 next_free_cbv_srv_uav_descriptor,
+                                                 cbv_srv_uav_size};
+
         for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
-            descriptor_tables.emplace("textures",
-                                      DescriptorTableDescriptorDescription{DescriptorType::ShaderResource,
-                                                                           cbv_srv_uav_heaps[i]->GetCPUDescriptorHandleForHeapStart()});
+            descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(3, cbv_srv_uav_heaps[i]->GetGPUDescriptorHandleForHeapStart());
+            descriptor_table_gpu_handles.emplace(3, gpu_handle);
 
             material_bind_group_builder.emplace_back(*device.Get(),
-                                                     *cbv_srv_uav_heaps[i].Get(),
+                                                     *cbv_srv_uav_heap.Get(),
                                                      cbv_srv_uav_size,
                                                      root_descriptors,
                                                      descriptor_tables,
                                                      descriptor_table_gpu_handles);
+
+            cpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
+            gpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
+
+            next_free_cbv_srv_uav_descriptor += MAX_NUM_TEXTURES;
         }
     }
 
@@ -1127,40 +1227,40 @@ namespace rhi {
         standard_graphics_pipeline_input_layout.reserve(4);
 
         standard_graphics_pipeline_input_layout.push_back(
-            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Position",
-                                     /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
-                                     /* .InputSlot = */ 0,
-                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                     /* .InstanceDataStepRate = */ 0});
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Position",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
 
         standard_graphics_pipeline_input_layout.push_back(
-            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Normal",
-                                     /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R32G32B32_FLOAT,
-                                     /* .InputSlot = */ 0,
-                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                     /* .InstanceDataStepRate = */ 0});
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Normal",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
 
         standard_graphics_pipeline_input_layout.push_back(
-            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Color",
-                                     /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R8G8B8A8_UNORM,
-                                     /* .InputSlot = */ 0,
-                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                     /* .InstanceDataStepRate = */ 0});
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Color",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
 
         standard_graphics_pipeline_input_layout.push_back(
-            D3D12_INPUT_ELEMENT_DESC{/* .SemanticName = */ "Texcoord",
-                                     /* .SemanticIndex = */ 0,
-                                     /* .Format = */ DXGI_FORMAT_R32G32_FLOAT,
-                                     /* .InputSlot = */ 0,
-                                     /* .AlignedByteOffset = */ D3D12_APPEND_ALIGNED_ELEMENT,
-                                     /* .InputSlotClass = */ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                                     /* .InstanceDataStepRate = */ 0});
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Texcoord",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R32G32_FLOAT,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
     }
 
     void D3D12RenderDevice::return_staging_buffers_for_frame(const uint32_t frame_idx) {
