@@ -21,11 +21,17 @@ if __name__ == '__main__':
     if not os.path.exists(dxil_directory):
         os.makedirs(dxil_directory)
 
+    print('HLSL Directory:', hlsl_directory, 'DXIL directory:', dxil_directory)
+
     hlsl_paths = Path(hlsl_directory).glob('**/*.hlsl')
 
     any_failed = False
+    any_processed = False
 
     for path in hlsl_paths:
+        any_processed = True
+        print('Compiling', str(path))
+
         dxil_filename = path.stem + '.dxil'
         dxil_path = dxil_directory + '/' + dxil_filename
 
@@ -46,6 +52,9 @@ if __name__ == '__main__':
             any_failed = True
         else:
             print('Successfully compiled ', str(path))
+
+    if not any_processed:
+        print('No shaders found in the HLSL directory')
 
     if any_failed:
         exit(2)
