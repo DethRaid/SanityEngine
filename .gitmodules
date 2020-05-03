@@ -1,6 +1,3 @@
-[submodule "SanityEngine/extern/minitrace"]
-	path = SanityEngine/extern/minitrace
-	url = https://github.com/hrydgard/minitrace.git
 [submodule "SanityEngine/extern/spdlog"]
 	path = SanityEngine/extern/spdlog
 	url = https://github.com/gabime/spdlog.git
