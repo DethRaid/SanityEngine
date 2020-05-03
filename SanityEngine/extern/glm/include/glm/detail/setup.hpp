@@ -481,9 +481,6 @@
 // Coordinate system, define GLM_FORCE_LEFT_HANDED before including GLM
 // to use left handed coordinate system by default.
 
-// Force left-handed on, because that's what Sanity Engine needs
-#define GLM_FORCE_LEFT_HANDED
-
 #define GLM_CLIP_CONTROL_ZO_BIT		(1 << 0) // ZERO_TO_ONE
 #define GLM_CLIP_CONTROL_NO_BIT		(1 << 1) // NEGATIVE_ONE_TO_ONE
 #define GLM_CLIP_CONTROL_LH_BIT		(1 << 2) // LEFT_HANDED, For DirectX, Metal, Vulkan
