@@ -39,14 +39,21 @@ namespace renderer {
 
         std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
 
-        std::unique_ptr<rhi::RenderPipelineState> debug_pipeline;
+        std::unique_ptr<rhi::RenderPipelineState> standard_pipeline;
 
         std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
+
+        std::unique_ptr<rhi::Image> color_render_target;
+        std::unique_ptr<rhi::Image> depth_target;
+        std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
+
 
 #pragma region Initialization
         void make_static_mesh_storage();
 
-        void create_debug_pipeline();
+        void create_standard_pipeline();
+
+        void create_scene_framebuffer(glm::uvec2 size);
 #pragma endregion
 
         void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;

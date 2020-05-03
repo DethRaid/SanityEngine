@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 
+#include <GLFW/glfw3.h>
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
@@ -38,7 +39,9 @@ namespace renderer {
         MTR_SCOPE("Renderer", "Renderer");
         make_static_mesh_storage();
 
-        create_debug_pipeline();
+        create_standard_pipeline();
+
+        create_scene_framebuffer();
     }
 
     void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
@@ -90,17 +93,36 @@ namespace renderer {
         static_mesh_storage = std::make_unique<rhi::MeshDataStore>(*render_device, std::move(vertex_buffer), std::move(index_buffer));
     }
 
-    void Renderer::create_debug_pipeline() {
+    void Renderer::create_standard_pipeline() {
         rhi::RenderPipelineStateCreateInfo debug_pipeline_create_info{};
-        debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/debug.vertex.dxil");
-        debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/debug.pixel.dxil");
+        debug_pipeline_create_info.vertex_shader = load_shader("data/shaders/standard.vertex.dxil");
+        debug_pipeline_create_info.pixel_shader = load_shader("data/shaders/standard.pixel.dxil");
 
-        debug_pipeline_create_info.depth_stencil_state.enable_depth_test = false;
-        debug_pipeline_create_info.depth_stencil_state.enable_depth_write = false;
-
-        debug_pipeline = render_device->create_render_pipeline_state(debug_pipeline_create_info);
+        standard_pipeline = render_device->create_render_pipeline_state(debug_pipeline_create_info);
 
         spdlog::info("Created debug pipeline");
+    }
+
+    void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
+        rhi::ImageCreateInfo color_target_create_info{};
+        color_target_create_info.name = "Scene color target";
+        color_target_create_info.usage = rhi::ImageUsage::RenderTarget;
+        color_target_create_info.format = rhi::ImageFormat::Rgba8;
+        color_target_create_info.width = size.x;
+        color_target_create_info.height = size.y;
+
+        color_render_target = render_device->create_image(color_target_create_info);
+
+        rhi::ImageCreateInfo depth_target_create_info{};
+        depth_target_create_info.name = "Scene depth target";
+        depth_target_create_info.usage = rhi::ImageUsage::DepthStencil;
+        depth_target_create_info.format = rhi::ImageFormat::Depth32;
+        depth_target_create_info.width = size.x;
+        depth_target_create_info.height = size.y;
+
+        depth_target = render_device->create_image(depth_target_create_info);
+
+        scene_framebuffer = render_device->create_framebuffer({color_render_target.get()}, depth_target.get());
     }
 
     void Renderer::update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) const {
@@ -129,16 +151,22 @@ namespace renderer {
                              /* .format = */ rhi::ImageFormat::Rgba8},
              /* .end = */ {/* .type = */ rhi::RenderTargetEndingAccessType::Preserve, /* .resolve_params = */ {}}}};
 
+        auto depth_access = rhi::RenderTargetAccess{/* .begin = */
+                                                    {/* .type = */ rhi::RenderTargetBeginningAccessType::Clear,
+                                                     /* .clear_color = */ {0, 0, 0, 0},
+                                                     /* .format = */ rhi::ImageFormat::Depth32},
+                                                    /* .end = */ {/* .type = */
+                                                                  rhi::RenderTargetEndingAccessType::Preserve,
+                                                                  /* .resolve_params = */ {}}};
+
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder();
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
 
         const auto material_bind_group = material_bind_group_builder.build();
 
-        const auto framebuffer = render_device->get_backbuffer_framebuffer();
+        command_list.set_framebuffer(*scene_framebuffer, render_target_accesses, depth_access);
 
-        command_list.set_framebuffer(*framebuffer, render_target_accesses, std::nullopt);
-
-        command_list.set_pipeline_state(*debug_pipeline);
+        command_list.set_pipeline_state(*standard_pipeline);
         command_list.set_camera_idx(0);
         command_list.bind_render_resources(*material_bind_group);
 
@@ -151,5 +179,7 @@ namespace renderer {
 
             command_list.draw(mesh_renderable.num_indices, mesh_renderable.first_index);
         }
+
+        const auto* framebuffer = render_device->get_backbuffer_framebuffer();
     }
 } // namespace renderer
