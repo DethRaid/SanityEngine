@@ -141,6 +141,9 @@
     <ClCompile Include="extern\minitrace\src\minitrace.c">
       <Filter>Source Files\external</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\material_data_buffer.cpp">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -177,9 +180,6 @@
       <Filter>Header Files\player</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\camera_matrix_buffer.hpp">
-      <Filter>Header Files\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\components.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\renderer.hpp">
@@ -265,6 +265,12 @@
     </ClInclude>
     <ClInclude Include="src\windows\windows_helpers.hpp">
       <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\components.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\material_data_buffer.hpp">
+      <Filter>Header Files\renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
