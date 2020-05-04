@@ -114,15 +114,13 @@ namespace renderer {
     }
 
     void Renderer::create_backbuffer_output_pipeline() {
-        const auto create_info = rhi::RenderPipelineStateCreateInfo {
+        const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
             .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
             .pixel_shader = load_shader("data/shaders/backbuffer_output.pixel"),
         };
 
-        auto [new_backbuffer_output_pipeline, new_backbuffer_output_bind_group_builder] = render_device->create_bespoke_render_pipeline_state(create_info);
-        backbuffer_output_pipeline = std::move(new_backbuffer_output_pipeline);
-        backbuffer_output_bind_group_builder = std::move(new_backbuffer_output_bind_group_builder);
+        backbuffer_output_pipeline = render_device->create_render_pipeline_state(create_info);
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
@@ -133,7 +131,7 @@ namespace renderer {
         color_target_create_info.width = size.x;
         color_target_create_info.height = size.y;
 
-        color_render_target = render_device->create_image(color_target_create_info);
+        all_images.emplace(color_target_create_info.name, render_device->create_image(color_target_create_info));
 
         rhi::ImageCreateInfo depth_target_create_info{};
         depth_target_create_info.name = "Scene depth target";
@@ -142,13 +140,21 @@ namespace renderer {
         depth_target_create_info.width = size.x;
         depth_target_create_info.height = size.y;
 
-        depth_target = render_device->create_image(depth_target_create_info);
+        all_images.emplace(depth_target_create_info.name, render_device->create_image(depth_target_create_info));
 
-        scene_framebuffer = render_device->create_framebuffer({color_render_target.get()}, depth_target.get());
+        scene_framebuffer = render_device->create_framebuffer({all_images[color_target_create_info.name].get()},
+                                                              all_images[depth_target_create_info.name].get());
+    }
 
-        // Bind the scene output color target to everything that needs it
-        backbuffer_output_bind_group_builder->set_image("scene_output", *color_render_target);
-        backbuffer_output_bind_group = backbuffer_output_bind_group_builder->build();
+    std::vector<const rhi::Image*> Renderer::get_texture_array() const {
+        std::vector<const rhi::Image*> images;
+        images.reserve(all_images.size());
+
+        for(const auto& [name, image] : all_images) {
+            images.push_back(image.get());
+        }
+
+        return images;
     }
 
     void Renderer::update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) const {
@@ -181,8 +187,9 @@ namespace renderer {
                                                            .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
                                                                    .resolve_params = {}}};
 
-        auto& material_bind_group_builder = render_device->get_material_bind_group_builder();
+        auto& material_bind_group_builder = render_device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
+        material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         const auto material_bind_group = material_bind_group_builder.build();
 
@@ -205,7 +212,6 @@ namespace renderer {
         const auto* framebuffer = render_device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});
         command_list.set_pipeline_state(*backbuffer_output_pipeline);
-        command_list.bind_render_resources(*backbuffer_output_bind_group);
 
         command_list.draw(3);
     }

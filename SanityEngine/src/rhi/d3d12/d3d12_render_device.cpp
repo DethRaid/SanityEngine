@@ -376,7 +376,7 @@ namespace rhi {
     }
 
     std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>> D3D12RenderDevice::
-        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
+        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info, BespokePipelineType pipeline_type) {
         auto bindings = get_bindings_from_shader(create_info.vertex_shader);
         if(create_info.pixel_shader) {
             auto pixel_shader_bindings = get_bindings_from_shader(create_info.pixel_shader.value());
@@ -404,10 +404,10 @@ namespace rhi {
         }
 
         auto cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
-                                                        next_free_cbv_srv_uav_descriptor,
+                                                        static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                         cbv_srv_uav_size};
         auto gpu_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
-                                                        next_free_cbv_srv_uav_descriptor,
+                                                        static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                         cbv_srv_uav_size};
 
         const auto table_start_offset = next_free_cbv_srv_uav_descriptor;
@@ -572,7 +572,7 @@ namespace rhi {
         return std::make_unique<D3D12RenderCommandList>(commands, *this);
     }
 
-    void D3D12RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
+    void D3D12RenderDevice::submit_command_list(const std::unique_ptr<CommandList> commands) {
         auto* d3d12_commands = dynamic_cast<D3D12CommandList*>(commands.get());
 
         d3d12_commands->prepare_for_submission();
@@ -603,12 +603,10 @@ namespace rhi {
         }
     }
 
-    BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder() {
-        const auto cur_frame_idx = swapchain->GetCurrentBackBufferIndex();
+    BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
+        ENSURE(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
 
-        ENSURE(cur_frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
-
-        return material_bind_group_builder[cur_frame_idx];
+        return material_bind_group_builder[frame_idx];
     }
 
     void D3D12RenderDevice::begin_frame(const uint64_t frame_count) {
@@ -1163,10 +1161,10 @@ namespace rhi {
         material_bind_group_builder.reserve(settings.num_in_flight_frames);
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
-                                                 next_free_cbv_srv_uav_descriptor,
+                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
         CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
-                                                 next_free_cbv_srv_uav_descriptor,
+                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
 
         for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
@@ -1233,9 +1231,9 @@ namespace rhi {
 
     std::vector<D3D12_SHADER_INPUT_BIND_DESC> D3D12RenderDevice::get_bindings_from_shader(const std::vector<uint8_t>& shader) const {
         ComPtr<ID3D12ShaderReflection> reflection;
-        auto result = D3DReflect(shader.data(), shader.size(), IID_PPV_ARGS(reflection.GetAddressOf()));
+        auto result = D3DReflect(shader.data(), shader.size() * sizeof(uint8_t), IID_PPV_ARGS(&reflection));
         if(FAILED(result)) {
-            logger->error("Could not retrieve shader reflection information");
+            logger->error("Could not retrieve shader reflection information: {}", to_string(result));
         }
 
         D3D12_SHADER_DESC desc;

@@ -67,7 +67,7 @@ namespace rhi {
             const RenderPipelineStateCreateInfo& create_info) override;
 
         [[nodiscard]] std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>>
-        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) override;
+        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info, BespokePipelineType pipeline_type) override;
 
         void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) override;
 
@@ -81,7 +81,7 @@ namespace rhi {
 
         void submit_command_list(std::unique_ptr<CommandList> commands) override;
 
-        BindGroupBuilder& get_material_bind_group_builder() override;
+        BindGroupBuilder& get_material_bind_group_builder_for_frame(uint32_t frame_idx) override;
 
         void begin_frame(uint64_t frame_count) override;
 
@@ -137,7 +137,7 @@ namespace rhi {
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
-        INT next_free_cbv_srv_uav_descriptor{0};
+        UINT next_free_cbv_srv_uav_descriptor{0};
 
         std::unique_ptr<D3D12DescriptorAllocator> rtv_allocator;
 

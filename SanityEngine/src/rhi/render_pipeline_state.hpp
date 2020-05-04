@@ -132,4 +132,11 @@ namespace rhi {
 
     struct RenderPipelineState {
     };
+
+    enum class BespokePipelineType {
+        /*!
+         * \brief The pipeline will output to the backbuffer
+         */
+        BackbufferOutput,
+    };
 } // namespace render

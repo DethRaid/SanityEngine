@@ -43,14 +43,11 @@ namespace renderer {
 
         std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
-        std::unique_ptr<rhi::Image> color_render_target;
-        std::unique_ptr<rhi::Image> depth_target;
         std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
 
         std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
-        std::unique_ptr<rhi::BindGroupBuilder> backbuffer_output_bind_group_builder;
-        std::unique_ptr<rhi::BindGroup> backbuffer_output_bind_group;
 
+        std::unordered_map<std::string, std::unique_ptr<rhi::Image>> all_images;
 
 #pragma region Initialization
         void make_static_mesh_storage();
@@ -61,6 +58,8 @@ namespace renderer {
 
         void create_scene_framebuffer(glm::uvec2 size);
 #pragma endregion
+
+        std::vector<const rhi::Image*> get_texture_array() const;
 
         void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;
 

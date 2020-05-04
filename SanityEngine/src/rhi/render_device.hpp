@@ -12,6 +12,7 @@ struct Settings;
 struct GLFWwindow;
 
 namespace rhi {
+    enum class BespokePipelineType;
     struct RenderPipelineStateCreateInfo;
 
     enum class RenderBackend {
@@ -56,7 +57,7 @@ namespace rhi {
             const RenderPipelineStateCreateInfo& create_info) = 0;
 
         [[nodiscard]] virtual std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>>
-        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) = 0;
+        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info, BespokePipelineType pipeline_type) = 0;
 
         virtual void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) = 0;
 
@@ -74,7 +75,7 @@ namespace rhi {
 #pragma endregion
 
 #pragma region Rendering
-        [[nodiscard]] virtual BindGroupBuilder& get_material_bind_group_builder() = 0;
+        [[nodiscard]] virtual BindGroupBuilder& get_material_bind_group_builder_for_frame(uint32_t frame_idx) = 0;
 
         /*!
          * \brief Sets up the render device to render the next frame
