@@ -239,7 +239,7 @@ namespace renderer {
 
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
-        material_bind_group_builder.set_buffer("material_data", *material_device_buffers[frame_idx]);
+        material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         const auto material_bind_group = material_bind_group_builder.build();

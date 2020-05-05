@@ -2,12 +2,14 @@
 
 #include <utility>
 
+#include <minitrace.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 #include "../../core/ensure.hpp"
 #include "d3dx12.hpp"
-#include "minitrace.h"
 
 namespace rhi {
-    RootParameter::RootParameter() : type{RootParameterType::Empty}, descriptor{} {}
+    RootParameter::RootParameter() {}
 
     D3D12BindGroup::D3D12BindGroup(ID3D12DescriptorHeap& heap_in,
                                    std::vector<RootParameter> root_parameters_in,
@@ -83,6 +85,13 @@ namespace rhi {
           root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
           descriptor_table_handles{std::move(descriptor_table_handles_in)} {
+        if(auto loggy = spdlog::get("D3D12BindGroupBuilder")) {
+            logger = loggy;
+
+        } else {
+            logger = spdlog::stdout_color_st("D3D12BindGroupBuilder");
+        }
+
         bound_buffers.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
         bound_images.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
     }
@@ -140,6 +149,7 @@ namespace rhi {
 
             if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
                 root_parameters[idx].descriptor.address = buffer_itr->second->resource->GetGPUVirtualAddress();
+                logger->trace("Binding buffer {} to root descriptor {}", buffer_itr->second->name, name);
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -221,7 +231,7 @@ namespace rhi {
             } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
-                        spdlog::warn("Can not bind images to constant buffer {}", name);
+                        logger->warn("Can not bind images to constant buffer {}", name);
                     } break;
 
                     case DescriptorType::ShaderResource: {
@@ -263,7 +273,7 @@ namespace rhi {
                     } break;
                 }
             } else {
-                // spdlog::warn("No resource bound to descriptor {}", name);
+                logger->warn("No resource bound to descriptor {}", name);
             }
         }
 

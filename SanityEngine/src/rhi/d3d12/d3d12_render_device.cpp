@@ -622,6 +622,7 @@ namespace rhi {
 
         reset_command_allocators_for_frame(cur_gpu_frame_idx);
 
+
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Render Target");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());

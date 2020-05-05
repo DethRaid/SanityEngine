@@ -1,5 +1,7 @@
 #pragma once
 #include <unordered_map>
+#include <spdlog/logger.h>
+
 
 #include "../bind_group.hpp"
 #include "resources.hpp"
@@ -126,6 +128,8 @@ namespace rhi {
         std::unique_ptr<BindGroup> build() override;
 
     private:
+        std::shared_ptr<spdlog::logger> logger;
+
         ID3D12Device* device;
 
         ID3D12DescriptorHeap* heap;
