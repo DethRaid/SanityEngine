@@ -1066,7 +1066,7 @@ namespace rhi {
     void D3D12RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("D3D12RenderDevice", "create_standard_root_signature");
 
-        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{4};
+        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{5};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -1076,6 +1076,9 @@ namespace rhi {
 
         // Material data buffer
         root_parameters[2].InitAsShaderResourceView(1);
+
+        // Lights buffer
+        root_parameters[3].InitAsShaderResourceView(3);
 
         // Textures array
         std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
@@ -1087,7 +1090,7 @@ namespace rhi {
         textures_array.OffsetInDescriptorsFromTableStart = 0;
         descriptor_table_ranges.push_back(move(textures_array));
 
-        root_parameters[3].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
+        root_parameters[4].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
         std::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
@@ -1160,6 +1163,7 @@ namespace rhi {
         std::unordered_map<std::string, RootDescriptorDescription> root_descriptors;
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
+        root_descriptors.emplace("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_frames);
 

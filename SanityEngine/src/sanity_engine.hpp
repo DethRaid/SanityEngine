@@ -60,6 +60,8 @@ private:
 #pragma endregion
 
 #pragma region Spawning
+    void create_the_sun();
+
     void create_flycam_player();
 #pragma endregion
 };

@@ -5,6 +5,13 @@ struct Camera {
     float4x4 previous_projection;
 };
 
+struct Light {
+    uint type;
+    float3 color;
+    float3 direction;
+    float angular_size;
+};
+
 /*!
  * \brief Point sampler you can use to sample any texture
  */
@@ -41,6 +48,13 @@ StructuredBuffer<Camera> cameras : register(t0);
  * \brief Array of all the materials
  */
 StructuredBuffer<MaterialData> material_buffer : register(t1);
+
+/*!
+ * \brief Array of all the lights in the scene
+ *
+ * When I get forward+ rendering working, there will be a separate buffer for which lights affect which object
+ */
+StructuredBuffer<Light> lights : register(t2);
 
 /*!
  * \brief Array of all the textures that are available for a shader to sample from

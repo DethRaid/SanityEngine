@@ -266,10 +266,13 @@
     <ClInclude Include="src\windows\windows_helpers.hpp">
       <Filter>Header Files\windows</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\components.hpp">
+    <ClInclude Include="src\renderer\material_data_buffer.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\material_data_buffer.hpp">
+    <ClInclude Include="src\renderer\lights.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\render_components.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
   </ItemGroup>

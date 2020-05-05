@@ -63,6 +63,8 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     renderer = std::make_unique<renderer::Renderer>(window, settings);
     spdlog::info("Initialized renderer");
+
+    create_the_sun();
 }
 
 SanityEngine::~SanityEngine() {
@@ -236,6 +238,11 @@ void SanityEngine::create_debug_plane() {
     registry.assign<renderer::StaticMeshRenderableComponent>(plane_entity, plane_renderable);
 
     spdlog::info("Created plane");
+}
+
+void SanityEngine::create_the_sun() {
+    const auto sun = registry.create();
+    registry.assign<renderer::LightComponent>(sun);
 }
 
 void SanityEngine::create_flycam_player() {

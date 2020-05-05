@@ -6,8 +6,8 @@
 #include "../rhi/render_pipeline_state.hpp"
 #include "../settings.hpp"
 #include "camera_matrix_buffer.hpp"
-#include "components.hpp"
 #include "material_data_buffer.hpp"
+#include "render_components.hpp"
 
 namespace rhi {
     class RenderCommandList;
@@ -36,7 +36,7 @@ namespace renderer {
 
         void begin_frame(uint64_t frame_count);
 
-        void render_scene(entt::registry& registry) const;
+        void render_scene(entt::registry& registry);
 
         void end_frame();
 
@@ -71,13 +71,16 @@ namespace renderer {
 
         std::unique_ptr<rhi::Image> scene_depth_target;
 
+        std::array<Light, 4> lights;
+        std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
+
 #pragma region Initialization
         void create_static_mesh_storage();
 
         void create_material_data_buffers();
 
         void create_standard_pipeline();
-        
+
         void create_backbuffer_output_pipeline_and_material();
 
         void create_scene_framebuffer(glm::uvec2 size);
@@ -88,7 +91,9 @@ namespace renderer {
         void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;
 
 #pragma region 3D Scene
-        void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx) const;
+        void update_lights(entt::registry& registry, uint32_t frame_idx);
+
+        void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion
     };
 } // namespace renderer

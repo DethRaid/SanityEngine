@@ -10,7 +10,7 @@
 #include "../core/constants.hpp"
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/resources.hpp"
-#include "components.hpp"
+#include "render_components.hpp"
 
 namespace rhi {
     class RenderDevice;

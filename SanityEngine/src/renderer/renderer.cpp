@@ -10,7 +10,7 @@
 #include "../core/ensure.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
-#include "components.hpp"
+#include "render_components.hpp"
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -66,7 +66,8 @@ namespace renderer {
 
     void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
 
-    void Renderer::render_scene(entt::registry& registry) const {
+
+    void Renderer::render_scene(entt::registry& registry) {
         MTR_SCOPE("Renderer", "render_scene");
 
         const auto frame_idx = render_device->get_cur_gpu_frame_idx();
@@ -88,9 +89,8 @@ namespace renderer {
         MTR_SCOPE("Renderer", "create_static_mesh");
         const auto mesh_start_idx = static_mesh_storage->add_mesh(vertices, indices);
 
-        StaticMeshRenderableComponent renderable{};
-        renderable.first_index = mesh_start_idx;
-        renderable.num_indices = static_cast<uint32_t>(indices.size());
+        const auto renderable = StaticMeshRenderableComponent{.first_index = mesh_start_idx,
+                                                              .num_indices = static_cast<uint32_t>(indices.size())};
 
         return renderable;
     }
@@ -115,17 +115,17 @@ namespace renderer {
     }
 
     void Renderer::create_static_mesh_storage() {
-        rhi::BufferCreateInfo vertex_create_info{};
-        vertex_create_info.name = "Static Mesh Vertex Buffer";
-        vertex_create_info.size = STATIC_MESH_VERTEX_BUFFER_SIZE;
-        vertex_create_info.usage = rhi::BufferUsage::VertexBuffer;
+        const auto vertex_create_info = rhi::BufferCreateInfo{
+            .name = "Static Mesh Vertex Buffer",
+            .usage = rhi::BufferUsage::VertexBuffer,
+            .size = STATIC_MESH_VERTEX_BUFFER_SIZE,
+        };
 
         auto vertex_buffer = render_device->create_buffer(vertex_create_info);
 
-        rhi::BufferCreateInfo index_buffer_create_info{};
-        index_buffer_create_info.name = "Static Mesh Index Buffer";
-        index_buffer_create_info.size = STATIC_MESH_INDEX_BUFFER_SIZE;
-        index_buffer_create_info.usage = rhi::BufferUsage::IndexBuffer;
+        const auto index_buffer_create_info = rhi::BufferCreateInfo{.name = "Static Mesh Index Buffer",
+                                                                    .usage = rhi::BufferUsage::IndexBuffer,
+                                                                    .size = STATIC_MESH_INDEX_BUFFER_SIZE};
 
         auto index_buffer = render_device->create_buffer(index_buffer_create_info);
 
@@ -196,7 +196,6 @@ namespace renderer {
         scene_framebuffer = render_device->create_framebuffer({&color_target}, scene_depth_target.get());
     }
 
-
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
         std::vector<const rhi::Image*> images;
         images.reserve(all_images.size());
@@ -225,8 +224,17 @@ namespace renderer {
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
     }
 
-    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
+    void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
+        registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.handle] = light.light; });
+
+        auto* dst = render_device->map_buffer(*light_device_buffers[frame_idx]);
+        std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
+    }
+
+    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) {
         MTR_SCOPE("Renderer", "render_3d_scene");
+
+        update_lights(registry, frame_idx);
 
         static auto render_target_accesses = std::vector<rhi::RenderTargetAccess>{
             {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
@@ -241,6 +249,7 @@ namespace renderer {
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
+        material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         const auto material_bind_group = material_bind_group_builder.build();

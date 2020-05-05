@@ -5,4 +5,10 @@ struct VertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-float4 main(VertexOutput input) : SV_TARGET { return float4(input.normal * 0.5 + 0.5, 1); }
+float4 main(VertexOutput input) : SV_TARGET { 
+    Light sun = lights[0];  // The sun is ALWAYS at index 0
+
+    float ndotl = saturate(dot(input.normal, -sun.direction));
+
+    return float4(input.color * ndotl, 1); 
+}
