@@ -242,7 +242,7 @@ void SanityEngine::create_flycam_player() {
     player = registry.create();
 
     auto& transform = registry.assign<TransformComponent>(player);
-    transform.position.z = 50;
+    transform.position.z = 5;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 

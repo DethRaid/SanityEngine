@@ -29,8 +29,8 @@ namespace renderer {
         projection_matrix[0][0] = static_cast<float>(e);
         projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);
         projection_matrix[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
-        projection_matrix[2][3] = -1.0f;
-        projection_matrix[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+        projection_matrix[3][2] = -1.0f;
+        projection_matrix[2][3] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
     }
 
     CameraMatrixBuffer::CameraMatrixBuffer(rhi::RenderDevice& device_in, const uint32_t num_in_flight_frames) : device{&device_in} {

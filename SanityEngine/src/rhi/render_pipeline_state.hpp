@@ -106,7 +106,7 @@ namespace rhi {
     struct DepthStencilState {
         bool enable_depth_test{true};
         bool enable_depth_write{true};
-        CompareOp depth_func{CompareOp::Greater};
+        CompareOp depth_func{CompareOp::Less};
 
         bool enable_stencil_test{false};
         uint8_t stencil_read_mask{0xFF};

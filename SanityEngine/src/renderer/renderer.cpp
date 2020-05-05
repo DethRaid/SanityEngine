@@ -233,7 +233,7 @@ namespace renderer {
              .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
 
         static auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
-                                                                     .clear_color = {0, 0, 0, 0},
+                                                                     .clear_color = {1, 0, 0, 0},
                                                                      .format = rhi::ImageFormat::Depth32},
                                                            .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
                                                                    .resolve_params = {}}};
