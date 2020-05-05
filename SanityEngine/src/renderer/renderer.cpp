@@ -13,6 +13,13 @@
 #include "components.hpp"
 
 namespace renderer {
+    constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
+    constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
+
+    struct BackbufferOutputMaterial {
+        uint32_t scene_output_index;
+    };
+
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
         MTR_SCOPE("Renderer", "load_shader");
         auto* shader_file = fopen(shader_filename.c_str(), "rb");
@@ -83,6 +90,25 @@ namespace renderer {
         return renderable;
     }
 
+    TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
+        const auto idx = static_cast<uint32_t>(all_images.size());
+
+        all_images.push_back(render_device->create_image(create_info));
+        image_name_to_index.emplace(create_info.name, idx);
+
+        return {idx};
+    }
+
+    rhi::Image& Renderer::get_image(const std::string& image_name) const {
+        if(!image_name_to_index.contains(image_name)) {
+            const auto message = fmt::format("Image '{}' does not exist", image_name);
+            throw std::exception(message.c_str());
+        }
+
+        const auto idx = image_name_to_index.at(image_name);
+        return *all_images[idx];
+    }
+
     void Renderer::make_static_mesh_storage() {
         rhi::BufferCreateInfo vertex_create_info{};
         vertex_create_info.name = "Static Mesh Vertex Buffer";
@@ -125,32 +151,34 @@ namespace renderer {
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
         rhi::ImageCreateInfo color_target_create_info{};
-        color_target_create_info.name = "Scene color target";
+        color_target_create_info.name = SCENE_COLOR_RENDER_TARGET;
         color_target_create_info.usage = rhi::ImageUsage::RenderTarget;
         color_target_create_info.format = rhi::ImageFormat::Rgba8;
         color_target_create_info.width = size.x;
         color_target_create_info.height = size.y;
 
-        all_images.emplace(color_target_create_info.name, render_device->create_image(color_target_create_info));
+        create_image(color_target_create_info);
 
         rhi::ImageCreateInfo depth_target_create_info{};
-        depth_target_create_info.name = "Scene depth target";
+        depth_target_create_info.name = SCENE_DEPTH_TARGET;
         depth_target_create_info.usage = rhi::ImageUsage::DepthStencil;
         depth_target_create_info.format = rhi::ImageFormat::Depth32;
         depth_target_create_info.width = size.x;
         depth_target_create_info.height = size.y;
 
-        all_images.emplace(depth_target_create_info.name, render_device->create_image(depth_target_create_info));
+        create_image(depth_target_create_info);
 
-        scene_framebuffer = render_device->create_framebuffer({all_images[color_target_create_info.name].get()},
-                                                              all_images[depth_target_create_info.name].get());
+        const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
+        const auto& depth_target = get_image(SCENE_DEPTH_TARGET);
+
+        scene_framebuffer = render_device->create_framebuffer({&color_target}, &depth_target);
     }
 
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
         std::vector<const rhi::Image*> images;
         images.reserve(all_images.size());
 
-        for(const auto& [name, image] : all_images) {
+        for(const auto& image : all_images) {
             images.push_back(image.get());
         }
 
