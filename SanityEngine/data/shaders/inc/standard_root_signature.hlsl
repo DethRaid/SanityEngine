@@ -59,4 +59,4 @@ StructuredBuffer<Light> lights : register(t2);
 /*!
  * \brief Array of all the textures that are available for a shader to sample from
  */
-Texture2D textures[] : register(t2);
+Texture2D textures[] : register(t3);

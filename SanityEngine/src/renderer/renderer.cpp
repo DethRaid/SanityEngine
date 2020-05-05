@@ -62,10 +62,11 @@ namespace renderer {
         create_scene_framebuffer(glm::uvec2{framebuffer_width * settings_in.render_scale, framebuffer_height * settings_in.render_scale});
 
         create_backbuffer_output_pipeline_and_material();
+
+        create_light_buffers();
     }
 
     void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
-
 
     void Renderer::render_scene(entt::registry& registry) {
         MTR_SCOPE("Renderer", "render_scene");
@@ -144,7 +145,7 @@ namespace renderer {
     }
 
     void Renderer::create_standard_pipeline() {
-        const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
+        auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("data/shaders/standard.vertex"),
             .pixel_shader = load_shader("data/shaders/standard.pixel"),
@@ -158,7 +159,7 @@ namespace renderer {
     }
 
     void Renderer::create_backbuffer_output_pipeline_and_material() {
-        const auto create_info = rhi::RenderPipelineStateCreateInfo{
+        auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
             .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
             .pixel_shader = load_shader("data/shaders/backbuffer_output.pixel"),
@@ -170,6 +171,15 @@ namespace renderer {
         backbuffer_output_material.handle = material_data_buffer->get_next_free_index<BackbufferOutputMaterial>();
         material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material.handle)
             .scene_output_index = image_name_to_index[SCENE_COLOR_RENDER_TARGET];
+    }
+
+    void Renderer::create_light_buffers() {
+        auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
+
+        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+            create_info.name = fmt::format("Light Buffer {}", i);
+            light_device_buffers.push_back(render_device->create_buffer(create_info));
+        }
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {

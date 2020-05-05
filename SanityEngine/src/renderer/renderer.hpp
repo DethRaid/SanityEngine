@@ -71,7 +71,7 @@ namespace renderer {
 
         std::unique_ptr<rhi::Image> scene_depth_target;
 
-        std::array<Light, 4> lights;
+        std::array<Light, MAX_NUM_LIGHTS> lights;
         std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
 
 #pragma region Initialization
@@ -81,9 +81,11 @@ namespace renderer {
 
         void create_standard_pipeline();
 
+        void create_scene_framebuffer(glm::uvec2 size);
+
         void create_backbuffer_output_pipeline_and_material();
 
-        void create_scene_framebuffer(glm::uvec2 size);
+        void create_light_buffers();
 #pragma endregion
 
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;

@@ -7,7 +7,7 @@ namespace renderer {
     constexpr uint32_t MAX_NUM_LIGHTS = 32;
 
     struct LightHandle {
-        uint32_t handle;
+        uint32_t handle{0};
     };
 
     enum class LightType {
