@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace nova::renderer {
+namespace renderer {
     /*!
      * \brief Array that can hold data of multiple types of multiple sizes
      *
@@ -10,7 +10,7 @@ namespace nova::renderer {
      */
     class MaterialDataBuffer {
     public:
-        explicit MaterialDataBuffer(uint8_t* buffer_in, size_t buffer_size_in);
+        explicit MaterialDataBuffer(size_t buffer_size_in);
 
         MaterialDataBuffer(const MaterialDataBuffer& other) = delete;
         MaterialDataBuffer& operator=(const MaterialDataBuffer& other) = delete;
@@ -47,7 +47,7 @@ namespace nova::renderer {
         [[nodiscard]] uint8_t* data() const;
 
     private:
-        uint8_t *buffer; size_t buffer_size;
+        uint8_t* buffer;
 
         uint32_t num_allocated_bytes = 0;
     };
@@ -84,4 +84,4 @@ namespace nova::renderer {
 
         return new_idx;
     }
-} // namespace nova::renderer
+} // namespace renderer
