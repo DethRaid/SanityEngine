@@ -1338,6 +1338,7 @@ namespace rhi {
             }
         }
 
+
         ENSURE(create_info.render_target_formats.size() + (create_info.depth_stencil_format ? 1 : 0) > 0,
                "Must have at least one render target or depth target");
         ENSURE(create_info.render_target_formats.size() < 8,

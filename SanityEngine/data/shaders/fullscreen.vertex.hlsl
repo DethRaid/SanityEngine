@@ -18,7 +18,7 @@ FullscreenVertexOutput main(uint vertex_id : SV_VERTEXID) {
 
     } else if(vertex_id % 3 == 1) {
         output.position = float4(-1, 3, 1, 1);
-        output.texcoord = float2(0, -2);
+        output.texcoord = float2(0, -1);
 
     } else {
         output.position = float4(3, -1, 1, 1);
