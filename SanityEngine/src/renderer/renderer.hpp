@@ -21,6 +21,10 @@ namespace renderer {
         uint32_t handle;
     };
 
+    struct MaterialHandle {
+        uint32_t handle;
+    };
+
     /*!
      * \brief Renderer class that uses a clustered forward lighting algorithm
      *
@@ -28,7 +32,7 @@ namespace renderer {
      */
     class Renderer {
     public:
-        explicit Renderer(GLFWwindow* window, const Settings& settings);
+        explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
         void begin_frame(uint64_t frame_count);
 
@@ -44,6 +48,8 @@ namespace renderer {
         [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
 
     private:
+        Settings settings;
+
         std::unique_ptr<rhi::RenderDevice> render_device;
 
         std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
@@ -53,20 +59,26 @@ namespace renderer {
         std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
         std::unique_ptr<MaterialDataBuffer> material_data_buffer;
+        std::vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
 
         std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
 
         std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
+        MaterialHandle backbuffer_output_material;
 
         std::unordered_map<std::string, uint32_t> image_name_to_index;
         std::vector<std::unique_ptr<rhi::Image>> all_images;
 
+        std::unique_ptr<rhi::Image> scene_depth_target;
+
 #pragma region Initialization
-        void make_static_mesh_storage();
+        void create_static_mesh_storage();
+
+        void create_material_data_buffers();
 
         void create_standard_pipeline();
         
-        void create_backbuffer_output_pipeline();
+        void create_backbuffer_output_pipeline_and_material();
 
         void create_scene_framebuffer(glm::uvec2 size);
 #pragma endregion

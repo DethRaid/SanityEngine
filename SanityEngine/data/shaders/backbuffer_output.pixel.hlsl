@@ -3,13 +3,14 @@ struct FullscreenVertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-/*
- * \brief Scene output render target
- */
-Texture2D<float4> scene_output : register(t0);
+struct MaterialData {
+    uint texture_idx;
+};
 
-SamplerState bilinear_sampler : register(s0, space0);
+#include "inc/standard_root_signature.hlsl"
 
 float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
+    MaterialData material = material_buffer.Load(constants.material_index);
+    Texture2D scene_output = textures[material.texture_idx];
     return scene_output.Sample(bilinear_sampler, vertex.texcoord);
 }

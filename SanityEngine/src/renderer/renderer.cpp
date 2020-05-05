@@ -12,9 +12,12 @@
 #include "camera_matrix_buffer.hpp"
 #include "components.hpp"
 
+
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
+
+    constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     struct BackbufferOutputMaterial {
         uint32_t scene_output_index;
@@ -41,22 +44,24 @@ namespace renderer {
         return shader;
     }
 
-    Renderer::Renderer(GLFWwindow* window, const Settings& settings)
-        : render_device{make_render_device(rhi::RenderBackend::D3D12, window, settings)},
-          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, settings.num_in_flight_frames)} {
+    Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
+        : settings{settings_in}, render_device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
+          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, settings_in.num_in_flight_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
-        make_static_mesh_storage();
+        create_static_mesh_storage();
+
+        create_material_data_buffers();
 
         create_standard_pipeline();
 
-        create_backbuffer_output_pipeline();
-
-        ENSURE(settings.render_scale > 0, "Render scale may not be 0 or less");
+        ENSURE(settings_in.render_scale > 0, "Render scale may not be 0 or less");
 
         int framebuffer_width;
         int framebuffer_height;
         glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-        create_scene_framebuffer(glm::uvec2{framebuffer_width * settings.render_scale, framebuffer_height * settings.render_scale});
+        create_scene_framebuffer(glm::uvec2{framebuffer_width * settings_in.render_scale, framebuffer_height * settings_in.render_scale});
+
+        create_backbuffer_output_pipeline_and_material();
     }
 
     void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
@@ -109,7 +114,7 @@ namespace renderer {
         return *all_images[idx];
     }
 
-    void Renderer::make_static_mesh_storage() {
+    void Renderer::create_static_mesh_storage() {
         rhi::BufferCreateInfo vertex_create_info{};
         vertex_create_info.name = "Static Mesh Vertex Buffer";
         vertex_create_info.size = STATIC_MESH_VERTEX_BUFFER_SIZE;
@@ -127,6 +132,17 @@ namespace renderer {
         static_mesh_storage = std::make_unique<rhi::MeshDataStore>(*render_device, std::move(vertex_buffer), std::move(index_buffer));
     }
 
+    void Renderer::create_material_data_buffers() {
+        material_data_buffer = std::make_unique<MaterialDataBuffer>(MATERIAL_DATA_BUFFER_SIZE);
+
+        auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
+        material_device_buffers.reserve(settings.num_in_flight_frames);
+        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+            create_info.name = fmt::format("Material Data Buffer {}", 1);
+            material_device_buffers.push_back(render_device->create_buffer(create_info));
+        }
+    }
+
     void Renderer::create_standard_pipeline() {
         const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Standard material pipeline",
@@ -139,7 +155,7 @@ namespace renderer {
         spdlog::info("Created standard pipeline");
     }
 
-    void Renderer::create_backbuffer_output_pipeline() {
+    void Renderer::create_backbuffer_output_pipeline_and_material() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
             .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
@@ -147,6 +163,10 @@ namespace renderer {
         };
 
         backbuffer_output_pipeline = render_device->create_render_pipeline_state(create_info);
+
+        backbuffer_output_material.handle = material_data_buffer->get_next_free_index<BackbufferOutputMaterial>();
+        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material.handle)
+            .scene_output_index = image_name_to_index[SCENE_COLOR_RENDER_TARGET];
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
@@ -166,12 +186,11 @@ namespace renderer {
         depth_target_create_info.width = size.x;
         depth_target_create_info.height = size.y;
 
-        create_image(depth_target_create_info);
+        scene_depth_target = render_device->create_image(depth_target_create_info);
 
         const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
-        const auto& depth_target = get_image(SCENE_DEPTH_TARGET);
 
-        scene_framebuffer = render_device->create_framebuffer({&color_target}, &depth_target);
+        scene_framebuffer = render_device->create_framebuffer({&color_target}, scene_depth_target.get());
     }
 
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
@@ -217,6 +236,7 @@ namespace renderer {
 
         auto& material_bind_group_builder = render_device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
+        material_bind_group_builder.set_buffer("material_data", *material_device_buffers[frame_idx]);
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         const auto material_bind_group = material_bind_group_builder.build();
