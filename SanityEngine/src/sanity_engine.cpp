@@ -197,11 +197,11 @@ void SanityEngine::create_debug_cube() {
 
         // top face
         16,
-        17,
-        18, // first triangle
+        18,
+        17, // first triangle
         16,
-        19,
-        17, // second triangle
+        17,
+        19, // second triangle
 
         // bottom face
         20,
