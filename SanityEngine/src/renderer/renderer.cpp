@@ -12,7 +12,6 @@
 #include "camera_matrix_buffer.hpp"
 #include "components.hpp"
 
-
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
@@ -45,7 +44,8 @@ namespace renderer {
     }
 
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
-        : settings{settings_in}, render_device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
+        : settings{settings_in},
+          render_device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, settings_in.num_in_flight_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
         create_static_mesh_storage();
@@ -148,6 +148,8 @@ namespace renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("data/shaders/standard.vertex"),
             .pixel_shader = load_shader("data/shaders/standard.pixel"),
+            .render_target_formats = {rhi::ImageFormat::Rgba8},
+            .depth_stencil_format = rhi::ImageFormat::Depth32,
         };
 
         standard_pipeline = render_device->create_render_pipeline_state(standard_pipeline_create_info);
@@ -160,6 +162,7 @@ namespace renderer {
             .name = "Backbuffer output",
             .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
             .pixel_shader = load_shader("data/shaders/backbuffer_output.pixel"),
+            .render_target_formats = {rhi::ImageFormat::Rgba8},
         };
 
         backbuffer_output_pipeline = render_device->create_render_pipeline_state(create_info);

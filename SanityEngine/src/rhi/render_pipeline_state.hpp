@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "bind_group.hpp"
+#include "resources.hpp"
 
 namespace rhi {
     enum class PrimitiveType { Points, Lines, Triangles };
@@ -128,6 +129,16 @@ namespace rhi {
         DepthStencilState depth_stencil_state{};
 
         PrimitiveType primitive_type{PrimitiveType::Triangles};
+
+        /*!
+         * \brief Formats of any render target this render pipeline outputs to
+         */
+        std::vector<ImageFormat> render_target_formats;
+
+        /*!
+         * \brief Format of the depth/stencil target that this render pipeline outputs to
+         */
+        std::optional<ImageFormat> depth_stencil_format;
     };
 
     struct RenderPipelineState {

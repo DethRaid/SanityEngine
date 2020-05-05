@@ -1335,9 +1335,21 @@ namespace rhi {
             }
         }
 
-        desc.NumRenderTargets = 1;
-        desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        ENSURE(create_info.render_target_formats.size() + (create_info.depth_stencil_format ? 1 : 0) > 0,
+               "Must have at least one render target or depth target");
+        ENSURE(create_info.render_target_formats.size() < 8,
+               "May not have more than 8 render targets - you have {}",
+               create_info.render_target_formats.size());
+
+        desc.NumRenderTargets = static_cast<UINT>(create_info.render_target_formats.size());
+        for(uint32_t i = 0; i < create_info.render_target_formats.size(); i++) {
+            desc.RTVFormats[i] = to_dxgi_format(create_info.render_target_formats[i]);
+        }
+        if(create_info.depth_stencil_format) {
+            desc.DSVFormat = to_dxgi_format(*create_info.depth_stencil_format);
+        } else {
+            desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        }
 
         auto pipeline = std::make_unique<D3D12RenderPipelineState>();
         pipeline->root_signature = &root_signature;
