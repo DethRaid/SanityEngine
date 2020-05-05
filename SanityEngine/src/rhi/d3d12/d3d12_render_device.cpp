@@ -183,6 +183,8 @@ namespace rhi {
         }
 
         image->name = create_info.name;
+        image->width = static_cast<uint32_t>(desc.Width);
+        image->height = desc.Height;
 
         set_object_name(*image->resource.Get(), create_info.name);
 

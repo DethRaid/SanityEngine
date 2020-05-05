@@ -196,6 +196,7 @@ namespace renderer {
         scene_framebuffer = render_device->create_framebuffer({&color_target}, scene_depth_target.get());
     }
 
+
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
         std::vector<const rhi::Image*> images;
         images.reserve(all_images.size());

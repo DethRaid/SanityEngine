@@ -8,7 +8,8 @@
 #include "core/abort.hpp"
 
 int main() {
-    Settings settings{};settings.enable_gpu_crash_reporting = true;
+    Settings settings{};
+    // settings.enable_gpu_crash_reporting = true;
 
     SanityEngine engine{settings};
 

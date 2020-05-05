@@ -95,6 +95,7 @@ namespace rhi {
          * \brief Initializes a D3D12BindGroupBuilder with information about how to bind resources
          *
          * \param device_in Device that will use this bind group
+         * \param heap_in The descriptor heap that this bind group builder puts descriptors in
          * \param descriptor_size_in Size of a descriptor, used for binding image arrays
          * \param root_descriptor_descriptions_in Mapping from the string name of each root descriptor to the index and type of that
          * descriptor

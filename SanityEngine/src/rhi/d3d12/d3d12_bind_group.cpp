@@ -9,7 +9,7 @@
 #include "d3dx12.hpp"
 
 namespace rhi {
-    RootParameter::RootParameter() {}
+    RootParameter::RootParameter() = default;
 
     D3D12BindGroup::D3D12BindGroup(ID3D12DescriptorHeap& heap_in,
                                    std::vector<RootParameter> root_parameters_in,
@@ -85,7 +85,7 @@ namespace rhi {
           root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
           descriptor_table_handles{std::move(descriptor_table_handles_in)} {
-        if(auto loggy = spdlog::get("D3D12BindGroupBuilder")) {
+        if(const auto loggy = spdlog::get("D3D12BindGroupBuilder")) {
             logger = loggy;
 
         } else {
@@ -176,7 +176,7 @@ namespace rhi {
                 used_images.emplace_back(image_itr->second[0], states);
 
             } else {
-                // spdlog::warn("No resources bound to root descriptor {}", name);
+                logger->warn("No resources bound to root descriptor {}", name);
             }
         }
 
