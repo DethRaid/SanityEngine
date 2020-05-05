@@ -1078,7 +1078,7 @@ namespace rhi {
         root_parameters[2].InitAsShaderResourceView(1);
 
         // Lights buffer
-        root_parameters[3].InitAsShaderResourceView(3);
+        root_parameters[3].InitAsShaderResourceView(2);
 
         // Textures array
         std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
@@ -1180,7 +1180,7 @@ namespace rhi {
             descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(3, gpu_handle);
+            descriptor_table_gpu_handles.emplace(4, gpu_handle);
 
             material_bind_group_builder.emplace_back(*device.Get(),
                                                      *cbv_srv_uav_heap.Get(),
