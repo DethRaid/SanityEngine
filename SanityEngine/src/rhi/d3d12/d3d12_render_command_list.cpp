@@ -301,8 +301,31 @@ namespace rhi {
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};
         device->device5->GetRaytracingAccelerationStructurePrebuildInfo(&as_inputs, &prebuild_info);
 
-        prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, prebuild_info.ScratchDataSizeInBytes);
-        prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, prebuild_info.ResultDataMaxSizeInBytes);
+        prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                     prebuild_info.ScratchDataSizeInBytes);
+        prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                       prebuild_info.ResultDataMaxSizeInBytes);
+
+        auto scratch_buffer = device->get_scratch_buffer(prebuild_info.ScratchDataSizeInBytes);
+
+        const auto as_buffer_create_info = BufferCreateInfo{.name = "Raytracing Scene",
+                                                            .usage = BufferUsage::RaytracingAccelerationStructure,
+                                                            .size = static_cast<uint32_t>(prebuild_info.ResultDataMaxSizeInBytes)};
+        auto as_buffer = device->create_buffer(as_buffer_create_info);
+        const auto& d3d12_as_buffer = static_cast<const D3D12Buffer&>(*as_buffer);
+
+        const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
+            .DestAccelerationStructureData = d3d12_as_buffer.resource->GetGPUVirtualAddress(),
+            .Inputs = as_inputs,
+            .ScratchAccelerationStructureData = scratch_buffer->resource->GetGPUVirtualAddress(),
+        };
+
+        commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
+
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_as_buffer.resource.Get());
+        commands->ResourceBarrier(1, &barrier);
+
+        return {.buffer = std::move(as_buffer)};
     }
 
     void D3D12RenderCommandList::prepare_for_submission() {

@@ -21,6 +21,7 @@ namespace rhi {
         ConstantBuffer,
         IndirectCommands,
         UnorderedAccess,
+        RaytracingAccelerationStructure,
     };
 
     struct BufferCreateInfo {

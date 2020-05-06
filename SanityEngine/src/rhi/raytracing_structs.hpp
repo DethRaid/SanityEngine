@@ -36,5 +36,7 @@ namespace rhi {
     /*!
      * \brief Struct for the top level acceleration structure that we can raytrace against
      */
-    struct RaytracingScene {};
+    struct RaytracingScene {
+        std::unique_ptr<Buffer> buffer;
+    };
 } // namespace rhi
