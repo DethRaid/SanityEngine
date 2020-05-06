@@ -324,76 +324,6 @@ namespace rhi {
         }
     }
 
-    Blas D3D12RenderDevice::create_bottom_level_acceleration_structure(const MeshDataStore& mesh_data,
-                                                                       const uint32_t first_vertex,
-                                                                       const uint32_t first_index) {
-        const auto& index_buffer = mesh_data.get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
-
-        const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
-        const auto& d3d12_vertex_buffer = static_cast<const D3D12Buffer&>(vertex_buffer);
-
-        const auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{
-            .Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
-            .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
-            .Triangles = D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC{.Transform3x4 = 0,
-                                                                  .IndexFormat = DXGI_FORMAT_R32_UINT,
-                                                                  .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
-                                                                  .IndexCount = 0,
-                                                                  .VertexCount = 0,
-                                                                  .IndexBuffer = d3d12_index_buffer.resource->GetGPUVirtualAddress() +
-                                                                                 (first_index * sizeof(uint32_t)),
-                                                                  .VertexBuffer = {.StartAddress = d3d12_vertex_buffer.resource
-                                                                                                       ->GetGPUVirtualAddress() +
-                                                                                                   (first_vertex * sizeof(BveVertex)),
-                                                                                   .StrideInBytes = sizeof(BveVertex)}}};
-
-        const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
-            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
-            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
-            .NumDescs = 1,
-            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-            .pGeometryDescs = &geom_desc};
-
-        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
-        device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
-
-        as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
-                                                        as_prebuild_info.ScratchDataSizeInBytes);
-        as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
-                                                          as_prebuild_info.ResultDataMaxSizeInBytes);
-
-        const auto scratch_buffer_create_info = BufferCreateInfo{.name = "BLAS Scratch Buffer",
-                                                                 .usage = BufferUsage::UnorderedAccess,
-                                                                 .size = as_prebuild_info.ScratchDataSizeInBytes};
-
-        auto scratch_buffer = create_buffer(scratch_buffer_create_info);
-
-        const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
-                                                                .usage = BufferUsage::UnorderedAccess,
-                                                                .size = as_prebuild_info.ResultDataMaxSizeInBytes};
-
-        auto result_buffer = create_buffer(result_buffer_create_info);
-
-        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(*scratch_buffer);
-        const auto& d3d12_result_buffer = static_cast<const D3D12Buffer&>(*result_buffer);
-
-        const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
-            .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
-            .Inputs = build_as_inputs,
-            .ScratchAccelerationStructureData = d3d12_scratch_buffer.resource->GetGPUVirtualAddress()
-        };
-
-        auto cmds = create_render_command_list();
-
-        auto& d3d12_cmds = dynamic_cast<D3D12RenderCommandList&>(*cmds);
-        d3d12_cmds.get_commands4().BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
-
-        submit_command_list(std::move(cmds));
-
-        return {std::move(result_buffer)};
-    }
-
     std::unique_ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) {
         auto compute_pipeline = std::make_unique<D3D12ComputePipelineState>();
 
@@ -447,132 +377,6 @@ namespace rhi {
                 spdlog::error("Unknown descriptor type, defaulting to UAV");
                 return DescriptorType::UnorderedAccess;
         }
-    }
-
-    std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>> D3D12RenderDevice::
-        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info, BespokePipelineType pipeline_type) {
-        auto bindings = get_bindings_from_shader(create_info.vertex_shader);
-        if(create_info.pixel_shader) {
-            auto pixel_shader_bindings = get_bindings_from_shader(create_info.pixel_shader.value());
-
-            // Remove all bindings that are present in the vertex shader
-            // Eventually I'll get cool enough to track which bindings are pixel shader-only and which aren't, and use that for smarter
-            // barriers, but for now this works
-            for(const auto& binding : bindings) {
-                const auto itr = std::remove_if(pixel_shader_bindings.begin(),
-                                                pixel_shader_bindings.end(),
-                                                [&](const D3D12_SHADER_INPUT_BIND_DESC& pixel_shader_binding) {
-                                                    return pixel_shader_binding.Name == binding.Name ||
-                                                           strcmp(pixel_shader_binding.Name, binding.Name) == 0;
-                                                });
-                pixel_shader_bindings.erase(itr, pixel_shader_bindings.end());
-            }
-
-            bindings.insert(bindings.end(), pixel_shader_bindings.begin(), pixel_shader_bindings.end());
-        }
-
-        if(bindings.empty()) {
-            // No bindings! I don't like this cause I like all my code to be the same
-            logger->error("No bindings found in pipeline {}! This isn't something I really want to support", create_info.name);
-            return {};
-        }
-
-        auto cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
-                                                        static_cast<INT>(next_free_cbv_srv_uav_descriptor),
-                                                        cbv_srv_uav_size};
-        auto gpu_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
-                                                        static_cast<INT>(next_free_cbv_srv_uav_descriptor),
-                                                        cbv_srv_uav_size};
-
-        const auto table_start_offset = next_free_cbv_srv_uav_descriptor;
-
-        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptors;
-        descriptors.reserve(bindings.size());
-
-        std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
-        std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_ranges;
-
-        for(const auto& binding : bindings) {
-            if(binding.Type == D3D_SIT_SAMPLER) {
-                // In Sanity Engine, all samplers are root samplers
-
-                if(binding.Name == "point_sampler") {
-                    auto sampler_desc = point_sampler_desc;
-                    sampler_desc.ShaderRegister = binding.BindPoint;
-                    sampler_desc.RegisterSpace = binding.Space;
-                    samplers.push_back(sampler_desc);
-
-                } else if(binding.Name == "linear_sampler") {
-                    auto sampler_desc = linear_sampler_desc;
-                    sampler_desc.ShaderRegister = binding.BindPoint;
-                    sampler_desc.RegisterSpace = binding.Space;
-                    samplers.push_back(sampler_desc);
-                }
-
-            } else {
-                if(binding.Dimension == D3D_SRV_DIMENSION_BUFFER) {
-                    logger->warn(
-                        "Binding {} in pipeline {} uses a SRV buffer, but I don't know how to handle that. Bespoke pipelines are currently not allowed to use buffers because I don't know how to reflect their struct size",
-                        create_info.name,
-                        binding.Name);
-                }
-
-                auto desc = DescriptorTableDescriptorDescription{
-                    .type = to_descriptor_type(binding.Type),
-                    .handle = cpu_handle,
-                };
-
-                auto range = D3D12_DESCRIPTOR_RANGE{
-                    .NumDescriptors = binding.BindCount,
-                    .BaseShaderRegister = binding.BindPoint,
-                    .RegisterSpace = binding.Space,
-                    .OffsetInDescriptorsFromTableStart = next_free_cbv_srv_uav_descriptor - table_start_offset,
-                };
-                switch(desc.type) {
-                    case DescriptorType::ConstantBuffer:
-                        range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-                        break;
-
-                    case DescriptorType::ShaderResource:
-                        range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-                        break;
-
-                    case DescriptorType::UnorderedAccess:
-                        range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-                        break;
-                }
-
-                descriptors.emplace(binding.Name, desc);
-                descriptor_ranges.push_back(range);
-
-                cpu_handle.Offset(binding.BindCount, cbv_srv_uav_size);
-
-                next_free_cbv_srv_uav_descriptor += binding.BindCount;
-            }
-        }
-
-        auto bind_group_builder = std::make_unique<D3D12BindGroupBuilder>(*device.Get(),
-                                                                          *cbv_srv_uav_heap.Get(),
-                                                                          cbv_srv_uav_size,
-                                                                          std::unordered_map<std::string, RootDescriptorDescription>{},
-                                                                          descriptors,
-                                                                          std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>{
-                                                                              {0, gpu_handle}});
-
-        auto root_param = D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
-                                               .DescriptorTable = {.NumDescriptorRanges = static_cast<UINT>(descriptor_ranges.size()),
-                                                                   .pDescriptorRanges = descriptor_ranges.data()}};
-
-        auto signature = D3D12_ROOT_SIGNATURE_DESC{.NumParameters = 1,
-                                                   .pParameters = &root_param,
-                                                   .NumStaticSamplers = static_cast<UINT>(samplers.size()),
-                                                   .pStaticSamplers = samplers.data()};
-
-        auto root_signature = compile_root_signature(signature);
-
-        auto pipeline_state = create_pipeline_state(create_info, *root_signature.Get());
-
-        return {std::move(pipeline_state), std::move(bind_group_builder)};
     }
 
     void D3D12RenderDevice::destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> /* pipeline_state */) {
@@ -738,7 +542,7 @@ namespace rhi {
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
+    D3D12StagingBufferPtr D3D12RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
         size_t best_fit_idx = staging_buffers.size();
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
@@ -755,9 +559,11 @@ namespace rhi {
 
         if(best_fit_idx < staging_buffers.size()) {
             // We found a valid staging buffer!
-            auto buffer = std::move(staging_buffers[best_fit_idx]);
+            auto* buffer = new D3D12StagingBuffer;
+            *buffer = std::move(staging_buffers[best_fit_idx]);
             staging_buffers.erase(staging_buffers.begin() + best_fit_idx);
-            return buffer;
+
+            return D3D12StagingBufferPtr{buffer, [&](D3D12StagingBuffer* old_buffer) { return_staging_buffer(std::move(*old_buffer)); }};
 
         } else {
             // No suitable buffer is available, let's make a new one
@@ -768,6 +574,33 @@ namespace rhi {
     void D3D12RenderDevice::return_staging_buffer(D3D12StagingBuffer&& buffer) {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer));
     }
+
+    D3D12ScratchBufferPtr D3D12RenderDevice::get_scratch_buffer(const uint32_t num_bytes) {
+        size_t best_fit_idx = scratch_buffers.size();
+        for(size_t i = 0; i < scratch_buffers.size(); i++) {
+            if(scratch_buffers[i].size >= num_bytes) {
+                if(best_fit_idx >= scratch_buffers.size()) {
+                    // First suitable buffer we've found, save it for later use
+                    best_fit_idx = i;
+
+                } else if(scratch_buffers[i].size < scratch_buffers[best_fit_idx].size) {
+                    // The current buffer is a better fit than the previous best fit buffer
+                    best_fit_idx = i;
+                }
+            }
+        }
+
+        if(best_fit_idx < scratch_buffers.size()) {
+            // We already have a suitable scratch buffer!
+            auto* buffer = new D3D12Buffer;
+            *buffer = std::move(scratch_buffers[best_fit_idx]);
+            scratch_buffers.erase(scratch_buffers.begin() + best_fit_idx);
+
+            return D3D12ScratchBufferPtr{buffer, [&](D3D12Buffer* old_buffer) { return_scratch_buffer(std::move(*old_buffer)); }};
+        }
+    }
+
+    void D3D12RenderDevice::return_scratch_buffer(D3D12Buffer&& buffer) { scratch_buffers_to_free[cur_gpu_frame_idx].push_back(buffer); }
 
     UINT D3D12RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
@@ -1485,7 +1318,7 @@ namespace rhi {
         wait_for_frame(frame_index);
     }
 
-    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
+    D3D12StagingBufferPtr D3D12RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
 
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
@@ -1495,27 +1328,27 @@ namespace rhi {
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
-        D3D12StagingBuffer buffer;
+        auto* buffer = new D3D12StagingBuffer;
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
                                                              nullptr,
-                                                             &buffer.allocation,
-                                                             IID_PPV_ARGS(&buffer.resource));
+                                                             &buffer->allocation,
+                                                             IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
             logger->error("Could not create staging buffer");
             return {};
         }
 
-        buffer.size = num_bytes;
+        buffer->size = num_bytes;
         D3D12_RANGE range{0, num_bytes};
-        buffer.resource->Map(0, &range, &buffer.ptr);
+        buffer->resource->Map(0, &range, &buffer->ptr);
 
         const auto staging_buffer_name = fmt::format("Staging Buffer {}", staging_buffer_idx);
         staging_buffer_idx++;
-        set_object_name(*buffer.resource.Get(), staging_buffer_name);
+        set_object_name(*buffer->resource.Get(), staging_buffer_name);
 
-        return buffer;
+        return D3D12StagingBufferPtr{buffer, [&](D3D12StagingBuffer* old_buffer) { return_staging_buffer(std::move(*old_buffer)); }};
     }
 
     ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {

@@ -30,8 +30,14 @@ using DirectX::XMINT2;
 namespace rhi {
     using Microsoft::WRL::ComPtr;
 
+    using D3D12ScratchBufferPtr = std::unique_ptr<D3D12Buffer, std::function<void(D3D12Buffer*)>>;
+
     class D3D12RenderDevice : public virtual RenderDevice {
     public:
+        ComPtr<ID3D12Device> device;
+        ComPtr<ID3D12Device1> device1;
+        ComPtr<ID3D12Device5> device5;
+
         D3D12RenderDevice(HWND window_handle, const XMINT2& window_size, const Settings& settings_in);
 
         D3D12RenderDevice(const D3D12RenderDevice& other) = delete;
@@ -60,16 +66,11 @@ namespace rhi {
 
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) override;
 
-        Blas create_bottom_level_acceleration_structure(const MeshDataStore& mesh_data, uint32_t first_vertex, uint32_t first_index) override;
-
         [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
             const std::vector<uint8_t>& compute_shader) override;
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(
             const RenderPipelineStateCreateInfo& create_info) override;
-
-        [[nodiscard]] std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>>
-        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info, BespokePipelineType pipeline_type) override;
 
         void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) override;
 
@@ -94,9 +95,13 @@ namespace rhi {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] D3D12StagingBuffer get_staging_buffer(uint32_t num_bytes);
+        [[nodiscard]] D3D12StagingBufferPtr get_staging_buffer(uint32_t num_bytes);
 
         void return_staging_buffer(D3D12StagingBuffer&& buffer);
+
+        [[nodiscard]] D3D12ScratchBufferPtr get_scratch_buffer(uint32_t num_bytes);
+
+        void return_scratch_buffer(D3D12Buffer&& buffer);
 
         [[nodiscard]] ID3D12Device* get_d3d12_device() const;
 
@@ -113,10 +118,6 @@ namespace rhi {
         ComPtr<IDXGIFactory4> factory;
 
         ComPtr<IDXGIAdapter> adapter;
-
-        ComPtr<ID3D12Device> device;
-        ComPtr<ID3D12Device1> device1;
-        ComPtr<ID3D12Device5> device5;
 
         ComPtr<ID3D12InfoQueue> info_queue;
 
@@ -160,6 +161,9 @@ namespace rhi {
          * next frame 1, etc
          */
         std::vector<std::vector<D3D12StagingBuffer>> staging_buffers_to_free;
+
+        std::vector<D3D12Buffer> scratch_buffers;
+        std::vector<std::vector<D3D12Buffer>> scratch_buffers_to_free;
 
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture
@@ -258,7 +262,7 @@ namespace rhi {
 
         void wait_gpu_idle(uint64_t frame_index);
 
-        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(uint32_t num_bytes);
+        [[nodiscard]] D3D12StagingBufferPtr create_staging_buffer(uint32_t num_bytes);
 
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
