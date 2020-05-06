@@ -273,11 +273,11 @@ namespace rhi {
 
         const auto instance_buffer_size = static_cast<uint32_t>(objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
         const auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
-        auto* instance_buffer_ptr = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer->ptr);
+        auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer->ptr);
 
         for(uint32_t i = 0; i < objects.size(); i++) {
             const auto& object = objects[i];
-            auto& desc = instance_buffer_ptr[i];
+            auto& desc = instance_buffer_array[i];
             desc = {};
 
             // TODO: Actually copy the matrix once we get real model matrices

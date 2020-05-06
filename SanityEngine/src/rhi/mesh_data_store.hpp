@@ -55,7 +55,7 @@ namespace rhi {
 
         [[nodiscard]] const Buffer& get_index_buffer() const;
 
-        [[nodiscard]] uint32_t add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices);
+        [[nodiscard]] std::pair<uint32_t, uint32_t> add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices);
 
     private:
         std::shared_ptr<spdlog::logger> logger;

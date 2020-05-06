@@ -26,7 +26,7 @@ namespace rhi {
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    uint32_t MeshDataStore::add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) {
+    std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
         logger->trace("Current vertex offset: {} Current index offset: {}",
                       next_vertex_offset,
@@ -55,15 +55,17 @@ namespace rhi {
 
         device->submit_command_list(std::move(cmds));
 
+        const auto vertex_offset = next_free_vertex_byte / sizeof(BveVertex);
+
         next_free_vertex_byte += vertex_data_size;
 
-        const auto mesh_start_idx = next_index_offset;
+        const auto index_offset = next_index_offset;
 
         next_vertex_offset += static_cast<uint32_t>(vertices.size());
         next_index_offset += static_cast<uint32_t>(indices.size());
 
         logger->trace("New vertex offset: {} New index offset: {}", next_vertex_offset, next_index_offset);
 
-        return mesh_start_idx;
+        return {vertex_offset, index_offset};
     }
 } // namespace rhi

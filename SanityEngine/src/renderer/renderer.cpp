@@ -88,10 +88,11 @@ namespace renderer {
     StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
                                                                const std::vector<uint32_t>& indices) const {
         MTR_SCOPE("Renderer", "create_static_mesh");
-        const auto mesh_start_idx = static_mesh_storage->add_mesh(vertices, indices);
+        const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices);
 
-        const auto renderable = StaticMeshRenderableComponent{.num_vertices = static_cast<uint32_t>(vertices.size()),
-                                                              .first_index = mesh_start_idx,
+        const auto renderable = StaticMeshRenderableComponent{.first_vertex = vertex_offset,
+                                                              .num_vertices = static_cast<uint32_t>(vertices.size()),
+                                                              .first_index = index_offset,
                                                               .num_indices = static_cast<uint32_t>(indices.size())};
 
         return renderable;
