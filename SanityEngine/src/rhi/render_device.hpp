@@ -50,28 +50,12 @@ namespace rhi {
         virtual void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) = 0;
 #pragma endregion
 
-#pragma region Raytracing
-        /*!
-         * \brief Creates a bottom-level acceleration structure for a specific mesh in the provided mesh data
-         *
-         * \param mesh_data The MeshDataStore that holds the mesh's data
-         * \param first_vertex Offset in the mesh data's vertex buffer of the first vertex in the desired mesh
-         * \param first_index Offset in the mesh data's index buffer of the first index in the desired mesh
-         */
-        [[nodiscard]] virtual Blas create_bottom_level_acceleration_structure(const MeshDataStore& mesh_data,
-                                                                              uint32_t first_vertex,
-                                                                              uint32_t first_index) = 0;
-#pragma endregion
-
 #pragma region Pipeline
         [[nodiscard]] virtual std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
             const std::vector<uint8_t>& compute_shader) = 0;
 
         [[nodiscard]] virtual std::unique_ptr<RenderPipelineState> create_render_pipeline_state(
             const RenderPipelineStateCreateInfo& create_info) = 0;
-
-        [[nodiscard]] virtual std::pair<std::unique_ptr<RenderPipelineState>, std::unique_ptr<BindGroupBuilder>>
-        create_bespoke_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info, BespokePipelineType pipeline_type) = 0;
 
         virtual void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state) = 0;
 

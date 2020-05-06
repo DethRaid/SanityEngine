@@ -32,23 +32,29 @@ namespace rhi {
         void bind_mesh_data(const MeshDataStore& mesh_data) override;
 
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
+
+        RaytracingMesh build_acceleration_structure_for_mesh(uint32_t num_vertices,
+                                                             uint32_t num_indices,
+                                                             uint32_t first_vertex,
+                                                             uint32_t first_index) override;
+
+        RaytracingScene build_raytracing_scene(const std::vector<RaytracingObject>& objects) override;
 #pragma endregion
 
-        [[nodiscard]] ID3D12GraphicsCommandList4& get_commands4();
-
         /*!
-         * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU, including ending any pending render passes
+         * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU, including ending any pending
+         * render passes
          */
         void prepare_for_submission() override;
 
     protected:
-        ComPtr<ID3D12GraphicsCommandList4> commands4;
-
         bool in_render_pass{false};
 
         const D3D12RenderPipelineState* current_render_pipeline_state{nullptr};
 
+        const MeshDataStore* current_mesh_data{nullptr};
+
         bool is_render_material_bound{false};
         bool is_mesh_data_bound{false};
     };
-} // namespace render
+} // namespace rhi

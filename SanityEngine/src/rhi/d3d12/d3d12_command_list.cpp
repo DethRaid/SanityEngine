@@ -10,7 +10,7 @@
 using std::move;
 
 namespace rhi {
-    D3D12CommandList::D3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmds) : commands{std::move(cmds)} {}
+    D3D12CommandList::D3D12CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds) : commands{std::move(cmds)} {}
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& old) noexcept
         : completion_functions{move(old.completion_functions)},
@@ -40,7 +40,7 @@ namespace rhi {
         commands->Close();
     }
 
-    ID3D12GraphicsCommandList* D3D12CommandList::get_command_list() const { return commands.Get(); }
+    ID3D12GraphicsCommandList4* D3D12CommandList::get_command_list() const { return commands.Get(); }
 
     void D3D12CommandList::execute_completion_functions() {
         MTR_SCOPE("D3D12CommandList", "execute_completion_functions");

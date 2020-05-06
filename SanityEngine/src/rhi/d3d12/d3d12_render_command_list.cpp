@@ -5,31 +5,29 @@
 
 #include <minitrace.h>
 
+#include "../../core/align.hpp"
 #include "../../core/ensure.hpp"
 #include "../mesh_data_store.hpp"
 #include "d3d12_bind_group.hpp"
 #include "d3d12_framebuffer.hpp"
 #include "d3d12_render_pipeline_state.hpp"
+#include "d3dx12.hpp"
 #include "helpers.hpp"
 
 using std::move;
 
 namespace rhi {
     D3D12RenderCommandList::D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
-        : D3D12ComputeCommandList{move(cmds), device_in} {
-        commands->QueryInterface(commands4.GetAddressOf());
-    }
+        : D3D12ComputeCommandList{move(cmds), device_in} {}
 
     D3D12RenderCommandList::D3D12RenderCommandList(D3D12RenderCommandList&& old) noexcept
         : D3D12ComputeCommandList{move(old)},
-          commands4{move(old.commands4)},
           in_render_pass{old.in_render_pass},
           current_render_pipeline_state{old.current_render_pipeline_state},
           is_render_material_bound{old.is_render_material_bound},
           is_mesh_data_bound{old.is_mesh_data_bound} {}
 
     D3D12RenderCommandList& D3D12RenderCommandList::operator=(D3D12RenderCommandList&& old) noexcept {
-        commands4 = old.commands4;
         in_render_pass = old.in_render_pass;
         current_render_pipeline_state = old.current_render_pipeline_state;
         is_render_material_bound = old.is_render_material_bound;
@@ -50,63 +48,45 @@ namespace rhi {
         ENSURE(d3d12_framebuffer.dsv_handle.has_value() == depth_access.has_value(),
                "There must be either both a DSV handle and a depth target access, or neither");
 
-        if(commands4) {
-            // TODO: Decide if every framebuffer should be a separate renderpass
+        // TODO: Decide if every framebuffer should be a separate renderpass
 
-            if(in_render_pass) {
-                commands4->EndRenderPass();
-            }
+        if(in_render_pass) {
+            commands->EndRenderPass();
+        }
 
-            std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> render_target_descriptions;
-            render_target_descriptions.reserve(render_target_accesses.size());
+        std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> render_target_descriptions;
+        render_target_descriptions.reserve(render_target_accesses.size());
 
-            for(uint32_t i = 0; i < render_target_accesses.size(); i++) {
-                D3D12_RENDER_PASS_RENDER_TARGET_DESC desc{};
-                desc.cpuDescriptor = d3d12_framebuffer.rtv_handles[i];
-                desc.BeginningAccess = to_d3d12_beginning_access(render_target_accesses[i].begin);
-                desc.EndingAccess = to_d3d12_ending_access(render_target_accesses[i].end);
+        for(uint32_t i = 0; i < render_target_accesses.size(); i++) {
+            D3D12_RENDER_PASS_RENDER_TARGET_DESC desc{};
+            desc.cpuDescriptor = d3d12_framebuffer.rtv_handles[i];
+            desc.BeginningAccess = to_d3d12_beginning_access(render_target_accesses[i].begin);
+            desc.EndingAccess = to_d3d12_ending_access(render_target_accesses[i].end);
 
-                render_target_descriptions.emplace_back(desc);
-            }
+            render_target_descriptions.emplace_back(desc);
+        }
 
-            if(depth_access) {
-                D3D12_RENDER_PASS_DEPTH_STENCIL_DESC desc{};
-                desc.cpuDescriptor = *d3d12_framebuffer.dsv_handle;
-                desc.DepthBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
-                desc.DepthEndingAccess = to_d3d12_ending_access(depth_access->end);
-                desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
-                desc.StencilEndingAccess = to_d3d12_ending_access(depth_access->end);
+        if(depth_access) {
+            D3D12_RENDER_PASS_DEPTH_STENCIL_DESC desc{};
+            desc.cpuDescriptor = *d3d12_framebuffer.dsv_handle;
+            desc.DepthBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
+            desc.DepthEndingAccess = to_d3d12_ending_access(depth_access->end);
+            desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
+            desc.StencilEndingAccess = to_d3d12_ending_access(depth_access->end);
 
-                commands4->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
-                                           render_target_descriptions.data(),
-                                           &desc,
-                                           D3D12_RENDER_PASS_FLAG_NONE);
-
-            } else {
-                commands4->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
-                                           render_target_descriptions.data(),
-                                           nullptr,
-                                           D3D12_RENDER_PASS_FLAG_NONE);
-            }
-
-            in_render_pass = true;
+            commands->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
+                                      render_target_descriptions.data(),
+                                      &desc,
+                                      D3D12_RENDER_PASS_FLAG_NONE);
 
         } else {
-            if(d3d12_framebuffer.dsv_handle) {
-                commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
-                                             d3d12_framebuffer.rtv_handles.data(),
-                                             0,
-                                             &(*d3d12_framebuffer.dsv_handle));
-
-            } else {
-                commands->OMSetRenderTargets(static_cast<UINT>(d3d12_framebuffer.rtv_handles.size()),
-                                             d3d12_framebuffer.rtv_handles.data(),
-                                             0,
-                                             nullptr);
-            }
-
-            spdlog::warn("Render passes not available - falling back to something lame");
+            commands->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
+                                      render_target_descriptions.data(),
+                                      nullptr,
+                                      D3D12_RENDER_PASS_FLAG_NONE);
         }
+
+        in_render_pass = true;
 
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
@@ -218,14 +198,122 @@ namespace rhi {
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
     }
 
-    ID3D12GraphicsCommandList4& D3D12RenderCommandList::get_commands4() {
-        return *commands4.Get();
+    RaytracingMesh D3D12RenderCommandList::build_acceleration_structure_for_mesh(const uint32_t num_vertices,
+                                                                                 const uint32_t num_indices,
+                                                                                 const uint32_t first_vertex,
+                                                                                 const uint32_t first_index) {
+        ENSURE(current_mesh_data != nullptr, "Must have mesh data bound before building acceleration structures out of it");
+
+        const auto& index_buffer = current_mesh_data->get_index_buffer();
+        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
+
+        const auto& vertex_buffer = *current_mesh_data->get_vertex_bindings()[0].buffer;
+        const auto& d3d12_vertex_buffer = static_cast<const D3D12Buffer&>(vertex_buffer);
+
+        const auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{
+            .Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+            .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
+            .Triangles = D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC{.Transform3x4 = 0,
+                                                                  .IndexFormat = DXGI_FORMAT_R32_UINT,
+                                                                  .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+                                                                  .IndexCount = num_indices,
+                                                                  .VertexCount = num_vertices,
+                                                                  .IndexBuffer = d3d12_index_buffer.resource->GetGPUVirtualAddress() +
+                                                                                 (first_index * sizeof(uint32_t)),
+                                                                  .VertexBuffer = {.StartAddress = d3d12_vertex_buffer.resource
+                                                                                                       ->GetGPUVirtualAddress() +
+                                                                                                   (first_vertex * sizeof(BveVertex)),
+                                                                                   .StrideInBytes = sizeof(BveVertex)}}};
+
+        const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
+            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+            .NumDescs = 1,
+            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+            .pGeometryDescs = &geom_desc};
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
+        device->device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+
+        as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                        as_prebuild_info.ScratchDataSizeInBytes);
+        as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                          as_prebuild_info.ResultDataMaxSizeInBytes);
+
+        // TODO: Find a way to reuse the scratch buffers
+        const auto scratch_buffer_create_info = BufferCreateInfo{.name = "BLAS Scratch Buffer",
+                                                                 .usage = BufferUsage::UnorderedAccess,
+                                                                 .size = as_prebuild_info.ScratchDataSizeInBytes};
+
+        auto scratch_buffer = device->create_buffer(scratch_buffer_create_info);
+
+        const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
+                                                                .usage = BufferUsage::UnorderedAccess,
+                                                                .size = as_prebuild_info.ResultDataMaxSizeInBytes};
+
+        auto result_buffer = device->create_buffer(result_buffer_create_info);
+
+        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(*scratch_buffer);
+        const auto& d3d12_result_buffer = static_cast<const D3D12Buffer&>(*result_buffer);
+
+        const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
+            .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
+            .Inputs = build_as_inputs,
+            .ScratchAccelerationStructureData = d3d12_scratch_buffer.resource->GetGPUVirtualAddress()};
+
+        commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
+
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_result_buffer.resource.Get());
+        commands->ResourceBarrier(1, &barrier);
+
+        return {std::move(result_buffer)};
+    }
+
+    RaytracingScene D3D12RenderCommandList::build_raytracing_scene(const std::vector<RaytracingObject>& objects) {
+        constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+
+        ENSURE(objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
+
+        const auto instance_buffer_size = static_cast<uint32_t>(objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
+        const auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
+        auto* instance_buffer_ptr = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.ptr);
+
+        for(uint32_t i = 0; i < objects.size(); i++) {
+            const auto& object = objects[i];
+            auto& desc = instance_buffer_ptr[i];
+            desc = {};
+
+            // TODO: Actually copy the matrix once we get real model matrices
+            desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+
+            // TODO: Figure out if we want to use the mask to control which kind of rays can hit which objects
+            desc.InstanceMask = 0xFF;
+
+            desc.InstanceContributionToHitGroupIndex = object.material.handle;
+
+            const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(*object.mesh->blas_buffer);
+            desc.AccelerationStructure = d3d12_buffer.resource->GetGPUVirtualAddress();
+        }
+
+        const auto as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
+            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+            .NumDescs = static_cast<UINT>(objects.size()),
+            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+            .InstanceDescs = instance_buffer.resource->GetGPUVirtualAddress(),
+        };
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};
+        device->device5->GetRaytracingAccelerationStructurePrebuildInfo(&as_inputs, &prebuild_info);
+
+        prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, prebuild_info.ScratchDataSizeInBytes);
+        prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, prebuild_info.ResultDataMaxSizeInBytes);
     }
 
     void D3D12RenderCommandList::prepare_for_submission() {
         MTR_SCOPE("D3D12RenderCommandList", "prepare_for_submission");
-        if(in_render_pass && commands4) {
-            commands4->EndRenderPass();
+        if(in_render_pass) {
+            commands->EndRenderPass();
         }
 
         D3D12ComputeCommandList::prepare_for_submission();

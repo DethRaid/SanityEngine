@@ -21,7 +21,7 @@ namespace rhi {
      */
     class D3D12CommandList : virtual public CommandList {
     public:
-        explicit D3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmds);
+        explicit D3D12CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds);
 
         D3D12CommandList(const D3D12CommandList& other) = delete;
         D3D12CommandList& operator=(const D3D12CommandList& other) = delete;
@@ -46,14 +46,14 @@ namespace rhi {
 
         [[nodiscard]] const auto& get_used_command_types() const;
 
-        [[nodiscard]] ID3D12GraphicsCommandList* get_command_list() const;
+        [[nodiscard]] ID3D12GraphicsCommandList4* get_command_list() const;
 
         void execute_completion_functions();
 
     protected:
         std::vector<std::function<void()>> completion_functions;
 
-        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12GraphicsCommandList4> commands;
 
         std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> initial_resource_states;
         std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;

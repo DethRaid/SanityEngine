@@ -90,10 +90,9 @@ namespace renderer {
         MTR_SCOPE("Renderer", "create_static_mesh");
         const auto mesh_start_idx = static_mesh_storage->add_mesh(vertices, indices);
 
-        const auto renderable = StaticMeshRenderableComponent{.first_index = mesh_start_idx,
+        const auto renderable = StaticMeshRenderableComponent{.num_vertices = static_cast<uint32_t>(vertices.size()),
+                                                              .first_index = mesh_start_idx,
                                                               .num_indices = static_cast<uint32_t>(indices.size())};
-
-
 
         return renderable;
     }
