@@ -281,5 +281,8 @@
     <ClInclude Include="src\core\align.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\mesh.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,14 +3,12 @@
 #include <cstdint>
 
 #include "lights.hpp"
+#include "mesh.hpp"
 
 namespace renderer {
     struct StaticMeshRenderableComponent {
-        uint32_t first_vertex{0};
-        uint32_t num_vertices{0};
-
-        uint32_t first_index{0};
-        uint32_t num_indices{0};
+        Mesh mesh;
+        rhi::RaytracingMesh rt_mesh;
     };
 
     struct CameraComponent {

@@ -45,8 +45,8 @@ namespace renderer {
 
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
         : settings{settings_in},
-          render_device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
-          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*render_device, settings_in.num_in_flight_frames)} {
+          device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
+          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
         create_static_mesh_storage();
 
@@ -66,42 +66,49 @@ namespace renderer {
         create_light_buffers();
     }
 
-    void Renderer::begin_frame(const uint64_t frame_count) { render_device->begin_frame(frame_count); }
+    void Renderer::begin_frame(const uint64_t frame_count) { device->begin_frame(frame_count); }
 
     void Renderer::render_scene(entt::registry& registry) {
         MTR_SCOPE("Renderer", "render_scene");
 
-        const auto frame_idx = render_device->get_cur_gpu_frame_idx();
+        const auto frame_idx = device->get_cur_gpu_frame_idx();
 
-        auto command_list = render_device->create_render_command_list();
+        auto command_list = device->create_render_command_list();
         command_list->set_debug_name("Main Render Command List");
 
         update_cameras(registry, *command_list, frame_idx);
 
         render_3d_scene(registry, *command_list, frame_idx);
 
-        render_device->submit_command_list(std::move(command_list));
+        device->submit_command_list(std::move(command_list));
     }
 
-    void Renderer::end_frame() { render_device->end_frame(); }
+    void Renderer::end_frame() { device->end_frame(); }
 
     StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
                                                                const std::vector<uint32_t>& indices) const {
         MTR_SCOPE("Renderer", "create_static_mesh");
         const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices);
+        const auto mesh = Mesh{.first_vertex = vertex_offset,
+                               .num_vertices = static_cast<uint32_t>(vertices.size()),
+                               .first_index = index_offset,
+                               .num_indices = static_cast<uint32_t>(indices.size())};
 
-        const auto renderable = StaticMeshRenderableComponent{.first_vertex = vertex_offset,
-                                                              .num_vertices = static_cast<uint32_t>(vertices.size()),
-                                                              .first_index = index_offset,
-                                                              .num_indices = static_cast<uint32_t>(indices.size())};
+        auto cmds = device->create_render_command_list();
+        cmds->bind_mesh_data(*static_mesh_storage);
+        auto raytracing_mesh = cmds->build_acceleration_structure_for_mesh(mesh.num_vertices,
+                                                                           mesh.num_indices,
+                                                                           mesh.first_vertex,
+                                                                           mesh.first_index);
+        device->submit_command_list(std::move(cmds));
 
-        return renderable;
+        return StaticMeshRenderableComponent{.mesh = mesh, .rt_mesh = std::move(raytracing_mesh)};
     }
 
     TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
         const auto idx = static_cast<uint32_t>(all_images.size());
 
-        all_images.push_back(render_device->create_image(create_info));
+        all_images.push_back(device->create_image(create_info));
         image_name_to_index.emplace(create_info.name, idx);
 
         return {idx};
@@ -124,15 +131,15 @@ namespace renderer {
             .size = STATIC_MESH_VERTEX_BUFFER_SIZE,
         };
 
-        auto vertex_buffer = render_device->create_buffer(vertex_create_info);
+        auto vertex_buffer = device->create_buffer(vertex_create_info);
 
         const auto index_buffer_create_info = rhi::BufferCreateInfo{.name = "Static Mesh Index Buffer",
                                                                     .usage = rhi::BufferUsage::IndexBuffer,
                                                                     .size = STATIC_MESH_INDEX_BUFFER_SIZE};
 
-        auto index_buffer = render_device->create_buffer(index_buffer_create_info);
+        auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = std::make_unique<rhi::MeshDataStore>(*render_device, std::move(vertex_buffer), std::move(index_buffer));
+        static_mesh_storage = std::make_unique<rhi::MeshDataStore>(*device, std::move(vertex_buffer), std::move(index_buffer));
     }
 
     void Renderer::create_material_data_buffers() {
@@ -142,12 +149,12 @@ namespace renderer {
         material_device_buffers.reserve(settings.num_in_flight_frames);
         for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             create_info.name = fmt::format("Material Data Buffer {}", 1);
-            material_device_buffers.push_back(render_device->create_buffer(create_info));
+            material_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
 
     void Renderer::create_standard_pipeline() {
-        auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
+        const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("data/shaders/standard.vertex"),
             .pixel_shader = load_shader("data/shaders/standard.pixel"),
@@ -155,20 +162,20 @@ namespace renderer {
             .depth_stencil_format = rhi::ImageFormat::Depth32,
         };
 
-        standard_pipeline = render_device->create_render_pipeline_state(standard_pipeline_create_info);
+        standard_pipeline = device->create_render_pipeline_state(standard_pipeline_create_info);
 
         spdlog::info("Created standard pipeline");
     }
 
     void Renderer::create_backbuffer_output_pipeline_and_material() {
-        auto create_info = rhi::RenderPipelineStateCreateInfo{
+        const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
             .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
             .pixel_shader = load_shader("data/shaders/backbuffer_output.pixel"),
             .render_target_formats = {rhi::ImageFormat::Rgba8},
         };
 
-        backbuffer_output_pipeline = render_device->create_render_pipeline_state(create_info);
+        backbuffer_output_pipeline = device->create_render_pipeline_state(create_info);
 
         backbuffer_output_material.handle = material_data_buffer->get_next_free_index<BackbufferOutputMaterial>();
         material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material.handle)
@@ -180,7 +187,7 @@ namespace renderer {
 
         for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
             create_info.name = fmt::format("Light Buffer {}", i);
-            light_device_buffers.push_back(render_device->create_buffer(create_info));
+            light_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
 
@@ -201,11 +208,11 @@ namespace renderer {
         depth_target_create_info.width = size.x;
         depth_target_create_info.height = size.y;
 
-        scene_depth_target = render_device->create_image(depth_target_create_info);
+        scene_depth_target = device->create_image(depth_target_create_info);
 
         const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
 
-        scene_framebuffer = render_device->create_framebuffer({&color_target}, scene_depth_target.get());
+        scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
     }
 
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
@@ -239,7 +246,7 @@ namespace renderer {
     void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
         registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.handle] = light.light; });
 
-        auto* dst = render_device->map_buffer(*light_device_buffers[frame_idx]);
+        auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
@@ -258,7 +265,7 @@ namespace renderer {
                                                            .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
                                                                    .resolve_params = {}}};
 
-        auto& material_bind_group_builder = render_device->get_material_bind_group_builder_for_frame(frame_idx);
+        auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
@@ -274,15 +281,11 @@ namespace renderer {
 
         command_list.bind_mesh_data(*static_mesh_storage);
 
-        auto static_mesh_view = registry.view<StaticMeshRenderableComponent>();
+        registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
+            command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
+        });
 
-        for(const auto entity : static_mesh_view) {
-            const auto mesh_renderable = registry.get<StaticMeshRenderableComponent>(entity);
-
-            command_list.draw(mesh_renderable.num_indices, mesh_renderable.first_index);
-        }
-
-        const auto* framebuffer = render_device->get_backbuffer_framebuffer();
+        const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});
         command_list.set_pipeline_state(*backbuffer_output_pipeline);
 

@@ -57,6 +57,7 @@
     <ClInclude Include="src\player\components.hpp" />
     <ClInclude Include="src\player\flycam_controller.hpp" />
     <ClInclude Include="src\renderer\camera_matrix_buffer.hpp" />
+    <ClInclude Include="src\renderer\mesh.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\lights.hpp" />
     <ClInclude Include="src\renderer\material_data_buffer.hpp" />

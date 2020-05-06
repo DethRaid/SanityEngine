@@ -1,5 +1,6 @@
 #pragma once
 
+#include <queue>
 #include <entt/fwd.hpp>
 
 #include "../rhi/mesh_data_store.hpp"
@@ -50,7 +51,7 @@ namespace renderer {
     private:
         Settings settings;
 
-        std::unique_ptr<rhi::RenderDevice> render_device;
+        std::unique_ptr<rhi::RenderDevice> device;
 
         std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
 
@@ -73,6 +74,8 @@ namespace renderer {
 
         std::array<Light, MAX_NUM_LIGHTS> lights;
         std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
+
+        std::queue<Mesh> pending_raytracing_upload_meshes;
 
 #pragma region Initialization
         void create_static_mesh_storage();
