@@ -34,6 +34,8 @@ namespace rhi {
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
 #pragma endregion
 
+        [[nodiscard]] ID3D12GraphicsCommandList4& get_commands4();
+
         /*!
          * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU, including ending any pending render passes
          */

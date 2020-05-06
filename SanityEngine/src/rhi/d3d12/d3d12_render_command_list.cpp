@@ -218,6 +218,10 @@ namespace rhi {
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
     }
 
+    ID3D12GraphicsCommandList4& D3D12RenderCommandList::get_commands4() {
+        return *commands4.Get();
+    }
+
     void D3D12RenderCommandList::prepare_for_submission() {
         MTR_SCOPE("D3D12RenderCommandList", "prepare_for_submission");
         if(in_render_pass && commands4) {

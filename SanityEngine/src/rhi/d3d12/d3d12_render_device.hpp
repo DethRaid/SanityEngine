@@ -60,6 +60,8 @@ namespace rhi {
 
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) override;
 
+        Blas create_bottom_level_acceleration_structure(const MeshDataStore& mesh_data, uint32_t first_vertex, uint32_t first_index) override;
+
         [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(
             const std::vector<uint8_t>& compute_shader) override;
 
@@ -114,6 +116,7 @@ namespace rhi {
 
         ComPtr<ID3D12Device> device;
         ComPtr<ID3D12Device1> device1;
+        ComPtr<ID3D12Device5> device5;
 
         ComPtr<ID3D12InfoQueue> info_queue;
 

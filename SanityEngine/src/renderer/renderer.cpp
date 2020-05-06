@@ -93,6 +93,8 @@ namespace renderer {
         const auto renderable = StaticMeshRenderableComponent{.first_index = mesh_start_idx,
                                                               .num_indices = static_cast<uint32_t>(indices.size())};
 
+
+
         return renderable;
     }
 

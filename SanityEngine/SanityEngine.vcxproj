@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\abort.hpp" />
+    <ClInclude Include="src\core\align.hpp" />
     <ClInclude Include="src\core\async\mutex.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
@@ -80,6 +81,7 @@
     <ClInclude Include="src\rhi\d3d12\shader_reflection.hpp" />
     <ClInclude Include="src\rhi\framebuffer.hpp" />
     <ClInclude Include="src\rhi\mesh_data_store.hpp" />
+    <ClInclude Include="src\rhi\raytracing_structs.hpp" />
     <ClInclude Include="src\rhi\render_command_list.hpp" />
     <ClInclude Include="src\rhi\render_device.hpp" />
     <ClInclude Include="src\rhi\render_pipeline_state.hpp" />

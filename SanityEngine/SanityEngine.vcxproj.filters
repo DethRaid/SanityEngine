@@ -275,5 +275,11 @@
     <ClInclude Include="src\renderer\render_components.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\rhi\raytracing_structs.hpp">
+      <Filter>Header Files\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\align.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

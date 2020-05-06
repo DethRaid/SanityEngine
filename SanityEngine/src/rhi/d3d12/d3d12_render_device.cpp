@@ -7,10 +7,12 @@
 #include <spdlog/spdlog.h>
 
 #include "../../core/abort.hpp"
+#include "../../core/align.hpp"
 #include "../../core/constants.hpp"
 #include "../../core/ensure.hpp"
 #include "../../core/errors.hpp"
 #include "../../windows/windows_helpers.hpp"
+#include "../mesh_data_store.hpp"
 #include "d3d12_bind_group.hpp"
 #include "d3d12_compute_command_list.hpp"
 #include "d3d12_framebuffer.hpp"
@@ -322,6 +324,76 @@ namespace rhi {
         }
     }
 
+    Blas D3D12RenderDevice::create_bottom_level_acceleration_structure(const MeshDataStore& mesh_data,
+                                                                       const uint32_t first_vertex,
+                                                                       const uint32_t first_index) {
+        const auto& index_buffer = mesh_data.get_index_buffer();
+        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
+
+        const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
+        const auto& d3d12_vertex_buffer = static_cast<const D3D12Buffer&>(vertex_buffer);
+
+        const auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{
+            .Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+            .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
+            .Triangles = D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC{.Transform3x4 = 0,
+                                                                  .IndexFormat = DXGI_FORMAT_R32_UINT,
+                                                                  .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+                                                                  .IndexCount = 0,
+                                                                  .VertexCount = 0,
+                                                                  .IndexBuffer = d3d12_index_buffer.resource->GetGPUVirtualAddress() +
+                                                                                 (first_index * sizeof(uint32_t)),
+                                                                  .VertexBuffer = {.StartAddress = d3d12_vertex_buffer.resource
+                                                                                                       ->GetGPUVirtualAddress() +
+                                                                                                   (first_vertex * sizeof(BveVertex)),
+                                                                                   .StrideInBytes = sizeof(BveVertex)}}};
+
+        const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
+            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+            .NumDescs = 1,
+            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+            .pGeometryDescs = &geom_desc};
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
+        device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+
+        as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                        as_prebuild_info.ScratchDataSizeInBytes);
+        as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                          as_prebuild_info.ResultDataMaxSizeInBytes);
+
+        const auto scratch_buffer_create_info = BufferCreateInfo{.name = "BLAS Scratch Buffer",
+                                                                 .usage = BufferUsage::UnorderedAccess,
+                                                                 .size = as_prebuild_info.ScratchDataSizeInBytes};
+
+        auto scratch_buffer = create_buffer(scratch_buffer_create_info);
+
+        const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
+                                                                .usage = BufferUsage::UnorderedAccess,
+                                                                .size = as_prebuild_info.ResultDataMaxSizeInBytes};
+
+        auto result_buffer = create_buffer(result_buffer_create_info);
+
+        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(*scratch_buffer);
+        const auto& d3d12_result_buffer = static_cast<const D3D12Buffer&>(*result_buffer);
+
+        const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
+            .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
+            .Inputs = build_as_inputs,
+            .ScratchAccelerationStructureData = d3d12_scratch_buffer.resource->GetGPUVirtualAddress()
+        };
+
+        auto cmds = create_render_command_list();
+
+        auto& d3d12_cmds = dynamic_cast<D3D12RenderCommandList&>(*cmds);
+        d3d12_cmds.get_commands4().BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
+
+        submit_command_list(std::move(cmds));
+
+        return {std::move(result_buffer)};
+    }
+
     std::unique_ptr<ComputePipelineState> D3D12RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) {
         auto compute_pipeline = std::make_unique<D3D12ComputePipelineState>();
 
@@ -624,7 +696,6 @@ namespace rhi {
 
         reset_command_allocators_for_frame(cur_gpu_frame_idx);
 
-
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Render Target");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
@@ -814,6 +885,7 @@ namespace rhi {
                 device = try_device;
 
                 device->QueryInterface(device1.GetAddressOf());
+                device->QueryInterface(device5.GetAddressOf());
 
                 // Save information about the device
                 D3D12_FEATURE_DATA_ARCHITECTURE arch;
@@ -1341,7 +1413,6 @@ namespace rhi {
                 output_rt_blend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
             }
         }
-
 
         ENSURE(create_info.render_target_formats.size() + (create_info.depth_stencil_format ? 1 : 0) > 0,
                "Must have at least one render target or depth target");
