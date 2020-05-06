@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+
 #include <entt/fwd.hpp>
 
 #include "../rhi/mesh_data_store.hpp"
@@ -42,7 +43,7 @@ namespace renderer {
         void end_frame();
 
         [[nodiscard]] StaticMeshRenderableComponent create_static_mesh(const std::vector<BveVertex>& vertices,
-                                                                       const std::vector<uint32_t>& indices) const;
+                                                                       const std::vector<uint32_t>& indices);
 
         [[yesdiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info);
 
@@ -76,6 +77,7 @@ namespace renderer {
         std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
 
         std::queue<Mesh> pending_raytracing_upload_meshes;
+        bool raytracing_scene_dirty{false};
 
 #pragma region Initialization
         void create_static_mesh_storage();
@@ -94,6 +96,12 @@ namespace renderer {
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;
 
         void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;
+
+#pragma region Raytracing
+        rhi::RaytracingScene raytracing_scene;
+
+        void rebuild_raytracing_scene(entt::registry& registry, rhi::RenderCommandList& command_list);
+#pragma endregion
 
 #pragma region 3D Scene
         void update_lights(entt::registry& registry, uint32_t frame_idx);

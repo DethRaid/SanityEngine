@@ -8,7 +8,7 @@
 using std::move;
 
 namespace rhi {
-    D3D12ResourceCommandList::D3D12ResourceCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
+    D3D12ResourceCommandList::D3D12ResourceCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, D3D12RenderDevice& device_in)
         : D3D12CommandList{move(cmds)}, device{&device_in} {}
 
     D3D12ResourceCommandList::D3D12ResourceCommandList(D3D12ResourceCommandList&& old) noexcept

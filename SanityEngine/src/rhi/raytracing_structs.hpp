@@ -25,7 +25,7 @@ namespace rhi {
         /*!
          * \brief Pointer to the mesh that this RaytracingObject uses
          */
-        RaytracingMesh* mesh{nullptr};
+        const RaytracingMesh* mesh{nullptr};
 
         /*!
          * \brief Material to render this RaytracingObject with

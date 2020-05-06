@@ -216,7 +216,7 @@ void SanityEngine::create_debug_cube() {
 
     const auto cube_entity = registry.create();
 
-    registry.assign<renderer::StaticMeshRenderableComponent>(cube_entity, cube_renderable);
+    registry.assign<renderer::StaticMeshRenderableComponent>(cube_entity, std::move(cube_renderable));
 
     spdlog::info("Created cube");
 }
@@ -235,7 +235,7 @@ void SanityEngine::create_debug_plane() {
 
     const auto plane_entity = registry.create();
 
-    registry.assign<renderer::StaticMeshRenderableComponent>(plane_entity, plane_renderable);
+    registry.assign<renderer::StaticMeshRenderableComponent>(plane_entity, std::move(plane_renderable));
 
     spdlog::info("Created plane");
 }

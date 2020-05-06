@@ -18,7 +18,7 @@
 using std::move;
 
 namespace rhi {
-    D3D12RenderCommandList::D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in)
+    D3D12RenderCommandList::D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, D3D12RenderDevice& device_in)
         : D3D12ComputeCommandList{move(cmds), device_in} {}
 
     D3D12RenderCommandList::D3D12RenderCommandList(D3D12RenderCommandList&& old) noexcept
@@ -245,7 +245,7 @@ namespace rhi {
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
-                                                                .size = as_prebuild_info.ResultDataMaxSizeInBytes};
+                                                                .size = static_cast<uint32_t>(as_prebuild_info.ResultDataMaxSizeInBytes)};
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
 

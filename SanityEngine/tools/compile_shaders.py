@@ -36,10 +36,10 @@ if __name__ == '__main__':
         dxil_path = dxil_directory + '/' + dxil_filename
 
         if str(path).endswith('.pixel.hlsl'):
-            target = 'ps_6_0'
+            target = 'ps_6_5'
 
         elif str(path).endswith('.vertex.hlsl'):
-            target = 'vs_6_0'
+            target = 'vs_6_5'
 
         else:
             print('Could not determine shading stage for shader `', str(path), '`, skipping')

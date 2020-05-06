@@ -8,6 +8,7 @@
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../core/ensure.hpp"
+#include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
@@ -76,6 +77,11 @@ namespace renderer {
         auto command_list = device->create_render_command_list();
         command_list->set_debug_name("Main Render Command List");
 
+        if(raytracing_scene_dirty) {
+            rebuild_raytracing_scene(registry, *command_list);
+            raytracing_scene_dirty = false;
+        }
+
         update_cameras(registry, *command_list, frame_idx);
 
         render_3d_scene(registry, *command_list, frame_idx);
@@ -86,7 +92,7 @@ namespace renderer {
     void Renderer::end_frame() { device->end_frame(); }
 
     StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
-                                                               const std::vector<uint32_t>& indices) const {
+                                                               const std::vector<uint32_t>& indices) {
         MTR_SCOPE("Renderer", "create_static_mesh");
         const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices);
         const auto mesh = Mesh{.first_vertex = vertex_offset,
@@ -101,6 +107,8 @@ namespace renderer {
                                                                            mesh.first_vertex,
                                                                            mesh.first_index);
         device->submit_command_list(std::move(cmds));
+
+        raytracing_scene_dirty = true;
 
         return StaticMeshRenderableComponent{.mesh = mesh, .rt_mesh = std::move(raytracing_mesh)};
     }
@@ -243,6 +251,19 @@ namespace renderer {
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
     }
 
+    void Renderer::rebuild_raytracing_scene(entt::registry& registry, rhi::RenderCommandList& command_list) {
+        // TODO: Destroy the old raytracing scene
+        // Also TODO: figure out how to update the raytracing scene without needing a full rebuild
+
+        std::vector<rhi::RaytracingObject> objects;
+        registry.view<TransformComponent, StaticMeshRenderableComponent>().each(
+            [&](const TransformComponent& /* transform */, const StaticMeshRenderableComponent& mesh) {
+                objects.push_back(rhi::RaytracingObject{.mesh = &mesh.rt_mesh});
+            });
+
+        raytracing_scene = command_list.build_raytracing_scene(objects);
+    }
+
     void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
         registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.handle] = light.light; });
 
@@ -269,6 +290,7 @@ namespace renderer {
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
+        material_bind_group_builder.set_raytracing_scene("raytracing_scene", raytracing_scene);
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         const auto material_bind_group = material_bind_group_builder.build();

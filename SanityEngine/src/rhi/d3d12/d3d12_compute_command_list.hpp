@@ -7,7 +7,7 @@
 namespace rhi {
     class D3D12ComputeCommandList : public D3D12ResourceCommandList, public virtual ComputeCommandList {
     public:
-        D3D12ComputeCommandList(ComPtr<ID3D12GraphicsCommandList> cmds, D3D12RenderDevice& device_in);
+        D3D12ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, D3D12RenderDevice& device_in);
 
         D3D12ComputeCommandList(const D3D12ComputeCommandList& other) = delete;
         D3D12ComputeCommandList& operator=(const D3D12ComputeCommandList& other) = delete;

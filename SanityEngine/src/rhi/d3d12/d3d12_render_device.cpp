@@ -390,7 +390,7 @@ namespace rhi {
     std::unique_ptr<ResourceCommandList> D3D12RenderDevice::create_resource_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_resoruce_command_list");
 
-        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -410,7 +410,7 @@ namespace rhi {
     std::unique_ptr<ComputeCommandList> D3D12RenderDevice::create_compute_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "get_compute_command_list");
 
-        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -430,7 +430,7 @@ namespace rhi {
     std::unique_ptr<RenderCommandList> D3D12RenderDevice::create_render_command_list() {
         MTR_SCOPE("D3D12RenderDevice", "create_graphics_command_list");
 
-        ComPtr<ID3D12GraphicsCommandList> commands;
+        ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
