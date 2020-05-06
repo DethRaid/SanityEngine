@@ -597,6 +597,9 @@ namespace rhi {
             scratch_buffers.erase(scratch_buffers.begin() + best_fit_idx);
 
             return D3D12ScratchBufferPtr{buffer, [&](D3D12Buffer* old_buffer) { return_scratch_buffer(std::move(*old_buffer)); }};
+
+        } else {
+            return create_scratch_buffer(num_bytes);
         }
     }
 
@@ -1336,7 +1339,7 @@ namespace rhi {
                                                              &buffer->allocation,
                                                              IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
-            logger->error("Could not create staging buffer");
+            logger->error("Could not create staging buffer: {}", to_string(result));
             return {};
         }
 
@@ -1344,11 +1347,35 @@ namespace rhi {
         D3D12_RANGE range{0, num_bytes};
         buffer->resource->Map(0, &range, &buffer->ptr);
 
-        const auto staging_buffer_name = fmt::format("Staging Buffer {}", staging_buffer_idx);
+        set_object_name(*buffer->resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx));
         staging_buffer_idx++;
-        set_object_name(*buffer->resource.Get(), staging_buffer_name);
 
         return D3D12StagingBufferPtr{buffer, [&](D3D12StagingBuffer* old_buffer) { return_staging_buffer(std::move(*old_buffer)); }};
+    }
+
+    D3D12ScratchBufferPtr D3D12RenderDevice::create_scratch_buffer(const uint32_t num_bytes) {
+        constexpr auto alignment = std::max(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                            D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, alignment);
+
+        const auto alloc_desc = D3D12MA::ALLOCATION_DESC{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
+
+        auto* scratch_buffer = new D3D12Buffer;
+        const auto result = device_allocator->CreateResource(&alloc_desc,
+                                                             &desc,
+                                                             D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                             nullptr,
+                                                             &scratch_buffer->allocation,
+                                                             IID_PPV_ARGS(&scratch_buffer->resource));
+        if(FAILED(result)) {
+            logger->error("Could not create scratch buffer: {}", to_string(result));
+        }
+
+        scratch_buffer->size = num_bytes;
+        set_object_name(*scratch_buffer->resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter));
+        scratch_buffer_counter++;
+
+        return D3D12ScratchBufferPtr{scratch_buffer, [&](D3D12Buffer* old_buffer) { return_scratch_buffer(std::move(*old_buffer)); }};
     }
 
     ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {
@@ -1370,7 +1397,7 @@ namespace rhi {
         return fence;
     }
 
-    void D3D12RenderDevice::retrieve_dred_report() {
+    void D3D12RenderDevice::retrieve_dred_report() const {
         ComPtr<ID3D12DeviceRemovedExtendedData> dred;
         auto result = device->QueryInterface(IID_PPV_ARGS(&dred));
         if(FAILED(result)) {

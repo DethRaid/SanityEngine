@@ -240,12 +240,7 @@ namespace rhi {
         as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                           as_prebuild_info.ResultDataMaxSizeInBytes);
 
-        // TODO: Find a way to reuse the scratch buffers
-        const auto scratch_buffer_create_info = BufferCreateInfo{.name = "BLAS Scratch Buffer",
-                                                                 .usage = BufferUsage::UnorderedAccess,
-                                                                 .size = as_prebuild_info.ScratchDataSizeInBytes};
-
-        auto scratch_buffer = device->create_buffer(scratch_buffer_create_info);
+        const auto scratch_buffer = device->get_scratch_buffer(as_prebuild_info.ScratchDataSizeInBytes);
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::UnorderedAccess,
@@ -276,7 +271,7 @@ namespace rhi {
 
         const auto instance_buffer_size = static_cast<uint32_t>(objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
         const auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
-        auto* instance_buffer_ptr = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.ptr);
+        auto* instance_buffer_ptr = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer->ptr);
 
         for(uint32_t i = 0; i < objects.size(); i++) {
             const auto& object = objects[i];
@@ -300,7 +295,7 @@ namespace rhi {
             .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
             .NumDescs = static_cast<UINT>(objects.size()),
             .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-            .InstanceDescs = instance_buffer.resource->GetGPUVirtualAddress(),
+            .InstanceDescs = instance_buffer->resource->GetGPUVirtualAddress(),
         };
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};

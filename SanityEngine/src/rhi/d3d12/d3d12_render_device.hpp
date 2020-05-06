@@ -162,6 +162,7 @@ namespace rhi {
          */
         std::vector<std::vector<D3D12StagingBuffer>> staging_buffers_to_free;
 
+        uint32_t scratch_buffer_counter{0};
         std::vector<D3D12Buffer> scratch_buffers;
         std::vector<std::vector<D3D12Buffer>> scratch_buffers_to_free;
 
@@ -264,8 +265,10 @@ namespace rhi {
 
         [[nodiscard]] D3D12StagingBufferPtr create_staging_buffer(uint32_t num_bytes);
 
+        [[nodiscard]] D3D12ScratchBufferPtr create_scratch_buffer(uint32_t num_bytes);
+
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
-        void retrieve_dred_report();
+        void retrieve_dred_report() const;
     };
 } // namespace rhi
