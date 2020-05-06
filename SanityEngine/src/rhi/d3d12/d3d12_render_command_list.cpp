@@ -243,7 +243,7 @@ namespace rhi {
         const auto scratch_buffer = device->get_scratch_buffer(as_prebuild_info.ScratchDataSizeInBytes);
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
-                                                                .usage = BufferUsage::UnorderedAccess,
+                                                                .usage = BufferUsage::RaytracingAccelerationStructure,
                                                                 .size = as_prebuild_info.ResultDataMaxSizeInBytes};
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
@@ -260,6 +260,8 @@ namespace rhi {
 
         const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_result_buffer.resource.Get());
         commands->ResourceBarrier(1, &barrier);
+
+        set_resource_state(d3d12_result_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
         return {std::move(result_buffer)};
     }
@@ -324,6 +326,8 @@ namespace rhi {
 
         const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_as_buffer.resource.Get());
         commands->ResourceBarrier(1, &barrier);
+
+        set_resource_state(d3d12_as_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
         return {.buffer = std::move(as_buffer)};
     }
