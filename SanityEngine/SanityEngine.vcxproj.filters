@@ -67,6 +67,12 @@
     <Filter Include="Source Files\external">
       <UniqueIdentifier>{55598584-eda2-4739-8f3b-5a760cc1977e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{bdfcd1eb-1721-4321-b0cf-4b7fc82eb1e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\inc">
+      <UniqueIdentifier>{ee06b3be-6b4a-4545-9e80-02e155c3c50b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -284,5 +290,25 @@
     <ClInclude Include="src\renderer\mesh.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\defer.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
+      <Filter>Shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.vertex.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -542,7 +542,7 @@ namespace rhi {
 
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    D3D12StagingBufferPtr D3D12RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
+    D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
         size_t best_fit_idx = staging_buffers.size();
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
@@ -559,11 +559,10 @@ namespace rhi {
 
         if(best_fit_idx < staging_buffers.size()) {
             // We found a valid staging buffer!
-            auto* buffer = new D3D12StagingBuffer;
-            *buffer = std::move(staging_buffers[best_fit_idx]);
+            auto buffer = std::move(staging_buffers[best_fit_idx]);
             staging_buffers.erase(staging_buffers.begin() + best_fit_idx);
 
-            return D3D12StagingBufferPtr{buffer, [&](D3D12StagingBuffer* old_buffer) { return_staging_buffer(std::move(*old_buffer)); }};
+            return std::move(buffer);
 
         } else {
             // No suitable buffer is available, let's make a new one
@@ -575,7 +574,7 @@ namespace rhi {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer));
     }
 
-    D3D12ScratchBufferPtr D3D12RenderDevice::get_scratch_buffer(const uint32_t num_bytes) {
+    D3D12Buffer D3D12RenderDevice::get_scratch_buffer(const uint32_t num_bytes) {
         size_t best_fit_idx = scratch_buffers.size();
         for(size_t i = 0; i < scratch_buffers.size(); i++) {
             if(scratch_buffers[i].size >= num_bytes) {
@@ -592,11 +591,11 @@ namespace rhi {
 
         if(best_fit_idx < scratch_buffers.size()) {
             // We already have a suitable scratch buffer!
-            auto* buffer = new D3D12Buffer;
-            *buffer = std::move(scratch_buffers[best_fit_idx]);
+            auto buffer = D3D12Buffer{};
+            buffer = std::move(scratch_buffers[best_fit_idx]);
             scratch_buffers.erase(scratch_buffers.begin() + best_fit_idx);
 
-            return D3D12ScratchBufferPtr{buffer, [&](D3D12Buffer* old_buffer) { return_scratch_buffer(std::move(*old_buffer)); }};
+            return buffer;
 
         } else {
             return create_scratch_buffer(num_bytes);
@@ -974,7 +973,7 @@ namespace rhi {
     void D3D12RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("D3D12RenderDevice", "create_standard_root_signature");
 
-        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{5};
+        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{6};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -988,17 +987,20 @@ namespace rhi {
         // Lights buffer
         root_parameters[3].InitAsShaderResourceView(2);
 
+        // Raytracing acceleration structure
+        root_parameters[4].InitAsShaderResourceView(3);
+
         // Textures array
         std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
         D3D12_DESCRIPTOR_RANGE textures_array;
         textures_array.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         textures_array.NumDescriptors = MAX_NUM_TEXTURES;
-        textures_array.BaseShaderRegister = 3;
+        textures_array.BaseShaderRegister = 16;
         textures_array.RegisterSpace = 0;
         textures_array.OffsetInDescriptorsFromTableStart = 0;
         descriptor_table_ranges.push_back(move(textures_array));
 
-        root_parameters[4].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
+        root_parameters[5].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
         std::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
@@ -1072,6 +1074,7 @@ namespace rhi {
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
         root_descriptors.emplace("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
+        root_descriptors.emplace("raytracing_scene", RootDescriptorDescription{4, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_frames);
 
@@ -1088,7 +1091,7 @@ namespace rhi {
             descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(4, gpu_handle);
+            descriptor_table_gpu_handles.emplace(root_descriptors.size(), gpu_handle);
 
             material_bind_group_builder.emplace_back(*device.Get(),
                                                      *cbv_srv_uav_heap.Get(),
@@ -1321,7 +1324,7 @@ namespace rhi {
         wait_for_frame(frame_index);
     }
 
-    D3D12StagingBufferPtr D3D12RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
+    D3D12StagingBuffer D3D12RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
 
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
@@ -1331,51 +1334,51 @@ namespace rhi {
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
-        auto* buffer = new D3D12StagingBuffer;
+        auto buffer = D3D12StagingBuffer{};
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
                                                              nullptr,
-                                                             &buffer->allocation,
-                                                             IID_PPV_ARGS(&buffer->resource));
+                                                             &buffer.allocation,
+                                                             IID_PPV_ARGS(&buffer.resource));
         if(FAILED(result)) {
             logger->error("Could not create staging buffer: {}", to_string(result));
             return {};
         }
 
-        buffer->size = num_bytes;
+        buffer.size = num_bytes;
         D3D12_RANGE range{0, num_bytes};
-        buffer->resource->Map(0, &range, &buffer->ptr);
+        buffer.resource->Map(0, &range, &buffer.ptr);
 
-        set_object_name(*buffer->resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx));
+        set_object_name(*buffer.resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx));
         staging_buffer_idx++;
 
-        return D3D12StagingBufferPtr{buffer, [&](D3D12StagingBuffer* old_buffer) { return_staging_buffer(std::move(*old_buffer)); }};
+        return std::move(buffer);
     }
 
-    D3D12ScratchBufferPtr D3D12RenderDevice::create_scratch_buffer(const uint32_t num_bytes) {
+    D3D12Buffer D3D12RenderDevice::create_scratch_buffer(const uint32_t num_bytes) {
         constexpr auto alignment = std::max(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                             D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, alignment);
 
         const auto alloc_desc = D3D12MA::ALLOCATION_DESC{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
 
-        auto* scratch_buffer = new D3D12Buffer;
+        auto scratch_buffer = D3D12Buffer{};
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                              nullptr,
-                                                             &scratch_buffer->allocation,
-                                                             IID_PPV_ARGS(&scratch_buffer->resource));
+                                                             &scratch_buffer.allocation,
+                                                             IID_PPV_ARGS(&scratch_buffer.resource));
         if(FAILED(result)) {
             logger->error("Could not create scratch buffer: {}", to_string(result));
         }
 
-        scratch_buffer->size = num_bytes;
-        set_object_name(*scratch_buffer->resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter));
+        scratch_buffer.size = num_bytes;
+        set_object_name(*scratch_buffer.resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter));
         scratch_buffer_counter++;
 
-        return D3D12ScratchBufferPtr{scratch_buffer, [&](D3D12Buffer* old_buffer) { return_scratch_buffer(std::move(*old_buffer)); }};
+        return scratch_buffer;
     }
 
     ComPtr<ID3D12Fence> D3D12RenderDevice::get_next_command_list_done_fence() {

@@ -51,6 +51,7 @@
     <ClInclude Include="src\core\async\mutex.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
+    <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\ensure.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
@@ -92,6 +93,13 @@
     <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl" />
+    <FxCompile Include="data\shaders\fullscreen.vertex.hlsl" />
+    <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl" />
+    <FxCompile Include="data\shaders\standard.pixel.hlsl" />
+    <FxCompile Include="data\shaders\standard.vertex.hlsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

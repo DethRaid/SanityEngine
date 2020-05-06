@@ -5,6 +5,7 @@
 #include <vector>
 
 namespace rhi {
+    struct RaytracingScene;
     struct Buffer;
     struct Image;
 
@@ -29,6 +30,8 @@ namespace rhi {
         virtual BindGroupBuilder& set_image(const std::string& name, const Image& image) = 0;
 
         virtual BindGroupBuilder& set_image_array(const std::string& name, const std::vector<const Image*>& images) = 0;
+
+        virtual BindGroupBuilder& set_raytracing_scene(const std::string& name, const RaytracingScene& scene) = 0;
 
         virtual std::unique_ptr<BindGroup> build() = 0;
     };

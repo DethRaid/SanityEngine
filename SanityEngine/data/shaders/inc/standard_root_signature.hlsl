@@ -57,6 +57,12 @@ StructuredBuffer<MaterialData> material_buffer : register(t1);
 StructuredBuffer<Light> lights : register(t2);
 
 /*!
+ * \brief Acceleration structure for all the objects that we can raytrace against
+ */
+RaytracingAccelerationStructure raytracing_scene : register(t3);
+
+/*!
  * \brief Array of all the textures that are available for a shader to sample from
  */
-Texture2D textures[] : register(t3);
+Texture2D textures[] : register(t16);
+

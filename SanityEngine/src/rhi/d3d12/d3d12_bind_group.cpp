@@ -6,6 +6,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "../../core/ensure.hpp"
+#include "../raytracing_structs.hpp"
 #include "d3dx12.hpp"
 
 namespace rhi {
@@ -120,6 +121,13 @@ namespace rhi {
         return *this;
     }
 
+    BindGroupBuilder& D3D12BindGroupBuilder::set_raytracing_scene(const std::string& name, const RaytracingScene& scene) {
+        const auto* d3d12_buffer = static_cast<const D3D12Buffer*>(scene.buffer.get());
+        bound_raytracing_scenes.emplace(name, d3d12_buffer);
+
+        return *this;
+    }
+
     std::unique_ptr<BindGroup> D3D12BindGroupBuilder::build() {
         MTR_SCOPE("D3D12BindGroupBuilder", "build");
 
@@ -174,6 +182,20 @@ namespace rhi {
                 }
 
                 used_images.emplace_back(image_itr->second[0], states);
+
+            } else if(const auto& scene_itr = bound_raytracing_scenes.find(name); scene_itr != bound_raytracing_scenes.end()) {
+                ENSURE(type == DescriptorType::ShaderResource,
+                       "May only bind raytracing acceleration structure {} as a shader resource",
+                       scene_itr->second->name);
+
+                const auto* scene = scene_itr->second;
+
+                root_parameters[idx].descriptor.address = scene->resource->GetGPUVirtualAddress();
+
+                auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
+                              D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+                used_buffers.emplace_back(scene, states);
 
             } else {
                 logger->warn("No resources bound to root descriptor {}", name);

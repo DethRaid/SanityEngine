@@ -6,6 +6,7 @@
 #include <minitrace.h>
 
 #include "../../core/align.hpp"
+#include "../../core/defer.hpp"
 #include "../../core/ensure.hpp"
 #include "../mesh_data_store.hpp"
 #include "d3d12_bind_group.hpp"
@@ -240,7 +241,7 @@ namespace rhi {
         as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                           as_prebuild_info.ResultDataMaxSizeInBytes);
 
-        const auto scratch_buffer = device->get_scratch_buffer(as_prebuild_info.ScratchDataSizeInBytes);
+        auto scratch_buffer = device->get_scratch_buffer(as_prebuild_info.ScratchDataSizeInBytes);
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
@@ -248,13 +249,15 @@ namespace rhi {
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
 
-        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(*scratch_buffer);
+        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(scratch_buffer);
         const auto& d3d12_result_buffer = static_cast<const D3D12Buffer&>(*result_buffer);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
             .Inputs = build_as_inputs,
             .ScratchAccelerationStructureData = d3d12_scratch_buffer.resource->GetGPUVirtualAddress()};
+
+        DEFER(a, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
@@ -272,8 +275,8 @@ namespace rhi {
         ENSURE(objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
 
         const auto instance_buffer_size = static_cast<uint32_t>(objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
-        const auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
-        auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer->ptr);
+        auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
+        auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.ptr);
 
         for(uint32_t i = 0; i < objects.size(); i++) {
             const auto& object = objects[i];
@@ -297,7 +300,7 @@ namespace rhi {
             .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
             .NumDescs = static_cast<UINT>(objects.size()),
             .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-            .InstanceDescs = instance_buffer->resource->GetGPUVirtualAddress(),
+            .InstanceDescs = instance_buffer.resource->GetGPUVirtualAddress(),
         };
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};
@@ -319,8 +322,11 @@ namespace rhi {
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = d3d12_as_buffer.resource->GetGPUVirtualAddress(),
             .Inputs = as_inputs,
-            .ScratchAccelerationStructureData = scratch_buffer->resource->GetGPUVirtualAddress(),
+            .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress(),
         };
+
+        DEFER(a, [&]() { device->return_staging_buffer(std::move(instance_buffer)); });
+        DEFER(b, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 

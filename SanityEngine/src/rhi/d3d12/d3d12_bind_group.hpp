@@ -126,6 +126,8 @@ namespace rhi {
 
         BindGroupBuilder& set_image_array(const std::string& name, const std::vector<const Image*>& images) override;
 
+        BindGroupBuilder& set_raytracing_scene(const std::string& name, const RaytracingScene& scene) override;
+
         std::unique_ptr<BindGroup> build() override;
 
     private:
@@ -140,6 +142,8 @@ namespace rhi {
         std::unordered_map<std::string, const D3D12Buffer*> bound_buffers{};
 
         std::unordered_map<std::string, std::vector<const D3D12Image*>> bound_images{};
+
+        std::unordered_map<std::string, const D3D12Buffer*> bound_raytracing_scenes{};
 
         std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions;
         std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;

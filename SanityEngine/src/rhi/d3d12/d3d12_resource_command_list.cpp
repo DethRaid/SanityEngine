@@ -2,6 +2,7 @@
 
 #include <minitrace.h>
 
+#include "../../core/defer.hpp"
 #include "d3dx12.hpp"
 
 using std::move;
@@ -48,8 +49,7 @@ namespace rhi {
 
             commands->CopyBufferRegion(d3d12_buffer.resource.Get(), offset, staging_buffer.resource.Get(), 0, num_bytes);
 
-            add_completion_function(
-                [staging_buffer{move(staging_buffer)}, this]() mutable { device->return_staging_buffer(move(staging_buffer)); });
+            DEFER(a, [&]() { device->return_staging_buffer(move(staging_buffer)); });
 
             command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
         }
@@ -78,7 +78,7 @@ namespace rhi {
 
         UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
 
-        device->return_staging_buffer(move(staging_buffer));
+        DEFER(a, [&]() { device->return_staging_buffer(move(staging_buffer)); });
 
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
     }

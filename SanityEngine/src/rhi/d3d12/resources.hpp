@@ -25,8 +25,6 @@ namespace rhi {
         void* ptr{nullptr};
     };
 
-    using D3D12StagingBufferPtr = std::unique_ptr<D3D12StagingBuffer, std::function<void(D3D12StagingBuffer*)>>;
-
     struct D3D12Image : Image {
         ComPtr<ID3D12Resource> resource;
 

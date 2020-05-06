@@ -30,8 +30,6 @@ using DirectX::XMINT2;
 namespace rhi {
     using Microsoft::WRL::ComPtr;
 
-    using D3D12ScratchBufferPtr = std::unique_ptr<D3D12Buffer, std::function<void(D3D12Buffer*)>>;
-
     class D3D12RenderDevice : public virtual RenderDevice {
     public:
         ComPtr<ID3D12Device> device;
@@ -95,11 +93,11 @@ namespace rhi {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] D3D12StagingBufferPtr get_staging_buffer(uint32_t num_bytes);
+        [[nodiscard]] D3D12StagingBuffer get_staging_buffer(uint32_t num_bytes);
 
         void return_staging_buffer(D3D12StagingBuffer&& buffer);
 
-        [[nodiscard]] D3D12ScratchBufferPtr get_scratch_buffer(uint32_t num_bytes);
+        [[nodiscard]] D3D12Buffer get_scratch_buffer(uint32_t num_bytes);
 
         void return_scratch_buffer(D3D12Buffer&& buffer);
 
@@ -263,9 +261,9 @@ namespace rhi {
 
         void wait_gpu_idle(uint64_t frame_index);
 
-        [[nodiscard]] D3D12StagingBufferPtr create_staging_buffer(uint32_t num_bytes);
+        [[nodiscard]] D3D12StagingBuffer create_staging_buffer(uint32_t num_bytes);
 
-        [[nodiscard]] D3D12ScratchBufferPtr create_scratch_buffer(uint32_t num_bytes);
+        [[nodiscard]] D3D12Buffer create_scratch_buffer(uint32_t num_bytes);
 
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
