@@ -14,3 +14,12 @@ A 3D video game engine made to increase my sanity
 - `dxc` must be in your PATH
 - Visual Studio 16.5
 - Windows Kit 10.0.19042.0
+
+## Runtime requirements
+
+- Windows 10 2004/20H1
+- Graphics driver with support for DX12 Ultimate. At the time of writing, only Nvidia beta driver 450.82 support DX12U
+
+## Features
+
+- PFS
