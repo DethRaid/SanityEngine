@@ -4,6 +4,7 @@
 
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include "core/abort.hpp"
@@ -27,7 +28,8 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
+SanityEngine::SanityEngine(const Settings& settings_in)
+    : logger{spdlog::stdout_color_st("SanityEngine")}, settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
     mtr_init("SanityEngine.json");
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
@@ -35,7 +37,7 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
     // spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
     spdlog::set_pattern("[%n] [%^%l%$] %v");
 
-    spdlog::info("HELLO HUMAN");
+    logger->info("HELLO HUMAN");
 
     {
         MTR_SCOPE("SanityEngine", "glfwInit");
@@ -55,7 +57,7 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
         }
     }
 
-    spdlog::info("Created window");
+    logger->info("Created window");
 
     glfwSetWindowUserPointer(window, input_manager.get());
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -63,7 +65,7 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
     glfwSetKeyCallback(window, key_func);
 
     renderer = std::make_unique<renderer::Renderer>(window, settings);
-    spdlog::info("Initialized renderer");
+    logger->info("Initialized renderer");
 
     create_the_sun();
 }
@@ -94,7 +96,7 @@ void SanityEngine::run() {
 
                 create_flycam_player();
 
-                load_bve_train();
+                load_bve_train("data/trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
             }
 
             player_controller->update_player_transform(last_frame_duration);
@@ -112,7 +114,7 @@ void SanityEngine::run() {
             framerate_tracker.add_frame_time(last_frame_duration);
 
             if(frame_count % 100 == 0) {
-                spdlog::info("Frame {} stats", frame_count);
+                logger->info("Frame {} stats", frame_count);
                 framerate_tracker.log_framerate_stats();
             }
 
@@ -139,7 +141,7 @@ void SanityEngine::create_debug_plane() {
 
     registry.assign<renderer::StaticMeshRenderableComponent>(plane_entity, std::move(plane_renderable));
 
-    spdlog::info("Created plane");
+    logger->info("Created plane");
 }
 
 void SanityEngine::create_the_sun() {
@@ -157,5 +159,26 @@ void SanityEngine::create_flycam_player() {
 
     player_controller = std::make_unique<FlycamController>(window, player, registry);
 
-    spdlog::info("Created flycam");
+    logger->info("Created flycam");
+}
+
+void SanityEngine::load_bve_train(const std::string& filename) {
+    const auto train = bve.load_mesh_from_file(filename);
+    if(train->errors.count > 0) {
+        logger->error("Could not load train '{}'", filename);
+
+        for(uint32_t i = 0; i < train->errors.count; i++) {
+            const auto& error = train->errors.ptr[i];
+            const auto error_data = bve.get_printable_error(error);
+            logger->error("{}", error_data->description);
+        }
+
+        return;
+
+    } else {
+        const auto entity = registry.create();
+
+        // TODO: Create a subentity for each of the mesh parts
+        // TODO: Collect train vertices and indices into SanityEngine mesh data
+    }
 }

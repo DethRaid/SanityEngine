@@ -33,6 +33,8 @@ public:
     [[nodiscard]] entt::entity get_player() const;
 
 private:
+    std::shared_ptr<spdlog::logger> logger;
+
     Settings settings;
 
     std::unique_ptr<InputManager> input_manager;
@@ -65,6 +67,6 @@ private:
 
     void create_flycam_player();
 
-    void load_bve_train(const std::string& filepath);
+    void load_bve_train(const std::string& filename);
 #pragma endregion
 };
