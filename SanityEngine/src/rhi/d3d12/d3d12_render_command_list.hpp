@@ -55,6 +55,5 @@ namespace rhi {
         const MeshDataStore* current_mesh_data{nullptr};
 
         bool is_render_material_bound{false};
-        bool is_mesh_data_bound{false};
     };
 } // namespace rhi

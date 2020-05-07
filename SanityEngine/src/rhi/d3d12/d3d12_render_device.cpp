@@ -120,7 +120,7 @@ namespace rhi {
                                                              &buffer->allocation,
                                                              IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
-            logger->error("Could not create buffer %s", create_info.name);
+            logger->error("Could not create buffer {}: {}", create_info.name, to_string(result));
             return {};
         }
 
@@ -706,13 +706,13 @@ namespace rhi {
 
                     continue;
 
-                } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_0) {
+                } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_5) {
                     // Only supports old-ass shaders
 
                     logger->warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
                                  from_wide_string(desc.Description));
 
-                    continue;
+                    //continue;
                 }
 
                 adapter = cur_adapter;
