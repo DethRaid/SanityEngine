@@ -1,5 +1,6 @@
 #include "d3d12_render_device.hpp"
 
+#include <DXProgrammableCapture.h>
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
 #include <minitrace.h>
@@ -33,7 +34,12 @@ namespace rhi {
           staging_buffers_to_free{settings.num_in_flight_gpu_frames},
           scratch_buffers_to_free{settings.num_in_flight_gpu_frames} {
 #ifndef NDEBUG
-        enable_debugging();
+        // Only enable the debug layer if we're not running in PIX
+        ComPtr<IDXGraphicsAnalysis> ga;
+        const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&ga));
+        if(FAILED(result)) {
+            enable_debugging();
+        }
 
         logger->set_level(spdlog::level::debug);
 #endif
@@ -712,7 +718,7 @@ namespace rhi {
                     logger->warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
                                  from_wide_string(desc.Description));
 
-                    //continue;
+                    // continue;
                 }
 
                 adapter = cur_adapter;
