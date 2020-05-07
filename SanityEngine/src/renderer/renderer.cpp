@@ -47,7 +47,7 @@ namespace renderer {
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
         : settings{settings_in},
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
-          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_frames)} {
+          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
         create_static_mesh_storage();
 
@@ -154,8 +154,8 @@ namespace renderer {
         material_data_buffer = std::make_unique<MaterialDataBuffer>(MATERIAL_DATA_BUFFER_SIZE);
 
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
-        material_device_buffers.reserve(settings.num_in_flight_frames);
-        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+        material_device_buffers.reserve(settings.num_in_flight_gpu_frames);
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = fmt::format("Material Data Buffer {}", 1);
             material_device_buffers.push_back(device->create_buffer(create_info));
         }
@@ -193,7 +193,7 @@ namespace renderer {
     void Renderer::create_light_buffers() {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
-        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = fmt::format("Light Buffer {}", i);
             light_device_buffers.push_back(device->create_buffer(create_info));
         }
@@ -256,8 +256,8 @@ namespace renderer {
         // Also TODO: figure out how to update the raytracing scene without needing a full rebuild
 
         std::vector<rhi::RaytracingObject> objects;
-        registry.view<TransformComponent, StaticMeshRenderableComponent>().each(
-            [&](const TransformComponent& /* transform */, const StaticMeshRenderableComponent& mesh) {
+        registry.view<StaticMeshRenderableComponent>().each(
+            [&](const StaticMeshRenderableComponent& mesh) {
                 objects.push_back(rhi::RaytracingObject{.mesh = &mesh.rt_mesh});
             });
 

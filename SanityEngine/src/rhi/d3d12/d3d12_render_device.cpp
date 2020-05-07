@@ -7,7 +7,6 @@
 #include <spdlog/spdlog.h>
 
 #include "../../core/abort.hpp"
-#include "../../core/align.hpp"
 #include "../../core/constants.hpp"
 #include "../../core/ensure.hpp"
 #include "../../core/errors.hpp"
@@ -31,7 +30,8 @@ namespace rhi {
                                          const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : settings{settings_in},
           logger{spdlog::stdout_color_st("D3D12RenderDevice")},
-          staging_buffers_to_free{settings.num_in_flight_frames} {
+          staging_buffers_to_free{settings.num_in_flight_gpu_frames},
+          scratch_buffers_to_free{settings.num_in_flight_gpu_frames} {
 #ifndef NDEBUG
         enable_debugging();
 
@@ -44,7 +44,7 @@ namespace rhi {
 
         create_queues();
 
-        create_swapchain(window_handle, window_size, settings.num_in_flight_frames);
+        create_swapchain(window_handle, window_size, settings.num_in_flight_gpu_frames);
 
         create_gpu_frame_synchronization_objects();
 
@@ -68,7 +68,7 @@ namespace rhi {
     }
 
     D3D12RenderDevice::~D3D12RenderDevice() {
-        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             wait_for_frame(i);
             direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
         }
@@ -85,7 +85,7 @@ namespace rhi {
     std::unique_ptr<Buffer> D3D12RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
         MTR_SCOPE("D3D12RenderDevice", "create_buffer");
 
-        const auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
 
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
         bool should_map = false;
@@ -110,6 +110,15 @@ namespace rhi {
                 alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
                 initial_state = D3D12_RESOURCE_STATE_COMMON;
                 break;
+
+            case BufferUsage::RaytracingAccelerationStructure:
+                alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+                initial_state = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+                break;
+
+            default:
+                logger->warn("Unknown buffer usage {}", create_info.usage);
         }
 
         auto buffer = std::make_unique<D3D12Buffer>();
@@ -491,7 +500,7 @@ namespace rhi {
         MTR_SCOPE("D3D12RenderDevice", "begin_frame");
 
         cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
-        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_frames;
+        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_gpu_frames;
 
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
@@ -546,11 +555,7 @@ namespace rhi {
         size_t best_fit_idx = staging_buffers.size();
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
-                if(best_fit_idx >= staging_buffers.size()) {
-                    // This is the first suitable buffer we've found
-                    best_fit_idx = i;
-
-                } else if(staging_buffers[i].size < staging_buffers[best_fit_idx].size) {
+                if(best_fit_idx >= staging_buffers.size() || staging_buffers[i].size < staging_buffers[best_fit_idx].size) {
                     // The current buffer is more suitable than the previous best buffer
                     best_fit_idx = i;
                 }
@@ -578,11 +583,7 @@ namespace rhi {
         size_t best_fit_idx = scratch_buffers.size();
         for(size_t i = 0; i < scratch_buffers.size(); i++) {
             if(scratch_buffers[i].size >= num_bytes) {
-                if(best_fit_idx >= scratch_buffers.size()) {
-                    // First suitable buffer we've found, save it for later use
-                    best_fit_idx = i;
-
-                } else if(scratch_buffers[i].size < scratch_buffers[best_fit_idx].size) {
+                if(best_fit_idx >= scratch_buffers.size() || scratch_buffers[i].size < scratch_buffers[best_fit_idx].size) {
                     // The current buffer is a better fit than the previous best fit buffer
                     best_fit_idx = i;
                 }
@@ -591,8 +592,7 @@ namespace rhi {
 
         if(best_fit_idx < scratch_buffers.size()) {
             // We already have a suitable scratch buffer!
-            auto buffer = D3D12Buffer{};
-            buffer = std::move(scratch_buffers[best_fit_idx]);
+            auto buffer = std::move(scratch_buffers[best_fit_idx]);
             scratch_buffers.erase(scratch_buffers.begin() + best_fit_idx);
 
             return buffer;
@@ -829,7 +829,7 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::create_gpu_frame_synchronization_objects() {
-        frame_fence_values.resize(settings.num_in_flight_frames);
+        frame_fence_values.resize(settings.num_in_flight_gpu_frames);
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
         set_object_name(*frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
@@ -840,11 +840,11 @@ namespace rhi {
     void D3D12RenderDevice::create_command_allocators() {
         MTR_SCOPE("D3D12RenderDevice", "create_command_allocators");
 
-        direct_command_allocators.resize(settings.num_in_flight_frames);
-        compute_command_allocators.resize(settings.num_in_flight_frames);
-        copy_command_allocators.resize(settings.num_in_flight_frames);
+        direct_command_allocators.resize(settings.num_in_flight_gpu_frames);
+        compute_command_allocators.resize(settings.num_in_flight_gpu_frames);
+        copy_command_allocators.resize(settings.num_in_flight_gpu_frames);
 
-        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             HRESULT result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
                                                             IID_PPV_ARGS(direct_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
@@ -875,7 +875,7 @@ namespace rhi {
 
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                                   MAX_NUM_TEXTURES * 2 * settings.num_in_flight_frames);
+                                                                   MAX_NUM_TEXTURES * 2 * settings.num_in_flight_gpu_frames);
 
         cbv_srv_uav_heap = new_cbv_srv_uav_heap;
         cbv_srv_uav_size = new_cbv_srv_uav_size;
@@ -1076,7 +1076,7 @@ namespace rhi {
         root_descriptors.emplace("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
         root_descriptors.emplace("raytracing_scene", RootDescriptorDescription{4, DescriptorType::ShaderResource});
 
-        material_bind_group_builder.reserve(settings.num_in_flight_frames);
+        material_bind_group_builder.reserve(settings.num_in_flight_gpu_frames);
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
@@ -1085,13 +1085,13 @@ namespace rhi {
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
 
-        for(uint32_t i = 0; i < settings.num_in_flight_frames; i++) {
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(root_descriptors.size(), gpu_handle);
+            descriptor_table_gpu_handles.emplace(root_descriptors.size() + 1, gpu_handle);
 
             material_bind_group_builder.emplace_back(*device.Get(),
                                                      *cbv_srv_uav_heap.Get(),

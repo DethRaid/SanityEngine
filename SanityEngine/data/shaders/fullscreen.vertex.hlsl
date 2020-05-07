@@ -3,14 +3,7 @@ struct FullscreenVertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-struct MaterialData {};
-
-#include "inc/standard_root_signature.hlsl"
-
 FullscreenVertexOutput main(uint vertex_id : SV_VERTEXID) {
-    // Use a w = 0 so that things draws with this geometry map to the far clipping plane
-    // See page 8 of http://www.terathon.com/gdc07_lengyel.pdf for details
-
     FullscreenVertexOutput output;
     if(vertex_id % 3 == 0) {
         output.position = float4(-1, -1, 1, 1);

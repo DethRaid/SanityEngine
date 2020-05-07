@@ -241,7 +241,7 @@ namespace rhi {
         as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                           as_prebuild_info.ResultDataMaxSizeInBytes);
 
-        auto scratch_buffer = device->get_scratch_buffer(as_prebuild_info.ScratchDataSizeInBytes);
+        auto scratch_buffer = device->get_scratch_buffer(static_cast<uint32_t>(as_prebuild_info.ScratchDataSizeInBytes));
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
@@ -311,7 +311,7 @@ namespace rhi {
         prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                        prebuild_info.ResultDataMaxSizeInBytes);
 
-        auto scratch_buffer = device->get_scratch_buffer(prebuild_info.ScratchDataSizeInBytes);
+        auto scratch_buffer = device->get_scratch_buffer(static_cast<uint32_t>(prebuild_info.ScratchDataSizeInBytes));
 
         const auto as_buffer_create_info = BufferCreateInfo{.name = "Raytracing Scene",
                                                             .usage = BufferUsage::RaytracingAccelerationStructure,

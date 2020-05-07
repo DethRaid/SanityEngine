@@ -192,10 +192,7 @@ namespace rhi {
 
                 root_parameters[idx].descriptor.address = scene->resource->GetGPUVirtualAddress();
 
-                auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
-                              D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-
-                used_buffers.emplace_back(scene, states);
+                // Don't need to issue barriers for raytracing acceleration structures
 
             } else {
                 logger->warn("No resources bound to root descriptor {}", name);
