@@ -697,7 +697,7 @@ namespace rhi {
                     continue;
                 }
 
-                D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_4};
+                D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_5};
                 res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
                 if(FAILED(res)) {
                     logger->warn("Ignoring adapter {} - Could not check the supported shader model: {}",
