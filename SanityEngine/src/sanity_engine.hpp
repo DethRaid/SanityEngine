@@ -54,8 +54,6 @@ private:
     std::unique_ptr<FlycamController> player_controller;
 
 #pragma region Debug
-    void create_debug_cube();
-
     void create_debug_plane();
 #pragma endregion
 
@@ -63,5 +61,7 @@ private:
     void create_the_sun();
 
     void create_flycam_player();
+
+    void load_bve_train(const std::string& filepath);
 #pragma endregion
 };

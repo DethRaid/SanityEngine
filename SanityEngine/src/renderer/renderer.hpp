@@ -34,6 +34,9 @@ namespace renderer {
      */
     class Renderer {
     public:
+        static std::vector<BveVertex> cube_vertices;
+        static std::vector<uint32_t> cube_indices;
+
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
         void begin_frame(uint64_t frame_count);
