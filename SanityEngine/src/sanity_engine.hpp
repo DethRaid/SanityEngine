@@ -7,6 +7,7 @@
 #include "player/flycam_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
+#include "bve/bve_wrapper.hpp"
 #include "stats/framerate_tracker.hpp"
 
 /*!
@@ -39,6 +40,8 @@ private:
     std::unique_ptr<renderer::Renderer> renderer;
 
     FramerateTracker framerate_tracker{1000};
+
+    BveWrapper bve;
 
     GLFWwindow* window;
 

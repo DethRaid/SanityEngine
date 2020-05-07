@@ -406,3 +406,4 @@ MigrationBackup/
 out/
 /build
 /SanityEngine/extern/aftermath
+/SanityEngine/data/trains

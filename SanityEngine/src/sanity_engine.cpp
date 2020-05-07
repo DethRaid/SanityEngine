@@ -93,6 +93,8 @@ void SanityEngine::run() {
                 create_debug_plane();
 
                 create_flycam_player();
+
+                load_bve_train();
             }
 
             player_controller->update_player_transform(last_frame_duration);
