@@ -27,6 +27,6 @@ namespace renderer {
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights
          */
-        float angular_size{glm::radians(0.53f)};
+        float angular_size{glm::radians(0.53f * 10)};
     };
 } // namespace renderer
