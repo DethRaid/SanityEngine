@@ -1,8 +1,13 @@
 struct Camera {
     float4x4 view;
     float4x4 projection;
+    float4x4 inverse_view;
+    float4x4 inverse_projection;
+
     float4x4 previous_view;
     float4x4 previous_projection;
+    float4x4 previous_inverse_view;
+    float4x4 previous_inverse_projection;
 };
 
 struct Light {

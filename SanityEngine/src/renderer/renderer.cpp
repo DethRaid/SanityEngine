@@ -242,8 +242,8 @@ namespace renderer {
             const auto& camera = registry.get<CameraComponent>(entity);
 
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
-            matrices.previous_projection_matrix = matrices.projection_matrix;
-            matrices.previous_view_matrix = matrices.view_matrix;
+
+            matrices.copy_matrices_to_previous();
             matrices.calculate_view_matrix(transform);
             matrices.calculate_projection_matrix(camera);
         }

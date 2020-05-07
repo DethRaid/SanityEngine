@@ -8,12 +8,19 @@
 #include "../rhi/resource_command_list.hpp"
 
 namespace renderer {
+    void CameraMatrices::copy_matrices_to_previous() {
+        previous_view_matrix = view_matrix;
+        previous_projection_matrix = projection_matrix;
+        previous_inverse_view_matrix = inverse_view_matrix;
+        previous_inverse_projection_matrix = inverse_projection_matrix;
+    }
+
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
         view_matrix = glm::toMat4(transform.rotation);
 
         view_matrix = glm::translate(view_matrix, -transform.position);
 
-        view_matrix = glm::transpose(view_matrix);
+        inverse_view_matrix = glm::inverse(view_matrix);
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
@@ -29,19 +36,20 @@ namespace renderer {
         projection_matrix[0][0] = static_cast<float>(e);
         projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);
         projection_matrix[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
-        projection_matrix[3][2] = -1.0f;
-        projection_matrix[2][3] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+        projection_matrix[2][3] = -1.0f;
+        projection_matrix[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+
+        inverse_projection_matrix = glm::inverse(projection_matrix);
     }
 
     CameraMatrixBuffer::CameraMatrixBuffer(rhi::RenderDevice& device_in, const uint32_t num_in_flight_frames) : device{&device_in} {
         device_data.reserve(num_in_flight_frames);
 
-        rhi::BufferCreateInfo create_info{};
-        create_info.name = "Camera Matrices";
-        create_info.usage = rhi::BufferUsage::ConstantBuffer;
-        create_info.size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS;
+        auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer,
+                                                 .size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS};
 
         for(uint32_t i = 0; i < num_in_flight_frames; i++) {
+            create_info.name = fmt::format("Camera Matrix Buffer {}", i);
             auto buffer = device->create_buffer(create_info);
             device_data.push_back(buffer.release());
         }

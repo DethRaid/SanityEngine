@@ -20,9 +20,15 @@ namespace renderer {
     struct CameraMatrices {
         glm::mat4 view_matrix{};
         glm::mat4 projection_matrix{};
+        glm::mat4 inverse_view_matrix{};
+        glm::mat4 inverse_projection_matrix{};
 
         glm::mat4 previous_view_matrix{};
         glm::mat4 previous_projection_matrix{};
+        glm::mat4 previous_inverse_view_matrix{};
+        glm::mat4 previous_inverse_projection_matrix{};
+
+        void copy_matrices_to_previous();
 
         void calculate_view_matrix(const TransformComponent& transform);
 

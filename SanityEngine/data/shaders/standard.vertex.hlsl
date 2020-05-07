@@ -21,7 +21,7 @@ VertexOutput main(BveVertex input) {
 
     Camera camera = cameras[constants.camera_index];
 
-    output.position = mul(float4(input.position, 1), mul(camera.view, camera.projection));
+    output.position = mul(camera.projection, mul(camera.view, float4(input.position, 1)));
     output.normal = input.normal;
     output.color = input.color;
     output.texcoord = input.texcoord;

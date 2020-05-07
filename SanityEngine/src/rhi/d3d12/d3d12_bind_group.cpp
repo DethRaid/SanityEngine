@@ -199,6 +199,7 @@ namespace rhi {
             }
         }
 
+
         // Bind resources to descriptor table descriptors
         for(const auto& [name, desc] : descriptor_table_descriptor_mappings) {
             if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
