@@ -27,6 +27,6 @@ namespace renderer {
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights
          */
-        float angular_size{glm::radians(0.53f * 10)};
+        float angular_size{glm::radians(0.53f * 10)};   // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 } // namespace renderer
