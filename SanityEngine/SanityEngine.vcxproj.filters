@@ -67,6 +67,12 @@
     <Filter Include="Source Files\external">
       <UniqueIdentifier>{55598584-eda2-4739-8f3b-5a760cc1977e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\bve">
+      <UniqueIdentifier>{e92e3a3a-61c9-45f4-93bf-7266e7919eac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bve">
+      <UniqueIdentifier>{60ef05e0-a35a-47a7-99f9-361e52b6ea5a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -143,6 +149,12 @@
     </ClCompile>
     <ClCompile Include="src\renderer\material_data_buffer.cpp">
       <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="bve_wrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bve\bve_wrapper.cpp">
+      <Filter>Source Files\bve</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -286,6 +298,12 @@
     </ClInclude>
     <ClInclude Include="src\core\defer.hpp">
       <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="bve_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bve\bve_wrapper.hpp">
+      <Filter>Header Files\bve</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
