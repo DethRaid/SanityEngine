@@ -32,6 +32,7 @@ namespace renderer {
         // Reset the projection matrix, just to be sure
         projection_matrix = {};
 
+
         // Infinite projection matrix
         projection_matrix[0][0] = static_cast<float>(e);
         projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);

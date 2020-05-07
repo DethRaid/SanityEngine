@@ -7,6 +7,7 @@ struct BveVertex {
 
 struct VertexOutput {
     float4 position : SV_POSITION;
+    float3 position_worldspace : WORLDPOS;
     float3 normal : NORMAL;
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
@@ -22,6 +23,7 @@ VertexOutput main(BveVertex input) {
     Camera camera = cameras[constants.camera_index];
 
     output.position = mul(camera.projection, mul(camera.view, float4(input.position, 1)));
+    output.position_worldspace = input.position;
     output.normal = input.normal;
     output.color = input.color;
     output.texcoord = input.texcoord;
