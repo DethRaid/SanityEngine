@@ -80,7 +80,8 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     MaterialData material = material_buffer[constants.material_index];
     Texture2D texture = textures[material.texture_idx];
-    float4 color = texture.Sample(bilinear_sampler, input.texcoord);
+    float4 color = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
 
-    return float4(color.rgb * input.color.rgb * light * light_strength, input.color.a * color.a);
+
+    return float4(color.rgb * (light * light_strength + float3(0.2, 0.2, 0.2)), color.a);
 }
