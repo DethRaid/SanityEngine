@@ -203,13 +203,22 @@ namespace renderer {
         return StaticMeshRenderableComponent{.mesh = mesh, .rt_mesh = std::move(raytracing_mesh)};
     }
 
-    TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
+    ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
         const auto idx = static_cast<uint32_t>(all_images.size());
 
         all_images.push_back(device->create_image(create_info));
         image_name_to_index.emplace(create_info.name, idx);
 
         return {idx};
+    }
+
+    std::optional<ImageHandle> Renderer::get_image_handle(const std::string& name) {
+        if(const auto itr = image_name_to_index.find(name); itr != image_name_to_index.end()) {
+            return ImageHandle{itr->second};
+
+        } else {
+            return std::nullopt;
+        }
     }
 
     rhi::Image& Renderer::get_image(const std::string& image_name) const {

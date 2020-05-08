@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace renderer {
-    struct TextureHandle {
+    struct ImageHandle {
         uint32_t handle;
     };
 

@@ -9,6 +9,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <filesystem>
+
 #include <stb_image.h>
 
 #include "core/abort.hpp"
@@ -167,7 +168,7 @@ void SanityEngine::create_flycam_player() {
 }
 
 struct BveMaterial {
-    renderer::TextureHandle color_texture;
+    renderer::ImageHandle color_texture;
 };
 
 void SanityEngine::load_bve_train(const std::string& filename) {
@@ -222,32 +223,42 @@ void SanityEngine::load_bve_train(const std::string& filename) {
                 const auto texture_msg = fmt::format("Load texture {}", texture_name);
                 MTR_SCOPE("SanityEngine", texture_msg.c_str());
 
-                const auto texture_path = train_path.replace_filename(texture_name).string();
-
-                int width, height, num_channels;
-                const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 4);
-                if(texture_data == nullptr) {
-                    logger->error("Could not load texture {}", texture_name);
-                    bve::bve_delete_string(const_cast<char*>(texture_name));
-
-                } else {
-                    const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
-                                                                  .usage = rhi::ImageUsage::SampledImage,
-                                                                  .format = rhi::ImageFormat::Rgba8,
-                                                                  .width = static_cast<uint32_t>(width),
-                                                                  .height = static_cast<uint32_t>(height),
-                                                                  .depth = 1};
-                    const auto texture_handle = renderer->create_image(create_info);
-
+                const auto texture_handle_maybe = renderer->get_image_handle(texture_name);
+                if(texture_handle_maybe) {
                     auto& material_data = renderer->get_material_data_buffer();
                     const auto material_handle = material_data.get_next_free_material<BveMaterial>();
                     auto& material = material_data.at<BveMaterial>(material_handle);
-                    material.color_texture = texture_handle;
+                    material.color_texture = *texture_handle_maybe;
 
                     mesh.material = material_handle;
 
-                    bve::bve_delete_string(const_cast<char*>(texture_name));
+                } else {
+                    const auto texture_path = train_path.replace_filename(texture_name).string();
+
+                    int width, height, num_channels;
+                    const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 4);
+                    if(texture_data == nullptr) {
+                        logger->error("Could not load texture {}", texture_name);
+
+                    } else {
+                        const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
+                                                                      .usage = rhi::ImageUsage::SampledImage,
+                                                                      .format = rhi::ImageFormat::Rgba8,
+                                                                      .width = static_cast<uint32_t>(width),
+                                                                      .height = static_cast<uint32_t>(height),
+                                                                      .depth = 1};
+                        const auto texture_handle = renderer->create_image(create_info);
+
+                        auto& material_data = renderer->get_material_data_buffer();
+                        const auto material_handle = material_data.get_next_free_material<BveMaterial>();
+                        auto& material = material_data.at<BveMaterial>(material_handle);
+                        material.color_texture = texture_handle;
+
+                        mesh.material = material_handle;
+                    }
                 }
+
+                bve::bve_delete_string(const_cast<char*>(texture_name));
             }
 
             const auto entity = registry.create();

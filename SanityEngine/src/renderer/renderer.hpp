@@ -41,7 +41,9 @@ namespace renderer {
         [[nodiscard]] StaticMeshRenderableComponent create_static_mesh(const std::vector<BveVertex>& vertices,
                                                                        const std::vector<uint32_t>& indices);
 
-        [[yesdiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info);
+        [[yesdiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info);
+
+        [[nodisacrd]] std::optional<ImageHandle> get_image_handle(const std::string& name);
 
         [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
 
