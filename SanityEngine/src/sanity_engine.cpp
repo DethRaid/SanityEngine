@@ -179,8 +179,6 @@ void SanityEngine::load_bve_train(const std::string& filename) {
             return;
         }
 
-        // TODO: Create a subentity for each of the mesh parts
-        // TODO: Collect train vertices and indices into SanityEngine mesh data
         for(uint32_t i = 0; i < train->meshes.count; i++) {
             const auto& bve_mesh = train->meshes.ptr[i];
 
@@ -198,11 +196,16 @@ void SanityEngine::load_bve_train(const std::string& filename) {
 
             std::vector<uint32_t> indices;
             indices.reserve(bve_mesh.indices.count);
-            std::transform(bve_mesh.indices.ptr, bve_mesh.indices.ptr + bve_mesh.indices.count, std::back_inserter(indices), [&](size_t bve_idx) {
-                return static_cast<uint32_t>(bve_idx);
-            });
+            std::transform(bve_mesh.indices.ptr,
+                           bve_mesh.indices.ptr + bve_mesh.indices.count,
+                           std::back_inserter(indices),
+                           [&](const size_t bve_idx) { return static_cast<uint32_t>(bve_idx); });
 
             auto mesh = renderer->create_static_mesh(vertices, indices);
+
+            if(bve_mesh.texture.texture_id.exists) {
+                const auto* texture_name = bve::BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+            }
 
             const auto entity = registry.create();
 

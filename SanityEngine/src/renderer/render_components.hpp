@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "handles.hpp"
 #include "lights.hpp"
 #include "mesh.hpp"
 

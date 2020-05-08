@@ -8,6 +8,7 @@
 #include "../rhi/render_pipeline_state.hpp"
 #include "../settings.hpp"
 #include "camera_matrix_buffer.hpp"
+#include "handles.hpp"
 #include "material_data_buffer.hpp"
 #include "render_components.hpp"
 
@@ -19,14 +20,6 @@ namespace rhi {
 struct GLFWwindow;
 
 namespace renderer {
-    struct TextureHandle {
-        uint32_t handle;
-    };
-
-    struct MaterialHandle {
-        uint32_t handle;
-    };
-
     /*!
      * \brief Renderer class that uses a clustered forward lighting algorithm
      *
