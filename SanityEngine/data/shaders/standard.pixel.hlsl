@@ -8,7 +8,9 @@ struct VertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-struct MaterialData {};
+struct MaterialData {
+    uint texture_idx;
+};
 
 #include "inc/standard_root_signature.hlsl"
 
@@ -76,5 +78,9 @@ float4 main(VertexOutput input) : SV_TARGET {
         }
     }
 
-    return float4(input.color.rgb * light * light_strength, input.color.a);
+    MaterialData material = material_buffer[constants.material_index];
+    Texture2D texture = textures[material.texture_idx];
+    float4 color = texture.Sample(bilinear_sampler, input.texcoord);
+
+    return float4(color.rgb * input.color.rgb * light * light_strength, input.color.a * color.a);
 }

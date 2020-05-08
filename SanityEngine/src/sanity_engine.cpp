@@ -42,6 +42,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     // spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
     spdlog::set_pattern("[%n] [%^%l%$] %v");
 
+    logger->set_level(spdlog::level::debug);
+
     logger->info("HELLO HUMAN");
 
     {
@@ -225,6 +227,7 @@ void SanityEngine::load_bve_train(const std::string& filename) {
 
                 const auto texture_handle_maybe = renderer->get_image_handle(texture_name);
                 if(texture_handle_maybe) {
+                    logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->idx);
                     auto& material_data = renderer->get_material_data_buffer();
                     const auto material_handle = material_data.get_next_free_material<BveMaterial>();
                     auto& material = material_data.at<BveMaterial>(material_handle);
@@ -236,7 +239,7 @@ void SanityEngine::load_bve_train(const std::string& filename) {
                     const auto texture_path = train_path.replace_filename(texture_name).string();
 
                     int width, height, num_channels;
-                    const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 4);
+                    const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 0);
                     if(texture_data == nullptr) {
                         logger->error("Could not load texture {}", texture_name);
 
@@ -247,7 +250,9 @@ void SanityEngine::load_bve_train(const std::string& filename) {
                                                                       .width = static_cast<uint32_t>(width),
                                                                       .height = static_cast<uint32_t>(height),
                                                                       .depth = 1};
-                        const auto texture_handle = renderer->create_image(create_info);
+                        const auto texture_handle = renderer->create_image(create_info, texture_data);
+
+                        logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.idx);
 
                         auto& material_data = renderer->get_material_data_buffer();
                         const auto material_handle = material_data.get_next_free_material<BveMaterial>();

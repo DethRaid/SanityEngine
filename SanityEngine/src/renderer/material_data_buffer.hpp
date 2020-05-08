@@ -14,7 +14,7 @@ namespace renderer {
      */
     class MaterialDataBuffer {
     public:
-        explicit MaterialDataBuffer(size_t buffer_size_in);
+        explicit MaterialDataBuffer(uint32_t buffer_size_in);
 
         MaterialDataBuffer(const MaterialDataBuffer& other) = delete;
         MaterialDataBuffer& operator=(const MaterialDataBuffer& other) = delete;
@@ -50,8 +50,12 @@ namespace renderer {
 
         [[nodiscard]] uint8_t* data() const;
 
+        [[nodiscard]] uint32_t size() const;
+
     private:
         uint8_t* buffer;
+
+        uint32_t buffer_size;
 
         uint32_t num_allocated_bytes = 0;
     };

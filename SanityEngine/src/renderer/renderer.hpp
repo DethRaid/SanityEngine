@@ -43,7 +43,9 @@ namespace renderer {
 
         [[yesdiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info);
 
-        [[nodisacrd]] std::optional<ImageHandle> get_image_handle(const std::string& name);
+        [[nodiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info, const void* image_data);
+
+        [[nodiscard]] std::optional<ImageHandle> get_image_handle(const std::string& name);
 
         [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
 
@@ -96,6 +98,8 @@ namespace renderer {
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;
 
         void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;
+
+        void upload_material_data(rhi::ResourceCommandList& command_list, uint32_t frame_idx);
 
 #pragma region Raytracing
         rhi::RaytracingScene raytracing_scene;

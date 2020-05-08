@@ -142,8 +142,6 @@ namespace rhi {
     }
 
     void D3D12RenderCommandList::set_camera_idx(const uint32_t camera_idx) {
-        MTR_SCOPE("D3D12RenderCommandList", "set_camera_idx");
-
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a pipeline before setting the camera index");
 
         commands->SetGraphicsRoot32BitConstant(0, camera_idx, 0);
@@ -187,6 +185,12 @@ namespace rhi {
         commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         current_mesh_data = &mesh_data;
+    }
+
+    void D3D12RenderCommandList::set_material_idx(const uint32_t idx) {
+        ENSURE(current_render_pipeline_state != nullptr, "Must bind a pipeline before setting the material index");
+
+        commands->SetGraphicsRoot32BitConstant(0, idx, 1);
     }
 
     void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {

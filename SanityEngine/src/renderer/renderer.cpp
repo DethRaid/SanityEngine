@@ -174,6 +174,8 @@ namespace renderer {
 
         update_cameras(registry, *command_list, frame_idx);
 
+        upload_material_data(*command_list, frame_idx);
+
         render_3d_scene(registry, *command_list, frame_idx);
 
         device->submit_command_list(std::move(command_list));
@@ -210,6 +212,17 @@ namespace renderer {
         image_name_to_index.emplace(create_info.name, idx);
 
         return {idx};
+    }
+
+    ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info, const void* image_data) {
+        const auto handle = create_image(create_info);
+        auto& image = *all_images[handle.idx];
+
+        auto commands = device->create_resource_command_list();
+        commands->copy_data_to_image(image_data, image);
+        device->submit_command_list(std::move(commands));
+
+        return handle;
     }
 
     std::optional<ImageHandle> Renderer::get_image_handle(const std::string& name) {
@@ -352,6 +365,12 @@ namespace renderer {
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
     }
 
+    void Renderer::upload_material_data(rhi::ResourceCommandList& command_list, const uint32_t frame_idx) {
+        auto& buffer = *material_device_buffers[frame_idx];
+
+        command_list.copy_data_to_buffer(material_data_buffer->data(), material_data_buffer->size(), buffer, 0);
+    }
+
     void Renderer::rebuild_raytracing_scene(entt::registry& registry, rhi::RenderCommandList& command_list) {
         // TODO: Destroy the old raytracing scene
         // Also TODO: figure out how to update the raytracing scene without needing a full rebuild
@@ -403,6 +422,7 @@ namespace renderer {
         command_list.bind_mesh_data(*static_mesh_storage);
 
         registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
+            command_list.set_material_idx(mesh_renderable.material.handle);
             command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
         });
 

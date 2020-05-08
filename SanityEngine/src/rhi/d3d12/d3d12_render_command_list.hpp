@@ -31,6 +31,8 @@ namespace rhi {
 
         void bind_mesh_data(const MeshDataStore& mesh_data) override;
 
+        void set_material_idx(uint32_t idx) override;
+
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
 
         RaytracingMesh build_acceleration_structure_for_mesh(uint32_t num_vertices,

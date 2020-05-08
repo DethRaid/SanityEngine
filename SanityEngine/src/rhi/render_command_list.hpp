@@ -47,6 +47,11 @@ namespace rhi {
         virtual void bind_mesh_data(const MeshDataStore& mesh_data) = 0;
 
         /*!
+         * \brief Sets the material index for subsequent drawcalls to use
+         */
+        virtual void set_material_idx(uint32_t idx) = 0;
+
+        /*!
          * \brief Draws some of the indices in the current mesh data
          *
          * This method MUST be called after bind_mesh_data

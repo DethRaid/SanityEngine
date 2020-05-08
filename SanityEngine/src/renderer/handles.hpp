@@ -4,7 +4,7 @@
 
 namespace renderer {
     struct ImageHandle {
-        uint32_t handle;
+        uint32_t idx;
     };
 
     struct LightHandle {
