@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include <filesystem>
 #include <stb_image.h>
 
 #include "core/abort.hpp"
@@ -186,6 +187,8 @@ void SanityEngine::load_bve_train(const std::string& filename) {
             return;
         }
 
+        auto train_path = std::filesystem::path{filename};
+
         for(uint32_t i = 0; i < train->meshes.count; i++) {
             const auto& bve_mesh = train->meshes.ptr[i];
 
@@ -212,8 +215,10 @@ void SanityEngine::load_bve_train(const std::string& filename) {
 
             if(bve_mesh.texture.texture_id.exists) {
                 const auto* texture_name = bve::BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+                const auto texture_path = train_path.replace_filename(texture_name).string();
+
                 int width, height, num_channels;
-                const auto* texture_data = stbi_load(texture_name, &width, &height, &num_channels, 4);
+                const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 4);
                 if(texture_data == nullptr) {
                     logger->error("Could not load texture {}", texture_name);
                     bve::bve_delete_string(const_cast<char*>(texture_name));
