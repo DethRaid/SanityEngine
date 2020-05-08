@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include "../core/components.hpp"
@@ -135,7 +136,8 @@ namespace renderer {
 #pragma endregion
 
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
-        : settings{settings_in},
+        : logger{spdlog::stdout_color_st("Renderer")},
+          settings{settings_in},
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
@@ -144,6 +146,8 @@ namespace renderer {
         create_material_data_buffers();
 
         create_standard_pipeline();
+
+        create_atmospheric_sky_pipeline();
 
         ENSURE(settings_in.render_scale > 0, "Render scale may not be 0 or less");
 
@@ -293,6 +297,10 @@ namespace renderer {
         spdlog::info("Created standard pipeline");
     }
 
+    void Renderer::create_atmospheric_sky_pipeline() {
+        // TODO
+    }
+
     void Renderer::create_backbuffer_output_pipeline_and_material() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
@@ -304,8 +312,8 @@ namespace renderer {
         backbuffer_output_pipeline = device->create_render_pipeline_state(create_info);
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
-        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material)
-            .scene_output_image = {image_name_to_index[SCENE_COLOR_RENDER_TARGET]};
+        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = {
+            image_name_to_index[SCENE_COLOR_RENDER_TARGET]};
     }
 
     void Renderer::create_light_buffers() {
@@ -429,6 +437,14 @@ namespace renderer {
             command_list.set_material_idx(mesh_renderable.material.handle);
             command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
         });
+
+        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
+        if(atmosphere_view.size() > 1) {
+            logger->error("May only have one atmospheric sky component in a scene");
+        } else {
+            command_list.set_pipeline_state(*atmospheric_sky_pipeline);
+            command_list.draw(3);
+        }
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});

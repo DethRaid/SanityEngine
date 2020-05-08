@@ -56,6 +56,8 @@ namespace renderer {
         void end_device_capture() const;
 
     private:
+        std::shared_ptr<spdlog::logger> logger;
+
         Settings settings;
 
         std::unique_ptr<rhi::RenderDevice> device;
@@ -85,12 +87,16 @@ namespace renderer {
         std::queue<Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
 
+        std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
+
 #pragma region Initialization
         void create_static_mesh_storage();
 
         void create_material_data_buffers();
 
         void create_standard_pipeline();
+
+        void create_atmospheric_sky_pipeline();
 
         void create_scene_framebuffer(glm::uvec2 size);
 

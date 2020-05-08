@@ -74,7 +74,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     renderer = std::make_unique<renderer::Renderer>(window, settings);
     logger->info("Initialized renderer");
 
-    create_the_sun();
+    create_planetary_atmosphere();
 }
 
 SanityEngine::~SanityEngine() {
@@ -151,9 +151,13 @@ void SanityEngine::create_debug_plane() {
     logger->info("Created plane");
 }
 
-void SanityEngine::create_the_sun() {
-    const auto sun = registry.create();
-    registry.assign<renderer::LightComponent>(sun);
+void SanityEngine::create_planetary_atmosphere() {
+    const auto atmosphere = registry.create();
+
+    // No need to set parameters, the default light component represents the Earth's sun
+    registry.assign<renderer::LightComponent>(atmosphere);
+
+    registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
 }
 
 void SanityEngine::create_flycam_player() {
