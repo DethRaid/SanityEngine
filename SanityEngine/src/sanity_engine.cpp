@@ -173,6 +173,24 @@ struct BveMaterial {
     renderer::ImageHandle color_texture;
 };
 
+const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const int width, const int height) {
+    const auto num_pixels = width * height;
+    const auto total_num_bytes = num_pixels * 4;
+    auto* new_data = new stbi_uc[total_num_bytes];
+
+    for(uint32_t i = 0; i < num_pixels; i++) {
+        const auto src_idx = i * 3;
+        const auto dst_idx = i * 4;
+
+        new_data[dst_idx] = texture_data[src_idx];
+        new_data[dst_idx + 1] = texture_data[src_idx + 1];
+        new_data[dst_idx + 2] = texture_data[src_idx + 2];
+        new_data[dst_idx + 3] = 0xFF;
+    }
+
+    return new_data;
+}
+
 void SanityEngine::load_bve_train(const std::string& filename) {
     const auto train_msg = fmt::format("Load train {}", filename);
     MTR_SCOPE("SanityEngine", train_msg.c_str());
@@ -244,6 +262,10 @@ void SanityEngine::load_bve_train(const std::string& filename) {
                         logger->error("Could not load texture {}", texture_name);
 
                     } else {
+                        if(num_channels == 3) {
+                            texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
+                        }
+
                         const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
                                                                       .usage = rhi::ImageUsage::SampledImage,
                                                                       .format = rhi::ImageFormat::Rgba8,
@@ -260,6 +282,8 @@ void SanityEngine::load_bve_train(const std::string& filename) {
                         material.color_texture = texture_handle;
 
                         mesh.material = material_handle;
+
+                        delete[] texture_data;
                     }
                 }
 

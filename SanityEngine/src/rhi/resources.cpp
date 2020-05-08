@@ -4,7 +4,7 @@ namespace rhi {
     uint32_t size_in_bytes(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:
-                return 32;
+                return 16;
 
             case ImageFormat::Rgba8:
                 [[fallthrough]];
@@ -13,7 +13,7 @@ namespace rhi {
             case ImageFormat::Depth24Stencil8:
                 [[fallthrough]];
             default:
-                return 8;
+                return 4;
         }
     }
 } // namespace render

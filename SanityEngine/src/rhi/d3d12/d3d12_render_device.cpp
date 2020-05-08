@@ -175,7 +175,7 @@ namespace rhi {
                 break;
 
             case ImageUsage::SampledImage:
-                initial_state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+                initial_state = D3D12_RESOURCE_STATE_COPY_DEST;
                 break;
 
             case ImageUsage::DepthStencil:
