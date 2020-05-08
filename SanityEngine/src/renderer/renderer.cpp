@@ -222,6 +222,10 @@ namespace renderer {
         return *all_images[idx];
     }
 
+    MaterialDataBuffer& Renderer::get_material_data_buffer() const {
+        return *material_data_buffer;
+    }
+
     void Renderer::create_static_mesh_storage() {
         const auto vertex_create_info = rhi::BufferCreateInfo{
             .name = "Static Mesh Vertex Buffer",

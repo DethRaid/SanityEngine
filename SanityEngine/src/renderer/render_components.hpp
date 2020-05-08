@@ -10,6 +10,8 @@ namespace renderer {
     struct StaticMeshRenderableComponent {
         Mesh mesh;
         rhi::RaytracingMesh rt_mesh;
+
+        MaterialHandle material{0};
     };
 
     struct CameraComponent {

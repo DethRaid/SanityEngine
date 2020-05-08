@@ -7,6 +7,9 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include "core/abort.hpp"
 
 int main() {
@@ -162,6 +165,10 @@ void SanityEngine::create_flycam_player() {
     logger->info("Created flycam");
 }
 
+struct BveMaterial {
+    renderer::TextureHandle color_texture;
+};
+
 void SanityEngine::load_bve_train(const std::string& filename) {
     const auto train = bve.load_mesh_from_file(filename);
     if(train->errors.count > 0) {
@@ -205,6 +212,29 @@ void SanityEngine::load_bve_train(const std::string& filename) {
 
             if(bve_mesh.texture.texture_id.exists) {
                 const auto* texture_name = bve::BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+                int width, height, num_channels;
+                const auto* texture_data = stbi_load(texture_name, &width, &height, &num_channels, 4);
+                if(texture_data == nullptr) {
+                    logger->error("Could not load texture {}", texture_name);
+                    bve::bve_delete_string(const_cast<char*>(texture_name));
+                }
+
+                const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
+                                                              .usage = rhi::ImageUsage::SampledImage,
+                                                              .format = rhi::ImageFormat::Rgba8,
+                                                              .width = static_cast<uint32_t>(width),
+                                                              .height = static_cast<uint32_t>(height),
+                                                              .depth = 1};
+                const auto texture_handle = renderer->create_image(create_info);
+
+                auto& material_data = renderer->get_material_data_buffer();
+                const auto material_idx = material_data.get_next_free_index<BveMaterial>();
+                auto& material = material_data.at<BveMaterial>(material_idx);
+                material.color_texture = texture_handle;
+
+                mesh.material = {material_idx};
+
+                bve::bve_delete_string(const_cast<char*>(texture_name));
             }
 
             const auto entity = registry.create();

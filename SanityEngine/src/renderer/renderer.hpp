@@ -45,6 +45,8 @@ namespace renderer {
 
         [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
 
+        [[nodiscard]] MaterialDataBuffer& get_material_data_buffer() const;
+
     private:
         Settings settings;
 
