@@ -28,6 +28,7 @@
     <ClCompile Include="src\input\input_manager.cpp" />
     <ClCompile Include="src\player\flycam_controller.cpp" />
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
+    <ClCompile Include="src\renderer\handles.hpp" />
     <ClCompile Include="src\renderer\material_data_buffer.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\rhi\d3d12\d3d12_bind_group.cpp" />
@@ -152,7 +153,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
     <LibraryPath>E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>

@@ -153,6 +153,9 @@
     <ClCompile Include="src\bve\bve_wrapper.cpp">
       <Filter>Source Files\bve</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\handles.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
