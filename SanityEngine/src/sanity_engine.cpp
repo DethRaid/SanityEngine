@@ -217,24 +217,25 @@ void SanityEngine::load_bve_train(const std::string& filename) {
                 if(texture_data == nullptr) {
                     logger->error("Could not load texture {}", texture_name);
                     bve::bve_delete_string(const_cast<char*>(texture_name));
+
+                } else {
+                    const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
+                                                                  .usage = rhi::ImageUsage::SampledImage,
+                                                                  .format = rhi::ImageFormat::Rgba8,
+                                                                  .width = static_cast<uint32_t>(width),
+                                                                  .height = static_cast<uint32_t>(height),
+                                                                  .depth = 1};
+                    const auto texture_handle = renderer->create_image(create_info);
+
+                    auto& material_data = renderer->get_material_data_buffer();
+                    const auto material_handle = material_data.get_next_free_material<BveMaterial>();
+                    auto& material = material_data.at<BveMaterial>(material_handle);
+                    material.color_texture = texture_handle;
+
+                    mesh.material = material_handle;
+
+                    bve::bve_delete_string(const_cast<char*>(texture_name));
                 }
-
-                const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
-                                                              .usage = rhi::ImageUsage::SampledImage,
-                                                              .format = rhi::ImageFormat::Rgba8,
-                                                              .width = static_cast<uint32_t>(width),
-                                                              .height = static_cast<uint32_t>(height),
-                                                              .depth = 1};
-                const auto texture_handle = renderer->create_image(create_info);
-
-                auto& material_data = renderer->get_material_data_buffer();
-                const auto material_idx = material_data.get_next_free_index<BveMaterial>();
-                auto& material = material_data.at<BveMaterial>(material_idx);
-                material.color_texture = texture_handle;
-
-                mesh.material = {material_idx};
-
-                bve::bve_delete_string(const_cast<char*>(texture_name));
             }
 
             const auto entity = registry.create();

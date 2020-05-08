@@ -222,9 +222,7 @@ namespace renderer {
         return *all_images[idx];
     }
 
-    MaterialDataBuffer& Renderer::get_material_data_buffer() const {
-        return *material_data_buffer;
-    }
+    MaterialDataBuffer& Renderer::get_material_data_buffer() const { return *material_data_buffer; }
 
     void Renderer::create_static_mesh_storage() {
         const auto vertex_create_info = rhi::BufferCreateInfo{
@@ -279,8 +277,8 @@ namespace renderer {
 
         backbuffer_output_pipeline = device->create_render_pipeline_state(create_info);
 
-        backbuffer_output_material.handle = material_data_buffer->get_next_free_index<BackbufferOutputMaterial>();
-        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material.handle)
+        backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
+        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material)
             .scene_output_index = image_name_to_index[SCENE_COLOR_RENDER_TARGET];
     }
 

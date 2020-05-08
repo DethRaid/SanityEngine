@@ -7,10 +7,6 @@ namespace renderer {
         uint32_t handle;
     };
 
-    struct MaterialHandle {
-        uint32_t handle;
-    };
-
     struct LightHandle {
         uint32_t handle{0};
     };

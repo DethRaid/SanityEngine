@@ -3,6 +3,10 @@
 #include <stdint.h>
 
 namespace renderer {
+    struct MaterialHandle {
+        uint32_t handle;
+    };
+
     /*!
      * \brief Array that can hold data of multiple types of multiple sizes
      *
@@ -27,7 +31,7 @@ namespace renderer {
          * get from `get_next_free_index` with the same type as what you're requesting
          */
         template <typename MaterialDataStruct>
-        [[nodiscard]] MaterialDataStruct& at(uint32_t idx);
+        [[nodiscard]] MaterialDataStruct& at(MaterialHandle handle);
 
         /*!
          * \brief Provides access to an element in this array
@@ -36,13 +40,13 @@ namespace renderer {
          * get from `get_next_free_index` with the same type as what you're requesting
          */
         template <typename MaterialDataStruct>
-        [[nodiscard]] const MaterialDataStruct& at(uint32_t idx) const;
+        [[nodiscard]] const MaterialDataStruct& at(MaterialHandle handle) const;
 
         /*!
          * \brief Gets the index of the next free element of the requested type
          */
         template <typename MaterialDataStruct>
-        [[nodiscard]] uint32_t get_next_free_index();
+        [[nodiscard]] MaterialHandle get_next_free_material();
 
         [[nodiscard]] uint8_t* data() const;
 
@@ -53,17 +57,17 @@ namespace renderer {
     };
 
     template <typename MaterialDataStruct>
-    MaterialDataStruct& MaterialDataBuffer::at(uint32_t idx) {
-        return reinterpret_cast<MaterialDataStruct*>(buffer)[idx];
+    MaterialDataStruct& MaterialDataBuffer::at(MaterialHandle handle) {
+        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.handle];
     }
 
     template <typename MaterialDataStruct>
-    const MaterialDataStruct& MaterialDataBuffer::at(uint32_t idx) const {
-        return reinterpret_cast<MaterialDataStruct*>(buffer)[idx];
+    const MaterialDataStruct& MaterialDataBuffer::at(MaterialHandle handle) const {
+        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.handle];
     }
 
     template <typename MaterialDataStruct>
-    uint32_t MaterialDataBuffer::get_next_free_index() {
+    MaterialHandle MaterialDataBuffer::get_next_free_material() {
         constexpr uint32_t struct_size = sizeof(MaterialDataStruct);
 
         // Here's a Al Gore rhythm for your soul
@@ -82,6 +86,6 @@ namespace renderer {
 
         num_allocated_bytes = struct_size * new_idx;
 
-        return new_idx;
+        return {new_idx};
     }
 } // namespace renderer
