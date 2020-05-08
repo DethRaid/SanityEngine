@@ -171,6 +171,9 @@ struct BveMaterial {
 };
 
 void SanityEngine::load_bve_train(const std::string& filename) {
+    const auto train_msg = fmt::format("Load train {}", filename);
+    MTR_SCOPE("SanityEngine", train_msg.c_str());
+
     const auto train = bve.load_mesh_from_file(filename);
     if(train->errors.count > 0) {
         logger->error("Could not load train '{}'", filename);
@@ -215,6 +218,10 @@ void SanityEngine::load_bve_train(const std::string& filename) {
 
             if(bve_mesh.texture.texture_id.exists) {
                 const auto* texture_name = bve::BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+
+                const auto texture_msg = fmt::format("Load texture {}", texture_name);
+                MTR_SCOPE("SanityEngine", texture_msg.c_str());
+
                 const auto texture_path = train_path.replace_filename(texture_name).string();
 
                 int width, height, num_channels;
