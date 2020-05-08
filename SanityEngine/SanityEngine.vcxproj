@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bve_wrapper.cpp" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\minitrace\src\minitrace.c" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
@@ -48,7 +47,6 @@
     <ClCompile Include="src\windows\windows_helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bve_wrapper.h" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\core\abort.hpp" />
     <ClInclude Include="src\core\align.hpp" />
@@ -183,6 +181,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;MTR_ENABLED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

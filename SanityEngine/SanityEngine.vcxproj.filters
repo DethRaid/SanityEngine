@@ -150,9 +150,6 @@
     <ClCompile Include="src\renderer\material_data_buffer.cpp">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="bve_wrapper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\bve\bve_wrapper.cpp">
       <Filter>Source Files\bve</Filter>
     </ClCompile>
@@ -298,9 +295,6 @@
     </ClInclude>
     <ClInclude Include="src\core\defer.hpp">
       <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="bve_wrapper.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\bve\bve_wrapper.hpp">
       <Filter>Header Files\bve</Filter>

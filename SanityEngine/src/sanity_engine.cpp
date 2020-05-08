@@ -170,15 +170,43 @@ void SanityEngine::load_bve_train(const std::string& filename) {
         for(uint32_t i = 0; i < train->errors.count; i++) {
             const auto& error = train->errors.ptr[i];
             const auto error_data = bve.get_printable_error(error);
-            logger->error("{}", error_data->description);
+            logger->error("{}", error_data.description);
         }
 
-        return;
-
     } else {
-        const auto entity = registry.create();
+        if(train->meshes.count == 0) {
+            logger->error("No meshes loaded for train '{}'", filename);
+            return;
+        }
 
         // TODO: Create a subentity for each of the mesh parts
         // TODO: Collect train vertices and indices into SanityEngine mesh data
+        for(uint32_t i = 0; i < train->meshes.count; i++) {
+            const auto& bve_mesh = train->meshes.ptr[i];
+
+            std::vector<BveVertex> vertices;
+            vertices.reserve(bve_mesh.vertices.count);
+            std::transform(bve_mesh.vertices.ptr,
+                           bve_mesh.vertices.ptr + bve_mesh.vertices.count,
+                           std::back_inserter(vertices),
+                           [&](const bve::BVE_Vertex& vertex) {
+                               return BveVertex{.position = to_glm_vec3(vertex.position),
+                                                .normal = to_glm_vec3(vertex.normal),
+                                                .color = to_uint32_t(vertex.color),
+                                                .texcoord = to_glm_vec2(vertex.coord)};
+                           });
+
+            std::vector<uint32_t> indices;
+            indices.reserve(bve_mesh.indices.count);
+            std::transform(bve_mesh.indices.ptr, bve_mesh.indices.ptr + bve_mesh.indices.count, std::back_inserter(indices), [&](size_t bve_idx) {
+                return static_cast<uint32_t>(bve_idx);
+            });
+
+            auto mesh = renderer->create_static_mesh(vertices, indices);
+
+            const auto entity = registry.create();
+
+            registry.assign<renderer::StaticMeshRenderableComponent>(entity, std::move(mesh));
+        }
     }
 }
