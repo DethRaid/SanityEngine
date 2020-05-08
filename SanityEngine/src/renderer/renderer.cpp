@@ -20,7 +20,7 @@ namespace renderer {
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     struct BackbufferOutputMaterial {
-        uint32_t scene_output_index;
+        ImageHandle scene_output_image;
     };
 
     std::vector<uint8_t> load_shader(const std::string& shader_filename) {
@@ -246,6 +246,10 @@ namespace renderer {
 
     MaterialDataBuffer& Renderer::get_material_data_buffer() const { return *material_data_buffer; }
 
+    void Renderer::begin_device_capture() const { device->begin_capture(); }
+
+    void Renderer::end_device_capture() const { device->end_capture(); }
+
     void Renderer::create_static_mesh_storage() {
         const auto vertex_create_info = rhi::BufferCreateInfo{
             .name = "Static Mesh Vertex Buffer",
@@ -301,7 +305,7 @@ namespace renderer {
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
         material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material)
-            .scene_output_index = image_name_to_index[SCENE_COLOR_RENDER_TARGET];
+            .scene_output_image = {image_name_to_index[SCENE_COLOR_RENDER_TARGET]};
     }
 
     void Renderer::create_light_buffers() {
@@ -428,6 +432,7 @@ namespace renderer {
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});
+        command_list.set_material_idx(backbuffer_output_material.handle);
         command_list.set_pipeline_state(*backbuffer_output_pipeline);
 
         command_list.draw(3);

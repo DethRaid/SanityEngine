@@ -1,6 +1,7 @@
 #include "d3d12_resource_command_list.hpp"
 
 #include <minitrace.h>
+#include <spdlog/spdlog.h>
 
 #include "../../core/defer.hpp"
 #include "d3dx12.hpp"
@@ -33,13 +34,11 @@ namespace rhi {
         const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
         if(d3d12_buffer.mapped_ptr != nullptr) {
             // Copy the data directly, ezpz
-            uint8_t* ptr = reinterpret_cast<uint8_t*>(d3d12_buffer.mapped_ptr);
+            uint8_t* ptr = static_cast<uint8_t*>(d3d12_buffer.mapped_ptr);
             memcpy(ptr + offset, data, num_bytes);
 
         } else {
             // Upload the data using a staging buffer
-
-            // TODO: Don't use a staging buffer on UMA, but that has a lot of sync implications and I'm scared
 
             auto staging_buffer = device->get_staging_buffer(num_bytes);
             memcpy(staging_buffer.ptr, data, num_bytes);
@@ -63,7 +62,7 @@ namespace rhi {
 
         // TODO: Don't use a staging buffer on UMA
 
-        auto staging_buffer = device->get_staging_buffer(num_bytes);
+        auto staging_buffer = device->get_staging_buffer(num_bytes * 2);
         memcpy(staging_buffer.ptr, data, num_bytes);
 
         const auto& d3d12_image = static_cast<const D3D12Image&>(image);
@@ -76,7 +75,11 @@ namespace rhi {
         subresource.RowPitch = d3d12_image.width * bytes_per_pixel;
         subresource.SlicePitch = d3d12_image.width * d3d12_image.height * bytes_per_pixel;
 
-        UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
+        const auto
+            result = UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
+        if(result == 0 || FAILED(result)) {
+            spdlog::error("Could not copy data to image");
+        }
 
         DEFER(a, [&]() { device->return_staging_buffer(move(staging_buffer)); });
 

@@ -51,6 +51,10 @@ namespace renderer {
 
         [[nodiscard]] MaterialDataBuffer& get_material_data_buffer() const;
 
+        void begin_device_capture() const;
+
+        void end_device_capture() const;
+
     private:
         Settings settings;
 

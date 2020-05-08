@@ -91,6 +91,22 @@ namespace rhi {
 
         [[nodiscard]] virtual uint32_t get_cur_gpu_frame_idx() = 0;
 #pragma endregion
+
+#pragma region Debug
+        /*!
+         * \brief Begins a capture of GPU API calls
+         *
+         * NOTE: only has a meaningful effect if Sanity Engine is running in PIX
+         */
+        virtual void begin_capture() = 0;
+
+        /*!
+         * \brief Ends a capture of GPU API calls
+         * 
+         * NOTE: only has a meaningful effect if Sanity Engine is running in PIX
+         */
+        virtual void end_capture() = 0;
+#pragma endregion
     };
 
     [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);

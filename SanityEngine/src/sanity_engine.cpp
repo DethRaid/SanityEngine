@@ -211,6 +211,8 @@ void SanityEngine::load_bve_train(const std::string& filename) {
             return;
         }
 
+        renderer->begin_device_capture();
+
         auto train_path = std::filesystem::path{filename};
 
         for(uint32_t i = 0; i < train->meshes.count; i++) {
@@ -293,6 +295,9 @@ void SanityEngine::load_bve_train(const std::string& filename) {
             const auto entity = registry.create();
 
             registry.assign<renderer::StaticMeshRenderableComponent>(entity, std::move(mesh));
+
+            renderer->end_device_capture();
         }
     }
 }
+

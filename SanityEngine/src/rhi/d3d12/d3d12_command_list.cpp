@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "minitrace.h"
@@ -10,7 +12,8 @@
 using std::move;
 
 namespace rhi {
-    D3D12CommandList::D3D12CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds) : commands{std::move(cmds)} {}
+    D3D12CommandList::D3D12CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds)
+        : commands{std::move(cmds)} {}
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& old) noexcept
         : completion_functions{move(old.completion_functions)},

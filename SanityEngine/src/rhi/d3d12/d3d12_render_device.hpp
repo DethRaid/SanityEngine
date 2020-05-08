@@ -4,6 +4,7 @@
 #include <queue>
 
 #include <D3D12MemAlloc.h>
+#include <DXProgrammableCapture.h>
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi.h>
@@ -89,6 +90,10 @@ namespace rhi {
         void end_frame() override;
 
         uint32_t get_cur_gpu_frame_idx() override;
+
+        void begin_capture() override;
+
+        void end_capture() override;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;
@@ -112,6 +117,7 @@ namespace rhi {
 
         ComPtr<ID3D12Debug> debug_controller;
         ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
+        ComPtr<IDXGraphicsAnalysis> graphics_analysis;
 
         ComPtr<IDXGIFactory4> factory;
 

@@ -87,4 +87,4 @@ namespace rhi {
                                          D3D12_RESOURCE_STATES new_states,
                                          bool is_buffer_or_simultaneous_access_texture);
     };
-} // namespace render
+} // namespace rhi

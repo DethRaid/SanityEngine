@@ -35,8 +35,7 @@ namespace rhi {
           scratch_buffers_to_free{settings.num_in_flight_gpu_frames} {
 #ifndef NDEBUG
         // Only enable the debug layer if we're not running in PIX
-        ComPtr<IDXGraphicsAnalysis> ga;
-        const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&ga));
+        const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
         if(FAILED(result)) {
             enable_debugging();
         }
@@ -555,6 +554,18 @@ namespace rhi {
 
     uint32_t D3D12RenderDevice::get_cur_gpu_frame_idx() { return cur_gpu_frame_idx; }
 
+    void D3D12RenderDevice::begin_capture() {
+        if(graphics_analysis) {
+            graphics_analysis->BeginCapture();
+        }
+    }
+
+    void D3D12RenderDevice::end_capture() {
+        if(graphics_analysis) {
+            graphics_analysis->EndCapture();
+        }
+    }
+
     bool D3D12RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
     D3D12StagingBuffer D3D12RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
@@ -974,6 +985,7 @@ namespace rhi {
                                                         .MinLOD = 0,
                                                         .MaxLOD = D3D12_FLOAT32_MAX,
                                                         .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
+
     }
 
     void D3D12RenderDevice::create_standard_root_signature() {

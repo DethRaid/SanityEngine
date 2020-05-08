@@ -15,6 +15,11 @@ namespace renderer {
         MaterialHandle material{0};
     };
 
+    struct PostProcessingPassComponent {
+        uint32_t draw_idx{0};
+        MaterialHandle material{0};
+    };
+
     struct CameraComponent {
         uint32_t idx;
 
