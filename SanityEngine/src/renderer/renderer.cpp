@@ -438,13 +438,14 @@ namespace renderer {
             command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
         });
 
-        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
+        // TODO
+        /*const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
         } else {
             command_list.set_pipeline_state(*atmospheric_sky_pipeline);
             command_list.draw(3);
-        }
+        }*/
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});
