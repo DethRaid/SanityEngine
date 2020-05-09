@@ -1,5 +1,6 @@
 struct FullscreenVertexOutput {
     float4 position : SV_POSITION;
+    float3 position_viewspace : VIEWPOS;
     float2 texcoord : TEXCOORD;
 };
 
@@ -119,12 +120,11 @@ float3 get_sky_color(in float3 eye_vector, in float3 light_vector, in float ligh
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
-    float4 view_vector_viewspace = float4(normalize(input.position.xyz), 0);
-    float4 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace.xyz, 0));
+    float4 view_vector_worldspace = mul(camera.inverse_view, float4(input.position_viewspace, 0));
 
     MaterialData material = material_buffer[constants.material_index];
 
-    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), normalize(material.sun_direction), 100, true);
+    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), normalize(material.sun_direction), 10, true);
 
-    return float4(view_vector_worldspace.xxx, 1);
+    return float4(sky_color, 1);
 }
