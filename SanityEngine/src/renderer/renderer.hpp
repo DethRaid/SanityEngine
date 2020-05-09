@@ -135,6 +135,7 @@ namespace renderer {
 
 #pragma region 3D Scene
         void update_lights(entt::registry& registry, uint32_t frame_idx);
+        void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list);
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion

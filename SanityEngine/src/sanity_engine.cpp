@@ -102,7 +102,6 @@ void SanityEngine::run() {
 
             // Hackily spawn entities on the first frame, because mesh uploading is hard
             if(frame_count == 1) {
-                renderer->begin_device_capture();
                 create_debug_plane();
 
                 create_flycam_player();
@@ -115,10 +114,6 @@ void SanityEngine::run() {
             renderer->render_scene(registry);
 
             renderer->end_frame();
-
-            if(frame_count == 1) {
-                renderer->end_device_capture();
-            }
 
             const auto frame_end_time = std::chrono::steady_clock::now();
 

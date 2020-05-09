@@ -1,4 +1,4 @@
-#define NUM_SHADOW_RAYS 128
+#define NUM_SHADOW_RAYS 4
 
 struct VertexOutput {
     float4 position : SV_POSITION;

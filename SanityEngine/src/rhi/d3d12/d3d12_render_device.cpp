@@ -507,6 +507,7 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::end_frame() {
+        MTR_SCOPE("D3D12RenderDevice", "end_frame");
         // Transition the swapchain image into the correct format and request presentation
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Presentable");
@@ -524,12 +525,15 @@ namespace rhi {
 
         direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
 
-        const auto result = swapchain->Present(0, 0);
-        if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
-            logger->error("Device lost on present :(");
+        {
+            MTR_SCOPE("D3D12RenderDevice", "present");
+            const auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
+            if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
+                logger->error("Device lost on present :(");
 
-            if(settings.enable_gpu_crash_reporting) {
-                retrieve_dred_report();
+                if(settings.enable_gpu_crash_reporting) {
+                    retrieve_dred_report();
+                }
             }
         }
     }
@@ -808,6 +812,7 @@ namespace rhi {
         swapchain_desc.BufferCount = num_images;
 
         swapchain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapchain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
         ComPtr<IDXGISwapChain1> swapchain1;
         auto hr = factory->CreateSwapChainForHwnd(direct_command_queue.Get(),
