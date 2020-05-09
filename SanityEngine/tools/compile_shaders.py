@@ -41,6 +41,9 @@ if __name__ == '__main__':
         elif str(path).endswith('.vertex.hlsl'):
             target = 'vs_6_5'
 
+        elif str(path).endswith('.compute.hlsl'):
+            target = 'cs_6_5'
+
         else:
             print('Could not determine shading stage for shader `', str(path), '`, skipping')
             continue

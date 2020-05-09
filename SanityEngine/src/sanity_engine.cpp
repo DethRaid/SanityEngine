@@ -145,7 +145,12 @@ void SanityEngine::create_debug_plane() {
 
     const auto indices = std::vector<uint32_t>{0, 1, 2, 0, 3, 1};
 
-    auto plane_renderable = renderer->create_static_mesh(vertices, indices);
+    auto& device = renderer->get_render_device();
+    auto commands = device.create_resource_command_list();
+
+    auto plane_renderable = renderer->create_static_mesh(vertices, indices, *commands);
+
+    device.submit_command_list(std::move(commands));
 
     const auto plane_entity = registry.create();
 

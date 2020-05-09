@@ -31,6 +31,7 @@ namespace rhi {
                                          const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : settings{settings_in},
           logger{spdlog::stdout_color_st("D3D12RenderDevice")},
+          command_lists_by_frame{settings.num_in_flight_gpu_frames},
           staging_buffers_to_free{settings.num_in_flight_gpu_frames},
           scratch_buffers_to_free{settings.num_in_flight_gpu_frames} {
 #ifndef NDEBUG
@@ -464,35 +465,12 @@ namespace rhi {
         return std::make_unique<D3D12RenderCommandList>(commands, *this);
     }
 
-    void D3D12RenderDevice::submit_command_list(const std::unique_ptr<CommandList> commands) {
-        auto* d3d12_commands = dynamic_cast<D3D12CommandList*>(commands.get());
+    void D3D12RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
+        auto* d3d12_commands = dynamic_cast<D3D12CommandList*>(commands.release());
 
         d3d12_commands->prepare_for_submission();
 
-        auto* d3d12_command_list = static_cast<ID3D12CommandList*>(d3d12_commands->get_command_list());
-
-        // First implementation - run everything on the same queue, because it's easy
-        // Eventually I'll come up with a fancy way to use multiple queues
-
-        // TODO: Actually figure out how to use multiple queues
-        direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
-
-        if(settings.enable_gpu_crash_reporting) {
-            auto command_list_done_fence = get_next_command_list_done_fence();
-
-            direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
-
-            auto event = CreateEvent(nullptr, false, false, nullptr);
-            command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
-
-            WaitForSingleObject(event, INFINITE);
-
-            retrieve_dred_report();
-
-            command_list_done_fences.push_back(command_list_done_fence);
-
-            CloseHandle(event);
-        }
+        command_lists_by_frame[cur_gpu_frame_idx].push_back(std::unique_ptr<D3D12CommandList>{d3d12_commands});
     }
 
     BindGroupBuilder& D3D12RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
@@ -528,6 +506,36 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::end_frame() {
+        // Submit all the command lists we batched up
+        auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
+        for(auto& commands : lists) {
+            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands->get_command_list());
+
+            // First implementation - run everything on the same queue, because it's easy
+            // Eventually I'll come up with a fancy way to use multiple queues
+
+            // TODO: Actually figure out how to use multiple queues
+            direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
+
+            if(settings.enable_gpu_crash_reporting) {
+                auto command_list_done_fence = get_next_command_list_done_fence();
+
+                direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+
+                const auto event = CreateEvent(nullptr, false, false, nullptr);
+                command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+
+                WaitForSingleObject(event, INFINITE);
+
+                retrieve_dred_report();
+
+                command_list_done_fences.push_back(command_list_done_fence);
+
+                CloseHandle(event);
+            }
+        }
+
+        // Transition the swapchain image into the correct format and request presentation
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Presentable");
         auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
@@ -985,7 +993,6 @@ namespace rhi {
                                                         .MinLOD = 0,
                                                         .MaxLOD = D3D12_FLOAT32_MAX,
                                                         .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
-
     }
 
     void D3D12RenderDevice::create_standard_root_signature() {
@@ -1109,7 +1116,7 @@ namespace rhi {
             descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(root_descriptors.size() + 1, gpu_handle);
+            descriptor_table_gpu_handles.emplace(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
 
             material_bind_group_builder.emplace_back(*device.Get(),
                                                      *cbv_srv_uav_heap.Get(),

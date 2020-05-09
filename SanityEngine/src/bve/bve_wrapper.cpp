@@ -9,6 +9,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <stb_image.h>
 
+
+#include "train_components.hpp"
 #include "../core/ensure.hpp"
 #include "../renderer/renderer.hpp"
 
@@ -68,23 +70,41 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
             logger->error("{}", error_data.description);
         }
 
+        return false;
+
     } else {
         if(train->meshes.count == 0) {
             logger->error("No meshes loaded for train '{}'", filename);
             return false;
         }
 
+        const auto train_entity = registry.create();
+        auto& train_component = registry.assign<TrainComponent>(train_entity);
+
         auto train_path = std::filesystem::path{filename};
+
+        auto& device = renderer.get_render_device();
+
+        auto commands = device.create_compute_command_list();
+        commands->bind_mesh_data(renderer.get_static_mesh_store());
+
+        std::vector<renderer::Mesh> train_meshes;
+        train_meshes.reserve(train->meshes.count);
 
         for(uint32_t i = 0; i < train->meshes.count; i++) {
             const auto& bve_mesh = train->meshes.ptr[i];
 
             const auto [vertices, indices] = process_vertices(bve_mesh);
 
-            auto mesh = renderer.create_static_mesh(vertices, indices);
+            const auto entity = registry.create();
+
+            auto& mesh_component = registry.assign<renderer::StaticMeshRenderableComponent>(entity);
+
+            mesh_component.mesh = renderer.create_static_mesh(vertices, indices, *commands);
+            train_meshes.push_back(mesh_component.mesh);
 
             if(bve_mesh.texture.texture_id.exists) {
-                const auto* texture_name = bve::BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+                const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
 
                 const auto texture_msg = fmt::format("Load texture {}", texture_name);
                 MTR_SCOPE("SanityEngine", texture_msg.c_str());
@@ -92,12 +112,13 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                 const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
                 if(texture_handle_maybe) {
                     logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->idx);
+
                     auto& material_data = renderer.get_material_data_buffer();
                     const auto material_handle = material_data.get_next_free_material<BveMaterial>();
                     auto& material = material_data.at<BveMaterial>(material_handle);
                     material.color_texture = *texture_handle_maybe;
 
-                    mesh.material = material_handle;
+                    mesh_component.material = material_handle;
 
                 } else {
                     const auto texture_path = train_path.replace_filename(texture_name).string();
@@ -118,7 +139,10 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                                                                       .width = static_cast<uint32_t>(width),
                                                                       .height = static_cast<uint32_t>(height),
                                                                       .depth = 1};
-                        const auto texture_handle = renderer.create_image(create_info, texture_data);
+                        const auto texture_handle = renderer.create_image(create_info);
+                        const auto& texture = renderer.get_image(texture_handle);
+
+                        commands->copy_data_to_image(texture_data, texture);
 
                         logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.idx);
 
@@ -127,21 +151,25 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                         auto& material = material_data.at<BveMaterial>(material_handle);
                         material.color_texture = texture_handle;
 
-                        mesh.material = material_handle;
+                        mesh_component.material = material_handle;
 
                         delete[] texture_data;
                     }
                 }
 
-                bve::bve_delete_string(const_cast<char*>(texture_name));
+                bve_delete_string(const_cast<char*>(texture_name));
             }
-
-            const auto entity = registry.create();
-
-            registry.assign<renderer::StaticMeshRenderableComponent>(entity, std::move(mesh));
         }
 
+        train_component.raytracing_mesh = commands->build_acceleration_structure_for_meshes(train_meshes);
+
+        device.submit_command_list(std::move(commands));
+
+        renderer.add_raytracing_objects_to_scene({rhi::RaytracingObject{.mesh = &train_component.raytracing_mesh}});
+
         logger->info("Loaded file {}", filename);
+
+        return true;
     }
 }
 
@@ -153,7 +181,7 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const std::string& filename) {
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
 }
 
-std::pair<std::vector<BveVertex>, std::vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) {
+std::pair<std::vector<BveVertex>, std::vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
     ENSURE(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
 
     const auto& bve_vertices = mesh.vertices;

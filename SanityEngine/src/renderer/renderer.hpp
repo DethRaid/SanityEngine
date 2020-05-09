@@ -4,6 +4,7 @@
 
 #include <entt/fwd.hpp>
 
+#include "../rhi/compute_pipeline_state.hpp"
 #include "../rhi/mesh_data_store.hpp"
 #include "../rhi/render_pipeline_state.hpp"
 #include "../settings.hpp"
@@ -38,8 +39,11 @@ namespace renderer {
 
         void end_frame();
 
-        [[nodiscard]] StaticMeshRenderableComponent create_static_mesh(const std::vector<BveVertex>& vertices,
-                                                                       const std::vector<uint32_t>& indices);
+        void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
+
+        [[nodiscard]] Mesh create_static_mesh(const std::vector<BveVertex>& vertices,
+                                              const std::vector<uint32_t>& indices,
+                                              rhi::ResourceCommandList& commands) const;
 
         [[yesdiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info);
 
@@ -49,7 +53,13 @@ namespace renderer {
 
         [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
 
+        [[nodiscard]] rhi::Image& get_image(ImageHandle handle) const;
+
         [[nodiscard]] MaterialDataBuffer& get_material_data_buffer() const;
+
+        [[nodiscard]] rhi::RenderDevice& get_render_device() const;
+
+        [[nodiscard]] rhi::MeshDataStore& get_static_mesh_store() const;
 
         void begin_device_capture() const;
 
@@ -72,6 +82,8 @@ namespace renderer {
         std::vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
 
         std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
+
+        std::unique_ptr<rhi::ComputePipelineState> bve_texture_pipeline;
 
         std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
         MaterialHandle backbuffer_output_material;
@@ -103,6 +115,8 @@ namespace renderer {
         void create_backbuffer_output_pipeline_and_material();
 
         void create_light_buffers();
+
+        void create_bve_texture_alpha_pipeline();
 #pragma endregion
 
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;
@@ -112,6 +126,8 @@ namespace renderer {
         void upload_material_data(rhi::ResourceCommandList& command_list, uint32_t frame_idx);
 
 #pragma region Raytracing
+        std::vector<rhi::RaytracingObject> raytracing_objects;
+
         rhi::RaytracingScene raytracing_scene;
 
         void rebuild_raytracing_scene(entt::registry& registry, rhi::RenderCommandList& command_list);

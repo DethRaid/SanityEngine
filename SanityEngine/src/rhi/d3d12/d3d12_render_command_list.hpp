@@ -29,18 +29,9 @@ namespace rhi {
 
         void set_camera_idx(uint32_t camera_idx) override;
 
-        void bind_mesh_data(const MeshDataStore& mesh_data) override;
-
         void set_material_idx(uint32_t idx) override;
 
         void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances) override;
-
-        RaytracingMesh build_acceleration_structure_for_mesh(uint32_t num_vertices,
-                                                             uint32_t num_indices,
-                                                             uint32_t first_vertex,
-                                                             uint32_t first_index) override;
-
-        RaytracingScene build_raytracing_scene(const std::vector<RaytracingObject>& objects) override;
 #pragma endregion
 
         /*!
@@ -53,8 +44,6 @@ namespace rhi {
         bool in_render_pass{false};
 
         const D3D12RenderPipelineState* current_render_pipeline_state{nullptr};
-
-        const MeshDataStore* current_mesh_data{nullptr};
 
         bool is_render_material_bound{false};
     };

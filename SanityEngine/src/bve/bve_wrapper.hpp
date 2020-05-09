@@ -24,9 +24,9 @@ public:
 private:
     static std::shared_ptr<spdlog::logger> logger;
 
-    bve::BVE_User_Error_Data get_printable_error(const bve::BVE_Mesh_Error& error);
+    [[nodiscard]] bve::BVE_User_Error_Data get_printable_error(const bve::BVE_Mesh_Error& error);
 
-    BveMeshHandle load_mesh_from_file(const std::string& filename);
+    [[nodiscard]] BveMeshHandle load_mesh_from_file(const std::string& filename);
 
-    std::pair<std::vector<BveVertex>, std::vector<uint32_t>> process_vertices(const bve::BVE_Mesh& mesh);
+    [[nodiscard]] std::pair<std::vector<BveVertex>, std::vector<uint32_t>> process_vertices(const bve::BVE_Mesh& mesh) const;
 };

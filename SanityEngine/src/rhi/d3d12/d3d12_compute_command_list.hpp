@@ -23,12 +23,25 @@ namespace rhi {
         void bind_compute_resources(const BindGroup& bind_group) override;
 
         void dispatch(uint32_t workgroup_x, uint32_t workgroup_y, uint32_t workgroup_z) override;
+
+        void bind_mesh_data(const MeshDataStore& mesh_data) override;
+
+        RaytracingMesh build_acceleration_structure_for_mesh(uint32_t num_vertices,
+                                                             uint32_t num_indices,
+                                                             uint32_t first_vertex,
+                                                             uint32_t first_index) override;
+
+        RaytracingMesh build_acceleration_structure_for_meshes(const std::vector<renderer::Mesh>& meshes) override;
+
+        RaytracingScene build_raytracing_scene(const std::vector<RaytracingObject>& objects) override;
 #pragma endregion
 
     protected:
         const D3D12ComputePipelineState* compute_pipeline{nullptr};
 
         ID3D12DescriptorHeap* current_descriptor_heap{nullptr};
+
+        const MeshDataStore* current_mesh_data{nullptr};
 
         bool are_compute_resources_bound{false};
     };

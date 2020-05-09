@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
+    <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\core\abort.hpp" />
     <ClInclude Include="src\core\align.hpp" />
     <ClInclude Include="src\core\async\mutex.hpp" />

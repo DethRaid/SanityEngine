@@ -26,7 +26,9 @@ namespace rhi {
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<BveVertex>& vertices, const std::vector<uint32_t>& indices) {
+    std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<BveVertex>& vertices,
+                                                          const std::vector<uint32_t>& indices,
+                                                          ResourceCommandList& commands) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
         logger->trace("Current vertex offset: {} Current index offset: {}",
                       next_vertex_offset,
@@ -44,16 +46,12 @@ namespace rhi {
             return idx + next_vertex_offset;
         });
 
-        auto cmds = device->create_resource_command_list();
-
         logger->trace("Copying {} bytes of vertex data into the vertex buffer, offset of {}", vertex_data_size, next_free_vertex_byte);
-        cmds->copy_data_to_buffer(vertices.data(), vertex_data_size, *vertex_buffer, next_free_vertex_byte);
+        commands.copy_data_to_buffer(vertices.data(), vertex_data_size, *vertex_buffer, next_free_vertex_byte);
 
         const auto index_buffer_byte_offset = static_cast<uint32_t>(next_index_offset * sizeof(uint32_t));
         logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
-        cmds->copy_data_to_buffer(offset_indices.data(), index_data_size, *index_buffer, index_buffer_byte_offset);
-
-        device->submit_command_list(std::move(cmds));
+        commands.copy_data_to_buffer(offset_indices.data(), index_data_size, *index_buffer, index_buffer_byte_offset);
 
         const auto vertex_offset = next_free_vertex_byte / sizeof(BveVertex);
 

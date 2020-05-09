@@ -135,13 +135,15 @@ namespace rhi {
 
         std::vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
+        std::vector<std::vector<std::unique_ptr<D3D12CommandList>>> command_lists_by_frame;
+
         ComPtr<IDXGISwapChain3> swapchain;
         std::vector<ComPtr<ID3D12Resource>> swapchain_images;
         std::vector<D3D12Framebuffer> swapchain_framebuffers;
 
         HANDLE frame_event;
         ComPtr<ID3D12Fence> frame_fences;
-        std::vector<uint32_t> frame_fence_values;
+        std::vector<uint64_t> frame_fence_values;
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};

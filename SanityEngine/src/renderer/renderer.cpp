@@ -141,6 +141,7 @@ namespace renderer {
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
+
         create_static_mesh_storage();
 
         create_material_data_buffers();
@@ -159,6 +160,8 @@ namespace renderer {
         create_backbuffer_output_pipeline_and_material();
 
         create_light_buffers();
+
+        create_bve_texture_alpha_pipeline();
     }
 
     void Renderer::begin_frame(const uint64_t frame_count) { device->begin_frame(frame_count); }
@@ -187,26 +190,22 @@ namespace renderer {
 
     void Renderer::end_frame() { device->end_frame(); }
 
-    StaticMeshRenderableComponent Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
-                                                               const std::vector<uint32_t>& indices) {
-        MTR_SCOPE("Renderer", "create_static_mesh");
-        const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices);
-        const auto mesh = Mesh{.first_vertex = vertex_offset,
-                               .num_vertices = static_cast<uint32_t>(vertices.size()),
-                               .first_index = index_offset,
-                               .num_indices = static_cast<uint32_t>(indices.size())};
-
-        auto cmds = device->create_render_command_list();
-        cmds->bind_mesh_data(*static_mesh_storage);
-        auto raytracing_mesh = cmds->build_acceleration_structure_for_mesh(mesh.num_vertices,
-                                                                           mesh.num_indices,
-                                                                           mesh.first_vertex,
-                                                                           mesh.first_index);
-        device->submit_command_list(std::move(cmds));
-
+    void Renderer::add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects) {
+        raytracing_objects.insert(raytracing_objects.end(), new_objects.begin(), new_objects.end());
         raytracing_scene_dirty = true;
+    }
 
-        return StaticMeshRenderableComponent{.mesh = mesh, .rt_mesh = std::move(raytracing_mesh)};
+    Mesh Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
+                                      const std::vector<uint32_t>& indices,
+                                      rhi::ResourceCommandList& commands) const {
+        MTR_SCOPE("Renderer", "create_static_mesh");
+
+        const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices, commands);
+
+        return Mesh{.first_vertex = vertex_offset,
+                    .num_vertices = static_cast<uint32_t>(vertices.size()),
+                    .first_index = index_offset,
+                    .num_indices = static_cast<uint32_t>(indices.size())};
     }
 
     ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
@@ -248,7 +247,13 @@ namespace renderer {
         return *all_images[idx];
     }
 
+    rhi::Image& Renderer::get_image(ImageHandle handle) const { return *all_images[handle.idx]; }
+
     MaterialDataBuffer& Renderer::get_material_data_buffer() const { return *material_data_buffer; }
+
+    rhi::RenderDevice& Renderer::get_render_device() const { return *device; }
+
+    rhi::MeshDataStore& Renderer::get_static_mesh_store() const { return *static_mesh_storage; }
 
     void Renderer::begin_device_capture() const { device->begin_capture(); }
 
@@ -334,6 +339,12 @@ namespace renderer {
         }
     }
 
+    void Renderer::create_bve_texture_alpha_pipeline() {
+        const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
+
+        // bve_texture_pipeline = device->create_compute_pipeline_state(compute_shader);
+    }
+
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
         rhi::ImageCreateInfo color_target_create_info{};
         color_target_create_info.name = SCENE_COLOR_RENDER_TARGET;
@@ -396,11 +407,7 @@ namespace renderer {
         // TODO: Destroy the old raytracing scene
         // Also TODO: figure out how to update the raytracing scene without needing a full rebuild
 
-        std::vector<rhi::RaytracingObject> objects;
-        registry.view<StaticMeshRenderableComponent>().each(
-            [&](const StaticMeshRenderableComponent& mesh) { objects.push_back(rhi::RaytracingObject{.mesh = &mesh.rt_mesh}); });
-
-        raytracing_scene = command_list.build_raytracing_scene(objects);
+        raytracing_scene = command_list.build_raytracing_scene(raytracing_objects);
     }
 
     void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
