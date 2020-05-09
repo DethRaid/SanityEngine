@@ -53,5 +53,6 @@ namespace renderer {
      */
     struct AtmosphericSkyComponent {
         MaterialHandle material{0};
+
     };
 } // namespace renderer

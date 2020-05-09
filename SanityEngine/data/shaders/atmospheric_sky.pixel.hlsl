@@ -80,10 +80,8 @@ float3 absorb(float dist, float3 color, float factor) {
     return color - color * pow(Kr, (factor / dist).xxx);
 }
 
-/*float3 get_sky_color(in float3 eye_vector, in float3 light_vector, in float light_intensity, bool show_light) {
-    float3 light_vector_worldspace = normalize(viewspace_to_worldspace(float4(light_vector, 0.0)).xyz);
-
-    float alpha = max(dot(eye_vector, light_vector_worldspace), 0.0);
+float3 get_sky_color(in float3 eye_vector, in float3 light_vector, in float light_intensity, bool show_light) {
+    float alpha = max(dot(eye_vector, light_vector), 0.0);
 
     float rayleigh_factor = phase(alpha, -0.01) * RAYLEIGH_BRIGHTNESS;
     float mie_factor = phase(alpha, MIE_DISTRIBUTION) * MIE_BRIGHTNESS;
@@ -101,8 +99,8 @@ float3 absorb(float dist, float3 color, float factor) {
     for(int i = 0; i < STEP_COUNT; i++) {
         float sample_distance = step_length * float(i);
         float3 position = eye_position + eye_vector * sample_distance;
-        float extinction = horizon_extinction(position, light_vector_worldspace, SURFACE_HEIGHT - 0.35);
-        float sample_depth = atmospheric_depth(position, light_vector_worldspace);
+        float extinction = horizon_extinction(position, light_vector, SURFACE_HEIGHT - 0.35);
+        float sample_depth = atmospheric_depth(position, light_vector);
 
         float3 influx = absorb(sample_depth, float3(light_intensity.xxx), SCATTER_STRENGTH) * extinction;
 
@@ -114,15 +112,19 @@ float3 absorb(float dist, float3 color, float factor) {
     rayleigh_collected = (rayleigh_collected * eye_extinction * pow(eye_depth, RAYLEIGH_COLLECTION_POWER)) / STEP_COUNT;
     mie_collected = (mie_collected * eye_extinction * pow(eye_depth, MIE_COLLECTION_POWER)) / STEP_COUNT;
 
-    float3 color = (spot * mie_collected) + (mie_factor * mie_collected) + (rayleigh_factor * rayleigh_collected) * float3(1, 0.8, 0.8);
+    float3 color = (spot * mie_collected) + (mie_factor * mie_collected) + (rayleigh_factor * rayleigh_collected);// * float3(1, 0.8, 0.8);
 
-    return color * 7;
-}*/
+    return color;
+}
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
     float4 view_vector_viewspace = float4(normalize(input.position.xyz), 0);
-    float4 view_vector_worldspace = mul(camera.inverse_view, view_vector_viewspace);
+    float4 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace.xyz, 0));
 
-    return float4(normalize(view_vector_worldspace.xyz), 1);
+    MaterialData material = material_buffer[constants.material_index];
+
+    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), normalize(material.sun_direction), 100, true);
+
+    return float4(view_vector_worldspace.xxx, 1);
 }

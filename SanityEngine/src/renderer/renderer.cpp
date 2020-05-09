@@ -20,10 +20,6 @@ namespace renderer {
 
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
-    struct AtmosphereMaterial {
-        glm::vec3 sun_vector;
-    };
-
     struct BackbufferOutputMaterial {
         ImageHandle scene_output_image;
     };
@@ -447,22 +443,26 @@ namespace renderer {
         command_list.bind_mesh_data(*static_mesh_storage);
 
         registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
-            command_list.set_material_idx(mesh_renderable.material.handle);
+            command_list.set_material_idx(mesh_renderable.material.index);
             command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
         });
 
-        // TODO
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
         } else {
             command_list.set_pipeline_state(*atmospheric_sky_pipeline);
+
+            const auto& atmosphere_entity = atmosphere_view.front();
+            const auto& atmosphere = atmosphere_view.get(atmosphere_entity);
+            command_list.set_material_idx(atmosphere.material.index);
+
             command_list.draw(3);
         }
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});
-        command_list.set_material_idx(backbuffer_output_material.handle);
+        command_list.set_material_idx(backbuffer_output_material.index);
         command_list.set_pipeline_state(*backbuffer_output_pipeline);
 
         command_list.draw(3);

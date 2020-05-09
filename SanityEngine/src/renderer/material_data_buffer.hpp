@@ -4,7 +4,7 @@
 
 namespace renderer {
     struct MaterialHandle {
-        uint32_t handle;
+        uint32_t index;
     };
 
     /*!
@@ -62,12 +62,12 @@ namespace renderer {
 
     template <typename MaterialDataStruct>
     MaterialDataStruct& MaterialDataBuffer::at(MaterialHandle handle) {
-        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.handle];
+        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.index];
     }
 
     template <typename MaterialDataStruct>
     const MaterialDataStruct& MaterialDataBuffer::at(MaterialHandle handle) const {
-        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.handle];
+        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.index];
     }
 
     template <typename MaterialDataStruct>

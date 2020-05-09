@@ -72,6 +72,6 @@ void FlycamController::update_player_transform(const float delta_time) {
     const auto pitch_delta = std::atan2(mouse_delta.y * 0.0001, 1);
     const auto yaw_delta = std::atan2(mouse_delta.x * 0.0001, 1);
 
-    player_transform.rotation = glm::rotate(player_transform.rotation, static_cast<float>(pitch_delta), right);
-    player_transform.rotation = glm::rotate(player_transform.rotation, static_cast<float>(yaw_delta), up);
+    player_transform.rotation = glm::rotate(player_transform.rotation, static_cast<float>(pitch_delta), glm::vec3{1, 0, 0});
+    player_transform.rotation = glm::rotate(player_transform.rotation, static_cast<float>(yaw_delta), glm::vec3{0, 1, 0});
 }

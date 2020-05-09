@@ -1,18 +1,21 @@
 ﻿#include "sanity_engine.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+
+#include <filesystem>
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <filesystem>
-
 #include <stb_image.h>
 
 #include "core/abort.hpp"
+
+struct AtmosphereMaterial {
+    glm::vec3 sun_vector;
+};
 
 int main() {
     Settings settings{};
@@ -155,9 +158,15 @@ void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = registry.create();
 
     // No need to set parameters, the default light component represents the Earth's sun
-    registry.assign<renderer::LightComponent>(atmosphere);
+    const auto& light_component = registry.assign<renderer::LightComponent>(atmosphere);
 
-    registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
+    // I need a better way to do this send help
+    auto& atmosphere_component = registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
+    auto& material_data = renderer->get_material_data_buffer();
+    const auto atmosphere_material_handle = material_data.get_next_free_material<AtmosphereMaterial>();
+    auto& atmosphere_material = material_data.at<AtmosphereMaterial>(atmosphere_material_handle);
+    atmosphere_material.sun_vector = light_component.light.direction;
+    atmosphere_component.material = atmosphere_material_handle;
 }
 
 void SanityEngine::create_flycam_player() {
@@ -165,6 +174,7 @@ void SanityEngine::create_flycam_player() {
 
     auto& transform = registry.assign<TransformComponent>(player);
     transform.position.z = 5;
+    transform.position.y = 5;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 
@@ -174,9 +184,8 @@ void SanityEngine::create_flycam_player() {
 }
 
 void SanityEngine::load_bve_train(const std::string& filename) {
-   const auto success = bve.add_train_to_scene(filename, registry, *renderer);
+    const auto success = bve.add_train_to_scene(filename, registry, *renderer);
     if(!success) {
         logger->error("Could not load train file {}", filename);
     }
 }
-
