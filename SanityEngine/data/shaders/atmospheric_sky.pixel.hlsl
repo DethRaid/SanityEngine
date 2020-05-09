@@ -112,18 +112,18 @@ float3 get_sky_color(in float3 eye_vector, in float3 light_vector, in float ligh
     rayleigh_collected = (rayleigh_collected * eye_extinction * pow(eye_depth, RAYLEIGH_COLLECTION_POWER)) / STEP_COUNT;
     mie_collected = (mie_collected * eye_extinction * pow(eye_depth, MIE_COLLECTION_POWER)) / STEP_COUNT;
 
-    float3 color = (spot * mie_collected) + (mie_factor * mie_collected) + (rayleigh_factor * rayleigh_collected);// * float3(1, 0.8, 0.8);
+    float3 color = (spot * mie_collected) + (mie_factor * mie_collected) + (rayleigh_factor * rayleigh_collected);
 
     return color;
 }
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
-    float4 view_vector_worldspace = mul(camera.inverse_view, float4(input.position_viewspace, 0));
+    float4 view_vector_worldspace = mul(camera.inverse_view, float4(normalize(input.position_viewspace), 0));
 
     Light light = lights[0];    // Light 0 is always the sun
 
-    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), -normalize(light.direction), length(light.color), true);
+    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), -normalize(light.direction), length(light.color) * 3, true);
 
     return float4(sky_color, 1);
 }
