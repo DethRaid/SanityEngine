@@ -16,7 +16,7 @@ namespace renderer {
     }
 
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
-        view_matrix = glm::toMat4(transform.rotation);
+        view_matrix = glm::mat4_cast(transform.rotation);
 
         view_matrix = glm::translate(view_matrix, -transform.position);
 

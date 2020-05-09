@@ -18,7 +18,7 @@ namespace renderer {
         /*!
          * \brief HDR color of this light
          */
-        glm::vec3 color{glm::normalize(glm::vec3{1, 1, 1}) * 3.0f};
+        glm::vec3 color{glm::normalize(glm::vec3{1, 1, 1})};
 
         glm::vec3 direction{glm::normalize(glm::vec3{1, -1, -1})};
 
@@ -28,4 +28,3 @@ namespace renderer {
         float angular_size{glm::radians(0.53f * 10)};   // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 } // namespace renderer
-
