@@ -3,6 +3,10 @@ struct FullscreenVertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
+struct MaterialData {};
+
+#include "inc/standard_root_signature.hlsl"
+
 FullscreenVertexOutput main(uint vertex_id : SV_VERTEXID) {
     FullscreenVertexOutput output;
     if(vertex_id % 3 == 0) {

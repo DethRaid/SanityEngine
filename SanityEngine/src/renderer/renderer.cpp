@@ -294,12 +294,22 @@ namespace renderer {
 
         standard_pipeline = device->create_render_pipeline_state(standard_pipeline_create_info);
 
-        spdlog::info("Created standard pipeline");
+        logger->info("Created standard pipeline");
     }
 
     void Renderer::create_atmospheric_sky_pipeline() {
-        // TODO
+        const auto atmospheric_sky_create_info = rhi::RenderPipelineStateCreateInfo{
+            .name = "Atmospheric Sky",
+            .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
+            .pixel_shader = load_shader("data/shaders/atmospheric_sky.pixel"),
+            .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
+            .render_target_formats = {rhi::ImageFormat::Rgba8},
+            .depth_stencil_format = rhi::ImageFormat::Depth32,
+        };
+
+        atmospheric_sky_pipeline = device->create_render_pipeline_state(atmospheric_sky_create_info);
     }
+
 
     void Renderer::create_backbuffer_output_pipeline_and_material() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{
@@ -439,13 +449,13 @@ namespace renderer {
         });
 
         // TODO
-        /*const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
+        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
         } else {
             command_list.set_pipeline_state(*atmospheric_sky_pipeline);
             command_list.draw(3);
-        }*/
+        }
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.set_framebuffer(*framebuffer, {render_target_accesses});

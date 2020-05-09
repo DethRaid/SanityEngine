@@ -140,6 +140,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
             registry.assign<renderer::StaticMeshRenderableComponent>(entity, std::move(mesh));
         }
+
+        logger->info("Loaded file {}", filename);
     }
 }
 

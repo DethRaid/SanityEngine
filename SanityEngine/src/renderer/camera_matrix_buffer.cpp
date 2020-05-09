@@ -27,12 +27,10 @@ namespace renderer {
         // Use an infinite projection matrix
         // Math from http://www.terathon.com/gdc07_lengyel.pdf
 
-        const auto e = 1.0 / tan(camera.fov / 2.0);
-
-        // Reset the projection matrix, just to be sure
-        projection_matrix = {};
+        projection_matrix = {};//glm::tweakedInfinitePerspective(camera.fov, camera.aspect_ratio, camera.near_clip_plane);
 
         // Infinite projection matrix
+        const auto e = 1.0 / tan(camera.fov / 2.0);
         projection_matrix[0][0] = static_cast<float>(e);
         projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);
         projection_matrix[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
