@@ -175,7 +175,7 @@ namespace renderer {
         command_list->set_debug_name("Main Render Command List");
 
         if(raytracing_scene_dirty) {
-            rebuild_raytracing_scene(registry, *command_list);
+            rebuild_raytracing_scene(*command_list);
             raytracing_scene_dirty = false;
         }
 
@@ -403,9 +403,12 @@ namespace renderer {
         command_list.copy_data_to_buffer(material_data_buffer->data(), material_data_buffer->size(), buffer, 0);
     }
 
-    void Renderer::rebuild_raytracing_scene(entt::registry& registry, rhi::RenderCommandList& command_list) {
-        // TODO: Destroy the old raytracing scene
-        // Also TODO: figure out how to update the raytracing scene without needing a full rebuild
+    void Renderer::rebuild_raytracing_scene(rhi::RenderCommandList& command_list) {
+        // TODO: figure out how to update the raytracing scene without needing a full rebuild
+
+        if(raytracing_scene.buffer) {
+            device->destroy_buffer(std::move(raytracing_scene.buffer));
+        }
 
         raytracing_scene = command_list.build_raytracing_scene(raytracing_objects);
     }

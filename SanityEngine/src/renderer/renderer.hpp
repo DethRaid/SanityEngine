@@ -130,7 +130,7 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
-        void rebuild_raytracing_scene(entt::registry& registry, rhi::RenderCommandList& command_list);
+        void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
 #pragma endregion
 
 #pragma region 3D Scene
