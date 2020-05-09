@@ -20,6 +20,10 @@ namespace renderer {
 
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
+    struct AtmosphereMaterial {
+        glm::vec3 sun_vector;
+    };
+
     struct BackbufferOutputMaterial {
         ImageHandle scene_output_image;
     };
@@ -309,7 +313,6 @@ namespace renderer {
 
         atmospheric_sky_pipeline = device->create_render_pipeline_state(atmospheric_sky_create_info);
     }
-
 
     void Renderer::create_backbuffer_output_pipeline_and_material() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{

@@ -37,7 +37,7 @@ static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const in
     const auto total_num_bytes = num_pixels * 4;
     auto* new_data = new stbi_uc[total_num_bytes];
 
-    for(uint32_t i = 0; i < num_pixels; i++) {
+    for(int i = 0; i < num_pixels; i++) {
         const auto src_idx = i * 3;
         const auto dst_idx = i * 4;
 
