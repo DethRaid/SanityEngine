@@ -261,6 +261,8 @@ namespace rhi {
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);
 
+        void flush_batched_command_lists();
+
         void return_staging_buffers_for_frame(uint32_t frame_idx);
 
         void reset_command_allocators_for_frame(uint32_t frame_idx);

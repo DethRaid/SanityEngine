@@ -482,11 +482,12 @@ namespace rhi {
     void D3D12RenderDevice::begin_frame(const uint64_t frame_count) {
         MTR_SCOPE("D3D12RenderDevice", "begin_frame");
 
-        cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_gpu_frames;
 
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
+
+        cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
 
         return_staging_buffers_for_frame(cur_gpu_frame_idx);
 
@@ -506,35 +507,6 @@ namespace rhi {
     }
 
     void D3D12RenderDevice::end_frame() {
-        // Submit all the command lists we batched up
-        auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
-        for(auto& commands : lists) {
-            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands->get_command_list());
-
-            // First implementation - run everything on the same queue, because it's easy
-            // Eventually I'll come up with a fancy way to use multiple queues
-
-            // TODO: Actually figure out how to use multiple queues
-            direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
-
-            if(settings.enable_gpu_crash_reporting) {
-                auto command_list_done_fence = get_next_command_list_done_fence();
-
-                direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
-
-                const auto event = CreateEvent(nullptr, false, false, nullptr);
-                command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
-
-                WaitForSingleObject(event, INFINITE);
-
-                retrieve_dred_report();
-
-                command_list_done_fences.push_back(command_list_done_fence);
-
-                CloseHandle(event);
-            }
-        }
-
         // Transition the swapchain image into the correct format and request presentation
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Presentable");
@@ -547,6 +519,8 @@ namespace rhi {
         swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
 
         submit_command_list(std::move(cmds));
+
+        flush_batched_command_lists();
 
         direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
 
@@ -1306,6 +1280,39 @@ namespace rhi {
         set_object_name(*pipeline->pso.Get(), create_info.name);
 
         return pipeline;
+    }
+
+    void D3D12RenderDevice::flush_batched_command_lists() {
+        // Submit all the command lists we batched up
+        auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
+        for(auto& commands : lists) {
+            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands->get_command_list());
+
+            // First implementation - run everything on the same queue, because it's easy
+            // Eventually I'll come up with a fancy way to use multiple queues
+
+            // TODO: Actually figure out how to use multiple queues
+            direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
+
+            if(settings.enable_gpu_crash_reporting) {
+                auto command_list_done_fence = get_next_command_list_done_fence();
+
+                direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+
+                const auto event = CreateEvent(nullptr, false, false, nullptr);
+                command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+
+                WaitForSingleObject(event, INFINITE);
+
+                retrieve_dred_report();
+
+                command_list_done_fences.push_back(command_list_done_fence);
+
+                CloseHandle(event);
+            }
+        }
+
+        lists.clear();
     }
 
     void D3D12RenderDevice::return_staging_buffers_for_frame(const uint32_t frame_idx) {
