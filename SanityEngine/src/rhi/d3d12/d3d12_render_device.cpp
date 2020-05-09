@@ -32,6 +32,8 @@ namespace rhi {
         : settings{settings_in},
           logger{spdlog::stdout_color_st("D3D12RenderDevice")},
           command_lists_by_frame{settings.num_in_flight_gpu_frames},
+          buffer_deletion_list{settings.num_in_flight_gpu_frames},
+          image_deletion_list{settings.num_in_flight_gpu_frames},
           staging_buffers_to_free{settings.num_in_flight_gpu_frames},
           scratch_buffers_to_free{settings.num_in_flight_gpu_frames} {
 #ifndef NDEBUG
@@ -317,14 +319,12 @@ namespace rhi {
         return ptr;
     }
 
-    void D3D12RenderDevice::destroy_buffer(const std::unique_ptr<Buffer> buffer) {
-        auto* d3d12_buffer = static_cast<D3D12Buffer*>(buffer.get());
-        d3d12_buffer->allocation->Release();
+    void D3D12RenderDevice::destroy_buffer(std::unique_ptr<Buffer> buffer) {
+        buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<D3D12Buffer*>(buffer.release()));
     }
 
-    void D3D12RenderDevice::destroy_image(const std::unique_ptr<Image> image) {
-        auto* d3d12_image = static_cast<D3D12Image*>(image.get());
-        d3d12_image->allocation->Release();
+    void D3D12RenderDevice::destroy_image(std::unique_ptr<Image> image) {
+        image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<D3D12Image*>(image.release()));
     }
 
     void D3D12RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) {
@@ -493,33 +493,15 @@ namespace rhi {
 
         reset_command_allocators_for_frame(cur_gpu_frame_idx);
 
-        auto cmds = create_render_command_list();
-        cmds->set_debug_name("Transition Swapchain to Render Target");
-        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+        destroy_resources_for_frame(cur_gpu_frame_idx);
 
-        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
-        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
-                                                                                                   D3D12_RESOURCE_STATE_COMMON,
-                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET);
-        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
-
-        submit_command_list(std::move(cmds));
+        transition_swapchain_image_to_render_target();
     }
 
     void D3D12RenderDevice::end_frame() {
         MTR_SCOPE("D3D12RenderDevice", "end_frame");
         // Transition the swapchain image into the correct format and request presentation
-        auto cmds = create_render_command_list();
-        cmds->set_debug_name("Transition Swapchain to Presentable");
-        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
-
-        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
-        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
-                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                                   D3D12_RESOURCE_STATE_PRESENT);
-        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
-
-        submit_command_list(std::move(cmds));
+        transition_swapchain_image_to_presentable();
 
         flush_batched_command_lists();
 
@@ -1329,6 +1311,49 @@ namespace rhi {
         direct_command_allocators[frame_idx]->Reset();
         copy_command_allocators[frame_idx]->Reset();
         compute_command_allocators[frame_idx]->Reset();
+    }
+
+    void D3D12RenderDevice::destroy_resources_for_frame(const uint32_t frame_idx) {
+        auto& buffers = buffer_deletion_list[frame_idx];
+        for(const auto& buffer : buffers) {
+            destroy_resource_immediate(*buffer);
+        }
+
+        buffers.clear();
+
+        auto& images = image_deletion_list[cur_gpu_frame_idx];
+        for(const auto& image : images) {
+            destroy_resource_immediate(*image);
+        }
+        images.clear();
+    }
+
+    void D3D12RenderDevice::transition_swapchain_image_to_render_target() {
+        auto cmds = create_render_command_list();
+        cmds->set_debug_name("Transition Swapchain to Render Target");
+        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+
+        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+                                                                                                   D3D12_RESOURCE_STATE_COMMON,
+                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET);
+        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
+
+        submit_command_list(std::move(cmds));
+    }
+
+    void D3D12RenderDevice::transition_swapchain_image_to_presentable() {
+        auto cmds = create_render_command_list();
+        cmds->set_debug_name("Transition Swapchain to Presentable");
+        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+
+        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                                   D3D12_RESOURCE_STATE_PRESENT);
+        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
+
+        submit_command_list(std::move(cmds));
     }
 
     void D3D12RenderDevice::wait_for_frame(const uint64_t frame_index) {

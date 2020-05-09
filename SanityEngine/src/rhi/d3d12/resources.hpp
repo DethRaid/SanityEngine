@@ -32,4 +32,10 @@ namespace rhi {
 
         DXGI_FORMAT format;
     };
+
+    template <typename T>
+    concept GpuResource = requires(T a) {
+        { a.allocation }
+        ->std::convertible_to<D3D12MA::Allocation*>;
+    };
 } // namespace rhi

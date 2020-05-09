@@ -145,6 +145,9 @@ namespace rhi {
         ComPtr<ID3D12Fence> frame_fences;
         std::vector<uint64_t> frame_fence_values;
 
+        std::vector<std::vector<std::unique_ptr<D3D12Buffer>>> buffer_deletion_list;
+        std::vector<std::vector<std::unique_ptr<D3D12Image>>> image_deletion_list;
+
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
         UINT next_free_cbv_srv_uav_descriptor{0};
@@ -267,6 +270,15 @@ namespace rhi {
 
         void reset_command_allocators_for_frame(uint32_t frame_idx);
 
+        template <typename ResourceType> requires GpuResource<ResourceType>
+        void destroy_resource_immediate(const ResourceType& resource);
+
+        void destroy_resources_for_frame(uint32_t frame_idx);
+
+        void transition_swapchain_image_to_render_target();
+
+        void transition_swapchain_image_to_presentable();
+
         void wait_for_frame(uint64_t frame_index);
 
         void wait_gpu_idle(uint64_t frame_index);
@@ -279,4 +291,9 @@ namespace rhi {
 
         void retrieve_dred_report() const;
     };
+
+    template <typename ResourceType> requires GpuResource<ResourceType>
+    void D3D12RenderDevice::destroy_resource_immediate(const ResourceType& resource) {
+        resource.resource->Release();
+    }
 } // namespace rhi
