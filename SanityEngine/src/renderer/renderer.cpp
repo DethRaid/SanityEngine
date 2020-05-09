@@ -341,8 +341,7 @@ namespace renderer {
 
     void Renderer::create_bve_texture_alpha_pipeline() {
         const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
-
-        // bve_texture_pipeline = device->create_compute_pipeline_state(compute_shader);
+        bve_texture_pipeline = device->create_compute_pipeline_state(compute_shader);
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {

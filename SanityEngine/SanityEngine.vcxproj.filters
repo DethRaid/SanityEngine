@@ -73,6 +73,12 @@
     <Filter Include="Source Files\bve">
       <UniqueIdentifier>{60ef05e0-a35a-47a7-99f9-361e52b6ea5a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{d26769c1-973d-4a22-a087-0c4c979ffb58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\inc">
+      <UniqueIdentifier>{54bcccfc-0082-4108-b88e-6f7c1e55c953}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -305,5 +311,28 @@
     <ClInclude Include="src\bve\train_components.hpp">
       <Filter>Header Files\bve</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\make_transparent_texture.compute.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.vertex.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
+      <Filter>Shaders\inc</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
