@@ -5,7 +5,6 @@ struct FullscreenVertexOutput {
 };
 
 struct MaterialData {
-    float3 sun_direction;
 };
 
 #include "inc/standard_root_signature.hlsl"
@@ -122,9 +121,9 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
     float4 view_vector_worldspace = mul(camera.inverse_view, float4(input.position_viewspace, 0));
 
-    MaterialData material = material_buffer[constants.material_index];
+    Light light = lights[0];    // Light 0 is always the sun
 
-    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), normalize(material.sun_direction), 10, true);
+    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), -normalize(light.direction), length(light.color), true);
 
     return float4(sky_color, 1);
 }

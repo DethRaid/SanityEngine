@@ -452,11 +452,6 @@ namespace renderer {
             logger->error("May only have one atmospheric sky component in a scene");
         } else {
             command_list.set_pipeline_state(*atmospheric_sky_pipeline);
-
-            const auto& atmosphere_entity = atmosphere_view.front();
-            const auto& atmosphere = atmosphere_view.get(atmosphere_entity);
-            command_list.set_material_idx(atmosphere.material.index);
-
             command_list.draw(3);
         }
 

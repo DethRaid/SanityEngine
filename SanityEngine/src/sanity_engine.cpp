@@ -158,15 +158,8 @@ void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = registry.create();
 
     // No need to set parameters, the default light component represents the Earth's sun
-    const auto& light_component = registry.assign<renderer::LightComponent>(atmosphere);
-
-    // I need a better way to do this send help
-    auto& atmosphere_component = registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
-    auto& material_data = renderer->get_material_data_buffer();
-    const auto atmosphere_material_handle = material_data.get_next_free_material<AtmosphereMaterial>();
-    auto& atmosphere_material = material_data.at<AtmosphereMaterial>(atmosphere_material_handle);
-    atmosphere_material.sun_vector = light_component.light.direction;
-    atmosphere_component.material = atmosphere_material_handle;
+    registry.assign<renderer::LightComponent>(atmosphere);
+    registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
 }
 
 void SanityEngine::create_flycam_player() {

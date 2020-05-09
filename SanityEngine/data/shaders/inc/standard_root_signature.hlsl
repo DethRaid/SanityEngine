@@ -12,7 +12,7 @@ struct Camera {
 
 struct Light {
     uint type;
-    float3 color;
+    float3 color;    
     float3 direction;
     float angular_size;
 };

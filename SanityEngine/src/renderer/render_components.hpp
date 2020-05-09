@@ -52,7 +52,5 @@ namespace renderer {
      * NOTE: Only one allowed in the scene ever
      */
     struct AtmosphericSkyComponent {
-        MaterialHandle material{0};
-
     };
 } // namespace renderer
