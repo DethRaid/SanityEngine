@@ -1,3 +1,5 @@
+#pragma once
+
 #include "scalar_constants.hpp"
 
 namespace glm
