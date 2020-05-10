@@ -49,7 +49,7 @@ namespace rhi {
     };
 
     template <typename ResourceType>
-    BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in)
+    BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, const D3D12_RESOURCE_STATES states_in)
         : resource{resource_in}, states{states_in} {}
 
     struct BindGroup {

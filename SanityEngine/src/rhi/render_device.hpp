@@ -10,6 +10,7 @@
 #include <spdlog/logger.h>
 #include <wrl/client.h>
 
+// Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
 
 #include "../settings.hpp"
@@ -77,7 +78,8 @@ namespace rhi {
 
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
 
-        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) const;
+        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader,
+                                                                                          ID3D12RootSignature& root_signature) const;
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 

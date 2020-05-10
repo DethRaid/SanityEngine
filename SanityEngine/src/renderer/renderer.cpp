@@ -202,10 +202,10 @@ namespace renderer {
 
         const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices, commands);
 
-        return rhi::Mesh{.first_vertex = vertex_offset,
-                         .num_vertices = static_cast<uint32_t>(vertices.size()),
-                         .first_index = index_offset,
-                         .num_indices = static_cast<uint32_t>(indices.size())};
+        return {.first_vertex = vertex_offset,
+                .num_vertices = static_cast<uint32_t>(vertices.size()),
+                .first_index = index_offset,
+                .num_indices = static_cast<uint32_t>(indices.size())};
     }
 
     ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
@@ -247,7 +247,7 @@ namespace renderer {
         return *all_images[idx];
     }
 
-    rhi::Image& Renderer::get_image(ImageHandle handle) const { return *all_images[handle.idx]; }
+    rhi::Image& Renderer::get_image(const ImageHandle handle) const { return *all_images[handle.idx]; }
 
     MaterialDataBuffer& Renderer::get_material_data_buffer() const { return *material_data_buffer; }
 

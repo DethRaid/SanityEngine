@@ -330,12 +330,14 @@ namespace rhi {
         }
     }
 
-    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) const {
+    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader,
+                                                                                      ID3D12RootSignature& root_signature) const {
         auto compute_pipeline = std::make_unique<ComputePipelineState>();
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
         desc.CS.BytecodeLength = compute_shader.size();
         desc.CS.pShaderBytecode = compute_shader.data();
+        desc.pRootSignature = &root_signature;
 
         device->CreateComputePipelineState(&desc, IID_PPV_ARGS(compute_pipeline->pso.GetAddressOf()));
 

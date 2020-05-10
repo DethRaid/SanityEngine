@@ -5,7 +5,6 @@
 #include "handles.hpp"
 #include "lights.hpp"
 #include "material_data_buffer.hpp"
-#include "mesh.hpp"
 
 namespace renderer {
     /*!
@@ -50,6 +49,5 @@ namespace renderer {
      *
      * NOTE: Only one allowed in the scene ever
      */
-    struct AtmosphericSkyComponent {
-    };
+    struct AtmosphericSkyComponent {};
 } // namespace renderer
