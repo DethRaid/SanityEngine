@@ -43,7 +43,7 @@ private:
 
     FramerateTracker framerate_tracker{1000};
 
-    BveWrapper bve;
+    std::unique_ptr<BveWrapper> bve;
 
     GLFWwindow* window;
 

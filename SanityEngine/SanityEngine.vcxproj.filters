@@ -73,6 +73,15 @@
     <Filter Include="Shaders\inc">
       <UniqueIdentifier>{54bcccfc-0082-4108-b88e-6f7c1e55c953}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{2c734da1-0c67-4507-9e62-2f6533fe2219}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\loading">
+      <UniqueIdentifier>{9cb5180d-a1c1-4355-8327-a638d5efbcf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\loading">
+      <UniqueIdentifier>{f8bfeb06-5ab8-4734-982d-a3c62c375884}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -149,6 +158,9 @@
     </ClCompile>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp">
       <Filter>Source Files\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\loading\shader_loading.cpp">
+      <Filter>Source Files\loading</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -266,6 +278,9 @@
     <ClInclude Include="src\rhi\helpers.hpp">
       <Filter>Header Files\rhi</Filter>
     </ClInclude>
+    <ClInclude Include="src\loading\shader_loading.hpp">
+      <Filter>Header Files\loading</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -289,5 +304,10 @@
     <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
       <Filter>Shaders\inc</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\loading\shader_loading.ixx">
+      <Filter>Modules</Filter>
+    </None>
   </ItemGroup>
 </Project>

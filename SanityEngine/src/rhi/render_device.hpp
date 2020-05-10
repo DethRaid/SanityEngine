@@ -221,7 +221,7 @@ namespace rhi {
 
         std::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
-        std::vector<BindGroupBuilder> material_bind_group_builder;
+        std::vector<std::unique_ptr<BindGroupBuilder>> material_bind_group_builder;
 
         /*!
          * \brief Index of the swapchain image we're currently rendering to

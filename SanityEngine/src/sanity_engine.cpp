@@ -78,6 +78,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     renderer = std::make_unique<renderer::Renderer>(window, settings);
     logger->info("Initialized renderer");
 
+    bve = std::make_unique<BveWrapper>(renderer->get_render_device());
+
     create_planetary_atmosphere();
 }
 
@@ -183,7 +185,7 @@ void SanityEngine::create_flycam_player() {
 }
 
 void SanityEngine::load_bve_train(const std::string& filename) {
-    const auto success = bve.add_train_to_scene(filename, registry, *renderer);
+    const auto success = bve->add_train_to_scene(filename, registry, *renderer);
     if(!success) {
         logger->error("Could not load train file {}", filename);
     }

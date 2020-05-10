@@ -10,6 +10,7 @@
 #include <stb_image.h>
 
 #include "../core/ensure.hpp"
+#include "../loading/shader_loading.hpp"
 #include "../renderer/renderer.hpp"
 #include "../rhi/render_device.hpp"
 #include "train_components.hpp"
@@ -54,7 +55,11 @@ static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const in
 
 std::shared_ptr<spdlog::logger> BveWrapper::logger{spdlog::stdout_color_st("Bve")};
 
-BveWrapper::BveWrapper() { bve_init(); }
+BveWrapper::BveWrapper(rhi::RenderDevice& device) {
+    bve_init();
+
+    create_texture_filter_pipeline(device);
+}
 
 bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry& registry, renderer::Renderer& renderer) {
     const auto train_msg = fmt::format("Load train {}", filename);
@@ -139,17 +144,17 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                                                                       .width = static_cast<uint32_t>(width),
                                                                       .height = static_cast<uint32_t>(height),
                                                                       .depth = 1};
-                        const auto texture_handle = renderer.create_image(create_info);
-                        const auto& texture = renderer.get_image(texture_handle);
+                        const auto staging_texture_handle = renderer.create_image(create_info);
+                        const auto& staging_texture = renderer.get_image(staging_texture_handle);
 
-                        commands->copy_data_to_image(texture_data, texture);
+                        commands->copy_data_to_image(texture_data, staging_texture);
 
-                        logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.idx);
+                        logger->debug("Newly loaded image {} has handle {}", texture_name, staging_texture_handle.idx);
 
                         auto& material_data = renderer.get_material_data_buffer();
                         const auto material_handle = material_data.get_next_free_material<BveMaterial>();
                         auto& material = material_data.at<BveMaterial>(material_handle);
-                        material.color_texture = texture_handle;
+                        material.color_texture = staging_texture_handle;
 
                         mesh_component.material = material_handle;
 
@@ -171,6 +176,45 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
         return true;
     }
+}
+
+void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
+    MTR_SCOPE("Renderer", "create_bve_texture_alpha_pipeline");
+
+    std::vector<D3D12_ROOT_PARAMETER1> root_params;
+
+    // Root constant for the decal transparent color (stupid name smh)
+    root_params.push_back(D3D12_ROOT_PARAMETER1{
+        .ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
+        .Constants = {.ShaderRegister = 0, .RegisterSpace = 0, .Num32BitValues = 3},
+        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+    });
+
+    // Root descriptor for the input texture
+    root_params.push_back(D3D12_ROOT_PARAMETER1{
+        .ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+        .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0},
+        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+    });
+
+    root_params.push_back(D3D12_ROOT_PARAMETER1{
+        .ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV,
+        .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0},
+        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+    });
+
+    const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC1{.NumParameters = static_cast<UINT>(root_params.size()),
+                                                     .pParameters = root_params.data()};
+
+    const auto root_sig = device.compile_root_signature(sig_desc);
+
+    const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
+    bve_texture_pipeline = device.create_compute_pipeline_state(compute_shader, root_sig);
+
+    const std::unordered_map<std::string, rhi::RootDescriptorDescription> root_descriptors =
+        {{"input_texture", {1, rhi::DescriptorType::ShaderResource}}, {"output_texture", {2, rhi::DescriptorType::UnorderedAccess}}};
+
+    bve_texture_resource_binder = device.create_bind_group_builder(root_descriptors);
 }
 
 BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error) { return BVE_Mesh_Error_to_data(&error); }

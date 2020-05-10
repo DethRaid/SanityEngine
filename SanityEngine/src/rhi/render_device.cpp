@@ -486,7 +486,7 @@ namespace rhi {
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
         ENSURE(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
 
-        return material_bind_group_builder[frame_idx];
+        return *material_bind_group_builder[frame_idx];
     }
 
     void RenderDevice::begin_frame(const uint64_t frame_count) {
@@ -1092,7 +1092,7 @@ namespace rhi {
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
             descriptor_table_gpu_handles.emplace(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
 
-            material_bind_group_builder.emplace_back(
+            material_bind_group_builder.push_back(
                 create_bind_group_builder(root_descriptors, descriptor_tables, descriptor_table_gpu_handles));
 
             cpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);

@@ -14,6 +14,7 @@
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
+#include "../loading/shader_loading.hpp"
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -24,27 +25,6 @@ namespace renderer {
     struct BackbufferOutputMaterial {
         ImageHandle scene_output_image;
     };
-
-    std::vector<uint8_t> load_shader(const std::string& shader_filename) {
-        MTR_SCOPE("Renderer", "load_shader");
-        auto* shader_file = fopen(shader_filename.c_str(), "rb");
-        if(shader_file == nullptr) {
-            spdlog::error("Could not open shader file '{}'", shader_filename);
-            return {};
-        }
-
-        fseek(shader_file, 0, SEEK_END);
-        const auto file_size = ftell(shader_file);
-
-        auto shader = std::vector<uint8_t>(file_size);
-
-        rewind(shader_file);
-
-        fread(shader.data(), sizeof(uint8_t), file_size, shader_file);
-        fclose(shader_file);
-
-        return shader;
-    }
 
 #pragma region Cube
     std::vector<BveVertex> Renderer::cube_vertices{

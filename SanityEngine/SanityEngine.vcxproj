@@ -26,6 +26,7 @@
     <ClCompile Include="src\core\ensure.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />
+    <ClCompile Include="src\loading\shader_loading.cpp" />
     <ClCompile Include="src\player\flycam_controller.cpp" />
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
     <ClCompile Include="src\renderer\handles.hpp" />
@@ -57,6 +58,7 @@
     <ClInclude Include="src\core\ensure.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
+    <ClInclude Include="src\loading\shader_loading.hpp" />
     <ClInclude Include="src\player\components.hpp" />
     <ClInclude Include="src\player\flycam_controller.hpp" />
     <ClInclude Include="src\renderer\camera_matrix_buffer.hpp" />
@@ -107,6 +109,9 @@
     <FxCompile Include="data\shaders\standard.vertex.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\loading\shader_loading.ixx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
