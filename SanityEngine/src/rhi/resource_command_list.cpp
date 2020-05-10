@@ -28,7 +28,6 @@ namespace rhi {
 
     void ResourceCommandList::copy_data_to_buffer(const void* data, const uint32_t num_bytes, const Buffer& buffer, const uint32_t offset) {
         if(buffer.mapped_ptr != nullptr) {
-            MTR_SCOPE("D32D12ResourceCommandList", "copy_data_to_buffer");
             // Copy the data directly, ezpz
             uint8_t* ptr = static_cast<uint8_t*>(buffer.mapped_ptr);
             memcpy(ptr + offset, data, num_bytes);

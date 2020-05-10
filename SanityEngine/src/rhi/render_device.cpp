@@ -89,8 +89,6 @@ namespace rhi {
     }
 
     std::unique_ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
-        MTR_SCOPE("RenderDevice", "create_buffer");
-
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
 
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
@@ -154,8 +152,6 @@ namespace rhi {
     }
 
     std::unique_ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
-        MTR_SCOPE("RenderDevice", "create_image");
-
         const auto format = to_dxgi_format(create_info.format);
         auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
                                                  static_cast<uint32_t>(round(create_info.width)),
@@ -212,8 +208,6 @@ namespace rhi {
 
     std::unique_ptr<Framebuffer> RenderDevice::create_framebuffer(const std::vector<const Image*>& render_targets,
                                                                   const Image* depth_target) const {
-        MTR_SCOPE("RenderDevice", "create_framebuffer");
-
         auto framebuffer = std::make_unique<Framebuffer>();
 
         float width = 0;
@@ -301,8 +295,6 @@ namespace rhi {
     }
 
     void* RenderDevice::map_buffer(const Buffer& buffer) const {
-        MTR_SCOPE("D3D12RenderEngine", "map_buffer");
-
         void* ptr;
         D3D12_RANGE range{0, buffer.size};
         const auto result = buffer.resource->Map(0, &range, &ptr);
@@ -420,8 +412,6 @@ namespace rhi {
     }
 
     std::unique_ptr<ResourceCommandList> RenderDevice::create_resource_command_list() {
-        MTR_SCOPE("RenderDevice", "get_resoruce_command_list");
-
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
@@ -440,8 +430,6 @@ namespace rhi {
     }
 
     std::unique_ptr<ComputeCommandList> RenderDevice::create_compute_command_list() {
-        MTR_SCOPE("RenderDevice", "get_compute_command_list");
-
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
@@ -460,8 +448,6 @@ namespace rhi {
     }
 
     std::unique_ptr<RenderCommandList> RenderDevice::create_render_command_list() {
-        MTR_SCOPE("RenderDevice", "create_graphics_command_list");
-
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
@@ -1415,8 +1401,6 @@ namespace rhi {
     }
 
     StagingBuffer RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
-        MTR_SCOPE("RenderDevice", "create_buffer");
-
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
 
         const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;

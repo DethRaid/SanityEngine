@@ -23,8 +23,6 @@ namespace rhi {
           used_buffers{std::move(used_buffers_in)} {}
 
     void BindGroup::bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const {
-        MTR_SCOPE("BindGroup", "bind_to_graphics_signature");
-
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
             if(param.type == RootParameterType::Descriptor) {
@@ -49,8 +47,6 @@ namespace rhi {
     }
 
     void BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const {
-        MTR_SCOPE("BindGroup", "bind_to_compute_signature");
-
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
             if(param.type == RootParameterType::Descriptor) {
@@ -128,8 +124,6 @@ namespace rhi {
     }
 
     std::unique_ptr<BindGroup> BindGroupBuilder::build() {
-        MTR_SCOPE("BindGroupBuilder", "build");
-
         // D3D12 has a maximum root signature size of 64 descriptor tables
         std::vector<RootParameter> root_parameters{64};
 

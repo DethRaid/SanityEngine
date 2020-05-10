@@ -4,7 +4,6 @@
 #include <spdlog/spdlog.h>
 
 std::vector<uint8_t> load_shader(const std::string& shader_filename) {
-    MTR_SCOPE("Loading", "load_shader");
     auto* shader_file = fopen(shader_filename.c_str(), "rb");
     if(shader_file == nullptr) {
         spdlog::error("Could not open shader file '{}'", shader_filename);

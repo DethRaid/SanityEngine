@@ -23,8 +23,6 @@ FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity con
 }
 
 void FlycamController::update_player_transform(const float delta_time) {
-    MTR_SCOPE("FlycamController", "update_player_transform");
-
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
     auto& player_transform = registry->get<TransformComponent>(controlled_entity);
