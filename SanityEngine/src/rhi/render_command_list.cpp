@@ -1,46 +1,45 @@
-#include "d3d12_render_command_list.hpp"
-
 #include <array>
 #include <cassert>
 
 #include <minitrace.h>
 
-#include "../../core/align.hpp"
-#include "../../core/defer.hpp"
-#include "../../core/ensure.hpp"
-#include "../mesh_data_store.hpp"
-#include "d3d12_bind_group.hpp"
-#include "d3d12_framebuffer.hpp"
-#include "d3d12_render_pipeline_state.hpp"
+#include "../core/align.hpp"
+#include "../core/defer.hpp"
+#include "../core/ensure.hpp"
+#include "mesh_data_store.hpp"
+#include "bind_group.hpp"
+#include "framebuffer.hpp"
+#include "render_command_list.hpp"
+#include "render_pipeline_state.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 
 using std::move;
 
 namespace rhi {
-    D3D12RenderCommandList::D3D12RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, D3D12RenderDevice& device_in)
-        : D3D12ComputeCommandList{move(cmds), device_in} {}
+    RenderCommandList::RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)
+        : ComputeCommandList{move(cmds), device_in} {}
 
-    D3D12RenderCommandList::D3D12RenderCommandList(D3D12RenderCommandList&& old) noexcept
-        : D3D12ComputeCommandList{move(old)},
+    RenderCommandList::RenderCommandList(RenderCommandList&& old) noexcept
+        : ComputeCommandList{move(old)},
           in_render_pass{old.in_render_pass},
           current_render_pipeline_state{old.current_render_pipeline_state},
           is_render_material_bound{old.is_render_material_bound} {}
 
-    D3D12RenderCommandList& D3D12RenderCommandList::operator=(D3D12RenderCommandList&& old) noexcept {
+    RenderCommandList& RenderCommandList::operator=(RenderCommandList&& old) noexcept {
         in_render_pass = old.in_render_pass;
         current_render_pipeline_state = old.current_render_pipeline_state;
         is_render_material_bound = old.is_render_material_bound;
 
-        return static_cast<D3D12RenderCommandList&>(D3D12ComputeCommandList::operator=(move(old)));
+        return static_cast<RenderCommandList&>(ComputeCommandList::operator=(move(old)));
     }
 
-    void D3D12RenderCommandList::set_framebuffer(const Framebuffer& framebuffer,
+    void RenderCommandList::set_framebuffer(const Framebuffer& framebuffer,
                                                  std::vector<RenderTargetAccess> render_target_accesses,
                                                  std::optional<RenderTargetAccess> depth_access) {
-        MTR_SCOPE("D3D12RenderCommandList", "set_render_targets");
+        MTR_SCOPE("RenderCommandList", "set_render_targets");
 
-        const D3D12Framebuffer& d3d12_framebuffer = static_cast<const D3D12Framebuffer&>(framebuffer);
+        const Framebuffer& d3d12_framebuffer = static_cast<const Framebuffer&>(framebuffer);
 
         ENSURE(d3d12_framebuffer.rtv_handles.size() == render_target_accesses.size(),
                "Must have the same number of render targets and render target accesses");
@@ -100,10 +99,10 @@ namespace rhi {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void D3D12RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
-        MTR_SCOPE("D3D12RenderCommandList", "set_pipeline_state");
+    void RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
+        MTR_SCOPE("RenderCommandList", "set_pipeline_state");
 
-        const auto& d3d12_state = static_cast<const D3D12RenderPipelineState&>(state);
+        const auto& d3d12_state = static_cast<const RenderPipelineState&>(state);
 
         if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != d3d12_state.root_signature) {
             commands->SetGraphicsRootSignature(d3d12_state.root_signature.Get());
@@ -115,17 +114,17 @@ namespace rhi {
         current_render_pipeline_state = &d3d12_state;
     }
 
-    void D3D12RenderCommandList::bind_render_resources(const BindGroup& bind_group) {
-        MTR_SCOPE("D3D12RenderCommandList", "bind_render_resources");
+    void RenderCommandList::bind_render_resources(const BindGroup& bind_group) {
+        MTR_SCOPE("RenderCommandList", "bind_render_resources");
 
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
 
-        const auto& d3d12_bind_group = static_cast<const D3D12BindGroup&>(bind_group);
-        for(const BoundResource<D3D12Buffer>& resource : d3d12_bind_group.used_buffers) {
+        const auto& d3d12_bind_group = static_cast<const BindGroup&>(bind_group);
+        for(const BoundResource<Buffer>& resource : d3d12_bind_group.used_buffers) {
             set_resource_state(*resource.resource, resource.states);
         }
 
-        for(const BoundResource<D3D12Image>& resource : d3d12_bind_group.used_images) {
+        for(const BoundResource<Image>& resource : d3d12_bind_group.used_images) {
             set_resource_state(*resource.resource, resource.states);
         }
 
@@ -139,20 +138,20 @@ namespace rhi {
         is_render_material_bound = true;
     }
 
-    void D3D12RenderCommandList::set_camera_idx(const uint32_t camera_idx) {
+    void RenderCommandList::set_camera_idx(const uint32_t camera_idx) {
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a pipeline before setting the camera index");
 
         commands->SetGraphicsRoot32BitConstant(0, camera_idx, 0);
     }
 
-    void D3D12RenderCommandList::set_material_idx(const uint32_t idx) {
+    void RenderCommandList::set_material_idx(const uint32_t idx) {
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a pipeline before setting the material index");
 
         commands->SetGraphicsRoot32BitConstant(0, idx, 1);
     }
 
-    void D3D12RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
-        MTR_SCOPE("D3D12RenderCommandList", "draw");
+    void RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
+        MTR_SCOPE("RenderCommandList", "draw");
 
         // ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
         ENSURE(current_mesh_data != nullptr, "Must bind mesh data to issue drawcalls");
@@ -161,12 +160,12 @@ namespace rhi {
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);
     }
 
-    void D3D12RenderCommandList::prepare_for_submission() {
-        MTR_SCOPE("D3D12RenderCommandList", "prepare_for_submission");
+    void RenderCommandList::prepare_for_submission() {
+        MTR_SCOPE("RenderCommandList", "prepare_for_submission");
         if(in_render_pass) {
             commands->EndRenderPass();
         }
 
-        D3D12ComputeCommandList::prepare_for_submission();
+        ComputeCommandList::prepare_for_submission();
     }
 } // namespace rhi
