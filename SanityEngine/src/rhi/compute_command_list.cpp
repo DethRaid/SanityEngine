@@ -32,22 +32,20 @@ namespace rhi {
     void ComputeCommandList::set_pipeline_state(const ComputePipelineState& state) {
         MTR_SCOPE("ComputeCommandList", "set_pipeline_state");
 
-        const auto& d3d12_state = static_cast<const ComputePipelineState&>(state);
-
         if(compute_pipeline == nullptr) {
             // First time binding a compute pipeline to this command list, we need to bind the root signature
-            commands->SetComputeRootSignature(d3d12_state.root_signature.Get());
+            commands->SetComputeRootSignature(state.root_signature.Get());
             are_compute_resources_bound = false;
 
-        } else if(d3d12_state.root_signature != compute_pipeline->root_signature) {
+        } else if(state.root_signature != compute_pipeline->root_signature) {
             // Previous compute pipeline had a different root signature. Bind the new root signature
-            commands->SetComputeRootSignature(d3d12_state.root_signature.Get());
+            commands->SetComputeRootSignature(state.root_signature.Get());
             are_compute_resources_bound = false;
         }
 
-        compute_pipeline = &d3d12_state;
+        compute_pipeline = &state;
 
-        commands->SetPipelineState(d3d12_state.pso.Get());
+        commands->SetPipelineState(state.pso.Get());
 
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
@@ -57,22 +55,20 @@ namespace rhi {
 
         ENSURE(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
 
-        const auto& d3d12_bind_group = static_cast<const BindGroup&>(bind_group);
-
-        for(const auto& image : d3d12_bind_group.used_images) {
+        for(const auto& image : bind_group.used_images) {
             set_resource_state(*image.resource, image.states);
         }
 
-        for(const auto& buffer : d3d12_bind_group.used_buffers) {
+        for(const auto& buffer : bind_group.used_buffers) {
             set_resource_state(*buffer.resource, buffer.states);
         }
 
-        if(current_descriptor_heap != d3d12_bind_group.heap) {
-            commands->SetDescriptorHeaps(1, &d3d12_bind_group.heap);
-            current_descriptor_heap = d3d12_bind_group.heap;
+        if(current_descriptor_heap != bind_group.heap) {
+            commands->SetDescriptorHeaps(1, &bind_group.heap);
+            current_descriptor_heap = bind_group.heap;
         }
 
-        d3d12_bind_group.bind_to_compute_signature(*commands.Get());
+        bind_group.bind_to_compute_signature(*commands.Get());
 
         are_compute_resources_bound = true;
 
@@ -120,13 +116,13 @@ namespace rhi {
         std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views{};
         for(uint32_t i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
-            const auto* d3d12_buffer = static_cast<const Buffer*>(binding.buffer);
+            const auto* buffer = static_cast<const Buffer*>(binding.buffer);
 
-            set_resource_state(*d3d12_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+            set_resource_state(*buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
             D3D12_VERTEX_BUFFER_VIEW view{};
-            view.BufferLocation = d3d12_buffer->resource->GetGPUVirtualAddress() + binding.offset;
-            view.SizeInBytes = d3d12_buffer->size - binding.offset;
+            view.BufferLocation = buffer->resource->GetGPUVirtualAddress() + binding.offset;
+            view.SizeInBytes = buffer->size - binding.offset;
             view.StrideInBytes = binding.vertex_size;
 
             vertex_buffer_views[i] = view;
@@ -135,12 +131,11 @@ namespace rhi {
         commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
 
         const auto& index_buffer = mesh_data.get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const Buffer&>(index_buffer);
 
-        set_resource_state(d3d12_index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        set_resource_state(index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
         D3D12_INDEX_BUFFER_VIEW index_view{};
-        index_view.BufferLocation = d3d12_index_buffer.resource->GetGPUVirtualAddress();
+        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
         index_view.SizeInBytes = index_buffer.size;
         index_view.Format = DXGI_FORMAT_R32_UINT;
 
@@ -158,10 +153,8 @@ namespace rhi {
         ENSURE(current_mesh_data != nullptr, "Must have mesh data bound before building acceleration structures out of it");
 
         const auto& index_buffer = current_mesh_data->get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const Buffer&>(index_buffer);
 
         const auto& vertex_buffer = *current_mesh_data->get_vertex_bindings()[0].buffer;
-        const auto& d3d12_vertex_buffer = static_cast<const Buffer&>(vertex_buffer);
 
         const auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                               .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
@@ -171,9 +164,9 @@ namespace rhi {
                                                                    .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
                                                                    .IndexCount = num_indices,
                                                                    .VertexCount = num_vertices,
-                                                                   .IndexBuffer = d3d12_index_buffer.resource->GetGPUVirtualAddress() +
+                                                                   .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
                                                                                   (first_index * sizeof(uint32_t)),
-                                                                   .VertexBuffer = {.StartAddress = d3d12_vertex_buffer.resource
+                                                                   .VertexBuffer = {.StartAddress = vertex_buffer.resource
                                                                                                         ->GetGPUVirtualAddress() +
                                                                                                     (first_vertex * sizeof(BveVertex)),
                                                                                     .StrideInBytes = sizeof(BveVertex)}}};
@@ -201,22 +194,19 @@ namespace rhi {
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
 
-        const auto& d3d12_scratch_buffer = static_cast<const Buffer&>(scratch_buffer);
-        const auto& d3d12_result_buffer = static_cast<const Buffer&>(*result_buffer);
-
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
-            .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
+            .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
             .Inputs = build_as_inputs,
-            .ScratchAccelerationStructureData = d3d12_scratch_buffer.resource->GetGPUVirtualAddress()};
+            .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
 
         DEFER(a, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_result_buffer.resource.Get());
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
 
-        set_resource_state(d3d12_result_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+        set_resource_state(*result_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
         return {std::move(result_buffer)};
     }
@@ -225,10 +215,8 @@ namespace rhi {
         ENSURE(current_mesh_data != nullptr, "Must have mesh data bound before building acceleration structures out of it");
 
         const auto& index_buffer = current_mesh_data->get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const Buffer&>(index_buffer);
 
         const auto& vertex_buffer = *current_mesh_data->get_vertex_bindings()[0].buffer;
-        const auto& d3d12_vertex_buffer = static_cast<const Buffer&>(vertex_buffer);
 
         std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
@@ -241,10 +229,10 @@ namespace rhi {
                                                                  .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
                                                                  .IndexCount = num_indices,
                                                                  .VertexCount = num_vertices,
-                                                                 .IndexBuffer = d3d12_index_buffer.resource->GetGPUVirtualAddress() +
+                                                                 .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
                                                                                 (first_index * sizeof(uint32_t)),
                                                                  .VertexBuffer =
-                                                                     {.StartAddress = d3d12_vertex_buffer.resource->GetGPUVirtualAddress() +
+                                                                     {.StartAddress = vertex_buffer.resource->GetGPUVirtualAddress() +
                                                                                       (first_vertex * sizeof(BveVertex)),
                                                                       .StrideInBytes = sizeof(BveVertex)}}};
 
@@ -274,25 +262,22 @@ namespace rhi {
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
 
-        const auto& d3d12_scratch_buffer = static_cast<const Buffer&>(scratch_buffer);
-        const auto& d3d12_result_buffer = static_cast<const Buffer&>(*result_buffer);
-
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
-            .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
+            .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
             .Inputs = build_as_inputs,
-            .ScratchAccelerationStructureData = d3d12_scratch_buffer.resource->GetGPUVirtualAddress()};
+            .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
 
         DEFER(a, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
 
-        set_resource_state(d3d12_index_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_state(d3d12_vertex_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_state(index_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_state(vertex_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_result_buffer.resource.Get());
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
 
-        set_resource_state(d3d12_result_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+        set_resource_state(*result_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
         return {std::move(result_buffer)};
     }
@@ -319,8 +304,8 @@ namespace rhi {
 
             desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
-            const auto& d3d12_buffer = static_cast<const Buffer&>(*object.mesh->blas_buffer);
-            desc.AccelerationStructure = d3d12_buffer.resource->GetGPUVirtualAddress();
+            const auto& buffer = static_cast<const Buffer&>(*object.mesh->blas_buffer);
+            desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
         }
 
         const auto as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
@@ -345,10 +330,9 @@ namespace rhi {
                                                             .usage = BufferUsage::RaytracingAccelerationStructure,
                                                             .size = static_cast<uint32_t>(prebuild_info.ResultDataMaxSizeInBytes)};
         auto as_buffer = device->create_buffer(as_buffer_create_info);
-        const auto& d3d12_as_buffer = static_cast<const Buffer&>(*as_buffer);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
-            .DestAccelerationStructureData = d3d12_as_buffer.resource->GetGPUVirtualAddress(),
+            .DestAccelerationStructureData = as_buffer->resource->GetGPUVirtualAddress(),
             .Inputs = as_inputs,
             .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress(),
         };
@@ -358,10 +342,10 @@ namespace rhi {
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(d3d12_as_buffer.resource.Get());
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
 
-        set_resource_state(d3d12_as_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+        set_resource_state(*as_buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
         return {.buffer = std::move(as_buffer)};
     }

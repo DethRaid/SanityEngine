@@ -101,9 +101,9 @@ namespace rhi {
 
         [[nodiscard]] uint32_t get_cur_gpu_frame_idx() const;
 
-        void begin_capture();
+        void begin_capture() const;
 
-        void end_capture();
+        void end_capture() const;
 #pragma endregion
 
         [[nodiscard]] bool has_separate_device_memory() const;

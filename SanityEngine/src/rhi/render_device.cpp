@@ -24,7 +24,7 @@
 #include "render_pipeline_state.hpp"
 
 namespace rhi {
-    RenderDevice::RenderDevice(const HWND window_handle,
+    RenderDevice::RenderDevice(HWND window_handle,
                                const glm::uvec2& window_size,
                                const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : settings{settings_in},
@@ -167,7 +167,7 @@ namespace rhi {
         auto image = std::make_unique<Image>();
         image->format = create_info.format;
 
-        D3D12_RESOURCE_STATES initial_state;
+        D3D12_RESOURCE_STATES initial_state{};
         switch(create_info.usage) {
             case ImageUsage::RenderTarget:
                 initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -220,31 +220,29 @@ namespace rhi {
         framebuffer->rtv_handles.reserve(render_targets.size());
         uint32_t i{0};
         for(const auto* image : render_targets) {
-            const auto* d3d12_image = static_cast<const Image*>(image);
-
-            if(width != 0 && width != d3d12_image->width) {
+            if(width != 0 && width != image->width) {
                 logger->error(
                     "Render target {} has width {}, which is different from the width {} of the previous render target. All render targets must have the same width",
                     i,
-                    d3d12_image->width,
+                    image->width,
                     width);
             }
 
-            width = static_cast<float>(d3d12_image->width);
+            width = static_cast<float>(image->width);
 
-            if(height != 0 && height != d3d12_image->height) {
+            if(height != 0 && height != image->height) {
                 logger->error(
                     "Render target {} has height {}, which is different from the height {} of the previous render target. All render targets must have the same height",
                     i,
-                    d3d12_image->height,
+                    image->height,
                     height);
             }
 
-            height = static_cast<float>(d3d12_image->height);
+            height = static_cast<float>(image->height);
 
             const auto handle = rtv_allocator->get_next_free_descriptor();
 
-            device->CreateRenderTargetView(d3d12_image->resource.Get(), nullptr, handle);
+            device->CreateRenderTargetView(image->resource.Get(), nullptr, handle);
 
             framebuffer->rtv_handles.push_back(handle);
 
@@ -252,36 +250,34 @@ namespace rhi {
         }
 
         if(depth_target != nullptr) {
-            const auto* d3d12_depth_target = static_cast<const Image*>(depth_target);
-
-            if(width != 0 && width != d3d12_depth_target->width) {
+            if(width != 0 && width != depth_target->width) {
                 logger->error(
                     "Depth target has width {}, which is different from the width {} of the render targets. The depth target must have the same width as the render targets",
                     i,
-                    d3d12_depth_target->width,
+                    depth_target->width,
                     width);
             }
 
-            width = static_cast<float>(d3d12_depth_target->width);
+            width = static_cast<float>(depth_target->width);
 
-            if(height != 0 && height != d3d12_depth_target->height) {
+            if(height != 0 && height != depth_target->height) {
                 logger->error(
                     "Depth target has height {}, which is different from the height {} of the render targets. The depth target must have the same height as the render targets",
                     i,
-                    d3d12_depth_target->height,
+                    depth_target->height,
                     height);
             }
 
-            height = static_cast<float>(d3d12_depth_target->height);
+            height = static_cast<float>(depth_target->height);
 
             D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
-            desc.Format = to_dxgi_format(d3d12_depth_target->format);
+            desc.Format = to_dxgi_format(depth_target->format);
             desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
             desc.Texture2D.MipSlice = 0;
 
             const auto handle = dsv_allocator->get_next_free_descriptor();
 
-            device->CreateDepthStencilView(d3d12_depth_target->resource.Get(), &desc, handle);
+            device->CreateDepthStencilView(depth_target->resource.Get(), &desc, handle);
 
             framebuffer->dsv_handle = handle;
         }
@@ -303,12 +299,11 @@ namespace rhi {
     }
 
     void* RenderDevice::map_buffer(const Buffer& buffer) const {
-        const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
         MTR_SCOPE("D3D12RenderEngine", "map_buffer");
 
         void* ptr;
-        D3D12_RANGE range{0, d3d12_buffer.size};
-        const auto result = d3d12_buffer.resource->Map(0, &range, &ptr);
+        D3D12_RANGE range{0, buffer.size};
+        const auto result = buffer.resource->Map(0, &range, &ptr);
         if(FAILED(result)) {
             logger->error("Could not map buffer");
             return nullptr;
@@ -326,14 +321,12 @@ namespace rhi {
     }
 
     void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) const {
-        auto* d3d12_framebuffer = static_cast<Framebuffer*>(framebuffer.get());
-
-        for(const D3D12_CPU_DESCRIPTOR_HANDLE handle : d3d12_framebuffer->rtv_handles) {
+        for(const D3D12_CPU_DESCRIPTOR_HANDLE handle : framebuffer->rtv_handles) {
             rtv_allocator->return_descriptor(handle);
         }
 
-        if(d3d12_framebuffer->dsv_handle) {
-            dsv_allocator->return_descriptor(*d3d12_framebuffer->dsv_handle);
+        if(framebuffer->dsv_handle) {
+            dsv_allocator->return_descriptor(*framebuffer->dsv_handle);
         }
     }
 
@@ -464,11 +457,9 @@ namespace rhi {
     }
 
     void RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
-        auto* d3d12_commands = dynamic_cast<CommandList*>(commands.release());
+        commands->prepare_for_submission();
 
-        d3d12_commands->prepare_for_submission();
-
-        command_lists_by_frame[cur_gpu_frame_idx].push_back(std::unique_ptr<CommandList>{d3d12_commands});
+        command_lists_by_frame[cur_gpu_frame_idx].push_back(std::move(commands));
     }
 
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
@@ -520,13 +511,13 @@ namespace rhi {
 
     uint32_t RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
 
-    void RenderDevice::begin_capture() {
+    void RenderDevice::begin_capture() const {
         if(graphics_analysis) {
             graphics_analysis->BeginCapture();
         }
     }
 
-    void RenderDevice::end_capture() {
+    void RenderDevice::end_capture() const {
         if(graphics_analysis) {
             graphics_analysis->EndCapture();
         }

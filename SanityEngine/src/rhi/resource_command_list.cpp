@@ -29,10 +29,9 @@ namespace rhi {
     void ResourceCommandList::copy_data_to_buffer(const void* data, const uint32_t num_bytes, const Buffer& buffer, const uint32_t offset) {
         MTR_SCOPE("D32D12ResourceCommandList", "copy_data_to_buffer");
 
-        const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
-        if(d3d12_buffer.mapped_ptr != nullptr) {
+        if(buffer.mapped_ptr != nullptr) {
             // Copy the data directly, ezpz
-            uint8_t* ptr = static_cast<uint8_t*>(d3d12_buffer.mapped_ptr);
+            uint8_t* ptr = static_cast<uint8_t*>(buffer.mapped_ptr);
             memcpy(ptr + offset, data, num_bytes);
 
         } else {
@@ -42,9 +41,9 @@ namespace rhi {
             memcpy(staging_buffer.ptr, data, num_bytes);
 
             set_resource_state(staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
-            set_resource_state(d3d12_buffer, D3D12_RESOURCE_STATE_COPY_DEST);
+            set_resource_state(buffer, D3D12_RESOURCE_STATE_COPY_DEST);
 
-            commands->CopyBufferRegion(d3d12_buffer.resource.Get(), offset, staging_buffer.resource.Get(), 0, num_bytes);
+            commands->CopyBufferRegion(buffer.resource.Get(), offset, staging_buffer.resource.Get(), 0, num_bytes);
 
             DEFER(a, [&]() { device->return_staging_buffer(move(staging_buffer)); });
 
@@ -63,18 +62,16 @@ namespace rhi {
         auto staging_buffer = device->get_staging_buffer(num_bytes * 2);
         memcpy(staging_buffer.ptr, data, num_bytes);
 
-        const auto& d3d12_image = static_cast<const Image&>(image);
-
         set_resource_state(staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        set_resource_state(d3d12_image, D3D12_RESOURCE_STATE_COPY_DEST);
+        set_resource_state(image, D3D12_RESOURCE_STATE_COPY_DEST);
 
         D3D12_SUBRESOURCE_DATA subresource;
         subresource.pData = data;
-        subresource.RowPitch = d3d12_image.width * bytes_per_pixel;
-        subresource.SlicePitch = d3d12_image.width * d3d12_image.height * bytes_per_pixel;
+        subresource.RowPitch = image.width * bytes_per_pixel;
+        subresource.SlicePitch = image.width * image.height * bytes_per_pixel;
 
         const auto
-            result = UpdateSubresources(commands.Get(), d3d12_image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
+            result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0 || FAILED(result)) {
             spdlog::error("Could not copy data to image");
         }

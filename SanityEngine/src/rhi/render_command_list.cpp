@@ -1,3 +1,5 @@
+#include "render_command_list.hpp"
+
 #include <array>
 #include <cassert>
 
@@ -6,13 +8,12 @@
 #include "../core/align.hpp"
 #include "../core/defer.hpp"
 #include "../core/ensure.hpp"
-#include "mesh_data_store.hpp"
 #include "bind_group.hpp"
-#include "framebuffer.hpp"
-#include "render_command_list.hpp"
-#include "render_pipeline_state.hpp"
 #include "d3dx12.hpp"
+#include "framebuffer.hpp"
 #include "helpers.hpp"
+#include "mesh_data_store.hpp"
+#include "render_pipeline_state.hpp"
 
 using std::move;
 
@@ -35,15 +36,13 @@ namespace rhi {
     }
 
     void RenderCommandList::set_framebuffer(const Framebuffer& framebuffer,
-                                                 std::vector<RenderTargetAccess> render_target_accesses,
-                                                 std::optional<RenderTargetAccess> depth_access) {
+                                            std::vector<RenderTargetAccess> render_target_accesses,
+                                            std::optional<RenderTargetAccess> depth_access) {
         MTR_SCOPE("RenderCommandList", "set_render_targets");
 
-        const Framebuffer& d3d12_framebuffer = static_cast<const Framebuffer&>(framebuffer);
-
-        ENSURE(d3d12_framebuffer.rtv_handles.size() == render_target_accesses.size(),
+        ENSURE(framebuffer.rtv_handles.size() == render_target_accesses.size(),
                "Must have the same number of render targets and render target accesses");
-        ENSURE(d3d12_framebuffer.dsv_handle.has_value() == depth_access.has_value(),
+        ENSURE(framebuffer.dsv_handle.has_value() == depth_access.has_value(),
                "There must be either both a DSV handle and a depth target access, or neither");
 
         // TODO: Decide if every framebuffer should be a separate renderpass
@@ -57,7 +56,7 @@ namespace rhi {
 
         for(uint32_t i = 0; i < render_target_accesses.size(); i++) {
             D3D12_RENDER_PASS_RENDER_TARGET_DESC desc{};
-            desc.cpuDescriptor = d3d12_framebuffer.rtv_handles[i];
+            desc.cpuDescriptor = framebuffer.rtv_handles[i];
             desc.BeginningAccess = to_d3d12_beginning_access(render_target_accesses[i].begin);
             desc.EndingAccess = to_d3d12_ending_access(render_target_accesses[i].end);
 
@@ -66,7 +65,7 @@ namespace rhi {
 
         if(depth_access) {
             D3D12_RENDER_PASS_DEPTH_STENCIL_DESC desc{};
-            desc.cpuDescriptor = *d3d12_framebuffer.dsv_handle;
+            desc.cpuDescriptor = *framebuffer.dsv_handle;
             desc.DepthBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
             desc.DepthEndingAccess = to_d3d12_ending_access(depth_access->end);
             desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
@@ -89,29 +88,27 @@ namespace rhi {
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
-        viewport.Width = d3d12_framebuffer.width;
-        viewport.Height = d3d12_framebuffer.height;
+        viewport.Width = framebuffer.width;
+        viewport.Height = framebuffer.height;
         commands->RSSetViewports(1, &viewport);
 
         D3D12_RECT scissor_rect{};
-        scissor_rect.right = static_cast<LONG>(d3d12_framebuffer.width);
-        scissor_rect.bottom = static_cast<LONG>(d3d12_framebuffer.height);
+        scissor_rect.right = static_cast<LONG>(framebuffer.width);
+        scissor_rect.bottom = static_cast<LONG>(framebuffer.height);
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
     void RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
         MTR_SCOPE("RenderCommandList", "set_pipeline_state");
 
-        const auto& d3d12_state = static_cast<const RenderPipelineState&>(state);
-
-        if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != d3d12_state.root_signature) {
-            commands->SetGraphicsRootSignature(d3d12_state.root_signature.Get());
+        if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != state.root_signature) {
+            commands->SetGraphicsRootSignature(state.root_signature.Get());
             is_render_material_bound = false;
         }
 
-        commands->SetPipelineState(d3d12_state.pso.Get());
+        commands->SetPipelineState(state.pso.Get());
 
-        current_render_pipeline_state = &d3d12_state;
+        current_render_pipeline_state = &state;
     }
 
     void RenderCommandList::bind_render_resources(const BindGroup& bind_group) {
@@ -119,21 +116,20 @@ namespace rhi {
 
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
 
-        const auto& d3d12_bind_group = static_cast<const BindGroup&>(bind_group);
-        for(const BoundResource<Buffer>& resource : d3d12_bind_group.used_buffers) {
+        for(const BoundResource<Buffer>& resource : bind_group.used_buffers) {
             set_resource_state(*resource.resource, resource.states);
         }
 
-        for(const BoundResource<Image>& resource : d3d12_bind_group.used_images) {
+        for(const BoundResource<Image>& resource : bind_group.used_images) {
             set_resource_state(*resource.resource, resource.states);
         }
 
-        if(current_descriptor_heap != d3d12_bind_group.heap) {
-            commands->SetDescriptorHeaps(1, &d3d12_bind_group.heap);
-            current_descriptor_heap = d3d12_bind_group.heap;
+        if(current_descriptor_heap != bind_group.heap) {
+            commands->SetDescriptorHeaps(1, &bind_group.heap);
+            current_descriptor_heap = bind_group.heap;
         }
 
-        d3d12_bind_group.bind_to_graphics_signature(*commands.Get());
+        bind_group.bind_to_graphics_signature(*commands.Get());
 
         is_render_material_bound = true;
     }
