@@ -68,7 +68,7 @@ namespace rhi {
 
         D3D12MA::Allocation* allocation;
 
-        DXGI_FORMAT format;
+        ImageFormat format;
     };
 
     struct ImageCreateInfo {

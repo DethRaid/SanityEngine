@@ -25,7 +25,7 @@ namespace rhi {
         CommandList(CommandList&& old) noexcept;
         CommandList& operator=(CommandList&& old) noexcept;
 
-        void set_debug_name(const std::string& name);
+        void set_debug_name(const std::string& name) const;
 
         void add_completion_function(std::function<void()>&& completion_func);
 

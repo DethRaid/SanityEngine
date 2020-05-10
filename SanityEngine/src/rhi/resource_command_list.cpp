@@ -1,37 +1,35 @@
-#include "d3d12_resource_command_list.hpp"
+#include "resource_command_list.hpp"
 
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 
-#include "../../core/defer.hpp"
+#include "../core/defer.hpp"
 #include "d3dx12.hpp"
+#include "helpers.hpp"
+#include "render_device.hpp"
 
 using std::move;
 
 namespace rhi {
-    D3D12ResourceCommandList::D3D12ResourceCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, D3D12RenderDevice& device_in)
-        : D3D12CommandList{move(cmds)}, device{&device_in} {}
+    ResourceCommandList::ResourceCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)
+        : CommandList{move(cmds)}, device{&device_in} {}
 
-    D3D12ResourceCommandList::D3D12ResourceCommandList(D3D12ResourceCommandList&& old) noexcept
-        : D3D12CommandList(move(old)), device{old.device} {
+    ResourceCommandList::ResourceCommandList(ResourceCommandList&& old) noexcept : CommandList(move(old)), device{old.device} {
         old.device = nullptr;
     }
 
-    D3D12ResourceCommandList& D3D12ResourceCommandList::operator=(D3D12ResourceCommandList&& old) noexcept {
+    ResourceCommandList& ResourceCommandList::operator=(ResourceCommandList&& old) noexcept {
         device = old.device;
 
         old.device = nullptr;
 
-        return static_cast<D3D12ResourceCommandList&>(D3D12CommandList::operator=(move(old)));
+        return static_cast<ResourceCommandList&>(CommandList::operator=(move(old)));
     }
 
-    void D3D12ResourceCommandList::copy_data_to_buffer(const void* data,
-                                                       const uint32_t num_bytes,
-                                                       const Buffer& buffer,
-                                                       const uint32_t offset) {
+    void ResourceCommandList::copy_data_to_buffer(const void* data, const uint32_t num_bytes, const Buffer& buffer, const uint32_t offset) {
         MTR_SCOPE("D32D12ResourceCommandList", "copy_data_to_buffer");
 
-        const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
+        const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
         if(d3d12_buffer.mapped_ptr != nullptr) {
             // Copy the data directly, ezpz
             uint8_t* ptr = static_cast<uint8_t*>(d3d12_buffer.mapped_ptr);
@@ -54,8 +52,8 @@ namespace rhi {
         }
     }
 
-    void D3D12ResourceCommandList::copy_data_to_image(const void* data, const Image& image) {
-        MTR_SCOPE("D3D12ResourceCommandList", "copy_data_to_image");
+    void ResourceCommandList::copy_data_to_image(const void* data, const Image& image) {
+        MTR_SCOPE("ResourceCommandList", "copy_data_to_image");
 
         const auto bytes_per_pixel = size_in_bytes(image.format);
         const auto num_bytes = image.width * image.height * image.depth * bytes_per_pixel;
@@ -65,7 +63,7 @@ namespace rhi {
         auto staging_buffer = device->get_staging_buffer(num_bytes * 2);
         memcpy(staging_buffer.ptr, data, num_bytes);
 
-        const auto& d3d12_image = static_cast<const D3D12Image&>(image);
+        const auto& d3d12_image = static_cast<const Image&>(image);
 
         set_resource_state(staging_buffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
         set_resource_state(d3d12_image, D3D12_RESOURCE_STATE_COPY_DEST);

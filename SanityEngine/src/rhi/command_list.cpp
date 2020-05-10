@@ -30,7 +30,7 @@ namespace rhi {
         return *this;
     }
 
-    void CommandList::set_debug_name(const std::string& name) { set_object_name(*commands.Get(), name); }
+    void CommandList::set_debug_name(const std::string& name) const { set_object_name(*commands.Get(), name); }
 
     void CommandList::add_completion_function(std::function<void()>&& completion_func) {
         MTR_SCOPE("CommandList", "add_completion_function");
