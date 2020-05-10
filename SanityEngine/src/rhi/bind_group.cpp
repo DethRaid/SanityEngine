@@ -1,21 +1,22 @@
+#include "bind_group.hpp"
+
 #include <utility>
 
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "../core/ensure.hpp"
-#include "raytracing_structs.hpp"
-#include "bind_group.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
+#include "raytracing_structs.hpp"
 
 namespace rhi {
     RootParameter::RootParameter() = default;
 
     BindGroup::BindGroup(ID3D12DescriptorHeap& heap_in,
-                                   std::vector<RootParameter> root_parameters_in,
-                                   std::vector<BoundResource<Image>> used_images_in,
-                                   std::vector<BoundResource<Buffer>> used_buffers_in)
+                         std::vector<RootParameter> root_parameters_in,
+                         std::vector<BoundResource<Image>> used_images_in,
+                         std::vector<BoundResource<Buffer>> used_buffers_in)
         : heap{&heap_in},
           root_parameters{std::move(root_parameters_in)},
           used_images{std::move(used_images_in)},
@@ -104,9 +105,7 @@ namespace rhi {
         return *this;
     }
 
-    BindGroupBuilder& BindGroupBuilder::set_image(const std::string& name, const Image& image) {
-        return set_image_array(name, {&image});
-    }
+    BindGroupBuilder& BindGroupBuilder::set_image(const std::string& name, const Image& image) { return set_image_array(name, {&image}); }
 
     BindGroupBuilder& BindGroupBuilder::set_image_array(const std::string& name, const std::vector<const Image*>& images) {
         std::vector<const Image*> d3d12_images;

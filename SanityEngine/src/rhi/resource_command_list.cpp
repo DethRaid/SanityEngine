@@ -70,8 +70,7 @@ namespace rhi {
         subresource.RowPitch = image.width * bytes_per_pixel;
         subresource.SlicePitch = image.width * image.height * bytes_per_pixel;
 
-        const auto
-            result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
+        const auto result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0 || FAILED(result)) {
             spdlog::error("Could not copy data to image");
         }

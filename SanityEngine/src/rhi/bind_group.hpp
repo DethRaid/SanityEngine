@@ -2,7 +2,11 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include <d3d12.h>
+#include <spdlog/logger.h>
 
 namespace rhi {
     struct RaytracingScene;
@@ -48,12 +52,11 @@ namespace rhi {
     BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in)
         : resource{resource_in}, states{states_in} {}
 
-
     struct BindGroup {
         explicit BindGroup(ID3D12DescriptorHeap& heap_in,
-                                std::vector<RootParameter> root_parameters_in,
-                                std::vector<BoundResource<Image>> used_images_in,
-                                std::vector<BoundResource<Buffer>> used_buffers_in);
+                           std::vector<RootParameter> root_parameters_in,
+                           std::vector<BoundResource<Image>> used_images_in,
+                           std::vector<BoundResource<Buffer>> used_buffers_in);
 
         BindGroup(const BindGroup& other) = default;
         BindGroup& operator=(const BindGroup& other) = default;
@@ -127,17 +130,17 @@ namespace rhi {
         BindGroupBuilder(BindGroupBuilder&& old) noexcept = default;
         BindGroupBuilder& operator=(BindGroupBuilder&& old) noexcept = default;
 
-        ~BindGroupBuilder()  = default;
+        ~BindGroupBuilder() = default;
 
-        BindGroupBuilder& set_buffer(const std::string& name, const Buffer& buffer) ;
+        BindGroupBuilder& set_buffer(const std::string& name, const Buffer& buffer);
 
-        BindGroupBuilder& set_image(const std::string& name, const Image& image) ;
+        BindGroupBuilder& set_image(const std::string& name, const Image& image);
 
-        BindGroupBuilder& set_image_array(const std::string& name, const std::vector<const Image*>& images) ;
+        BindGroupBuilder& set_image_array(const std::string& name, const std::vector<const Image*>& images);
 
-        BindGroupBuilder& set_raytracing_scene(const std::string& name, const RaytracingScene& scene) ;
+        BindGroupBuilder& set_raytracing_scene(const std::string& name, const RaytracingScene& scene);
 
-        std::unique_ptr<BindGroup> build() ;
+        std::unique_ptr<BindGroup> build();
 
     private:
         std::shared_ptr<spdlog::logger> logger;
