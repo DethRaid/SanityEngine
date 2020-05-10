@@ -1,30 +1,23 @@
 // Converts a silly BVE texture into a texture with proper transparency
 
-struct TransparencyConstants {
-    /*!
-     * \brief Sentinel value to indicate transparent texels
-     */
-    float3 decal_transparent_color;
-} constants;
-
 Texture2D<float4> input_texture : register(t0);
 
 RWTexture2D<float4> output_texture : register(u0);
 
 float4 load_gamma(int2 position) {
-    float4 srgb = input_texture[position] / 255.0f;
+    float4 srgb = input_texture[position];
     return float4(pow(srgb.rgb, 2.2f), srgb.a);
 }
 
 void store_gamma(int2 location, float4 value) {
     float4 srgb = float4(pow(value.rgb, 1.0f / 2.2f), value.a);
-    output_texture[location] = uint4(srgb * 255);
+    output_texture[location] = srgb;
 }
 
 float4 load_strip_blue(int2 location) {
     float4 value = load_gamma(location);
-    if(dot(value.xyz, constants.decal_transparent_color) > 0.99) {
-        value = 0.0;
+    if(all(value.xyz == float3(0, 0, 1))) {
+        value.a = 0.0;
     }
     return value;
 }
@@ -39,17 +32,18 @@ float4 conditional_load(int2 location, uint2 texture_dimensions) {
         }
         return value;
     } else {
-        return 0.0;
+        return 0;
     }
 }
 
 [numthreads(8, 8, 1)]
 void main(uint3 dispatch_thread_id : SV_DISPATCHTHREADID) {
     uint2 texture_dimensions;
-    input_texture.GetDimensions(texture_dimensions.x, texture_dimensions.y);    
+    input_texture.GetDimensions(texture_dimensions.x, texture_dimensions.y);
     
     int2 location = dispatch_thread_id.xy;
     if (!(location.x < texture_dimensions.x && location.y < texture_dimensions.y)) {
+        store_gamma(location, 0);
         return;
     }
     float4 texel11 = load_strip_blue(location);

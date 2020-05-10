@@ -160,10 +160,12 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                         const auto texture_handle = renderer.create_image(create_info);
                         const auto& texture = renderer.get_image(texture_handle);
 
-                        bve_texture_resource_binder->set_image("input_texture", staging_texture);
-                        bve_texture_resource_binder->set_image("output_texture", texture);
+                        auto bind_group_builder = create_texture_processor_bind_group_builder(device);;
 
-                        auto bind_group = bve_texture_resource_binder->build();
+                        bind_group_builder->set_image("input_texture", staging_texture);
+                        bind_group_builder->set_image("output_texture", texture);
+
+                        auto bind_group = bind_group_builder->build();
                         commands->bind_compute_resources(*bind_group);
 
                         const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
@@ -202,18 +204,29 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
     }
 }
 
+std::unique_ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(rhi::RenderDevice& device) {
+    auto [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
+    const auto descriptor_size = device.get_shader_resource_descriptor_size();
+
+    const std::unordered_map<std::string, rhi::DescriptorTableDescriptorDescription> descriptors =
+    {{"input_texture", {.type = rhi::DescriptorType::ShaderResource, .handle = cpu_handle}},
+     {"output_texture", {.type = rhi::DescriptorType::UnorderedAccess, .handle = cpu_handle.Offset(descriptor_size)}}};
+
+    const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = {{0, gpu_handle}};
+
+    return device.create_bind_group_builder({}, descriptors, tables);
+}
+
 void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
     MTR_SCOPE("Renderer", "create_bve_texture_alpha_pipeline");
 
-    std::vector<CD3DX12_ROOT_PARAMETER> root_params{2};
-
-    root_params[0].InitAsConstants(3, 0);
+    std::vector<CD3DX12_ROOT_PARAMETER> root_params{1};
 
     std::vector<CD3DX12_DESCRIPTOR_RANGE> ranges{2};
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
     ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
-    root_params[1].InitAsDescriptorTable(static_cast<UINT>(ranges.size()), ranges.data());
+    root_params[0].InitAsDescriptorTable(static_cast<UINT>(ranges.size()), ranges.data());
 
     const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC{.NumParameters = static_cast<UINT>(root_params.size()),
                                                     .pParameters = root_params.data()};
@@ -222,17 +235,6 @@ void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
 
     const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
     bve_texture_pipeline = device.create_compute_pipeline_state(compute_shader, root_sig);
-
-    auto& [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
-    const auto descriptor_size = device.get_shader_resource_descriptor_size();
-
-    const std::unordered_map<std::string, rhi::DescriptorTableDescriptorDescription> descriptors =
-        {{"input_texture", {.type = rhi::DescriptorType::ShaderResource, .handle = cpu_handle}},
-         {"output_texture", {.type = rhi::DescriptorType::UnorderedAccess, .handle = cpu_handle.Offset(descriptor_size)}}};
-
-    const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = {{1, gpu_handle}};
-
-    bve_texture_resource_binder = device.create_bind_group_builder({}, descriptors, tables);
 }
 
 BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error) { return BVE_Mesh_Error_to_data(&error); }

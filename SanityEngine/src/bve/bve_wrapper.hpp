@@ -23,12 +23,12 @@ public:
     explicit BveWrapper(rhi::RenderDevice& device);
 
     [[nodiscard]] bool add_train_to_scene(const std::string& filename, entt::registry& registry, renderer::Renderer& renderer);
+    std::unique_ptr<rhi::BindGroupBuilder> create_texture_processor_bind_group_builder(rhi::RenderDevice& device);
 
 private:
     static std::shared_ptr<spdlog::logger> logger;
 
     std::unique_ptr<rhi::ComputePipelineState> bve_texture_pipeline;
-    std::unique_ptr<rhi::BindGroupBuilder> bve_texture_resource_binder;
 
     void create_texture_filter_pipeline(rhi::RenderDevice& device);
 

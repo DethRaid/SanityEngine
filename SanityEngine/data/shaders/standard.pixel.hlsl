@@ -82,6 +82,9 @@ float4 main(VertexOutput input) : SV_TARGET {
     Texture2D texture = textures[material.texture_idx];
     float4 color = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
 
+    if(color.a == 0) {
+        discard;
+    }
 
     return float4(color.rgb * (light * light_strength + float3(0.2, 0.2, 0.2)), color.a);
 }
