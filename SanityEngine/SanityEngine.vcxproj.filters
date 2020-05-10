@@ -82,6 +82,12 @@
     <Filter Include="Source Files\loading">
       <UniqueIdentifier>{f8bfeb06-5ab8-4734-982d-a3c62c375884}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\imgui">
+      <UniqueIdentifier>{c7fa8ae5-f40e-4820-8c0a-ebe376cfda07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{be8c91aa-fae9-4662-8dff-0ba28c8c31ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -161,6 +167,18 @@
     </ClCompile>
     <ClCompile Include="src\loading\shader_loading.cpp">
       <Filter>Source Files\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui\src\imgui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui\src\imgui_demo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui\src\imgui_draw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui\src\imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +298,24 @@
     </ClInclude>
     <ClInclude Include="src\loading\shader_loading.hpp">
       <Filter>Header Files\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui\include\imgui\imconfig.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui\include\imgui\imgui.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui\include\imgui\imgui_internal.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui\include\imgui\imstb_rectpack.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui\include\imgui\imstb_textedit.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui\include\imgui\imstb_truetype.h">
+      <Filter>Header Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

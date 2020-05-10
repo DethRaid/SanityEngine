@@ -20,6 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
+    <ClCompile Include="extern\imgui\src\imgui.cpp" />
+    <ClCompile Include="extern\imgui\src\imgui_demo.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="extern\imgui\src\imgui_draw.cpp" />
+    <ClCompile Include="extern\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="extern\minitrace\src\minitrace.c" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
     <ClCompile Include="src\core\abort.cpp" />
@@ -47,6 +53,12 @@
     <ClCompile Include="src\windows\windows_helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="extern\imgui\include\imgui\imconfig.h" />
+    <ClInclude Include="extern\imgui\include\imgui\imgui.h" />
+    <ClInclude Include="extern\imgui\include\imgui\imgui_internal.h" />
+    <ClInclude Include="extern\imgui\include\imgui\imstb_rectpack.h" />
+    <ClInclude Include="extern\imgui\include\imgui\imstb_textedit.h" />
+    <ClInclude Include="extern\imgui\include\imgui\imstb_truetype.h" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\core\abort.hpp" />
@@ -169,7 +181,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\imgui\include;E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
     <LibraryPath>E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
