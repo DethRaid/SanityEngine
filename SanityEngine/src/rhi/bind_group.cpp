@@ -259,16 +259,18 @@ namespace rhi {
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
                         for(const auto* image : image_itr->second) {
-                            D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
-                            srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-                            srv_desc.Format = to_dxgi_format(image->format);
-                            srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                            srv_desc.Texture2D.MostDetailedMip = 0;
-                            srv_desc.Texture2D.MipLevels = 0xFFFFFFFF;
-                            srv_desc.Texture2D.PlaneSlice = 0;
-                            srv_desc.Texture2D.ResourceMinLODClamp = 0;
+                            if(image != nullptr) {
+                                D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+                                srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                                srv_desc.Format = to_dxgi_format(image->format);
+                                srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                                srv_desc.Texture2D.MostDetailedMip = 0;
+                                srv_desc.Texture2D.MipLevels = 0xFFFFFFFF;
+                                srv_desc.Texture2D.PlaneSlice = 0;
+                                srv_desc.Texture2D.ResourceMinLODClamp = 0;
 
-                            device->CreateShaderResourceView(image->resource.Get(), &srv_desc, handle);
+                                device->CreateShaderResourceView(image->resource.Get(), &srv_desc, handle);
+                            }
 
                             handle.Offset(descriptor_size);
                         }

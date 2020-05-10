@@ -176,6 +176,7 @@ namespace rhi {
 
             case ImageUsage::SampledImage:
                 initial_state = D3D12_RESOURCE_STATE_COPY_DEST;
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
 
             case ImageUsage::DepthStencil:
@@ -185,6 +186,7 @@ namespace rhi {
 
             case ImageUsage::UnorderedAccess:
                 initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
         }
 
@@ -316,7 +318,7 @@ namespace rhi {
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Buffer*>(buffer.release()));
     }
 
-    void RenderDevice::destroy_image(std::unique_ptr<Image> image) {
+    void RenderDevice::schedule_image_destruction(std::unique_ptr<Image> image) {
         image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Image*>(image.release()));
     }
 

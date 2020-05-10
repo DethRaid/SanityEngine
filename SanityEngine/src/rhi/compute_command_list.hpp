@@ -27,7 +27,7 @@ namespace rhi {
 
         void bind_compute_resources(const BindGroup& bind_group);
 
-        void dispatch(uint32_t workgroup_x, uint32_t workgroup_y, uint32_t workgroup_z);
+        void dispatch(uint32_t workgroup_x, uint32_t workgroup_y = 1, uint32_t workgroup_z = 1);
 
         void bind_mesh_data(const MeshDataStore& mesh_data);
 

@@ -9,12 +9,12 @@
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../core/ensure.hpp"
+#include "../loading/shader_loading.hpp"
 #include "../rhi/d3dx12.hpp"
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
-#include "../loading/shader_loading.hpp"
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -228,6 +228,11 @@ namespace renderer {
 
     rhi::Image& Renderer::get_image(const ImageHandle handle) const { return *all_images[handle.idx]; }
 
+    void Renderer::schedule_texture_destruction(const ImageHandle& image_handle) {
+        auto image = std::move(all_images[image_handle.idx]);
+        device->schedule_image_destruction(std::move(image));
+    }
+
     MaterialDataBuffer& Renderer::get_material_data_buffer() const { return *material_data_buffer; }
 
     rhi::RenderDevice& Renderer::get_render_device() const { return *device; }
@@ -317,7 +322,6 @@ namespace renderer {
             light_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
-
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
         rhi::ImageCreateInfo color_target_create_info{};

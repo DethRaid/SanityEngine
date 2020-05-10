@@ -75,7 +75,7 @@ namespace rhi {
 
         void destroy_buffer(std::unique_ptr<Buffer> buffer);
 
-        void destroy_image(std::unique_ptr<Image> image);
+        void schedule_image_destruction(std::unique_ptr<Image> image);
 
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
 

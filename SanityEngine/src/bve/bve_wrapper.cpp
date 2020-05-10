@@ -18,6 +18,9 @@
 
 using namespace bve;
 
+constexpr uint32_t THREAD_GROUP_WIDTH = 8;
+constexpr uint32_t THREAD_GROUP_HEIGHT = 8;
+
 struct BveMaterial {
     renderer::ImageHandle color_texture;
 };
@@ -94,6 +97,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         auto commands = device.create_compute_command_list();
         commands->bind_mesh_data(renderer.get_static_mesh_store());
 
+        commands->set_pipeline_state(*bve_texture_pipeline);
+
         std::vector<rhi::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
 
@@ -150,12 +155,29 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
                         commands->copy_data_to_image(texture_data, staging_texture);
 
-                        logger->debug("Newly loaded image {} has handle {}", texture_name, staging_texture_handle.idx);
+                        // Create a second image as the real image
+                        const auto texture_handle = renderer.create_image(create_info);
+                        const auto& texture = renderer.get_image(texture_handle);
+
+                        bve_texture_resource_binder->set_image("input_texture", staging_texture);
+                        bve_texture_resource_binder->set_image("output_texture", texture);
+
+                        auto bind_group = bve_texture_resource_binder->build();
+                        commands->bind_compute_resources(*bind_group);
+
+                        const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
+                        const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
+
+                        commands->dispatch(workgroup_width, workgroup_height);
+
+                        renderer.schedule_texture_destruction(staging_texture_handle);
+
+                        logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.idx);
 
                         auto& material_data = renderer.get_material_data_buffer();
                         const auto material_handle = material_data.get_next_free_material<BveMaterial>();
                         auto& material = material_data.at<BveMaterial>(material_handle);
-                        material.color_texture = staging_texture_handle;
+                        material.color_texture = texture_handle;
 
                         mesh_component.material = material_handle;
 

@@ -56,6 +56,8 @@ namespace renderer {
 
         [[nodiscard]] rhi::Image& get_image(ImageHandle handle) const;
 
+        void schedule_texture_destruction(const ImageHandle& image_handle);
+
         [[nodiscard]] MaterialDataBuffer& get_material_data_buffer() const;
 
         [[nodiscard]] rhi::RenderDevice& get_render_device() const;
