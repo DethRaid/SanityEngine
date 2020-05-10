@@ -330,6 +330,19 @@ namespace rhi {
         }
     }
 
+    std::unique_ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
+        const std::unordered_map<std::string, RootDescriptorDescription>& root_descriptors,
+        const std::unordered_map<std::string, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
+        const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
+
+        return std::make_unique<BindGroupBuilder>(*device.Get(),
+                                                  *cbv_srv_uav_heap.Get(),
+                                                  cbv_srv_uav_size,
+                                                  root_descriptors,
+                                                  descriptor_table_descriptors,
+                                                  descriptor_table_handles);
+    }
+
     std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(
         const std::vector<uint8_t>& compute_shader, const ComPtr<ID3D12RootSignature> root_signature) const {
         auto compute_pipeline = std::make_unique<ComputePipelineState>();
@@ -1079,12 +1092,8 @@ namespace rhi {
             std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
             descriptor_table_gpu_handles.emplace(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
 
-            material_bind_group_builder.emplace_back(*device.Get(),
-                                                     *cbv_srv_uav_heap.Get(),
-                                                     cbv_srv_uav_size,
-                                                     root_descriptors,
-                                                     descriptor_tables,
-                                                     descriptor_table_gpu_handles);
+            material_bind_group_builder.emplace_back(
+                create_bind_group_builder(root_descriptors, descriptor_tables, descriptor_table_gpu_handles));
 
             cpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
             gpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);

@@ -348,7 +348,7 @@ namespace renderer {
         // Root constant for the decal transparent color (stupid name smh)
         root_params.push_back(D3D12_ROOT_PARAMETER1{
             .ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
-            .Constants = {.ShaderRegister = 0, .RegisterSpace = 0, .Num32BitValues = 4},
+            .Constants = {.ShaderRegister = 0, .RegisterSpace = 0, .Num32BitValues = 3},
             .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
         });
 
@@ -372,6 +372,11 @@ namespace renderer {
 
         const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
         bve_texture_pipeline = device->create_compute_pipeline_state(compute_shader, root_sig);
+
+        const std::unordered_map<std::string, rhi::RootDescriptorDescription> root_descriptors =
+            {{"input_texture", {1, rhi::DescriptorType::ShaderResource}}, {"output_texture", {2, rhi::DescriptorType::UnorderedAccess}}};
+
+        bve_texture_resource_binder = device->create_bind_group_builder(root_descriptors);
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {

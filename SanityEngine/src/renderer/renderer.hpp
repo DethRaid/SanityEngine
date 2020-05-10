@@ -4,6 +4,7 @@
 
 #include <entt/fwd.hpp>
 
+#include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
 #include "../rhi/mesh_data_store.hpp"
 #include "../rhi/render_pipeline_state.hpp"
@@ -42,8 +43,8 @@ namespace renderer {
         void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
 
         [[nodiscard]] rhi::Mesh create_static_mesh(const std::vector<BveVertex>& vertices,
-                                              const std::vector<uint32_t>& indices,
-                                              rhi::ResourceCommandList& commands) const;
+                                                   const std::vector<uint32_t>& indices,
+                                                   rhi::ResourceCommandList& commands) const;
 
         [[yesdiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info);
 
@@ -100,6 +101,7 @@ namespace renderer {
         bool raytracing_scene_dirty{false};
 
         std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
+        std::unique_ptr<rhi::BindGroupBuilder> bve_texture_resource_binder;
 
 #pragma region Initialization
         void create_static_mesh_storage();

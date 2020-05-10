@@ -38,6 +38,8 @@ namespace rhi {
 
         [[nodiscard]] const auto& get_used_command_types() const;
 
+        [[nodiscard]] ID3D12GraphicsCommandList4* operator->() const;
+
         [[nodiscard]] ID3D12GraphicsCommandList4* get_command_list() const;
 
         void execute_completion_functions();

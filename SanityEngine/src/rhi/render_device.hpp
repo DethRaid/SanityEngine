@@ -78,6 +78,11 @@ namespace rhi {
 
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
 
+        [[nodiscard]] std::unique_ptr<BindGroupBuilder> create_bind_group_builder(
+            const std::unordered_map<std::string, RootDescriptorDescription>& root_descriptors = {},
+            const std::unordered_map<std::string, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
+            const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
+
         [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader,
                                                                                           ComPtr<ID3D12RootSignature> root_signature) const;
 

@@ -9,23 +9,21 @@
 #include "minitrace.h"
 #include "resources.hpp"
 
-using std::move;
-
 namespace rhi {
     CommandList::CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds) : commands{std::move(cmds)} {}
 
     CommandList::CommandList(CommandList&& old) noexcept
-        : completion_functions{move(old.completion_functions)},
-          commands{move(old.commands)},
-          most_recent_resource_states{move(old.most_recent_resource_states)},
-          command_types{move(old.command_types)} {}
+        : completion_functions{std::move(old.completion_functions)},
+          commands{std::move(old.commands)},
+          most_recent_resource_states{std::move(old.most_recent_resource_states)},
+          command_types{std::move(old.command_types)} {}
 
     CommandList& CommandList::operator=(CommandList&& old) noexcept {
 
-        completion_functions = move(old.completion_functions);
-        commands = move(old.commands);
-        most_recent_resource_states = move(old.most_recent_resource_states);
-        command_types = move(old.command_types);
+        completion_functions = std::move(old.completion_functions);
+        commands = std::move(old.commands);
+        most_recent_resource_states = std::move(old.most_recent_resource_states);
+        command_types = std::move(old.command_types);
 
         return *this;
     }
@@ -41,6 +39,8 @@ namespace rhi {
         MTR_SCOPE("CommandList", "prepare_for_submission");
         commands->Close();
     }
+
+    ID3D12GraphicsCommandList4* CommandList::operator->() const { return commands.Get(); }
 
     ID3D12GraphicsCommandList4* CommandList::get_command_list() const { return commands.Get(); }
 
