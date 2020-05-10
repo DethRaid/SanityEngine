@@ -40,6 +40,7 @@
     <ClCompile Include="src\rhi\d3d12\d3d12_resource_command_list.cpp" />
     <ClCompile Include="src\rhi\d3d12\helpers.cpp" />
     <ClCompile Include="src\rhi\d3d12\shader_reflection.cpp" />
+    <ClCompile Include="src\rhi\helpers.cpp" />
     <ClCompile Include="src\rhi\mesh_data_store.cpp" />
     <ClCompile Include="src\rhi\render_device.cpp" />
     <ClCompile Include="src\rhi\resources.cpp" />
@@ -85,7 +86,9 @@
     <ClInclude Include="src\rhi\d3d12\helpers.hpp" />
     <ClInclude Include="src\rhi\d3d12\resources.hpp" />
     <ClInclude Include="src\rhi\d3d12\shader_reflection.hpp" />
+    <ClInclude Include="src\rhi\d3dx12.hpp" />
     <ClInclude Include="src\rhi\framebuffer.hpp" />
+    <ClInclude Include="src\rhi\helpers.hpp" />
     <ClInclude Include="src\rhi\mesh_data_store.hpp" />
     <ClInclude Include="src\rhi\raytracing_structs.hpp" />
     <ClInclude Include="src\rhi\render_command_list.hpp" />

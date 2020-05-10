@@ -162,6 +162,9 @@
     <ClCompile Include="src\renderer\handles.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\rhi\helpers.cpp">
+      <Filter>Source Files\rhi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -310,6 +313,12 @@
     </ClInclude>
     <ClInclude Include="src\bve\train_components.hpp">
       <Filter>Header Files\bve</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhi\d3dx12.hpp">
+      <Filter>Source Files\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhi\helpers.hpp">
+      <Filter>Source Files\rhi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

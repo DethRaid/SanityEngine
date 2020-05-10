@@ -2,13 +2,30 @@
 
 #include <string>
 
+#include <d3d12.h>
+#include <wrl/client.h>
+
+using Microsoft::WRL::ComPtr;
+
+namespace D3D12MA {
+    class Allocation;
+}
+
 namespace rhi {
     struct Buffer {
         std::string name;
 
         uint32_t size{};
 
-        virtual ~Buffer() = default;
+        ComPtr<ID3D12Resource> resource;
+
+        D3D12MA::Allocation* allocation;
+
+        void* mapped_ptr{nullptr};
+    };
+
+    struct StagingBuffer : Buffer {
+        void* ptr{nullptr};
     };
 
     /*!
@@ -49,7 +66,11 @@ namespace rhi {
 
         ImageFormat format{};
 
-        virtual ~Image() = default;
+        ComPtr<ID3D12Resource> resource;
+
+        D3D12MA::Allocation* allocation;
+
+        DXGI_FORMAT format;
     };
 
     struct ImageCreateInfo {
@@ -64,4 +85,10 @@ namespace rhi {
     };
 
     [[nodiscard]] uint32_t size_in_bytes(ImageFormat format);
-} // namespace render
+
+    template <typename T>
+    concept GpuResource = requires(T a) {
+        { a.allocation }
+        ->std::convertible_to<D3D12MA::Allocation*>;
+    };
+} // namespace rhi

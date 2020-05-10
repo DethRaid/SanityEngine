@@ -2,7 +2,7 @@
 
 #include <comdef.h>
 
-#include "../rhi/d3d12/helpers.hpp"
+#include "../rhi/helpers.hpp"
 
 std::string to_string(const HRESULT hr) {
     const _com_error err(hr);

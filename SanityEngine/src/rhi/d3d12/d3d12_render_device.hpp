@@ -1,7 +1,5 @@
 #pragma once
-#include <atomic>
 #include <mutex>
-#include <queue>
 
 #include <D3D12MemAlloc.h>
 #include <DXProgrammableCapture.h>
@@ -12,7 +10,6 @@
 #include <spdlog/logger.h>
 #include <wrl/client.h>
 
-#include "../../core/async/mutex.hpp"
 #include "../../settings.hpp"
 #include "../bind_group.hpp"
 #include "../render_device.hpp"
