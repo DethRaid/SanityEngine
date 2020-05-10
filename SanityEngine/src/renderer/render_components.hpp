@@ -12,7 +12,7 @@ namespace renderer {
      * \brief Renders a static mesh with some material
      */
     struct StaticMeshRenderableComponent {
-        Mesh mesh;
+        rhi::Mesh mesh;
 
         MaterialHandle material{0};
     };

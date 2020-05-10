@@ -9,10 +9,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <stb_image.h>
 
-
-#include "train_components.hpp"
 #include "../core/ensure.hpp"
 #include "../renderer/renderer.hpp"
+#include "../rhi/render_device.hpp"
+#include "train_components.hpp"
 
 using namespace bve;
 
@@ -88,7 +88,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         auto commands = device.create_compute_command_list();
         commands->bind_mesh_data(renderer.get_static_mesh_store());
 
-        std::vector<renderer::Mesh> train_meshes;
+        std::vector<rhi::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
 
         for(uint32_t i = 0; i < train->meshes.count; i++) {

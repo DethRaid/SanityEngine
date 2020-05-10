@@ -41,7 +41,7 @@ namespace renderer {
 
         void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
 
-        [[nodiscard]] Mesh create_static_mesh(const std::vector<BveVertex>& vertices,
+        [[nodiscard]] rhi::Mesh create_static_mesh(const std::vector<BveVertex>& vertices,
                                               const std::vector<uint32_t>& indices,
                                               rhi::ResourceCommandList& commands) const;
 
@@ -96,7 +96,7 @@ namespace renderer {
         std::array<Light, MAX_NUM_LIGHTS> lights;
         std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
 
-        std::queue<Mesh> pending_raytracing_upload_meshes;
+        std::queue<rhi::Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
 
         std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;

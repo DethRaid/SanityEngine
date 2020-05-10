@@ -7,7 +7,6 @@
 #include <glm/vec3.hpp>
 #include <spdlog/logger.h>
 
-#include "render_device.hpp"
 #include "resources.hpp"
 
 struct BveVertex {
@@ -18,6 +17,9 @@ struct BveVertex {
 };
 
 namespace rhi {
+    class ResourceCommandList;
+    class RenderDevice;
+
     struct Mesh {
         uint32_t first_vertex{0};
         uint32_t num_vertices{0};

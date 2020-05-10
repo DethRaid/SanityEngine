@@ -7,6 +7,7 @@
 #include "raytracing_structs.hpp"
 #include "bind_group.hpp"
 #include "d3dx12.hpp"
+#include "helpers.hpp"
 
 namespace rhi {
     RootParameter::RootParameter() = default;
@@ -261,7 +262,7 @@ namespace rhi {
                         for(const auto* image : image_itr->second) {
                             D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
                             srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-                            srv_desc.Format = image->format;
+                            srv_desc.Format = to_dxgi_format(image->format);
                             srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
                             srv_desc.Texture2D.MostDetailedMip = 0;
                             srv_desc.Texture2D.MipLevels = 0xFFFFFFFF;
@@ -280,7 +281,7 @@ namespace rhi {
                         for(const auto* image : image_itr->second) {
                             D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc{};
                             uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-                            uav_desc.Format = image->format;
+                            uav_desc.Format = to_dxgi_format(image->format);
                             uav_desc.Texture2D.MipSlice = 0;
                             uav_desc.Texture2D.PlaneSlice = 0;
 

@@ -12,6 +12,7 @@
 #include <stb_image.h>
 
 #include "core/abort.hpp"
+#include "rhi/render_device.hpp"
 
 struct AtmosphereMaterial {
     glm::vec3 sun_vector;

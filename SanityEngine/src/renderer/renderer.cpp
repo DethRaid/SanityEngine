@@ -195,17 +195,17 @@ namespace renderer {
         raytracing_scene_dirty = true;
     }
 
-    Mesh Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
-                                      const std::vector<uint32_t>& indices,
-                                      rhi::ResourceCommandList& commands) const {
+    rhi::Mesh Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
+                                           const std::vector<uint32_t>& indices,
+                                           rhi::ResourceCommandList& commands) const {
         MTR_SCOPE("Renderer", "create_static_mesh");
 
         const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices, commands);
 
-        return Mesh{.first_vertex = vertex_offset,
-                    .num_vertices = static_cast<uint32_t>(vertices.size()),
-                    .first_index = index_offset,
-                    .num_indices = static_cast<uint32_t>(indices.size())};
+        return rhi::Mesh{.first_vertex = vertex_offset,
+                         .num_vertices = static_cast<uint32_t>(vertices.size()),
+                         .first_index = index_offset,
+                         .num_indices = static_cast<uint32_t>(indices.size())};
     }
 
     ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {

@@ -24,7 +24,7 @@ namespace rhi {
 
         void set_framebuffer(const Framebuffer& framebuffer,
                              std::vector<RenderTargetAccess> render_target_accesses,
-                             std::optional<RenderTargetAccess> depth_access);
+                             std::optional<RenderTargetAccess> depth_access = std::nullopt);
 
         void set_pipeline_state(const RenderPipelineState& state);
 
@@ -34,7 +34,7 @@ namespace rhi {
 
         void set_material_idx(uint32_t idx);
 
-        void draw(uint32_t num_indices, uint32_t first_index, uint32_t num_instances);
+        void draw(uint32_t num_indices, uint32_t first_index = 0, uint32_t num_instances = 1);
 
         /*!
          * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU, including ending any pending

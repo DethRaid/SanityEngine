@@ -4,7 +4,7 @@
 
 #include <d3d12.h>
 
-#include "../framebuffer.hpp"
+#include "framebuffer.hpp"
 
 namespace rhi {
 

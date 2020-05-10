@@ -3,13 +3,14 @@
 #include <memory>
 #include <vector>
 
-#include <DXProgrammableCapture.h>
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi1_4.h>
 #include <glm/glm.hpp>
 #include <spdlog/logger.h>
 #include <wrl/client.h>
+
+#include <DXProgrammableCapture.h>
 
 #include "../settings.hpp"
 #include "bind_group.hpp"
@@ -68,7 +69,7 @@ namespace rhi {
 
         Framebuffer* get_backbuffer_framebuffer();
 
-        void* map_buffer(const Buffer& buffer) const;
+        [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
 
         void destroy_buffer(std::unique_ptr<Buffer> buffer);
 
@@ -98,7 +99,7 @@ namespace rhi {
 
         void end_frame();
 
-        uint32_t get_cur_gpu_frame_idx() const;
+        [[nodiscard]] uint32_t get_cur_gpu_frame_idx() const;
 
         void begin_capture();
 

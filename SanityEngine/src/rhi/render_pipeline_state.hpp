@@ -2,6 +2,7 @@
 
 #include <array>
 #include <optional>
+#include <vector>
 
 #include <d3d12.h>
 #include <wrl/client.h>

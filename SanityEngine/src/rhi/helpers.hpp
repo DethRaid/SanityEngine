@@ -6,8 +6,8 @@
 #include <dxgi.h>
 #include <spdlog/fmt/ostr.h>
 
-#include "../render_pipeline_state.hpp"
-#include "../resources.hpp"
+#include "render_pipeline_state.hpp"
+#include "resources.hpp"
 
 interface ID3D12Object;
 

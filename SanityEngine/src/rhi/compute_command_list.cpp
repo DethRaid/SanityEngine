@@ -1,12 +1,15 @@
+#include "compute_command_list.hpp"
+
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 
 #include "../core/align.hpp"
 #include "../core/defer.hpp"
 #include "../core/ensure.hpp"
-#include "compute_command_list.hpp"
+#include "bind_group.hpp"
 #include "compute_pipeline_state.hpp"
 #include "d3dx12.hpp"
+#include "render_device.hpp"
 
 namespace rhi {
     ComputeCommandList::ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)

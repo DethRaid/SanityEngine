@@ -4,6 +4,8 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "render_device.hpp"
+
 namespace rhi {
     MeshDataStore::MeshDataStore(RenderDevice& device_in, std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in)
         : logger{spdlog::stdout_color_st("MeshDataStore")},
@@ -30,9 +32,7 @@ namespace rhi {
                                                           const std::vector<uint32_t>& indices,
                                                           ResourceCommandList& commands) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
-        logger->trace("Current vertex offset: {} Current index offset: {}",
-                      next_vertex_offset,
-                      next_index_offset);
+        logger->trace("Current vertex offset: {} Current index offset: {}", next_vertex_offset, next_index_offset);
 
         const auto vertex_data_size = static_cast<uint32_t>(vertices.size() * sizeof(BveVertex));
         const auto index_data_size = static_cast<uint32_t>(indices.size() * sizeof(uint32_t));
@@ -53,7 +53,7 @@ namespace rhi {
         logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
         commands.copy_data_to_buffer(offset_indices.data(), index_data_size, *index_buffer, index_buffer_byte_offset);
 
-        const auto vertex_offset = next_free_vertex_byte / sizeof(BveVertex);
+        const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(BveVertex));
 
         next_free_vertex_byte += vertex_data_size;
 
