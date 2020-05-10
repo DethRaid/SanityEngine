@@ -79,7 +79,7 @@ namespace rhi {
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
 
         [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader,
-                                                                                          ID3D12RootSignature& root_signature) const;
+                                                                                          ComPtr<ID3D12RootSignature> root_signature) const;
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
@@ -121,6 +121,8 @@ namespace rhi {
         [[nodiscard]] ID3D12Device* get_d3d12_device() const;
 
         [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
+
+        [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& root_signature_desc) const;
 
     private:
         Settings settings;
@@ -263,8 +265,6 @@ namespace rhi {
         void create_static_sampler_descriptions();
 
         void create_standard_root_signature();
-
-        [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
 
         void create_material_resource_binders();
 

@@ -330,16 +330,22 @@ namespace rhi {
         }
     }
 
-    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader,
-                                                                                      ID3D12RootSignature& root_signature) const {
+    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(
+        const std::vector<uint8_t>& compute_shader, const ComPtr<ID3D12RootSignature> root_signature) const {
         auto compute_pipeline = std::make_unique<ComputePipelineState>();
 
-        D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
-        desc.CS.BytecodeLength = compute_shader.size();
-        desc.CS.pShaderBytecode = compute_shader.data();
-        desc.pRootSignature = &root_signature;
+        const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
+            .pRootSignature = root_signature.Get(),
+            .CS =
+                {
+                    .pShaderBytecode = compute_shader.data(),
+                    .BytecodeLength = compute_shader.size(),
+                },
+        };
 
         device->CreateComputePipelineState(&desc, IID_PPV_ARGS(compute_pipeline->pso.GetAddressOf()));
+
+        compute_pipeline->root_signature = root_signature;
 
         return compute_pipeline;
     }
@@ -950,7 +956,7 @@ namespace rhi {
     void RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("RenderDevice", "create_standard_root_signature");
 
-        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{6};
+        std::vector<CD3DX12_ROOT_PARAMETER1> root_parameters{6};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -968,8 +974,8 @@ namespace rhi {
         root_parameters[4].InitAsShaderResourceView(3);
 
         // Textures array
-        std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
-        D3D12_DESCRIPTOR_RANGE textures_array;
+        std::vector<D3D12_DESCRIPTOR_RANGE1> descriptor_table_ranges;
+        D3D12_DESCRIPTOR_RANGE1 textures_array;
         textures_array.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         textures_array.NumDescriptors = MAX_NUM_TEXTURES;
         textures_array.BaseShaderRegister = 16;
@@ -984,29 +990,29 @@ namespace rhi {
         // Point sampler
         auto& point_sampler_desc = static_samplers[0];
         point_sampler_desc.Filter = D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_POINT;
-        point_sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        point_sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        point_sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        point_sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        point_sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        point_sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         point_sampler_desc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 
         auto& linear_sampler = static_samplers[1];
         linear_sampler.Filter = D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
-        linear_sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        linear_sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        linear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        linear_sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        linear_sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        linear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         linear_sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
         linear_sampler.RegisterSpace = 1;
 
         auto& trilinear_sampler = static_samplers[2];
         trilinear_sampler.Filter = D3D12_FILTER_ANISOTROPIC;
-        trilinear_sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        trilinear_sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        trilinear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        trilinear_sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        trilinear_sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        trilinear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         trilinear_sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
         trilinear_sampler.MaxAnisotropy = 8;
         trilinear_sampler.RegisterSpace = 2;
 
-        D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
+        D3D12_ROOT_SIGNATURE_DESC1 root_signature_desc;
         root_signature_desc.NumParameters = static_cast<UINT>(root_parameters.size());
         root_signature_desc.pParameters = root_parameters.data();
         root_signature_desc.NumStaticSamplers = static_cast<UINT>(static_samplers.size());
@@ -1021,12 +1027,15 @@ namespace rhi {
         set_object_name(*standard_root_signature.Get(), "Standard Root Signature");
     }
 
-    ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
+    ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& root_signature_desc) const {
         MTR_SCOPE("RenderDevice", "compile_root_signature");
+
+        const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_1,
+                                                                        .Desc_1_1 = root_signature_desc};
 
         ComPtr<ID3DBlob> root_signature_blob;
         ComPtr<ID3DBlob> error_blob;
-        auto result = D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &root_signature_blob, &error_blob);
+        auto result = D3D12SerializeVersionedRootSignature(&versioned_desc, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
             const std::string msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
             logger->error("Could not create root signature: {}", msg);

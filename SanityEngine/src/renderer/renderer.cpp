@@ -9,6 +9,7 @@
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../core/ensure.hpp"
+#include "../rhi/d3dx12.hpp"
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
@@ -340,8 +341,37 @@ namespace renderer {
     }
 
     void Renderer::create_bve_texture_alpha_pipeline() {
+        MTR_SCOPE("Renderer", "create_bve_texture_alpha_pipeline");
+
+        std::vector<D3D12_ROOT_PARAMETER1> root_params;
+
+        // Root constant for the decal transparent color (stupid name smh)
+        root_params.push_back(D3D12_ROOT_PARAMETER1{
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
+            .Constants = {.ShaderRegister = 0, .RegisterSpace = 0, .Num32BitValues = 4},
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+        });
+
+        // Root descriptor for the input texture
+        root_params.push_back(D3D12_ROOT_PARAMETER1{
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+            .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0},
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+        });
+
+        root_params.push_back(D3D12_ROOT_PARAMETER1{
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV,
+            .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0},
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+        });
+
+        const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC1{.NumParameters = static_cast<UINT>(root_params.size()),
+                                                         .pParameters = root_params.data()};
+
+        const auto root_sig = device->compile_root_signature(sig_desc);
+
         const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
-        bve_texture_pipeline = device->create_compute_pipeline_state(compute_shader);
+        bve_texture_pipeline = device->create_compute_pipeline_state(compute_shader, root_sig);
     }
 
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
