@@ -144,18 +144,19 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                             texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
                         }
 
-                        const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
-                                                                      .usage = rhi::ImageUsage::SampledImage,
-                                                                      .format = rhi::ImageFormat::Rgba8,
-                                                                      .width = static_cast<uint32_t>(width),
-                                                                      .height = static_cast<uint32_t>(height),
-                                                                      .depth = 1};
+                        auto create_info = rhi::ImageCreateInfo{.name = fmt::format("Scratch Texture {}", texture_name),
+                                                                .usage = rhi::ImageUsage::SampledImage,
+                                                                .format = rhi::ImageFormat::Rgba8,
+                                                                .width = static_cast<uint32_t>(width),
+                                                                .height = static_cast<uint32_t>(height),
+                                                                .depth = 1};
                         const auto staging_texture_handle = renderer.create_image(create_info);
                         const auto& staging_texture = renderer.get_image(staging_texture_handle);
 
                         commands->copy_data_to_image(texture_data, staging_texture);
 
                         // Create a second image as the real image
+                        create_info.name = texture_name;
                         const auto texture_handle = renderer.create_image(create_info);
                         const auto& texture = renderer.get_image(texture_handle);
 
@@ -215,7 +216,7 @@ void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
     root_params[1].InitAsDescriptorTable(static_cast<UINT>(ranges.size()), ranges.data());
 
     const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC{.NumParameters = static_cast<UINT>(root_params.size()),
-                                                     .pParameters = root_params.data()};
+                                                    .pParameters = root_params.data()};
 
     const auto root_sig = device.compile_root_signature(sig_desc);
 

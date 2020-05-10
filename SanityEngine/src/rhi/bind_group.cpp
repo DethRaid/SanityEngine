@@ -130,6 +130,8 @@ namespace rhi {
     std::unique_ptr<BindGroup> BindGroupBuilder::build() {
         MTR_SCOPE("BindGroupBuilder", "build");
 
+        TODO: Allocate descriptors here
+
         // D3D12 has a maximum root signature size of 64 descriptor tables
         std::vector<RootParameter> root_parameters{64};
 
