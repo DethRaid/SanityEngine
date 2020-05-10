@@ -114,9 +114,6 @@
     <ClCompile Include="src\rhi\mesh_data_store.cpp">
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
-    <ClCompile Include="src\rhi\d3d12\d3d12_compute_command_list.cpp">
-      <Filter>Source Files\rhi\d3d12</Filter>
-    </ClCompile>
     <ClCompile Include="src\rhi\d3d12\d3d12_render_command_list.cpp">
       <Filter>Source Files\rhi\d3d12</Filter>
     </ClCompile>
@@ -163,6 +160,9 @@
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\resource_command_list.cpp">
+      <Filter>Source Files\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rhi\compute_command_list.cpp">
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
   </ItemGroup>
@@ -238,9 +238,6 @@
     </ClInclude>
     <ClInclude Include="src\rhi\resources.hpp">
       <Filter>Header Files\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\d3d12_compute_command_list.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\d3d12\d3d12_framebuffer.hpp">
       <Filter>Header Files\rhi\d3d12</Filter>

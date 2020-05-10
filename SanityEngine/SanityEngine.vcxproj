@@ -33,7 +33,7 @@
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\rhi\bind_group.cpp" />
     <ClCompile Include="src\rhi\command_list.cpp" />
-    <ClCompile Include="src\rhi\d3d12\d3d12_compute_command_list.cpp" />
+    <ClCompile Include="src\rhi\compute_command_list.cpp" />
     <ClCompile Include="src\rhi\d3d12\d3d12_render_command_list.cpp" />
     <ClCompile Include="src\rhi\d3d12\d3d12_render_device.cpp" />
     <ClCompile Include="src\rhi\d3d12\helpers.cpp" />
@@ -72,7 +72,6 @@
     <ClInclude Include="src\rhi\command_list.hpp" />
     <ClInclude Include="src\rhi\compute_command_list.hpp" />
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp" />
-    <ClInclude Include="src\rhi\d3d12\d3d12_compute_command_list.hpp" />
     <ClInclude Include="src\rhi\d3d12\d3d12_framebuffer.hpp" />
     <ClInclude Include="src\rhi\d3d12\d3d12_render_command_list.hpp" />
     <ClInclude Include="src\rhi\d3d12\d3d12_render_device.hpp" />

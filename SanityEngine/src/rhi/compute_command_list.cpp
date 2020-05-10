@@ -1,39 +1,35 @@
-#include "d3d12_compute_command_list.hpp"
-
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 
-#include "../../core/align.hpp"
-#include "../../core/defer.hpp"
-#include "../../core/ensure.hpp"
-#include "../compute_pipeline_state.hpp"
-#include "../mesh_data_store.hpp"
+#include "../core/align.hpp"
+#include "../core/defer.hpp"
+#include "../core/ensure.hpp"
+#include "compute_command_list.hpp"
+#include "compute_pipeline_state.hpp"
 #include "d3dx12.hpp"
 
-using std::move;
-
 namespace rhi {
-    D3D12ComputeCommandList::D3D12ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, D3D12RenderDevice& device_in)
-        : D3D12ResourceCommandList{move(cmds), device_in} {}
+    ComputeCommandList::ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)
+        : ResourceCommandList{std::move(cmds), device_in} {}
 
-    D3D12ComputeCommandList::D3D12ComputeCommandList(D3D12ComputeCommandList&& old) noexcept
-        : D3D12ResourceCommandList(move(old)),
+    ComputeCommandList::ComputeCommandList(ComputeCommandList&& old) noexcept
+        : ResourceCommandList(std::move(old)),
           compute_pipeline{old.compute_pipeline},
           current_mesh_data{old.current_mesh_data},
           are_compute_resources_bound{old.are_compute_resources_bound} {}
 
-    D3D12ComputeCommandList& D3D12ComputeCommandList::operator=(D3D12ComputeCommandList&& old) noexcept {
+    ComputeCommandList& ComputeCommandList::operator=(ComputeCommandList&& old) noexcept {
         compute_pipeline = old.compute_pipeline;
         are_compute_resources_bound = old.are_compute_resources_bound;
         current_mesh_data = old.current_mesh_data;
 
-        return static_cast<D3D12ComputeCommandList&>(D3D12ResourceCommandList::operator=(move(old)));
+        return static_cast<ComputeCommandList&>(ResourceCommandList::operator=(std::move(old)));
     }
 
-    void D3D12ComputeCommandList::set_pipeline_state(const ComputePipelineState& state) {
-        MTR_SCOPE("D3D12ComputeCommandList", "set_pipeline_state");
+    void ComputeCommandList::set_pipeline_state(const ComputePipelineState& state) {
+        MTR_SCOPE("ComputeCommandList", "set_pipeline_state");
 
-        const auto& d3d12_state = static_cast<const D3D12ComputePipelineState&>(state);
+        const auto& d3d12_state = static_cast<const ComputePipelineState&>(state);
 
         if(compute_pipeline == nullptr) {
             // First time binding a compute pipeline to this command list, we need to bind the root signature
@@ -53,12 +49,12 @@ namespace rhi {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::bind_compute_resources(const BindGroup& bind_group) {
-        MTR_SCOPE("D3D12ComputeCommandList", "bind_compute_resources");
+    void ComputeCommandList::bind_compute_resources(const BindGroup& bind_group) {
+        MTR_SCOPE("ComputeCommandList", "bind_compute_resources");
 
         ENSURE(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
 
-        const auto& d3d12_bind_group = static_cast<const D3D12BindGroup&>(bind_group);
+        const auto& d3d12_bind_group = static_cast<const BindGroup&>(bind_group);
 
         for(const auto& image : d3d12_bind_group.used_images) {
             set_resource_state(*image.resource, image.states);
@@ -80,8 +76,8 @@ namespace rhi {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::dispatch(const uint32_t workgroup_x, const uint32_t workgroup_y, const uint32_t workgroup_z) {
-        MTR_SCOPE("D3D12ComputeCommandList", "dispatch");
+    void ComputeCommandList::dispatch(const uint32_t workgroup_x, const uint32_t workgroup_y, const uint32_t workgroup_z) {
+        MTR_SCOPE("ComputeCommandList", "dispatch");
 
 #ifndef NDEBUG
         ENSURE(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
@@ -112,16 +108,16 @@ namespace rhi {
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     }
 
-    void D3D12ComputeCommandList::bind_mesh_data(const MeshDataStore& mesh_data) {
+    void ComputeCommandList::bind_mesh_data(const MeshDataStore& mesh_data) {
         MTR_SCOPE("D3D12RenderCommandList", "bind_mesh_data");
 
         const auto& vertex_bindings = mesh_data.get_vertex_bindings();
 
         // If we have more than 16 vertex attributes, we probably have bigger problems
-        std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views;
+        std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views{};
         for(uint32_t i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
-            const auto* d3d12_buffer = static_cast<const D3D12Buffer*>(binding.buffer);
+            const auto* d3d12_buffer = static_cast<const Buffer*>(binding.buffer);
 
             set_resource_state(*d3d12_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
@@ -136,7 +132,7 @@ namespace rhi {
         commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
 
         const auto& index_buffer = mesh_data.get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
+        const auto& d3d12_index_buffer = static_cast<const Buffer&>(index_buffer);
 
         set_resource_state(d3d12_index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
@@ -152,17 +148,17 @@ namespace rhi {
         current_mesh_data = &mesh_data;
     }
 
-    RaytracingMesh D3D12ComputeCommandList::build_acceleration_structure_for_mesh(const uint32_t num_vertices,
-                                                                                  const uint32_t num_indices,
-                                                                                  const uint32_t first_vertex,
-                                                                                  const uint32_t first_index) {
+    RaytracingMesh ComputeCommandList::build_acceleration_structure_for_mesh(const uint32_t num_vertices,
+                                                                             const uint32_t num_indices,
+                                                                             const uint32_t first_vertex,
+                                                                             const uint32_t first_index) {
         ENSURE(current_mesh_data != nullptr, "Must have mesh data bound before building acceleration structures out of it");
 
         const auto& index_buffer = current_mesh_data->get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
+        const auto& d3d12_index_buffer = static_cast<const Buffer&>(index_buffer);
 
         const auto& vertex_buffer = *current_mesh_data->get_vertex_bindings()[0].buffer;
-        const auto& d3d12_vertex_buffer = static_cast<const D3D12Buffer&>(vertex_buffer);
+        const auto& d3d12_vertex_buffer = static_cast<const Buffer&>(vertex_buffer);
 
         const auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                               .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
@@ -202,8 +198,8 @@ namespace rhi {
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
 
-        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(scratch_buffer);
-        const auto& d3d12_result_buffer = static_cast<const D3D12Buffer&>(*result_buffer);
+        const auto& d3d12_scratch_buffer = static_cast<const Buffer&>(scratch_buffer);
+        const auto& d3d12_result_buffer = static_cast<const Buffer&>(*result_buffer);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
@@ -222,14 +218,14 @@ namespace rhi {
         return {std::move(result_buffer)};
     }
 
-    RaytracingMesh D3D12ComputeCommandList::build_acceleration_structure_for_meshes(const std::vector<renderer::Mesh>& meshes) {
+    RaytracingMesh ComputeCommandList::build_acceleration_structure_for_meshes(const std::vector<Mesh>& meshes) {
         ENSURE(current_mesh_data != nullptr, "Must have mesh data bound before building acceleration structures out of it");
 
         const auto& index_buffer = current_mesh_data->get_index_buffer();
-        const auto& d3d12_index_buffer = static_cast<const D3D12Buffer&>(index_buffer);
+        const auto& d3d12_index_buffer = static_cast<const Buffer&>(index_buffer);
 
         const auto& vertex_buffer = *current_mesh_data->get_vertex_bindings()[0].buffer;
-        const auto& d3d12_vertex_buffer = static_cast<const D3D12Buffer&>(vertex_buffer);
+        const auto& d3d12_vertex_buffer = static_cast<const Buffer&>(vertex_buffer);
 
         std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
@@ -275,8 +271,8 @@ namespace rhi {
 
         auto result_buffer = device->create_buffer(result_buffer_create_info);
 
-        const auto& d3d12_scratch_buffer = static_cast<const D3D12Buffer&>(scratch_buffer);
-        const auto& d3d12_result_buffer = static_cast<const D3D12Buffer&>(*result_buffer);
+        const auto& d3d12_scratch_buffer = static_cast<const Buffer&>(scratch_buffer);
+        const auto& d3d12_result_buffer = static_cast<const Buffer&>(*result_buffer);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = d3d12_result_buffer.resource->GetGPUVirtualAddress(),
@@ -298,7 +294,7 @@ namespace rhi {
         return {std::move(result_buffer)};
     }
 
-    RaytracingScene D3D12ComputeCommandList::build_raytracing_scene(const std::vector<RaytracingObject>& objects) {
+    RaytracingScene ComputeCommandList::build_raytracing_scene(const std::vector<RaytracingObject>& objects) {
         constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
 
         ENSURE(objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
@@ -320,7 +316,7 @@ namespace rhi {
 
             desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
-            const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(*object.mesh->blas_buffer);
+            const auto& d3d12_buffer = static_cast<const Buffer&>(*object.mesh->blas_buffer);
             desc.AccelerationStructure = d3d12_buffer.resource->GetGPUVirtualAddress();
         }
 
@@ -346,7 +342,7 @@ namespace rhi {
                                                             .usage = BufferUsage::RaytracingAccelerationStructure,
                                                             .size = static_cast<uint32_t>(prebuild_info.ResultDataMaxSizeInBytes)};
         auto as_buffer = device->create_buffer(as_buffer_create_info);
-        const auto& d3d12_as_buffer = static_cast<const D3D12Buffer&>(*as_buffer);
+        const auto& d3d12_as_buffer = static_cast<const Buffer&>(*as_buffer);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = d3d12_as_buffer.resource->GetGPUVirtualAddress(),

@@ -43,7 +43,7 @@ namespace rhi {
     protected:
         bool in_render_pass{false};
 
-        const D3D12RenderPipelineState* current_render_pipeline_state{nullptr};
+        const D3D12RenderPipelineState* urrent_render_pipeline_state{nullptr};
 
         bool is_render_material_bound{false};
     };
