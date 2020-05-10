@@ -3,8 +3,12 @@
 #include <array>
 #include <optional>
 
-#include "bind_group.hpp"
+#include <d3d12.h>
+#include <wrl/client.h>
+
 #include "resources.hpp"
+
+using Microsoft::WRL::ComPtr;
 
 namespace rhi {
     enum class PrimitiveType { Points, Lines, Triangles };
@@ -142,6 +146,8 @@ namespace rhi {
     };
 
     struct RenderPipelineState {
+        ComPtr<ID3D12PipelineState> pso;
+        ComPtr<ID3D12RootSignature> root_signature;
     };
 
     enum class BespokePipelineType {
@@ -150,4 +156,4 @@ namespace rhi {
          */
         BackbufferOutput,
     };
-} // namespace render
+} // namespace rhi

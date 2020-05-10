@@ -867,10 +867,10 @@ namespace rhi {
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        rtv_allocator = std::make_unique<D3D12DescriptorAllocator>(rtv_heap, rtv_size);
+        rtv_allocator = std::make_unique<DescriptorAllocator>(rtv_heap, rtv_size);
 
         const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        dsv_allocator = std::make_unique<D3D12DescriptorAllocator>(dsv_heap, dsv_size);
+        dsv_allocator = std::make_unique<DescriptorAllocator>(dsv_heap, dsv_size);
     }
 
     void D3D12RenderDevice::initialize_swapchain_descriptors() {

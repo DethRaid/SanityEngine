@@ -64,8 +64,6 @@ namespace rhi {
         uint32_t height{1};
         uint32_t depth{1};
 
-        ImageFormat format{};
-
         ComPtr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;

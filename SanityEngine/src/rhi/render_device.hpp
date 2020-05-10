@@ -3,24 +3,29 @@
 #include <memory>
 #include <vector>
 
+#include <DXProgrammableCapture.h>
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi1_4.h>
-#include <DXProgrammableCapture.h>
 #include <glm/glm.hpp>
 #include <spdlog/logger.h>
 #include <wrl/client.h>
 
 #include "bind_group.hpp"
 #include "compute_command_list.hpp"
+#include "descriptor_allocator.hpp"
 #include "raytracing_structs.hpp"
 #include "render_command_list.hpp"
 #include "resource_command_list.hpp"
+#include "../settings.hpp"
 
-struct Settings;
 struct GLFWwindow;
 
 using Microsoft::WRL::ComPtr;
+
+namespace D3D12MA {
+    class Allocator;
+}
 
 namespace rhi {
     enum class BespokePipelineType;
@@ -296,10 +301,10 @@ namespace rhi {
         void retrieve_dred_report() const;
     };
 
+    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
+
     template <typename ResourceType>
     requires GpuResource<ResourceType> void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {
         resource.resource->Release();
     }
-
-    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
 } // namespace rhi

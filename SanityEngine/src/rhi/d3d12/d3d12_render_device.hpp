@@ -149,9 +149,9 @@ namespace rhi {
         UINT cbv_srv_uav_size{};
         UINT next_free_cbv_srv_uav_descriptor{0};
 
-        std::unique_ptr<D3D12DescriptorAllocator> rtv_allocator;
+        std::unique_ptr<DescriptorAllocator> rtv_allocator;
 
-        std::unique_ptr<D3D12DescriptorAllocator> dsv_allocator;
+        std::unique_ptr<DescriptorAllocator> dsv_allocator;
 
         D3D12MA::Allocator* device_allocator;
 

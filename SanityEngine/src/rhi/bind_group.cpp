@@ -1,28 +1,27 @@
-#include "d3d12_bind_group.hpp"
-
 #include <utility>
 
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../../core/ensure.hpp"
-#include "../raytracing_structs.hpp"
+#include "../core/ensure.hpp"
+#include "raytracing_structs.hpp"
+#include "bind_group.hpp"
 #include "d3dx12.hpp"
 
 namespace rhi {
     RootParameter::RootParameter() = default;
 
-    D3D12BindGroup::D3D12BindGroup(ID3D12DescriptorHeap& heap_in,
+    BindGroup::BindGroup(ID3D12DescriptorHeap& heap_in,
                                    std::vector<RootParameter> root_parameters_in,
-                                   std::vector<BoundResource<D3D12Image>> used_images_in,
-                                   std::vector<BoundResource<D3D12Buffer>> used_buffers_in)
+                                   std::vector<BoundResource<Image>> used_images_in,
+                                   std::vector<BoundResource<Buffer>> used_buffers_in)
         : heap{&heap_in},
           root_parameters{std::move(root_parameters_in)},
           used_images{std::move(used_images_in)},
           used_buffers{std::move(used_buffers_in)} {}
 
-    void D3D12BindGroup::bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const {
-        MTR_SCOPE("D3D12BindGroup", "bind_to_graphics_signature");
+    void BindGroup::bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const {
+        MTR_SCOPE("BindGroup", "bind_to_graphics_signature");
 
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
@@ -47,8 +46,8 @@ namespace rhi {
         }
     }
 
-    void D3D12BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const {
-        MTR_SCOPE("D3D12BindGroup", "bind_to_compute_signature");
+    void BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const {
+        MTR_SCOPE("BindGroup", "bind_to_compute_signature");
 
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
@@ -73,7 +72,7 @@ namespace rhi {
         }
     }
 
-    D3D12BindGroupBuilder::D3D12BindGroupBuilder(
+    BindGroupBuilder::BindGroupBuilder(
         ID3D12Device& device_in,
         ID3D12DescriptorHeap& heap_in,
         const UINT descriptor_size_in,
@@ -86,34 +85,34 @@ namespace rhi {
           root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
           descriptor_table_handles{std::move(descriptor_table_handles_in)} {
-        if(const auto loggy = spdlog::get("D3D12BindGroupBuilder")) {
+        if(const auto loggy = spdlog::get("BindGroupBuilder")) {
             logger = loggy;
 
         } else {
-            logger = spdlog::stdout_color_st("D3D12BindGroupBuilder");
+            logger = spdlog::stdout_color_st("BindGroupBuilder");
         }
 
         bound_buffers.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
         bound_images.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_buffer(const std::string& name, const Buffer& buffer) {
-        const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
+    BindGroupBuilder& BindGroupBuilder::set_buffer(const std::string& name, const Buffer& buffer) {
+        const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
         bound_buffers.insert_or_assign(name, &d3d12_buffer);
 
         return *this;
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_image(const std::string& name, const Image& image) {
+    BindGroupBuilder& BindGroupBuilder::set_image(const std::string& name, const Image& image) {
         return set_image_array(name, {&image});
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_image_array(const std::string& name, const std::vector<const Image*>& images) {
-        std::vector<const D3D12Image*> d3d12_images;
+    BindGroupBuilder& BindGroupBuilder::set_image_array(const std::string& name, const std::vector<const Image*>& images) {
+        std::vector<const Image*> d3d12_images;
         d3d12_images.reserve(images.size());
 
         for(const auto* image : images) {
-            d3d12_images.push_back(static_cast<const D3D12Image*>(image));
+            d3d12_images.push_back(static_cast<const Image*>(image));
         }
 
         bound_images.insert_or_assign(name, d3d12_images);
@@ -121,15 +120,15 @@ namespace rhi {
         return *this;
     }
 
-    BindGroupBuilder& D3D12BindGroupBuilder::set_raytracing_scene(const std::string& name, const RaytracingScene& scene) {
-        const auto* d3d12_buffer = static_cast<const D3D12Buffer*>(scene.buffer.get());
+    BindGroupBuilder& BindGroupBuilder::set_raytracing_scene(const std::string& name, const RaytracingScene& scene) {
+        const auto* d3d12_buffer = static_cast<const Buffer*>(scene.buffer.get());
         bound_raytracing_scenes.emplace(name, d3d12_buffer);
 
         return *this;
     }
 
-    std::unique_ptr<BindGroup> D3D12BindGroupBuilder::build() {
-        MTR_SCOPE("D3D12BindGroupBuilder", "build");
+    std::unique_ptr<BindGroup> BindGroupBuilder::build() {
+        MTR_SCOPE("BindGroupBuilder", "build");
 
         // D3D12 has a maximum root signature size of 64 descriptor tables
         std::vector<RootParameter> root_parameters{64};
@@ -142,8 +141,8 @@ namespace rhi {
             root_parameters[idx].table.handle = handle;
         }
 
-        std::vector<BoundResource<D3D12Image>> used_images;
-        std::vector<BoundResource<D3D12Buffer>> used_buffers;
+        std::vector<BoundResource<Image>> used_images;
+        std::vector<BoundResource<Buffer>> used_buffers;
 
         // Save root descriptor information
         for(const auto& [name, desc] : root_descriptor_descriptions) {
@@ -198,7 +197,6 @@ namespace rhi {
                 logger->warn("No resources bound to root descriptor {}", name);
             }
         }
-
 
         // Bind resources to descriptor table descriptors
         for(const auto& [name, desc] : descriptor_table_descriptor_mappings) {
@@ -297,6 +295,6 @@ namespace rhi {
             }
         }
 
-        return std::make_unique<D3D12BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
+        return std::make_unique<BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
     }
 } // namespace rhi

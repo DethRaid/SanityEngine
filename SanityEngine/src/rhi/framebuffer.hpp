@@ -1,12 +1,19 @@
 #pragma once
 
+#include <optional>
+#include <vector>
+
+#include <d3d12.h>
 #include <glm/vec4.hpp>
 
 namespace rhi {
     struct Framebuffer {
-        virtual ~Framebuffer() = default;
-    };
+        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
+        std::optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;
 
+        float width;
+        float height;
+    };
     enum class RenderTargetBeginningAccessType {
         /*!
          * \brief Load the data that was previously rendered to this render target
@@ -86,4 +93,4 @@ namespace rhi {
         RenderTargetBeginningAccess begin;
         RenderTargetEndingAccess end;
     };
-} // namespace render
+} // namespace rhi

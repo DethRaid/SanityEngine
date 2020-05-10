@@ -12,11 +12,15 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include "../core/abort.hpp"
+#include "../core/constants.hpp"
 #include "../core/ensure.hpp"
+#include "../core/errors.hpp"
 #include "../settings.hpp"
 #include "../windows/windows_helpers.hpp"
 #include "d3dx12.hpp"
-#include "../core/errors.hpp"
+#include "helpers.hpp"
+#include "render_pipeline_state.hpp"
 
 namespace rhi {
     RenderDevice::RenderDevice(const HWND window_handle,
@@ -159,7 +163,7 @@ namespace rhi {
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
 
-        auto image = std::make_unique<D3D12Image>();
+        auto image = std::make_unique<Image>();
         image->format = format;
 
         D3D12_RESOURCE_STATES initial_state;
@@ -207,7 +211,7 @@ namespace rhi {
                                                                   const Image* depth_target) {
         MTR_SCOPE("RenderDevice", "create_framebuffer");
 
-        auto framebuffer = std::make_unique<D3D12Framebuffer>();
+        auto framebuffer = std::make_unique<Framebuffer>();
 
         float width = 0;
         float height = 0;
@@ -215,7 +219,7 @@ namespace rhi {
         framebuffer->rtv_handles.reserve(render_targets.size());
         uint32_t i{0};
         for(const auto* image : render_targets) {
-            const auto* d3d12_image = static_cast<const D3D12Image*>(image);
+            const auto* d3d12_image = static_cast<const Image*>(image);
 
             if(width != 0 && width != d3d12_image->width) {
                 logger->error(
@@ -247,7 +251,7 @@ namespace rhi {
         }
 
         if(depth_target != nullptr) {
-            const auto* d3d12_depth_target = static_cast<const D3D12Image*>(depth_target);
+            const auto* d3d12_depth_target = static_cast<const Image*>(depth_target);
 
             if(width != 0 && width != d3d12_depth_target->width) {
                 logger->error(
@@ -298,7 +302,7 @@ namespace rhi {
     }
 
     void* RenderDevice::map_buffer(const Buffer& buffer) {
-        const auto& d3d12_buffer = static_cast<const D3D12Buffer&>(buffer);
+        const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
         MTR_SCOPE("D3D12RenderEngine", "map_buffer");
 
         void* ptr;
@@ -313,15 +317,15 @@ namespace rhi {
     }
 
     void RenderDevice::destroy_buffer(std::unique_ptr<Buffer> buffer) {
-        buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<D3D12Buffer*>(buffer.release()));
+        buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Buffer*>(buffer.release()));
     }
 
     void RenderDevice::destroy_image(std::unique_ptr<Image> image) {
-        image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<D3D12Image*>(image.release()));
+        image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Image*>(image.release()));
     }
 
     void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) {
-        auto* d3d12_framebuffer = static_cast<D3D12Framebuffer*>(framebuffer.get());
+        auto* d3d12_framebuffer = static_cast<Framebuffer*>(framebuffer.get());
 
         for(const D3D12_CPU_DESCRIPTOR_HANDLE handle : d3d12_framebuffer->rtv_handles) {
             rtv_allocator->return_descriptor(handle);
@@ -333,7 +337,7 @@ namespace rhi {
     }
 
     std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) {
-        auto compute_pipeline = std::make_unique<D3D12ComputePipelineState>();
+        auto compute_pipeline = std::make_unique<ComputePipelineState>();
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
         desc.CS.BytecodeLength = compute_shader.size();
@@ -412,7 +416,7 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<D3D12ResourceCommandList>(commands, *this);
+        return std::make_unique<ResourceCommandList>(commands, *this);
     }
 
     std::unique_ptr<ComputeCommandList> RenderDevice::create_compute_command_list() {
@@ -432,7 +436,7 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<D3D12ComputeCommandList>(commands, *this);
+        return std::make_unique<ComputeCommandList>(commands, *this);
     }
 
     std::unique_ptr<RenderCommandList> RenderDevice::create_render_command_list() {
@@ -455,15 +459,15 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<D3D12RenderCommandList>(commands, *this);
+        return std::make_unique<RenderCommandList>(commands, *this);
     }
 
     void RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
-        auto* d3d12_commands = dynamic_cast<D3D12CommandList*>(commands.release());
+        auto* d3d12_commands = dynamic_cast<CommandList*>(commands.release());
 
         d3d12_commands->prepare_for_submission();
 
-        command_lists_by_frame[cur_gpu_frame_idx].push_back(std::unique_ptr<D3D12CommandList>{d3d12_commands});
+        command_lists_by_frame[cur_gpu_frame_idx].push_back(std::unique_ptr<CommandList>{d3d12_commands});
     }
 
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
@@ -529,7 +533,7 @@ namespace rhi {
 
     bool RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    D3D12StagingBuffer RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
+    StagingBuffer RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
         size_t best_fit_idx = staging_buffers.size();
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
@@ -553,11 +557,11 @@ namespace rhi {
         }
     }
 
-    void RenderDevice::return_staging_buffer(D3D12StagingBuffer&& buffer) {
+    void RenderDevice::return_staging_buffer(StagingBuffer&& buffer) {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer));
     }
 
-    D3D12Buffer RenderDevice::get_scratch_buffer(const uint32_t num_bytes) {
+    Buffer RenderDevice::get_scratch_buffer(const uint32_t num_bytes) {
         size_t best_fit_idx = scratch_buffers.size();
         for(size_t i = 0; i < scratch_buffers.size(); i++) {
             if(scratch_buffers[i].size >= num_bytes) {
@@ -580,7 +584,7 @@ namespace rhi {
         }
     }
 
-    void RenderDevice::return_scratch_buffer(D3D12Buffer&& buffer) { scratch_buffers_to_free[cur_gpu_frame_idx].push_back(buffer); }
+    void RenderDevice::return_scratch_buffer(Buffer&& buffer) { scratch_buffers_to_free[cur_gpu_frame_idx].push_back(buffer); }
 
     UINT RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
@@ -775,7 +779,7 @@ namespace rhi {
         }
     }
 
-    void RenderDevice::create_swapchain(HWND window_handle, const XMINT2& window_size, const UINT num_images) {
+    void RenderDevice::create_swapchain(HWND window_handle, const glm::uvec2& window_size, const UINT num_images) {
         MTR_SCOPE("RenderDevice", "create_swapchain");
         DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
         swapchain_desc.Width = static_cast<UINT>(window_size.x);
@@ -860,10 +864,10 @@ namespace rhi {
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        rtv_allocator = std::make_unique<D3D12DescriptorAllocator>(rtv_heap, rtv_size);
+        rtv_allocator = std::make_unique<DescriptorAllocator>(rtv_heap, rtv_size);
 
         const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        dsv_allocator = std::make_unique<D3D12DescriptorAllocator>(dsv_heap, dsv_size);
+        dsv_allocator = std::make_unique<DescriptorAllocator>(dsv_heap, dsv_size);
     }
 
     void RenderDevice::initialize_swapchain_descriptors() {
@@ -879,7 +883,7 @@ namespace rhi {
 
             device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle);
 
-            D3D12Framebuffer framebuffer;
+            Framebuffer framebuffer;
             framebuffer.rtv_handles.push_back(rtv_handle);
             framebuffer.width = static_cast<float>(desc.Width);
             framebuffer.height = static_cast<float>(desc.Height);
@@ -977,7 +981,7 @@ namespace rhi {
         textures_array.BaseShaderRegister = 16;
         textures_array.RegisterSpace = 0;
         textures_array.OffsetInDescriptorsFromTableStart = 0;
-        descriptor_table_ranges.push_back(move(textures_array));
+        descriptor_table_ranges.push_back(std::move(textures_array));
 
         root_parameters[5].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
@@ -1248,7 +1252,7 @@ namespace rhi {
             desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
         }
 
-        auto pipeline = std::make_unique<D3D12RenderPipelineState>();
+        auto pipeline = std::make_unique<RenderPipelineState>();
         pipeline->root_signature = &root_signature;
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
@@ -1324,7 +1328,7 @@ namespace rhi {
     void RenderDevice::transition_swapchain_image_to_render_target() {
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Render Target");
-        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+        auto* swapchain_cmds = dynamic_cast<CommandList*>(cmds.get());
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
@@ -1338,7 +1342,7 @@ namespace rhi {
     void RenderDevice::transition_swapchain_image_to_presentable() {
         auto cmds = create_render_command_list();
         cmds->set_debug_name("Transition Swapchain to Presentable");
-        auto* swapchain_cmds = dynamic_cast<D3D12CommandList*>(cmds.get());
+        auto* swapchain_cmds = dynamic_cast<CommandList*>(cmds.get());
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
@@ -1411,14 +1415,14 @@ namespace rhi {
         return std::move(buffer);
     }
 
-    D3D12Buffer RenderDevice::create_scratch_buffer(const uint32_t num_bytes) {
+    Buffer RenderDevice::create_scratch_buffer(const uint32_t num_bytes) {
         constexpr auto alignment = std::max(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                             D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, alignment);
 
         const auto alloc_desc = D3D12MA::ALLOCATION_DESC{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
 
-        auto scratch_buffer = D3D12Buffer{};
+        auto scratch_buffer = Buffer{};
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
@@ -1484,7 +1488,7 @@ namespace rhi {
             case RenderBackend::D3D12: {
                 const auto hwnd = glfwGetWin32Window(window);
 
-                XMINT2 framebuffer_size{};
+                glm::ivec2 framebuffer_size{};
                 glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
 
                 spdlog::info("Creating D3D12 backend");
