@@ -12,6 +12,7 @@
 #include "../core/ensure.hpp"
 #include "../loading/shader_loading.hpp"
 #include "../renderer/renderer.hpp"
+#include "../rhi/d3dx12.hpp"
 #include "../rhi/render_device.hpp"
 #include "train_components.hpp"
 
@@ -181,29 +182,17 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
     MTR_SCOPE("Renderer", "create_bve_texture_alpha_pipeline");
 
-    std::vector<D3D12_ROOT_PARAMETER1> root_params;
+    std::vector<CD3DX12_ROOT_PARAMETER> root_params{2};
 
-    // Root constant for the decal transparent color (stupid name smh)
-    root_params.push_back(D3D12_ROOT_PARAMETER1{
-        .ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
-        .Constants = {.ShaderRegister = 0, .RegisterSpace = 0, .Num32BitValues = 3},
-        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
-    });
+    root_params[0].InitAsConstants(3, 0);
 
-    // Root descriptor for the input texture
-    root_params.push_back(D3D12_ROOT_PARAMETER1{
-        .ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
-        .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0},
-        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
-    });
+    std::vector<CD3DX12_DESCRIPTOR_RANGE> ranges{2};
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
-    root_params.push_back(D3D12_ROOT_PARAMETER1{
-        .ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV,
-        .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0},
-        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
-    });
+    root_params[1].InitAsDescriptorTable(static_cast<UINT>(ranges.size()), ranges.data());
 
-    const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC1{.NumParameters = static_cast<UINT>(root_params.size()),
+    const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC{.NumParameters = static_cast<UINT>(root_params.size()),
                                                      .pParameters = root_params.data()};
 
     const auto root_sig = device.compile_root_signature(sig_desc);
@@ -211,10 +200,16 @@ void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
     const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
     bve_texture_pipeline = device.create_compute_pipeline_state(compute_shader, root_sig);
 
-    const std::unordered_map<std::string, rhi::RootDescriptorDescription> root_descriptors =
-        {{"input_texture", {1, rhi::DescriptorType::ShaderResource}}, {"output_texture", {2, rhi::DescriptorType::UnorderedAccess}}};
+    auto& [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
+    const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
-    bve_texture_resource_binder = device.create_bind_group_builder(root_descriptors);
+    const std::unordered_map<std::string, rhi::DescriptorTableDescriptorDescription> descriptors =
+        {{"input_texture", {.type = rhi::DescriptorType::ShaderResource, .handle = cpu_handle}},
+         {"output_texture", {.type = rhi::DescriptorType::UnorderedAccess, .handle = cpu_handle.Offset(descriptor_size)}}};
+
+    const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = {{1, gpu_handle}};
+
+    bve_texture_resource_binder = device.create_bind_group_builder({}, descriptors, tables);
 }
 
 BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error) { return BVE_Mesh_Error_to_data(&error); }

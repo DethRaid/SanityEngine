@@ -84,8 +84,6 @@ namespace renderer {
 
         std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
 
-        std::unique_ptr<rhi::ComputePipelineState> bve_texture_pipeline;
-
         std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
         MaterialHandle backbuffer_output_material;
 
@@ -101,7 +99,6 @@ namespace renderer {
         bool raytracing_scene_dirty{false};
 
         std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
-        std::unique_ptr<rhi::BindGroupBuilder> bve_texture_resource_binder;
 
 #pragma region Initialization
         void create_static_mesh_storage();
@@ -117,8 +114,6 @@ namespace renderer {
         void create_backbuffer_output_pipeline_and_material();
 
         void create_light_buffers();
-
-        void create_bve_texture_alpha_pipeline();
 #pragma endregion
 
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;

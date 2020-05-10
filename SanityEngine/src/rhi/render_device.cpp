@@ -335,6 +335,9 @@ namespace rhi {
         const std::unordered_map<std::string, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
         const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
 
+        ENSURE(descriptor_table_descriptors.empty() == descriptor_table_handles.empty(),
+               "If you specify descriptor table descriptors, you must also specift descriptor table handles");
+
         return std::make_unique<BindGroupBuilder>(*device.Get(),
                                                   *cbv_srv_uav_heap.Get(),
                                                   cbv_srv_uav_size,
@@ -969,7 +972,7 @@ namespace rhi {
     void RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("RenderDevice", "create_standard_root_signature");
 
-        std::vector<CD3DX12_ROOT_PARAMETER1> root_parameters{6};
+        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{6};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -987,14 +990,14 @@ namespace rhi {
         root_parameters[4].InitAsShaderResourceView(3);
 
         // Textures array
-        std::vector<D3D12_DESCRIPTOR_RANGE1> descriptor_table_ranges;
-        D3D12_DESCRIPTOR_RANGE1 textures_array;
-        textures_array.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        textures_array.NumDescriptors = MAX_NUM_TEXTURES;
-        textures_array.BaseShaderRegister = 16;
-        textures_array.RegisterSpace = 0;
-        textures_array.OffsetInDescriptorsFromTableStart = 0;
-        descriptor_table_ranges.push_back(std::move(textures_array));
+        std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
+        descriptor_table_ranges.push_back(D3D12_DESCRIPTOR_RANGE{
+            .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+            .NumDescriptors = MAX_NUM_TEXTURES,
+            .BaseShaderRegister = 16,
+            .RegisterSpace = 0,
+            .OffsetInDescriptorsFromTableStart = 0,
+        });
 
         root_parameters[5].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
@@ -1025,7 +1028,7 @@ namespace rhi {
         trilinear_sampler.MaxAnisotropy = 8;
         trilinear_sampler.RegisterSpace = 2;
 
-        D3D12_ROOT_SIGNATURE_DESC1 root_signature_desc;
+        D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
         root_signature_desc.NumParameters = static_cast<UINT>(root_parameters.size());
         root_signature_desc.pParameters = root_parameters.data();
         root_signature_desc.NumStaticSamplers = static_cast<UINT>(static_samplers.size());
@@ -1040,11 +1043,11 @@ namespace rhi {
         set_object_name(*standard_root_signature.Get(), "Standard Root Signature");
     }
 
-    ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& root_signature_desc) const {
+    ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
         MTR_SCOPE("RenderDevice", "compile_root_signature");
 
-        const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_1,
-                                                                        .Desc_1_1 = root_signature_desc};
+        const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_0,
+                                                                        .Desc_1_0 = root_signature_desc};
 
         ComPtr<ID3DBlob> root_signature_blob;
         ComPtr<ID3DBlob> error_blob;
@@ -1066,6 +1069,20 @@ namespace rhi {
         }
 
         return sig;
+    }
+
+    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> RenderDevice::allocate_descriptor_table(
+        const uint32_t num_descriptors) {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
+                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
+                                                 cbv_srv_uav_size};
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
+                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
+                                                 cbv_srv_uav_size};
+
+        next_free_cbv_srv_uav_descriptor += num_descriptors;
+
+        return {cpu_handle, gpu_handle};
     }
 
     void RenderDevice::create_material_resource_binders() {

@@ -16,6 +16,7 @@
 #include "../settings.hpp"
 #include "bind_group.hpp"
 #include "compute_command_list.hpp"
+#include "d3dx12.hpp"
 #include "descriptor_allocator.hpp"
 #include "raytracing_structs.hpp"
 #include "render_command_list.hpp"
@@ -78,6 +79,14 @@ namespace rhi {
 
         void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
 
+        /*!
+         * \brief Creates a bind group builder with the provided descriptors
+         *
+         * \param root_descriptors Mapping from root descriptor name to information about how to bind to that root descriptor
+         * \param descriptor_table_descriptors Mapping from the name of a descriptors in a descriptor table to information about how to bind
+         * to that descriptors
+         * \param descriptor_table_handles Mapping from root parameters index to GPU handle to the descriptor table to bind to that index
+         */
         [[nodiscard]] std::unique_ptr<BindGroupBuilder> create_bind_group_builder(
             const std::unordered_map<std::string, RootDescriptorDescription>& root_descriptors = {},
             const std::unordered_map<std::string, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
@@ -127,7 +136,14 @@ namespace rhi {
 
         [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
 
-        [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& root_signature_desc) const;
+        [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
+
+        /*!
+         * \brief Allocated a descriptor table with the specified number of descriptors, returning both a CPU and GPU handle to the start of
+         * the table. All descriptors in the table are tightly packed
+         */
+        [[nodiscard]] std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> allocate_descriptor_table(
+            uint32_t num_descriptors);
 
     private:
         Settings settings;
