@@ -31,12 +31,10 @@ namespace rhi {
     void CommandList::set_debug_name(const std::string& name) const { set_object_name(*commands.Get(), name); }
 
     void CommandList::add_completion_function(std::function<void()>&& completion_func) {
-        MTR_SCOPE("CommandList", "add_completion_function");
         completion_functions.push_back(std::move(completion_func));
     }
 
     void CommandList::prepare_for_submission() {
-        MTR_SCOPE("CommandList", "prepare_for_submission");
         commands->Close();
     }
 
@@ -52,12 +50,10 @@ namespace rhi {
     }
 
     void CommandList::set_resource_state(const Image& image, const D3D12_RESOURCE_STATES new_states) {
-        MTR_SCOPE("CommandList", "set_resource_state(D3D12Image)");
         set_resource_state(image.resource.Get(), new_states, false);
     }
 
     void CommandList::set_resource_state(const Buffer& buffer, const D3D12_RESOURCE_STATES new_states) {
-        MTR_SCOPE("CommandList", "set_resource_state(D3D12Buffer)");
         set_resource_state(buffer.resource.Get(), new_states, true);
     }
 

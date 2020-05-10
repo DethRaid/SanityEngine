@@ -1,12 +1,5 @@
 #include "render_command_list.hpp"
 
-#include <array>
-#include <cassert>
-
-#include <minitrace.h>
-
-#include "../core/align.hpp"
-#include "../core/defer.hpp"
 #include "../core/ensure.hpp"
 #include "bind_group.hpp"
 #include "d3dx12.hpp"
@@ -38,8 +31,6 @@ namespace rhi {
     void RenderCommandList::set_framebuffer(const Framebuffer& framebuffer,
                                             std::vector<RenderTargetAccess> render_target_accesses,
                                             std::optional<RenderTargetAccess> depth_access) {
-        MTR_SCOPE("RenderCommandList", "set_render_targets");
-
         ENSURE(framebuffer.rtv_handles.size() == render_target_accesses.size(),
                "Must have the same number of render targets and render target accesses");
         ENSURE(framebuffer.dsv_handle.has_value() == depth_access.has_value(),
@@ -99,8 +90,6 @@ namespace rhi {
     }
 
     void RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
-        MTR_SCOPE("RenderCommandList", "set_pipeline_state");
-
         if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != state.root_signature) {
             commands->SetGraphicsRootSignature(state.root_signature.Get());
             is_render_material_bound = false;
@@ -112,8 +101,6 @@ namespace rhi {
     }
 
     void RenderCommandList::bind_render_resources(const BindGroup& bind_group) {
-        MTR_SCOPE("RenderCommandList", "bind_render_resources");
-
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline before binding render resources");
 
         for(const BoundResource<Buffer>& resource : bind_group.used_buffers) {
@@ -147,8 +134,6 @@ namespace rhi {
     }
 
     void RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
-        MTR_SCOPE("RenderCommandList", "draw");
-
         // ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
         ENSURE(current_mesh_data != nullptr, "Must bind mesh data to issue drawcalls");
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
@@ -157,7 +142,6 @@ namespace rhi {
     }
 
     void RenderCommandList::prepare_for_submission() {
-        MTR_SCOPE("RenderCommandList", "prepare_for_submission");
         if(in_render_pass) {
             commands->EndRenderPass();
         }

@@ -440,10 +440,13 @@ namespace renderer {
 
         command_list.bind_mesh_data(*static_mesh_storage);
 
+        {
+            MTR_SCOPE("Renderer", "Render static meshes");
         registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
             command_list.set_material_idx(mesh_renderable.material.index);
             command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
         });
+            }
 
         draw_sky(registry, command_list);
 

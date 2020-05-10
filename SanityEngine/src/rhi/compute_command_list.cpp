@@ -30,8 +30,6 @@ namespace rhi {
     }
 
     void ComputeCommandList::set_pipeline_state(const ComputePipelineState& state) {
-        MTR_SCOPE("ComputeCommandList", "set_pipeline_state");
-
         if(compute_pipeline == nullptr) {
             // First time binding a compute pipeline to this command list, we need to bind the root signature
             commands->SetComputeRootSignature(state.root_signature.Get());
@@ -51,8 +49,6 @@ namespace rhi {
     }
 
     void ComputeCommandList::bind_compute_resources(const BindGroup& bind_group) {
-        MTR_SCOPE("ComputeCommandList", "bind_compute_resources");
-
         ENSURE(compute_pipeline != nullptr, "Can not bind compute resources to a command list before you bind a compute pipeline");
 
         for(const auto& image : bind_group.used_images) {
@@ -76,8 +72,6 @@ namespace rhi {
     }
 
     void ComputeCommandList::dispatch(const uint32_t workgroup_x, const uint32_t workgroup_y, const uint32_t workgroup_z) {
-        MTR_SCOPE("ComputeCommandList", "dispatch");
-
 #ifndef NDEBUG
         ENSURE(compute_pipeline != nullptr, "Can not dispatch a compute workgroup before binding a compute pipeline");
 
@@ -108,8 +102,6 @@ namespace rhi {
     }
 
     void ComputeCommandList::bind_mesh_data(const MeshDataStore& mesh_data) {
-        MTR_SCOPE("D3D12RenderCommandList", "bind_mesh_data");
-
         const auto& vertex_bindings = mesh_data.get_vertex_bindings();
 
         // If we have more than 16 vertex attributes, we probably have bigger problems
