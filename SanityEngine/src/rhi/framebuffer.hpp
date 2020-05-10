@@ -14,6 +14,7 @@ namespace rhi {
         float width;
         float height;
     };
+
     enum class RenderTargetBeginningAccessType {
         /*!
          * \brief Load the data that was previously rendered to this render target

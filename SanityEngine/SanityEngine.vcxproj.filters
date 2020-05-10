@@ -25,9 +25,6 @@
     <Filter Include="Header Files\rhi">
       <UniqueIdentifier>{2c159e03-43e2-4eb5-bf89-4783c114c27a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\rhi\d3d12">
-      <UniqueIdentifier>{2cfb512c-2ddb-4c17-a597-bfa30aff22dc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\stats">
       <UniqueIdentifier>{62b758d5-0892-4b48-ab1a-6c8975b5198a}</UniqueIdentifier>
     </Filter>
@@ -54,9 +51,6 @@
     </Filter>
     <Filter Include="Source Files\rhi">
       <UniqueIdentifier>{fdcf90b2-5e89-4abc-a753-46c545b33be1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\rhi\d3d12">
-      <UniqueIdentifier>{8b6c88f0-97ff-44da-8460-02ef6274482e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\stats">
       <UniqueIdentifier>{72d684aa-47d4-4a90-8118-acc6d90029a3}</UniqueIdentifier>
@@ -114,18 +108,6 @@
     <ClCompile Include="src\rhi\mesh_data_store.cpp">
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
-    <ClCompile Include="src\rhi\d3d12\d3d12_render_device.cpp">
-      <Filter>Source Files\rhi\d3d12</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp">
-      <Filter>Source Files\rhi\d3d12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rhi\d3d12\helpers.cpp">
-      <Filter>Source Files\rhi\d3d12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rhi\d3d12\shader_reflection.cpp">
-      <Filter>Source Files\rhi\d3d12</Filter>
-    </ClCompile>
     <ClCompile Include="src\stats\framerate_tracker.cpp">
       <Filter>Source Files\stats</Filter>
     </ClCompile>
@@ -163,6 +145,9 @@
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\render_command_list.cpp">
+      <Filter>Source Files\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp">
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
   </ItemGroup>
@@ -238,24 +223,6 @@
     </ClInclude>
     <ClInclude Include="src\rhi\resources.hpp">
       <Filter>Header Files\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\d3d12_framebuffer.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\d3d12_render_device.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\d3dx12.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\helpers.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\resources.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\d3d12\shader_reflection.hpp">
-      <Filter>Header Files\rhi\d3d12</Filter>
     </ClInclude>
     <ClInclude Include="src\stats\framerate_tracker.hpp">
       <Filter>Header Files\stats</Filter>

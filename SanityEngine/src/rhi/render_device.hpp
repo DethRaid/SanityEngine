@@ -11,13 +11,13 @@
 #include <spdlog/logger.h>
 #include <wrl/client.h>
 
+#include "../settings.hpp"
 #include "bind_group.hpp"
 #include "compute_command_list.hpp"
 #include "descriptor_allocator.hpp"
 #include "raytracing_structs.hpp"
 #include "render_command_list.hpp"
 #include "resource_command_list.hpp"
-#include "../settings.hpp"
 
 struct GLFWwindow;
 
@@ -59,24 +59,24 @@ namespace rhi {
         ~RenderDevice();
 
 #pragma region RenderDevice
-        [[nodiscard]] std::unique_ptr<Buffer> create_buffer(const BufferCreateInfo& create_info);
+        [[nodiscard]] std::unique_ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
 
-        [[nodiscard]] std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info);
+        [[nodiscard]] std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
         [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
-                                                                      const Image* depth_target);
+                                                                      const Image* depth_target) const;
 
         Framebuffer* get_backbuffer_framebuffer();
 
-        void* map_buffer(const Buffer& buffer);
+        void* map_buffer(const Buffer& buffer) const;
 
         void destroy_buffer(std::unique_ptr<Buffer> buffer);
 
         void destroy_image(std::unique_ptr<Image> image);
 
-        void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer);
+        void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
 
-        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader);
+        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) const;
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
@@ -98,7 +98,7 @@ namespace rhi {
 
         void end_frame();
 
-        uint32_t get_cur_gpu_frame_idx();
+        uint32_t get_cur_gpu_frame_idx() const;
 
         void begin_capture();
 

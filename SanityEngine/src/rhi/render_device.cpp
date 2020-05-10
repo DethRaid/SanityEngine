@@ -18,6 +18,7 @@
 #include "../core/errors.hpp"
 #include "../settings.hpp"
 #include "../windows/windows_helpers.hpp"
+#include "compute_pipeline_state.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "render_pipeline_state.hpp"
@@ -87,7 +88,7 @@ namespace rhi {
         device_allocator->Release();
     }
 
-    std::unique_ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
+    std::unique_ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
         MTR_SCOPE("RenderDevice", "create_buffer");
 
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
@@ -152,7 +153,7 @@ namespace rhi {
         return move(buffer);
     }
 
-    std::unique_ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) {
+    std::unique_ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
         MTR_SCOPE("RenderDevice", "create_image");
 
         const auto format = to_dxgi_format(create_info.format);
@@ -164,7 +165,7 @@ namespace rhi {
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
 
         auto image = std::make_unique<Image>();
-        image->format = format;
+        image->format = create_info.format;
 
         D3D12_RESOURCE_STATES initial_state;
         switch(create_info.usage) {
@@ -208,7 +209,7 @@ namespace rhi {
     }
 
     std::unique_ptr<Framebuffer> RenderDevice::create_framebuffer(const std::vector<const Image*>& render_targets,
-                                                                  const Image* depth_target) {
+                                                                  const Image* depth_target) const {
         MTR_SCOPE("RenderDevice", "create_framebuffer");
 
         auto framebuffer = std::make_unique<Framebuffer>();
@@ -274,7 +275,7 @@ namespace rhi {
             height = static_cast<float>(d3d12_depth_target->height);
 
             D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
-            desc.Format = d3d12_depth_target->format;
+            desc.Format = to_dxgi_format(d3d12_depth_target->format);
             desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
             desc.Texture2D.MipSlice = 0;
 
@@ -301,7 +302,7 @@ namespace rhi {
         return &swapchain_framebuffers[cur_swapchain_index];
     }
 
-    void* RenderDevice::map_buffer(const Buffer& buffer) {
+    void* RenderDevice::map_buffer(const Buffer& buffer) const {
         const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
         MTR_SCOPE("D3D12RenderEngine", "map_buffer");
 
@@ -324,7 +325,7 @@ namespace rhi {
         image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Image*>(image.release()));
     }
 
-    void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) {
+    void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) const {
         auto* d3d12_framebuffer = static_cast<Framebuffer*>(framebuffer.get());
 
         for(const D3D12_CPU_DESCRIPTOR_HANDLE handle : d3d12_framebuffer->rtv_handles) {
@@ -336,7 +337,7 @@ namespace rhi {
         }
     }
 
-    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) {
+    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader) const {
         auto compute_pipeline = std::make_unique<ComputePipelineState>();
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
@@ -517,7 +518,7 @@ namespace rhi {
         }
     }
 
-    uint32_t RenderDevice::get_cur_gpu_frame_idx() { return cur_gpu_frame_idx; }
+    uint32_t RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
 
     void RenderDevice::begin_capture() {
         if(graphics_analysis) {
@@ -1034,7 +1035,7 @@ namespace rhi {
         ComPtr<ID3DBlob> error_blob;
         auto result = D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
-            const std::string msg{reinterpret_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
+            const std::string msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
             logger->error("Could not create root signature: {}", msg);
             return {};
         }
@@ -1486,7 +1487,7 @@ namespace rhi {
     std::unique_ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const Settings& settings) {
         switch(backend) {
             case RenderBackend::D3D12: {
-                const auto hwnd = glfwGetWin32Window(window);
+                auto hwnd = glfwGetWin32Window(window);
 
                 glm::ivec2 framebuffer_size{};
                 glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
