@@ -12,6 +12,12 @@ enum class FramerateDisplayMode {
     Both
 };
 
+struct FrametimeStats {
+    double average;
+    double minimum;
+    double maximum;
+};
+
 class FramerateTracker {
 public:
     explicit FramerateTracker(uint32_t max_num_samples_in);
@@ -19,6 +25,8 @@ public:
     void add_frame_time(double frame_time);
 
     void log_framerate_stats(FramerateDisplayMode display_mode = FramerateDisplayMode::FrameTime) const;
+
+    [[nodiscard]] FrametimeStats calculate_frametime_stats() const;
 
 private:
     uint32_t max_num_samples;

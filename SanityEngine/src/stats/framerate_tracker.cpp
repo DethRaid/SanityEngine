@@ -17,18 +17,8 @@ void FramerateTracker::add_frame_time(const double frame_time) {
     frame_times.push_front(frame_time);
 }
 
-void FramerateTracker::log_framerate_stats(FramerateDisplayMode display_mode) const {
-    double min_time{100000000};
-    double max_time{0};
-    double average{0};
-
-    for(const auto sample : frame_times) {
-        min_time = std::min(sample, min_time);
-        max_time = std::max(max_time, sample);
-        average += sample;
-    }
-
-    average /= frame_times.size();
+void FramerateTracker::log_framerate_stats(const FramerateDisplayMode display_mode) const {
+    const auto [average, min_time, max_time] = calculate_frametime_stats();
 
     switch(display_mode) {
         case FramerateDisplayMode::FrameTime:
@@ -47,4 +37,20 @@ void FramerateTracker::log_framerate_stats(FramerateDisplayMode display_mode) co
                          1.0 / max_time);
             break;
     }
+}
+
+FrametimeStats FramerateTracker::calculate_frametime_stats() const {
+    double min_time{100000000};
+    double max_time{0};
+    double average{0};
+
+    for(const auto sample : frame_times) {
+        min_time = std::min(sample, min_time);
+        max_time = std::max(max_time, sample);
+        average += sample;
+    }
+
+    average /= frame_times.size();
+
+    return { .average = average, .minimum = min_time, .maximum = max_time};
 }

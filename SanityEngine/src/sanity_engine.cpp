@@ -12,7 +12,10 @@
 #include <stb_image.h>
 
 #include "core/abort.hpp"
+#include "imgui/imgui.h"
 #include "rhi/render_device.hpp"
+#include "ui/fps_display.hpp"
+#include "ui/ui_components.hpp"
 
 struct AtmosphereMaterial {
     glm::vec3 sun_vector;
@@ -81,6 +84,10 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     bve = std::make_unique<BveWrapper>(renderer->get_render_device());
 
     create_planetary_atmosphere();
+
+    init_imgui();
+
+    make_frametime_display();
 }
 
 SanityEngine::~SanityEngine() {
@@ -101,6 +108,7 @@ void SanityEngine::run() {
             MTR_SCOPE("SanityEngine", "tick");
             const auto frame_start_time = std::chrono::steady_clock::now();
             glfwPollEvents();
+
             renderer->begin_frame(frame_count);
 
             // Hackily spawn entities on the first frame, because mesh uploading is hard
@@ -116,7 +124,9 @@ void SanityEngine::run() {
 
             player_controller->update_player_transform(last_frame_duration);
 
-            renderer->render_scene(registry);
+            draw_ui(registry);
+
+            renderer->render_all(registry);
 
             renderer->end_frame();
 
@@ -168,12 +178,19 @@ void SanityEngine::create_debug_plane() {
     logger->info("Created plane");
 }
 
+void SanityEngine::init_imgui() { ImGui::CreateContext(); }
+
 void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = registry.create();
 
     // No need to set parameters, the default light component represents the Earth's sun
     registry.assign<renderer::LightComponent>(atmosphere);
     registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
+}
+
+void SanityEngine::make_frametime_display() {
+    const auto frametime_display = registry.create();
+    registry.assign<ui::UiComponent>(frametime_display, std::make_unique<ui::FramerateDisplay>(framerate_tracker));
 }
 
 void SanityEngine::create_flycam_player() {
@@ -195,4 +212,13 @@ void SanityEngine::load_bve_train(const std::string& filename) {
     if(!success) {
         logger->error("Could not load train file {}", filename);
     }
+}
+
+void SanityEngine::draw_ui(entt::registry& registry) {
+    ImGui::NewFrame();
+
+    registry.view<ui::UiComponent>().each([](const ui::UiComponent& component) { component.panel->draw(); });
+
+    ImGui::EndFrame();
+    // ImGui::Render();
 }

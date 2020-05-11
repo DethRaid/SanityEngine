@@ -14,6 +14,7 @@
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
+#include "imgui/imgui.h"
 #include "render_components.hpp"
 
 namespace renderer {
@@ -145,7 +146,7 @@ namespace renderer {
 
     void Renderer::begin_frame(const uint64_t frame_count) { device->begin_frame(frame_count); }
 
-    void Renderer::render_scene(entt::registry& registry) {
+    void Renderer::render_all(entt::registry& registry) {
         MTR_SCOPE("Renderer", "render_scene");
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
@@ -163,6 +164,8 @@ namespace renderer {
         upload_material_data(*command_list, frame_idx);
 
         render_3d_scene(registry, *command_list, frame_idx);
+
+        render_ui(*command_list, frame_idx);
 
         device->submit_command_list(std::move(command_list));
     }
@@ -442,11 +445,11 @@ namespace renderer {
 
         {
             MTR_SCOPE("Renderer", "Render static meshes");
-        registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
-            command_list.set_material_idx(mesh_renderable.material.index);
-            command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
-        });
-            }
+            registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
+                command_list.set_material_idx(mesh_renderable.material.index);
+                command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
+            });
+        }
 
         draw_sky(registry, command_list);
 
@@ -456,5 +459,67 @@ namespace renderer {
         command_list.set_pipeline_state(*backbuffer_output_pipeline);
 
         command_list.draw(3);
+    }
+
+    void Renderer::create_ui_pipeline() {
+        const auto create_info = rhi::RenderPipelineStateCreateInfo{
+            .name = "UI Pipeline",
+            .vertex_shader = load_shader("data/shaders/ui.vertex"),
+            .pixel_shader = load_shader("data/shaders/ui.pixel"),
+
+            .blend_state = rhi::BlendState{.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
+
+            .rasterizer_state =
+                rhi::RasterizerState{
+                    .cull_mode = rhi::CullMode::None,
+                },
+
+            .depth_stencil_state =
+                rhi::DepthStencilState{
+                    .enable_depth_test{false},
+                    .enable_depth_write{false},
+                },
+        };
+
+        ui_pipeline = device->create_render_pipeline_state(create_info);
+    }
+
+    void Renderer::render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) {
+        MTR_SCOPE("Renderer", "render_ui");
+
+        ImDrawData* draw_data = ImGui::GetDrawData();
+
+        command_list.set_pipeline_state(*ui_pipeline);
+
+        for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
+            const auto* cmd_list = draw_data->CmdLists[i];
+            const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
+            const auto* imgui_indices = cmd_list->IdxBuffer.Data;
+
+            const auto vertex_buffer_size = static_cast<uint32_t>(cmd_list->VtxBuffer.size_in_bytes());
+            const auto index_buffer_size = static_cast<uint32_t>(cmd_list->IdxBuffer.size_in_bytes());
+
+            const auto vert_buffer_create_info = rhi::BufferCreateInfo{
+                .name = "Dear ImGUI Vertex Buffer",
+                .usage = rhi::BufferUsage::StagingBuffer,
+                .size = vertex_buffer_size,
+            };
+
+            auto vertex_buffer = device->create_buffer(vert_buffer_create_info);
+
+            command_list.copy_data_to_buffer(imgui_vertices, vertex_buffer_size, *vertex_buffer);
+
+            const auto index_buffer_create_info = rhi::BufferCreateInfo{
+                .name = "Dear ImGUI Index Buffer",
+                .usage = rhi::BufferUsage::StagingBuffer,
+                .size = index_buffer_size,
+            };
+
+            auto index_buffer = device->create_buffer(index_buffer_create_info);
+
+            command_list.copy_data_to_buffer(imgui_indices, index_buffer_size, *index_buffer);
+
+
+        }
     }
 } // namespace renderer

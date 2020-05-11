@@ -50,6 +50,8 @@
     <ClCompile Include="src\rhi\resource_command_list.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
+    <ClCompile Include="src\ui\fps_display.cpp" />
+    <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +99,9 @@
     <ClInclude Include="src\sanity_engine.hpp" />
     <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
+    <ClInclude Include="src\ui\fps_display.hpp" />
+    <ClInclude Include="src\ui\ui_components.hpp" />
+    <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
   </ItemGroup>
   <ItemGroup>

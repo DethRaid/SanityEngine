@@ -62,11 +62,19 @@ private:
     void create_debug_plane();
 #pragma endregion
 
+#pragma region Init
+    void init_imgui();
+#pragma endregion
+
 #pragma region Spawning
     void create_planetary_atmosphere();
+
+    void make_frametime_display();
 
     void create_flycam_player();
 
     void load_bve_train(const std::string& filename);
 #pragma endregion
+    
+    void draw_ui(entt::registry& registry);
 };

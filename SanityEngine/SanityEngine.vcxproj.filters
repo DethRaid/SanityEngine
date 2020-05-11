@@ -88,6 +88,12 @@
     <Filter Include="Source Files\imgui">
       <UniqueIdentifier>{be8c91aa-fae9-4662-8dff-0ba28c8c31ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ui">
+      <UniqueIdentifier>{be3cdd6e-f70d-4e1b-8ebf-1c2f5831ec48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ui">
+      <UniqueIdentifier>{b178a131-fd37-455a-950b-8c1e8f329185}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -179,6 +185,12 @@
     </ClCompile>
     <ClCompile Include="extern\imgui\src\imgui_widgets.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\fps_display.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\ui_components.cpp">
+      <Filter>Source Files\ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -316,6 +328,15 @@
     </ClInclude>
     <ClInclude Include="extern\imgui\include\imgui\imstb_truetype.h">
       <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\ui_components.hpp">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\ui_panel.hpp">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\fps_display.hpp">
+      <Filter>Header Files\ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

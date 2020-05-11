@@ -36,7 +36,7 @@ namespace renderer {
 
         void begin_frame(uint64_t frame_count);
 
-        void render_scene(entt::registry& registry);
+        void render_all(entt::registry& registry);
 
         void end_frame();
 
@@ -137,6 +137,14 @@ namespace renderer {
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list);
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
+#pragma endregion
+
+#pragma region UI
+        std::shared_ptr<rhi::RenderPipelineState> ui_pipeline;
+
+        void create_ui_pipeline();
+
+        void render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion
     };
 } // namespace renderer

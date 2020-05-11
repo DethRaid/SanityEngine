@@ -22,7 +22,7 @@ namespace rhi {
         ResourceCommandList(ResourceCommandList&& old) noexcept;
         ResourceCommandList& operator=(ResourceCommandList&& old) noexcept;
 
-        void copy_data_to_buffer(const void* data, uint32_t num_bytes, const Buffer& buffer, uint32_t offset);
+        void copy_data_to_buffer(const void* data, uint32_t num_bytes, const Buffer& buffer, uint32_t offset = 0);
 
         void copy_data_to_image(const void* data, const Image& image);
 

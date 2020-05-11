@@ -39,6 +39,11 @@ namespace rhi {
         IndirectCommands,
         UnorderedAccess,
         RaytracingAccelerationStructure,
+
+        /*!
+         * \brief Vertex buffer that gets written to every frame
+         */
+        UiVertices,
     };
 
     struct BufferCreateInfo {
