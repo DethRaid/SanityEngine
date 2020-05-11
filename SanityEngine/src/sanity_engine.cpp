@@ -1,14 +1,11 @@
 ﻿#include "sanity_engine.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#define GLFW_EXPOSE_NATIVE_WIN32
 
 #include <filesystem>
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-#include <imgui/imgui.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -87,7 +84,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     create_planetary_atmosphere();
 
-    imgui_adapter = std::make_unique<DearImguiAdapter>(glfwGetWin32Window(window));
+    imgui_adapter = std::make_unique<DearImguiAdapter>(window);
 
     make_frametime_display();
 }

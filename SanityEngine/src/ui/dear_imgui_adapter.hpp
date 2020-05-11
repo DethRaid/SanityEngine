@@ -1,7 +1,8 @@
 #pragma once
 
-#include <windows.h>
+#include <GLFW/glfw3.h>
 #include <entt/entity/view.hpp>
+#include <imgui/imgui.h>
 
 #include "ui_components.hpp"
 
@@ -10,9 +11,24 @@
  */
 class DearImguiAdapter {
 public:
-    explicit DearImguiAdapter(HWND hwnd);
+    explicit DearImguiAdapter(GLFWwindow* window_in);
+
+    DearImguiAdapter(const DearImguiAdapter& other) = delete;
+    DearImguiAdapter& operator=(const DearImguiAdapter& other) = delete;
+
+    DearImguiAdapter(DearImguiAdapter&& old) noexcept = delete;
+    DearImguiAdapter& operator=(DearImguiAdapter&& old) noexcept = delete;
 
     ~DearImguiAdapter();
 
     void draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view);
+
+private:
+    GLFWwindow* window;
+    std::array<GLFWcursor*, ImGuiMouseCursor_COUNT> mouse_cursors;
+    double last_start_time{0};
+
+    void update_mouse_pos_and_buttons() const;
+
+    void update_mouse_cursor() const;
 };
