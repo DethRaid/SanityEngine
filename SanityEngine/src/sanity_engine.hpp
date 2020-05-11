@@ -3,12 +3,13 @@
 
 #include <entt/entity/registry.hpp>
 
+#include "bve/bve_wrapper.hpp"
 #include "input/input_manager.hpp"
 #include "player/flycam_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
-#include "bve/bve_wrapper.hpp"
 #include "stats/framerate_tracker.hpp"
+#include "ui/dear_imgui_adapter.hpp"
 
 /*!
  * \brief Main class for my glorious engine
@@ -41,6 +42,8 @@ private:
 
     std::unique_ptr<renderer::Renderer> renderer;
 
+    std::unique_ptr<DearImguiAdapter> imgui_adapter;
+
     FramerateTracker framerate_tracker{1000};
 
     std::unique_ptr<BveWrapper> bve;
@@ -62,10 +65,6 @@ private:
     void create_debug_plane();
 #pragma endregion
 
-#pragma region Init
-    void init_imgui();
-#pragma endregion
-
 #pragma region Spawning
     void create_planetary_atmosphere();
 
@@ -75,6 +74,4 @@ private:
 
     void load_bve_train(const std::string& filename);
 #pragma endregion
-    
-    void draw_ui(entt::registry& registry);
 };

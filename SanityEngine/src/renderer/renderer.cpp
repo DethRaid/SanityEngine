@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <entt/entity/registry.hpp>
+#include <imgui/imgui.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -14,7 +15,6 @@
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
-#include "imgui/imgui.h"
 #include "render_components.hpp"
 
 namespace renderer {
@@ -163,8 +163,10 @@ namespace renderer {
 
         upload_material_data(*command_list, frame_idx);
 
+        // render_3d_scene binds all the render targets it needs
         render_3d_scene(registry, *command_list, frame_idx);
 
+        // At the end of render_3d_scene, the backbuffer framebuffer is bound. render_ui thus simply renders directly onto the backbuffer
         render_ui(*command_list, frame_idx);
 
         device->submit_command_list(std::move(command_list));
@@ -388,7 +390,7 @@ namespace renderer {
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
         if(raytracing_scene.buffer) {
-            device->destroy_buffer(std::move(raytracing_scene.buffer));
+            device->schedule_buffer_destruction(std::move(raytracing_scene.buffer));
         }
 
         raytracing_scene = command_list.build_raytracing_scene(raytracing_objects);
@@ -405,6 +407,7 @@ namespace renderer {
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
+
         } else {
             command_list.set_pipeline_state(*atmospheric_sky_pipeline);
             command_list.draw(3);
@@ -491,6 +494,8 @@ namespace renderer {
 
         command_list.set_pipeline_state(*ui_pipeline);
 
+        command_list.set_viewport(draw_data->DisplayPos, draw_data->DisplaySize);
+
         for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
             const auto* cmd_list = draw_data->CmdLists[i];
             const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
@@ -504,9 +509,7 @@ namespace renderer {
                 .usage = rhi::BufferUsage::StagingBuffer,
                 .size = vertex_buffer_size,
             };
-
             auto vertex_buffer = device->create_buffer(vert_buffer_create_info);
-
             command_list.copy_data_to_buffer(imgui_vertices, vertex_buffer_size, *vertex_buffer);
 
             const auto index_buffer_create_info = rhi::BufferCreateInfo{
@@ -514,12 +517,26 @@ namespace renderer {
                 .usage = rhi::BufferUsage::StagingBuffer,
                 .size = index_buffer_size,
             };
-
             auto index_buffer = device->create_buffer(index_buffer_create_info);
-
             command_list.copy_data_to_buffer(imgui_indices, index_buffer_size, *index_buffer);
 
+            command_list.bind_ui_mesh(*vertex_buffer, *index_buffer);
 
+            for(const auto& cmd : cmd_list->CmdBuffer) {
+                if(cmd.UserCallback) {
+                    cmd.UserCallback(cmd_list, &cmd);
+
+                } else {
+                    const auto& clip_rect = cmd.ClipRect;
+                    const auto pos = draw_data->DisplayPos;
+                    command_list.set_scissor_rect({clip_rect.x - pos.x, clip_rect.y - pos.y}, {clip_rect.z - pos.x, clip_rect.w - pos.y});
+
+                    command_list.draw(cmd.ElemCount);
+                }
+            }
+
+            device->schedule_buffer_destruction(std::move(vertex_buffer));
+            device->schedule_buffer_destruction(std::move(index_buffer));
         }
     }
 } // namespace renderer

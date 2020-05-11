@@ -73,7 +73,7 @@ namespace rhi {
 
         [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
 
-        void destroy_buffer(std::unique_ptr<Buffer> buffer);
+        void schedule_buffer_destruction(std::unique_ptr<Buffer> buffer);
 
         void schedule_image_destruction(std::unique_ptr<Image> image);
 

@@ -55,7 +55,7 @@ namespace renderer {
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
         for(auto* buffer : device_data) {
-            device->destroy_buffer(std::unique_ptr<rhi::Buffer>(buffer));
+            device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>(buffer));
         }
     }
 

@@ -45,6 +45,7 @@ namespace rhi {
 
         ID3D12DescriptorHeap* current_descriptor_heap{nullptr};
 
+        bool is_mesh_data_bound{false};
         const MeshDataStore* current_mesh_data{nullptr};
 
         bool are_compute_resources_bound{false};

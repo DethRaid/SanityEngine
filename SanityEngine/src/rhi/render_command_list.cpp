@@ -5,6 +5,7 @@
 #include "d3dx12.hpp"
 #include "framebuffer.hpp"
 #include "helpers.hpp"
+#include "imgui/imgui.h"
 #include "mesh_data_store.hpp"
 #include "render_pipeline_state.hpp"
 
@@ -89,6 +90,25 @@ namespace rhi {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
+    void RenderCommandList::bind_ui_mesh(const Buffer& vertex_buffer, const Buffer& index_buffer) {
+        set_resource_state(vertex_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        set_resource_state(index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+        const auto vb_view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = vertex_buffer.resource->GetGPUVirtualAddress(),
+                                                      .SizeInBytes = vertex_buffer.size,
+                                                      .StrideInBytes = sizeof(ImDrawVert)};
+        commands->IASetVertexBuffers(0, 1, &vb_view);
+
+        const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer.resource->GetGPUVirtualAddress(),
+                                                     .SizeInBytes = index_buffer.size,
+                                                     .Format = DXGI_FORMAT_R32_UINT};
+        commands->IASetIndexBuffer(&ib_view);
+
+        commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        is_mesh_data_bound = true;
+    }
+
     void RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
         if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != state.root_signature) {
             commands->SetGraphicsRootSignature(state.root_signature.Get());
@@ -98,6 +118,24 @@ namespace rhi {
         commands->SetPipelineState(state.pso.Get());
 
         current_render_pipeline_state = &state;
+    }
+
+    void RenderCommandList::set_viewport(const glm::vec2& display_pos, const glm::vec2& display_size) const {
+        const auto viewport = D3D12_VIEWPORT{.TopLeftX = display_pos.x,
+                                             .TopLeftY = display_pos.y,
+                                             .Width = display_size.x,
+                                             .Height = display_size.y,
+                                             .MinDepth = 0,
+                                             .MaxDepth = 1};
+        commands->RSSetViewports(1, &viewport);
+    }
+
+    void RenderCommandList::set_scissor_rect(const glm::uvec2& pos, const glm::uvec2& size) const {
+        const auto rect = D3D12_RECT{.left = static_cast<LONG>(pos.x),
+                                     .top = static_cast<LONG>(pos.y),
+                                     .right = static_cast<LONG>(pos.x + size.x),
+                                     .bottom = static_cast<LONG>(pos.y + size.y)};
+        commands->RSSetScissorRects(1, &rect);
     }
 
     void RenderCommandList::bind_render_resources(const BindGroup& bind_group) {
@@ -121,21 +159,21 @@ namespace rhi {
         is_render_material_bound = true;
     }
 
-    void RenderCommandList::set_camera_idx(const uint32_t camera_idx) {
+    void RenderCommandList::set_camera_idx(const uint32_t camera_idx) const {
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a pipeline before setting the camera index");
 
         commands->SetGraphicsRoot32BitConstant(0, camera_idx, 0);
     }
 
-    void RenderCommandList::set_material_idx(const uint32_t idx) {
+    void RenderCommandList::set_material_idx(const uint32_t idx) const {
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a pipeline before setting the material index");
 
         commands->SetGraphicsRoot32BitConstant(0, idx, 1);
     }
 
-    void RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) {
+    void RenderCommandList::draw(const uint32_t num_indices, const uint32_t first_index, const uint32_t num_instances) const {
         // ENSURE(is_render_material_bound, "Must bind material data to issue drawcalls");
-        ENSURE(current_mesh_data != nullptr, "Must bind mesh data to issue drawcalls");
+        ENSURE(is_mesh_data_bound, "Must bind mesh data to issue drawcalls");
         ENSURE(current_render_pipeline_state != nullptr, "Must bind a render pipeline to issue drawcalls");
 
         commands->DrawIndexedInstanced(num_indices, num_instances, first_index, 0, 0);

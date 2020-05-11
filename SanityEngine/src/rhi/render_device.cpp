@@ -1,7 +1,5 @@
 #include "render_device.hpp"
 
-#include <DirectXMath.h>
-
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <D3D12MemAlloc.h>
 #include <GLFW/glfw3.h>
@@ -306,7 +304,7 @@ namespace rhi {
         return ptr;
     }
 
-    void RenderDevice::destroy_buffer(std::unique_ptr<Buffer> buffer) {
+    void RenderDevice::schedule_buffer_destruction(std::unique_ptr<Buffer> buffer) {
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Buffer*>(buffer.release()));
     }
 

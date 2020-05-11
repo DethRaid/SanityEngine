@@ -20,8 +20,8 @@ namespace rhi {
     }
 
     MeshDataStore::~MeshDataStore() {
-        device->destroy_buffer(std::move(vertex_buffer));
-        device->destroy_buffer(std::move(index_buffer));
+        device->schedule_buffer_destruction(std::move(vertex_buffer));
+        device->schedule_buffer_destruction(std::move(index_buffer));
     }
 
     const std::vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }

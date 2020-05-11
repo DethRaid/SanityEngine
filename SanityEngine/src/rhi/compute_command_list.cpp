@@ -136,6 +136,7 @@ namespace rhi {
         commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         current_mesh_data = &mesh_data;
+        is_mesh_data_bound = true;
     }
 
     RaytracingMesh ComputeCommandList::build_acceleration_structure_for_mesh(const uint32_t num_vertices,

@@ -1,18 +1,20 @@
 ﻿#include "sanity_engine.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
+#define GLFW_EXPOSE_NATIVE_WIN32
 
 #include <filesystem>
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+#include <imgui/imgui.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
 
 #include "core/abort.hpp"
-#include "imgui/imgui.h"
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
@@ -85,7 +87,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     create_planetary_atmosphere();
 
-    init_imgui();
+    imgui_adapter = std::make_unique<DearImguiAdapter>(glfwGetWin32Window(window));
 
     make_frametime_display();
 }
@@ -124,7 +126,7 @@ void SanityEngine::run() {
 
             player_controller->update_player_transform(last_frame_duration);
 
-            draw_ui(registry);
+            imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
 
             renderer->render_all(registry);
 
@@ -178,7 +180,6 @@ void SanityEngine::create_debug_plane() {
     logger->info("Created plane");
 }
 
-void SanityEngine::init_imgui() { ImGui::CreateContext(); }
 
 void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = registry.create();
@@ -212,13 +213,4 @@ void SanityEngine::load_bve_train(const std::string& filename) {
     if(!success) {
         logger->error("Could not load train file {}", filename);
     }
-}
-
-void SanityEngine::draw_ui(entt::registry& registry) {
-    ImGui::NewFrame();
-
-    registry.view<ui::UiComponent>().each([](const ui::UiComponent& component) { component.panel->draw(); });
-
-    ImGui::EndFrame();
-    // ImGui::Render();
 }
