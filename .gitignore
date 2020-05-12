@@ -405,5 +405,4 @@ MigrationBackup/
 
 out/
 /build
-/SanityEngine/extern/aftermath
-/SanityEngine/data/trains
+/SanityEngine/data/bve_trains

@@ -84,7 +84,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     create_planetary_atmosphere();
 
-    imgui_adapter = std::make_unique<DearImguiAdapter>(window);
+    imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
     make_frametime_display();
 }

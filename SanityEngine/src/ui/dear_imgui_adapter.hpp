@@ -5,13 +5,19 @@
 #include <imgui/imgui.h>
 
 #include "ui_components.hpp"
+#include "../renderer/handles.hpp"
+#include "../renderer/material_data_buffer.hpp"
+
+namespace renderer {
+    class Renderer;
+}
 
 /*!
  * \brief Adapter class to hook Dear ImGUI into Sanity Engine. Largely based on the GLFW impl in the Dear ImGUI examples
  */
 class DearImguiAdapter {
 public:
-    explicit DearImguiAdapter(GLFWwindow* window_in);
+    explicit DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& renderer);
 
     DearImguiAdapter(const DearImguiAdapter& other) = delete;
     DearImguiAdapter& operator=(const DearImguiAdapter& other) = delete;
@@ -25,8 +31,15 @@ public:
 
 private:
     GLFWwindow* window;
-    std::array<GLFWcursor*, ImGuiMouseCursor_COUNT> mouse_cursors;
+    std::array<GLFWcursor*, ImGuiMouseCursor_COUNT> mouse_cursors{};
     double last_start_time{0};
+
+    renderer::ImageHandle font_atlas;
+    renderer::MaterialHandle font_material;
+
+    void initialize_style();
+
+    void create_font_texture(renderer::Renderer& renderer);
 
     void update_mouse_pos_and_buttons() const;
 

@@ -34,11 +34,11 @@ namespace renderer {
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
-        void begin_frame(uint64_t frame_count);
+        void begin_frame(uint64_t frame_count) const;
 
         void render_all(entt::registry& registry);
 
-        void end_frame();
+        void end_frame() const;
 
         void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
 
@@ -134,7 +134,7 @@ namespace renderer {
 
 #pragma region 3D Scene
         void update_lights(entt::registry& registry, uint32_t frame_idx);
-        void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list);
+        void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion
@@ -144,7 +144,7 @@ namespace renderer {
 
         void create_ui_pipeline();
 
-        void render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx);
+        void render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const;
 #pragma endregion
     };
 } // namespace renderer

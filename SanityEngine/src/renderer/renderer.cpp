@@ -132,6 +132,8 @@ namespace renderer {
 
         create_atmospheric_sky_pipeline();
 
+        create_ui_pipeline();
+
         ENSURE(settings_in.render_scale > 0, "Render scale may not be 0 or less");
 
         int framebuffer_width;
@@ -144,7 +146,7 @@ namespace renderer {
         create_light_buffers();
     }
 
-    void Renderer::begin_frame(const uint64_t frame_count) { device->begin_frame(frame_count); }
+    void Renderer::begin_frame(const uint64_t frame_count) const { device->begin_frame(frame_count); }
 
     void Renderer::render_all(entt::registry& registry) {
         MTR_SCOPE("Renderer", "render_scene");
@@ -172,7 +174,7 @@ namespace renderer {
         device->submit_command_list(std::move(command_list));
     }
 
-    void Renderer::end_frame() { device->end_frame(); }
+    void Renderer::end_frame() const { device->end_frame(); }
 
     void Renderer::add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects) {
         raytracing_objects.insert(raytracing_objects.end(), new_objects.begin(), new_objects.end());
@@ -403,7 +405,7 @@ namespace renderer {
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
-    void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) {
+    void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
@@ -482,15 +484,20 @@ namespace renderer {
                     .enable_depth_test{false},
                     .enable_depth_write{false},
                 },
+
+            .render_target_formats = {rhi::ImageFormat::Rgba8},
         };
 
         ui_pipeline = device->create_render_pipeline_state(create_info);
     }
 
-    void Renderer::render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) {
+    void Renderer::render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
         ImDrawData* draw_data = ImGui::GetDrawData();
+        if(draw_data == nullptr) {
+            return;
+        }
 
         command_list.set_pipeline_state(*ui_pipeline);
 
@@ -527,6 +534,9 @@ namespace renderer {
                     cmd.UserCallback(cmd_list, &cmd);
 
                 } else {
+                    const auto material_idx = reinterpret_cast<uint32_t>(cmd.TextureId);
+                    command_list.set_material_idx(material_idx);
+
                     const auto& clip_rect = cmd.ClipRect;
                     const auto pos = draw_data->DisplayPos;
                     command_list.set_scissor_rect({clip_rect.x - pos.x, clip_rect.y - pos.y}, {clip_rect.z - pos.x, clip_rect.w - pos.y});
