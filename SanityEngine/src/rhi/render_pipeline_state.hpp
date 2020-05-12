@@ -120,12 +120,19 @@ namespace rhi {
         StencilState back_face{};
     };
 
+    enum class InputAssemblerLayout {
+        StandardVertex,
+        DearImGui,
+    };
+
     struct RenderPipelineStateCreateInfo {
         std::string name;
 
         std::vector<uint8_t> vertex_shader{};
 
         std::optional<std::vector<uint8_t>> pixel_shader{std::nullopt};
+
+        InputAssemblerLayout input_assembler_layout{InputAssemblerLayout::StandardVertex};
 
         BlendState blend_state{};
 

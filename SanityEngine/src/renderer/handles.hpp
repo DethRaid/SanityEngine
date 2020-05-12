@@ -4,10 +4,14 @@
 
 namespace renderer {
     struct ImageHandle {
-        uint32_t idx;
+        uint32_t index;
+    };
+
+    struct MaterialHandle {
+        uint32_t index;
     };
 
     struct LightHandle {
-        uint32_t handle{0};
+        uint32_t index{0};
     };
 } // namespace renderer

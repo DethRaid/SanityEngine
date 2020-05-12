@@ -205,7 +205,7 @@ namespace renderer {
 
     ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info, const void* image_data) {
         const auto handle = create_image(create_info);
-        auto& image = *all_images[handle.idx];
+        auto& image = *all_images[handle.index];
 
         auto commands = device->create_resource_command_list();
         commands->copy_data_to_image(image_data, image);
@@ -233,10 +233,10 @@ namespace renderer {
         return *all_images[idx];
     }
 
-    rhi::Image& Renderer::get_image(const ImageHandle handle) const { return *all_images[handle.idx]; }
+    rhi::Image& Renderer::get_image(const ImageHandle handle) const { return *all_images[handle.index]; }
 
     void Renderer::schedule_texture_destruction(const ImageHandle& image_handle) {
-        auto image = std::move(all_images[image_handle.idx]);
+        auto image = std::move(all_images[image_handle.index]);
         device->schedule_image_destruction(std::move(image));
     }
 
@@ -399,7 +399,7 @@ namespace renderer {
     }
 
     void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
-        registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.handle] = light.light; });
+        registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
@@ -474,6 +474,8 @@ namespace renderer {
             .vertex_shader = load_shader("data/shaders/ui.vertex"),
             .pixel_shader = load_shader("data/shaders/ui.pixel"),
 
+            .input_assembler_layout = rhi::InputAssemblerLayout::DearImGui,
+
             .blend_state = rhi::BlendState{.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
 
             .rasterizer_state =
@@ -538,7 +540,8 @@ namespace renderer {
                     cmd.UserCallback(cmd_list, &cmd);
 
                 } else {
-                    const auto material_idx = reinterpret_cast<uint32_t>(cmd.TextureId);
+                    const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
+                    const auto material_idx = static_cast<uint32_t>(imgui_material_idx);
                     command_list.set_material_idx(material_idx);
 
                     const auto& clip_rect = cmd.ClipRect;

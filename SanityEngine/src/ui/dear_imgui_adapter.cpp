@@ -247,7 +247,9 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     font_material = materials.get_next_free_material<ImGuiMaterial>();
     materials.at<ImGuiMaterial>(font_material).image = font_atlas;
 
-    io.Fonts->TexID = reinterpret_cast<ImTextureID>(font_material.index);
+    const uint64_t imgui_tex_id = font_material.index;
+
+    io.Fonts->TexID = reinterpret_cast<ImTextureID>(imgui_tex_id);
 }
 
 void DearImguiAdapter::update_mouse_pos_and_buttons() const {

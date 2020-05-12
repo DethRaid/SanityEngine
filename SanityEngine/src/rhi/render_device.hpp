@@ -196,6 +196,7 @@ namespace rhi {
         ComPtr<ID3D12RootSignature> standard_root_signature;
 
         std::vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
+        std::vector<D3D12_INPUT_ELEMENT_DESC> dear_imgui_graphics_pipeline_input_layout;
 
         uint64_t staging_buffer_idx{0};
         std::vector<StagingBuffer> staging_buffers;
@@ -289,7 +290,7 @@ namespace rhi {
 
         void create_material_resource_binders();
 
-        void create_standard_graphics_pipeline_input_layout();
+        void create_pipeline_input_layouts();
 #pragma endregion
 
         [[nodiscard]] std::vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const std::vector<uint8_t>& shader) const;

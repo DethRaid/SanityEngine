@@ -73,6 +73,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
     if(!train) {
         logger->error("BVE returned absolutely nothing for train '{}'", filename);
 
+        return false;
+
     } else if(train->errors.count > 0) {
         logger->error("Could not load train '{}'", filename);
 
@@ -125,7 +127,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
                 const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
                 if(texture_handle_maybe) {
-                    logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->idx);
+                    logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->index);
 
                     auto& material_data = renderer.get_material_data_buffer();
                     const auto material_handle = material_data.get_next_free_material<BveMaterial>();
@@ -179,7 +181,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
                         renderer.schedule_texture_destruction(staging_texture_handle);
 
-                        logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.idx);
+                        logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.index);
 
                         auto& material_data = renderer.get_material_data_buffer();
                         const auto material_handle = material_data.get_next_free_material<BveMaterial>();

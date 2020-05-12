@@ -2,11 +2,9 @@
 
 #include <stdint.h>
 
-namespace renderer {
-    struct MaterialHandle {
-        uint32_t index;
-    };
+#include "handles.hpp"
 
+namespace renderer {
     /*!
      * \brief Array that can hold data of multiple types of multiple sizes
      *

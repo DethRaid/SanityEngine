@@ -66,7 +66,7 @@ namespace rhi {
 
         create_material_resource_binders();
 
-        create_standard_graphics_pipeline_input_layout();
+        create_pipeline_input_layouts();
 
         logger->info("Initialized D3D12 render device");
     }
@@ -1105,7 +1105,7 @@ namespace rhi {
         }
     }
 
-    void RenderDevice::create_standard_graphics_pipeline_input_layout() {
+    void RenderDevice::create_pipeline_input_layouts() {
         standard_graphics_pipeline_input_layout.reserve(4);
 
         standard_graphics_pipeline_input_layout.push_back(
@@ -1139,6 +1139,35 @@ namespace rhi {
             D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Texcoord",
                                      .SemanticIndex = 0,
                                      .Format = DXGI_FORMAT_R32G32_FLOAT,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
+
+        dear_imgui_graphics_pipeline_input_layout.reserve(2);
+
+        dear_imgui_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Position",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R32G32_FLOAT,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
+
+        dear_imgui_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Texcoord",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R32G32_FLOAT,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
+
+        dear_imgui_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Color",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
                                      .InputSlot = 0,
                                      .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
                                      .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
@@ -1184,8 +1213,17 @@ namespace rhi {
             desc.PS.pShaderBytecode = create_info.pixel_shader->data();
         }
 
-        desc.InputLayout.NumElements = static_cast<UINT>(standard_graphics_pipeline_input_layout.size());
-        desc.InputLayout.pInputElementDescs = standard_graphics_pipeline_input_layout.data();
+        switch(create_info.input_assembler_layout) {
+            case InputAssemblerLayout::StandardVertex:
+                desc.InputLayout.NumElements = static_cast<UINT>(standard_graphics_pipeline_input_layout.size());
+                desc.InputLayout.pInputElementDescs = standard_graphics_pipeline_input_layout.data();
+                break;
+
+            case InputAssemblerLayout::DearImGui:
+                desc.InputLayout.NumElements = static_cast<UINT>(dear_imgui_graphics_pipeline_input_layout.size());
+                desc.InputLayout.pInputElementDescs = dear_imgui_graphics_pipeline_input_layout.data();
+            break;
+        }
         desc.PrimitiveTopologyType = to_d3d12_primitive_topology_type(create_info.primitive_type);
 
         // Rasterizer state
