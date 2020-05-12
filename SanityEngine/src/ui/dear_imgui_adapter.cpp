@@ -135,8 +135,7 @@ void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclud
 
     view.each([](const ui::UiComponent& component) { component.panel->draw(); });
 
-    ImGui::EndFrame();
-    // ImGui::Render();
+    ImGui::Render();
 }
 
 void DearImguiAdapter::initialize_style() {

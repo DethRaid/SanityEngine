@@ -13,7 +13,7 @@ struct VertexOutput {
 VertexOutput main( DearImGuiVertex input) {
 	VertexOutput output;
 
-    output.position = float4(input.position, 0, 1);
+    output.position = float4(input.position / float2(1000, 480), 0, 1);
     output.texcoord = input.texcoord;
     output.color = input.color;
 

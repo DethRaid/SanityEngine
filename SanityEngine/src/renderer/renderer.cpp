@@ -496,6 +496,8 @@ namespace renderer {
     void Renderer::render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
+        // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in
+
         ImDrawData* draw_data = ImGui::GetDrawData();
         if(draw_data == nullptr) {
             return;
