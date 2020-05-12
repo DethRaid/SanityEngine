@@ -161,8 +161,8 @@ namespace rhi {
                                                                                   (first_index * sizeof(uint32_t)),
                                                                    .VertexBuffer = {.StartAddress = vertex_buffer.resource
                                                                                                         ->GetGPUVirtualAddress() +
-                                                                                                    (first_vertex * sizeof(BveVertex)),
-                                                                                    .StrideInBytes = sizeof(BveVertex)}}};
+                                                                                                    (first_vertex * sizeof(StandardVertex)),
+                                                                                    .StrideInBytes = sizeof(StandardVertex)}}};
 
         const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
             .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
@@ -226,8 +226,8 @@ namespace rhi {
                                                                                 (first_index * sizeof(uint32_t)),
                                                                  .VertexBuffer =
                                                                      {.StartAddress = vertex_buffer.resource->GetGPUVirtualAddress() +
-                                                                                      (first_vertex * sizeof(BveVertex)),
-                                                                      .StrideInBytes = sizeof(BveVertex)}}};
+                                                                                      (first_vertex * sizeof(StandardVertex)),
+                                                                      .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(std::move(geom_desc));
         }

@@ -29,7 +29,7 @@ namespace renderer {
      */
     class Renderer {
     public:
-        static std::vector<BveVertex> cube_vertices;
+        static std::vector<StandardVertex> cube_vertices;
         static std::vector<uint32_t> cube_indices;
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
@@ -42,7 +42,7 @@ namespace renderer {
 
         void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
 
-        [[nodiscard]] rhi::Mesh create_static_mesh(const std::vector<BveVertex>& vertices,
+        [[nodiscard]] rhi::Mesh create_static_mesh(const std::vector<StandardVertex>& vertices,
                                                    const std::vector<uint32_t>& indices,
                                                    rhi::ResourceCommandList& commands) const;
 
@@ -140,9 +140,14 @@ namespace renderer {
 #pragma endregion
 
 #pragma region UI
-        std::shared_ptr<rhi::RenderPipelineState> ui_pipeline;
+        std::unique_ptr<rhi::RenderPipelineState> ui_pipeline;
+
+        std::vector<std::unique_ptr<rhi::Buffer>> ui_vertex_buffers;
+        std::vector<std::unique_ptr<rhi::Buffer>> ui_index_buffers;
 
         void create_ui_pipeline();
+
+        void create_ui_mesh_buffers();
 
         void render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const;
 #pragma endregion

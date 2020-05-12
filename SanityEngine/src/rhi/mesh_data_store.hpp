@@ -9,7 +9,7 @@
 
 #include "resources.hpp"
 
-struct BveVertex {
+struct StandardVertex {
     glm::vec3 position;
     glm::vec3 normal;
     uint32_t color;
@@ -64,7 +64,7 @@ namespace rhi {
 
         [[nodiscard]] const Buffer& get_index_buffer() const;
 
-        [[nodiscard]] std::pair<uint32_t, uint32_t> add_mesh(const std::vector<BveVertex>& vertices,
+        [[nodiscard]] std::pair<uint32_t, uint32_t> add_mesh(const std::vector<StandardVertex>& vertices,
                                                              const std::vector<uint32_t>& indices,
                                                              ResourceCommandList& commands);
 

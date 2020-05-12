@@ -36,5 +36,5 @@ private:
 
     [[nodiscard]] BveMeshHandle load_mesh_from_file(const std::string& filename);
 
-    [[nodiscard]] std::pair<std::vector<BveVertex>, std::vector<uint32_t>> process_vertices(const bve::BVE_Mesh& mesh) const;
+    [[nodiscard]] std::pair<std::vector<StandardVertex>, std::vector<uint32_t>> process_vertices(const bve::BVE_Mesh& mesh) const;
 };

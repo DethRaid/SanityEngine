@@ -2,6 +2,7 @@
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 
+#include <minitrace.h>
 #include <GLFW/glfw3native.h>
 #include <imgui/imgui.h>
 
@@ -73,6 +74,7 @@ void char_callback(GLFWwindow* window, const unsigned int c) {
 }
 
 DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& renderer) : window{window_in} {
+    MTR_SCOPE("DearImguiAdapter", "DearImguiAdapter");
     ImGui::CreateContext();
 
     auto& io = ImGui::GetIO();
@@ -99,7 +101,7 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
     prev_key_callback = glfwSetKeyCallback(window, key_callback);
     prev_char_callback = glfwSetCharCallback(window, char_callback);
 
-    initialize_style();
+    // initialize_style();
 
     create_font_texture(renderer);
 }
@@ -107,6 +109,8 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
 DearImguiAdapter::~DearImguiAdapter() { ImGui::DestroyContext(); }
 
 void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
+    MTR_SCOPE("DearImguiAdapter", "draw_ui");
+
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(
         io.Fonts->IsBuilt() &&

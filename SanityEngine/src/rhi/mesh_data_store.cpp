@@ -13,10 +13,10 @@ namespace rhi {
           vertex_buffer{std::move(vertex_buffer_in)},
           index_buffer{std::move(index_buffer_in)} {
         vertex_bindings.reserve(4);
-        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(BveVertex, position), sizeof(BveVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(BveVertex, normal), sizeof(BveVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(BveVertex, color), sizeof(BveVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(BveVertex, texcoord), sizeof(BveVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, position), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, normal), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, color), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, texcoord), sizeof(StandardVertex)});
     }
 
     MeshDataStore::~MeshDataStore() {
@@ -28,13 +28,13 @@ namespace rhi {
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<BveVertex>& vertices,
+    std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<StandardVertex>& vertices,
                                                           const std::vector<uint32_t>& indices,
                                                           ResourceCommandList& commands) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
         logger->trace("Current vertex offset: {} Current index offset: {}", next_vertex_offset, next_index_offset);
 
-        const auto vertex_data_size = static_cast<uint32_t>(vertices.size() * sizeof(BveVertex));
+        const auto vertex_data_size = static_cast<uint32_t>(vertices.size() * sizeof(StandardVertex));
         const auto index_data_size = static_cast<uint32_t>(indices.size() * sizeof(uint32_t));
 
         // Offset the indices so they'll refer to the right vertex
@@ -53,7 +53,7 @@ namespace rhi {
         logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
         commands.copy_data_to_buffer(offset_indices.data(), index_data_size, *index_buffer, index_buffer_byte_offset);
 
-        const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(BveVertex));
+        const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(StandardVertex));
 
         next_free_vertex_byte += vertex_data_size;
 

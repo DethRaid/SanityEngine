@@ -255,15 +255,15 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const std::string& filename) {
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
 }
 
-std::pair<std::vector<BveVertex>, std::vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
+std::pair<std::vector<StandardVertex>, std::vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
     ENSURE(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
 
     const auto& bve_vertices = mesh.vertices;
-    auto vertices = std::vector<BveVertex>{};
+    auto vertices = std::vector<StandardVertex>{};
     vertices.reserve(bve_vertices.count);
 
     std::transform(bve_vertices.ptr, bve_vertices.ptr + bve_vertices.count, std::back_inserter(vertices), [](const BVE_Vertex& bve_vertex) {
-        return BveVertex{.position = to_glm_vec3(bve_vertex.position),
+        return StandardVertex{.position = to_glm_vec3(bve_vertex.position),
                          .normal = to_glm_vec3(bve_vertex.normal),
                          .color = to_uint32_t(bve_vertex.color),
                          .texcoord = to_glm_vec2(bve_vertex.coord)};

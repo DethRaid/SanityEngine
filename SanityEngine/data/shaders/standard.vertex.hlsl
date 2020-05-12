@@ -1,4 +1,4 @@
-struct BveVertex {
+struct StandardVertex {
     float3 position : Position;
     float3 normal : Normal;
     float4 color : Color;
@@ -17,7 +17,7 @@ struct MaterialData {};
 
 #include "inc/standard_root_signature.hlsl"
 
-VertexOutput main(BveVertex input) {
+VertexOutput main(StandardVertex input) {
     VertexOutput output;
 
     Camera camera = cameras[constants.camera_index];

@@ -156,7 +156,7 @@ void SanityEngine::run() {
 }
 
 void SanityEngine::create_debug_plane() {
-    const auto vertices = std::vector<BveVertex>{
+    const auto vertices = std::vector<StandardVertex>{
         {/* .position = */ {-5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
@@ -198,7 +198,7 @@ void SanityEngine::create_flycam_player() {
 
     auto& transform = registry.assign<TransformComponent>(player);
     transform.position.z = 5;
-    transform.position.y = 5;
+    transform.position.y = 2;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 

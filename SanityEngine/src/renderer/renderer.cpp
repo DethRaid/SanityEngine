@@ -28,7 +28,7 @@ namespace renderer {
     };
 
 #pragma region Cube
-    std::vector<BveVertex> Renderer::cube_vertices{
+    std::vector<StandardVertex> Renderer::cube_vertices{
         // Front
         {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
         {.position = {0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
@@ -134,6 +134,8 @@ namespace renderer {
 
         create_ui_pipeline();
 
+        create_ui_mesh_buffers();
+
         ENSURE(settings_in.render_scale > 0, "Render scale may not be 0 or less");
 
         int framebuffer_width;
@@ -181,7 +183,7 @@ namespace renderer {
         raytracing_scene_dirty = true;
     }
 
-    rhi::Mesh Renderer::create_static_mesh(const std::vector<BveVertex>& vertices,
+    rhi::Mesh Renderer::create_static_mesh(const std::vector<StandardVertex>& vertices,
                                            const std::vector<uint32_t>& indices,
                                            rhi::ResourceCommandList& commands) const {
         MTR_SCOPE("Renderer", "create_static_mesh");
@@ -495,6 +497,27 @@ namespace renderer {
         ui_pipeline = device->create_render_pipeline_state(create_info);
     }
 
+    void Renderer::create_ui_mesh_buffers() {
+        constexpr uint32_t num_ui_vertices = 1 << 20;
+        const auto vert_buffer_create_info = rhi::BufferCreateInfo{
+            .name = "Dear ImGUI Vertex Buffer",
+            .usage = rhi::BufferUsage::VertexBuffer,
+            .size = num_ui_vertices * sizeof(ImDrawVert),
+        };
+
+        constexpr uint32_t num_ui_indices = 1 << 20;
+        const auto index_buffer_create_info = rhi::BufferCreateInfo{
+            .name = "Dear ImGUI Index Buffer",
+            .usage = rhi::BufferUsage::StagingBuffer,
+            .size = num_ui_indices * sizeof(ImDrawIdx),
+        };
+
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+            ui_vertex_buffers.push_back(device->create_buffer(vert_buffer_create_info));
+            ui_index_buffers.push_back(device->create_buffer(index_buffer_create_info));
+        }
+    }
+
     void Renderer::render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
@@ -508,6 +531,9 @@ namespace renderer {
         command_list.set_pipeline_state(*ui_pipeline);
 
         command_list.set_viewport(draw_data->DisplayPos, draw_data->DisplaySize);
+
+        uint32_t vertex_offset{0};
+        uint32_t index_offset{0};
 
         for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
             const auto* cmd_list = draw_data->CmdLists[i];
