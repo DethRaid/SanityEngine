@@ -70,7 +70,10 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
     MTR_SCOPE("SanityEngine", train_msg.c_str());
 
     const auto train = load_mesh_from_file(filename);
-    if(train->errors.count > 0) {
+    if(!train) {
+        logger->error("BVE returned absolutely nothing for train '{}'", filename);
+
+    } else if(train->errors.count > 0) {
         logger->error("Could not load train '{}'", filename);
 
         for(uint32_t i = 0; i < train->errors.count; i++) {
@@ -160,7 +163,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                         const auto texture_handle = renderer.create_image(create_info);
                         const auto& texture = renderer.get_image(texture_handle);
 
-                        auto bind_group_builder = create_texture_processor_bind_group_builder(device);;
+                        auto bind_group_builder = create_texture_processor_bind_group_builder(device);
+                        ;
 
                         bind_group_builder->set_image("input_texture", staging_texture);
                         bind_group_builder->set_image("output_texture", texture);
@@ -209,8 +213,8 @@ std::unique_ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind
     const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
     const std::unordered_map<std::string, rhi::DescriptorTableDescriptorDescription> descriptors =
-    {{"input_texture", {.type = rhi::DescriptorType::ShaderResource, .handle = cpu_handle}},
-     {"output_texture", {.type = rhi::DescriptorType::UnorderedAccess, .handle = cpu_handle.Offset(descriptor_size)}}};
+        {{"input_texture", {.type = rhi::DescriptorType::ShaderResource, .handle = cpu_handle}},
+         {"output_texture", {.type = rhi::DescriptorType::UnorderedAccess, .handle = cpu_handle.Offset(descriptor_size)}}};
 
     const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = {{0, gpu_handle}};
 
@@ -241,6 +245,10 @@ BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error)
 
 BveMeshHandle BveWrapper::load_mesh_from_file(const std::string& filename) {
     auto* mesh = bve_load_mesh_from_file(filename.c_str());
+
+    if(mesh == nullptr) {
+        logger->error("BVE failed to load anything for mesh '{}'", filename);
+    }
 
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
 }

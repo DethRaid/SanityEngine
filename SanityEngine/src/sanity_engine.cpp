@@ -84,8 +84,6 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     create_planetary_atmosphere();
 
-    imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
-
     make_frametime_display();
 }
 
@@ -114,11 +112,15 @@ void SanityEngine::run() {
             if(frame_count == 1) {
                 renderer->begin_device_capture();
 
+                // TODO: Figure out a good way to submit GPU work before the first frame has begun
+
+                imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
+
                 create_debug_plane();
 
                 create_flycam_player();
 
-                load_bve_train("data/trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
+                load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
             }
 
             player_controller->update_player_transform(last_frame_duration);
