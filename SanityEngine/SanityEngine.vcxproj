@@ -220,8 +220,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\imgui\include;E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\assimp\include;E:\Documents\SanityEngine\SanityEngine\extern\imgui\include;E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\SanityEngine\SanityEngine\extern\assimp\lib;E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -254,7 +254,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;spdlogd.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;spdlogd.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>
