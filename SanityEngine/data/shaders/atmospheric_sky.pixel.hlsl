@@ -4,126 +4,156 @@ struct FullscreenVertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-struct MaterialData {
-};
+struct MaterialData {};
 
 #include "inc/standard_root_signature.hlsl"
+#define PI 3.141592
+#define iSteps 16
+#define jSteps 8
 
-// Sky options
-#define RAYLEIGH_BRIGHTNESS         3.3
-#define MIE_BRIGHTNESS              0.1
-#define MIE_DISTRIBUTION            0.63
-#define STEP_COUNT                  15.0
-#define SCATTER_STRENGTH            0.028
-#define RAYLEIGH_STRENGTH           0.139
-#define MIE_STRENGTH                0.0264
-#define RAYLEIGH_COLLECTION_POWER	0.81
-#define MIE_COLLECTION_POWER        0.39
-
-#define SUNSPOT_BRIGHTNESS          500
-#define MOONSPOT_BRIGHTNESS         25
-
-#define SKY_SATURATION              1.5
-
-#define SURFACE_HEIGHT              0.98
-
-#define CLOUDS_START                512
-
-#define PI 3.14159
-
-/*
- * Begin sky rendering code
- *
- * Taken from http://codeflow.org/entries/2011/apr/13/advanced-webgl-part-2-sky-rendering/
- */
-
-float phase(float alpha, float g) {
-    float a = 3.0 * (1.0 - g * g);
-    float b = 2.0 * (2.0 + g * g);
-    float c = 1.0 + alpha * alpha;
-    float d = pow(1.0 + g * g - 2.0 * g * alpha, 1.5);
-    return (a / b) * (c / d);
+float2 rsi(float3 r0, float3 rd, float sr) {
+    // ray-sphere intersection that assumes
+    // the sphere is centered at the origin.
+    // No intersection when result.x > result.y
+    float a = dot(rd, rd);
+    float b = 2.0 * dot(rd, r0);
+    float c = dot(r0, r0) - (sr * sr);
+    float d = (b * b) - 4.0 * a * c;
+    if(d < 0.0)
+        return float2(1e5, -1e5);
+    return float2((-b - sqrt(d)) / (2.0 * a), (-b + sqrt(d)) / (2.0 * a));
 }
 
-float atmospheric_depth(float3 position, float3 dir) {
-    float a = dot(dir, dir);
-    float b = 2.0 * dot(dir, position);
-    float c = dot(position, position) - 1.0;
-    float det = b * b - 4.0 * a * c;
-    float detSqrt = sqrt(det);
-    float q = (-b - detSqrt) / 2.0;
-    float t1 = c / q;
-    return t1;
-}
+float3 atmosphere(float maxDepth,
+                  float3 r,
+                  float3 r0,
+                  float3 pSun,
+                  float iSun,
+                  float rPlanet,
+                  float rAtmos,
+                  float3 kRlh,
+                  float kMie,
+                  float shRlh,
+                  float shMie,
+                  float g) {
+    // Normalize the sun and view directions.
+    pSun = normalize(pSun);
+    r = normalize(r);
 
-float horizon_extinction(float3 position, float3 dir, float radius) {
-    float u = dot(dir, -position);
-    if(u < 0.0) {
-        return 1.0;
+    // Calculate the step size of the primary ray.
+    float2 p = rsi(r0, r, rAtmos);
+
+    if(p.x > p.y)
+        return float3(0, 0, 0);
+    p.y = min(p.y, rsi(r0, r, rPlanet).x);
+
+    float rayLength = p.y - p.x;
+    rayLength = min(rayLength, maxDepth); // limit marching to scene depth in order to avoid "transparent" geometry
+    float iStepSize = rayLength / float(iSteps);
+
+    // Initialize the primary ray time.
+    float iTime = 0.0;
+
+    // Initialize accumulators for Rayleigh and Mie scattering.
+    float3 totalRlh = float3(0, 0, 0);
+    float3 totalMie = float3(0, 0, 0);
+
+    // Initialize optical depth accumulators for the primary ray.
+    float iOdRlh = 0.0;
+    float iOdMie = 0.0;
+
+    // Calculate the Rayleigh and Mie phases.
+    float mu = dot(r, pSun);
+    float mumu = mu * mu;
+    float gg = g * g;
+    float pRlh = 3.0 / (16.0 * PI) * (1.0 + mumu);
+    float pMie = 3.0 / (8.0 * PI) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * g, 1.5) * (2.0 + gg));
+
+    // Sample the primary ray.
+    // float3 failAccum = float3(0.0f, 0.0f, 0.0f);
+    for(int i = 0; i < iSteps; i++) {
+
+        // Calculate the primary ray sample position.
+        float3 iPos = r0 + r * (iTime + iStepSize * 0.5);
+
+        // Increment the primary ray time.
+        iTime += iStepSize;
+
+        // shadow this step if we can't be seen from the sun
+        // i.e. "shadow map" the ray on this position
+        // --------------------
+        // if(PointInShadow(iPos - float3(0.0f, 6371e3f, 0.0f))) {
+        //     continue;
+        // }
+
+        // Calculate the height of the sample.
+        float iHeight = length(iPos) - rPlanet;
+
+        // Calculate the optical depth of the Rayleigh and Mie scattering for this step.
+        float odStepRlh = exp(-iHeight / shRlh) * iStepSize;
+        float odStepMie = exp(-iHeight / shMie) * iStepSize;
+
+        // Accumulate optical depth.
+        iOdRlh += odStepRlh;
+        iOdMie += odStepMie;
+
+        // Calculate the step size of the secondary ray.
+        float jStepSize = rsi(iPos, pSun, rAtmos).y / float(jSteps);
+
+        // Initialize the secondary ray time.
+        float jTime = 0.0;
+
+        // Initialize optical depth accumulators for the secondary ray.
+        float jOdRlh = 0.0;
+        float jOdMie = 0.0;
+
+        // Sample the secondary ray.
+        for(int j = 0; j < jSteps; j++) {
+
+            // Calculate the secondary ray sample position.
+            float3 jPos = iPos + pSun * (jTime + jStepSize * 0.5);
+
+            // Calculate the height of the sample.
+            float jHeight = length(jPos) - rPlanet;
+
+            // Accumulate the optical depth.
+            jOdRlh += exp(-jHeight / shRlh) * jStepSize;
+            jOdMie += exp(-jHeight / shMie) * jStepSize;
+
+            // Increment the secondary ray time.
+            jTime += jStepSize;
+        }
+
+        // Calculate attenuation.
+        float3 attn = exp(-(kMie * (iOdMie + jOdMie) + kRlh * (iOdRlh + jOdRlh)));
+
+        // Accumulate scattering.
+        totalRlh += odStepRlh * attn;
+        totalMie += odStepMie * attn;
     }
-
-    float3 near = position + u*dir;
-
-    if(sqrt(dot(near, near)) < radius) {
-        return 0.0;
-
-    } else {
-        float3 v2 = normalize(near)*radius - position;
-        float diff = acos(dot(normalize(v2), dir));
-        return smoothstep(0.0, 1.0, pow(diff * 2.0, 3.0));
-    }
-}
-
-static const float3 Kr = float3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131);    // Color of nitrogen
-
-float3 absorb(float dist, float3 color, float factor) {
-    return color - color * pow(Kr, (factor / dist).xxx);
-}
-
-float3 get_sky_color(in float3 eye_vector, in float3 light_vector, in float light_intensity, bool show_light) {
-    float alpha = max(dot(eye_vector, light_vector), 0.0);
-
-    float rayleigh_factor = phase(alpha, -0.01) * RAYLEIGH_BRIGHTNESS;
-    float mie_factor = phase(alpha, MIE_DISTRIBUTION) * MIE_BRIGHTNESS;
-    float spot = show_light ? smoothstep(0.0, 15.0, phase(alpha, 0.9995)) * light_intensity : 0;
-
-    float3 eye_position = float3(0.0, SURFACE_HEIGHT, 0.0);
-    float eye_depth = atmospheric_depth(eye_position, eye_vector);
-    float step_length = eye_depth / STEP_COUNT;
-
-    float eye_extinction = horizon_extinction(eye_position, eye_vector, SURFACE_HEIGHT - 0.15);
-
-    float3 rayleigh_collected = 0;
-    float3 mie_collected = 0;
-
-    for(int i = 0; i < STEP_COUNT; i++) {
-        float sample_distance = step_length * float(i);
-        float3 position = eye_position + eye_vector * sample_distance;
-        float extinction = horizon_extinction(position, light_vector, SURFACE_HEIGHT - 0.35);
-        float sample_depth = atmospheric_depth(position, light_vector);
-
-        float3 influx = absorb(sample_depth, float3(light_intensity.xxx), SCATTER_STRENGTH) * extinction;
-
-        // rayleigh will make the nice blue band around the bottom of the sky
-        rayleigh_collected += absorb(sample_distance, Kr * influx, RAYLEIGH_STRENGTH);
-        mie_collected += absorb(sample_distance, influx, MIE_STRENGTH);
-    }
-
-    rayleigh_collected = (rayleigh_collected * eye_extinction * pow(eye_depth, RAYLEIGH_COLLECTION_POWER)) / STEP_COUNT;
-    mie_collected = (mie_collected * eye_extinction * pow(eye_depth, MIE_COLLECTION_POWER)) / STEP_COUNT;
-
-    float3 color = (spot * mie_collected) + (mie_factor * mie_collected) + (rayleigh_factor * rayleigh_collected);
-
-    return color;
+    // Calculate and return the final color.
+    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
 }
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
     float4 view_vector_worldspace = mul(camera.inverse_view, float4(normalize(input.position_viewspace), 0));
 
-    Light light = lights[0];    // Light 0 is always the sun
+    Light light = lights[0]; // Light 0 is always the sun
 
-    float3 sky_color = get_sky_color(normalize(view_vector_worldspace.xyz), -normalize(light.direction), length(light.color) * 3, true);
+    float3 color = atmosphere(1000000,
+                              view_vector_worldspace,
+                              float3(0, 6371e3, 0),
+                              light.direction,                  // direction of the sun
+                              22.0f,                            // intensity of the sun
+                              6371e3,                           // radius of the planet in meters
+                              6471e3,                           // radius of the atmosphere in meters
+                              float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
+                              21e-6,                            // Mie scattering coefficient
+                              8e3,                              // Rayleigh scale height
+                              1.2e3,                            // Mie scale height
+                              0.758                             // Mie preferred scattering direction
+    );
 
-    return float4(sky_color, 1);
+    return float4(color, 1);
 }

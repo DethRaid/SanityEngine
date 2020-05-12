@@ -148,6 +148,13 @@ namespace rhi {
     private:
         Settings settings;
 
+        /*!
+         * \brief Marker for if the engine is still being initialized and hasn't yet rendered any frame
+         *
+         * This allows the renderer to queue up work to be executed on the first frame
+         */
+        bool in_init_phase{true};
+
         std::shared_ptr<spdlog::logger> logger;
 
         ComPtr<ID3D12Debug> debug_controller;

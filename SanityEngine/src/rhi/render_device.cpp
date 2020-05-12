@@ -481,20 +481,23 @@ namespace rhi {
     void RenderDevice::begin_frame(const uint64_t frame_count) {
         MTR_SCOPE("RenderDevice", "begin_frame");
 
-        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_gpu_frames;
-
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
 
         cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
 
-        return_staging_buffers_for_frame(cur_gpu_frame_idx);
+        // Don't reset per frame resources on the first frame. This allows the engine to submit work while initializing
+        if(!in_init_phase) {
+            return_staging_buffers_for_frame(cur_gpu_frame_idx);
 
-        reset_command_allocators_for_frame(cur_gpu_frame_idx);
+            reset_command_allocators_for_frame(cur_gpu_frame_idx);
 
-        destroy_resources_for_frame(cur_gpu_frame_idx);
+            destroy_resources_for_frame(cur_gpu_frame_idx);
+        }
 
         transition_swapchain_image_to_render_target();
+
+        in_init_phase = false;
     }
 
     void RenderDevice::end_frame() {
@@ -517,6 +520,8 @@ namespace rhi {
                 }
             }
         }
+
+        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_gpu_frames;
     }
 
     uint32_t RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
@@ -1222,7 +1227,7 @@ namespace rhi {
             case InputAssemblerLayout::DearImGui:
                 desc.InputLayout.NumElements = static_cast<UINT>(dear_imgui_graphics_pipeline_input_layout.size());
                 desc.InputLayout.pInputElementDescs = dear_imgui_graphics_pipeline_input_layout.data();
-            break;
+                break;
         }
         desc.PrimitiveTopologyType = to_d3d12_primitive_topology_type(create_info.primitive_type);
 
