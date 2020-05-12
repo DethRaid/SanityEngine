@@ -574,7 +574,7 @@ namespace renderer {
                     const auto pos = draw_data->DisplayPos;
                     command_list.set_scissor_rect({clip_rect.x - pos.x, clip_rect.y - pos.y}, {clip_rect.z - pos.x, clip_rect.w - pos.y});
 
-                    command_list.draw(cmd.ElemCount);
+                    command_list.draw(cmd.ElemCount, cmd.IdxOffset);
                 }
             }
 

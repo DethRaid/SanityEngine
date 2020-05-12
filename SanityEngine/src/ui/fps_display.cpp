@@ -10,7 +10,7 @@ namespace ui {
     void FramerateDisplay::draw() {
         const auto [average, minimum, maximum] = tracker->calculate_frametime_stats();
 
-        ImGui::SetNextWindowSize({500, 250}, ImGuiCond_Always);
+        ImGui::SetNextWindowPos({0, 0}, ImGuiCond_Always);
 
         if(ImGui::Begin("Framerate")) {
             ImGui::Text("Average: %.3f ms (%.3f fps)", average * 1000.0, 1.0 / average);

@@ -101,7 +101,7 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
     prev_key_callback = glfwSetKeyCallback(window, key_callback);
     prev_char_callback = glfwSetCharCallback(window, char_callback);
 
-    // initialize_style();
+    initialize_style();
 
     create_font_texture(renderer);
 }
