@@ -286,7 +286,8 @@ namespace renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("data/shaders/standard.vertex"),
             .pixel_shader = load_shader("data/shaders/standard.pixel"),
-            .render_target_formats = {rhi::ImageFormat::Rgba8},
+            .blend_state = {.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
+            .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
         };
 
@@ -301,7 +302,7 @@ namespace renderer {
             .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
             .pixel_shader = load_shader("data/shaders/atmospheric_sky.pixel"),
             .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
-            .render_target_formats = {rhi::ImageFormat::Rgba8},
+            .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
         };
 
@@ -336,7 +337,7 @@ namespace renderer {
         rhi::ImageCreateInfo color_target_create_info{};
         color_target_create_info.name = SCENE_COLOR_RENDER_TARGET;
         color_target_create_info.usage = rhi::ImageUsage::RenderTarget;
-        color_target_create_info.format = rhi::ImageFormat::Rgba8;
+        color_target_create_info.format = rhi::ImageFormat::Rgba32F;
         color_target_create_info.width = size.x;
         color_target_create_info.height = size.y;
 

@@ -40,7 +40,16 @@ float3x3 AngleAxis3x3(float angle, float3 axis)
     );
 }
 
-float4 main(VertexOutput input) : SV_TARGET { 
+float4 main(VertexOutput input) : SV_TARGET {
+    MaterialData material = material_buffer[constants.material_index];
+    Texture2D texture = textures[material.texture_idx];
+    float4 color = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
+
+    if(color.a == 0) {
+        // Early-out to avoid the expensive raytrace on completely transparent surfaces
+        discard;
+    }
+
     Light sun = lights[0];  // The sun is ALWAYS at index 0
 
     float3 light = saturate(dot(input.normal, -sun.direction)) * sun.color;
@@ -76,14 +85,6 @@ float4 main(VertexOutput input) : SV_TARGET {
                 light_strength -= 1.0f / NUM_SHADOW_RAYS;
             }
         }
-    }
-
-    MaterialData material = material_buffer[constants.material_index];
-    Texture2D texture = textures[material.texture_idx];
-    float4 color = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
-
-    if(color.a == 0) {
-        discard;
     }
 
     return float4(color.rgb * (light * light_strength + float3(0.2, 0.2, 0.2)), color.a);

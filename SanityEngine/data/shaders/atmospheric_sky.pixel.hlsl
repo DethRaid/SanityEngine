@@ -132,8 +132,14 @@ float3 atmosphere(float maxDepth,
         totalRlh += odStepRlh * attn;
         totalMie += odStepMie * attn;
     }
+
+    g = 0.9995;
+    gg = g * g;
+    float phase_sun = 3.0 / (8.0 * PI) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * g, 1.5) * (2.0 + gg));
+    float spot = smoothstep(0.0, 15.0, phase_sun);
+
     // Calculate and return the final color.
-    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
+    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie + spot);
 }
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
@@ -142,7 +148,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
 
     Light light = lights[0]; // Light 0 is always the sun
 
-    float3 color = atmosphere(1000000,
+    float3 color = atmosphere(6471e3,
                               view_vector_worldspace,
                               float3(0, 6371e3, 0),
                               -light.direction,                  // direction of the sun
@@ -155,8 +161,6 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
                               1.2e3,                            // Mie scale height
                               0.758                             // Mie preferred scattering direction
     );
-
-    //float3 color = getSky(-view_vector_worldspace, light.direction);
 
     return float4(color, 1);
 }
