@@ -12,7 +12,7 @@
 struct StandardVertex {
     glm::vec3 position;
     glm::vec3 normal;
-    uint32_t color;
+    uint32_t color = 0xFFFFFFFF;
     glm::vec2 texcoord;
 };
 

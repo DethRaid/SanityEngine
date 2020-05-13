@@ -6,6 +6,8 @@
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -121,6 +123,8 @@ void SanityEngine::run() {
                 create_flycam_player();
 
                 load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
+
+                //load_3d_object("data/trains/BestFriend.obj");
             }
 
             player_controller->update_player_transform(last_frame_duration);
@@ -179,7 +183,6 @@ void SanityEngine::create_debug_plane() {
     logger->info("Created plane");
 }
 
-
 void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = registry.create();
 
@@ -214,3 +217,64 @@ void SanityEngine::load_bve_train(const std::string& filename) {
     }
 }
 
+void SanityEngine::load_3d_object(const std::string& filename) {
+    const auto* scene = importer.ReadFile(filename, aiProcess_ConvertToLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
+
+    if(scene == nullptr) {
+        logger->error("Could not load {}", filename);
+        return;
+    }
+
+    auto& device = renderer->get_render_device();
+    auto command_list = device.create_resource_command_list();
+
+    std::unordered_map<uint32_t, renderer::MaterialHandle> materials;
+
+    // Initial revision: import the root node and hope it's fine
+    const auto* node = scene->mRootNode;
+    for(uint32_t mesh_idx = 0; mesh_idx < node->mNumMeshes; mesh_idx++) {
+        // Get the mesh at this index
+        const auto ass_mesh_handle = node->mMeshes[mesh_idx];
+        const auto* mesh = scene->mMeshes[ass_mesh_handle];
+
+        // Convert it to our vertex format
+        std::vector<StandardVertex> vertices;
+        vertices.reserve(mesh->mNumVertices);
+
+        for(uint32_t vert_idx = 0; vert_idx < mesh->mNumVertices; vert_idx++) {
+            const auto& position = mesh->mVertices[vert_idx];
+            const auto& normal = mesh->mNormals[vert_idx];
+            // const auto& tangent = mesh->mTangents[vert_idx];
+            // const auto& color = mesh->mColors[0][vert_idx];
+            const auto& texcoord = mesh->mTextureCoords[0][mesh_idx];
+
+            vertices.push_back(StandardVertex{.position = {position.x, position.y, position.z},
+                                              .normal = {normal.x, normal.y, normal.z},
+                                              .texcoord = {texcoord.x, texcoord.y}});
+        }
+
+        std::vector<uint32_t> indices;
+        indices.reserve(mesh->mNumFaces * 3);
+        for(uint32_t face_idx = 0; face_idx < mesh->mNumFaces; face_idx++) {
+            const auto& face = mesh->mFaces[face_idx];
+            indices.push_back(face.mIndices[0]);
+            indices.push_back(face.mIndices[1]);
+            indices.push_back(face.mIndices[2]);
+        }
+
+        const auto mesh_handle = renderer->create_static_mesh(vertices, indices, *command_list);
+
+        const auto mesh_entity = registry.create();
+        auto& mesh_renderer = registry.assign<renderer::StaticMeshRenderableComponent>(mesh_entity);
+        mesh_renderer.mesh = mesh_handle;
+
+        if(const auto& mat = materials.find(mesh->mMaterialIndex); mat != materials.end()) {
+            mesh_renderer.material = mat->second;
+
+        } else {
+            
+        }
+    }
+
+    device.submit_command_list(std::move(command_list));
+}

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <memory>
 
+#include <assimp/Importer.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "bve/bve_wrapper.hpp"
@@ -61,6 +62,8 @@ private:
 
     std::unique_ptr<FlycamController> player_controller;
 
+    Assimp::Importer importer;
+
 #pragma region Debug
     void create_debug_plane();
 #pragma endregion
@@ -73,5 +76,7 @@ private:
     void create_flycam_player();
 
     void load_bve_train(const std::string& filename);
+
+    void load_3d_object(const std::string& filename);
 #pragma endregion
 };
