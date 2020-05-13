@@ -195,6 +195,9 @@
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp">
       <Filter>Source Files\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\loading\image_loading.cpp">
+      <Filter>Source Files\loading</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -346,6 +349,9 @@
     </ClInclude>
     <ClInclude Include="src\renderer\standard_material.hpp">
       <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loading\image_loading.hpp">
+      <Filter>Header Files\loading</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

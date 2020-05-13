@@ -14,6 +14,7 @@
 #include <stb_image.h>
 
 #include "core/abort.hpp"
+#include "loading/image_loading.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
@@ -123,7 +124,7 @@ void SanityEngine::run() {
 
                 create_flycam_player();
 
-                // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
+                load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
 
                 load_3d_object("data/trains/BestFriend.obj");
             }
@@ -285,8 +286,28 @@ void SanityEngine::load_3d_object(const std::string& filename) {
             if(result == aiReturn_SUCCESS) {
                 // Load texture into Sanity Engine and set on material
 
-                if(const auto image_handle = renderer->get_image_handle(ass_texture_path.C_Str())) {
-                    material.albedo = *image_handle;
+                if(const auto existing_image_handle = renderer->get_image_handle(ass_texture_path.C_Str())) {
+                    material.albedo = *existing_image_handle;
+
+                } else {
+                    uint32_t width, height;
+                    std::vector<uint8_t> pixels;
+                    const auto was_image_loaded = load_image(ass_texture_path.C_Str(), width, height, pixels);
+                    if(!was_image_loaded) {
+                        logger->warn("Could not load texture {}", ass_texture_path.C_Str());
+
+                        // TODO: Use the no-material pink texture
+
+                        continue;
+                    }
+
+                    const auto create_info = rhi::ImageCreateInfo{.name = ass_texture_path.C_Str(),
+                                                                  .usage = rhi::ImageUsage::SampledImage,
+                                                                  .width = width,
+                                                                  .height = height};
+
+                    const auto image_handle = renderer->create_image(create_info, pixels.data());
+                    material.albedo = image_handle;
                 }
 
             } else {
