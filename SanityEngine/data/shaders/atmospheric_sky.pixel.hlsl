@@ -8,6 +8,8 @@ struct MaterialData {};
 
 #include "inc/standard_root_signature.hlsl"
 
+// Atmospheric scattering adapted from https://github.com/wwwtyro/glsl-atmosphere
+
 #define PI 3.141592
 #define iSteps 16
 #define jSteps 8
