@@ -80,3 +80,4 @@ private:
     void load_3d_object(const std::string& filename);
 #pragma endregion
 };
+

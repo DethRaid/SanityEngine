@@ -144,7 +144,7 @@ float3 atmosphere(float maxDepth,
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
-    float3 view_vector_worldspace = mul(camera.inverse_view, float4(normalize(input.position_viewspace), 0)).xyz;
+    float3 view_vector_worldspace = mul(float4(normalize(input.position_viewspace), 0), camera.inverse_view).xyz;
 
     Light light = lights[0]; // Light 0 is always the sun
 

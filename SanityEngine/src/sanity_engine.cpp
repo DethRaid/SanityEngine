@@ -14,6 +14,7 @@
 #include <stb_image.h>
 
 #include "core/abort.hpp"
+#include "renderer/standard_material.hpp"
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
@@ -122,9 +123,9 @@ void SanityEngine::run() {
 
                 create_flycam_player();
 
-                load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
+                // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
 
-                //load_3d_object("data/trains/BestFriend.obj");
+                load_3d_object("data/trains/BestFriend.obj");
             }
 
             player_controller->update_player_transform(last_frame_duration);
@@ -272,7 +273,26 @@ void SanityEngine::load_3d_object(const std::string& filename) {
             mesh_renderer.material = mat->second;
 
         } else {
-            
+            auto& material_store = renderer->get_material_data_buffer();
+            const auto material_handle = material_store.get_next_free_material<StandardMaterial>();
+            auto& material = material_store.at<StandardMaterial>(material_handle);
+
+            const auto* ass_material = scene->mMaterials[mesh->mMaterialIndex];
+
+            // TODO: Useful logic to select between material formats
+            aiString ass_texture_path;
+            const auto result = ass_material->GetTexture(aiTextureType_BASE_COLOR, 0, &ass_texture_path);
+            if(result == aiReturn_SUCCESS) {
+                // Load texture into Sanity Engine and set on material
+
+                if(const auto image_handle = renderer->get_image_handle(ass_texture_path.C_Str())) {
+                    material.albedo = *image_handle;
+                }
+
+            } else {
+                // Get the material base color. Create a renderer texture with this color, set that texture as the albedo
+                // If there's no material base color, use a pure white texture
+            }
         }
     }
 
