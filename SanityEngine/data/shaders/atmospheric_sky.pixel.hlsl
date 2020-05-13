@@ -1,4 +1,4 @@
-struct FullscreenVertexOutput {
+﻿struct FullscreenVertexOutput {
     float4 position : SV_POSITION;
     float3 position_viewspace : VIEWPOS;
     float2 texcoord : TEXCOORD;
@@ -7,6 +7,7 @@ struct FullscreenVertexOutput {
 struct MaterialData {};
 
 #include "inc/standard_root_signature.hlsl"
+
 #define PI 3.141592
 #define iSteps 16
 #define jSteps 8
@@ -137,14 +138,14 @@ float3 atmosphere(float maxDepth,
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
-    float4 view_vector_worldspace = mul(camera.inverse_view, float4(normalize(input.position_viewspace), 0));
+    float3 view_vector_worldspace = mul(camera.inverse_view, float4(normalize(input.position_viewspace), 0)).xyz;
 
     Light light = lights[0]; // Light 0 is always the sun
 
     float3 color = atmosphere(1000000,
                               view_vector_worldspace,
                               float3(0, 6371e3, 0),
-                              light.direction,                  // direction of the sun
+                              -light.direction,                  // direction of the sun
                               22.0f,                            // intensity of the sun
                               6371e3,                           // radius of the planet in meters
                               6471e3,                           // radius of the atmosphere in meters
@@ -154,6 +155,8 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
                               1.2e3,                            // Mie scale height
                               0.758                             // Mie preferred scattering direction
     );
+
+    //float3 color = getSky(-view_vector_worldspace, light.direction);
 
     return float4(color, 1);
 }

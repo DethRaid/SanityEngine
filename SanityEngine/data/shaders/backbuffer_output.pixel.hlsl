@@ -13,5 +13,8 @@ struct MaterialData {
 float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
     MaterialData material = material_buffer[constants.material_index];
     Texture2D scene_output = textures[material.texture_idx];
-    return scene_output.Sample(bilinear_sampler, vertex.texcoord);
+    float4 color = scene_output.Sample(bilinear_sampler, vertex.texcoord);
+
+    float3 correct_color = pow(color.rgb, (1.0 / 2.2).xxx);
+    return float4(correct_color, color.a);
 }
