@@ -198,6 +198,9 @@
     <ClCompile Include="src\loading\image_loading.cpp">
       <Filter>Source Files\loading</Filter>
     </ClCompile>
+    <ClCompile Include="src\loading\entity_loading.cpp">
+      <Filter>Source Files\loading</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -351,6 +354,9 @@
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\loading\image_loading.hpp">
+      <Filter>Header Files\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loading\entity_loading.hpp">
       <Filter>Header Files\loading</Filter>
     </ClInclude>
   </ItemGroup>

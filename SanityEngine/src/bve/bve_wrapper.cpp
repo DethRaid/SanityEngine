@@ -14,7 +14,6 @@
 #include "../renderer/renderer.hpp"
 #include "../rhi/d3dx12.hpp"
 #include "../rhi/render_device.hpp"
-#include "train_components.hpp"
 #include "../renderer/standard_material.hpp"
 
 using namespace bve;

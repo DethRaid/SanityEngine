@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "../rhi/mesh_data_store.hpp"
+#include "../rhi/raytracing_structs.hpp"
 #include "handles.hpp"
 #include "lights.hpp"
 #include "material_data_buffer.hpp"
