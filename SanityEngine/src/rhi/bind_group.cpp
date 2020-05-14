@@ -188,7 +188,7 @@ namespace rhi {
                 // Don't need to issue barriers for raytracing acceleration structures
 
             } else {
-                logger->warn("No resources bound to root descriptor {}", name);
+                // logger->warn("No resources bound to root descriptor {}", name);
             }
         }
 
@@ -287,7 +287,7 @@ namespace rhi {
                     } break;
                 }
             } else {
-                logger->warn("No resource bound to descriptor {}", name);
+                // logger->warn("No resource bound to descriptor {}", name);
             }
         }
 

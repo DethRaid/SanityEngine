@@ -1,7 +1,6 @@
 #include "flycam_controller.hpp"
 
 #include <entt/entity/registry.hpp>
-#include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <glm/ext/quaternion_transform.hpp> 

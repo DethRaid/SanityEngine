@@ -23,9 +23,9 @@ namespace rhi {
 
     struct RaytracingObject {
         /*!
-         * \brief Pointer to the mesh that this RaytracingObject uses
+         * \brief Buffer that holds the object's bottom-level acceleration structure
          */
-        const RaytracingMesh* mesh{nullptr};
+        const Buffer* blas_buffer{nullptr};
 
         /*!
          * \brief Material to render this RaytracingObject with

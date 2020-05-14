@@ -15,15 +15,12 @@
 #include "../rhi/d3dx12.hpp"
 #include "../rhi/render_device.hpp"
 #include "train_components.hpp"
+#include "../renderer/standard_material.hpp"
 
 using namespace bve;
 
 constexpr uint32_t THREAD_GROUP_WIDTH = 8;
 constexpr uint32_t THREAD_GROUP_HEIGHT = 8;
-
-struct BveMaterial {
-    renderer::ImageHandle color_texture;
-};
 
 static uint32_t to_uint32_t(const BVE_Vector4<uint8_t>& bve_color) {
     uint32_t color{0};
@@ -93,7 +90,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         }
 
         const auto train_entity = registry.create();
-        auto& train_component = registry.assign<TrainComponent>(train_entity);
+        auto& train_component = registry.assign<renderer::RaytracableMeshComponent>(train_entity);
 
         auto train_path = std::filesystem::path{filename};
 
@@ -130,9 +127,9 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                     logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->index);
 
                     auto& material_data = renderer.get_material_data_buffer();
-                    const auto material_handle = material_data.get_next_free_material<BveMaterial>();
-                    auto& material = material_data.at<BveMaterial>(material_handle);
-                    material.color_texture = *texture_handle_maybe;
+                    const auto material_handle = material_data.get_next_free_material<StandardMaterial>();
+                    auto& material = material_data.at<StandardMaterial>(material_handle);
+                    material.albedo = *texture_handle_maybe;
 
                     mesh_component.material = material_handle;
 
@@ -184,9 +181,9 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                         logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.index);
 
                         auto& material_data = renderer.get_material_data_buffer();
-                        const auto material_handle = material_data.get_next_free_material<BveMaterial>();
-                        auto& material = material_data.at<BveMaterial>(material_handle);
-                        material.color_texture = texture_handle;
+                        const auto material_handle = material_data.get_next_free_material<StandardMaterial>();
+                        auto& material = material_data.at<StandardMaterial>(material_handle);
+                        material.albedo = texture_handle;
 
                         mesh_component.material = material_handle;
 
@@ -202,7 +199,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
         device.submit_command_list(std::move(commands));
 
-        renderer.add_raytracing_objects_to_scene({rhi::RaytracingObject{.mesh = &train_component.raytracing_mesh}});
+        renderer.add_raytracing_objects_to_scene({rhi::RaytracingObject{.blas_buffer = train_component.raytracing_mesh.blas_buffer.get()}});
 
         logger->info("Loaded file {}", filename);
 

@@ -33,7 +33,6 @@ namespace rhi {
 
         RaytracingMesh build_acceleration_structure_for_mesh(uint32_t num_vertices,
                                                              uint32_t num_indices,
-                                                             uint32_t first_vertex,
                                                              uint32_t first_index);
 
         RaytracingMesh build_acceleration_structure_for_meshes(const std::vector<Mesh>& meshes);

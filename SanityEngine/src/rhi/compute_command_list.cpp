@@ -141,7 +141,6 @@ namespace rhi {
 
     RaytracingMesh ComputeCommandList::build_acceleration_structure_for_mesh(const uint32_t num_vertices,
                                                                              const uint32_t num_indices,
-                                                                             const uint32_t first_vertex,
                                                                              const uint32_t first_index) {
         ENSURE(current_mesh_data != nullptr, "Must have mesh data bound before building acceleration structures out of it");
 
@@ -160,8 +159,7 @@ namespace rhi {
                                                                    .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
                                                                                   (first_index * sizeof(uint32_t)),
                                                                    .VertexBuffer = {.StartAddress = vertex_buffer.resource
-                                                                                                        ->GetGPUVirtualAddress() +
-                                                                                                    (first_vertex * sizeof(StandardVertex)),
+                                                                                                        ->GetGPUVirtualAddress(),
                                                                                     .StrideInBytes = sizeof(StandardVertex)}}};
 
         const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
@@ -194,6 +192,9 @@ namespace rhi {
 
         DEFER(a, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
 
+        set_resource_state(index_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_state(vertex_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
         const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
@@ -225,8 +226,7 @@ namespace rhi {
                                                                  .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
                                                                                 (first_index * sizeof(uint32_t)),
                                                                  .VertexBuffer =
-                                                                     {.StartAddress = vertex_buffer.resource->GetGPUVirtualAddress() +
-                                                                                      (first_vertex * sizeof(StandardVertex)),
+                                                                     {.StartAddress = vertex_buffer.resource->GetGPUVirtualAddress(),
                                                                       .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(std::move(geom_desc));
@@ -297,7 +297,7 @@ namespace rhi {
 
             desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
-            const auto& buffer = static_cast<const Buffer&>(*object.mesh->blas_buffer);
+            const auto& buffer = static_cast<const Buffer&>(*object.blas_buffer);
             desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
         }
 

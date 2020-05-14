@@ -9,7 +9,9 @@ struct VertexOutput {
 };
 
 struct MaterialData {
-    uint texture_idx;
+    uint albedo_idx;
+    uint normal_idx;
+    uint specular_idx;
 };
 
 #include "inc/standard_root_signature.hlsl"
@@ -42,7 +44,7 @@ float3x3 AngleAxis3x3(float angle, float3 axis)
 
 float4 main(VertexOutput input) : SV_TARGET {
     MaterialData material = material_buffer[constants.material_index];
-    Texture2D texture = textures[material.texture_idx];
+    Texture2D texture = textures[material.albedo_idx];
     float4 color = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
 
     if(color.a == 0) {

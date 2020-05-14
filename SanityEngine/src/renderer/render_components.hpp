@@ -16,6 +16,13 @@ namespace renderer {
         MaterialHandle material{0};
     };
 
+    struct RaytracableMeshComponent {
+        /*!
+         * \brief the raytracing mesh that represents this train
+         */
+        rhi::RaytracingMesh raytracing_mesh;
+    };
+
     /*!
      * \brief Renders a postprocessing pass
      */

@@ -398,7 +398,9 @@ namespace renderer {
             device->schedule_buffer_destruction(std::move(raytracing_scene.buffer));
         }
 
-        raytracing_scene = command_list.build_raytracing_scene(raytracing_objects);
+        if(!raytracing_objects.empty()) {
+            raytracing_scene = command_list.build_raytracing_scene(raytracing_objects);
+        }
     }
 
     void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
