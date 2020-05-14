@@ -19,12 +19,12 @@ namespace renderer {
          */
         glm::vec3 color{glm::normalize(glm::vec3{1, 1, 1})};
 
-        glm::vec3 direction{glm::normalize(glm::vec3{1, -1, 0})};
+        glm::vec3 direction{glm::normalize(glm::vec3{-1, -1, 1})};
 
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights
          */
-        float angular_size{glm::radians(0.53f * 10)};
+        float angular_size{glm::radians(0.53f)};
         // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 } // namespace renderer

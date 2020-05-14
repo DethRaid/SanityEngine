@@ -87,6 +87,8 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
             const auto material_handle = material_store.get_next_free_material<StandardMaterial>();
             auto& material = material_store.at<StandardMaterial>(material_handle);
 
+            material.noise = renderer.get_noise_image_handle();
+
             mesh_renderer.material = material_handle;
 
             const auto* ass_material = scene->mMaterials[ass_mesh->mMaterialIndex];

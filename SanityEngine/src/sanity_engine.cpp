@@ -90,6 +90,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     create_planetary_atmosphere();
 
     make_frametime_display();
+
+    create_flycam_player();
 }
 
 SanityEngine::~SanityEngine() {
@@ -123,7 +125,7 @@ void SanityEngine::run() {
 
                 create_debug_plane();
 
-                create_flycam_player();
+                renderer->load_noise_texture("data/textures/blue_noise.png");
 
                 load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
 

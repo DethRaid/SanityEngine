@@ -129,6 +129,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                     const auto material_handle = material_data.get_next_free_material<StandardMaterial>();
                     auto& material = material_data.at<StandardMaterial>(material_handle);
                     material.albedo = *texture_handle_maybe;
+                    material.noise = renderer.get_noise_image_handle();
 
                     mesh_component.material = material_handle;
 

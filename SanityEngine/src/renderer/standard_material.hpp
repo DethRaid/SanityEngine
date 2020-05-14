@@ -21,4 +21,9 @@ struct StandardMaterial {
      * `emission = pow(specular_color_emission.a, 1 / 3) * 100;`
      */
     renderer::ImageHandle specular_color_emission;
+
+    /*!
+     * \brief Noise texture
+     */
+    renderer::ImageHandle noise;
 };

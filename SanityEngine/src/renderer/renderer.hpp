@@ -34,6 +34,8 @@ namespace renderer {
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
+        void load_noise_texture(const std::string& filepath);
+
         void begin_frame(uint64_t frame_count) const;
 
         void render_all(entt::registry& registry);
@@ -68,6 +70,8 @@ namespace renderer {
 
         void end_device_capture() const;
 
+        [[nodiscard]] ImageHandle get_noise_image_handle() const;
+
     private:
         std::shared_ptr<spdlog::logger> logger;
 
@@ -101,6 +105,8 @@ namespace renderer {
         bool raytracing_scene_dirty{false};
 
         std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
+
+        ImageHandle noise_image_handle;
 
 #pragma region Initialization
         void create_static_mesh_storage();

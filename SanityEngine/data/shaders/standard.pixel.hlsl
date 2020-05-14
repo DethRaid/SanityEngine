@@ -1,4 +1,4 @@
-#define NUM_SHADOW_RAYS 4
+#define NUM_SHADOW_RAYS 32
 
 struct VertexOutput {
     float4 position : SV_POSITION;
@@ -12,21 +12,21 @@ struct MaterialData {
     uint albedo_idx;
     uint normal_idx;
     uint specular_idx;
+
+    uint noise_idx;
 };
 
 #include "inc/standard_root_signature.hlsl"
 
 // from https://gamedev.stackexchange.com/questions/32681/random-number-hlsl
-float rand_1_05(in float2 uv)
-{
-    float2 noise = (frac(sin(dot(uv ,float2(12.9898,78.233)*2.0)) * 43758.5453));
+float rand_1_05(in float2 uv) {
+    float2 noise = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
     return abs(noise.x + noise.y) * 0.5;
 }
 
 // from https://gist.github.com/keijiro/ee439d5e7388f3aafc5296005c8c3f33
 // Rotation with angle (in radians) and axis
-float3x3 AngleAxis3x3(float angle, float3 axis)
-{
+float3x3 AngleAxis3x3(float angle, float3 axis) {
     float c, s;
     sincos(angle, s, c);
 
@@ -35,11 +35,15 @@ float3x3 AngleAxis3x3(float angle, float3 axis)
     float y = axis.y;
     float z = axis.z;
 
-    return float3x3(
-        t * x * x + c,      t * x * y - s * z,  t * x * z + s * y,
-        t * x * y + s * z,  t * y * y + c,      t * y * z - s * x,
-        t * x * z - s * y,  t * y * z + s * x,  t * z * z + c
-    );
+    return float3x3(t * x * x + c,
+                    t * x * y - s * z,
+                    t * x * z + s * y,
+                    t * x * y + s * z,
+                    t * y * y + c,
+                    t * y * z - s * x,
+                    t * x * z - s * y,
+                    t * y * z + s * x,
+                    t * z * z + c);
 }
 
 float4 main(VertexOutput input) : SV_TARGET {
@@ -52,7 +56,7 @@ float4 main(VertexOutput input) : SV_TARGET {
         discard;
     }
 
-    Light sun = lights[0];  // The sun is ALWAYS at index 0
+    Light sun = lights[0]; // The sun is ALWAYS at index 0
 
     float3 light = saturate(dot(input.normal, -sun.direction)) * sun.color;
 
@@ -63,9 +67,17 @@ float4 main(VertexOutput input) : SV_TARGET {
         // Shadow ray query
         RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
 
-        for(uint i = 0; i < NUM_SHADOW_RAYS; i++) {
-            // Random cone with the same angular witch as the sun
-            float3 random_vector = float3(rand_1_05(input.position_worldspace.xy * i), rand_1_05(input.position_worldspace.yz * i), rand_1_05(input.position_worldspace.xz * i));
+        Texture2D noise = textures[material.noise_idx];
+
+        uint2 noise_tex_size;
+        noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
+
+        for(uint i = 1; i <= NUM_SHADOW_RAYS; i++) {
+            // Random cone with the same angular size as the sun
+            float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
+
+            float3 random_vector = float3(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
+
             float3 projected_vector = random_vector - (-sun.direction * dot(-sun.direction, random_vector));
             float random_angle = rand_1_05(input.position_worldspace.zy * i) * sun.angular_size;
             float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
@@ -73,13 +85,15 @@ float4 main(VertexOutput input) : SV_TARGET {
 
             RayDesc ray;
             ray.Origin = input.position_worldspace;
-            ray.TMin = 0.1; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
+            ray.TMin = 0.01; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
             ray.Direction = ray_direction;
-            ray.TMax = 1000;    // TODO: Pass this in with a CB
+            ray.TMax = 1000; // TODO: Pass this in with a CB
 
             // Set up work
             q.TraceRayInline(raytracing_scene,
-                            RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, ray);
+                             RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH,
+                             0xFF,
+                             ray);
 
             // Actually perform the trace
             q.Proceed();

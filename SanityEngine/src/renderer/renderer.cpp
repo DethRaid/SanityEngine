@@ -10,6 +10,7 @@
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../core/ensure.hpp"
+#include "../loading/image_loading.hpp"
 #include "../loading/shader_loading.hpp"
 #include "../rhi/d3dx12.hpp"
 #include "../rhi/render_command_list.hpp"
@@ -148,6 +149,30 @@ namespace renderer {
         create_light_buffers();
     }
 
+    void Renderer::load_noise_texture(const std::string& filepath) {
+        uint32_t width, height;
+        std::vector<uint8_t> pixels;
+
+        const auto success = load_image(filepath, width, height, pixels);
+        if(!success) {
+            logger->error("Could not load noise texture {}", filepath);
+            return;
+        }
+
+        noise_image_handle = create_image(rhi::ImageCreateInfo{.name = "Noise Texture",
+                                                               .usage = rhi::ImageUsage::SampledImage,
+                                                               .format = rhi::ImageFormat::Rgba8,
+                                                               .width = width,
+                                                               .height = height});
+
+        auto commands = device->create_resource_command_list();
+
+        const auto& noise_image = get_image(noise_image_handle);
+        commands->copy_data_to_image(pixels.data(), noise_image);
+
+        device->submit_command_list(std::move(commands));
+    }
+
     void Renderer::begin_frame(const uint64_t frame_count) const { device->begin_frame(frame_count); }
 
     void Renderer::render_all(entt::registry& registry) {
@@ -251,6 +276,8 @@ namespace renderer {
     void Renderer::begin_device_capture() const { device->begin_capture(); }
 
     void Renderer::end_device_capture() const { device->end_capture(); }
+
+    ImageHandle Renderer::get_noise_image_handle() const { return noise_image_handle; }
 
     void Renderer::create_static_mesh_storage() {
         const auto vertex_create_info = rhi::BufferCreateInfo{
