@@ -5,7 +5,7 @@ float g1_v(float ndotv, float k) { return 1.0f / (ndotv * (1.0f - k) + k); }
 float3 ggx(float3 n, float3 v, float3 l, float roughness, float3 f0) {
     float alpha = roughness * roughness;
 
-    float3 h = normalize(v + l);
+    float3 h = normalize(-v + l);
 
     float ndotl = saturate(dot(n, l));
     float ndotv = saturate(dot(n, v));

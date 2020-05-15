@@ -117,7 +117,5 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     final_color += albedo.rgb * float3(0.2, 0.2, 0.2);
 
-    final_color = specular;
-
     return float4(final_color, albedo.a);
 }
