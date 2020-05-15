@@ -379,9 +379,6 @@
     <FxCompile Include="data\shaders\standard.vertex.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
-      <Filter>Shaders\inc</Filter>
-    </FxCompile>
     <FxCompile Include="data\shaders\ui.pixel.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -392,6 +389,12 @@
   <ItemGroup>
     <None Include="src\loading\shader_loading.ixx">
       <Filter>Modules</Filter>
+    </None>
+    <None Include="data\shaders\inc\atmospheric_scattering.hlsl">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="data\shaders\inc\standard_root_signature.hlsl">
+      <Filter>Shaders\inc</Filter>
     </None>
   </ItemGroup>
 </Project>
