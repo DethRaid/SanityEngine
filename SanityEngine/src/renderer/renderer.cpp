@@ -147,6 +147,8 @@ namespace renderer {
         create_backbuffer_output_pipeline_and_material();
 
         create_light_buffers();
+
+        load_noise_texture("data/textures/blue_noise.png");
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {

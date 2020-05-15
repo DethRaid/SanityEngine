@@ -34,8 +34,6 @@ namespace renderer {
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
-        void load_noise_texture(const std::string& filepath);
-
         void begin_frame(uint64_t frame_count) const;
 
         void render_all(entt::registry& registry);
@@ -122,6 +120,8 @@ namespace renderer {
         void create_backbuffer_output_pipeline_and_material();
 
         void create_light_buffers();
+
+        void load_noise_texture(const std::string& filepath);
 #pragma endregion
 
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;

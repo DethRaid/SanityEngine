@@ -92,6 +92,12 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     make_frametime_display();
 
     create_flycam_player();
+
+    imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
+
+    load_3d_object("data/trains/BestFriend.obj");
+
+    create_debug_plane();
 }
 
 SanityEngine::~SanityEngine() {
@@ -119,17 +125,7 @@ void SanityEngine::run() {
             if(frame_count == 1) {
                 // renderer->begin_device_capture();
 
-                // TODO: Figure out a good way to submit GPU work before the first frame has begun
-
-                imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
-
-                create_debug_plane();
-
-                renderer->load_noise_texture("data/textures/blue_noise.png");
-
                 load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
-
-                load_3d_object("data/trains/BestFriend.obj");
             }
 
             player_controller->update_player_transform(last_frame_duration);
