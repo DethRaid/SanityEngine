@@ -46,17 +46,17 @@ namespace renderer {
                                                    const std::vector<uint32_t>& indices,
                                                    rhi::ResourceCommandList& commands) const;
 
-        [[yesdiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info);
+        [[yesdiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info);
 
-        [[nodiscard]] ImageHandle create_image(const rhi::ImageCreateInfo& create_info, const void* image_data);
+        [[nodiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info, const void* image_data);
 
-        [[nodiscard]] std::optional<ImageHandle> get_image_handle(const std::string& name);
+        [[nodiscard]] std::optional<TextureHandle> get_image_handle(const std::string& name);
 
         [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
 
-        [[nodiscard]] rhi::Image& get_image(ImageHandle handle) const;
+        [[nodiscard]] rhi::Image& get_image(TextureHandle handle) const;
 
-        void schedule_texture_destruction(const ImageHandle& image_handle);
+        void schedule_texture_destruction(const TextureHandle& image_handle);
 
         [[nodiscard]] MaterialDataBuffer& get_material_data_buffer() const;
 
@@ -68,7 +68,13 @@ namespace renderer {
 
         void end_device_capture() const;
 
-        [[nodiscard]] ImageHandle get_noise_image_handle() const;
+        [[nodiscard]] TextureHandle get_noise_texture() const;
+
+        [[nodiscard]] TextureHandle get_pink_texture() const;
+
+        [[nodiscard]] TextureHandle get_default_normal_roughness_texture() const;
+
+        [[nodiscard]] TextureHandle get_default_specular_color_emission_texture() const;
 
     private:
         std::shared_ptr<spdlog::logger> logger;
@@ -104,7 +110,10 @@ namespace renderer {
 
         std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
 
-        ImageHandle noise_image_handle;
+        TextureHandle noise_texture_handle;
+        TextureHandle pink_texture_handle;
+        TextureHandle normal_roughness_texture_handle;
+        TextureHandle specular_emission_texture_handle;
 
 #pragma region Initialization
         void create_static_mesh_storage();
@@ -120,6 +129,8 @@ namespace renderer {
         void create_backbuffer_output_pipeline_and_material();
 
         void create_light_buffers();
+
+        void create_builtin_images();
 
         void load_noise_texture(const std::string& filepath);
 #pragma endregion

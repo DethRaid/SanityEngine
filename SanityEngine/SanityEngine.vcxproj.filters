@@ -385,6 +385,9 @@
     <FxCompile Include="data\shaders\ui.vertex.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\inc\lighting.hlsl">
+      <Filter>Shaders\inc</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\loading\shader_loading.ixx">

@@ -11,7 +11,7 @@
 #include "../rhi/resources.hpp"
 
 struct ImGuiMaterial {
-    renderer::ImageHandle image;
+    renderer::TextureHandle image;
 };
 
 static GLFWmousebuttonfun prev_mouse_button_callback;

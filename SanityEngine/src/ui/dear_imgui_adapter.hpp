@@ -34,7 +34,7 @@ private:
     std::array<GLFWcursor*, ImGuiMouseCursor_COUNT> mouse_cursors{};
     double last_start_time{0};
 
-    renderer::ImageHandle font_atlas;
+    renderer::TextureHandle font_atlas;
     renderer::MaterialHandle font_material;
 
     void initialize_style();

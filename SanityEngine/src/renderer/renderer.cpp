@@ -25,7 +25,7 @@ namespace renderer {
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     struct BackbufferOutputMaterial {
-        ImageHandle scene_output_image;
+        TextureHandle scene_output_image;
     };
 
 #pragma region Cube
@@ -148,7 +148,7 @@ namespace renderer {
 
         create_light_buffers();
 
-        load_noise_texture("data/textures/blue_noise.png");
+        create_builtin_images();
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {
@@ -161,15 +161,15 @@ namespace renderer {
             return;
         }
 
-        noise_image_handle = create_image(rhi::ImageCreateInfo{.name = "Noise Texture",
-                                                               .usage = rhi::ImageUsage::SampledImage,
-                                                               .format = rhi::ImageFormat::Rgba8,
-                                                               .width = width,
-                                                               .height = height});
+        noise_texture_handle = create_image(rhi::ImageCreateInfo{.name = "Noise Texture",
+                                                                 .usage = rhi::ImageUsage::SampledImage,
+                                                                 .format = rhi::ImageFormat::Rgba8,
+                                                                 .width = width,
+                                                                 .height = height});
 
         auto commands = device->create_resource_command_list();
 
-        const auto& noise_image = get_image(noise_image_handle);
+        const auto& noise_image = get_image(noise_texture_handle);
         commands->copy_data_to_image(pixels.data(), noise_image);
 
         device->submit_command_list(std::move(commands));
@@ -223,7 +223,7 @@ namespace renderer {
                 .num_indices = static_cast<uint32_t>(indices.size())};
     }
 
-    ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
+    TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
         const auto idx = static_cast<uint32_t>(all_images.size());
 
         all_images.push_back(device->create_image(create_info));
@@ -232,7 +232,7 @@ namespace renderer {
         return {idx};
     }
 
-    ImageHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info, const void* image_data) {
+    TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info, const void* image_data) {
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
@@ -243,9 +243,9 @@ namespace renderer {
         return handle;
     }
 
-    std::optional<ImageHandle> Renderer::get_image_handle(const std::string& name) {
+    std::optional<TextureHandle> Renderer::get_image_handle(const std::string& name) {
         if(const auto itr = image_name_to_index.find(name); itr != image_name_to_index.end()) {
-            return ImageHandle{itr->second};
+            return TextureHandle{itr->second};
 
         } else {
             return std::nullopt;
@@ -262,9 +262,9 @@ namespace renderer {
         return *all_images[idx];
     }
 
-    rhi::Image& Renderer::get_image(const ImageHandle handle) const { return *all_images[handle.index]; }
+    rhi::Image& Renderer::get_image(const TextureHandle handle) const { return *all_images[handle.index]; }
 
-    void Renderer::schedule_texture_destruction(const ImageHandle& image_handle) {
+    void Renderer::schedule_texture_destruction(const TextureHandle& image_handle) {
         auto image = std::move(all_images[image_handle.index]);
         device->schedule_image_destruction(std::move(image));
     }
@@ -279,7 +279,13 @@ namespace renderer {
 
     void Renderer::end_device_capture() const { device->end_capture(); }
 
-    ImageHandle Renderer::get_noise_image_handle() const { return noise_image_handle; }
+    TextureHandle Renderer::get_noise_texture() const { return noise_texture_handle; }
+
+    TextureHandle Renderer::get_pink_texture() const { return pink_texture_handle; }
+
+    TextureHandle Renderer::get_default_normal_roughness_texture() const { return normal_roughness_texture_handle; }
+
+    TextureHandle Renderer::get_default_specular_color_emission_texture() const { return specular_emission_texture_handle; }
 
     void Renderer::create_static_mesh_storage() {
         const auto vertex_create_info = rhi::BufferCreateInfo{
@@ -359,6 +365,46 @@ namespace renderer {
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = fmt::format("Light Buffer {}", i);
             light_device_buffers.push_back(device->create_buffer(create_info));
+        }
+    }
+
+    void Renderer::create_builtin_images() {
+        load_noise_texture("data/textures/blue_noise.png");
+
+        {
+            const auto pink_texture_create_info = rhi::ImageCreateInfo{.name = "Pink",
+                                                                       .usage = rhi::ImageUsage::SampledImage,
+                                                                       .format = rhi::ImageFormat::Rgba8,
+                                                                       .width = 8,
+                                                                       .height = 8};
+
+            const auto pink_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0xFFFF00FF);
+
+            pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data());
+        }
+
+        {
+            const auto normal_roughness_texture_create_info = rhi::ImageCreateInfo{.name = "Default Normal/Roughness",
+                                                                                   .usage = rhi::ImageUsage::SampledImage,
+                                                                                   .format = rhi::ImageFormat::Rgba8,
+                                                                                   .width = 8,
+                                                                                   .height = 8};
+
+            const auto normal_roughness_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0x80FF8080);
+
+            normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info, normal_roughness_texture_pixel.data());
+        }
+
+        {
+            const auto specular_emission_texture_create_info = rhi::ImageCreateInfo{.name = "Default Specular Color/Emission",
+                                                                                    .usage = rhi::ImageUsage::SampledImage,
+                                                                                    .format = rhi::ImageFormat::Rgba8,
+                                                                                    .width = 8,
+                                                                                    .height = 8};
+
+            const auto specular_emission_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0x00373737);
+
+            specular_emission_texture_handle = create_image(specular_emission_texture_create_info, specular_emission_texture_pixel.data());
         }
     }
 

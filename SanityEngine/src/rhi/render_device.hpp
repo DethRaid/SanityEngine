@@ -260,12 +260,23 @@ namespace rhi {
         /*!
          * \brief Description for a point sampler
          */
-        D3D12_STATIC_SAMPLER_DESC point_sampler_desc;
+        D3D12_STATIC_SAMPLER_DESC point_sampler_desc{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+                                                     .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                     .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                     .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                     .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+                                                     .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
+
 
         /*!
          * \brief Description for a linear sampler
          */
-        D3D12_STATIC_SAMPLER_DESC linear_sampler_desc;
+        D3D12_STATIC_SAMPLER_DESC linear_sampler_desc{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+                                                      .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                      .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                      .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                      .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+                                                      .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
 
 #pragma region initialization
         void enable_debugging();
@@ -290,8 +301,6 @@ namespace rhi {
                                                                                     uint32_t num_descriptors) const;
 
         void initialize_dma();
-
-        void create_static_sampler_descriptions();
 
         void create_standard_root_signature();
 

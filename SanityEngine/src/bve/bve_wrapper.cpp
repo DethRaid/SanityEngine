@@ -12,9 +12,9 @@
 #include "../core/ensure.hpp"
 #include "../loading/shader_loading.hpp"
 #include "../renderer/renderer.hpp"
+#include "../renderer/standard_material.hpp"
 #include "../rhi/d3dx12.hpp"
 #include "../rhi/render_device.hpp"
-#include "../renderer/standard_material.hpp"
 
 using namespace bve;
 
@@ -129,7 +129,9 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                     const auto material_handle = material_data.get_next_free_material<StandardMaterial>();
                     auto& material = material_data.at<StandardMaterial>(material_handle);
                     material.albedo = *texture_handle_maybe;
-                    material.noise = renderer.get_noise_image_handle();
+                    material.normal_roughness = renderer.get_default_normal_roughness_texture();
+                    material.specular_color_emission = renderer.get_default_specular_color_emission_texture();
+                    material.noise = renderer.get_noise_texture();
 
                     mesh_component.material = material_handle;
 
@@ -261,9 +263,9 @@ std::pair<std::vector<StandardVertex>, std::vector<uint32_t>> BveWrapper::proces
 
     std::transform(bve_vertices.ptr, bve_vertices.ptr + bve_vertices.count, std::back_inserter(vertices), [](const BVE_Vertex& bve_vertex) {
         return StandardVertex{.position = to_glm_vec3(bve_vertex.position),
-                         .normal = to_glm_vec3(bve_vertex.normal),
-                         .color = to_uint32_t(bve_vertex.color),
-                         .texcoord = to_glm_vec2(bve_vertex.coord)};
+                              .normal = {bve_vertex.normal.x, bve_vertex.normal.y, -bve_vertex.normal.z},
+                              .color = to_uint32_t(bve_vertex.color),
+                              .texcoord = to_glm_vec2(bve_vertex.coord)};
     });
 
     const auto& bve_indices = mesh.indices;

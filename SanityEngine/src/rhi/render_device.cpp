@@ -60,8 +60,6 @@ namespace rhi {
 
         initialize_dma();
 
-        create_static_sampler_descriptions();
-
         create_standard_root_signature();
 
         create_material_resource_binders();
@@ -556,7 +554,7 @@ namespace rhi {
             auto buffer = std::move(staging_buffers[best_fit_idx]);
             staging_buffers.erase(staging_buffers.begin() + best_fit_idx);
 
-            return std::move(buffer);
+            return buffer;
 
         } else {
             // No suitable buffer is available, let's make a new one
@@ -936,30 +934,6 @@ namespace rhi {
         }
     }
 
-    void RenderDevice::create_static_sampler_descriptions() {
-        point_sampler_desc = D3D12_STATIC_SAMPLER_DESC{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
-                                                       .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                                                       .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                                                       .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                                                       .MipLODBias = 0,
-                                                       .MaxAnisotropy = 0,
-                                                       .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
-                                                       .MinLOD = 0,
-                                                       .MaxLOD = D3D12_FLOAT32_MAX,
-                                                       .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
-
-        linear_sampler_desc = D3D12_STATIC_SAMPLER_DESC{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
-                                                        .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                                                        .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                                                        .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                                                        .MipLODBias = 0,
-                                                        .MaxAnisotropy = 0,
-                                                        .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
-                                                        .MinLOD = 0,
-                                                        .MaxLOD = D3D12_FLOAT32_MAX,
-                                                        .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
-    }
-
     void RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("RenderDevice", "create_standard_root_signature");
 
@@ -995,20 +969,12 @@ namespace rhi {
         std::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
         // Point sampler
-        auto& point_sampler_desc = static_samplers[0];
-        point_sampler_desc.Filter = D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_POINT;
-        point_sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        point_sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        point_sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        point_sampler_desc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        auto& point_sampler = static_samplers[0];
+        point_sampler = this->point_sampler_desc;
 
         auto& linear_sampler = static_samplers[1];
-        linear_sampler.Filter = D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
-        linear_sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        linear_sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        linear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        linear_sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        linear_sampler.RegisterSpace = 1;
+        linear_sampler = linear_sampler_desc;
+        linear_sampler.ShaderRegister = 1;
 
         auto& trilinear_sampler = static_samplers[2];
         trilinear_sampler.Filter = D3D12_FILTER_ANISOTROPIC;
@@ -1017,7 +983,7 @@ namespace rhi {
         trilinear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         trilinear_sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
         trilinear_sampler.MaxAnisotropy = 8;
-        trilinear_sampler.RegisterSpace = 2;
+        trilinear_sampler.ShaderRegister = 2;
 
         D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
         root_signature_desc.NumParameters = static_cast<UINT>(root_parameters.size());

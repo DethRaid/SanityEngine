@@ -121,10 +121,8 @@ void SanityEngine::run() {
 
             renderer->begin_frame(frame_count);
 
-            // Hackily spawn entities on the first frame, because mesh uploading is hard
+            // Hackily spawn the BVE train on the first frame. Something something resource usage idfk
             if(frame_count == 1) {
-                // renderer->begin_device_capture();
-
                 load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
             }
 
@@ -135,10 +133,6 @@ void SanityEngine::run() {
             renderer->render_all(registry);
 
             renderer->end_frame();
-
-            if(frame_count == 1) {
-                // renderer->end_device_capture();
-            }
 
             const auto frame_end_time = std::chrono::steady_clock::now();
 

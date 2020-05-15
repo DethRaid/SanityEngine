@@ -1,4 +1,4 @@
-#define NUM_SHADOW_RAYS 32
+#define NUM_SHADOW_RAYS 8
 
 struct VertexOutput {
     float4 position : SV_POSITION;
@@ -16,6 +16,7 @@ struct MaterialData {
     uint noise_idx;
 };
 
+#include "inc/lighting.hlsl"
 #include "inc/standard_root_signature.hlsl"
 
 // from https://gamedev.stackexchange.com/questions/32681/random-number-hlsl
@@ -49,21 +50,21 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
 float4 main(VertexOutput input) : SV_TARGET {
     MaterialData material = material_buffer[constants.material_index];
     Texture2D texture = textures[material.albedo_idx];
-    float4 color = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
+    float4 albedo = texture.Sample(bilinear_sampler, input.texcoord) * input.color;
 
-    if(color.a == 0) {
+    if(albedo.a == 0) {
         // Early-out to avoid the expensive raytrace on completely transparent surfaces
         discard;
     }
 
     Light sun = lights[0]; // The sun is ALWAYS at index 0
 
-    float3 light = saturate(dot(input.normal, -sun.direction)) * sun.color;
+    float3 diffuse = saturate(dot(input.normal, -sun.direction)) * sun.color;
 
     float light_strength = 1;
 
     // Only cast shadow rays if the pixel faces the light source
-    if(length(light) > 0) {
+    if(length(diffuse) > 0) {
         // Shadow ray query
         RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
 
@@ -103,5 +104,20 @@ float4 main(VertexOutput input) : SV_TARGET {
         }
     }
 
-    return float4(color.rgb * (light * light_strength + float3(0.2, 0.2, 0.2)), color.a);
+    Camera camera = cameras[constants.camera_index];
+    float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
+    float3 view_vector = normalize(position_viewspace.xyz);
+
+    float3 light_vector_viewspace = normalize(mul(camera.view, float4(-sun.direction, 0)).xyz);
+    float3 normal_viewspace = normalize(mul(camera.view, float4(input.normal, 0)).xyz);
+
+    float3 specular = ggx(normal_viewspace, view_vector, light_vector_viewspace, 0.5, 0.02);
+
+    float3 final_color = albedo.rgb * (diffuse * light_strength) + (specular * light_strength);
+
+    final_color += albedo.rgb * float3(0.2, 0.2, 0.2);
+
+    final_color = specular;
+
+    return float4(final_color, albedo.a);
 }

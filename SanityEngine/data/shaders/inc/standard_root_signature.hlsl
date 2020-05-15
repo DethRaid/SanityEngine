@@ -20,17 +20,17 @@ struct Light {
 /*!
  * \brief Point sampler you can use to sample any texture
  */
-SamplerState point_sampler : register(s0, space0);
+SamplerState point_sampler : register(s0);
 
 /*!
  * \brief Bilinear sampler you can use to sample any texture
  */
-SamplerState bilinear_sampler : register(s0, space1);
+SamplerState bilinear_sampler : register(s1);
 
 /*!
  * \brief Trilinear sampler you can use to sample any texture
  */
-SamplerState trilinear_sampler : register(s0, space2);
+SamplerState trilinear_sampler : register(s2);
 
 struct StandardPushConstants {
     /*!
@@ -70,4 +70,3 @@ RaytracingAccelerationStructure raytracing_scene : register(t3);
  * \brief Array of all the textures that are available for a shader to sample from
  */
 Texture2D textures[] : register(t16);
-

@@ -87,7 +87,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
             const auto material_handle = material_store.get_next_free_material<StandardMaterial>();
             auto& material = material_store.at<StandardMaterial>(material_handle);
 
-            material.noise = renderer.get_noise_image_handle();
+            material.noise = renderer.get_noise_texture();
 
             mesh_renderer.material = material_handle;
 
@@ -95,7 +95,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
 
             // TODO: Useful logic to select between material formats
             aiString ass_texture_path;
-            const auto result = ass_material->GetTexture(aiTextureType_DIFFUSE, 0, &ass_texture_path);
+            auto result = ass_material->GetTexture(aiTextureType_DIFFUSE, 0, &ass_texture_path);
             if(result == aiReturn_SUCCESS) {
                 // Load texture into Sanity Engine and set on material
 
@@ -112,26 +112,27 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                     if(!was_image_loaded) {
                         logger->warn("Could not load texture {}", texture_path.string());
 
-                        // TODO: Use the no-material pink texture
+                        material.albedo = renderer.get_pink_texture();
 
-                        continue;
+                    } else {
+                        const auto create_info = rhi::ImageCreateInfo{.name = ass_texture_path.C_Str(),
+                                                                      .usage = rhi::ImageUsage::SampledImage,
+                                                                      .width = width,
+                                                                      .height = height};
+
+                        const auto image_handle = renderer.create_image(create_info);
+                        const auto& image = renderer.get_image(image_handle);
+                        command_list->copy_data_to_image(pixels.data(), image);
+                        material.albedo = image_handle;
                     }
-
-                    const auto create_info = rhi::ImageCreateInfo{.name = ass_texture_path.C_Str(),
-                                                                  .usage = rhi::ImageUsage::SampledImage,
-                                                                  .width = width,
-                                                                  .height = height};
-
-                    const auto image_handle = renderer.create_image(create_info);
-                    const auto& image = renderer.get_image(image_handle);
-                    command_list->copy_data_to_image(pixels.data(), image);
-                    material.albedo = image_handle;
                 }
-
             } else {
                 // Get the material base color. Create a renderer texture with this color, set that texture as the albedo
                 // If there's no material base color, use a pure white texture
             }
+
+            material.normal_roughness = renderer.get_default_normal_roughness_texture();
+            material.specular_color_emission = renderer.get_default_specular_color_emission_texture();
         }
     }
 
