@@ -1,6 +1,6 @@
 ﻿struct FullscreenVertexOutput {
     float4 position : SV_POSITION;
-    float3 position_viewspace : VIEWPOS;
+    float3 position_clipspace : CLIPPOS;
     float2 texcoord : TEXCOORD;
 };
 
@@ -146,12 +146,14 @@ float3 atmosphere(float maxDepth,
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
-    float3 view_vector_worldspace = mul(camera.inverse_view, float4(normalize(input.position_viewspace), 0)).xyz;
+    float4 position_clipspace = float4(input.position_clipspace, 1);
+    float4 view_vector_worldspace = mul(mul(camera.inverse_view, camera.inverse_projection), position_clipspace);
+    view_vector_worldspace /= view_vector_worldspace.w;
 
     Light light = lights[0]; // Light 0 is always the sun
 
     float3 color = atmosphere(6471e3,
-                              view_vector_worldspace,
+                              normalize(-view_vector_worldspace.xyz),
                               float3(0, 6371e3, 0),
                               -light.direction,                  // direction of the sun
                               22.0f,                            // intensity of the sun

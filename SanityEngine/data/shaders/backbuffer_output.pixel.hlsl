@@ -1,6 +1,6 @@
 struct FullscreenVertexOutput {
     float4 position : SV_POSITION;
-    float3 position_viewspace : VIEWPOS;
+    float3 position_clipspace : CLIPPOS;
     float2 texcoord : TEXCOORD;
 };
 

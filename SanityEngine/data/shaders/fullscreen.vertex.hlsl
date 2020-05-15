@@ -1,6 +1,6 @@
 struct FullscreenVertexOutput {
     float4 position : SV_POSITION;
-    float3 position_viewspace : VIEWPOS;
+    float3 position_clipspace : CLIPPOS;
     float2 texcoord : TEXCOORD;
 };
 
@@ -23,7 +23,7 @@ FullscreenVertexOutput main(uint vertex_id : SV_VERTEXID) {
         output.texcoord = float2(2, 1);
     }
 
-    output.position_viewspace = output.position.xyz;
+    output.position_clipspace = output.position.xyz;
 
     return output;
 }
