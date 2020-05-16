@@ -87,11 +87,11 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     bve = std::make_unique<BveWrapper>(renderer->get_render_device());
 
+    create_flycam_player();
+
     create_planetary_atmosphere();
 
     make_frametime_display();
-
-    create_flycam_player();
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
@@ -184,6 +184,10 @@ void SanityEngine::create_planetary_atmosphere() {
     // No need to set parameters, the default light component represents the Earth's sun
     registry.assign<renderer::LightComponent>(atmosphere);
     registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
+
+    // Camera for the directional light's shadow
+    // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
+    registry.assign<renderer::CameraComponent>(atmosphere);
 }
 
 void SanityEngine::make_frametime_display() {

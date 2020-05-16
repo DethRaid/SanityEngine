@@ -29,7 +29,7 @@ namespace rhi {
         return static_cast<RenderCommandList&>(ComputeCommandList::operator=(move(old)));
     }
 
-    void RenderCommandList::set_framebuffer(const Framebuffer& framebuffer,
+    void RenderCommandList::bind_framebuffer(const Framebuffer& framebuffer,
                                             std::vector<RenderTargetAccess> render_target_accesses,
                                             std::optional<RenderTargetAccess> depth_access) {
         ENSURE(framebuffer.rtv_handles.size() == render_target_accesses.size(),

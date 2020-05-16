@@ -125,6 +125,8 @@ namespace renderer {
         void create_atmospheric_sky_pipeline();
 
         void create_scene_framebuffer(glm::uvec2 size);
+        
+        void create_shadowmap_framebuffer_and_pipeline(QualityLevel quality_level);
 
         void create_backbuffer_output_pipeline_and_material();
 
@@ -150,7 +152,17 @@ namespace renderer {
 #pragma endregion
 
 #pragma region 3D Scene
+        std::unique_ptr<rhi::Image> shadow_map_image;
+        std::unique_ptr<rhi::Framebuffer> shadow_map_framebuffer;
+
+        uint32_t shadow_camera_index;
+
+        std::unique_ptr<rhi::RenderPipelineState> shadow_pipeline;
+
         void update_lights(entt::registry& registry, uint32_t frame_idx);
+
+        void render_shadows(entt::registry& registry, rhi::RenderCommandList& command_list);
+
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);

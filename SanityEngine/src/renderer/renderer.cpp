@@ -144,6 +144,8 @@ namespace renderer {
         glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
         create_scene_framebuffer(glm::uvec2{framebuffer_width * settings_in.render_scale, framebuffer_height * settings_in.render_scale});
 
+        create_shadowmap_framebuffer_and_pipeline(settings.shadow_quality);
+
         create_backbuffer_output_pipeline_and_material();
 
         create_light_buffers();
@@ -432,6 +434,52 @@ namespace renderer {
         scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
     }
 
+    void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {
+        {
+            const auto shadowmap_resolution = [&]() {
+                // TODO: Scale based on  current hardware
+                switch(quality_level) {
+                    case QualityLevel::Low:
+                        return 512u;
+
+                    case QualityLevel::Medium:
+                        return 1024u;
+
+                    case QualityLevel::High:
+                        return 2048u;
+
+                    case QualityLevel::Ultra:
+                        return 4096u;
+                }
+
+                return 1024u;
+            }();
+
+            const auto create_info = rhi::ImageCreateInfo{
+                .name = "Sun Shadowmap",
+                .usage = rhi::ImageUsage::DepthStencil,
+                .format = rhi::ImageFormat::Depth32,
+                .width = shadowmap_resolution,
+                .height = shadowmap_resolution,
+            };
+
+            shadow_map_image = device->create_image(create_info);
+
+            shadow_map_framebuffer = device->create_framebuffer({}, shadow_map_image.get());
+        }
+
+        {
+            const auto create_info = rhi::RenderPipelineStateCreateInfo{
+                .name = "Shadow",
+                .vertex_shader = load_shader("shadow.vertex"),
+                .pixel_shader = load_shader("shadow.pixel"),
+                .depth_stencil_format = rhi::ImageFormat::Depth32,
+            };
+
+            shadow_pipeline = device->create_render_pipeline_state(create_info);
+        }
+    }
+
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
         std::vector<const rhi::Image*> images;
         images.reserve(all_images.size());
@@ -485,6 +533,21 @@ namespace renderer {
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
+    void Renderer::render_shadows(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources) {
+        MTR_SCOPE("Renderer", "render_shadows");
+        const auto depth_access = rhi::RenderTargetAccess {
+            .begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color =glm::vec4{0}, .format = rhi::ImageFormat::Depth32},
+            .end = { .type = rhi::RenderTargetEndingAccessType::Preserve}
+        };
+
+        command_list.bind_framebuffer(*shadow_map_framebuffer, {}, depth_access);
+        command_list.set_pipeline_state(*shadow_pipeline);
+        command_list.set_camera_idx(shadow_camera_index);
+        command_list.bind_render_resources(resources);
+
+
+    }
+
     void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
@@ -522,7 +585,9 @@ namespace renderer {
 
         const auto material_bind_group = material_bind_group_builder.build();
 
-        command_list.set_framebuffer(*scene_framebuffer, render_target_accesses, depth_access);
+        render_shadows(registry, command_list);
+
+        command_list.bind_framebuffer(*scene_framebuffer, render_target_accesses, depth_access);
 
         command_list.set_pipeline_state(*standard_pipeline);
         command_list.set_camera_idx(0);
@@ -541,7 +606,7 @@ namespace renderer {
         draw_sky(registry, command_list);
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
-        command_list.set_framebuffer(*framebuffer, {render_target_accesses});
+        command_list.bind_framebuffer(*framebuffer, {render_target_accesses});
         command_list.set_material_idx(backbuffer_output_material.index);
         command_list.set_pipeline_state(*backbuffer_output_pipeline);
 

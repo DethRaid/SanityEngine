@@ -23,7 +23,7 @@ namespace rhi {
 
         using ComputeCommandList::set_pipeline_state;
 
-        void set_framebuffer(const Framebuffer& framebuffer,
+        void bind_framebuffer(const Framebuffer& framebuffer,
                              std::vector<RenderTargetAccess> render_target_accesses,
                              std::optional<RenderTargetAccess> depth_access = std::nullopt);
 
