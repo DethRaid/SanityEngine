@@ -59,12 +59,19 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     Light sun = lights[0]; // The sun is ALWAYS at index 0
 
-    float3 diffuse = saturate(dot(input.normal, -sun.direction)) * sun.color;
+    Camera camera = cameras[constants.camera_index];
+    float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
+    float3 view_vector = normalize(position_viewspace.xyz);
 
-    float light_strength = 1;
+    float3 light_vector_viewspace = normalize(mul(camera.view, float4(-sun.direction, 0)).xyz);
+    float3 normal_viewspace = normalize(mul(camera.view, float4(input.normal, 0)).xyz);
+
+    float3 light_from_sun = brdf(albedo.rgb, 0.02, normal_viewspace, light_vector_viewspace, view_vector) * sun.color;
+
+    float sun_shadow = 1;
 
     // Only cast shadow rays if the pixel faces the light source
-    if(length(diffuse) > 0) {
+    if(length(light_from_sun) > 0) {
         // Shadow ray query
         RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
 
@@ -99,21 +106,12 @@ float4 main(VertexOutput input) : SV_TARGET {
             // Actually perform the trace
             q.Proceed();
             if(q.CommittedStatus() == COMMITTED_TRIANGLE_HIT) {
-                light_strength -= 1.0f / NUM_SHADOW_RAYS;
+                sun_shadow -= 1.0f / NUM_SHADOW_RAYS;
             }
         }
     }
 
-    Camera camera = cameras[constants.camera_index];
-    float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
-    float3 view_vector = normalize(position_viewspace.xyz);
-
-    float3 light_vector_viewspace = normalize(mul(camera.view, float4(-sun.direction, 0)).xyz);
-    float3 normal_viewspace = normalize(mul(camera.view, float4(input.normal, 0)).xyz);
-
-    float3 specular = ggx(normal_viewspace, view_vector, light_vector_viewspace, 0.5, 0.02);
-
-    float3 final_color = albedo.rgb * (diffuse * light_strength) + (specular * light_strength);
+    float3 final_color = light_from_sun * sun_shadow;
 
     final_color += albedo.rgb * float3(0.2, 0.2, 0.2);
 
