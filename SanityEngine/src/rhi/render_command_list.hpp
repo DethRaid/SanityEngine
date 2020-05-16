@@ -29,7 +29,7 @@ namespace rhi {
 
         void bind_ui_mesh(const Buffer& vertex_buffer, const Buffer& index_buffer);
 
-        void set_pipeline_state(const RenderPipelineState& state);
+        void bind_pipeline_state(const RenderPipelineState& state);
 
         void set_viewport(const glm::vec2& display_pos, const glm::vec2& display_size) const;
 

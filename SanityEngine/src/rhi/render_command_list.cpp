@@ -30,8 +30,8 @@ namespace rhi {
     }
 
     void RenderCommandList::bind_framebuffer(const Framebuffer& framebuffer,
-                                            std::vector<RenderTargetAccess> render_target_accesses,
-                                            std::optional<RenderTargetAccess> depth_access) {
+                                              std::vector<RenderTargetAccess> render_target_accesses,
+                                              std::optional<RenderTargetAccess> depth_access) {
         ENSURE(framebuffer.rtv_handles.size() == render_target_accesses.size(),
                "Must have the same number of render targets and render target accesses");
         ENSURE(framebuffer.dsv_handle.has_value() == depth_access.has_value(),
@@ -109,7 +109,7 @@ namespace rhi {
         is_mesh_data_bound = true;
     }
 
-    void RenderCommandList::set_pipeline_state(const RenderPipelineState& state) {
+    void RenderCommandList::bind_pipeline_state(const RenderPipelineState& state) {
         if(current_render_pipeline_state == nullptr || current_render_pipeline_state->root_signature != state.root_signature) {
             commands->SetGraphicsRootSignature(state.root_signature.Get());
             is_render_material_bound = false;

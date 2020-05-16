@@ -238,7 +238,7 @@ void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
 
     const auto root_sig = device.compile_root_signature(sig_desc);
 
-    const auto compute_shader = load_shader("data/shaders/make_transparent_texture.compute");
+    const auto compute_shader = load_shader("make_transparent_texture.compute");
     bve_texture_pipeline = device.create_compute_pipeline_state(compute_shader, root_sig);
 }
 
