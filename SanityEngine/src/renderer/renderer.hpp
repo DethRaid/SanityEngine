@@ -125,7 +125,7 @@ namespace renderer {
         void create_atmospheric_sky_pipeline();
 
         void create_scene_framebuffer(glm::uvec2 size);
-        
+
         void create_shadowmap_framebuffer_and_pipeline(QualityLevel quality_level);
 
         void create_backbuffer_output_pipeline_and_material();
@@ -161,9 +161,17 @@ namespace renderer {
 
         void update_lights(entt::registry& registry, uint32_t frame_idx);
 
-        void render_shadows(entt::registry& registry, rhi::RenderCommandList& command_list);
+        [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_resources_for_frame(uint32_t frame_idx);
+
+        void render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources);
+
+        void render_forward_pass(entt::registry& registry,
+                                 rhi::RenderCommandList& command_list,
+                                 const rhi::BindGroup& material_bind_group);
 
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
+
+        void render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const;
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion
@@ -182,4 +190,3 @@ namespace renderer {
 #pragma endregion
     };
 } // namespace renderer
-

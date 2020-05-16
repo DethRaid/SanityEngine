@@ -321,8 +321,8 @@ namespace renderer {
     void Renderer::create_standard_pipeline() {
         const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Standard material pipeline",
-            .vertex_shader = load_shader("data/shaders/standard.vertex"),
-            .pixel_shader = load_shader("data/shaders/standard.pixel"),
+            .vertex_shader = load_shader("standard.vertex"),
+            .pixel_shader = load_shader("standard.pixel"),
             .blend_state = {.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
             .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
@@ -336,8 +336,8 @@ namespace renderer {
     void Renderer::create_atmospheric_sky_pipeline() {
         const auto atmospheric_sky_create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Atmospheric Sky",
-            .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
-            .pixel_shader = load_shader("data/shaders/atmospheric_sky.pixel"),
+            .vertex_shader = load_shader("fullscreen.vertex"),
+            .pixel_shader = load_shader("atmospheric_sky.pixel"),
             .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
             .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
@@ -349,8 +349,8 @@ namespace renderer {
     void Renderer::create_backbuffer_output_pipeline_and_material() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
-            .vertex_shader = load_shader("data/shaders/fullscreen.vertex"),
-            .pixel_shader = load_shader("data/shaders/backbuffer_output.pixel"),
+            .vertex_shader = load_shader("fullscreen.vertex"),
+            .pixel_shader = load_shader("backbuffer_output.pixel"),
             .render_target_formats = {rhi::ImageFormat::Rgba8},
         };
 
@@ -471,7 +471,7 @@ namespace renderer {
         {
             const auto create_info = rhi::RenderPipelineStateCreateInfo{
                 .name = "Shadow",
-                .vertex_shader = load_shader("shadow.vertex"),
+                .vertex_shader = load_shader("standard.vertex"),
                 .pixel_shader = load_shader("shadow.pixel"),
                 .depth_stencil_format = rhi::ImageFormat::Depth32,
             };
@@ -533,47 +533,7 @@ namespace renderer {
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
-    void Renderer::render_shadows(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources) {
-        MTR_SCOPE("Renderer", "render_shadows");
-        const auto depth_access = rhi::RenderTargetAccess {
-            .begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color =glm::vec4{0}, .format = rhi::ImageFormat::Depth32},
-            .end = { .type = rhi::RenderTargetEndingAccessType::Preserve}
-        };
-
-        command_list.bind_framebuffer(*shadow_map_framebuffer, {}, depth_access);
-        command_list.set_pipeline_state(*shadow_pipeline);
-        command_list.set_camera_idx(shadow_camera_index);
-        command_list.bind_render_resources(resources);
-
-
-    }
-
-    void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
-        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
-        if(atmosphere_view.size() > 1) {
-            logger->error("May only have one atmospheric sky component in a scene");
-
-        } else {
-            command_list.set_pipeline_state(*atmospheric_sky_pipeline);
-            command_list.draw(3);
-        }
-    }
-
-    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) {
-        MTR_SCOPE("Renderer", "render_3d_scene");
-
-        update_lights(registry, frame_idx);
-
-        static auto render_target_accesses = std::vector<rhi::RenderTargetAccess>{
-            {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
-             .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
-
-        static auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
-                                                                     .clear_color = {1, 0, 0, 0},
-                                                                     .format = rhi::ImageFormat::Depth32},
-                                                           .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
-                                                                   .resolve_params = {}}};
-
+    std::unique_ptr<rhi::BindGroup> Renderer::bind_resources_for_frame(const uint32_t frame_idx) {
         auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
@@ -583,15 +543,51 @@ namespace renderer {
         }
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
-        const auto material_bind_group = material_bind_group_builder.build();
+        return material_bind_group_builder.build();
+    }
 
-        render_shadows(registry, command_list);
+    void Renderer::render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources) {
+        MTR_SCOPE("Renderer", "render_shadows");
+        const auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
+                                                                    .clear_color = glm::vec4{0},
+                                                                    .format = rhi::ImageFormat::Depth32},
+                                                          .end = {.type = rhi::RenderTargetEndingAccessType::Preserve}};
+
+        command_list.bind_framebuffer(*shadow_map_framebuffer, {}, depth_access);
+
+        command_list.bind_pipeline_state(*shadow_pipeline);
+
+        command_list.set_camera_idx(shadow_camera_index);
+        command_list.bind_render_resources(resources);
+
+        command_list.bind_mesh_data(*static_mesh_storage);
+
+        {
+            registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
+                command_list.set_material_idx(mesh_renderable.material.index);
+                command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
+            });
+        }
+    }
+
+    void Renderer::render_forward_pass(entt::registry& registry,
+                                       rhi::RenderCommandList& command_list,
+                                       const rhi::BindGroup& material_bind_group) {
+        const auto render_target_accesses = std::vector<rhi::RenderTargetAccess>{
+            {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
+             .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
+
+        static auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
+                                                                     .clear_color = {1, 0, 0, 0},
+                                                                     .format = rhi::ImageFormat::Depth32},
+                                                           .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
+                                                                   .resolve_params = {}}};
 
         command_list.bind_framebuffer(*scene_framebuffer, render_target_accesses, depth_access);
 
-        command_list.set_pipeline_state(*standard_pipeline);
+        command_list.bind_pipeline_state(*standard_pipeline);
         command_list.set_camera_idx(0);
-        command_list.bind_render_resources(*material_bind_group);
+        command_list.bind_render_resources(material_bind_group);
 
         command_list.bind_mesh_data(*static_mesh_storage);
 
@@ -604,20 +600,51 @@ namespace renderer {
         }
 
         draw_sky(registry, command_list);
+    }
+
+    void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
+        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
+        if(atmosphere_view.size() > 1) {
+            logger->error("May only have one atmospheric sky component in a scene");
+
+        } else {
+            command_list.bind_pipeline_state(*atmospheric_sky_pipeline);
+            command_list.draw(3);
+        }
+    }
+
+    void Renderer::render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const {
+        std::vector<rhi::RenderTargetAccess> render_target_accesses = std::vector<rhi::RenderTargetAccess>{
+            {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
+             .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
         command_list.bind_framebuffer(*framebuffer, {render_target_accesses});
         command_list.set_material_idx(backbuffer_output_material.index);
-        command_list.set_pipeline_state(*backbuffer_output_pipeline);
+        command_list.bind_pipeline_state(*backbuffer_output_pipeline);
 
         command_list.draw(3);
+    }
+
+    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) {
+        MTR_SCOPE("Renderer", "render_3d_scene");
+
+        update_lights(registry, frame_idx);
+
+        const auto material_bind_group = bind_resources_for_frame(frame_idx);
+
+        render_shadow_pass(registry, command_list, *material_bind_group);
+
+        render_forward_pass(registry, command_list, *material_bind_group);
+
+        render_backbuffer_output_pass(command_list);
     }
 
     void Renderer::create_ui_pipeline() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "UI Pipeline",
-            .vertex_shader = load_shader("data/shaders/ui.vertex"),
-            .pixel_shader = load_shader("data/shaders/ui.pixel"),
+            .vertex_shader = load_shader("ui.vertex"),
+            .pixel_shader = load_shader("ui.pixel"),
 
             .input_assembler_layout = rhi::InputAssemblerLayout::DearImGui,
 
@@ -671,7 +698,7 @@ namespace renderer {
             return;
         }
 
-        command_list.set_pipeline_state(*ui_pipeline);
+        command_list.bind_pipeline_state(*ui_pipeline);
 
         command_list.set_viewport(draw_data->DisplayPos, draw_data->DisplaySize);
 
