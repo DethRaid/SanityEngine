@@ -66,7 +66,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     float3 light_vector_viewspace = normalize(mul(camera.view, float4(-sun.direction, 0)).xyz);
     float3 normal_viewspace = normalize(mul(camera.view, float4(input.normal, 0)).xyz);
 
-    float3 light_from_sun = brdf(albedo.rgb, 0.02, normal_viewspace, light_vector_viewspace, view_vector) * sun.color;
+    float3 light_from_sun = brdf(albedo.rgb, 0.02, 0.5, normal_viewspace, light_vector_viewspace, view_vector) * sun.color;
 
     float sun_shadow = 1;
 

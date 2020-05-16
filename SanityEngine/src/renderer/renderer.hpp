@@ -170,3 +170,4 @@ namespace renderer {
 #pragma endregion
     };
 } // namespace renderer
+

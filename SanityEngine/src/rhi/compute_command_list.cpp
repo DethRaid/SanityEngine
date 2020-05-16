@@ -343,3 +343,4 @@ namespace rhi {
         return {.buffer = std::move(as_buffer)};
     }
 } // namespace rhi
+
