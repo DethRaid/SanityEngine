@@ -51,7 +51,16 @@ float3 brdf(float3 albedo, float3 f0, float roughness, float3 normal, float3 lig
  * \brief Calculated the direct light contribution from a specific light source
  *
  * All vectors should be in world space
+ *
+ * \param light The light to calculate analytical lighting from
+ * \param eye_vector Vector from the viewpoint to the surface to calculate light for
+ * \param albedo Albedo of the surface to shade
+ * \param normal Normal of the surface to shade
+ * \param specular_color Specular color of the surface to shade
+ * \param roughness Roughness of the surface to shade
  */
-float3 analytical_direct_light(Light light, float3 view_vector, float3 albedo, float3 normal, float3 specular_color, float roughness) {
-    return 0;
+float3 analytical_direct_light(Light light, float3 eye_vector, float3 albedo, float3 normal, float3 specular_color, float roughness) {
+    float3 reflected_light = brdf(albedo, specular_color, roughness, normal, -light.direction, eye_vector) * light.color;
+
+    return reflected_light;
 }
