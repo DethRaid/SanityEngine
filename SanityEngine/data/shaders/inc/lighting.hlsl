@@ -1,3 +1,7 @@
+#pragma once
+
+#include "inc/standard_root_signature.hlsl"
+
 // Unoptimized GGX specular term from http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/
 
 float3 fresnel(float3 f0, float ldoth) { return f0 + (1.0 - f0) * pow(1.0f - ldoth, 5); }
@@ -41,4 +45,13 @@ float3 brdf(float3 albedo, float3 f0, float roughness, float3 normal, float3 lig
     float3 diffuse = lambert(normal, light_vector) * albedo;
 
     return lerp(diffuse, specular, f);
+}
+
+/*!
+ * \brief Calculated the direct light contribution from a specific light source
+ *
+ * All vectors should be in world space
+ */
+float3 analytical_direct_light(Light light, float3 view_vector, float3 albedo, float3 normal, float3 specular_color, float roughness) {
+    return 0;
 }

@@ -629,7 +629,8 @@ namespace renderer {
 
         const auto material_bind_group = bind_resources_for_frame(frame_idx);
 
-        render_shadow_pass(registry, command_list, *material_bind_group);
+        // Smol brain v1 - don't use a shadowmap, just cast shadow rays from every ray hit
+        // render_shadow_pass(registry, command_list, *material_bind_group);
 
         render_forward_pass(registry, command_list, *material_bind_group);
 

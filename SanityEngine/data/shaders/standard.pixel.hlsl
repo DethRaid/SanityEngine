@@ -61,12 +61,10 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     Camera camera = cameras[constants.camera_index];
     float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
-    float3 view_vector = normalize(position_viewspace.xyz);
+    float3 view_vector_viewspace = normalize(position_viewspace.xyz);
+    float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
 
-    float3 light_vector_viewspace = normalize(mul(camera.view, float4(-sun.direction, 0)).xyz);
-    float3 normal_viewspace = normalize(mul(camera.view, float4(input.normal, 0)).xyz);
-
-    float3 light_from_sun = brdf(albedo.rgb, 0.02, 0.5, normal_viewspace, light_vector_viewspace, view_vector) * sun.color;
+    float3 light_from_sun = brdf(albedo.rgb, 0.02, 0.5, input.normal, -sun.direction, view_vector_worldspace) * sun.color;
 
     float sun_shadow = 1;
 
@@ -111,9 +109,11 @@ float4 main(VertexOutput input) : SV_TARGET {
         }
     }
 
-    float3 final_color = light_from_sun * sun_shadow;
+    float3 direct_light = light_from_sun * sun_shadow;
 
-    final_color += albedo.rgb * float3(0.2, 0.2, 0.2);
+    float3 indirect_light = float3(0.2, 0.2, 0.2) * albedo.rgb; // raytraced_indirect_light();
 
-    return float4(final_color, albedo.a);
+    float3 total_reflected_light = indirect_light + direct_light;
+
+    return float4(total_reflected_light, albedo.a);
 }
