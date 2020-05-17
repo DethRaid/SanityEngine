@@ -142,11 +142,6 @@ void SanityEngine::run() {
 
             framerate_tracker.add_frame_time(last_frame_duration);
 
-            if(frame_count % 100 == 0) {
-                logger->info("Frame {} stats", frame_count);
-                framerate_tracker.log_framerate_stats();
-            }
-
             frame_count++;
         }
 

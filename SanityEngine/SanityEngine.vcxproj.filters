@@ -385,13 +385,13 @@
     <FxCompile Include="data\shaders\ui.vertex.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\inc\lighting.hlsl">
-      <Filter>Shaders\inc</Filter>
-    </FxCompile>
     <FxCompile Include="data\shaders\shadow.pixel.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\shadow.hlsl">
+      <Filter>Shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\brdf.hlsl">
       <Filter>Shaders\inc</Filter>
     </FxCompile>
   </ItemGroup>
