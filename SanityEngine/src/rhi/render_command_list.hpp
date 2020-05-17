@@ -21,7 +21,7 @@ namespace rhi {
         RenderCommandList(RenderCommandList&& old) noexcept;
         RenderCommandList& operator=(RenderCommandList&& old) noexcept;
 
-        using ComputeCommandList::set_pipeline_state;
+        using ComputeCommandList::bind_pipeline_state;
 
         void bind_framebuffer(const Framebuffer& framebuffer,
                              std::vector<RenderTargetAccess> render_target_accesses,

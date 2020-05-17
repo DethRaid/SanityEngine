@@ -24,18 +24,25 @@ namespace renderer {
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
-        // Use an infinite projection matrix
-        // Math from http://www.terathon.com/gdc07_lengyel.pdf
+        ENSURE(camera.fov >= 0, "Field of view must not be negative");
 
-        projection_matrix = {};//glm::tweakedInfinitePerspective(camera.fov, camera.aspect_ratio, camera.near_clip_plane);
+        projection_matrix = {};
 
-        // Infinite projection matrix
-        const auto e = 1.0 / tan(camera.fov / 2.0);
-        projection_matrix[0][0] = static_cast<float>(e);
-        projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);
-        projection_matrix[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
-        projection_matrix[2][3] = -1.0f;
-        projection_matrix[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+        if(camera.fov > 0) {
+            // Use an infinite projection matrix
+            // Math from http://www.terathon.com/gdc07_lengyel.pdf
+            const auto e = 1.0 / tan(camera.fov / 2.0);
+            projection_matrix[0][0] = static_cast<float>(e);
+            projection_matrix[1][1] = static_cast<float>(e / camera.aspect_ratio);
+            projection_matrix[2][2] = static_cast<float>(FLT_EPSILON - 1.0);
+            projection_matrix[2][3] = -1.0f;
+            projection_matrix[3][2] = static_cast<float>((FLT_EPSILON - 2) * camera.near_clip_plane);
+
+        } else {
+            const auto half_width = camera.orthographic_size / 2.0;
+            const auto half_height = half_width / camera.aspect_ratio;
+            projection_matrix = glm::ortho(-half_width, half_width, -half_height, half_height, 0.0, 1000.0);
+        }
 
         inverse_projection_matrix = glm::inverse(projection_matrix);
     }
@@ -55,7 +62,7 @@ namespace renderer {
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
         for(auto* buffer : device_data) {
-            device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>(buffer));
+            device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>{buffer});
         }
     }
 
@@ -89,6 +96,9 @@ namespace renderer {
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
 
     void CameraMatrixBuffer::record_data_upload(rhi::ResourceCommandList& commands, const uint32_t frame_idx) const {
-        commands.copy_data_to_buffer(host_data.data(), static_cast<uint32_t>(host_data.size()) * sizeof(CameraMatrices), *device_data[frame_idx], 0);
+        commands.copy_data_to_buffer(host_data.data(),
+                                     static_cast<uint32_t>(host_data.size()) * sizeof(CameraMatrices),
+                                     *device_data[frame_idx],
+                                     0);
     }
 } // namespace renderer

@@ -29,7 +29,7 @@ namespace rhi {
         return static_cast<ComputeCommandList&>(ResourceCommandList::operator=(std::move(old)));
     }
 
-    void ComputeCommandList::set_pipeline_state(const ComputePipelineState& state) {
+    void ComputeCommandList::bind_pipeline_state(const ComputePipelineState& state) {
         if(compute_pipeline == nullptr) {
             // First time binding a compute pipeline to this command list, we need to bind the root signature
             commands->SetComputeRootSignature(state.root_signature.Get());

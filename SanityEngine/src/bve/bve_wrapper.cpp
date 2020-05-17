@@ -98,7 +98,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         auto commands = device.create_compute_command_list();
         commands->bind_mesh_data(renderer.get_static_mesh_store());
 
-        commands->set_pipeline_state(*bve_texture_pipeline);
+        commands->bind_pipeline_state(*bve_texture_pipeline);
 
         std::vector<rhi::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);

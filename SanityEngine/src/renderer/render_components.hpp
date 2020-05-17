@@ -42,6 +42,13 @@ namespace renderer {
         double fov{90};
         double aspect_ratio{9.0f / 16.0f};
         double near_clip_plane{0.01};
+
+        /*!
+         * \brief Width of the camera frustum, in local space
+         *
+         * Only relevant if `fov` is 0
+         */
+        double orthographic_size = 100;
     };
 
     /*!

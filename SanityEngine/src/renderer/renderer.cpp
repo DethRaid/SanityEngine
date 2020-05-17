@@ -493,17 +493,13 @@ namespace renderer {
 
     void Renderer::update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "update_cameras");
-        const auto camera_view = registry.view<TransformComponent, CameraComponent>();
-        for(const auto entity : camera_view) {
-            const auto& transform = registry.get<TransformComponent>(entity);
-            const auto& camera = registry.get<CameraComponent>(entity);
-
+        registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
 
             matrices.copy_matrices_to_previous();
             matrices.calculate_view_matrix(transform);
             matrices.calculate_projection_matrix(camera);
-        }
+        });
 
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
     }
@@ -688,7 +684,7 @@ namespace renderer {
         }
     }
 
-    void Renderer::render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const {
+    void Renderer::render_ui(rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
         // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in

@@ -23,7 +23,7 @@ namespace rhi {
         ComputeCommandList(ComputeCommandList&& old) noexcept;
         ComputeCommandList& operator=(ComputeCommandList&& old) noexcept;
 
-        void set_pipeline_state(const ComputePipelineState& state);
+        void bind_pipeline_state(const ComputePipelineState& state);
 
         void bind_compute_resources(const BindGroup& bind_group);
 

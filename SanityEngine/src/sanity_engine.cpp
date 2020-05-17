@@ -187,7 +187,9 @@ void SanityEngine::create_planetary_atmosphere() {
 
     // Camera for the directional light's shadow
     // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
-    registry.assign<renderer::CameraComponent>(atmosphere);
+    auto& shadow_camera = registry.assign<renderer::CameraComponent>(atmosphere);
+    shadow_camera.aspect_ratio = 1;
+    shadow_camera.fov = 0;
 }
 
 void SanityEngine::make_frametime_display() {

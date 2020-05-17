@@ -44,6 +44,16 @@ namespace rhi {
 
         void execute_completion_functions();
 
+        /*!
+         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
+         */
+        void set_resource_state(const Image& image, D3D12_RESOURCE_STATES new_states);
+
+        /*!
+         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
+         */
+        void set_resource_state(const Buffer& buffer, D3D12_RESOURCE_STATES new_states);
+
     protected:
         std::vector<std::function<void()>> completion_functions;
 
@@ -58,16 +68,6 @@ namespace rhi {
         std::set<D3D12_COMMAND_LIST_TYPE> command_types;
 
         bool should_do_validation = false;
-
-        /*!
-         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
-         */
-        void set_resource_state(const Image& image, D3D12_RESOURCE_STATES new_states);
-
-        /*!
-         * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
-         */
-        void set_resource_state(const Buffer& buffer, D3D12_RESOURCE_STATES new_states);
 
         /*!
          * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
