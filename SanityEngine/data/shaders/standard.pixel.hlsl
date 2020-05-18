@@ -37,11 +37,10 @@ float3 raytraced_indirect_light(
 
     for(uint i = 1; i <= num_indirect_rays; i++) {
         // Random hemisphere oriented around the surface's normal
-        float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * float3(2.0, 2.0, 1.0) -
-                                         float3(1.0, 1.0, 0.0));
+        float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
 
         float3 projected_vector = random_vector - (normal * dot(normal, random_vector));
-        float random_angle = rand_1_05(random_vector.zy * i) * PI * 2;
+        float random_angle = rand_1_05(random_vector.zy * i) * PI;
         float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
         float3 ray_direction = normalize(mul(rotation_matrix, normal));
 
