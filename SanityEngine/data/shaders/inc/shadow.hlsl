@@ -2,7 +2,7 @@
 
 #include "standard_root_signature.hlsl"
 
-#define NUM_SHADOW_RAYS 8
+#define NUM_SHADOW_RAYS 4
 
 // from https://gamedev.stackexchange.com/questions/32681/random-number-hlsl
 float rand_1_05(in float2 uv) {
@@ -32,13 +32,9 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
                     t * z * z + c);
 }
 
-float raytrace_shadow(Light light, float3 position_worldspace, float2 position_screenspace, Texture2D noise) {
+float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texcoord, Texture2D noise) {
     // Shadow ray query
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
-
-    uint2 noise_tex_size;
-    noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
-    float2 noise_texcoord = position_screenspace.xy / float2(noise_tex_size);
 
     float shadow_strength = 1.0;
 

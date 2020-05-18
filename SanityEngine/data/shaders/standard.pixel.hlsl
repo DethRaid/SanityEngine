@@ -22,15 +22,13 @@ struct MaterialData {
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
  */
-float3 raytraced_indirect_light(in float3 position_worldspace, in float3 normal, in float3 albedo, in float2 noise_texcoord, in Light sun) {
+float3 raytraced_indirect_light(
+    in float3 position_worldspace, in float3 normal, in float3 albedo, in float2 noise_texcoord, in Light sun, in Texture2D noise) {
     uint num_indirect_rays = 8;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
     // shaders
-
-    MaterialData material = material_buffer[constants.material_index];
-    Texture2D noise = textures[material.noise_idx];
 
     // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
@@ -64,6 +62,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace, in float3 normal,
 
         if(query.CommittedStatus() == COMMITTED_TRIANGLE_HIT) {
             // Sample the BRDF of the hit point
+
         } else {
             // Sample the atmosphere
 
@@ -107,15 +106,19 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float sun_shadow = 1;
 
+    Texture2D noise = textures[material.noise_idx];
+    uint2 noise_tex_size;
+    noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
+    float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
+
     // Only cast shadow rays if the pixel faces the light source
     if(length(light_from_sun) > 0) {
-        Texture2D noise = textures[material.noise_idx];
-        sun_shadow = raytrace_shadow(sun, input.position_worldspace, input.position.xy, noise);
+        sun_shadow = raytrace_shadow(sun, input.position_worldspace, noise_texcoord, noise);
     }
 
     float3 direct_light = light_from_sun * sun_shadow;
 
-    float3 indirect_light = raytraced_indirect_light(input.position_worldspace, input.normal, albedo, input.position.xy, sun);
+    float3 indirect_light = raytraced_indirect_light(input.position_worldspace, input.normal, albedo, noise_texcoord, sun, noise);
 
     float3 total_reflected_light = indirect_light + direct_light;
 
