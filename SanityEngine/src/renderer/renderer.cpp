@@ -323,7 +323,7 @@ namespace renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
-            .blend_state = {.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
+            // .blend_state = {.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
             .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
         };
@@ -534,6 +534,8 @@ namespace renderer {
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
+        material_bind_group_builder.set_buffer("indices", static_mesh_storage->get_index_buffer());
+        material_bind_group_builder.set_buffer("vertices", *static_mesh_storage->get_vertex_bindings()[0].buffer);
         if(raytracing_scene.buffer) {
             material_bind_group_builder.set_raytracing_scene("raytracing_scene", raytracing_scene);
         }

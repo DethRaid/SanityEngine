@@ -68,6 +68,9 @@ StructuredBuffer<Light> lights : register(t2);
  */
 RaytracingAccelerationStructure raytracing_scene : register(t3);
 
+ByteAddressBuffer indices : register(t4);
+ByteAddressBuffer vertices : register(t5);
+
 /*!
  * \brief Array of all the textures that are available for a shader to sample from
  */

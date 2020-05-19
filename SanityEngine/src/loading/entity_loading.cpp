@@ -25,7 +25,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     const auto* scene = importer.ReadFile(filename, aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
 
     if(scene == nullptr) {
-        logger->error("Could not load {}", filename);
+        logger->error("Could not load {}: {}", filename, importer.GetErrorString());
         return false;
     }
 

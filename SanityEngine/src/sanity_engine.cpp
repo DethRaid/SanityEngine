@@ -95,9 +95,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    load_3d_object("data/trains/BestFriend.obj");
-
-    create_debug_plane();
+    load_3d_object("data/models/walls.obj");
 }
 
 SanityEngine::~SanityEngine() {
@@ -120,11 +118,6 @@ void SanityEngine::run() {
             glfwPollEvents();
 
             renderer->begin_frame(frame_count);
-
-            // Hackily spawn the BVE train on the first frame. Something something resource usage idfk
-            if(frame_count == 1) {
-                load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
-            }
 
             player_controller->update_player_transform(last_frame_duration);
 
@@ -213,4 +206,8 @@ void SanityEngine::load_bve_train(const std::string& filename) {
     }
 }
 
-void SanityEngine::load_3d_object(const std::string& filename) { load_static_mesh(filename, registry, *renderer); }
+void SanityEngine::load_3d_object(const std::string& filename) {
+    const auto msg = fmt::format("load_3d_object({})", filename);
+    MTR_SCOPE("SanityEngine", msg.c_str());
+    load_static_mesh(filename, registry, *renderer);
+}

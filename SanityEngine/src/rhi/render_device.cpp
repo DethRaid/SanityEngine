@@ -937,7 +937,7 @@ namespace rhi {
     void RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("RenderDevice", "create_standard_root_signature");
 
-        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{6};
+        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{8};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -954,6 +954,12 @@ namespace rhi {
         // Raytracing acceleration structure
         root_parameters[4].InitAsShaderResourceView(3);
 
+        // Index buffer
+        root_parameters[5].InitAsShaderResourceView(4);
+
+        // Vertex buffer
+        root_parameters[6].InitAsShaderResourceView(5);
+
         // Textures array
         std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
         descriptor_table_ranges.push_back(D3D12_DESCRIPTOR_RANGE{
@@ -964,7 +970,7 @@ namespace rhi {
             .OffsetInDescriptorsFromTableStart = 0,
         });
 
-        root_parameters[5].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
+        root_parameters[7].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
         std::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
@@ -1048,6 +1054,8 @@ namespace rhi {
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
         root_descriptors.emplace("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
         root_descriptors.emplace("raytracing_scene", RootDescriptorDescription{4, DescriptorType::ShaderResource});
+        root_descriptors.emplace("indices", RootDescriptorDescription{5, DescriptorType::ShaderResource});
+        root_descriptors.emplace("vertices", RootDescriptorDescription{6, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_gpu_frames);
 
