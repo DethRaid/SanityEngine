@@ -267,7 +267,6 @@ namespace rhi {
                                                      .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
                                                      .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
 
-
         /*!
          * \brief Description for a linear sampler
          */
@@ -320,8 +319,8 @@ namespace rhi {
 
         void reset_command_allocators_for_frame(uint32_t frame_idx);
 
-        template <typename ResourceType>
-        requires GpuResource<ResourceType> void destroy_resource_immediate(const ResourceType& resource);
+        template <GpuResource ResourceType>
+        void destroy_resource_immediate(const ResourceType& resource);
 
         void destroy_resources_for_frame(uint32_t frame_idx);
 
@@ -344,8 +343,8 @@ namespace rhi {
 
     [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
 
-    template <typename ResourceType>
-    requires GpuResource<ResourceType> void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {
+    template <GpuResource ResourceType>
+    void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {
         resource.resource->Release();
     }
 } // namespace rhi

@@ -68,7 +68,7 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
  */
 float3 raytraced_indirect_light(
     in float3 position_worldspace, in float3 normal, in float3 albedo, in float2 noise_texcoord, in Light sun, in Texture2D noise) {
-    uint num_indirect_rays = 8;
+    uint num_indirect_rays = 16;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -107,9 +107,15 @@ float3 raytraced_indirect_light(
             float2 barycentrics = query.CommittedTriangleBarycentrics();
             StandardVertex vertex = get_vertex_attributes(triangle_index, barycentrics);
 
+            uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
+            MaterialData material = material_buffer[material_id];
+
+            Texture2D albedo_tex = textures[material.albedo_idx];
+            float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
+
             // Sample the BRDF at the hit location
-            float3 reflected_light = brdf(0.8, 0.02, 0.5, vertex.normal, sun.color, ray.Direction);
-            indirect_light += reflected_light;
+            float3 reflected_light = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color;
+            indirect_light += reflected_light / max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
 
         } else {
             // Sample the atmosphere
@@ -161,7 +167,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     Texture2D noise = textures[material.noise_idx];
     uint2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
-    float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
+    float2 noise_texcoord = input.position.xy / float2(noise_tex_size * 8);
 
     // Only cast shadow rays if the pixel faces the light source
     if(length(light_from_sun) > 0) {
@@ -172,7 +178,7 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float3 indirect_light = raytraced_indirect_light(input.position_worldspace, input.normal, albedo, noise_texcoord, sun, noise);
 
-    float3 total_reflected_light = indirect_light + direct_light;
+    float3 total_reflected_light = indirect_light;// + direct_light;
 
     // return float4(indirect_light, 1);
     return float4(total_reflected_light, albedo.a);

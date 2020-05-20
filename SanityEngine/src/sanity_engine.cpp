@@ -95,7 +95,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    load_3d_object("data/models/walls.obj");
+    load_3d_object("data/models/gi.obj");
 }
 
 SanityEngine::~SanityEngine() {
