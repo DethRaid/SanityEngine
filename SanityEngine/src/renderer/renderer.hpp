@@ -3,6 +3,7 @@
 #include <queue>
 
 #include <entt/fwd.hpp>
+#include <optix.h>
 
 #include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
@@ -148,6 +149,18 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
+        OptixDeviceContext optix_context{};
+
+        OptixDenoiser optix_denoiser{};
+
+        CUstream denoiser_stream{};
+
+        CUdeviceptr denoiser_state{};
+
+        CUdeviceptr denoiser_scratch{};
+
+        void create_optix_context(GLFWwindow* window);
+
         void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
 #pragma endregion
 
@@ -165,9 +178,7 @@ namespace renderer {
 
         void render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources);
 
-        void render_forward_pass(entt::registry& registry,
-                                 rhi::RenderCommandList& command_list,
-                                 const rhi::BindGroup& material_bind_group);
+        void render_forward_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& material_bind_group);
 
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
 

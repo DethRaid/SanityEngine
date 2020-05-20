@@ -151,6 +151,10 @@ namespace renderer {
         create_light_buffers();
 
         create_builtin_images();
+
+        if(settings.use_optix_denoiser) {
+            create_optix_context(window);
+        }
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {
@@ -508,6 +512,143 @@ namespace renderer {
         auto& buffer = *material_device_buffers[frame_idx];
 
         command_list.copy_data_to_buffer(material_data_buffer->data(), material_data_buffer->size(), buffer, 0);
+    }
+
+    void Renderer::create_optix_context(GLFWwindow* window) {
+        auto device_context_options = OptixDeviceContextOptions{
+            .logCallbackFunction =
+                +[](const unsigned int level, const char* tag, const char* message, void* data) {
+                    constexpr uint32_t LOG_LEVEL_FATAL = 1;
+                    constexpr uint32_t LOG_LEVEL_ERROR = 2;
+                    constexpr uint32_t LOG_LEVEL_WARNING = 3;
+                    constexpr uint32_t LOG_LEVEL_PRINT = 4;
+
+                    auto* logger = static_cast<spdlog::logger*>(data);
+                    if(level == LOG_LEVEL_FATAL || level == LOG_LEVEL_ERROR) {
+                        logger->error("[{}]: {}", tag, message);
+
+                    } else if(level == LOG_LEVEL_WARNING) {
+                        logger->warn("[{}]: {}", tag, message);
+
+                    } else {
+                        logger->info("[{}]: {}", tag, message);
+                    }
+                },
+            .logCallbackData = logger.get(),
+#ifndef NDEBUG
+            .logCallbackLevel = 4,
+#else
+            .logCallbackLevel = 3
+#endif
+        };
+
+        {
+            const auto result = optixDeviceContextCreate(nullptr, &device_context_options, &optix_context);
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not create OptiX context: {}: {}", error_name, error);
+                return;
+            }
+        }
+
+        {
+            const auto denoiser_options = OptixDenoiserOptions{.inputKind = OPTIX_DENOISER_INPUT_RGB_ALBEDO_NORMAL,
+                                                               .pixelFormat = OPTIX_PIXEL_FORMAT_FLOAT3};
+            const auto result = optixDenoiserCreate(optix_context, &denoiser_options, &optix_denoiser);
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not create OptiX denoiser: {}: {}", error_name, error);
+                return;
+            }
+        }
+
+        {
+            const auto result = optixDenoiserSetModel(optix_denoiser, OPTIX_DENOISER_MODEL_KIND_HDR, nullptr, 0);
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not set denoiser model: {}: {}", error_name, error);
+                return;
+            }
+        }
+
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        OptixDenoiserSizes sizes;
+        {
+            const auto result = optixDenoiserComputeMemoryResources(optix_denoiser,
+                                                                    static_cast<uint32_t>(width),
+                                                                    static_cast<uint32_t>(height),
+                                                                    &sizes);
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not compute denoiser memory sizes: {}: {}", error_name, error);
+                return;
+            }
+        }
+
+        {
+            const auto cuda_result = cuStreamCreate(&denoiser_stream, CU_STREAM_DEFAULT);
+            if(cuda_result != CUDA_SUCCESS) {
+                const char* error_name = new char[512];
+                cuGetErrorName(cuda_result, &error_name);
+
+                const char* error_string = new char[2048];
+                cuGetErrorString(cuda_result, &error_string);
+
+                logger->error("Could not create CUDA stream - [{}]: {}", error_name, error_string);
+                return;
+            }
+        }
+
+        {
+            const auto cuda_result = cuMemAlloc(&denoiser_state, sizes.stateSizeInBytes);
+            if(cuda_result != CUDA_SUCCESS) {
+                const char* error_name = new char[512];
+                cuGetErrorName(cuda_result, &error_name);
+
+                const char* error_string = new char[2048];
+                cuGetErrorString(cuda_result, &error_string);
+
+                logger->error("Could not allocate OptiX state - [{}]: {}", error_name, error_string);
+                return;
+            }
+        }
+
+        {
+            const auto cuda_result = cuMemAlloc(&denoiser_scratch, sizes.recommendedScratchSizeInBytes);
+            if(cuda_result != CUDA_SUCCESS) {
+                const char* error_name = new char[512];
+                cuGetErrorName(cuda_result, &error_name);
+
+                const char* error_string = new char[2048];
+                cuGetErrorString(cuda_result, &error_string);
+
+                logger->error("Could not allocate OptiX scratch memory - [{}]: {}", error_name, error_string);
+                return;
+            }
+        }
+
+        {
+            const auto result = optixDenoiserSetup(optix_denoiser,
+                                                   denoiser_stream,
+                                                   static_cast<uint32_t>(width),
+                                                   static_cast<uint32_t>(height),
+                                                   denoiser_state,
+                                                   sizes.stateSizeInBytes,
+                                                   denoiser_scratch,
+                                                   sizes.recommendedScratchSizeInBytes);
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not setup denoiser: {}: {}", error_name, error);
+                return;
+            }
+        }
     }
 
     void Renderer::rebuild_raytracing_scene(rhi::RenderCommandList& command_list) {
