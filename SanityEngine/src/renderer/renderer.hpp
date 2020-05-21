@@ -4,6 +4,7 @@
 
 #include <entt/fwd.hpp>
 #include <optix.h>
+#include <cuda_runtime_api.h>
 
 #include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
@@ -82,6 +83,8 @@ namespace renderer {
 
         Settings settings;
 
+        glm::uvec2 output_framebuffer_size;
+
         std::unique_ptr<rhi::RenderDevice> device;
 
         std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
@@ -155,11 +158,15 @@ namespace renderer {
 
         OptixDenoiserSizes optix_sizes;
 
-        CUstream denoiser_stream{};
+        cudaStream_t denoiser_stream{};
 
         CUdeviceptr denoiser_state{};
 
         CUdeviceptr denoiser_scratch{};
+
+        cudaExternalMemory_t color_target_memory;
+
+        void* mapped_scene_render_target;
 
         void create_optix_context(GLFWwindow* window);
 

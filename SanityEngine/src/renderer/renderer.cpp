@@ -1,7 +1,7 @@
 #include "renderer.hpp"
 
 #include <GLFW/glfw3.h>
-#include <cuda_runtime_api.h>
+#include <cuda.h>
 #include <entt/entity/registry.hpp>
 #include <imgui/imgui.h>
 #include <minitrace.h>
@@ -127,6 +127,12 @@ namespace renderer {
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
+
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        output_framebuffer_size = {static_cast<uint32_t>(width * settings.render_scale),
+                                   static_cast<uint32_t>(height * settings.render_scale)};
 
         if(settings.use_optix_denoiser) {
             create_optix_context(window);
@@ -455,14 +461,29 @@ namespace renderer {
                                                 name,
                                                 &shared_handle);
 
-            const auto
-                cuda_color_target_handle_desc = CUDA_EXTERNAL_MEMORY_HANDLE_DESC{.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE,
-                                                                                 .handle = {.win32 = {.handle = shared_handle}},
-                                                                                 .size = size.x * size.y * 4 * 4,
-                                                                                 .flags = CUDA_EXTERNAL_MEMORY_DEDICATED};
+            const auto total_size = size.x * size.y * 4 * 4;
+            const auto cuda_color_target_handle_desc = cudaExternalMemoryHandleDesc{.type = cudaExternalMemoryHandleTypeD3D12Resource,
+                                                                                    .handle = {.win32 = {.handle = shared_handle}},
+                                                                                    .size = total_size,
+                                                                                    .flags = cudaExternalMemoryDedicated};
 
-            CUexternalMemory color_target_memory;
-            const auto result = cuImportExternalMemory(&color_target_memory, &cuda_color_target_handle_desc);
+            auto result = cudaImportExternalMemory(&color_target_memory, &cuda_color_target_handle_desc);
+            CloseHandle(shared_handle);
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not share scene render target: {}: {}", error_name, error);
+                return;
+            }
+
+            const auto buffer_desc = cudaExternalMemoryBufferDesc{.offset = 0, .size = total_size};
+            result = cudaExternalMemoryGetMappedBuffer(&mapped_scene_render_target, color_target_memory, &buffer_desc);
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not map scene render target to a device pointer: {}: {}", error_name, error);
+                return;
+            }
         }
     }
 
@@ -621,12 +642,10 @@ namespace renderer {
             }
         }
 
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
         {
             const auto result = optixDenoiserComputeMemoryResources(optix_denoiser,
-                                                                    static_cast<uint32_t>(width),
-                                                                    static_cast<uint32_t>(height),
+                                                                    output_framebuffer_size.x,
+                                                                    output_framebuffer_size.y,
                                                                     &optix_sizes);
             if(result != OPTIX_SUCCESS) {
                 const auto* const error_name = optixGetErrorName(result);
@@ -681,8 +700,8 @@ namespace renderer {
         {
             const auto result = optixDenoiserSetup(optix_denoiser,
                                                    denoiser_stream,
-                                                   static_cast<uint32_t>(width),
-                                                   static_cast<uint32_t>(height),
+                                                   output_framebuffer_size.x,
+                                                   output_framebuffer_size.y,
                                                    denoiser_state,
                                                    optix_sizes.stateSizeInBytes,
                                                    denoiser_scratch,
@@ -812,16 +831,26 @@ namespace renderer {
 
     void Renderer::run_denoiser_pass() {
         if(settings.use_optix_denoiser) {
+            const auto params = OptixDenoiserParams{.denoiseAlpha = 1.0, .hdrIntensity = 22, .blendFactor = false};
+
+            const auto input_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_scene_render_target),
+                                                  .width = output_framebuffer_size.x,
+                                                  .height = output_framebuffer_size.y,
+                                                  .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
+                                                  .format = OPTIX_PIXEL_FORMAT_FLOAT4};
+
+            const auto output_layer = OptixImage2D{};
+
             const auto result = optixDenoiserInvoke(optix_denoiser,
                                                     denoiser_stream,
-                                                    nullptr,
+                                                    &params,
                                                     denoiser_state,
                                                     optix_sizes.stateSizeInBytes,
-                                                    nullptr,
+                                                    &input_layer,
                                                     1,
                                                     0,
                                                     0,
-                                                    nullptr,
+                                                    &output_layer,
                                                     denoiser_scratch,
                                                     optix_sizes.recommendedScratchSizeInBytes);
 
@@ -829,7 +858,6 @@ namespace renderer {
                 const auto* const error_name = optixGetErrorName(result);
                 const auto* const error = optixGetErrorString(result);
                 logger->error("Could not invoke denoiser: {}: {}", error_name, error);
-                return;
             }
         }
     }
@@ -964,4 +992,3 @@ namespace renderer {
         }
     }
 } // namespace renderer
-
