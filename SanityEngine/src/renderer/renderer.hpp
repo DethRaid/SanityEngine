@@ -153,6 +153,8 @@ namespace renderer {
 
         OptixDenoiser optix_denoiser{};
 
+        OptixDenoiserSizes optix_sizes;
+
         CUstream denoiser_stream{};
 
         CUdeviceptr denoiser_state{};
@@ -183,6 +185,8 @@ namespace renderer {
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
 
         void render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const;
+
+        void run_denoiser_pass();
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion

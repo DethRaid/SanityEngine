@@ -576,13 +576,11 @@ namespace renderer {
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-
-        OptixDenoiserSizes sizes;
         {
             const auto result = optixDenoiserComputeMemoryResources(optix_denoiser,
                                                                     static_cast<uint32_t>(width),
                                                                     static_cast<uint32_t>(height),
-                                                                    &sizes);
+                                                                    &optix_sizes);
             if(result != OPTIX_SUCCESS) {
                 const auto* const error_name = optixGetErrorName(result);
                 const auto* const error = optixGetErrorString(result);
@@ -606,7 +604,7 @@ namespace renderer {
         }
 
         {
-            const auto cuda_result = cuMemAlloc(&denoiser_state, sizes.stateSizeInBytes);
+            const auto cuda_result = cuMemAlloc(&denoiser_state, optix_sizes.stateSizeInBytes);
             if(cuda_result != CUDA_SUCCESS) {
                 const char* error_name = new char[512];
                 cuGetErrorName(cuda_result, &error_name);
@@ -620,7 +618,7 @@ namespace renderer {
         }
 
         {
-            const auto cuda_result = cuMemAlloc(&denoiser_scratch, sizes.recommendedScratchSizeInBytes);
+            const auto cuda_result = cuMemAlloc(&denoiser_scratch, optix_sizes.recommendedScratchSizeInBytes);
             if(cuda_result != CUDA_SUCCESS) {
                 const char* error_name = new char[512];
                 cuGetErrorName(cuda_result, &error_name);
@@ -639,9 +637,9 @@ namespace renderer {
                                                    static_cast<uint32_t>(width),
                                                    static_cast<uint32_t>(height),
                                                    denoiser_state,
-                                                   sizes.stateSizeInBytes,
+                                                   optix_sizes.stateSizeInBytes,
                                                    denoiser_scratch,
-                                                   sizes.recommendedScratchSizeInBytes);
+                                                   optix_sizes.recommendedScratchSizeInBytes);
             if(result != OPTIX_SUCCESS) {
                 const auto* const error_name = optixGetErrorName(result);
                 const auto* const error = optixGetErrorString(result);
@@ -765,6 +763,30 @@ namespace renderer {
         command_list.draw(3);
     }
 
+    void Renderer::run_denoiser_pass() {
+        if(settings.use_optix_denoiser) {
+            const auto result = optixDenoiserInvoke(optix_denoiser,
+                                                    denoiser_stream,
+                                                    nullptr,
+                                                    denoiser_state,
+                                                    optix_sizes.stateSizeInBytes,
+                                                    nullptr,
+                                                    3,
+                                                    0,
+                                                    0,
+                                                    nullptr,
+                                                    denoiser_scratch,
+                                                    optix_sizes.recommendedScratchSizeInBytes);
+
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not invoke denoiser: {}: {}", error_name, error);
+                return;
+            }
+        }
+    }
+
     void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
@@ -776,6 +798,8 @@ namespace renderer {
         // render_shadow_pass(registry, command_list, *material_bind_group);
 
         render_forward_pass(registry, command_list, *material_bind_group);
+
+        run_denoiser_pass();
 
         render_backbuffer_output_pass(command_list);
     }
