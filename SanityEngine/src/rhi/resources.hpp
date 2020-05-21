@@ -85,6 +85,11 @@ namespace rhi {
         uint32_t width{1};
         uint32_t height{1};
         uint32_t depth{1};
+
+        /*!
+         * \brief If true, this resource may be shared with other APIs, such as CUDA
+         */
+        bool enable_resource_sharing{false};
     };
 
     [[nodiscard]] uint32_t size_in_bytes(ImageFormat format);

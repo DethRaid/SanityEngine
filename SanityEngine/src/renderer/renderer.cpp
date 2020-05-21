@@ -424,6 +424,7 @@ namespace renderer {
         color_target_create_info.format = rhi::ImageFormat::Rgba32F;
         color_target_create_info.width = size.x;
         color_target_create_info.height = size.y;
+        color_target_create_info.enable_resource_sharing = true;
 
         create_image(color_target_create_info);
 
@@ -817,7 +818,7 @@ namespace renderer {
                                                     denoiser_state,
                                                     optix_sizes.stateSizeInBytes,
                                                     nullptr,
-                                                    3,
+                                                    1,
                                                     0,
                                                     0,
                                                     nullptr,
@@ -963,3 +964,4 @@ namespace renderer {
         }
     }
 } // namespace renderer
+

@@ -156,6 +156,10 @@ namespace rhi {
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
 
+        if(create_info.enable_resource_sharing) {
+            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;             
+        }
+
         auto image = std::make_unique<Image>();
         image->format = create_info.format;
 
@@ -164,6 +168,7 @@ namespace rhi {
             case ImageUsage::RenderTarget:
                 initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+                alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Render targets are always committed resources
                 break;
 
             case ImageUsage::SampledImage:
@@ -174,6 +179,7 @@ namespace rhi {
             case ImageUsage::DepthStencil:
                 initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+                alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Depth/Stencil targets are always committed resources
                 break;
 
             case ImageUsage::UnorderedAccess:
