@@ -734,6 +734,20 @@ namespace renderer {
                 return;
             }
         }
+
+        {
+            const auto result = cuMemAlloc(&intensity_ptr, sizeof(double));
+            if(result != CUDA_SUCCESS) {
+                const char* error_name = new char[512];
+                cuGetErrorName(result, &error_name);
+
+                const char* error_string = new char[2048];
+                cuGetErrorString(result, &error_string);
+
+                logger->error("Could not allocate memory to hold intensity - [{}]: {}", error_name, error_string);
+                return;
+            }
+        }
     }
 
     void Renderer::rebuild_raytracing_scene(rhi::RenderCommandList& command_list) {
@@ -852,8 +866,6 @@ namespace renderer {
 
     void Renderer::run_denoiser_pass() {
         if(settings.use_optix_denoiser) {
-            const auto params = OptixDenoiserParams{.denoiseAlpha = 0, .hdrIntensity = 22, .blendFactor = false};
-
             const auto input_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_scene_render_target),
                                                   .width = output_framebuffer_size.x,
                                                   .height = output_framebuffer_size.y,
@@ -866,18 +878,33 @@ namespace renderer {
                                                    .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
                                                    .format = OPTIX_PIXEL_FORMAT_FLOAT4};
 
-            const auto result = optixDenoiserInvoke(optix_denoiser,
-                                                    denoiser_stream,
-                                                    &params,
-                                                    denoiser_state,
-                                                    optix_sizes.stateSizeInBytes,
-                                                    &input_layer,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    &output_layer,
-                                                    denoiser_scratch,
-                                                    optix_sizes.recommendedScratchSizeInBytes);
+            auto result = optixDenoiserComputeIntensity(optix_denoiser,
+                                                        denoiser_stream,
+                                                        &input_layer,
+                                                        intensity_ptr,
+                                                        denoiser_scratch,
+                                                        optix_sizes.recommendedScratchSizeInBytes);
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not compute render target intensity: {}: {}", error_name, error);
+                return;
+            }
+
+            const auto params = OptixDenoiserParams{.denoiseAlpha = 0, .hdrIntensity = intensity_ptr, .blendFactor = false};
+
+            result = optixDenoiserInvoke(optix_denoiser,
+                                         denoiser_stream,
+                                         &params,
+                                         denoiser_state,
+                                         optix_sizes.stateSizeInBytes,
+                                         &input_layer,
+                                         1,
+                                         0,
+                                         0,
+                                         &output_layer,
+                                         denoiser_scratch,
+                                         optix_sizes.recommendedScratchSizeInBytes);
 
             if(result != OPTIX_SUCCESS) {
                 const auto* const error_name = optixGetErrorName(result);

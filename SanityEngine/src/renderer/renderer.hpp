@@ -162,6 +162,8 @@ namespace renderer {
 
         cudaStream_t denoiser_stream{};
 
+        CUdeviceptr intensity_ptr{};
+
         CUdeviceptr denoiser_state{};
 
         CUdeviceptr denoiser_scratch{};
