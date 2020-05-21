@@ -4,6 +4,8 @@
 #include <entt/entity/registry.hpp>
 #include <imgui/imgui.h>
 #include <minitrace.h>
+#include <optix_function_table_definition.h>
+#include <optix_stubs.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -125,6 +127,10 @@ namespace renderer {
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
 
+        if(settings.use_optix_denoiser) {
+            create_optix_context(window);
+        }
+
         create_static_mesh_storage();
 
         create_material_data_buffers();
@@ -151,10 +157,6 @@ namespace renderer {
         create_light_buffers();
 
         create_builtin_images();
-
-        if(settings.use_optix_denoiser) {
-            create_optix_context(window);
-        }
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {
@@ -436,6 +438,30 @@ namespace renderer {
         const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
 
         scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
+
+        if(settings.use_optix_denoiser) {
+            // Expose the scene color output to OptiX
+
+            const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
+
+            HANDLE shared_handle;
+            SECURITY_ATTRIBUTES windows_security_attributes;
+            LPCWSTR name = nullptr;
+            device->device5->CreateSharedHandle(color_target.resource.Get(),
+                                                &windows_security_attributes,
+                                                GENERIC_ALL,
+                                                name,
+                                                &shared_handle);
+
+            const auto
+                cuda_color_target_handle_desc = CUDA_EXTERNAL_MEMORY_HANDLE_DESC{.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE,
+                                                                                 .handle = {.win32 = {.handle = shared_handle}},
+                                                                                 .size = size.x * size.y * 4 * 4,
+                                                                                 .flags = CUDA_EXTERNAL_MEMORY_DEDICATED};
+
+            CUexternalMemory color_target_memory;
+            const auto result = cuImportExternalMemory(&color_target_memory, &cuda_color_target_handle_desc);
+        }
     }
 
     void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {
@@ -515,6 +541,8 @@ namespace renderer {
     }
 
     void Renderer::create_optix_context(GLFWwindow* window) {
+        optixInitWithHandle(&optix_handle);
+
         auto device_context_options = OptixDeviceContextOptions{
             .logCallbackFunction =
                 +[](const unsigned int level, const char* tag, const char* message, void* data) {

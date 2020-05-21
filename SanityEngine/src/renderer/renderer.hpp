@@ -149,6 +149,8 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
+        void* optix_handle;
+
         OptixDeviceContext optix_context{};
 
         OptixDenoiser optix_denoiser{};
