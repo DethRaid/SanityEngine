@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 
 #include <GLFW/glfw3.h>
+#include <cuda_runtime_api.h>
 #include <entt/entity/registry.hpp>
 #include <imgui/imgui.h>
 #include <minitrace.h>
@@ -541,7 +542,24 @@ namespace renderer {
     }
 
     void Renderer::create_optix_context(GLFWwindow* window) {
-        optixInitWithHandle(&optix_handle);
+        {
+            const auto result = cudaFree(nullptr);
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not create CUDA context: {}: {}", error_name, error);
+            }
+        }
+
+        {
+            const auto result = optixInit();
+            if(result != OPTIX_SUCCESS) {
+                const auto* const error_name = optixGetErrorName(result);
+                const auto* const error = optixGetErrorString(result);
+                logger->error("Could not create OptiX context: {}: {}", error_name, error);
+                return;
+            }
+        }
 
         auto device_context_options = OptixDeviceContextOptions{
             .logCallbackFunction =
@@ -581,7 +599,7 @@ namespace renderer {
         }
 
         {
-            const auto denoiser_options = OptixDenoiserOptions{.inputKind = OPTIX_DENOISER_INPUT_RGB_ALBEDO_NORMAL,
+            const auto denoiser_options = OptixDenoiserOptions{.inputKind = OPTIX_DENOISER_INPUT_RGB,
                                                                .pixelFormat = OPTIX_PIXEL_FORMAT_FLOAT3};
             const auto result = optixDenoiserCreate(optix_context, &denoiser_options, &optix_denoiser);
             if(result != OPTIX_SUCCESS) {
@@ -618,13 +636,13 @@ namespace renderer {
         }
 
         {
-            const auto cuda_result = cuStreamCreate(&denoiser_stream, CU_STREAM_DEFAULT);
-            if(cuda_result != CUDA_SUCCESS) {
+            const auto result = cuStreamCreate(&denoiser_stream, CU_STREAM_DEFAULT);
+            if(result != CUDA_SUCCESS) {
                 const char* error_name = new char[512];
-                cuGetErrorName(cuda_result, &error_name);
+                cuGetErrorName(result, &error_name);
 
                 const char* error_string = new char[2048];
-                cuGetErrorString(cuda_result, &error_string);
+                cuGetErrorString(result, &error_string);
 
                 logger->error("Could not create CUDA stream - [{}]: {}", error_name, error_string);
                 return;
@@ -632,13 +650,13 @@ namespace renderer {
         }
 
         {
-            const auto cuda_result = cuMemAlloc(&denoiser_state, optix_sizes.stateSizeInBytes);
-            if(cuda_result != CUDA_SUCCESS) {
+            const auto result = cuMemAlloc(&denoiser_state, optix_sizes.stateSizeInBytes);
+            if(result != CUDA_SUCCESS) {
                 const char* error_name = new char[512];
-                cuGetErrorName(cuda_result, &error_name);
+                cuGetErrorName(result, &error_name);
 
                 const char* error_string = new char[2048];
-                cuGetErrorString(cuda_result, &error_string);
+                cuGetErrorString(result, &error_string);
 
                 logger->error("Could not allocate OptiX state - [{}]: {}", error_name, error_string);
                 return;
@@ -646,13 +664,13 @@ namespace renderer {
         }
 
         {
-            const auto cuda_result = cuMemAlloc(&denoiser_scratch, optix_sizes.recommendedScratchSizeInBytes);
-            if(cuda_result != CUDA_SUCCESS) {
+            const auto result = cuMemAlloc(&denoiser_scratch, optix_sizes.recommendedScratchSizeInBytes);
+            if(result != CUDA_SUCCESS) {
                 const char* error_name = new char[512];
-                cuGetErrorName(cuda_result, &error_name);
+                cuGetErrorName(result, &error_name);
 
                 const char* error_string = new char[2048];
-                cuGetErrorString(cuda_result, &error_string);
+                cuGetErrorString(result, &error_string);
 
                 logger->error("Could not allocate OptiX scratch memory - [{}]: {}", error_name, error_string);
                 return;
