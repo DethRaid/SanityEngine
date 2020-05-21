@@ -25,6 +25,8 @@ namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 
+    constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
+
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     struct BackbufferOutputMaterial {
@@ -371,7 +373,7 @@ namespace renderer {
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
         material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = {
-            image_name_to_index[SCENE_COLOR_RENDER_TARGET]};
+            image_name_to_index[DENOISED_SCENE_RENDER_TARGET]};
     }
 
     void Renderer::create_light_buffers() {
@@ -423,66 +425,85 @@ namespace renderer {
         }
     }
 
+    bool Renderer::expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const {
+        HANDLE shared_handle;
+        SECURITY_ATTRIBUTES windows_security_attributes;
+        LPCWSTR name = nullptr;
+        device->device5->CreateSharedHandle(render_target.resource.Get(), &windows_security_attributes, GENERIC_ALL, name, &shared_handle);
+
+        const auto total_size = render_target.width * render_target.height * 4 * 4;
+        const auto cuda_color_target_handle_desc = cudaExternalMemoryHandleDesc{.type = cudaExternalMemoryHandleTypeD3D12Resource,
+                                                                                .handle = {.win32 = {.handle = shared_handle}},
+                                                                                .size = total_size,
+                                                                                .flags = cudaExternalMemoryDedicated};
+
+        cudaExternalMemory_t render_target_memory;
+        auto result = cudaImportExternalMemory(&render_target_memory, &cuda_color_target_handle_desc);
+        if(result != cudaSuccess) {
+            const auto* const error_name = cudaGetErrorName(result);
+            const auto* const error = cudaGetErrorString(result);
+            logger->error("Could not share scene render target: {}: {}", error_name, error);
+            return false;
+
+        } else {
+            CloseHandle(shared_handle);
+        }
+
+        const auto buffer_desc = cudaExternalMemoryBufferDesc{.offset = 0, .size = total_size};
+        result = cudaExternalMemoryGetMappedBuffer(mapped_pointer, render_target_memory, &buffer_desc);
+        if(result != cudaSuccess) {
+            const auto* const error_name = cudaGetErrorName(result);
+            const auto* const error = cudaGetErrorString(result);
+            logger->error("Could not map scene render target to a device pointer: {}: {}", error_name, error);
+            return false;
+        }
+
+        return true;
+    }
+
     void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
-        rhi::ImageCreateInfo color_target_create_info{};
-        color_target_create_info.name = SCENE_COLOR_RENDER_TARGET;
-        color_target_create_info.usage = rhi::ImageUsage::RenderTarget;
-        color_target_create_info.format = rhi::ImageFormat::Rgba32F;
-        color_target_create_info.width = size.x;
-        color_target_create_info.height = size.y;
-        color_target_create_info.enable_resource_sharing = true;
+        auto color_target_create_info = rhi::ImageCreateInfo{
+            .name = SCENE_COLOR_RENDER_TARGET,
+            .usage = rhi::ImageUsage::RenderTarget,
+            .format = rhi::ImageFormat::Rgba32F,
+            .width = size.x,
+            .height = size.y,
+            .enable_resource_sharing = true,
+        };
 
-        create_image(color_target_create_info);
+        const auto color_target_handle = create_image(color_target_create_info);
 
-        rhi::ImageCreateInfo depth_target_create_info{};
-        depth_target_create_info.name = SCENE_DEPTH_TARGET;
-        depth_target_create_info.usage = rhi::ImageUsage::DepthStencil;
-        depth_target_create_info.format = rhi::ImageFormat::Depth32;
-        depth_target_create_info.width = size.x;
-        depth_target_create_info.height = size.y;
+        const auto depth_target_create_info = rhi::ImageCreateInfo{
+            .name = SCENE_DEPTH_TARGET,
+            .usage = rhi::ImageUsage::DepthStencil,
+            .format = rhi::ImageFormat::Depth32,
+            .width = size.x,
+            .height = size.y,
+        };
 
         scene_depth_target = device->create_image(depth_target_create_info);
 
-        const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
+        const auto& color_target = get_image(color_target_handle);
 
         scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
 
+        color_target_create_info.name = DENOISED_SCENE_RENDER_TARGET;
+        const auto denoised_color_target_handle = create_image(color_target_create_info);
+
+        const auto& denoised_color_target = get_image(denoised_color_target_handle);
+        denoised_framebuffer = device->create_framebuffer({&denoised_color_target});
+
         if(settings.use_optix_denoiser) {
             // Expose the scene color output to OptiX
-
-            const auto& color_target = get_image(SCENE_COLOR_RENDER_TARGET);
-
-            HANDLE shared_handle;
-            SECURITY_ATTRIBUTES windows_security_attributes;
-            LPCWSTR name = nullptr;
-            device->device5->CreateSharedHandle(color_target.resource.Get(),
-                                                &windows_security_attributes,
-                                                GENERIC_ALL,
-                                                name,
-                                                &shared_handle);
-
-            const auto total_size = size.x * size.y * 4 * 4;
-            const auto cuda_color_target_handle_desc = cudaExternalMemoryHandleDesc{.type = cudaExternalMemoryHandleTypeD3D12Resource,
-                                                                                    .handle = {.win32 = {.handle = shared_handle}},
-                                                                                    .size = total_size,
-                                                                                    .flags = cudaExternalMemoryDedicated};
-
-            auto result = cudaImportExternalMemory(&color_target_memory, &cuda_color_target_handle_desc);
-            CloseHandle(shared_handle);
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not share scene render target: {}: {}", error_name, error);
-                return;
+            auto exposed = expose_render_target_to_optix(color_target, &mapped_scene_render_target);
+            if(!exposed) {
+                logger->error("Could not expose scene color target to OptiX");
             }
 
-            const auto buffer_desc = cudaExternalMemoryBufferDesc{.offset = 0, .size = total_size};
-            result = cudaExternalMemoryGetMappedBuffer(&mapped_scene_render_target, color_target_memory, &buffer_desc);
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not map scene render target to a device pointer: {}: {}", error_name, error);
-                return;
+            // Expose the denoised scene output to OptiX
+            exposed = expose_render_target_to_optix(denoised_color_target, &mapped_denoised_render_target);
+            if(!exposed) {
+                logger->error("Could not expose denoised color target to OptiX");
             }
         }
     }
@@ -831,7 +852,7 @@ namespace renderer {
 
     void Renderer::run_denoiser_pass() {
         if(settings.use_optix_denoiser) {
-            const auto params = OptixDenoiserParams{.denoiseAlpha = 1.0, .hdrIntensity = 22, .blendFactor = false};
+            const auto params = OptixDenoiserParams{.denoiseAlpha = 0, .hdrIntensity = 22, .blendFactor = false};
 
             const auto input_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_scene_render_target),
                                                   .width = output_framebuffer_size.x,
@@ -839,7 +860,11 @@ namespace renderer {
                                                   .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
                                                   .format = OPTIX_PIXEL_FORMAT_FLOAT4};
 
-            const auto output_layer = OptixImage2D{};
+            const auto output_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_denoised_render_target),
+                                                   .width = output_framebuffer_size.x,
+                                                   .height = output_framebuffer_size.y,
+                                                   .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
+                                                   .format = OPTIX_PIXEL_FORMAT_FLOAT4};
 
             const auto result = optixDenoiserInvoke(optix_denoiser,
                                                     denoiser_stream,

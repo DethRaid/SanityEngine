@@ -152,6 +152,8 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
+        std::unique_ptr<rhi::Framebuffer> denoised_framebuffer;
+
         OptixDeviceContext optix_context{};
 
         OptixDenoiser optix_denoiser{};
@@ -164,13 +166,15 @@ namespace renderer {
 
         CUdeviceptr denoiser_scratch{};
 
-        cudaExternalMemory_t color_target_memory;
-
         void* mapped_scene_render_target;
+
+        void* mapped_denoised_render_target;
 
         void create_optix_context(GLFWwindow* window);
 
         void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
+
+        [[nodiscard]] bool expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const;
 #pragma endregion
 
 #pragma region 3D Scene

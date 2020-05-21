@@ -67,7 +67,7 @@ namespace rhi {
         [[nodiscard]] std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
         [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
-                                                                      const Image* depth_target) const;
+                                                                      const Image* depth_target = nullptr) const;
 
         Framebuffer* get_backbuffer_framebuffer();
 
