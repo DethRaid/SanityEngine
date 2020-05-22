@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cuda.h>
 #include <queue>
 
 #include <entt/fwd.hpp>
@@ -160,7 +161,7 @@ namespace renderer {
 
         OptixDenoiserSizes optix_sizes;
 
-        cudaStream_t denoiser_stream{};
+        CUstream denoiser_stream{};
 
         CUdeviceptr intensity_ptr{};
 
@@ -172,7 +173,7 @@ namespace renderer {
 
         void* mapped_denoised_render_target;
 
-        void create_optix_context(GLFWwindow* window);
+        void create_optix_context();
 
         void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
 

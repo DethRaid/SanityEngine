@@ -13,6 +13,7 @@
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
 #include "../core/ensure.hpp"
+#include "../core/errors.hpp"
 #include "../loading/image_loading.hpp"
 #include "../loading/shader_loading.hpp"
 #include "../rhi/d3dx12.hpp"
@@ -20,6 +21,8 @@
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
+
+static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -137,7 +140,7 @@ namespace renderer {
                                    static_cast<uint32_t>(height * settings.render_scale)};
 
         if(settings.use_optix_denoiser) {
-            create_optix_context(window);
+            create_optix_context();
         }
 
         create_static_mesh_storage();
@@ -427,9 +430,17 @@ namespace renderer {
 
     bool Renderer::expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const {
         HANDLE shared_handle;
-        SECURITY_ATTRIBUTES windows_security_attributes;
-        LPCWSTR name = nullptr;
-        device->device5->CreateSharedHandle(render_target.resource.Get(), &windows_security_attributes, GENERIC_ALL, name, &shared_handle);
+        {
+            const auto result = device->device5->CreateSharedHandle(render_target.resource.Get(),
+                                                                    nullptr,
+                                                                    GENERIC_ALL,
+                                                                    nullptr,
+                                                                    &shared_handle);
+            if(FAILED(result)) {
+                logger->error("Could not create shared handle to image {}: {}", render_target.name, to_string(result));
+                return false;
+            }
+        }
 
         const auto total_size = render_target.width * render_target.height * 4 * 4;
         const auto cuda_color_target_handle_desc = cudaExternalMemoryHandleDesc{.type = cudaExternalMemoryHandleTypeD3D12Resource,
@@ -584,8 +595,9 @@ namespace renderer {
         command_list.copy_data_to_buffer(material_data_buffer->data(), material_data_buffer->size(), buffer, 0);
     }
 
-    void Renderer::create_optix_context(GLFWwindow* window) {
+    void Renderer::create_optix_context() {
         {
+            
             const auto result = cudaFree(nullptr);
             if(result != cudaSuccess) {
                 const auto* const error_name = cudaGetErrorName(result);
@@ -677,43 +689,31 @@ namespace renderer {
         }
 
         {
-            const auto result = cuStreamCreate(&denoiser_stream, CU_STREAM_DEFAULT);
-            if(result != CUDA_SUCCESS) {
-                const char* error_name = new char[512];
-                cuGetErrorName(result, &error_name);
-
-                const char* error_string = new char[2048];
-                cuGetErrorString(result, &error_string);
-
-                logger->error("Could not create CUDA stream - [{}]: {}", error_name, error_string);
+            const auto result = cudaStreamCreate(&denoiser_stream);
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not create CUDA stream - [{}]: {}", error_name, error);
                 return;
             }
         }
 
         {
-            const auto result = cuMemAlloc(&denoiser_state, optix_sizes.stateSizeInBytes);
-            if(result != CUDA_SUCCESS) {
-                const char* error_name = new char[512];
-                cuGetErrorName(result, &error_name);
-
-                const char* error_string = new char[2048];
-                cuGetErrorString(result, &error_string);
-
-                logger->error("Could not allocate OptiX state - [{}]: {}", error_name, error_string);
+            const auto result = cudaMalloc(reinterpret_cast<void**>(&denoiser_state), optix_sizes.stateSizeInBytes);
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not allocate OptiX state - [{}]: {}", error_name, error);
                 return;
             }
         }
 
         {
-            const auto result = cuMemAlloc(&denoiser_scratch, optix_sizes.recommendedScratchSizeInBytes);
-            if(result != CUDA_SUCCESS) {
-                const char* error_name = new char[512];
-                cuGetErrorName(result, &error_name);
-
-                const char* error_string = new char[2048];
-                cuGetErrorString(result, &error_string);
-
-                logger->error("Could not allocate OptiX scratch memory - [{}]: {}", error_name, error_string);
+            const auto result = cudaMalloc(reinterpret_cast<void**>(&denoiser_scratch), optix_sizes.recommendedScratchSizeInBytes);
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not allocate OptiX scratch memory - [{}]: {}", error_name, error);
                 return;
             }
         }
@@ -736,15 +736,11 @@ namespace renderer {
         }
 
         {
-            const auto result = cuMemAlloc(&intensity_ptr, sizeof(double));
-            if(result != CUDA_SUCCESS) {
-                const char* error_name = new char[512];
-                cuGetErrorName(result, &error_name);
-
-                const char* error_string = new char[2048];
-                cuGetErrorString(result, &error_string);
-
-                logger->error("Could not allocate memory to hold intensity - [{}]: {}", error_name, error_string);
+            const auto result = cudaMalloc(reinterpret_cast<void**>(&intensity_ptr), sizeof(double));
+            if(result != cudaSuccess) {
+                const auto* const error_name = cudaGetErrorName(result);
+                const auto* const error = cudaGetErrorString(result);
+                logger->error("Could not allocate memory to hold intensity - [{}]: {}", error_name, error);
                 return;
             }
         }
@@ -870,12 +866,14 @@ namespace renderer {
                                                   .width = output_framebuffer_size.x,
                                                   .height = output_framebuffer_size.y,
                                                   .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
+                                                  .pixelStrideInBytes = 4 * 4,
                                                   .format = OPTIX_PIXEL_FORMAT_FLOAT4};
 
             const auto output_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_denoised_render_target),
                                                    .width = output_framebuffer_size.x,
                                                    .height = output_framebuffer_size.y,
                                                    .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
+                                                   .pixelStrideInBytes = 4 * 4,
                                                    .format = OPTIX_PIXEL_FORMAT_FLOAT4};
 
             auto result = optixDenoiserComputeIntensity(optix_denoiser,
