@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <set>
 
 #include <d3d12.h>
@@ -17,7 +18,7 @@ namespace rhi {
      */
     class CommandList {
     public:
-        explicit CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds);
+        explicit CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, ID3D12InfoQueue* info_queue_in);
 
         CommandList(const CommandList& other) = delete;
         CommandList& operator=(const CommandList& other) = delete;
@@ -44,6 +45,8 @@ namespace rhi {
 
         void execute_completion_functions();
 
+        void transition_image(const Image& image, D3D12_RESOURCE_STATES old_states, D3D12_RESOURCE_STATES new_states);
+
         /*!
          * \brief Updates the resource state tracking for the provided resource, recording a barrier to transition resource state if needed
          */
@@ -58,6 +61,8 @@ namespace rhi {
         std::vector<std::function<void()>> completion_functions;
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
+
+        ID3D12InfoQueue* info_queue;
 
         std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> initial_resource_states;
         std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> most_recent_resource_states;

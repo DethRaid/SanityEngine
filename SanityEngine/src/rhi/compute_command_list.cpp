@@ -12,8 +12,8 @@
 #include "render_device.hpp"
 
 namespace rhi {
-    ComputeCommandList::ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)
-        : ResourceCommandList{std::move(cmds), device_in} {}
+    ComputeCommandList::ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in, ID3D12InfoQueue* info_queue_in)
+        : ResourceCommandList{std::move(cmds), device_in, info_queue_in} {}
 
     ComputeCommandList::ComputeCommandList(ComputeCommandList&& old) noexcept
         : ResourceCommandList(std::move(old)),

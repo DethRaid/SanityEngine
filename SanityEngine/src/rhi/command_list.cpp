@@ -10,7 +10,8 @@
 #include "resources.hpp"
 
 namespace rhi {
-    CommandList::CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds) : commands{std::move(cmds)} {}
+    CommandList::CommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, ID3D12InfoQueue* info_queue_in)
+        : commands{std::move(cmds)}, info_queue{info_queue_in} {}
 
     CommandList::CommandList(CommandList&& old) noexcept
         : completion_functions{std::move(old.completion_functions)},
@@ -34,9 +35,7 @@ namespace rhi {
         completion_functions.push_back(std::move(completion_func));
     }
 
-    void CommandList::prepare_for_submission() {
-        commands->Close();
-    }
+    void CommandList::prepare_for_submission() { commands->Close(); }
 
     ID3D12GraphicsCommandList4* CommandList::operator->() const { return commands.Get(); }
 
@@ -47,6 +46,27 @@ namespace rhi {
         for(const auto& func : completion_functions) {
             func();
         }
+    }
+
+    void CommandList::transition_image(const Image& image, const D3D12_RESOURCE_STATES old_states, const D3D12_RESOURCE_STATES new_states) {
+#ifndef NDEBUG
+        if(const auto& resource_states = most_recent_resource_states.find(image.resource.Get());
+           resource_states != most_recent_resource_states.end()) {
+            // The resource has states already in the map. This is probably a bug - you should use `set_resource_state` when the resource
+            // has a previous usage on this command list
+
+            const auto message = fmt::
+                format("Resource {} already has a known state - you probably want to use set_resource_state instead of issue_barrier",
+                       image.name);
+
+            const auto wide_message = to_wide_string(message);
+
+            info_queue->AddApplicationMessage(D3D12_MESSAGE_SEVERITY_WARNING, reinterpret_cast<LPCSTR>(wide_message.c_str()));
+        }
+#endif
+
+        set_resource_state(image, old_states);
+        set_resource_state(image, new_states);
     }
 
     void CommandList::set_resource_state(const Image& image, const D3D12_RESOURCE_STATES new_states) {
@@ -61,6 +81,7 @@ namespace rhi {
                                          const D3D12_RESOURCE_STATES new_states,
                                          const bool is_buffer_or_simultaneous_access_texture) {
         if(const auto& resource_states = most_recent_resource_states.find(resource); resource_states != most_recent_resource_states.end()) {
+            // The resource already has saved state(s) - issue a barrier if needed, and save the new states
             if(need_barrier_between_states(resource_states->second, new_states, is_buffer_or_simultaneous_access_texture)) {
                 const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, resource_states->second, new_states);
                 commands->ResourceBarrier(1, &barrier);
@@ -69,6 +90,8 @@ namespace rhi {
             resource_states->second = new_states;
 
         } else {
+            // The resource does not have any saved state(s)
+
             initial_resource_states.emplace(resource, new_states);
             most_recent_resource_states.emplace(resource, new_states);
         }

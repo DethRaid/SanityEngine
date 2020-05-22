@@ -12,8 +12,8 @@
 using std::move;
 
 namespace rhi {
-    RenderCommandList::RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)
-        : ComputeCommandList{move(cmds), device_in} {}
+    RenderCommandList::RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in, ID3D12InfoQueue* info_queue_in)
+        : ComputeCommandList{move(cmds), device_in, info_queue_in} {}
 
     RenderCommandList::RenderCommandList(RenderCommandList&& old) noexcept
         : ComputeCommandList{move(old)},
@@ -29,7 +29,7 @@ namespace rhi {
         return static_cast<RenderCommandList&>(ComputeCommandList::operator=(move(old)));
     }
 
-    void RenderCommandList::bind_framebuffer(const Framebuffer& framebuffer,
+    void RenderCommandList::begin_render_pass(const Framebuffer& framebuffer,
                                               std::vector<RenderTargetAccess> render_target_accesses,
                                               std::optional<RenderTargetAccess> depth_access) {
         ENSURE(framebuffer.rtv_handles.size() == render_target_accesses.size(),
@@ -37,10 +37,8 @@ namespace rhi {
         ENSURE(framebuffer.dsv_handle.has_value() == depth_access.has_value(),
                "There must be either both a DSV handle and a depth target access, or neither");
 
-        // TODO: Decide if every framebuffer should be a separate renderpass
-
         if(in_render_pass) {
-            commands->EndRenderPass();
+            end_render_pass();
         }
 
         std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> render_target_descriptions;
@@ -55,6 +53,10 @@ namespace rhi {
             render_target_descriptions.emplace_back(desc);
         }
 
+        for(const auto* render_target : framebuffer.render_targets) {
+            set_resource_state(*render_target, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        }
+
         if(depth_access) {
             D3D12_RENDER_PASS_DEPTH_STENCIL_DESC desc{};
             desc.cpuDescriptor = *framebuffer.dsv_handle;
@@ -62,6 +64,8 @@ namespace rhi {
             desc.DepthEndingAccess = to_d3d12_ending_access(depth_access->end);
             desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
             desc.StencilEndingAccess = to_d3d12_ending_access(depth_access->end);
+
+            set_resource_state(*framebuffer.depth_target, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
             commands->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
                                       render_target_descriptions.data(),
@@ -88,6 +92,13 @@ namespace rhi {
         scissor_rect.right = static_cast<LONG>(framebuffer.width);
         scissor_rect.bottom = static_cast<LONG>(framebuffer.height);
         commands->RSSetScissorRects(1, &scissor_rect);
+    }
+
+    void RenderCommandList::end_render_pass() {
+        if(in_render_pass) {
+            commands->EndRenderPass();
+            in_render_pass = false;
+        }
     }
 
     void RenderCommandList::bind_ui_mesh(const Buffer& vertex_buffer, const Buffer& index_buffer) {

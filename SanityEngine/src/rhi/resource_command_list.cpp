@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../core/defer.hpp"
+#include "../core/ensure.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "render_device.hpp"
@@ -11,8 +12,8 @@
 using std::move;
 
 namespace rhi {
-    ResourceCommandList::ResourceCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in)
-        : CommandList{move(cmds)}, device{&device_in} {}
+    ResourceCommandList::ResourceCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in, ID3D12InfoQueue* info_queue_in)
+        : CommandList{move(cmds), info_queue_in}, device{&device_in} {}
 
     ResourceCommandList::ResourceCommandList(ResourceCommandList&& old) noexcept : CommandList(move(old)), device{old.device} {
         old.device = nullptr;
@@ -74,5 +75,26 @@ namespace rhi {
         DEFER(a, [&]() { device->return_staging_buffer(move(staging_buffer)); });
 
         command_types.insert(D3D12_COMMAND_LIST_TYPE_COPY);
+    }
+
+    void ResourceCommandList::copy_render_target_to_image(const Image& source, const Image& destination) {
+        ENSURE(source.width == destination.width, "Images {} and {} must have the same width", source.name, destination.name);
+        ENSURE(source.height == destination.height, "Images {} and {} must have the same height", source.name, destination.name);
+        ENSURE(source.format == destination.format, "Images {} and {} must have the same pixel format", source.name, destination.name);
+
+        const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = source.resource.Get(),
+                                                                   .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                   .SubresourceIndex = 0};
+
+        const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = destination.resource.Get(),
+                                                                   .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                   .SubresourceIndex = 0};
+
+        const auto copy_box = D3D12_BOX{.right = source.width, .bottom = source.height, .back = 1};
+
+        set_resource_state(source, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        set_resource_state(destination, D3D12_RESOURCE_STATE_COPY_DEST);
+
+        commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
     }
 } // namespace rhi

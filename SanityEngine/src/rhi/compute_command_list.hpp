@@ -15,7 +15,7 @@ namespace rhi {
      */
     class ComputeCommandList : public ResourceCommandList {
     public:
-        ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in);
+        ComputeCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in, ID3D12InfoQueue* info_queue_in);
 
         ComputeCommandList(const ComputeCommandList& other) = delete;
         ComputeCommandList& operator=(const ComputeCommandList& other) = delete;

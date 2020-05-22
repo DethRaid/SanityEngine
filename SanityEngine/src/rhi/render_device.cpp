@@ -212,6 +212,9 @@ namespace rhi {
                                                                   const Image* depth_target) const {
         auto framebuffer = std::make_unique<Framebuffer>();
 
+        framebuffer->render_targets = render_targets;
+        framebuffer->depth_target = depth_target;
+
         float width = 0;
         float height = 0;
 
@@ -428,7 +431,7 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<ResourceCommandList>(commands, *this);
+        return std::make_unique<ResourceCommandList>(commands, *this, info_queue.Get());
     }
 
     std::unique_ptr<ComputeCommandList> RenderDevice::create_compute_command_list() {
@@ -446,7 +449,7 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<ComputeCommandList>(commands, *this);
+        return std::make_unique<ComputeCommandList>(commands, *this, info_queue.Get());
     }
 
     std::unique_ptr<RenderCommandList> RenderDevice::create_render_command_list() {
@@ -467,7 +470,7 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<RenderCommandList>(commands, *this);
+        return std::make_unique<RenderCommandList>(commands, *this, info_queue.Get());
     }
 
     void RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {

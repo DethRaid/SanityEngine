@@ -30,5 +30,5 @@ struct Settings {
     /*!
      * \brief Whether to use the OptiX denoiser to denoising raytracing output
      */
-    bool use_optix_denoiser{true};
+    bool use_optix_denoiser{false};
 };

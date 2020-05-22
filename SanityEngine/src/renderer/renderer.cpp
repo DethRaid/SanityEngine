@@ -28,12 +28,18 @@ namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 
+    constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
     constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
 
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     struct BackbufferOutputMaterial {
         TextureHandle scene_output_image;
+    };
+
+    struct AccumulationMaterial {
+        TextureHandle accumulation_texture;
+        TextureHandle scene_output_texture;
     };
 
 #pragma region Cube
@@ -157,10 +163,9 @@ namespace renderer {
 
         ENSURE(settings_in.render_scale > 0, "Render scale may not be 0 or less");
 
-        int framebuffer_width;
-        int framebuffer_height;
-        glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-        create_scene_framebuffer(glm::uvec2{framebuffer_width * settings_in.render_scale, framebuffer_height * settings_in.render_scale});
+        create_scene_framebuffer();
+
+        create_accumulation_pipeline_and_material();
 
         create_shadowmap_framebuffer_and_pipeline(settings.shadow_quality);
 
@@ -375,8 +380,7 @@ namespace renderer {
         backbuffer_output_pipeline = device->create_render_pipeline_state(create_info);
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
-        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = {
-            image_name_to_index[SCENE_COLOR_RENDER_TARGET]};
+        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = denoised_color_target_handle;
     }
 
     void Renderer::create_light_buffers() {
@@ -472,34 +476,34 @@ namespace renderer {
         return true;
     }
 
-    void Renderer::create_scene_framebuffer(const glm::uvec2 size) {
+    void Renderer::create_scene_framebuffer() {
         auto color_target_create_info = rhi::ImageCreateInfo{
             .name = SCENE_COLOR_RENDER_TARGET,
             .usage = rhi::ImageUsage::RenderTarget,
             .format = rhi::ImageFormat::Rgba32F,
-            .width = size.x,
-            .height = size.y,
+            .width = output_framebuffer_size.x,
+            .height = output_framebuffer_size.y,
             .enable_resource_sharing = true,
         };
 
-        const auto color_target_handle = create_image(color_target_create_info);
+        scene_color_target_handle = create_image(color_target_create_info);
 
         const auto depth_target_create_info = rhi::ImageCreateInfo{
             .name = SCENE_DEPTH_TARGET,
             .usage = rhi::ImageUsage::DepthStencil,
             .format = rhi::ImageFormat::Depth32,
-            .width = size.x,
-            .height = size.y,
+            .width = output_framebuffer_size.x,
+            .height = output_framebuffer_size.y,
         };
 
         scene_depth_target = device->create_image(depth_target_create_info);
 
-        const auto& color_target = get_image(color_target_handle);
+        const auto& color_target = get_image(scene_color_target_handle);
 
         scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
 
         color_target_create_info.name = DENOISED_SCENE_RENDER_TARGET;
-        const auto denoised_color_target_handle = create_image(color_target_create_info);
+        denoised_color_target_handle = create_image(color_target_create_info);
 
         const auto& denoised_color_target = get_image(denoised_color_target_handle);
         denoised_framebuffer = device->create_framebuffer({&denoised_color_target});
@@ -517,6 +521,32 @@ namespace renderer {
                 logger->error("Could not expose denoised color target to OptiX");
             }
         }
+    }
+
+    void Renderer::create_accumulation_pipeline_and_material() {
+        const auto pipeline_create_info = rhi::RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
+                                                                             .vertex_shader = load_shader("fullscreen.vertex"),
+                                                                             .pixel_shader = load_shader("raytracing_accumulation.pixel"),
+                                                                             .depth_stencil_state = {.enable_depth_test = false,
+                                                                                                     .enable_depth_write = false},
+                                                                             .render_target_formats = {rhi::ImageFormat::Rgba32F}};
+
+        accumulation_pipeline = device->create_render_pipeline_state(pipeline_create_info);
+
+        const auto accumulation_target_create_info = rhi::ImageCreateInfo{
+            .name = ACCUMULATION_RENDER_TARGET,
+            .usage = rhi::ImageUsage::SampledImage,
+            .format = rhi::ImageFormat::Rgba32F,
+            .width = output_framebuffer_size.x,
+            .height = output_framebuffer_size.y,
+            .enable_resource_sharing = true,
+        };
+        accumulation_target_handle = create_image(accumulation_target_create_info);
+
+        accumulation_material_handle = material_data_buffer->get_next_free_material<AccumulationMaterial>();
+        auto& accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
+        accumulation_material.scene_output_texture = scene_color_target_handle;
+        accumulation_material.accumulation_texture = accumulation_target_handle;
     }
 
     void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {
@@ -597,7 +627,7 @@ namespace renderer {
 
     void Renderer::create_optix_context() {
         {
-            
+
             const auto result = cudaFree(nullptr);
             if(result != cudaSuccess) {
                 const auto* const error_name = cudaGetErrorName(result);
@@ -787,7 +817,7 @@ namespace renderer {
                                                                     .format = rhi::ImageFormat::Depth32},
                                                           .end = {.type = rhi::RenderTargetEndingAccessType::Preserve}};
 
-        command_list.bind_framebuffer(*shadow_map_framebuffer, {}, depth_access);
+        command_list.begin_render_pass(*shadow_map_framebuffer, {}, depth_access);
 
         command_list.bind_pipeline_state(*shadow_pipeline);
 
@@ -817,7 +847,7 @@ namespace renderer {
                                                            .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
                                                                    .resolve_params = {}}};
 
-        command_list.bind_framebuffer(*scene_framebuffer, render_target_accesses, depth_access);
+        command_list.begin_render_pass(*scene_framebuffer, render_target_accesses, depth_access);
 
         command_list.bind_pipeline_state(*standard_pipeline);
         command_list.set_camera_idx(0);
@@ -853,14 +883,14 @@ namespace renderer {
              .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
 
         const auto* framebuffer = device->get_backbuffer_framebuffer();
-        command_list.bind_framebuffer(*framebuffer, {render_target_accesses});
+        command_list.begin_render_pass(*framebuffer, {render_target_accesses});
         command_list.set_material_idx(backbuffer_output_material.index);
         command_list.bind_pipeline_state(*backbuffer_output_pipeline);
 
         command_list.draw(3);
     }
 
-    void Renderer::run_denoiser_pass() {
+    void Renderer::run_denoiser_pass(rhi::RenderCommandList& commands) {
         if(settings.use_optix_denoiser) {
             const auto input_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_scene_render_target),
                                                   .width = output_framebuffer_size.x,
@@ -909,6 +939,30 @@ namespace renderer {
                 const auto* const error = optixGetErrorString(result);
                 logger->error("Could not invoke denoiser: {}: {}", error_name, error);
             }
+
+        } else {
+            // No OptiX? Just accumulate rays!
+
+            const auto render_target_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Discard},
+                                                                      .end = {.type = rhi::RenderTargetEndingAccessType::Preserve}};
+
+            commands.begin_render_pass(*denoised_framebuffer, {render_target_access});
+
+            commands.bind_pipeline_state(*accumulation_pipeline);
+
+            commands.set_material_idx(accumulation_material_handle.index);
+
+            const auto& accumulation_image = *all_images[accumulation_target_handle.index];
+            commands.transition_image(accumulation_image, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+            commands.draw(3);
+
+            commands.end_render_pass();
+
+            const auto& denoised_image = *all_images[denoised_color_target_handle.index];
+            commands.copy_render_target_to_image(denoised_image, accumulation_image);
+
+            commands.set_resource_state(denoised_image, D3D12_RESOURCE_STATE_RENDER_TARGET);
         }
     }
 
@@ -924,7 +978,7 @@ namespace renderer {
 
         render_forward_pass(registry, command_list, *material_bind_group);
 
-        //run_denoiser_pass();
+        run_denoiser_pass(command_list);
 
         render_backbuffer_output_pass(command_list);
     }

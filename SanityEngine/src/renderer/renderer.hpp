@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cuda.h>
 #include <queue>
 
+#include <cuda.h>
+#include <cuda_runtime_api.h>
 #include <entt/fwd.hpp>
 #include <optix.h>
-#include <cuda_runtime_api.h>
 
 #include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
@@ -129,7 +129,9 @@ namespace renderer {
 
         void create_atmospheric_sky_pipeline();
 
-        void create_scene_framebuffer(glm::uvec2 size);
+        void create_scene_framebuffer();
+
+        void create_accumulation_pipeline_and_material();
 
         void create_shadowmap_framebuffer_and_pipeline(QualityLevel quality_level);
 
@@ -153,8 +155,25 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
+        void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
+        
+        std::unique_ptr<rhi::RenderPipelineState> accumulation_pipeline;
+
+        MaterialHandle accumulation_material_handle;
+
+        TextureHandle accumulation_target_handle;
+
+        /*!
+         * \brief Handle to the texture that holds
+         */
+        TextureHandle denoised_color_target_handle;
+
+        /*!
+         * \brief Handle to the framebuffer that renders to the accumulation texture
+         */
         std::unique_ptr<rhi::Framebuffer> denoised_framebuffer;
 
+#pragma region OptiX
         OptixDeviceContext optix_context{};
 
         OptixDenoiser optix_denoiser{};
@@ -175,9 +194,10 @@ namespace renderer {
 
         void create_optix_context();
 
-        void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
-
         [[nodiscard]] bool expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const;
+#pragma endregion
+
+        void run_denoiser_pass(rhi::RenderCommandList& commands);
 #pragma endregion
 
 #pragma region 3D Scene
@@ -187,6 +207,8 @@ namespace renderer {
         uint32_t shadow_camera_index;
 
         std::unique_ptr<rhi::RenderPipelineState> shadow_pipeline;
+
+        TextureHandle scene_color_target_handle;
 
         void update_lights(entt::registry& registry, uint32_t frame_idx);
 
@@ -199,8 +221,6 @@ namespace renderer {
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
 
         void render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const;
-
-        void run_denoiser_pass();
 
         void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
 #pragma endregion

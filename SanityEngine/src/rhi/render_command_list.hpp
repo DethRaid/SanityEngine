@@ -13,7 +13,7 @@ namespace rhi {
 
     class RenderCommandList : public ComputeCommandList {
     public:
-        RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in);
+        RenderCommandList(ComPtr<ID3D12GraphicsCommandList4> cmds, RenderDevice& device_in, ID3D12InfoQueue* info_queue_in);
 
         RenderCommandList(const RenderCommandList& other) = delete;
         RenderCommandList& operator=(const RenderCommandList& other) = delete;
@@ -23,9 +23,11 @@ namespace rhi {
 
         using ComputeCommandList::bind_pipeline_state;
 
-        void bind_framebuffer(const Framebuffer& framebuffer,
-                             std::vector<RenderTargetAccess> render_target_accesses,
-                             std::optional<RenderTargetAccess> depth_access = std::nullopt);
+        void begin_render_pass(const Framebuffer& framebuffer,
+                               std::vector<RenderTargetAccess> render_target_accesses,
+                               std::optional<RenderTargetAccess> depth_access = std::nullopt);
+
+        void end_render_pass();
 
         void bind_ui_mesh(const Buffer& vertex_buffer, const Buffer& index_buffer);
 
@@ -47,7 +49,7 @@ namespace rhi {
          * \brief Preforms all the necessary tasks to prepare this command list for submission to the GPU, including ending any pending
          * render passes
          */
-        void prepare_for_submission();
+        void prepare_for_submission() override;
 
     protected:
         bool in_render_pass{false};

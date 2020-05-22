@@ -394,6 +394,9 @@
     <FxCompile Include="data\shaders\inc\brdf.hlsl">
       <Filter>Shaders\inc</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\loading\shader_loading.ixx">
