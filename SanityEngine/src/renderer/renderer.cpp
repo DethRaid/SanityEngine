@@ -376,7 +376,7 @@ namespace renderer {
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
         material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = {
-            image_name_to_index[DENOISED_SCENE_RENDER_TARGET]};
+            image_name_to_index[SCENE_COLOR_RENDER_TARGET]};
     }
 
     void Renderer::create_light_buffers() {
@@ -924,7 +924,7 @@ namespace renderer {
 
         render_forward_pass(registry, command_list, *material_bind_group);
 
-        run_denoiser_pass();
+        //run_denoiser_pass();
 
         render_backbuffer_output_pass(command_list);
     }

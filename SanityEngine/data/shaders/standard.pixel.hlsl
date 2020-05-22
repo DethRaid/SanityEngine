@@ -81,7 +81,7 @@ float3 raytraced_indirect_light(
 
     for(uint i = 1; i <= num_indirect_rays; i++) {
         // Random hemisphere oriented around the surface's normal
-        float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
+        float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i * 0.125).rgb * 2.0 - 1.0);
 
         float3 projected_vector = random_vector - (normal * dot(normal, random_vector));
 
@@ -91,7 +91,7 @@ float3 raytraced_indirect_light(
 
         RayDesc ray;
         ray.Origin = position_worldspace;
-        ray.TMin = 0.01; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
+        ray.TMin = 0.001; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
         ray.Direction = ray_direction;
         ray.TMax = 1000; // TODO: Pass this in with a CB
 
@@ -167,7 +167,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     Texture2D noise = textures[material.noise_idx];
     uint2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
-    float2 noise_texcoord = input.position.xy / float2(noise_tex_size * 8);
+    float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
 
     // Only cast shadow rays if the pixel faces the light source
     if(length(light_from_sun) > 0) {
@@ -178,7 +178,7 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float3 indirect_light = raytraced_indirect_light(input.position_worldspace, input.normal, albedo, noise_texcoord, sun, noise);
 
-    float3 total_reflected_light = indirect_light;// + direct_light;
+    float3 total_reflected_light = indirect_light + direct_light;
 
     // return float4(indirect_light, 1);
     return float4(total_reflected_light, albedo.a);
