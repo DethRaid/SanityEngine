@@ -26,6 +26,16 @@ struct GLFWwindow;
 
 namespace renderer {
     /*!
+     * \brief Data that remains constant for the entire frame
+     */
+    struct PerFrameData {
+        /*!
+         * \brief Number of seconds since the program started
+         */
+        float time_since_start{0};
+    };
+
+    /*!
      * \brief Renderer class that uses a clustered forward lighting algorithm
      *
      * It won't actually do that for a while, but having a strong name is very useful
@@ -37,7 +47,7 @@ namespace renderer {
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
-        void begin_frame(uint64_t frame_count) const;
+        void begin_frame(uint64_t frame_count);
 
         void render_all(entt::registry& registry);
 
@@ -82,6 +92,8 @@ namespace renderer {
     private:
         std::shared_ptr<spdlog::logger> logger;
 
+        std::chrono::high_resolution_clock::time_point start_time;
+
         Settings settings;
 
         glm::uvec2 output_framebuffer_size;
@@ -89,6 +101,9 @@ namespace renderer {
         std::unique_ptr<rhi::RenderDevice> device;
 
         std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
+
+        PerFrameData per_frame_data;
+        std::vector<std::unique_ptr<rhi::Buffer>> per_frame_data_buffers;
 
         std::unique_ptr<rhi::RenderPipelineState> standard_pipeline;
 
@@ -123,6 +138,8 @@ namespace renderer {
 #pragma region Initialization
         void create_static_mesh_storage();
 
+        void create_per_frame_data_buffers();
+
         void create_material_data_buffers();
 
         void create_standard_pipeline();
@@ -156,7 +173,7 @@ namespace renderer {
         rhi::RaytracingScene raytracing_scene;
 
         void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
-        
+
         std::unique_ptr<rhi::RenderPipelineState> accumulation_pipeline;
 
         MaterialHandle accumulation_material_handle;

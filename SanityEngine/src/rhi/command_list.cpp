@@ -127,3 +127,4 @@ namespace rhi {
 
     const auto& CommandList::get_used_command_types() const { return command_types; }
 } // namespace rhi
+

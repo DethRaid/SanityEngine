@@ -134,12 +134,13 @@ namespace renderer {
 
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
         : logger{spdlog::stdout_color_st("Renderer")},
+          start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
 
-        logger->set_level(spdlog::level::debug);
+        // logger->set_level(spdlog::level::debug);
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -152,6 +153,8 @@ namespace renderer {
         }
 
         create_static_mesh_storage();
+
+        create_per_frame_data_buffers();
 
         create_material_data_buffers();
 
@@ -202,7 +205,16 @@ namespace renderer {
         device->submit_command_list(std::move(commands));
     }
 
-    void Renderer::begin_frame(const uint64_t frame_count) const { device->begin_frame(frame_count); }
+    void Renderer::begin_frame(const uint64_t frame_count) {
+        device->begin_frame(frame_count);
+
+        const auto cur_time = std::chrono::high_resolution_clock::now();
+        const auto duration_since_start = cur_time - start_time;
+        const auto ns_since_start = std::chrono::duration_cast<std::chrono::nanoseconds>(duration_since_start).count();
+        const auto time_since_start = static_cast<double>(ns_since_start) / 1000000000.0;
+
+        per_frame_data.time_since_start = static_cast<float>(time_since_start);
+    }
 
     void Renderer::render_all(entt::registry& registry) {
         MTR_SCOPE("Renderer", "render_scene");
@@ -334,6 +346,20 @@ namespace renderer {
         static_mesh_storage = std::make_unique<rhi::MeshDataStore>(*device, std::move(vertex_buffer), std::move(index_buffer));
     }
 
+    void Renderer::create_per_frame_data_buffers() {
+        per_frame_data_buffers.reserve(settings.num_in_flight_gpu_frames);
+
+        auto create_info = rhi::BufferCreateInfo{
+            .usage = rhi::BufferUsage::ConstantBuffer,
+            .size = sizeof(PerFrameData),
+        };
+
+        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+            create_info.name = fmt::format("Per frame data buffer {}", i);
+            per_frame_data_buffers.push_back(device->create_buffer(create_info));
+        }
+    }
+
     void Renderer::create_material_data_buffers() {
         material_data_buffer = std::make_unique<MaterialDataBuffer>(MATERIAL_DATA_BUFFER_SIZE);
 
@@ -385,6 +411,8 @@ namespace renderer {
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
         material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = denoised_color_target_handle;
+
+        logger->debug("Initialized backbuffer output pass");
     }
 
     void Renderer::create_light_buffers() {
@@ -811,6 +839,7 @@ namespace renderer {
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
         material_bind_group_builder.set_buffer("indices", static_mesh_storage->get_index_buffer());
         material_bind_group_builder.set_buffer("vertices", *static_mesh_storage->get_vertex_bindings()[0].buffer);
+        material_bind_group_builder.set_buffer("per_frame_data", *per_frame_data_buffers[frame_idx]);
         if(raytracing_scene.buffer) {
             material_bind_group_builder.set_raytracing_scene("raytracing_scene", raytracing_scene);
         }
@@ -980,6 +1009,8 @@ namespace renderer {
 
         update_lights(registry, frame_idx);
 
+        command_list.copy_data_to_buffer(&per_frame_data, sizeof(PerFrameData), *per_frame_data_buffers[frame_idx]);
+
         const auto material_bind_group = bind_resources_for_frame(frame_idx);
 
         // Smol brain v1 - don't use a shadowmap, just cast shadow rays from every ray hit
@@ -1105,4 +1136,3 @@ namespace renderer {
         }
     }
 } // namespace renderer
-

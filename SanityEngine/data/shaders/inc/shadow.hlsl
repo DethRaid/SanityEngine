@@ -2,13 +2,7 @@
 
 #include "standard_root_signature.hlsl"
 
-#define NUM_SHADOW_RAYS 1
-
-// from https://gamedev.stackexchange.com/questions/32681/random-number-hlsl
-float rand_1_05(in float2 uv) {
-    float2 noise = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
-    return abs(noise.x + noise.y) * 0.5;
-}
+#define NUM_SHADOW_RAYS 4
 
 // from https://gist.github.com/keijiro/ee439d5e7388f3aafc5296005c8c3f33
 // Rotation with angle (in radians) and axis
@@ -43,7 +37,7 @@ float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texc
         float3 random_vector = float3(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
 
         float3 projected_vector = random_vector - (-light.direction * dot(-light.direction, random_vector));
-        float random_angle = rand_1_05(random_vector.yx * i) * light.angular_size;
+        float random_angle = random_vector.z * i * light.angular_size;
         float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
         float3 ray_direction = mul(rotation_matrix, -light.direction);
 

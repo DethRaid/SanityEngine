@@ -19,6 +19,10 @@ struct Light {
     float angular_size;
 };
 
+struct PerFrameData {
+    float time_since_start;
+};
+
 /*!
  * \brief Point sampler you can use to sample any texture
  */
@@ -70,6 +74,11 @@ RaytracingAccelerationStructure raytracing_scene : register(t3);
 
 ByteAddressBuffer indices : register(t4);
 ByteAddressBuffer vertices : register(t5);
+
+/*!
+ * \brief Data which is constant for the entire frame
+ */
+StructuredBuffer<PerFrameData> per_frame_data : register(t6);
 
 /*!
  * \brief Array of all the textures that are available for a shader to sample from

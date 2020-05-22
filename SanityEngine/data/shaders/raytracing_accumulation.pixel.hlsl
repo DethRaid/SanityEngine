@@ -11,7 +11,7 @@ struct MaterialData {
 
 #include "inc/standard_root_signature.hlsl"
 
-const static float ACCUMULATION_POWER = 0.5;
+const static float ACCUMULATION_POWER = 0.025;
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     MaterialData material = material_buffer[constants.material_index];

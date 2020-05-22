@@ -68,7 +68,7 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
  */
 float3 raytraced_indirect_light(
     in float3 position_worldspace, in float3 normal, in float3 albedo, in float2 noise_texcoord, in Light sun, in Texture2D noise) {
-    uint num_indirect_rays = 16;
+    uint num_indirect_rays = 4;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -168,6 +168,8 @@ float4 main(VertexOutput input) : SV_TARGET {
     uint2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
     float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
+    float2 offset = noise.Sample(bilinear_sampler, noise_texcoord * per_frame_data[0].time_since_start).rg;
+    noise_texcoord *= offset;
 
     // Only cast shadow rays if the pixel faces the light source
     if(length(light_from_sun) > 0) {
