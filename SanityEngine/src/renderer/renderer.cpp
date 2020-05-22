@@ -139,6 +139,8 @@ namespace renderer {
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
 
+        logger->set_level(spdlog::level::debug);
+
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
@@ -253,6 +255,8 @@ namespace renderer {
 
         all_images.push_back(device->create_image(create_info));
         image_name_to_index.emplace(create_info.name, idx);
+
+        logger->debug("Created texture {} with index {}", create_info.name, idx);
 
         return {idx};
     }
@@ -545,8 +549,13 @@ namespace renderer {
 
         accumulation_material_handle = material_data_buffer->get_next_free_material<AccumulationMaterial>();
         auto& accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
-        accumulation_material.scene_output_texture = scene_color_target_handle;
         accumulation_material.accumulation_texture = accumulation_target_handle;
+        accumulation_material.scene_output_texture = scene_color_target_handle;
+
+        logger->debug("Accumulation material idx: {} Accumulation texture idx: {} scene output texture idx: {}",
+                      accumulation_material_handle.index,
+                      accumulation_target_handle.index,
+                      scene_color_target_handle.index);
     }
 
     void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {
@@ -1096,3 +1105,4 @@ namespace renderer {
         }
     }
 } // namespace renderer
+

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <spdlog/logger.h>
 #include <stdint.h>
 
 #include "handles.hpp"
@@ -51,6 +52,8 @@ namespace renderer {
         [[nodiscard]] uint32_t size() const;
 
     private:
+        static std::shared_ptr<spdlog::logger> logger;
+
         uint8_t* buffer;
 
         uint32_t buffer_size;
@@ -85,8 +88,16 @@ namespace renderer {
 
         // Intentionally using integer division
         const auto new_idx = (num_allocated_bytes / struct_size) + 1;
+        const auto old_num_allocated_bytes = num_allocated_bytes;
 
-        num_allocated_bytes = struct_size * new_idx;
+        num_allocated_bytes = struct_size * (new_idx + 1);
+
+        logger->trace(
+            "Allocating a material of size {} - there's {} bytes already allocated, so the new material will be at index {}, and now there's {} bytes allocated",
+            struct_size,
+            old_num_allocated_bytes,
+            new_idx,
+            num_allocated_bytes);
 
         return {new_idx};
     }
