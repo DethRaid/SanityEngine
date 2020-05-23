@@ -157,7 +157,7 @@ namespace rhi {
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
 
         if(create_info.enable_resource_sharing) {
-            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;             
+            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
         }
 
         auto image = std::make_unique<Image>();
@@ -416,7 +416,7 @@ namespace rhi {
         // Nothing to do, destructors will take care of it
     }
 
-    std::unique_ptr<ResourceCommandList> RenderDevice::create_resource_command_list() {
+    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list() {
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
@@ -431,52 +431,12 @@ namespace rhi {
 
         cmds->QueryInterface(commands.GetAddressOf());
 
-        return std::make_unique<ResourceCommandList>(commands, *this, info_queue.Get());
+        return commands;
     }
+    void RenderDevice::submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands) {
+        commands->Close();
 
-    std::unique_ptr<ComputeCommandList> RenderDevice::create_compute_command_list() {
-        ComPtr<ID3D12GraphicsCommandList4> commands;
-        ComPtr<ID3D12CommandList> cmds;
-        const auto result = device->CreateCommandList(0,
-                                                      D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocators[cur_gpu_frame_idx].Get(),
-                                                      nullptr,
-                                                      IID_PPV_ARGS(cmds.GetAddressOf()));
-        if(FAILED(result)) {
-            logger->error("Could not create compute command list");
-            return {};
-        }
-
-        cmds->QueryInterface(commands.GetAddressOf());
-
-        return std::make_unique<ComputeCommandList>(commands, *this, info_queue.Get());
-    }
-
-    std::unique_ptr<RenderCommandList> RenderDevice::create_render_command_list() {
-        ComPtr<ID3D12GraphicsCommandList4> commands;
-        ComPtr<ID3D12CommandList> cmds;
-        const auto result = device->CreateCommandList(0,
-                                                      D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocators[cur_gpu_frame_idx].Get(),
-                                                      nullptr,
-                                                      IID_PPV_ARGS(cmds.GetAddressOf()));
-        if(FAILED(result)) {
-            logger->error("Could not create render command list");
-            return {};
-        }
-
-        // logger->debug("Creating a render command list with command allocator {}",
-        // fmt::ptr(direct_command_allocators[cur_gpu_frame_idx].Get()));
-
-        cmds->QueryInterface(commands.GetAddressOf());
-
-        return std::make_unique<RenderCommandList>(commands, *this, info_queue.Get());
-    }
-
-    void RenderDevice::submit_command_list(std::unique_ptr<CommandList> commands) {
-        commands->prepare_for_submission();
-
-        command_lists_by_frame[cur_gpu_frame_idx].push_back(std::move(commands));
+        command_lists_by_frame[cur_gpu_frame_idx].push_back(commands);
     }
 
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
@@ -1315,7 +1275,7 @@ namespace rhi {
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
         for(auto& commands : lists) {
-            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands->get_command_list());
+            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
 
             // First implementation - run everything on the same queue, because it's easy
             // Eventually I'll come up with a fancy way to use multiple queues
@@ -1371,31 +1331,29 @@ namespace rhi {
     }
 
     void RenderDevice::transition_swapchain_image_to_render_target() {
-        auto cmds = create_render_command_list();
-        cmds->set_debug_name("Transition Swapchain to Render Target");
-        auto* swapchain_cmds = dynamic_cast<CommandList*>(cmds.get());
+        auto swapchain_cmds = create_command_list();
+        set_object_name(*swapchain_cmds.Get(), "Transition Swapchain to Render Target");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                    D3D12_RESOURCE_STATE_COMMON,
                                                                                                    D3D12_RESOURCE_STATE_RENDER_TARGET);
-        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
+        swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
 
-        submit_command_list(std::move(cmds));
+        submit_command_list(swapchain_cmds);
     }
 
     void RenderDevice::transition_swapchain_image_to_presentable() {
-        auto cmds = create_render_command_list();
-        cmds->set_debug_name("Transition Swapchain to Presentable");
-        auto* swapchain_cmds = dynamic_cast<CommandList*>(cmds.get());
+        auto swapchain_cmds = create_command_list();
+        set_object_name(*swapchain_cmds.Get(), "Transition Swapchain to Presentable");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                    D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                                                    D3D12_RESOURCE_STATE_PRESENT);
-        swapchain_cmds->get_command_list()->ResourceBarrier(1, &swapchain_transition_barrier);
+        swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
 
-        submit_command_list(std::move(cmds));
+        submit_command_list(swapchain_cmds);
     }
 
     void RenderDevice::wait_for_frame(const uint64_t frame_index) {
@@ -1545,4 +1503,3 @@ namespace rhi {
         return {};
     }
 } // namespace rhi
-

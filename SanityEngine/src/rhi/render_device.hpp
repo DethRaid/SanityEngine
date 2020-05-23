@@ -101,13 +101,9 @@ namespace rhi {
 
         void destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> pipeline_state);
 
-        [[nodiscard]] std::unique_ptr<ResourceCommandList> create_resource_command_list();
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
 
-        [[nodiscard]] std::unique_ptr<ComputeCommandList> create_compute_command_list();
-
-        [[nodiscard]] std::unique_ptr<RenderCommandList> create_render_command_list();
-
-        void submit_command_list(std::unique_ptr<CommandList> commands);
+        void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
 
         BindGroupBuilder& get_material_bind_group_builder_for_frame(uint32_t frame_idx);
 
@@ -177,7 +173,7 @@ namespace rhi {
 
         std::vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
-        std::vector<std::vector<std::unique_ptr<CommandList>>> command_lists_by_frame;
+        std::vector<std::vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_by_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
         std::vector<ComPtr<ID3D12Resource>> swapchain_images;
