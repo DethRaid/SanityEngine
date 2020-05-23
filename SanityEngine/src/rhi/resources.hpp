@@ -57,6 +57,7 @@ namespace rhi {
 
     enum class ImageFormat {
         Rgba8,
+        R32F,
         Rgba32F,
         Depth32,
         Depth24Stencil8,

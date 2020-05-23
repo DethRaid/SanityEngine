@@ -7,11 +7,14 @@ struct FullscreenVertexOutput {
 struct MaterialData {
     uint accumulation_texture_idx;
     uint scene_output_texture_idx;
+    uint scene_depth_texture_idx;
 };
 
 #include "inc/standard_root_signature.hlsl"
 
 const static float ACCUMULATION_POWER = 0.025;
+
+// TODO: Sample from the accumulation buffer from the camera's viewpoint last frame 
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     MaterialData material = material_buffer[constants.material_index];

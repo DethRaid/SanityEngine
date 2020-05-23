@@ -8,6 +8,8 @@ namespace rhi {
 
             case ImageFormat::Rgba8:
                 [[fallthrough]];
+            case ImageFormat::R32F:
+                [[fallthrough]];
             case ImageFormat::Depth32:
                 [[fallthrough]];
             case ImageFormat::Depth24Stencil8:

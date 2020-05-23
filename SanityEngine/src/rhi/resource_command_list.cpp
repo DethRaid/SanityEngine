@@ -80,7 +80,7 @@ namespace rhi {
     void ResourceCommandList::copy_render_target_to_image(const Image& source, const Image& destination) {
         ENSURE(source.width == destination.width, "Images {} and {} must have the same width", source.name, destination.name);
         ENSURE(source.height == destination.height, "Images {} and {} must have the same height", source.name, destination.name);
-        ENSURE(source.format == destination.format, "Images {} and {} must have the same pixel format", source.name, destination.name);
+        // ENSURE(source.format == destination.format, "Images {} and {} must have the same pixel format", source.name, destination.name);
 
         const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = source.resource.Get(),
                                                                    .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,

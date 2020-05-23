@@ -39,6 +39,7 @@ namespace rhi {
 
         if(in_render_pass) {
             end_render_pass();
+            in_render_pass = false;
         }
 
         std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> render_target_descriptions;
@@ -65,7 +66,7 @@ namespace rhi {
             desc.StencilBeginningAccess = to_d3d12_beginning_access(depth_access->begin);
             desc.StencilEndingAccess = to_d3d12_ending_access(depth_access->end);
 
-            set_resource_state(*framebuffer.depth_target, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            set_resource_state(*framebuffer.depth_target, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
             commands->BeginRenderPass(static_cast<UINT>(render_target_descriptions.size()),
                                       render_target_descriptions.data(),

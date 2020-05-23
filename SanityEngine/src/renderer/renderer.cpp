@@ -27,6 +27,7 @@ static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
+    constexpr const char* SCENE_DEPTH_TEXTURE = "Scene depth texture";
 
     constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
     constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
@@ -40,6 +41,7 @@ namespace renderer {
     struct AccumulationMaterial {
         TextureHandle accumulation_texture;
         TextureHandle scene_output_texture;
+        TextureHandle scene_depth_texture;
     };
 
 #pragma region Cube
@@ -530,6 +532,16 @@ namespace renderer {
 
         scene_depth_target = device->create_image(depth_target_create_info);
 
+        const auto depth_texture_create_info = rhi::ImageCreateInfo{
+            .name = SCENE_DEPTH_TEXTURE,
+            .usage = rhi::ImageUsage::SampledImage,
+            .format = rhi::ImageFormat::R32F,
+            .width = output_framebuffer_size.x,
+            .height = output_framebuffer_size.y,
+        };
+
+        create_image(depth_texture_create_info);
+
         const auto& color_target = get_image(scene_color_target_handle);
 
         scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
@@ -902,6 +914,18 @@ namespace renderer {
         }
 
         draw_sky(registry, command_list);
+
+        command_list.end_render_pass();
+
+        const auto& depth_texture = get_image(SCENE_DEPTH_TEXTURE);
+
+        command_list.transition_image(depth_texture,
+                                      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                      D3D12_RESOURCE_STATE_COPY_DEST);
+        command_list.copy_render_target_to_image(*scene_depth_target, depth_texture);
+        command_list.set_resource_state(*scene_depth_target, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        command_list.set_resource_state(depth_texture,
+                                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
     }
 
     void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
