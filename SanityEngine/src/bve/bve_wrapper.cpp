@@ -14,6 +14,7 @@
 #include "../renderer/renderer.hpp"
 #include "../renderer/standard_material.hpp"
 #include "../rhi/d3dx12.hpp"
+#include "../rhi/helpers.hpp"
 #include "../rhi/render_device.hpp"
 
 using namespace bve;
@@ -216,10 +217,38 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
             }
         }
 
-        set_resource_state(index_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_state(vertex_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        const auto& index_buffer = renderer.get_static_mesh_store().get_index_buffer();
+        const auto& vertex_buffer = *renderer.get_static_mesh_store().get_vertex_bindings()[0].buffer;
 
-        train_component.raytracing_mesh = commands->build_acceleration_structure_for_meshes(train_meshes);
+        {
+            std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+            commands->ResourceBarrier(barriers.size(), barriers.data());
+        }
+
+        train_component.raytracing_mesh = build_acceleration_structure_for_meshes(commands,
+                                                                                  device,
+                                                                                  vertex_buffer,
+                                                                                  index_buffer,
+                                                                                  train_meshes);
+
+        {
+            std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER);
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+            commands->ResourceBarrier(barriers.size(), barriers.data());
+        }
 
         device.submit_command_list(std::move(commands));
 

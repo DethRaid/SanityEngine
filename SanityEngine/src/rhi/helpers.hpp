@@ -6,7 +6,6 @@
 #include <dxgi.h>
 #include <spdlog/fmt/ostr.h>
 
-
 #include "mesh_data_store.hpp"
 #include "raytracing_structs.hpp"
 #include "render_pipeline_state.hpp"
@@ -45,8 +44,7 @@ namespace rhi {
 
     D3D12_PRIMITIVE_TOPOLOGY_TYPE to_d3d12_primitive_topology_type(PrimitiveType topology);
 
-    D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d12_beginning_access(const RenderTargetBeginningAccess& access,
-                                                                 bool is_color = true);
+    D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d12_beginning_access(const RenderTargetBeginningAccess& access, bool is_color = true);
 
     D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access);
 
@@ -58,5 +56,9 @@ namespace rhi {
 
     std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
 
-    RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands, const std::vector<Mesh>& meshes);
+    RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands,
+                                                           RenderDevice& device,
+                                                           const Buffer& vertex_buffer,
+                                                           const Buffer& index_buffer,
+                                                           const std::vector<Mesh>& meshes);
 } // namespace rhi

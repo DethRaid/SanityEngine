@@ -4,11 +4,11 @@
 
 #include <d3d12.h>
 
-
-#include "d3dx12.hpp"
-#include "framebuffer.hpp"
 #include "../core/align.hpp"
 #include "../core/defer.hpp"
+#include "d3dx12.hpp"
+#include "framebuffer.hpp"
+#include "render_device.hpp"
 
 namespace rhi {
 
@@ -365,6 +365,7 @@ namespace rhi {
     }
 
     RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands,
+                                                           RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,
                                                            const std::vector<Mesh>& meshes) {
@@ -396,27 +397,27 @@ namespace rhi {
             .pGeometryDescs = geom_descs.data()};
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
-        device->device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+        device.device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
 
         as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                         as_prebuild_info.ScratchDataSizeInBytes);
         as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                           as_prebuild_info.ResultDataMaxSizeInBytes);
 
-        auto scratch_buffer = device->get_scratch_buffer(static_cast<uint32_t>(as_prebuild_info.ScratchDataSizeInBytes));
+        auto scratch_buffer = device.get_scratch_buffer(static_cast<uint32_t>(as_prebuild_info.ScratchDataSizeInBytes));
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
                                                                 .size = static_cast<uint32_t>(as_prebuild_info.ResultDataMaxSizeInBytes)};
 
-        auto result_buffer = device->create_buffer(result_buffer_create_info);
+        auto result_buffer = device.create_buffer(result_buffer_create_info);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
             .Inputs = build_as_inputs,
             .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
 
-        DEFER(a, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
+        DEFER(a, [&]() { device.return_scratch_buffer(std::move(scratch_buffer)); });
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
