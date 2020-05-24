@@ -4,7 +4,11 @@
 
 #include <d3d12.h>
 
+
+#include "d3dx12.hpp"
 #include "framebuffer.hpp"
+#include "../core/align.hpp"
+#include "../core/defer.hpp"
 
 namespace rhi {
 
@@ -358,6 +362,68 @@ namespace rhi {
         }
 
         return ss.str();
+    }
+
+    RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands,
+                                                           const Buffer& vertex_buffer,
+                                                           const Buffer& index_buffer,
+                                                           const std::vector<Mesh>& meshes) {
+
+        std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
+        geom_descs.reserve(meshes.size());
+        for(const auto& [first_vertex, num_vertices, first_index, num_indices] : meshes) {
+            auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+                                                            .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
+                                                            .Triangles = {.Transform3x4 = 0,
+                                                                          .IndexFormat = DXGI_FORMAT_R32_UINT,
+                                                                          .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+                                                                          .IndexCount = num_indices,
+                                                                          .VertexCount = num_vertices,
+                                                                          .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
+                                                                                         (first_index * sizeof(uint32_t)),
+                                                                          .VertexBuffer = {.StartAddress = vertex_buffer.resource
+                                                                                                               ->GetGPUVirtualAddress(),
+                                                                                           .StrideInBytes = sizeof(StandardVertex)}}};
+
+            geom_descs.push_back(std::move(geom_desc));
+        }
+
+        const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
+            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+            .NumDescs = static_cast<UINT>(geom_descs.size()),
+            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+            .pGeometryDescs = geom_descs.data()};
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
+        device->device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+
+        as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                        as_prebuild_info.ScratchDataSizeInBytes);
+        as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                          as_prebuild_info.ResultDataMaxSizeInBytes);
+
+        auto scratch_buffer = device->get_scratch_buffer(static_cast<uint32_t>(as_prebuild_info.ScratchDataSizeInBytes));
+
+        const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
+                                                                .usage = BufferUsage::RaytracingAccelerationStructure,
+                                                                .size = static_cast<uint32_t>(as_prebuild_info.ResultDataMaxSizeInBytes)};
+
+        auto result_buffer = device->create_buffer(result_buffer_create_info);
+
+        const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
+            .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
+            .Inputs = build_as_inputs,
+            .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
+
+        DEFER(a, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
+
+        commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
+
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
+        commands->ResourceBarrier(1, &barrier);
+
+        return {std::move(result_buffer)};
     }
 
     std::string breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {

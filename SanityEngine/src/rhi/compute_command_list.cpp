@@ -64,7 +64,7 @@ namespace rhi {
             current_descriptor_heap = bind_group.heap;
         }
 
-        bind_group.bind_to_compute_signature(*commands.Get());
+        bind_group.bind_to_compute_signature(commands);
 
         are_compute_resources_bound = true;
 

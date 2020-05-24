@@ -95,10 +95,11 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
         auto& device = renderer.get_render_device();
 
-        auto commands = device.create_compute_command_list();
-        commands->bind_mesh_data(renderer.get_static_mesh_store());
+        auto commands = device.create_command_list();
+        renderer.get_static_mesh_store().bind_to_command_list(commands);
 
-        commands->bind_pipeline_state(*bve_texture_pipeline);
+        commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
+        commands->SetPipelineState(bve_texture_pipeline->pso.Get());
 
         std::vector<rhi::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
@@ -112,7 +113,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
             auto& mesh_component = registry.assign<renderer::StaticMeshRenderableComponent>(entity);
 
-            mesh_component.mesh = renderer.create_static_mesh(vertices, indices, *commands);
+            mesh_component.mesh = renderer.create_static_mesh(vertices, indices, commands);
             train_meshes.push_back(mesh_component.mesh);
 
             if(bve_mesh.texture.texture_id.exists) {
@@ -154,10 +155,28 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                                                                 .width = static_cast<uint32_t>(width),
                                                                 .height = static_cast<uint32_t>(height),
                                                                 .depth = 1};
-                        const auto staging_texture_handle = renderer.create_image(create_info);
-                        const auto& staging_texture = renderer.get_image(staging_texture_handle);
+                        const auto scratch_texture_handle = renderer.create_image(create_info);
+                        const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
 
-                        commands->copy_data_to_image(texture_data, staging_texture);
+                        const auto num_bytes_in_texture = width * height * 4;
+                        const auto& staging_buffer = renderer.get_render_device().get_staging_buffer(num_bytes_in_texture);
+
+                        const auto subresource = D3D12_SUBRESOURCE_DATA{
+                            .pData = texture_data,
+                            .RowPitch = width * 4,
+                            .SlicePitch = width * height * 4,
+                        };
+
+                        const auto result = UpdateSubresources(commands.Get(),
+                                                               scratch_texture.resource.Get(),
+                                                               staging_buffer.resource.Get(),
+                                                               0,
+                                                               0,
+                                                               1,
+                                                               &subresource);
+                        if(result == 0 || FAILED(result)) {
+                            spdlog::error("Could not upload BVE texture");
+                        }
 
                         // Create a second image as the real image
                         create_info.name = texture_name;
@@ -167,18 +186,18 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                         auto bind_group_builder = create_texture_processor_bind_group_builder(device);
                         ;
 
-                        bind_group_builder->set_image("input_texture", staging_texture);
+                        bind_group_builder->set_image("input_texture", scratch_texture);
                         bind_group_builder->set_image("output_texture", texture);
 
                         auto bind_group = bind_group_builder->build();
-                        commands->bind_compute_resources(*bind_group);
+                        bind_group->bind_to_compute_signature(commands);
 
                         const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
                         const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
 
-                        commands->dispatch(workgroup_width, workgroup_height);
+                        commands->Dispatch(workgroup_width, workgroup_height, 1);
 
-                        renderer.schedule_texture_destruction(staging_texture_handle);
+                        renderer.schedule_texture_destruction(scratch_texture_handle);
 
                         logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.index);
 
@@ -196,6 +215,9 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                 bve_delete_string(const_cast<char*>(texture_name));
             }
         }
+
+        set_resource_state(index_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_state(vertex_buffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
         train_component.raytracing_mesh = commands->build_acceleration_structure_for_meshes(train_meshes);
 

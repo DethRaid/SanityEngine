@@ -68,6 +68,8 @@ namespace rhi {
                                                              const std::vector<uint32_t>& indices,
                                                              ResourceCommandList& commands);
 
+        void bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
+
     private:
         std::shared_ptr<spdlog::logger> logger;
 

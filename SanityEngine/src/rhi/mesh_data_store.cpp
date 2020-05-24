@@ -66,4 +66,35 @@ namespace rhi {
 
         return {vertex_offset, index_offset};
     }
+
+    void MeshDataStore::bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+        const auto& vertex_bindings = get_vertex_bindings();
+
+        // If we have more than 16 vertex attributes, we probably have bigger problems
+        std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views{};
+        for(uint32_t i = 0; i < vertex_bindings.size(); i++) {
+            const auto& binding = vertex_bindings[i];
+            const auto* buffer = static_cast<const Buffer*>(binding.buffer);
+
+            D3D12_VERTEX_BUFFER_VIEW view{};
+            view.BufferLocation = buffer->resource->GetGPUVirtualAddress() + binding.offset;
+            view.SizeInBytes = buffer->size - binding.offset;
+            view.StrideInBytes = binding.vertex_size;
+
+            vertex_buffer_views[i] = view;
+        }
+
+        commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
+
+        const auto& index_buffer = get_index_buffer();
+
+        D3D12_INDEX_BUFFER_VIEW index_view{};
+        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
+        index_view.SizeInBytes = index_buffer.size;
+        index_view.Format = DXGI_FORMAT_R32_UINT;
+
+        commands->IASetIndexBuffer(&index_view);
+
+        commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    }
 } // namespace rhi

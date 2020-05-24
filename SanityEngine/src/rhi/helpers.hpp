@@ -6,6 +6,9 @@
 #include <dxgi.h>
 #include <spdlog/fmt/ostr.h>
 
+
+#include "mesh_data_store.hpp"
+#include "raytracing_structs.hpp"
 #include "render_pipeline_state.hpp"
 #include "resources.hpp"
 
@@ -54,4 +57,6 @@ namespace rhi {
     std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs);
 
     std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
+
+    RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands, const std::vector<Mesh>& meshes);
 } // namespace rhi

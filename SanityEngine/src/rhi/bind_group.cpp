@@ -22,50 +22,54 @@ namespace rhi {
           used_images{std::move(used_images_in)},
           used_buffers{std::move(used_buffers_in)} {}
 
-    void BindGroup::bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const {
+    void BindGroup::bind_to_graphics_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const {
+        cmds->SetDescriptorHeaps(1, &heap);
+
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
             if(param.type == RootParameterType::Descriptor) {
                 switch(param.descriptor.type) {
                     case DescriptorType::ConstantBuffer:
-                        cmds.SetGraphicsRootConstantBufferView(i, param.descriptor.address);
+                        cmds->SetGraphicsRootConstantBufferView(i, param.descriptor.address);
                         break;
 
                     case DescriptorType::ShaderResource:
-                        cmds.SetGraphicsRootShaderResourceView(i, param.descriptor.address);
+                        cmds->SetGraphicsRootShaderResourceView(i, param.descriptor.address);
                         break;
 
                     case DescriptorType::UnorderedAccess:
-                        cmds.SetGraphicsRootUnorderedAccessView(i, param.descriptor.address);
+                        cmds->SetGraphicsRootUnorderedAccessView(i, param.descriptor.address);
                         break;
                 }
 
             } else if(param.type == RootParameterType::DescriptorTable) {
-                cmds.SetGraphicsRootDescriptorTable(i, param.table.handle);
+                cmds->SetGraphicsRootDescriptorTable(i, param.table.handle);
             }
         }
     }
 
-    void BindGroup::bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const {
+    void BindGroup::bind_to_compute_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const {
+        cmds->SetDescriptorHeaps(1, &heap);
+
         for(uint32_t i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
             if(param.type == RootParameterType::Descriptor) {
                 switch(param.descriptor.type) {
                     case DescriptorType::ConstantBuffer:
-                        cmds.SetComputeRootConstantBufferView(i, param.descriptor.address);
+                        cmds->SetComputeRootConstantBufferView(i, param.descriptor.address);
                         break;
 
                     case DescriptorType::ShaderResource:
-                        cmds.SetComputeRootShaderResourceView(i, param.descriptor.address);
+                        cmds->SetComputeRootShaderResourceView(i, param.descriptor.address);
                         break;
 
                     case DescriptorType::UnorderedAccess:
-                        cmds.SetComputeRootUnorderedAccessView(i, param.descriptor.address);
+                        cmds->SetComputeRootUnorderedAccessView(i, param.descriptor.address);
                         break;
                 }
 
             } else if(param.type == RootParameterType::DescriptorTable) {
-                cmds.SetComputeRootDescriptorTable(i, param.table.handle);
+                cmds->SetComputeRootDescriptorTable(i, param.table.handle);
             }
         }
     }

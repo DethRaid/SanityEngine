@@ -7,6 +7,9 @@
 
 #include <d3d12.h>
 #include <spdlog/logger.h>
+#include <wrl/client.h>
+
+using Microsoft::WRL::ComPtr;
 
 namespace rhi {
     struct RaytracingScene;
@@ -69,12 +72,12 @@ namespace rhi {
         /*!
          * \brief Binds this bind group to the active graphics root signature
          */
-        void bind_to_graphics_signature(ID3D12GraphicsCommandList& cmds) const;
+        void bind_to_graphics_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const;
 
         /*!
          * \brief Binds this bind group to the active compute root signature
          */
-        void bind_to_compute_signature(ID3D12GraphicsCommandList& cmds) const;
+        void bind_to_compute_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const;
 
         ID3D12DescriptorHeap* heap;
 
