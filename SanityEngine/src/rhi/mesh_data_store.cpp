@@ -28,9 +28,24 @@ namespace rhi {
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
+    void MeshDataStore::begin_mesh_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
+
+        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
+                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                           D3D12_RESOURCE_STATE_COPY_DEST);
+        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
+                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                           D3D12_RESOURCE_STATE_COPY_DEST);
+
+        commands->ResourceBarrier(barriers.size(), barriers.data());
+    }
+
     std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<StandardVertex>& vertices,
                                                           const std::vector<uint32_t>& indices,
-                                                          ResourceCommandList& commands) {
+                                                          const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
         logger->trace("Current vertex offset: {} Current index offset: {}", next_vertex_offset, next_index_offset);
 
@@ -46,12 +61,22 @@ namespace rhi {
             return idx + next_vertex_offset;
         });
 
-        logger->trace("Copying {} bytes of vertex data into the vertex buffer, offset of {}", vertex_data_size, next_free_vertex_byte);
-        commands.copy_data_to_buffer(vertices.data(), vertex_data_size, *vertex_buffer, next_free_vertex_byte);
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
 
         const auto index_buffer_byte_offset = static_cast<uint32_t>(next_index_offset * sizeof(uint32_t));
+
+        logger->trace("Copying {} bytes of vertex data into the vertex buffer, offset of {}", vertex_data_size, next_free_vertex_byte);
+        const auto vertex_staging_buffer = device->get_staging_buffer(vertex_data_size);
+        memcpy(vertex_staging_buffer.ptr, vertices.data(), vertex_data_size);
+
+        commands->CopyBufferRegion(vertex_resource, next_free_vertex_byte, vertex_staging_buffer.resource.Get(), 0, vertex_data_size);
+
         logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
-        commands.copy_data_to_buffer(offset_indices.data(), index_data_size, *index_buffer, index_buffer_byte_offset);
+        const auto index_staging_buffer = device->get_staging_buffer(index_data_size);
+        memcpy(index_staging_buffer.ptr, vertices.data(), index_data_size);
+
+        commands->CopyBufferRegion(index_resource, index_buffer_byte_offset, index_staging_buffer.resource.Get(), 0, index_data_size);
 
         const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(StandardVertex));
 
@@ -65,6 +90,21 @@ namespace rhi {
         logger->trace("New vertex offset: {} New index offset: {}", next_vertex_offset, next_index_offset);
 
         return {vertex_offset, index_offset};
+    }
+
+    void MeshDataStore::end_mesh_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
+
+        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
+                                                           D3D12_RESOURCE_STATE_COPY_DEST,
+                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
+                                                           D3D12_RESOURCE_STATE_COPY_DEST,
+                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+        commands->ResourceBarrier(barriers.size(), barriers.data());
     }
 
     void MeshDataStore::bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {

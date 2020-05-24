@@ -105,6 +105,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         std::vector<rhi::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
 
+        renderer.get_static_mesh_store().begin_mesh_data_upload(commands);
+
         for(uint32_t i = 0; i < train->meshes.count; i++) {
             const auto& bve_mesh = train->meshes.ptr[i];
 
@@ -216,6 +218,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                 bve_delete_string(const_cast<char*>(texture_name));
             }
         }
+
+        renderer.get_static_mesh_store().end_mesh_data_upload(commands);
 
         const auto& index_buffer = renderer.get_static_mesh_store().get_index_buffer();
         const auto& vertex_buffer = *renderer.get_static_mesh_store().get_vertex_bindings()[0].buffer;
