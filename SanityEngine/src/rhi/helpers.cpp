@@ -33,10 +33,10 @@ namespace rhi {
         return string;
     }
 
-    void set_object_name(ID3D12Object& object, const std::string& name) {
+    void set_object_name(ID3D12Object* object, const std::string& name) {
         const auto wide_name = to_wide_string(name);
 
-        object.SetName(reinterpret_cast<LPCWSTR>(wide_name.c_str()));
+        object->SetName(reinterpret_cast<LPCWSTR>(wide_name.c_str()));
     }
 
     DXGI_FORMAT to_dxgi_format(const ImageFormat format) {
