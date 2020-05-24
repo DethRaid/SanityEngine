@@ -21,6 +21,7 @@
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
+#include "../rhi/helpers.hpp"
 
 static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 
@@ -223,8 +224,8 @@ namespace renderer {
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
 
-        auto command_list = device->create_render_command_list();
-        command_list->set_debug_name("Main Render Command List");
+        auto command_list = device->create_command_list();
+        command_list->SetName(L"Main Render Command List");
 
         if(raytracing_scene_dirty) {
             rebuild_raytracing_scene(*command_list);
@@ -253,7 +254,7 @@ namespace renderer {
 
     rhi::Mesh Renderer::create_static_mesh(const std::vector<StandardVertex>& vertices,
                                            const std::vector<uint32_t>& indices,
-                                           rhi::ResourceCommandList& commands) const {
+                                           ComPtr<ID3D12GraphicsCommandList4> commands) const {
         MTR_SCOPE("Renderer", "create_static_mesh");
 
         const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices, commands);

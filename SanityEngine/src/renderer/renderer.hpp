@@ -57,7 +57,7 @@ namespace renderer {
 
         [[nodiscard]] rhi::Mesh create_static_mesh(const std::vector<StandardVertex>& vertices,
                                                    const std::vector<uint32_t>& indices,
-                                                   rhi::ResourceCommandList& commands) const;
+                                                   ComPtr<ID3D12GraphicsCommandList4> commands) const;
 
         [[yesdiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info);
 
