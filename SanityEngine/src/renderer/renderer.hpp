@@ -163,7 +163,7 @@ namespace renderer {
 
         void update_cameras(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
 
-        void upload_material_data(rhi::ResourceCommandList& command_list, uint32_t frame_idx);
+        void upload_material_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx);
 
 #pragma region Raytracing
         std::vector<rhi::RaytracingObject> raytracing_objects;

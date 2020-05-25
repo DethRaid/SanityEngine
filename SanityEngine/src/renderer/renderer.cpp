@@ -670,10 +670,17 @@ namespace renderer {
         camera_matrix_buffers->record_data_upload(commands, frame_idx);
     }
 
-    void Renderer::upload_material_data(rhi::ResourceCommandList& command_list, const uint32_t frame_idx) {
+    void Renderer::upload_material_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
 
-        command_list.copy_data_to_buffer(material_data_buffer->data(), material_data_buffer->size(), buffer, 0);
+        const auto vertex_staging_buffer = device->get_staging_buffer(material_data_buffer->size());
+        memcpy(vertex_staging_buffer.ptr, material_data_buffer->data(), material_data_buffer->size());
+
+        commands->CopyBufferRegion(buffer.resource.Get(),
+                                   0,
+                                   vertex_staging_buffer.resource.Get(),
+                                   0,
+                                   material_data_buffer->size());
     }
 
     void Renderer::create_optix_context() {
