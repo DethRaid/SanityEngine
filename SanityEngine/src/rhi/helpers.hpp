@@ -56,11 +56,16 @@ namespace rhi {
 
     std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
 
-    RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands,
+    RaytracingMesh build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                            RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,
                                                            const std::vector<Mesh>& meshes);
 
-    void upload_data_with_staging_buffer(ID3D12Resource* dst, void* src, uint32_t size);
+    void upload_data_with_staging_buffer(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                         RenderDevice& device,
+                                         ID3D12Resource* dst,
+                                         const void* src,
+                                         uint32_t size,
+                                         uint32_t dst_offset = 0);
 } // namespace rhi

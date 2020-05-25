@@ -4,6 +4,8 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+
+#include "helpers.hpp"
 #include "render_device.hpp"
 
 namespace rhi {
@@ -67,16 +69,10 @@ namespace rhi {
         const auto index_buffer_byte_offset = static_cast<uint32_t>(next_index_offset * sizeof(uint32_t));
 
         logger->trace("Copying {} bytes of vertex data into the vertex buffer, offset of {}", vertex_data_size, next_free_vertex_byte);
-        const auto vertex_staging_buffer = device->get_staging_buffer(vertex_data_size);
-        memcpy(vertex_staging_buffer.ptr, vertices.data(), vertex_data_size);
-
-        commands->CopyBufferRegion(vertex_resource, next_free_vertex_byte, vertex_staging_buffer.resource.Get(), 0, vertex_data_size);
+        upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
 
         logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
-        const auto index_staging_buffer = device->get_staging_buffer(index_data_size);
-        memcpy(index_staging_buffer.ptr, vertices.data(), index_data_size);
-
-        commands->CopyBufferRegion(index_resource, index_buffer_byte_offset, index_staging_buffer.resource.Get(), 0, index_data_size);
+        upload_data_with_staging_buffer(commands, *device, index_resource, indices.data(), index_data_size, index_buffer_byte_offset);
 
         const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(StandardVertex));
 

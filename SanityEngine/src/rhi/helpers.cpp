@@ -364,7 +364,7 @@ namespace rhi {
         return ss.str();
     }
 
-    RaytracingMesh build_acceleration_structure_for_meshes(ComPtr<ID3D12GraphicsCommandList4> commands,
+    RaytracingMesh build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                            RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,
@@ -425,6 +425,20 @@ namespace rhi {
         commands->ResourceBarrier(1, &barrier);
 
         return {std::move(result_buffer)};
+    }
+
+    void upload_data_with_staging_buffer(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                         RenderDevice& device,
+                                         ID3D12Resource* dst,
+                                         const void* src,
+                                         const uint32_t size,
+                                         const uint32_t dst_offset) {
+        auto staging_buffer = device.get_staging_buffer(size);
+        memcpy(staging_buffer.ptr, src, size);
+
+        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.Get(), 0, size);
+
+        device.return_staging_buffer(std::move(staging_buffer));
     }
 
     std::string breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {

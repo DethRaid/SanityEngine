@@ -657,7 +657,9 @@ namespace renderer {
         return images;
     }
 
-    void Renderer::update_cameras(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) const {
+    void Renderer::update_cameras(entt::registry& registry,
+                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                  const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "update_cameras");
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
@@ -673,14 +675,11 @@ namespace renderer {
     void Renderer::upload_material_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
 
-        const auto vertex_staging_buffer = device->get_staging_buffer(material_data_buffer->size());
-        memcpy(vertex_staging_buffer.ptr, material_data_buffer->data(), material_data_buffer->size());
-
-        commands->CopyBufferRegion(buffer.resource.Get(),
-                                   0,
-                                   vertex_staging_buffer.resource.Get(),
-                                   0,
-                                   material_data_buffer->size());
+        rhi::upload_data_with_staging_buffer(commands,
+                                             *device,
+                                             buffer.resource.Get(),
+                                             material_data_buffer->data(),
+                                             material_data_buffer->size());
     }
 
     void Renderer::create_optix_context() {
