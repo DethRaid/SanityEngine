@@ -161,7 +161,7 @@ namespace renderer {
 
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;
 
-        void update_cameras(entt::registry& registry, rhi::RenderCommandList& commands, uint32_t frame_idx) const;
+        void update_cameras(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
 
         void upload_material_data(rhi::ResourceCommandList& command_list, uint32_t frame_idx);
 

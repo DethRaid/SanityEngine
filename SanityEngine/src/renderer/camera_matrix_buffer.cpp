@@ -95,10 +95,17 @@ namespace renderer {
 
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
 
-    void CameraMatrixBuffer::record_data_upload(rhi::ResourceCommandList& commands, const uint32_t frame_idx) const {
-        commands.copy_data_to_buffer(host_data.data(),
-                                     static_cast<uint32_t>(host_data.size()) * sizeof(CameraMatrices),
-                                     *device_data[frame_idx],
-                                     0);
+    void CameraMatrixBuffer::record_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) const {
+        const auto num_bytes_to_upload = static_cast<uint32_t>(host_data.size()) *
+                                         sizeof(CameraMatrices);
+
+        const auto vertex_staging_buffer = device->get_staging_buffer(num_bytes_to_upload);
+        memcpy(vertex_staging_buffer.ptr, host_data.data(), num_bytes_to_upload);
+
+        commands->CopyBufferRegion(device_data[frame_idx]->resource.Get(),
+                                   0,
+                                   vertex_staging_buffer.resource.Get(),
+                                   0,
+                                   num_bytes_to_upload);
     }
 } // namespace renderer

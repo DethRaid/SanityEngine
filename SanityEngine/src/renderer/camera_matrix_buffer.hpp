@@ -63,7 +63,7 @@ namespace renderer {
         /*!
          * \brief Records a command to upload the host buffer to the device buffer for the provided frame
          */
-        void record_data_upload(rhi::ResourceCommandList& commands, uint32_t frame_idx) const;
+        void record_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
 
     private:
         rhi::RenderDevice* device;
