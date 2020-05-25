@@ -28,7 +28,7 @@ namespace rhi {
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    void MeshDataStore::begin_mesh_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+    void MeshDataStore::begin_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
         auto* vertex_resource = vertex_buffer->resource.Get();
         auto* index_resource = index_buffer->resource.Get();
 
@@ -43,9 +43,9 @@ namespace rhi {
         commands->ResourceBarrier(barriers.size(), barriers.data());
     }
 
-    std::pair<uint32_t, uint32_t> MeshDataStore::add_mesh(const std::vector<StandardVertex>& vertices,
-                                                          const std::vector<uint32_t>& indices,
-                                                          const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+    Mesh MeshDataStore::add_mesh(const std::vector<StandardVertex>& vertices,
+                                 const std::vector<uint32_t>& indices,
+                                 const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
         logger->trace("Current vertex offset: {} Current index offset: {}", next_vertex_offset, next_index_offset);
 
@@ -89,10 +89,13 @@ namespace rhi {
 
         logger->trace("New vertex offset: {} New index offset: {}", next_vertex_offset, next_index_offset);
 
-        return {vertex_offset, index_offset};
+        return {.first_vertex = vertex_offset,
+                .num_vertices = static_cast<uint32_t>(vertices.size()),
+                .first_index = index_offset,
+                .num_indices = static_cast<uint32_t>(indices.size())};
     }
 
-    void MeshDataStore::end_mesh_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+    void MeshDataStore::end_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
         auto* vertex_resource = vertex_buffer->resource.Get();
         auto* index_resource = index_buffer->resource.Get();
 

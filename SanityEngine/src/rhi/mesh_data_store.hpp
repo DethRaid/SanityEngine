@@ -67,20 +67,20 @@ namespace rhi {
         /*!
          * \brief Prepares the vertex and index buffers to receive new mesh data
          */
-        void begin_mesh_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
+        void begin_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
         /*!
          * \brief Adds new mesh data to the vertex and index buffers. Must be called after `begin_mesh_data_upload` and before
          * `end_mesh_data_upload`
          */
-        [[nodiscard]] std::pair<uint32_t, uint32_t> add_mesh(const std::vector<StandardVertex>& vertices,
-                                                             const std::vector<uint32_t>& indices,
-                                                             const ComPtr<ID3D12GraphicsCommandList4>& commands);
+        [[nodiscard]] Mesh add_mesh(const std::vector<StandardVertex>& vertices,
+                                    const std::vector<uint32_t>& indices,
+                                    const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         /*!
          * Prepares the vertex and index buffers to be rendered with
          */
-        void end_mesh_data_upload(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
+        void end_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
         void bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 

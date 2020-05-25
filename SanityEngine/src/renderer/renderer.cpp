@@ -17,11 +17,11 @@
 #include "../loading/image_loading.hpp"
 #include "../loading/shader_loading.hpp"
 #include "../rhi/d3dx12.hpp"
+#include "../rhi/helpers.hpp"
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
-#include "../rhi/helpers.hpp"
 
 static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 
@@ -252,19 +252,6 @@ namespace renderer {
         raytracing_scene_dirty = true;
     }
 
-    rhi::Mesh Renderer::create_static_mesh(const std::vector<StandardVertex>& vertices,
-                                           const std::vector<uint32_t>& indices,
-                                           ComPtr<ID3D12GraphicsCommandList4> commands) const {
-        MTR_SCOPE("Renderer", "create_static_mesh");
-
-        const auto& [vertex_offset, index_offset] = static_mesh_storage->add_mesh(vertices, indices, commands);
-
-        return {.first_vertex = vertex_offset,
-                .num_vertices = static_cast<uint32_t>(vertices.size()),
-                .first_index = index_offset,
-                .num_indices = static_cast<uint32_t>(indices.size())};
-    }
-
     TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
         const auto idx = static_cast<uint32_t>(all_images.size());
 
@@ -276,13 +263,33 @@ namespace renderer {
         return {idx};
     }
 
-    TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info, const void* image_data) {
+    TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info,
+                                         const void* image_data,
+                                         const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
-        auto commands = device->create_resource_command_list();
-        commands->copy_data_to_image(image_data, image);
-        device->submit_command_list(std::move(commands));
+
+        const auto num_bytes_in_texture = create_info.width * create_info.height * rhi::size_in_bytes(create_info.format);
+
+        const auto& staging_buffer = device->get_staging_buffer(num_bytes_in_texture);
+
+        const auto subresource = D3D12_SUBRESOURCE_DATA{
+            .pData = image_data,
+            .RowPitch = create_info.width * 4,
+            .SlicePitch = create_info.width * create_info.height * 4,
+        };
+
+        const auto result = UpdateSubresources(commands.Get(),
+                                               image.resource.Get(),
+                                               staging_buffer.resource.Get(),
+                                               0,
+                                               0,
+                                               1,
+                                               &subresource);
+        if(result == 0 || FAILED(result)) {
+            spdlog::error("Could not upload texture data");
+        }
 
         return handle;
     }

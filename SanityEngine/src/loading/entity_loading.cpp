@@ -17,6 +17,7 @@
 #include "../rhi/raytracing_structs.hpp"
 #include "../rhi/render_device.hpp"
 #include "image_loading.hpp"
+#include "../rhi/helpers.hpp"
 
 static Assimp::Importer importer;
 
@@ -31,14 +32,16 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     }
 
     auto& device = renderer.get_render_device();
-    auto command_list = device.create_compute_command_list();
+    auto commands = device.create_command_list();
 
     std::unordered_map<uint32_t, renderer::MaterialHandle> materials;
 
     std::vector<rhi::Mesh> meshes;
     std::vector<rhi::RaytracingObject> raytracing_objects;
 
-    command_list->bind_mesh_data(renderer.get_static_mesh_store());
+    auto& mesh_data = renderer.get_static_mesh_store();
+
+    mesh_data.bind_to_command_list(commands);
 
     // Initial revision: import the first child node and hope it's fine
     const auto* node = scene->mRootNode->mChildren[0];
@@ -72,7 +75,11 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
         indices.push_back(face.mIndices[2]);
     }
 
-    const auto mesh = renderer.create_static_mesh(vertices, indices, *command_list);
+    mesh_data.begin_adding_meshes(commands);
+
+    const auto mesh = mesh_data.add_mesh(vertices, indices, commands);
+
+    mesh_data.end_adding_meshes(commands);
 
     const auto mesh_entity = registry.create();
     auto& mesh_renderer = registry.assign<renderer::StaticMeshRenderableComponent>(mesh_entity);
@@ -121,9 +128,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                                                                   .width = width,
                                                                   .height = height};
 
-                    const auto image_handle = renderer.create_image(create_info);
-                    const auto& image = renderer.get_image(image_handle);
-                    command_list->copy_data_to_image(pixels.data(), image);
+                    const auto image_handle = renderer.create_image(create_info, pixels.data(), commands);
                     material.albedo = image_handle;
                 }
             }
@@ -138,12 +143,40 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
 
     const auto object_entity = registry.create();
     auto& ray_mesh = registry.assign<renderer::RaytracableMeshComponent>(object_entity);
-    ray_mesh.raytracing_mesh = command_list->build_acceleration_structure_for_meshes(meshes);
+
+    const auto& index_buffer = mesh_data.get_index_buffer();
+    const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
+
+    {
+        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+        commands->ResourceBarrier(barriers.size(), barriers.data());
+    }
+
+    ray_mesh.raytracing_mesh = build_acceleration_structure_for_meshes(commands, device, vertex_buffer, index_buffer, meshes);
+
+    {
+        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+        commands->ResourceBarrier(barriers.size(), barriers.data());
+    }
 
     renderer.add_raytracing_objects_to_scene(
         {rhi::RaytracingObject{.blas_buffer = ray_mesh.raytracing_mesh.blas_buffer.get(), .material = {mesh_renderer.material.index}}});
 
-    device.submit_command_list(std::move(command_list));
+    device.submit_command_list(std::move(commands));
 
     return true;
 }

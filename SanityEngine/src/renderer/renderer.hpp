@@ -55,13 +55,11 @@ namespace renderer {
 
         void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
 
-        [[nodiscard]] rhi::Mesh create_static_mesh(const std::vector<StandardVertex>& vertices,
-                                                   const std::vector<uint32_t>& indices,
-                                                   ComPtr<ID3D12GraphicsCommandList4> commands) const;
-
         [[yesdiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info);
 
-        [[nodiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info, const void* image_data);
+        [[nodiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info,
+                                                 const void* image_data,
+                                                 const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         [[nodiscard]] std::optional<TextureHandle> get_image_handle(const std::string& name);
 
