@@ -61,4 +61,6 @@ namespace rhi {
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,
                                                            const std::vector<Mesh>& meshes);
+
+    void upload_data_with_staging_buffer(ID3D12Resource* dst, void* src, uint32_t size);
 } // namespace rhi
