@@ -214,7 +214,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                                                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-            commands->ResourceBarrier(barriers.size(), barriers.data());
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         train_component.raytracing_mesh = build_acceleration_structure_for_meshes(commands,
@@ -232,7 +232,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-            commands->ResourceBarrier(barriers.size(), barriers.data());
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         device.submit_command_list(std::move(commands));

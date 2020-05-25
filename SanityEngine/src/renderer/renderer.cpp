@@ -10,8 +10,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include "../core/align.hpp"
 #include "../core/components.hpp"
 #include "../core/constants.hpp"
+#include "../core/defer.hpp"
 #include "../core/ensure.hpp"
 #include "../core/errors.hpp"
 #include "../loading/image_loading.hpp"
@@ -194,16 +196,15 @@ namespace renderer {
             return;
         }
 
+        auto commands = device->create_command_list();
+
         noise_texture_handle = create_image(rhi::ImageCreateInfo{.name = "Noise Texture",
                                                                  .usage = rhi::ImageUsage::SampledImage,
                                                                  .format = rhi::ImageFormat::Rgba8,
                                                                  .width = width,
-                                                                 .height = height});
-
-        auto commands = device->create_resource_command_list();
-
-        const auto& noise_image = get_image(noise_texture_handle);
-        commands->copy_data_to_image(pixels.data(), noise_image);
+                                                                 .height = height},
+                                            pixels.data(),
+                                            commands);
 
         device->submit_command_list(std::move(commands));
     }
@@ -228,19 +229,19 @@ namespace renderer {
         command_list->SetName(L"Main Render Command List");
 
         if(raytracing_scene_dirty) {
-            rebuild_raytracing_scene(*command_list);
+            rebuild_raytracing_scene(command_list);
             raytracing_scene_dirty = false;
         }
 
-        update_cameras(registry, *command_list, frame_idx);
+        update_cameras(registry, command_list, frame_idx);
 
-        upload_material_data(*command_list, frame_idx);
+        upload_material_data(command_list, frame_idx);
 
         // render_3d_scene binds all the render targets it needs
-        render_3d_scene(registry, *command_list, frame_idx);
+        render_3d_scene(registry, command_list, frame_idx);
 
         // At the end of render_3d_scene, the backbuffer framebuffer is bound. render_ui thus simply renders directly onto the backbuffer
-        render_ui(*command_list, frame_idx);
+        render_ui(command_list, frame_idx);
 
         device->submit_command_list(std::move(command_list));
     }
@@ -269,7 +270,6 @@ namespace renderer {
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
-
         const auto num_bytes_in_texture = create_info.width * create_info.height * rhi::size_in_bytes(create_info.format);
 
         const auto& staging_buffer = device->get_staging_buffer(num_bytes_in_texture);
@@ -280,13 +280,7 @@ namespace renderer {
             .SlicePitch = create_info.width * create_info.height * 4,
         };
 
-        const auto result = UpdateSubresources(commands.Get(),
-                                               image.resource.Get(),
-                                               staging_buffer.resource.Get(),
-                                               0,
-                                               0,
-                                               1,
-                                               &subresource);
+        const auto result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0 || FAILED(result)) {
             spdlog::error("Could not upload texture data");
         }
@@ -833,7 +827,7 @@ namespace renderer {
         }
     }
 
-    void Renderer::rebuild_raytracing_scene(rhi::RenderCommandList& command_list) {
+    void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
         if(raytracing_scene.buffer) {
@@ -841,7 +835,69 @@ namespace renderer {
         }
 
         if(!raytracing_objects.empty()) {
-            raytracing_scene = command_list.build_raytracing_scene(raytracing_objects);
+            constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+
+            ENSURE(raytracing_objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
+
+            const auto instance_buffer_size = static_cast<uint32_t>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
+            auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
+            auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.ptr);
+
+            for(uint32_t i = 0; i < raytracing_objects.size(); i++) {
+                const auto& object = raytracing_objects[i];
+                auto& desc = instance_buffer_array[i];
+                desc = {};
+
+                // TODO: Actually copy the matrix once we get real model matrices
+                desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+
+                // TODO: Figure out if we want to use the mask to control which kind of rays can hit which objects
+                desc.InstanceMask = 0xFF;
+
+                desc.InstanceContributionToHitGroupIndex = object.material.handle;
+
+                const auto& buffer = static_cast<const rhi::Buffer&>(*object.blas_buffer);
+                desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
+            }
+
+            const auto as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
+                .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+                .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+                .NumDescs = static_cast<UINT>(raytracing_objects.size()),
+                .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+                .InstanceDescs = instance_buffer.resource->GetGPUVirtualAddress(),
+            };
+
+            D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};
+            device->device5->GetRaytracingAccelerationStructurePrebuildInfo(&as_inputs, &prebuild_info);
+
+            prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                         prebuild_info.ScratchDataSizeInBytes);
+            prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                           prebuild_info.ResultDataMaxSizeInBytes);
+
+            auto scratch_buffer = device->get_scratch_buffer(static_cast<uint32_t>(prebuild_info.ScratchDataSizeInBytes));
+
+            const auto as_buffer_create_info = rhi::BufferCreateInfo{.name = "Raytracing Scene",
+                                                                     .usage = rhi::BufferUsage::RaytracingAccelerationStructure,
+                                                                     .size = static_cast<uint32_t>(prebuild_info.ResultDataMaxSizeInBytes)};
+            auto as_buffer = device->create_buffer(as_buffer_create_info);
+
+            const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
+                .DestAccelerationStructureData = as_buffer->resource->GetGPUVirtualAddress(),
+                .Inputs = as_inputs,
+                .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress(),
+            };
+
+            DEFER(a, [&]() { device->return_staging_buffer(std::move(instance_buffer)); });
+            DEFER(b, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
+
+            commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
+
+            const auto barriers = std::vector<D3D12_RESOURCE_BARRIER>{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+
+            raytracing_scene = {std::move(as_buffer)};
         }
     }
 

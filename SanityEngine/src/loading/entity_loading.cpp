@@ -13,11 +13,11 @@
 #include "../renderer/render_components.hpp"
 #include "../renderer/renderer.hpp"
 #include "../renderer/standard_material.hpp"
+#include "../rhi/helpers.hpp"
 #include "../rhi/mesh_data_store.hpp"
 #include "../rhi/raytracing_structs.hpp"
 #include "../rhi/render_device.hpp"
 #include "image_loading.hpp"
-#include "../rhi/helpers.hpp"
 
 static Assimp::Importer importer;
 
@@ -156,7 +156,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                                                            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                                            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-        commands->ResourceBarrier(barriers.size(), barriers.data());
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
     ray_mesh.raytracing_mesh = build_acceleration_structure_for_meshes(commands, device, vertex_buffer, index_buffer, meshes);
@@ -170,7 +170,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                                                            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-        commands->ResourceBarrier(barriers.size(), barriers.data());
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
     renderer.add_raytracing_objects_to_scene(

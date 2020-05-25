@@ -40,7 +40,7 @@ namespace rhi {
                                                            D3D12_RESOURCE_STATE_INDEX_BUFFER,
                                                            D3D12_RESOURCE_STATE_COPY_DEST);
 
-        commands->ResourceBarrier(barriers.size(), barriers.data());
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
     Mesh MeshDataStore::add_mesh(const std::vector<StandardVertex>& vertices,
@@ -107,7 +107,7 @@ namespace rhi {
                                                            D3D12_RESOURCE_STATE_COPY_DEST,
                                                            D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
-        commands->ResourceBarrier(barriers.size(), barriers.data());
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
     void MeshDataStore::bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {

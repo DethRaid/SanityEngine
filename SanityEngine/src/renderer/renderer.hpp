@@ -170,7 +170,7 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
-        void rebuild_raytracing_scene(rhi::RenderCommandList& command_list);
+        void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         std::unique_ptr<rhi::RenderPipelineState> accumulation_pipeline;
 
