@@ -166,7 +166,7 @@ namespace rhi {
             current_descriptor_heap = bind_group.heap;
         }
 
-        bind_group.bind_to_graphics_signature(*commands.Get());
+        bind_group.bind_to_graphics_signature(commands.Get());
 
         is_render_material_bound = true;
     }

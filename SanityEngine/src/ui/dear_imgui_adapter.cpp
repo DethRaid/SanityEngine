@@ -9,6 +9,7 @@
 
 #include "../renderer/renderer.hpp"
 #include "../rhi/resources.hpp"
+#include "../rhi/render_device.hpp"
 
 struct ImGuiMaterial {
     renderer::TextureHandle image;
@@ -234,6 +235,8 @@ void DearImguiAdapter::initialize_style() {
 }
 
 void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
+    const auto commands = renderer.get_render_device().create_command_list();
+
     auto& io = ImGui::GetIO();
     unsigned char* pixels;
     int width, height;
@@ -245,7 +248,9 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
                                                   .width = static_cast<uint32_t>(width),
                                                   .height = static_cast<uint32_t>(height)};
 
-    font_atlas = renderer.create_image(create_info, pixels);
+    font_atlas = renderer.create_image(create_info, pixels, commands);
+
+    renderer.get_render_device().submit_command_list(commands);
 
     auto& materials = renderer.get_material_data_buffer();
     font_material = materials.get_next_free_material<ImGuiMaterial>();

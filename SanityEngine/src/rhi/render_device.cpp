@@ -142,7 +142,7 @@ namespace rhi {
 
         buffer->name = create_info.name;
 
-        set_object_name(*buffer->resource.Get(), create_info.name);
+        set_object_name(buffer->resource.Get(), create_info.name);
 
         return move(buffer);
     }
@@ -715,7 +715,7 @@ namespace rhi {
             critical_error("Could not find a suitable D3D12 adapter");
         }
 
-        set_object_name(*device.Get(), "D3D12 Device");
+        set_object_name(device.Get(), "D3D12 Device");
     }
 
     void RenderDevice::create_queues() {
@@ -732,7 +732,7 @@ namespace rhi {
             critical_error("Could not create graphics command queue");
         }
 
-        set_object_name(*direct_command_queue.Get(), "Direct Queue");
+        set_object_name(direct_command_queue.Get(), "Direct Queue");
 
         // TODO: Add an async compute queue, when the time comes
 
@@ -748,7 +748,7 @@ namespace rhi {
                 logger->warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
             } else {
-                set_object_name(*async_copy_queue.Get(), "DMA queue");
+                set_object_name(async_copy_queue.Get(), "DMA queue");
             }
         }
     }
@@ -789,7 +789,7 @@ namespace rhi {
         frame_fence_values.resize(settings.num_in_flight_gpu_frames);
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
-        set_object_name(*frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
+        set_object_name(frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
@@ -808,7 +808,7 @@ namespace rhi {
                 critical_error(fmt::format("Could not create direct command allocator for frame {}", i));
             }
 
-            set_object_name(*direct_command_allocators[i].Get(), fmt::format("Direct Command Allocator {}", i));
+            set_object_name(direct_command_allocators[i].Get(), fmt::format("Direct Command Allocator {}", i));
 
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                     IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
@@ -816,14 +816,14 @@ namespace rhi {
                 critical_error(fmt::format("Could not create compute command allocator for frame {}", i));
             }
 
-            set_object_name(*compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i));
+            set_object_name(compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i));
 
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
                 critical_error(fmt::format("Could not create copy command allocator for frame {}", i));
             }
 
-            set_object_name(*copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i));
+            set_object_name(copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i));
         }
     }
 
@@ -864,7 +864,7 @@ namespace rhi {
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
-            set_object_name(*swapchain_images[i].Get(), fmt::format("Swapchain image {}", i));
+            set_object_name(swapchain_images[i].Get(), fmt::format("Swapchain image {}", i));
         }
     }
 
@@ -975,7 +975,7 @@ namespace rhi {
             critical_error("Could not create standard root signature");
         }
 
-        set_object_name(*standard_root_signature.Get(), "Standard Root Signature");
+        set_object_name(standard_root_signature.Get(), "Standard Root Signature");
     }
 
     ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
@@ -1266,7 +1266,7 @@ namespace rhi {
             return {};
         }
 
-        set_object_name(*pipeline->pso.Get(), create_info.name);
+        set_object_name(pipeline->pso.Get(), create_info.name);
 
         return pipeline;
     }
@@ -1332,7 +1332,7 @@ namespace rhi {
 
     void RenderDevice::transition_swapchain_image_to_render_target() {
         auto swapchain_cmds = create_command_list();
-        set_object_name(*swapchain_cmds.Get(), "Transition Swapchain to Render Target");
+        set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Render Target");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
@@ -1345,7 +1345,7 @@ namespace rhi {
 
     void RenderDevice::transition_swapchain_image_to_presentable() {
         auto swapchain_cmds = create_command_list();
-        set_object_name(*swapchain_cmds.Get(), "Transition Swapchain to Presentable");
+        set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Presentable");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
         D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
@@ -1410,7 +1410,7 @@ namespace rhi {
         D3D12_RANGE range{0, num_bytes};
         buffer.resource->Map(0, &range, &buffer.ptr);
 
-        set_object_name(*buffer.resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx));
+        set_object_name(buffer.resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx));
         staging_buffer_idx++;
 
         return std::move(buffer);
@@ -1435,7 +1435,7 @@ namespace rhi {
         }
 
         scratch_buffer.size = num_bytes;
-        set_object_name(*scratch_buffer.resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter));
+        set_object_name(scratch_buffer.resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter));
         scratch_buffer_counter++;
 
         return scratch_buffer;
