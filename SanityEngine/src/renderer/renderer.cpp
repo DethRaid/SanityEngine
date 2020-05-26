@@ -677,17 +677,12 @@ namespace renderer {
             matrices.calculate_projection_matrix(camera);
         });
 
-        camera_matrix_buffers->record_data_upload(commands, frame_idx);
+        camera_matrix_buffers->upload_data(commands, frame_idx);
     }
 
     void Renderer::upload_material_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
-
-        rhi::upload_data_with_staging_buffer(commands,
-                                             *device,
-                                             buffer.resource.Get(),
-                                             material_data_buffer->data(),
-                                             material_data_buffer->size());
+        memcpy(buffer.mapped_ptr, material_data_buffer->data(), material_data_buffer->size());
     }
 
     void Renderer::create_optix_context() {
@@ -1165,6 +1160,17 @@ namespace renderer {
             commands->EndRenderPass();
 
             const auto& denoised_image = *all_images[denoised_color_target_handle.index];
+
+            {
+                const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                                       D3D12_RESOURCE_STATE_COPY_DEST),
+                                                  CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                       D3D12_RESOURCE_STATE_COPY_SOURCE)};
+                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+            }
+
             {
                 const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
                                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
@@ -1193,11 +1199,7 @@ namespace renderer {
 
         update_lights(registry, frame_idx);
 
-        rhi::upload_data_with_staging_buffer(commands,
-                                             *device,
-                                             per_frame_data_buffers[frame_idx]->resource.Get(),
-                                             &per_frame_data,
-                                             sizeof(PerFrameData));
+        memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
 
         const auto material_bind_group = bind_resources_for_frame(frame_idx);
 
