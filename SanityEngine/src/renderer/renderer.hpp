@@ -230,12 +230,15 @@ namespace renderer {
         [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_resources_for_frame(uint32_t frame_idx);
 
         void render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources);
+        void draw_objects_in_scene(entt::registry& registry,
+                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                   const rhi::BindGroup& material_bind_group);
 
         void render_forward_pass(entt::registry& registry,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                  const rhi::BindGroup& material_bind_group);
 
-        void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
+        void draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const;
 
         void render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const;
 

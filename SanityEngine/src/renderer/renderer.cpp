@@ -954,6 +954,26 @@ namespace renderer {
         }
     }
 
+    void Renderer::draw_objects_in_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, const rhi::BindGroup& material_bind_group) {
+        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
+        commands->SetPipelineState(standard_pipeline->pso.Get());
+
+        // Hardcode camera 0 as the player camera
+        // TODO: Decide if this is fine
+        commands->SetGraphicsRoot32BitConstant(0, 0, 0);
+
+        material_bind_group.bind_to_graphics_signature(commands);
+        static_mesh_storage->bind_to_command_list(commands);
+
+        {
+            MTR_SCOPE("Renderer", "Render static meshes");
+            registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
+                commands->SetGraphicsRoot32BitConstant(0, mesh_renderable.material.index, 1);
+                commands->DrawIndexedInstanced(mesh_renderable.mesh.num_indices, 1, mesh_renderable.mesh.first_index, 0, 0);
+            });
+        }
+    }
+
     void Renderer::render_forward_pass(entt::registry& registry,
                                        const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                        const rhi::BindGroup& material_bind_group) {
@@ -977,23 +997,7 @@ namespace renderer {
                                   &depth_access,
                                   D3D12_RENDER_PASS_FLAG_NONE);
 
-        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
-        commands->SetPipelineState(standard_pipeline->pso.Get());
-
-        // Hardcode camera 0 as the player camera
-        // TODO: Decide if this is fine
-        commands->SetGraphicsRoot32BitConstant(0, 0, 0);
-
-        material_bind_group.bind_to_graphics_signature(commands);
-        static_mesh_storage->bind_to_command_list(commands);
-
-        {
-            MTR_SCOPE("Renderer", "Render static meshes");
-            registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
-                commands->SetGraphicsRoot32BitConstant(0, mesh_renderable.material.index, 1);
-                commands->DrawIndexedInstanced(mesh_renderable.mesh.num_indices, 1, mesh_renderable.mesh.first_index, 0, 0);
-            });
-        }
+        draw_objects_in_scene(registry, commands, material_bind_group);
 
         draw_sky(registry, commands);
 
@@ -1038,14 +1042,14 @@ namespace renderer {
         }
     }
 
-    void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
+    void Renderer::draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const {
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
-            command_list.bind_pipeline_state(*atmospheric_sky_pipeline);
-            command_list.draw(3);
+            command_list->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
+            command_list->DrawInstanced(3, 1, 0, 0);
         }
     }
 
