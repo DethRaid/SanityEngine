@@ -233,9 +233,9 @@ namespace renderer {
             raytracing_scene_dirty = false;
         }
 
-        update_cameras(registry, command_list, frame_idx);
+        update_cameras(registry, frame_idx);
 
-        upload_material_data(command_list, frame_idx);
+        upload_material_data(frame_idx);
 
         // render_3d_scene binds all the render targets it needs
         render_3d_scene(registry, command_list, frame_idx);
@@ -665,9 +665,7 @@ namespace renderer {
         return images;
     }
 
-    void Renderer::update_cameras(entt::registry& registry,
-                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                  const uint32_t frame_idx) const {
+    void Renderer::update_cameras(entt::registry& registry, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "update_cameras");
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
@@ -677,10 +675,10 @@ namespace renderer {
             matrices.calculate_projection_matrix(camera);
         });
 
-        camera_matrix_buffers->upload_data(commands, frame_idx);
+        camera_matrix_buffers->upload_data(frame_idx);
     }
 
-    void Renderer::upload_material_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) {
+    void Renderer::upload_material_data(const uint32_t frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, material_data_buffer->data(), material_data_buffer->size());
     }
@@ -979,35 +977,7 @@ namespace renderer {
         }
     }
 
-    void Renderer::render_forward_pass(entt::registry& registry,
-                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                       const rhi::BindGroup& material_bind_group) {
-        const auto render_target_accesses = std::vector{
-            // Scene color
-            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
-                                                 .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                              .Color = {0, 0, 0, 0}}}},
-                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}}};
-
-        const auto
-            depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
-                                                                .DepthBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                .StencilBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD,
-                                                                .DepthEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE,
-                                                                .StencilEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD};
-
-        commands->BeginRenderPass(static_cast<UINT>(render_target_accesses.size()),
-                                  render_target_accesses.data(),
-                                  &depth_access,
-                                  D3D12_RENDER_PASS_FLAG_NONE);
-
-        draw_objects_in_scene(registry, commands, material_bind_group);
-
-        draw_sky(registry, commands);
-
-        commands->EndRenderPass();
-
+    void Renderer::copy_depth_target_to_texture(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
         const auto& depth_texture = get_image(SCENE_DEPTH_TEXTURE);
 
         {
@@ -1045,6 +1015,38 @@ namespace renderer {
                                                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
+    }
+
+    void Renderer::render_forward_pass(entt::registry& registry,
+                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                       const rhi::BindGroup& material_bind_group) {
+        const auto render_target_accesses = std::vector{
+            // Scene color
+            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
+                                                 .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                              .Color = {0, 0, 0, 0}}}},
+                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}}};
+
+        const auto
+            depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
+                                                                .DepthBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                .StencilBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD,
+                                                                .DepthEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE,
+                                                                .StencilEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD};
+
+        commands->BeginRenderPass(static_cast<UINT>(render_target_accesses.size()),
+                                  render_target_accesses.data(),
+                                  &depth_access,
+                                  D3D12_RENDER_PASS_FLAG_NONE);
+
+        draw_objects_in_scene(registry, commands, material_bind_group);
+
+        draw_sky(registry, commands);
+
+        commands->EndRenderPass();
+
+        copy_depth_target_to_texture(commands);
     }
 
     void Renderer::draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const {
@@ -1300,7 +1302,7 @@ namespace renderer {
                 .size = vertex_buffer_size,
             };
             auto vertex_buffer = device->create_buffer(vert_buffer_create_info);
-            rhi::upload_data_with_staging_buffer(commands, *device, vertex_buffer->resource.Get(), imgui_vertices, vertex_buffer_size);
+            memcpy(vertex_buffer->mapped_ptr, imgui_vertices, vertex_buffer_size);
 
             const auto index_buffer_create_info = rhi::BufferCreateInfo{
                 .name = "Dear ImGUI Index Buffer",
@@ -1308,17 +1310,7 @@ namespace renderer {
                 .size = index_buffer_size,
             };
             auto index_buffer = device->create_buffer(index_buffer_create_info);
-            rhi::upload_data_with_staging_buffer(commands, *device, index_buffer->resource.Get(), imgui_indices, index_buffer_size);
-
-            {
-                const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer->resource.Get(),
-                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                       D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
-                                                  CD3DX12_RESOURCE_BARRIER::Transition(index_buffer->resource.Get(),
-                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                       D3D12_RESOURCE_STATE_INDEX_BUFFER)};
-                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-            }
+            memcpy(index_buffer->mapped_ptr, imgui_indices, index_buffer_size);
 
             {
                 const auto vb_view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = vertex_buffer->resource->GetGPUVirtualAddress(),

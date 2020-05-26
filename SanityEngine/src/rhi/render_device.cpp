@@ -172,7 +172,7 @@ namespace rhi {
                 break;
 
             case ImageUsage::SampledImage:
-                initial_state = D3D12_RESOURCE_STATE_COPY_DEST;
+                initial_state = D3D12_RESOURCE_STATE_COMMON;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
 

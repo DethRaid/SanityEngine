@@ -161,9 +161,9 @@ namespace renderer {
 
         [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;
 
-        void update_cameras(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
+        void update_cameras(entt::registry& registry, uint32_t frame_idx) const;
 
-        void upload_material_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx);
+        void upload_material_data(uint32_t frame_idx);
 
 #pragma region Raytracing
         std::vector<rhi::RaytracingObject> raytracing_objects;
@@ -234,6 +234,7 @@ namespace renderer {
         void draw_objects_in_scene(entt::registry& registry,
                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                    const rhi::BindGroup& material_bind_group);
+        void copy_depth_target_to_texture(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
         void render_forward_pass(entt::registry& registry,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,

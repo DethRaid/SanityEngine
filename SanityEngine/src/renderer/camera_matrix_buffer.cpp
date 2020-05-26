@@ -96,7 +96,7 @@ namespace renderer {
 
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
 
-    void CameraMatrixBuffer::upload_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) const {
+    void CameraMatrixBuffer::upload_data(const uint32_t frame_idx) const {
         const auto num_bytes_to_upload = static_cast<uint32_t>(host_data.size()) * sizeof(CameraMatrices);
 
         memcpy(device_data[frame_idx]->mapped_ptr, host_data.data(), num_bytes_to_upload);

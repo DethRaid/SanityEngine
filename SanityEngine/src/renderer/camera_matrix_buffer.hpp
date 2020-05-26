@@ -60,10 +60,7 @@ namespace renderer {
 
         [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
 
-        /*!
-         * \brief Records a command to upload the host buffer to the device buffer for the provided frame
-         */
-        void upload_data(const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
+        void upload_data(uint32_t frame_idx) const;
 
     private:
         rhi::RenderDevice* device;
