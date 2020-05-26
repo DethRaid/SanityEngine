@@ -955,47 +955,87 @@ namespace renderer {
     }
 
     void Renderer::render_forward_pass(entt::registry& registry,
-                                       rhi::RenderCommandList& command_list,
+                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                        const rhi::BindGroup& material_bind_group) {
-        const auto render_target_accesses = std::vector<rhi::RenderTargetAccess>{
-            {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
-             .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
+        const auto render_target_accesses = std::vector{
+            // Scene color
+            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
+                                                 .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                              .Color = {0, 0, 0, 0}}}},
+                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}}};
 
-        static auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
-                                                                     .clear_color = {1, 0, 0, 0},
-                                                                     .format = rhi::ImageFormat::Depth32},
-                                                           .end = {.type = rhi::RenderTargetEndingAccessType::Discard,
-                                                                   .resolve_params = {}}};
+        const auto
+            depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
+                                                                .DepthBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                .StencilBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD,
+                                                                .DepthEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE,
+                                                                .StencilEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD};
 
-        command_list.begin_render_pass(*scene_framebuffer, render_target_accesses, depth_access);
+        commands->BeginRenderPass(static_cast<UINT>(render_target_accesses.size()),
+                                  render_target_accesses.data(),
+                                  &depth_access,
+                                  D3D12_RENDER_PASS_FLAG_NONE);
 
-        command_list.bind_pipeline_state(*standard_pipeline);
-        command_list.set_camera_idx(0);
-        command_list.bind_render_resources(material_bind_group);
+        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
+        commands->SetPipelineState(standard_pipeline->pso.Get());
 
-        command_list.bind_mesh_data(*static_mesh_storage);
+        // Hardcode camera 0 as the player camera
+        // TODO: Decide if this is fine
+        commands->SetGraphicsRoot32BitConstant(0, 0, 0);
+
+        material_bind_group.bind_to_graphics_signature(commands);
+        static_mesh_storage->bind_to_command_list(commands);
 
         {
             MTR_SCOPE("Renderer", "Render static meshes");
             registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
-                command_list.set_material_idx(mesh_renderable.material.index);
-                command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
+                commands->SetGraphicsRoot32BitConstant(0, mesh_renderable.material.index, 1);
+                commands->DrawIndexedInstanced(mesh_renderable.mesh.num_indices, 1, mesh_renderable.mesh.first_index, 0, 0);
             });
         }
 
-        draw_sky(registry, command_list);
+        draw_sky(registry, commands);
 
-        command_list.end_render_pass();
+        commands->EndRenderPass();
 
         const auto& depth_texture = get_image(SCENE_DEPTH_TEXTURE);
 
-        command_list.transition_image(depth_texture,
-                                      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                      D3D12_RESOURCE_STATE_COPY_DEST);
-        command_list.copy_render_target_to_image(*scene_depth_target, depth_texture);
-        command_list.set_resource_state(*scene_depth_target, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-        command_list.set_resource_state(depth_texture,
-                                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        {
+            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(depth_texture.resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                                   D3D12_RESOURCE_STATE_COPY_DEST),
+                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target->resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+
+        {
+            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = scene_depth_target->resource.Get(),
+                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                       .SubresourceIndex = 0};
+
+            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = depth_texture.resource.Get(),
+                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                       .SubresourceIndex = 0};
+
+            const auto copy_box = D3D12_BOX{.right = scene_depth_target->width, .bottom = scene_depth_target->height, .back = 1};
+
+            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
+        }
+
+        {
+            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(depth_texture.resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target->resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                                                                   D3D12_RESOURCE_STATE_DEPTH_WRITE)};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
     }
 
     void Renderer::draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const {
@@ -1098,23 +1138,27 @@ namespace renderer {
         }
     }
 
-    void Renderer::render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, const uint32_t frame_idx) {
+    void Renderer::render_3d_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
         update_lights(registry, frame_idx);
 
-        command_list.copy_data_to_buffer(&per_frame_data, sizeof(PerFrameData), *per_frame_data_buffers[frame_idx]);
+        rhi::upload_data_with_staging_buffer(commands,
+                                             *device,
+                                             per_frame_data_buffers[frame_idx]->resource.Get(),
+                                             &per_frame_data,
+                                             sizeof(PerFrameData));
 
         const auto material_bind_group = bind_resources_for_frame(frame_idx);
 
         // Smol brain v1 - don't use a shadowmap, just cast shadow rays from every ray hit
         // render_shadow_pass(registry, command_list, *material_bind_group);
 
-        render_forward_pass(registry, command_list, *material_bind_group);
+        render_forward_pass(registry, commands, *material_bind_group);
 
-        run_denoiser_pass(command_list);
+        run_denoiser_pass(commands);
 
-        render_backbuffer_output_pass(command_list);
+        render_backbuffer_output_pass(commands);
     }
 
     void Renderer::create_ui_pipeline() {

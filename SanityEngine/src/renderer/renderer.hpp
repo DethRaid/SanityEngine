@@ -231,13 +231,15 @@ namespace renderer {
 
         void render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources);
 
-        void render_forward_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& material_bind_group);
+        void render_forward_pass(entt::registry& registry,
+                                 const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                 const rhi::BindGroup& material_bind_group);
 
         void draw_sky(entt::registry& registry, rhi::RenderCommandList& command_list) const;
 
         void render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const;
 
-        void render_3d_scene(entt::registry& registry, rhi::RenderCommandList& command_list, uint32_t frame_idx);
+        void render_3d_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx);
 #pragma endregion
 
 #pragma region UI
