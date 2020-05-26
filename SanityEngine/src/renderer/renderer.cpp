@@ -431,6 +431,8 @@ namespace renderer {
     void Renderer::create_builtin_images() {
         load_noise_texture("data/textures/blue_noise.png");
 
+        const auto commands = device->create_command_list();
+
         {
             const auto pink_texture_create_info = rhi::ImageCreateInfo{.name = "Pink",
                                                                        .usage = rhi::ImageUsage::SampledImage,
@@ -440,7 +442,7 @@ namespace renderer {
 
             const auto pink_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0xFFFF00FF);
 
-            pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data());
+            pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
         }
 
         {
@@ -452,7 +454,9 @@ namespace renderer {
 
             const auto normal_roughness_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0x80FF8080);
 
-            normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info, normal_roughness_texture_pixel.data());
+            normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
+                                                           normal_roughness_texture_pixel.data(),
+                                                           commands);
         }
 
         {
@@ -464,8 +468,12 @@ namespace renderer {
 
             const auto specular_emission_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0x00373737);
 
-            specular_emission_texture_handle = create_image(specular_emission_texture_create_info, specular_emission_texture_pixel.data());
+            specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
+                                                            specular_emission_texture_pixel.data(),
+                                                            commands);
         }
+
+        device->submit_command_list(commands);
     }
 
     bool Renderer::expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const {
@@ -1055,20 +1063,28 @@ namespace renderer {
         }
     }
 
-    void Renderer::render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const {
-        std::vector<rhi::RenderTargetAccess> render_target_accesses = std::vector<rhi::RenderTargetAccess>{
-            {.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear, .clear_color = {0, 0, 0, 0}, .format = rhi::ImageFormat::Rgba8},
-             .end = {.type = rhi::RenderTargetEndingAccessType::Preserve, .resolve_params = {}}}};
-
+    void Renderer::render_backbuffer_output_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
         const auto* framebuffer = device->get_backbuffer_framebuffer();
-        command_list.begin_render_pass(*framebuffer, {render_target_accesses});
-        command_list.set_material_idx(backbuffer_output_material.index);
-        command_list.bind_pipeline_state(*backbuffer_output_pipeline);
 
-        command_list.draw(3);
+        const auto
+            render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = framebuffer->rtv_handles[0],
+                                                                        .BeginningAccess =
+                                                                            {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                             .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                                                                                                      .Color = {0, 0, 0, 0}}}},
+                                                                        .EndingAccess = {
+                                                                            .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+
+        commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+
+        commands->SetGraphicsRoot32BitConstant(0, backbuffer_output_material.index, 1);
+        commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
+        commands->DrawIndexedInstanced(3, 1, 0, 0, 0);
+
+        commands->EndRenderPass();
     }
 
-    void Renderer::run_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+    void Renderer::render_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         if(settings.use_optix_denoiser) {
             // TODO: Figure out how to get this to work
 
@@ -1144,7 +1160,7 @@ namespace renderer {
                 commands->ResourceBarrier(1, &barrier);
             }
 
-            commands->DrawInstanced(3, 1, 0, 0);
+            commands->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
             commands->EndRenderPass();
 
@@ -1190,7 +1206,7 @@ namespace renderer {
 
         render_forward_pass(registry, commands, *material_bind_group);
 
-        run_denoiser_pass(commands);
+        render_denoiser_pass(commands);
 
         render_backbuffer_output_pass(commands);
     }
@@ -1243,7 +1259,7 @@ namespace renderer {
         }
     }
 
-    void Renderer::render_ui(rhi::RenderCommandList& command_list, const uint32_t frame_idx) const {
+    void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
         // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in
@@ -1253,9 +1269,17 @@ namespace renderer {
             return;
         }
 
-        command_list.bind_pipeline_state(*ui_pipeline);
+        commands->SetPipelineState(ui_pipeline->pso.Get());
 
-        command_list.set_viewport(draw_data->DisplayPos, draw_data->DisplaySize);
+        {
+            const auto viewport = D3D12_VIEWPORT{.TopLeftX = draw_data->DisplayPos.x,
+                                                 .TopLeftY = draw_data->DisplayPos.y,
+                                                 .Width = draw_data->DisplaySize.x,
+                                                 .Height = draw_data->DisplaySize.y,
+                                                 .MinDepth = 0,
+                                                 .MaxDepth = 1};
+            commands->RSSetViewports(1, &viewport);
+        }
 
         uint32_t vertex_offset{0};
         uint32_t index_offset{0};
@@ -1274,7 +1298,7 @@ namespace renderer {
                 .size = vertex_buffer_size,
             };
             auto vertex_buffer = device->create_buffer(vert_buffer_create_info);
-            command_list.copy_data_to_buffer(imgui_vertices, vertex_buffer_size, *vertex_buffer);
+            rhi::upload_data_with_staging_buffer(commands, *device, vertex_buffer->resource.Get(), imgui_vertices, vertex_buffer_size);
 
             const auto index_buffer_create_info = rhi::BufferCreateInfo{
                 .name = "Dear ImGUI Index Buffer",
@@ -1282,9 +1306,31 @@ namespace renderer {
                 .size = index_buffer_size,
             };
             auto index_buffer = device->create_buffer(index_buffer_create_info);
-            command_list.copy_data_to_buffer(imgui_indices, index_buffer_size, *index_buffer);
+            rhi::upload_data_with_staging_buffer(commands, *device, index_buffer->resource.Get(), imgui_indices, index_buffer_size);
 
-            command_list.bind_ui_mesh(*vertex_buffer, *index_buffer);
+            {
+                const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer->resource.Get(),
+                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                       D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
+                                                  CD3DX12_RESOURCE_BARRIER::Transition(index_buffer->resource.Get(),
+                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                       D3D12_RESOURCE_STATE_INDEX_BUFFER)};
+                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+            }
+
+            {
+                const auto vb_view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = vertex_buffer->resource->GetGPUVirtualAddress(),
+                                                              .SizeInBytes = vertex_buffer->size,
+                                                              .StrideInBytes = sizeof(ImDrawVert)};
+                commands->IASetVertexBuffers(0, 1, &vb_view);
+
+                const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer->resource->GetGPUVirtualAddress(),
+                                                             .SizeInBytes = index_buffer->size,
+                                                             .Format = DXGI_FORMAT_R32_UINT};
+                commands->IASetIndexBuffer(&ib_view);
+
+                commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            }
 
             for(const auto& cmd : cmd_list->CmdBuffer) {
                 if(cmd.UserCallback) {
@@ -1293,13 +1339,23 @@ namespace renderer {
                 } else {
                     const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
                     const auto material_idx = static_cast<uint32_t>(imgui_material_idx);
-                    command_list.set_material_idx(material_idx);
+                    commands->SetGraphicsRoot32BitConstant(0, material_idx, 1);
 
-                    const auto& clip_rect = cmd.ClipRect;
-                    const auto pos = draw_data->DisplayPos;
-                    command_list.set_scissor_rect({clip_rect.x - pos.x, clip_rect.y - pos.y}, {clip_rect.z - pos.x, clip_rect.w - pos.y});
+                    {
+                        const auto& clip_rect = cmd.ClipRect;
+                        const auto pos = draw_data->DisplayPos;
+                        const auto top_left_x = clip_rect.x - pos.x;
+                        const auto top_left_y = clip_rect.y - pos.y;
+                        const auto width = clip_rect.z - pos.x;
+                        const auto height = clip_rect.w - pos.y;
+                        const auto rect = D3D12_RECT{.left = static_cast<LONG>(top_left_x),
+                                                     .top = static_cast<LONG>(top_left_y),
+                                                     .right = static_cast<LONG>(top_left_x + width),
+                                                     .bottom = static_cast<LONG>(top_left_y + height)};
+                        commands->RSSetScissorRects(1, &rect);
+                    }
 
-                    command_list.draw(cmd.ElemCount, cmd.IdxOffset);
+                    commands->DrawIndexedInstanced(cmd.ElemCount, 1, cmd.IdxOffset, 0, 0);
                 }
             }
 

@@ -212,7 +212,7 @@ namespace renderer {
         [[nodiscard]] bool expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const;
 #pragma endregion
 
-        void run_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands);
+        void render_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 #pragma endregion
 
 #pragma region 3D Scene
@@ -230,6 +230,7 @@ namespace renderer {
         [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_resources_for_frame(uint32_t frame_idx);
 
         void render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources);
+
         void draw_objects_in_scene(entt::registry& registry,
                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                    const rhi::BindGroup& material_bind_group);
@@ -240,7 +241,7 @@ namespace renderer {
 
         void draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const;
 
-        void render_backbuffer_output_pass(rhi::RenderCommandList& command_list) const;
+        void render_backbuffer_output_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
         void render_3d_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx);
 #pragma endregion
@@ -255,7 +256,7 @@ namespace renderer {
 
         void create_ui_mesh_buffers();
 
-        void render_ui(rhi::RenderCommandList& command_list, uint32_t frame_idx) const;
+        void render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
 #pragma endregion
     };
 } // namespace renderer
