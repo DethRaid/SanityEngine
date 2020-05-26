@@ -148,7 +148,10 @@ namespace rhi {
     }
 
     std::unique_ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
-        const auto format = to_dxgi_format(create_info.format);
+        auto format = to_dxgi_format(create_info.format);   // TODO: Different to_dxgi_format functions for the different kinds of things
+        if(format == DXGI_FORMAT_D32_FLOAT) {
+            format = DXGI_FORMAT_R32_TYPELESS;  // Create depth buffers with a TYPELESS format
+        }
         auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
                                                  static_cast<uint32_t>(round(create_info.width)),
                                                  static_cast<uint32_t>(round(create_info.height)));

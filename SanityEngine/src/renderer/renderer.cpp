@@ -30,7 +30,6 @@ static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
-    constexpr const char* SCENE_DEPTH_TEXTURE = "Scene depth texture";
 
     constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
     constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
@@ -541,21 +540,9 @@ namespace renderer {
         };
 
         scene_depth_target_handle = create_image(depth_target_create_info);
-        const auto& depth_target = get_image(scene_depth_target_handle);
-        
-        // scene_depth_target = device->create_image(depth_target_create_info);
-
-        const auto depth_texture_create_info = rhi::ImageCreateInfo{
-            .name = SCENE_DEPTH_TEXTURE,
-            .usage = rhi::ImageUsage::SampledImage,
-            .format = rhi::ImageFormat::R32F,
-            .width = output_framebuffer_size.x,
-            .height = output_framebuffer_size.y,
-        };
-
-        scene_depth_texture_handle = create_image(depth_texture_create_info);
 
         const auto& color_target = get_image(scene_color_target_handle);
+        const auto& depth_target = get_image(scene_depth_target_handle);
 
         scene_framebuffer = device->create_framebuffer({&color_target}, &depth_target);
 
@@ -981,47 +968,6 @@ namespace renderer {
         }
     }
 
-    void Renderer::copy_depth_target_to_texture(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        const auto& scene_depth_target = get_image(scene_depth_target_handle);
-        const auto& depth_texture = get_image(SCENE_DEPTH_TEXTURE);
-
-        {
-            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(depth_texture.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
-                                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                                                   D3D12_RESOURCE_STATE_COPY_DEST),
-                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-
-        {
-            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = scene_depth_target.resource.Get(),
-                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                       .SubresourceIndex = 0};
-
-            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = depth_texture.resource.Get(),
-                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                       .SubresourceIndex = 0};
-
-            const auto copy_box = D3D12_BOX{.right = scene_depth_target.width, .bottom = scene_depth_target.height, .back = 1};
-
-            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, nullptr);
-        }
-
-        {
-            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(depth_texture.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
-                                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                                                                   D3D12_RESOURCE_STATE_DEPTH_WRITE)};
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-    }
-
     void Renderer::bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
         const auto render_target_accesses = std::vector{
             // Scene color
@@ -1069,8 +1015,6 @@ namespace renderer {
         draw_sky(registry, commands);
 
         commands->EndRenderPass();
-
-        copy_depth_target_to_texture(commands);
     }
 
     void Renderer::draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const {
