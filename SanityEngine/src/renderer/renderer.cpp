@@ -1017,9 +1017,7 @@ namespace renderer {
         }
     }
 
-    void Renderer::render_forward_pass(entt::registry& registry,
-                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                       const rhi::BindGroup& material_bind_group) {
+    void Renderer::bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         const auto render_target_accesses = std::vector{
             // Scene color
             D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
@@ -1039,6 +1037,25 @@ namespace renderer {
                                   render_target_accesses.data(),
                                   &depth_access,
                                   D3D12_RENDER_PASS_FLAG_NONE);
+
+        
+        D3D12_VIEWPORT viewport{};
+        viewport.MinDepth = 0;
+        viewport.MaxDepth = 1;
+        viewport.Width = scene_framebuffer->width;
+        viewport.Height = scene_framebuffer->height;
+        commands->RSSetViewports(1, &viewport);
+
+        D3D12_RECT scissor_rect{};
+        scissor_rect.right = static_cast<LONG>(scene_framebuffer->width);
+        scissor_rect.bottom = static_cast<LONG>(scene_framebuffer->height);
+        commands->RSSetScissorRects(1, &scissor_rect);
+    }
+
+    void Renderer::render_forward_pass(entt::registry& registry,
+                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                       const rhi::BindGroup& material_bind_group) {
+        bind_scene_framebuffer(commands);
 
         draw_objects_in_scene(registry, commands, material_bind_group);
 
@@ -1073,6 +1090,18 @@ namespace renderer {
                                                                             .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
         commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+
+        D3D12_VIEWPORT viewport{};
+        viewport.MinDepth = 0;
+        viewport.MaxDepth = 1;
+        viewport.Width = framebuffer->width;
+        viewport.Height = framebuffer->height;
+        commands->RSSetViewports(1, &viewport);
+
+        D3D12_RECT scissor_rect{};
+        scissor_rect.right = static_cast<LONG>(framebuffer->width);
+        scissor_rect.bottom = static_cast<LONG>(framebuffer->height);
+        commands->RSSetScissorRects(1, &scissor_rect);
 
         commands->SetGraphicsRoot32BitConstant(0, backbuffer_output_material.index, 1);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());

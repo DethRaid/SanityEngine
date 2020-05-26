@@ -235,6 +235,7 @@ namespace renderer {
                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                    const rhi::BindGroup& material_bind_group);
         void copy_depth_target_to_texture(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
+        void bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void render_forward_pass(entt::registry& registry,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
