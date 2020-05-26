@@ -954,7 +954,9 @@ namespace renderer {
         }
     }
 
-    void Renderer::draw_objects_in_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, const rhi::BindGroup& material_bind_group) {
+    void Renderer::draw_objects_in_scene(entt::registry& registry,
+                                         const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                         const rhi::BindGroup& material_bind_group) {
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -1066,8 +1068,10 @@ namespace renderer {
         command_list.draw(3);
     }
 
-    void Renderer::run_denoiser_pass(rhi::RenderCommandList& commands) {
+    void Renderer::run_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         if(settings.use_optix_denoiser) {
+            // TODO: Figure out how to get this to work
+
             const auto input_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_scene_render_target),
                                                   .width = output_framebuffer_size.x,
                                                   .height = output_framebuffer_size.y,
@@ -1119,26 +1123,52 @@ namespace renderer {
         } else {
             // No OptiX? Just accumulate rays!
 
-            const auto render_target_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Discard},
-                                                                      .end = {.type = rhi::RenderTargetEndingAccessType::Preserve}};
+            {
+                const auto render_target_access =
+                    D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
+                                                         .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                                                         .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-            commands.begin_render_pass(*denoised_framebuffer, {render_target_access});
+                commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+            }
 
-            commands.bind_pipeline_state(*accumulation_pipeline);
+            commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
-            commands.set_material_idx(accumulation_material_handle.index);
+            commands->SetGraphicsRoot32BitConstant(0, accumulation_material_handle.index, 1);
 
             const auto& accumulation_image = *all_images[accumulation_target_handle.index];
-            commands.transition_image(accumulation_image, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            {
+                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                commands->ResourceBarrier(1, &barrier);
+            }
 
-            commands.draw(3);
+            commands->DrawInstanced(3, 1, 0, 0);
 
-            commands.end_render_pass();
+            commands->EndRenderPass();
 
             const auto& denoised_image = *all_images[denoised_color_target_handle.index];
-            commands.copy_render_target_to_image(denoised_image, accumulation_image);
+            {
+                const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
+                                                                           .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                           .SubresourceIndex = 0};
 
-            commands.set_resource_state(denoised_image, D3D12_RESOURCE_STATE_RENDER_TARGET);
+                const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
+                                                                           .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                           .SubresourceIndex = 0};
+
+                const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
+
+                commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
+            }
+
+            {
+                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                          D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                                                          D3D12_RESOURCE_STATE_RENDER_TARGET);
+                commands->ResourceBarrier(1, &barrier);
+            }
         }
     }
 

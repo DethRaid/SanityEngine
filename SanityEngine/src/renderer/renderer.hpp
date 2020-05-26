@@ -212,7 +212,7 @@ namespace renderer {
         [[nodiscard]] bool expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const;
 #pragma endregion
 
-        void run_denoiser_pass(rhi::RenderCommandList& commands);
+        void run_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 #pragma endregion
 
 #pragma region 3D Scene
