@@ -540,7 +540,10 @@ namespace renderer {
             .height = output_framebuffer_size.y,
         };
 
-        scene_depth_target = device->create_image(depth_target_create_info);
+        scene_depth_target_handle = create_image(depth_target_create_info);
+        const auto& depth_target = get_image(scene_depth_target_handle);
+        
+        // scene_depth_target = device->create_image(depth_target_create_info);
 
         const auto depth_texture_create_info = rhi::ImageCreateInfo{
             .name = SCENE_DEPTH_TEXTURE,
@@ -550,11 +553,11 @@ namespace renderer {
             .height = output_framebuffer_size.y,
         };
 
-        create_image(depth_texture_create_info);
+        scene_depth_texture_handle = create_image(depth_texture_create_info);
 
         const auto& color_target = get_image(scene_color_target_handle);
 
-        scene_framebuffer = device->create_framebuffer({&color_target}, scene_depth_target.get());
+        scene_framebuffer = device->create_framebuffer({&color_target}, &depth_target);
 
         color_target_create_info.name = DENOISED_SCENE_RENDER_TARGET;
         denoised_color_target_handle = create_image(color_target_create_info);
@@ -601,8 +604,9 @@ namespace renderer {
         auto& accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
         accumulation_material.accumulation_texture = accumulation_target_handle;
         accumulation_material.scene_output_texture = scene_color_target_handle;
+        accumulation_material.scene_depth_texture = scene_depth_target_handle;
 
-        logger->debug("Accumulation material idx: {} Accumulation texture idx: {} scene output texture idx: {}",
+        logger->trace("Accumulation material idx: {} Accumulation texture idx: {} scene output texture idx: {}",
                       accumulation_material_handle.index,
                       accumulation_target_handle.index,
                       scene_color_target_handle.index);
@@ -978,6 +982,7 @@ namespace renderer {
     }
 
     void Renderer::copy_depth_target_to_texture(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+        const auto& scene_depth_target = get_image(scene_depth_target_handle);
         const auto& depth_texture = get_image(SCENE_DEPTH_TEXTURE);
 
         {
@@ -985,14 +990,14 @@ namespace renderer {
                                                                                    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
                                                                                        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                                    D3D12_RESOURCE_STATE_COPY_DEST),
-                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target->resource.Get(),
+                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target.resource.Get(),
                                                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE,
                                                                                    D3D12_RESOURCE_STATE_COPY_SOURCE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         {
-            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = scene_depth_target->resource.Get(),
+            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = scene_depth_target.resource.Get(),
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
 
@@ -1000,9 +1005,9 @@ namespace renderer {
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
 
-            const auto copy_box = D3D12_BOX{.right = scene_depth_target->width, .bottom = scene_depth_target->height, .back = 1};
+            const auto copy_box = D3D12_BOX{.right = scene_depth_target.width, .bottom = scene_depth_target.height, .back = 1};
 
-            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
+            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, nullptr);
         }
 
         {
@@ -1010,14 +1015,14 @@ namespace renderer {
                                                                                    D3D12_RESOURCE_STATE_COPY_DEST,
                                                                                    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
                                                                                        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target->resource.Get(),
+                                              CD3DX12_RESOURCE_BARRIER::Transition(scene_depth_target.resource.Get(),
                                                                                    D3D12_RESOURCE_STATE_COPY_SOURCE,
                                                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
     }
 
-    void Renderer::bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+    void Renderer::bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
         const auto render_target_accesses = std::vector{
             // Scene color
             D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],

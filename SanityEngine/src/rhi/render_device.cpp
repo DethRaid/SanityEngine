@@ -153,8 +153,7 @@ namespace rhi {
                                                  static_cast<uint32_t>(round(create_info.width)),
                                                  static_cast<uint32_t>(round(create_info.height)));
 
-        D3D12MA::ALLOCATION_DESC alloc_desc{};
-        alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+        D3D12MA::ALLOCATION_DESC alloc_desc{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
 
         if(create_info.enable_resource_sharing) {
             alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;

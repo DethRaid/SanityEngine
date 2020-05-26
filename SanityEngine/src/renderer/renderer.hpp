@@ -118,7 +118,10 @@ namespace renderer {
         std::unordered_map<std::string, uint32_t> image_name_to_index;
         std::vector<std::unique_ptr<rhi::Image>> all_images;
 
-        std::unique_ptr<rhi::Image> scene_depth_target;
+        TextureHandle scene_depth_target_handle;
+        // std::unique_ptr<rhi::Image> scene_depth_target;
+
+        TextureHandle scene_depth_texture_handle;
 
         std::array<Light, MAX_NUM_LIGHTS> lights;
         std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
@@ -235,7 +238,7 @@ namespace renderer {
                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                    const rhi::BindGroup& material_bind_group);
         void copy_depth_target_to_texture(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
-        void bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands);
+        void bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
         void render_forward_pass(entt::registry& registry,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
