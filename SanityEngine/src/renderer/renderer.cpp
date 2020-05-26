@@ -1028,7 +1028,10 @@ namespace renderer {
 
         const auto
             depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
-                                                                .DepthBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                .DepthBeginningAccess =
+                                                                    {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                              .DepthStencil = {.Depth = 1.0}}}},
                                                                 .StencilBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD,
                                                                 .DepthEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE,
                                                                 .StencilEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD};
@@ -1038,7 +1041,6 @@ namespace renderer {
                                   &depth_access,
                                   D3D12_RENDER_PASS_FLAG_NONE);
 
-        
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
