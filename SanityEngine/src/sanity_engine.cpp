@@ -95,7 +95,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    load_3d_object("data/models/gi.obj");
+    load_3d_object("data/models/corny.obj");
 }
 
 SanityEngine::~SanityEngine() {
@@ -215,3 +215,4 @@ void SanityEngine::load_3d_object(const std::string& filename) {
     MTR_SCOPE("SanityEngine", msg.c_str());
     load_static_mesh(filename, registry, *renderer);
 }
+

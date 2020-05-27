@@ -428,7 +428,7 @@ namespace renderer {
     }
 
     void Renderer::create_builtin_images() {
-        load_noise_texture("data/textures/blue_noise.png");
+        load_noise_texture("data/textures/LDR_RGBA_0.png");
 
         const auto commands = device->create_command_list();
 

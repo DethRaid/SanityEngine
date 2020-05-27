@@ -28,7 +28,7 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
 
 float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texcoord, Texture2D noise) {
     // Shadow ray query
-    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
+    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
 
     float shadow_strength = 1.0;
 
@@ -49,7 +49,7 @@ float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texc
 
         // Set up work
         q.TraceRayInline(raytracing_scene,
-                         RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH,
+                         RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES,
                          0xFF,
                          ray);
 

@@ -68,14 +68,14 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
  */
 float3 raytraced_indirect_light(
     in float3 position_worldspace, in float3 normal, in float3 albedo, in float2 noise_texcoord, in Light sun, in Texture2D noise) {
-    uint num_indirect_rays = 4;
+    uint num_indirect_rays = 8;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
     // shaders
 
     // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
 
     float3 indirect_light = 0;
 
@@ -96,7 +96,7 @@ float3 raytraced_indirect_light(
         ray.TMax = 1000; // TODO: Pass this in with a CB
 
         // Set up work
-        query.TraceRayInline(raytracing_scene, RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xFF, ray);
+        query.TraceRayInline(raytracing_scene, RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES, 0xFF, ray);
 
         // Actually perform the trace
         query.Proceed();
@@ -115,7 +115,7 @@ float3 raytraced_indirect_light(
 
             // Sample the BRDF at the hit location
             float3 reflected_light = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color;
-            indirect_light += reflected_light / max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
+            indirect_light += reflected_light;// / max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
 
         } else {
             // Sample the atmosphere
