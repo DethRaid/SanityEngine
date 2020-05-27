@@ -98,3 +98,4 @@ namespace rhi {
         commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
     }
 } // namespace rhi
+

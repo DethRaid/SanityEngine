@@ -60,7 +60,7 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
     v.color = v0.color + barycentrics.x * (v1.color - v0.color) + barycentrics.y * (v2.color - v0.color);
     v.texcoord = v0.texcoord + barycentrics.x * (v1.texcoord - v0.texcoord) + barycentrics.y * (v2.texcoord - v0.texcoord);
 
-    return v0;
+    return v;
 }
 
 struct SanityRayHit {
@@ -77,9 +77,11 @@ struct SanityRayHit {
 float4 get_incoming_light(in float3 ray_origin,
                           in float3 direction,
                           in Light sun,
-                          RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
-                          float2 noise_texcoord,
-                          Texture2D noise) {
+                          inout RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
+                          in float2 noise_texcoord,
+                          in Texture2D noise,
+                          out StandardVertex vertex,
+                          out MaterialData material) {
 
     RayDesc ray;
     ray.Origin = ray_origin;
@@ -96,10 +98,10 @@ float4 get_incoming_light(in float3 ray_origin,
     if(query.CommittedStatus() == COMMITTED_TRIANGLE_HIT) {
         uint triangle_index = query.CommittedPrimitiveIndex();
         float2 barycentrics = query.CommittedTriangleBarycentrics();
-        StandardVertex vertex = get_vertex_attributes(triangle_index, barycentrics);
+        vertex = get_vertex_attributes(triangle_index, barycentrics);
 
         uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
-        MaterialData material = material_buffer[material_id];
+        material = material_buffer[material_id];
 
         Texture2D albedo_tex = textures[material.albedo_idx];
         float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
@@ -145,9 +147,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 16;
+    uint num_indirect_rays = 8;
 
-    uint num_bounces = 1;
+    uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -164,6 +166,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     float3 view_vector = eye_vector;
 
     for(uint light_sample_idx = 1; light_sample_idx <= num_indirect_rays; light_sample_idx++) {
+        float3 contribution = 1;
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
@@ -172,13 +175,30 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                              1.0);
 
             float3 projected_vector = random_vector - (surface_normal * dot(normal, random_vector));
-
             float random_angle = random_vector.z * PI * 2 - PI;
             float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
             float3 ray_direction = normalize(mul(rotation_matrix, surface_normal));
 
-            float4 incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query, noise_texcoord, noise);
-            light_sample += brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector) * incoming_light.rgb;
+            contribution *= brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector);
+
+            StandardVertex hit_vertex;
+            MaterialData hit_material;
+
+            float4
+                incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query, noise_texcoord, noise, hit_vertex, hit_material);
+            light_sample += contribution * incoming_light.rgb;
+            if(incoming_light.a > 0.05) {
+                // set up next ray
+                ray_origin = hit_vertex.position;
+                surface_normal = hit_vertex.normal;
+                Texture2D albedo_tex = textures[hit_material.albedo_idx];
+                surface_albedo = albedo_tex.Sample(bilinear_sampler, hit_vertex.texcoord).rgb;
+                view_vector = ray_direction;
+
+            } else {
+                // Ray hit the sky, nothing to bounce through
+                break;
+            }
         }
 
         indirect_light += light_sample;
