@@ -63,19 +63,84 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
     return v0;
 }
 
+struct SanityRayHit {
+    float3 position;
+    float3 normal;
+    float3 albedo;
+};
+
+/*!
+ * \brief Sample the light that's coming from a given direction to a given point
+ *
+ * \return A float4 where the rgb are the incoming light and the a is 1 if we hit a surface, 0 is we're sampling the sky
+ */
+float4 get_incoming_light(in float3 position_worldspace, in float3 direction, in Light sun) {
+    // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+
+    RayDesc ray;
+    ray.Origin = position_worldspace;
+    ray.TMin = 0.001; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
+    ray.Direction = direction;
+    ray.TMax = 1000; // TODO: Pass this in with a CB
+
+    // Set up work
+    query.TraceRayInline(raytracing_scene, RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES, 0xFF, ray);
+
+    // Actually perform the trace
+    query.Proceed();
+
+    if(query.CommittedStatus() == COMMITTED_TRIANGLE_HIT) {
+        uint triangle_index = query.CommittedPrimitiveIndex();
+        float2 barycentrics = query.CommittedTriangleBarycentrics();
+        StandardVertex vertex = get_vertex_attributes(triangle_index, barycentrics);
+
+        uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
+        MaterialData material = material_buffer[material_id];
+
+        Texture2D albedo_tex = textures[material.albedo_idx];
+        float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
+
+        // Calculate the diffuse light reflected by the hit point along the ray
+        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color /
+                                          max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
+        return float4(reflected_direct_diffuse, 1.0);
+
+    } else {
+        // Sample the atmosphere
+        float3 atmosphere_sample = atmosphere(6471e3,
+                                              direction,
+                                              float3(0, 6371e3, 0),
+                                              -sun.direction,                   // direction of the sun
+                                              22.0f,                            // intensity of the sun
+                                              6371e3,                           // radius of the planet in meters
+                                              6471e3,                           // radius of the atmosphere in meters
+                                              float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
+                                              21e-6,                            // Mie scattering coefficient
+                                              8e3,                              // Rayleigh scale height
+                                              1.2e3,                            // Mie scale height
+                                              0.758                             // Mie preferred scattering direction
+        );
+    }
+
+    return 0;
+}
+
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
  */
-float3 raytraced_indirect_light(
-    in float3 position_worldspace, in float3 normal, in float3 albedo, in float2 noise_texcoord, in Light sun, in Texture2D noise) {
+float3 raytraced_indirect_light(in float3 position_worldspace,
+                                in float3 normal,
+                                in float3 eye_vector,
+                                in float3 albedo,
+                                in float2 noise_texcoord,
+                                in Light sun,
+                                in Texture2D noise) {
     uint num_indirect_rays = 8;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
     // shaders
-
-    // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
 
     float3 indirect_light = 0;
 
@@ -89,55 +154,8 @@ float3 raytraced_indirect_light(
         float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
         float3 ray_direction = normalize(mul(rotation_matrix, normal));
 
-        RayDesc ray;
-        ray.Origin = position_worldspace;
-        ray.TMin = 0.001; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
-        ray.Direction = ray_direction;
-        ray.TMax = 1000; // TODO: Pass this in with a CB
-
-        // Set up work
-        query.TraceRayInline(raytracing_scene, RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES, 0xFF, ray);
-
-        // Actually perform the trace
-        query.Proceed();
-
-        if(query.CommittedStatus() == COMMITTED_TRIANGLE_HIT) {
-            // Sample the BRDF of the hit point
-            uint triangle_index = query.CommittedPrimitiveIndex();
-            float2 barycentrics = query.CommittedTriangleBarycentrics();
-            StandardVertex vertex = get_vertex_attributes(triangle_index, barycentrics);
-
-            uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
-            MaterialData material = material_buffer[material_id];
-
-            Texture2D albedo_tex = textures[material.albedo_idx];
-            float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
-
-            // Sample the BRDF at the hit location
-            float3 reflected_light = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color;
-            indirect_light += reflected_light;// / max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
-
-        } else {
-            // Sample the atmosphere
-
-            float3 atmosphere_sample = atmosphere(6471e3,
-                                                  ray_direction,
-                                                  float3(0, 6371e3, 0),
-                                                  -sun.direction,                   // direction of the sun
-                                                  22.0f,                            // intensity of the sun
-                                                  6371e3,                           // radius of the planet in meters
-                                                  6471e3,                           // radius of the atmosphere in meters
-                                                  float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
-                                                  21e-6,                            // Mie scattering coefficient
-                                                  8e3,                              // Rayleigh scale height
-                                                  1.2e3,                            // Mie scale height
-                                                  0.758                             // Mie preferred scattering direction
-            );
-
-            if(!any(isnan(atmosphere_sample))) {
-                indirect_light += atmosphere_sample;
-            }
-        }
+        float4 incoming_light = get_incoming_light(position_worldspace, ray_direction, sun);
+        indirect_light += brdf(albedo, 0.02, 0.5, normal, -ray_direction, eye_vector) * incoming_light.rgb;
     }
 
     return albedo * (indirect_light / num_indirect_rays);
@@ -178,7 +196,13 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float3 direct_light = light_from_sun * sun_shadow;
 
-    float3 indirect_light = raytraced_indirect_light(input.position_worldspace, input.normal, albedo, noise_texcoord, sun, noise);
+    float3 indirect_light = raytraced_indirect_light(input.position_worldspace,
+                                                     input.normal,
+                                                     view_vector_worldspace,
+                                                     albedo,
+                                                     noise_texcoord,
+                                                     sun,
+                                                     noise);
 
     float3 total_reflected_light = indirect_light + direct_light;
 

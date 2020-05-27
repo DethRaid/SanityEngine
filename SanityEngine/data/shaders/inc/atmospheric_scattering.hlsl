@@ -133,5 +133,11 @@ float3 atmosphere(float maxDepth,
     float spot = smoothstep(0.0, 15.0, phase_sun);
 
     // Calculate and return the final color.
-    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie + spot);
+    float3 atmos = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie + spot);
+
+    if(!any(isnan(atmos))) {
+        return atmos;
+    }
+
+    return 0.0;
 }
