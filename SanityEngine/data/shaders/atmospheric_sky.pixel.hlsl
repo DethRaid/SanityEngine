@@ -21,7 +21,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
                               normalize(-view_vector_worldspace.xyz),
                               float3(0, 6371e3, 0),
                               -light.direction,                 // direction of the sun
-                              22.0f,                            // intensity of the sun
+                              length(light.color),              // intensity of the sun
                               6371e3,                           // radius of the planet in meters
                               6471e3,                           // radius of the atmosphere in meters
                               float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient

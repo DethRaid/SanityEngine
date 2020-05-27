@@ -66,7 +66,7 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
 struct SanityRayHit {
     float3 position;
     float3 normal;
-    float3 albedo;
+    float3 brdf_result;
 };
 
 /*!
@@ -74,7 +74,12 @@ struct SanityRayHit {
  *
  * \return A float4 where the rgb are the incoming light and the a is 1 if we hit a surface, 0 is we're sampling the sky
  */
-float4 get_incoming_light(in float3 ray_origin, in float3 direction, in Light sun, RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query) {
+float4 get_incoming_light(in float3 ray_origin,
+                          in float3 direction,
+                          in Light sun,
+                          RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
+                          float2 noise_texcoord,
+                          Texture2D noise) {
 
     RayDesc ray;
     ray.Origin = ray_origin;
@@ -99,8 +104,12 @@ float4 get_incoming_light(in float3 ray_origin, in float3 direction, in Light su
         Texture2D albedo_tex = textures[material.albedo_idx];
         float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
 
+        float t = query.CommittedRayT();
+
+        float shadow = raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise);
+
         // Calculate the diffuse light reflected by the hit point along the ray
-        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color /
+        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color * shadow /
                                           max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
         return float4(reflected_direct_diffuse, 1.0);
 
@@ -110,7 +119,7 @@ float4 get_incoming_light(in float3 ray_origin, in float3 direction, in Light su
                                               direction,
                                               float3(0, 6371e3, 0),
                                               -sun.direction,                   // direction of the sun
-                                              22.0f,                            // intensity of the sun
+                                              length(sun.color),                // intensity of the sun
                                               6371e3,                           // radius of the planet in meters
                                               6471e3,                           // radius of the atmosphere in meters
                                               float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
@@ -124,6 +133,8 @@ float4 get_incoming_light(in float3 ray_origin, in float3 direction, in Light su
     }
 }
 
+struct HitRecord {};
+
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
  */
@@ -134,7 +145,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 1;
+    uint num_indirect_rays = 16;
 
     uint num_bounces = 1;
 
@@ -157,8 +168,8 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
             // Random hemisphere oriented around the surface's normal
-            float3 random_vector = normalize(
-                noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx * 0.125).rgb * 2.0 - 1.0);
+            float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 -
+                                             1.0);
 
             float3 projected_vector = random_vector - (surface_normal * dot(normal, random_vector));
 
@@ -166,7 +177,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
             float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
             float3 ray_direction = normalize(mul(rotation_matrix, surface_normal));
 
-            float4 incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query);
+            float4 incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query, noise_texcoord, noise);
             light_sample += brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector) * incoming_light.rgb;
         }
 

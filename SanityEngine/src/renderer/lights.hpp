@@ -17,7 +17,7 @@ namespace renderer {
         /*!
          * \brief HDR color of this light
          */
-        glm::vec3 color{glm::normalize(glm::vec3{1, 1, 1})};
+        glm::vec3 color{glm::normalize(glm::vec3{1, 1, 1}) * 22.0f};
 
         glm::vec3 direction{glm::normalize(glm::vec3{0, -1, 0})};
 

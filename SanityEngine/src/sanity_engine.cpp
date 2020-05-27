@@ -95,7 +95,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    load_3d_object("data/models/corny.obj");
+    load_3d_object("data/models/box_big_hole.obj");
 }
 
 SanityEngine::~SanityEngine() {
