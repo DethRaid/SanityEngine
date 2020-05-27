@@ -77,7 +77,7 @@ struct SanityRayHit {
 float4 get_incoming_light(in float3 ray_origin,
                           in float3 direction,
                           in Light sun,
-                          inout RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
+                          inout RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query,
                           in float2 noise_texcoord,
                           in Texture2D noise,
                           out StandardVertex vertex,
@@ -85,7 +85,7 @@ float4 get_incoming_light(in float3 ray_origin,
 
     RayDesc ray;
     ray.Origin = ray_origin;
-    ray.TMin = 0.001; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
+    ray.TMin = 0.0;
     ray.Direction = direction;
     ray.TMax = 1000; // TODO: Pass this in with a CB
 
@@ -107,6 +107,10 @@ float4 get_incoming_light(in float3 ray_origin,
         float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
 
         float t = query.CommittedRayT();
+        if(t <= 0) {
+            // Ray is stuck
+            return 0;
+        }
 
         float shadow = raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise);
 
@@ -149,7 +153,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in Texture2D noise) {
     uint num_indirect_rays = 8;
 
-    uint num_bounces = 2;
+    uint num_bounces = 8;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -158,7 +162,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     float3 indirect_light = 0;
 
     // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
 
     float3 ray_origin = position_worldspace;
     float3 surface_normal = normal;
