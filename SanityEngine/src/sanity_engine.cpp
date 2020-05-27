@@ -119,6 +119,10 @@ void SanityEngine::run() {
 
             renderer->begin_frame(frame_count);
 
+            if(frame_count == 1) {
+                // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
+            }
+
             player_controller->update_player_transform(last_frame_duration);
 
             imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
@@ -215,4 +219,3 @@ void SanityEngine::load_3d_object(const std::string& filename) {
     MTR_SCOPE("SanityEngine", msg.c_str());
     load_static_mesh(filename, registry, *renderer);
 }
-

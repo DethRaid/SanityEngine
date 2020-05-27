@@ -1056,7 +1056,7 @@ namespace renderer {
 
         commands->SetGraphicsRoot32BitConstant(0, backbuffer_output_material.index, 1);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
-        commands->DrawIndexedInstanced(3, 1, 0, 0, 0);
+        commands->DrawInstanced(3, 1, 0, 0);
 
         commands->EndRenderPass();
     }
@@ -1137,7 +1137,7 @@ namespace renderer {
                 commands->ResourceBarrier(1, &barrier);
             }
 
-            commands->DrawIndexedInstanced(3, 1, 0, 0, 0);
+            commands->DrawInstanced(3, 1, 0, 0);
 
             commands->EndRenderPass();
 

@@ -74,12 +74,10 @@ struct SanityRayHit {
  *
  * \return A float4 where the rgb are the incoming light and the a is 1 if we hit a surface, 0 is we're sampling the sky
  */
-float4 get_incoming_light(in float3 position_worldspace, in float3 direction, in Light sun) {
-    // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+float4 get_incoming_light(in float3 ray_origin, in float3 direction, in Light sun, RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query) {
 
     RayDesc ray;
-    ray.Origin = position_worldspace;
+    ray.Origin = ray_origin;
     ray.TMin = 0.001; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
     ray.Direction = direction;
     ray.TMax = 1000; // TODO: Pass this in with a CB
@@ -121,9 +119,9 @@ float4 get_incoming_light(in float3 position_worldspace, in float3 direction, in
                                               1.2e3,                            // Mie scale height
                                               0.758                             // Mie preferred scattering direction
         );
-    }
 
-    return 0;
+        return float4(atmosphere_sample, 0);
+    }
 }
 
 /*!
@@ -136,7 +134,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 8;
+    uint num_indirect_rays = 1;
+
+    uint num_bounces = 1;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -144,21 +144,36 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
 
     float3 indirect_light = 0;
 
-    for(uint i = 1; i <= num_indirect_rays; i++) {
-        // Random hemisphere oriented around the surface's normal
-        float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i * 0.125).rgb * 2.0 - 1.0);
+    // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
 
-        float3 projected_vector = random_vector - (normal * dot(normal, random_vector));
+    float3 ray_origin = position_worldspace;
+    float3 surface_normal = normal;
+    float3 surface_albedo = albedo;
+    float3 view_vector = eye_vector;
 
-        float random_angle = random_vector.z * PI * 2 - PI;
-        float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
-        float3 ray_direction = normalize(mul(rotation_matrix, normal));
+    for(uint light_sample_idx = 1; light_sample_idx <= num_indirect_rays; light_sample_idx++) {
+        float3 light_sample = 0;
 
-        float4 incoming_light = get_incoming_light(position_worldspace, ray_direction, sun);
-        indirect_light += brdf(albedo, 0.02, 0.5, normal, -ray_direction, eye_vector) * incoming_light.rgb;
+        for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
+            // Random hemisphere oriented around the surface's normal
+            float3 random_vector = normalize(
+                noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx * 0.125).rgb * 2.0 - 1.0);
+
+            float3 projected_vector = random_vector - (surface_normal * dot(normal, random_vector));
+
+            float random_angle = random_vector.z * PI * 2 - PI;
+            float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
+            float3 ray_direction = normalize(mul(rotation_matrix, surface_normal));
+
+            float4 incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query);
+            light_sample += brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector) * incoming_light.rgb;
+        }
+
+        indirect_light += light_sample;
     }
 
-    return albedo * (indirect_light / num_indirect_rays);
+    return indirect_light / num_indirect_rays;
 }
 
 float4 main(VertexOutput input) : SV_TARGET {
