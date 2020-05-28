@@ -170,7 +170,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     float3 view_vector = eye_vector;
 
     for(uint light_sample_idx = 1; light_sample_idx <= num_indirect_rays; light_sample_idx++) {
-        float3 contribution = 1;
+        float3 reflection_factor = 1;
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
@@ -183,14 +183,14 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
             float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
             float3 ray_direction = normalize(mul(rotation_matrix, surface_normal));
 
-            contribution *= brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector);
+            reflection_factor *= brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector);
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
 
             float4
                 incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query, noise_texcoord, noise, hit_vertex, hit_material);
-            light_sample += contribution * incoming_light.rgb;
+            light_sample += reflection_factor * incoming_light.rgb;
             if(incoming_light.a > 0.05) {
                 // set up next ray
                 ray_origin = hit_vertex.position;

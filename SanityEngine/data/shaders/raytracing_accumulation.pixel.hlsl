@@ -12,7 +12,7 @@ struct MaterialData {
 
 #include "inc/standard_root_signature.hlsl"
 
-const static float ACCUMULATION_POWER = 0.025;
+const static float ACCUMULATION_POWER = 0.25;
 
 // TODO: Sample from the accumulation buffer from the camera's viewpoint last frame
 
@@ -21,21 +21,6 @@ float LinearizeDepth(float depth) {
     float farZ = 1000.0f; // Fake far because infinite projection matrix
     return (2.0 * nearZ) / (farZ + nearZ - depth * (farZ - nearZ));
 }
-
-/*
-float get_depth(in vec2 coord) { return texture2D(gdepthtex, coord.st).x; }
-
-vec4 get_viewspace_position(in vec2 coord) {
-    float depth = get_depth(coord);
-    vec4 pos = gbufferProjectionInverse * vec4(vec3(coord.st, depth) * 2.0 - 1.0, 1.0);
-    return pos / pos.w;
-}
-
-vec4 viewspace_to_worldspace(in vec4 position_viewspace) {
-    vec4 pos = gbufferModelViewInverse * position_viewspace;
-    return pos;
-}
-*/
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
@@ -60,7 +45,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
 
     // Only add in the previous frame's data if the pixel was onscreen last frame
     if(previous_texcoord.x <= 1.0 && previous_texcoord.x >= 0.0 && previous_texcoord.y <= 1.0 && previous_texcoord.y >= 0.0) {
-        float3 accumulated_color = accumulation_texture.Sample(point_sampler, previous_texcoord).rgb;
+        float3 accumulated_color = accumulation_texture.Sample(point_sampler, input.texcoord).rgb;
 
         float3 final_color = lerp(accumulated_color, scene_color.rgb, ACCUMULATION_POWER);
 

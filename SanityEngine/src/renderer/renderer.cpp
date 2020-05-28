@@ -1246,10 +1246,24 @@ namespace renderer {
     void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
+        {
+            const auto* backbuffer_framebuffer = device->get_backbuffer_framebuffer();
+
+            const auto
+                backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_framebuffer->rtv_handles[0],
+                                                                         .BeginningAccess =
+                                                                             {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE},
+                                                                         .EndingAccess = {
+                                                                             .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+
+            commands->BeginRenderPass(1, &backbuffer_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+        }
+
         // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in
 
         ImDrawData* draw_data = ImGui::GetDrawData();
         if(draw_data == nullptr) {
+            commands->EndRenderPass();
             return;
         }
 
@@ -1336,5 +1350,7 @@ namespace renderer {
             device->schedule_buffer_destruction(std::move(vertex_buffer));
             device->schedule_buffer_destruction(std::move(index_buffer));
         }
+
+        commands->EndRenderPass();
     }
 } // namespace renderer
