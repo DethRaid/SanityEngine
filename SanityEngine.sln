@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SanityEngine", "SanityEngine\SanityEngine.vcxproj", "{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VillageSim", "VillageSim\VillageSim.vcxproj", "{D4F84A0A-26E9-4938-9A07-165788C72644}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -23,14 +21,6 @@ Global
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Release|x64.Build.0 = Release|x64
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Release|x86.ActiveCfg = Release|Win32
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Release|x86.Build.0 = Release|Win32
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Debug|x64.ActiveCfg = Debug|x64
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Debug|x64.Build.0 = Debug|x64
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Debug|x86.ActiveCfg = Debug|Win32
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Debug|x86.Build.0 = Debug|Win32
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Release|x64.ActiveCfg = Release|x64
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Release|x64.Build.0 = Release|x64
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Release|x86.ActiveCfg = Release|Win32
-		{D4F84A0A-26E9-4938-9A07-165788C72644}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
