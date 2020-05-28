@@ -73,9 +73,6 @@
     <Filter Include="Shaders\inc">
       <UniqueIdentifier>{54bcccfc-0082-4108-b88e-6f7c1e55c953}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Modules">
-      <UniqueIdentifier>{2c734da1-0c67-4507-9e62-2f6533fe2219}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\loading">
       <UniqueIdentifier>{9cb5180d-a1c1-4355-8327-a638d5efbcf4}</UniqueIdentifier>
     </Filter>
@@ -93,6 +90,24 @@
     </Filter>
     <Filter Include="Source Files\ui">
       <UniqueIdentifier>{b178a131-fd37-455a-950b-8c1e8f329185}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\game">
+      <UniqueIdentifier>{7d64f63c-d886-484b-8c86-2aaad05b6f4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\game">
+      <UniqueIdentifier>{fdea173b-bbf6-4ac5-bd56-9722f859c058}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\world">
+      <UniqueIdentifier>{979400c0-5433-4f9d-b862-98a07c1651ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\world\generation">
+      <UniqueIdentifier>{4b89c3bb-8c16-429b-a0c9-488a1293db9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\world">
+      <UniqueIdentifier>{47e9be17-a905-4382-a8d2-20646005eb46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\world\generation">
+      <UniqueIdentifier>{079276f9-ecbf-4978-bcaa-b29edfddb308}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +215,15 @@
     </ClCompile>
     <ClCompile Include="src\loading\entity_loading.cpp">
       <Filter>Source Files\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\game.cpp">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\texture.cpp">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\generation\world_generation.cpp">
+      <Filter>Source Files\world\generation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -359,6 +383,15 @@
     <ClInclude Include="src\loading\entity_loading.hpp">
       <Filter>Header Files\loading</Filter>
     </ClInclude>
+    <ClInclude Include="src\game\game.hpp">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\generation\world_generation.hpp">
+      <Filter>Header Files\world\generation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\texture.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -399,9 +432,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\loading\shader_loading.ixx">
-      <Filter>Modules</Filter>
-    </None>
     <None Include="data\shaders\inc\atmospheric_scattering.hlsl">
       <Filter>Shaders\inc</Filter>
     </None>

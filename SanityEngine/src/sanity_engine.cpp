@@ -180,6 +180,7 @@ void SanityEngine::create_planetary_atmosphere() {
     // No need to set parameters, the default light component represents the Earth's sun
     registry.assign<renderer::LightComponent>(atmosphere);
     registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
+    registry.assign<TransformComponent>(atmosphere);    // Light rotations come from a Transform
 
     // Camera for the directional light's shadow
     // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
