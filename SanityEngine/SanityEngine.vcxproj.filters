@@ -219,11 +219,11 @@
     <ClCompile Include="src\game\game.cpp">
       <Filter>Source Files\game</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\texture.cpp">
-      <Filter>Source Files\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\world\generation\world_generation.cpp">
       <Filter>Source Files\world\generation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\textures.cpp">
+      <Filter>Source Files\renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -389,7 +389,7 @@
     <ClInclude Include="src\world\generation\world_generation.hpp">
       <Filter>Header Files\world\generation</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\texture.hpp">
+    <ClInclude Include="src\renderer\textures.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
   </ItemGroup>
