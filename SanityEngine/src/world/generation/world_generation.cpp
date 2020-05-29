@@ -25,6 +25,7 @@ float get_terrain_height(const TerrainSamplerParams& params, const renderer::Tex
     // Octave 2 has twice the resolution of octave 1
     //
     // etc
+
     const glm::vec2 octave_0_scale = noise_texture.get_size() / 4u;
     glm::vec2 texcoord = glm::vec2{params.longitude / (TERRAIN_LONGITUDE_RANGE * 2), params.latitude / (TERRAIN_LATITUDE_RANGE * 2)} *
                          octave_0_scale;
