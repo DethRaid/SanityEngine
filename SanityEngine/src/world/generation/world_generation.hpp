@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <glm/fwd.hpp>
 
 /*!
  * \brief A collection of things to aid in generating the world
@@ -27,8 +29,8 @@ constexpr float TERRAIN_LATITUDE_RANGE = 32768;
 constexpr float TERRAIN_LONGITUDE_RANGE = TERRAIN_LATITUDE_RANGE * 2;
 
 struct TerrainSamplerParams {
-    float latitude;
-    float longitude;
+    uint32_t latitude{};
+    uint32_t longitude{};
     float spread{0.5};
     float spread_reduction_rate{spread};
 };
@@ -38,7 +40,12 @@ namespace renderer {
 }
 
 /*!
- * \brief Gets the terrain height
+ * \brief Generates a terrain heightmap of a specific size
+ */
+[[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& size, const renderer::Texture2D& noise_texture);
+
+/*!
+ * \brief Gets the terrain height at a specific location
  */
 [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params, const renderer::Texture2D& noise_texture);
 

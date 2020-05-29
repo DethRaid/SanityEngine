@@ -8,6 +8,19 @@
 
 constexpr uint32_t NUM_OCTAVES = 5;
 
+std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& size, const renderer::Texture2D& noise_texture) {
+    auto heightmap = std::vector<std::vector<float>>(size.y, std::vector<float>(size.x));
+
+    for(uint32_t y = 0; y < size.y; y++) {
+        for(uint32_t x = 0; x < size.x; x++) {
+            const auto params = TerrainSamplerParams{.latitude = y, .longitude = x};
+            heightmap[y][x] = get_terrain_height(params, noise_texture);
+        }
+    }
+
+    return heightmap;
+}
+
 float get_terrain_height(const TerrainSamplerParams& params, const renderer::Texture2D& noise_texture) {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
                                                   .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
