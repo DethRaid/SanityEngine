@@ -225,6 +225,9 @@
     <ClCompile Include="src\renderer\textures.cpp">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -391,6 +394,9 @@
     </ClInclude>
     <ClInclude Include="src\renderer\textures.hpp">
       <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="world.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

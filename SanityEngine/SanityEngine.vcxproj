@@ -59,6 +59,7 @@
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
     <ClCompile Include="src\world\generation\world_generation.cpp" />
+    <ClCompile Include="world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extern\imgui\include\imgui\imconfig.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
     <ClInclude Include="src\world\generation\world_generation.hpp" />
+    <ClInclude Include="world.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
