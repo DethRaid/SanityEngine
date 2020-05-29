@@ -4,7 +4,7 @@
 
 #include <glm/vec2.hpp>
 
-#include "../../renderer/texture.hpp"
+#include "../../renderer/textures.hpp"
 
 constexpr uint32_t NUM_OCTAVES = 5;
 

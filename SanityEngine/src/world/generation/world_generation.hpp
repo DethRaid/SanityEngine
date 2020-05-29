@@ -41,3 +41,5 @@ namespace renderer {
  * \brief Gets the terrain height
  */
 [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params, const renderer::Texture2D& noise_texture);
+
+
