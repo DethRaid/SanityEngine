@@ -85,7 +85,7 @@ float4 get_incoming_light(in float3 ray_origin,
 
     RayDesc ray;
     ray.Origin = ray_origin;
-    ray.TMin = 0.0;
+    ray.TMin = 0.001;
     ray.Direction = direction;
     ray.TMax = 1000; // TODO: Pass this in with a CB
 
@@ -151,7 +151,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 4;
+    uint num_indirect_rays = 16;
 
     uint num_bounces = 2;
 
@@ -183,6 +183,10 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
             float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
             float3 ray_direction = normalize(mul(rotation_matrix, surface_normal));
 
+            if(dot(surface_normal, ray_direction) < 0) {
+                ray_direction *= -1;
+            }
+
             reflection_factor *= brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector);
 
             StandardVertex hit_vertex;
@@ -192,6 +196,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                 incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query, noise_texcoord, noise, hit_vertex, hit_material);
             light_sample += reflection_factor * incoming_light.rgb;
             if(incoming_light.a > 0.05) {
+
                 // set up next ray
                 ray_origin = hit_vertex.position;
                 surface_normal = hit_vertex.normal;
