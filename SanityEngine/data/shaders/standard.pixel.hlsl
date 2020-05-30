@@ -60,6 +60,8 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
     v.color = v0.color + barycentrics.x * (v1.color - v0.color) + barycentrics.y * (v2.color - v0.color);
     v.texcoord = v0.texcoord + barycentrics.x * (v1.texcoord - v0.texcoord) + barycentrics.y * (v2.texcoord - v0.texcoord);
 
+    // v.normal *= -1;
+
     return v;
 }
 
@@ -90,7 +92,7 @@ float4 get_incoming_light(in float3 ray_origin,
     ray.TMax = 1000; // TODO: Pass this in with a CB
 
     // Set up work
-    query.TraceRayInline(raytracing_scene, RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES, 0xFF, ray);
+    query.TraceRayInline(raytracing_scene, 0, 0xFF, ray);
 
     // Actually perform the trace
     query.Proceed();
@@ -115,7 +117,7 @@ float4 get_incoming_light(in float3 ray_origin,
         float shadow = raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise);
 
         // Calculate the diffuse light reflected by the hit point along the ray
-        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, sun.direction, ray.Direction) * sun.color * shadow /
+        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color * shadow /
                                           max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
         return float4(reflected_direct_diffuse, 1.0);
 
@@ -156,9 +158,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 16;
+    uint num_indirect_rays = 1;
 
-    uint num_bounces = 10;
+    uint num_bounces = 3;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -262,6 +264,5 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float3 total_reflected_light = indirect_light + direct_light;
 
-    // return float4(indirect_light, 1);
     return float4(total_reflected_light, albedo.a);
 }

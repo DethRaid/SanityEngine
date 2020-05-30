@@ -370,7 +370,6 @@ namespace renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
-            // .blend_state = {.render_target_blends = {rhi::RenderTargetBlendState{.enabled = true}}},
             .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
         };
@@ -633,6 +632,8 @@ namespace renderer {
 
                 // TODO: Figure out if we want to use the mask to control which kind of rays can hit which objects
                 desc.InstanceMask = 0xFF;
+
+                desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE;
 
                 desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
