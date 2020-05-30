@@ -141,11 +141,14 @@ float4 get_incoming_light(in float3 ray_origin,
     }
 }
 
-float3 SampleHemisphere(float2 uv) {
-    float phi = uv.y * 2 * PI;
-    float cosTheta = sqrt(1.0 - uv.x);
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-    return float3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+float3 CosineSampleHemisphere(float2 uv) {
+    float r = sqrt(uv.x);
+    float theta = 2 * PI * uv.y;
+    float cosTheta = cos(theta);
+    float sinTheta = sin(theta);
+    float x = r * cosTheta;
+    float y = r * sinTheta;
+    return float3(x, y, sqrt(max(0, 1 - uv.x)));
 }
 
 /*!
@@ -181,8 +184,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 -
-                                             1.0);
+            float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rg * 2.0 - 1.0;
+            float3 ray_direction = normalize(CosineSampleHemisphere(nums));
+            // float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 - 1.0);
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;
