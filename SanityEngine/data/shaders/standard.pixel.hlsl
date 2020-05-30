@@ -141,15 +141,31 @@ float4 get_incoming_light(in float3 ray_origin,
     }
 }
 
+// from http://www.rorydriscoll.com/2009/01/07/better-sampling/
 float3 CosineSampleHemisphere(float2 uv) {
     float r = sqrt(uv.x);
     float theta = 2 * PI * uv.y;
-    float cosTheta = cos(theta);
-    float sinTheta = sin(theta);
-    float x = r * cosTheta;
-    float y = r * sinTheta;
-    return float3(x, y, sqrt(max(0, 1 - uv.x)));
+    float x = r * cos(theta);
+    float z = r * sin(theta);
+    return float3(x, sqrt(max(0, 1 - uv.x)), z);
 }
+
+// Adapted from https://github.com/NVIDIA/Q2RTX/blob/9d987e755063f76ea86e426043313c2ba564c3b7/src/refresh/vkpt/shader/utils.glsl#L240
+float3x3 construct_ONB_frisvad(float3 normal) {
+    float3x3 ret;
+    ret[1] = normal;
+    if(normal.z < -0.999805696f) {
+        ret[0] = float3(0.0f, -1.0f, 0.0f);
+        ret[2] = float3(-1.0f, 0.0f, 0.0f);
+    } else {
+        float a = 1.0f / (1.0f + normal.z);
+        float b = -normal.x * normal.y * a;
+        ret[0] = float3(1.0f - normal.x * normal.x * a, b, -normal.x);
+        ret[2] = float3(b, 1.0f - normal.y * normal.y * a, -normal.y);
+    }
+    return ret;
+}
+
 
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
@@ -184,9 +200,11 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rg * 2.0 - 1.0;
-            float3 ray_direction = normalize(CosineSampleHemisphere(nums));
-            // float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 - 1.0);
+            // float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rg * 2.0 - 1.0;
+            // float3 ray_direction = normalize(CosineSampleHemisphere(nums));
+            // float3x3 onb = construct_ONB_frisvad(surface_normal);
+            // ray_direction = normalize(mul(onb, ray_direction));
+            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 - 1.0);
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;
