@@ -11,6 +11,7 @@
 #include "settings.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
+#include "world/world.hpp"
 
 /*!
  * \brief Main class for my glorious engine
@@ -50,6 +51,8 @@ private:
     std::unique_ptr<BveWrapper> bve;
 
     GLFWwindow* window;
+
+    std::unique_ptr<World> world;
 
     entt::registry registry;
 

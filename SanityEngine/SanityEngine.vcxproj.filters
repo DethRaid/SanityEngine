@@ -225,8 +225,11 @@
     <ClCompile Include="src\renderer\textures.cpp">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="world.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\world\world.cpp">
+      <Filter>Source Files\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\terrain.cpp">
+      <Filter>Source Files\world</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -395,8 +398,11 @@
     <ClInclude Include="src\renderer\textures.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="world.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\world\world.hpp">
+      <Filter>Header Files\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\terrain.hpp">
+      <Filter>Header Files\world</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

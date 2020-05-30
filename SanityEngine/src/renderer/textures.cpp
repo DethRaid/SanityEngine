@@ -6,12 +6,12 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace renderer {
-    std::shared_ptr<spdlog::logger> Texture2D::logger = spdlog::stdout_color_st("Texture2D");
+    std::shared_ptr<spdlog::logger> HostTexture2D::logger = spdlog::stdout_color_st("Texture2D");
 
-    Texture2D::Texture2D(const glm::uvec2& size_in, std::vector<glm::u8vec4> texels_in)
+    HostTexture2D::HostTexture2D(const glm::uvec2& size_in, std::vector<glm::u8vec4> texels_in)
         : size{size_in}, texel_size{1.0f / size}, texels{std::move(texels_in)} {}
 
-    glm::u8vec4 Texture2D::sample_linear(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& texcoord) const {
+    glm::u8vec4 HostTexture2D::sample_linear(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& texcoord) const {
         const auto texcoord_in_texels = texcoord * size;
 
         const auto texcoord_0_0 = floor(texcoord_in_texels);
@@ -33,7 +33,7 @@ namespace renderer {
         return glm::u8vec4{actual_texel};
     }
 
-    glm::u8vec4 Texture2D::sample_point(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& texcoord) const {
+    glm::u8vec4 HostTexture2D::sample_point(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& texcoord) const {
         glm::uvec2 texel_coords;
 
         switch(sampler_desc.AddressU) {
@@ -81,7 +81,7 @@ namespace renderer {
         return texels[texel_index];
     }
 
-    glm::u8vec4 Texture2D::sample(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& uv) const {
+    glm::u8vec4 HostTexture2D::sample(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& uv) const {
         if(sampler_desc.Filter == D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR) {
             return sample_linear(sampler_desc, uv);
 
@@ -94,5 +94,5 @@ namespace renderer {
         return {};
     }
 
-    glm::uvec2 Texture2D::get_size() const { return size; }
+    glm::uvec2 HostTexture2D::get_size() const { return size; }
 } // namespace renderer

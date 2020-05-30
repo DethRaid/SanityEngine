@@ -104,7 +104,7 @@ float4 get_incoming_light(in float3 ray_origin,
         material = material_buffer[material_id];
 
         Texture2D albedo_tex = textures[material.albedo_idx];
-        float3 hit_albedo = albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb;
+        float3 hit_albedo = pow(albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb, 1.0 / 2.2);
 
         float t = query.CommittedRayT();
         if(t <= 0) {
@@ -158,7 +158,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in Texture2D noise) {
     uint num_indirect_rays = 16;
 
-    uint num_bounces = 2;
+    uint num_bounces = 10;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -224,6 +224,8 @@ float4 main(VertexOutput input) : SV_TARGET {
         // Early-out to avoid the expensive raytrace on completely transparent surfaces
         discard;
     }
+
+    albedo.rgb = pow(albedo.rgb, 1.0 / 2.2);
 
     Light sun = lights[0]; // The sun is ALWAYS at index 0
 

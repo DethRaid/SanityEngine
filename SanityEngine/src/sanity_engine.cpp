@@ -95,7 +95,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    load_3d_object("data/models/gi.obj");
+    load_3d_object("data/models/box_big_hole.obj");
 }
 
 SanityEngine::~SanityEngine() {
@@ -117,15 +117,22 @@ void SanityEngine::run() {
             const auto frame_start_time = std::chrono::steady_clock::now();
             glfwPollEvents();
 
+            player_controller->update_player_transform(last_frame_duration);
+
+            imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
+
+            // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
+            // generation, etc
             renderer->begin_frame(frame_count);
+
+            // There might not be a world if the player is still in the main menu
+            if(world) {
+                // world->tick(last_frame_duration);
+            }
 
             if(frame_count == 1) {
                 // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
             }
-
-            player_controller->update_player_transform(last_frame_duration);
-
-            imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
 
             renderer->render_all(registry);
 
@@ -180,7 +187,7 @@ void SanityEngine::create_planetary_atmosphere() {
     // No need to set parameters, the default light component represents the Earth's sun
     registry.assign<renderer::LightComponent>(atmosphere);
     registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
-    registry.assign<TransformComponent>(atmosphere);    // Light rotations come from a Transform
+    registry.assign<TransformComponent>(atmosphere); // Light rotations come from a Transform
 
     // Camera for the directional light's shadow
     // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?

@@ -16,18 +16,6 @@
 constexpr float MIN_TERRAIN_HEIGHT = 32;
 constexpr float MAX_TERRAIN_HEIGHT = 128;
 
-/*!
- * \brief Number of blocks from the equator to the north pole
- *
- * Half the number of blocks from the north pole to the south pole
- */
-constexpr float TERRAIN_LATITUDE_RANGE = 32768;
-
-/*!
- * \brief Half the number of blocks from the westernmost edge of the world to the easternmost edge of the world
- */
-constexpr float TERRAIN_LONGITUDE_RANGE = TERRAIN_LATITUDE_RANGE * 2;
-
 struct TerrainSamplerParams {
     uint32_t latitude{};
     uint32_t longitude{};
@@ -36,17 +24,23 @@ struct TerrainSamplerParams {
 };
 
 namespace renderer {
-    class Texture2D;
+    class HostTexture2D;
 }
 
 /*!
  * \brief Generates a terrain heightmap of a specific size
+ *
+ * \param top_left World x and y coordinates of the top left of this terrain heightmap
+ * \param size Size in world units of this terrain heightmap
+ * \param noise_texture Noise texture to sample for the terrain
  */
-[[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& size, const renderer::Texture2D& noise_texture);
+[[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& top_left,
+                                                                         const glm::uvec2& size,
+                                                                         const renderer::HostTexture2D& noise_texture);
 
 /*!
  * \brief Gets the terrain height at a specific location
  */
-[[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params, const renderer::Texture2D& noise_texture);
+[[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params, const renderer::HostTexture2D& noise_texture);
 
 
