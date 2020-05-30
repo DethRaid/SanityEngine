@@ -3,9 +3,8 @@
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/observer.hpp>
 
-
-#include "terrain.hpp"
 #include "../renderer/textures.hpp"
+#include "terrain.hpp"
 
 namespace renderer {
     class Renderer;
@@ -31,6 +30,24 @@ struct WorldParameters {
      * \brief Width of the world, in meters
      */
     uint32_t width;
+
+    /*!
+     * \brief Maximum depth of the ocean, in meters
+     */
+    uint32_t max_ocean_depth;
+
+    /*!
+     * \brief Distance from the lowest point in the ocean to the bedrock layer
+     */
+    uint32_t min_terrain_depth_under_ocean;
+
+    /*
+     * \brief Height above sea level of the tallest possible mountain
+     *
+     * If this value is negative, no land will be above the ocean and you'll be playing in a world that's 100% water. This may or may not be
+     * interesting, so I'm leaving it here an an option
+     */
+    int32_t max_height_above_sea_level;
 };
 
 class World {
@@ -63,6 +80,8 @@ private:
     Terrain terrain;
 
     explicit World(const glm::uvec2& size_in,
+                   const uint32_t min_terrain_height,
+                   const uint32_t max_terrain_height,
                    renderer::HostTexture2D noise_texture_in,
                    entt::entity player_in,
                    entt::registry& registry_in,
