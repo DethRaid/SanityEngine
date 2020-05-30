@@ -115,7 +115,7 @@ float4 get_incoming_light(in float3 ray_origin,
         float shadow = raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise);
 
         // Calculate the diffuse light reflected by the hit point along the ray
-        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color * shadow /
+        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, sun.direction, ray.Direction) * sun.color * shadow /
                                           max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
         return float4(reflected_direct_diffuse, 1.0);
 
@@ -139,7 +139,12 @@ float4 get_incoming_light(in float3 ray_origin,
     }
 }
 
-struct HitRecord {};
+float3 SampleHemisphere(float2 uv) {
+    float phi = uv.y * 2 * PI;
+    float cosTheta = sqrt(1.0 - uv.x);
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    return float3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}
 
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
@@ -174,14 +179,8 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            // Random hemisphere oriented around the surface's normal
-            float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 -
+            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 -
                                              1.0);
-
-            float3 projected_vector = random_vector - (surface_normal * dot(normal, random_vector));
-            float random_angle = random_vector.z * PI * 2 - PI;
-            float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
-            float3 ray_direction = normalize(mul(rotation_matrix, surface_normal));
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;
