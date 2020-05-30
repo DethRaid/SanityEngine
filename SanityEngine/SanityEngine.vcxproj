@@ -58,7 +58,6 @@
     <ClCompile Include="src\ui\fps_display.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
-    <ClCompile Include="src\world\generation\world_generation.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
     <ClCompile Include="src\world\world.cpp" />
   </ItemGroup>
@@ -117,7 +116,6 @@
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
-    <ClInclude Include="src\world\generation\world_generation.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
@@ -278,8 +276,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\include;C:\ProgramData\NVIDIA Corporation\OptiX SDK 7.0.0\include;E:\Documents\SanityEngine\SanityEngine\extern\assimp\include;E:\Documents\SanityEngine\SanityEngine\extern\imgui\include;E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\lib\x64;E:\Documents\SanityEngine\SanityEngine\extern\assimp\lib;E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\ftl\include;E:\Documents\SanityEngine\SanityEngine\extern\assimp\include;E:\Documents\SanityEngine\SanityEngine\extern\imgui\include;E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\SanityEngine\SanityEngine\extern\ftl\lib;E:\Documents\SanityEngine\SanityEngine\extern\assimp\lib;E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -312,7 +310,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>cudart_static.lib;cuda.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;spdlogd.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;spdlogd.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>
