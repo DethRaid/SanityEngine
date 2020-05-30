@@ -1,12 +1,9 @@
 #include "renderer.hpp"
 
 #include <GLFW/glfw3.h>
-#include <cuda.h>
 #include <entt/entity/registry.hpp>
 #include <imgui/imgui.h>
 #include <minitrace.h>
-#include <optix_function_table_definition.h>
-#include <optix_stubs.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -24,8 +21,6 @@
 #include "../rhi/render_device.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
-
-static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -151,10 +146,6 @@ namespace renderer {
 
         output_framebuffer_size = {static_cast<uint32_t>(width * settings.render_scale),
                                    static_cast<uint32_t>(height * settings.render_scale)};
-
-        if(settings.use_optix_denoiser) {
-            create_optix_context();
-        }
 
         create_static_mesh_storage();
 
@@ -475,50 +466,6 @@ namespace renderer {
         device->submit_command_list(commands);
     }
 
-    bool Renderer::expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const {
-        HANDLE shared_handle;
-        {
-            const auto result = device->device5->CreateSharedHandle(render_target.resource.Get(),
-                                                                    nullptr,
-                                                                    GENERIC_ALL,
-                                                                    nullptr,
-                                                                    &shared_handle);
-            if(FAILED(result)) {
-                logger->error("Could not create shared handle to image {}: {}", render_target.name, to_string(result));
-                return false;
-            }
-        }
-
-        const auto total_size = render_target.width * render_target.height * 4 * 4;
-        const auto cuda_color_target_handle_desc = cudaExternalMemoryHandleDesc{.type = cudaExternalMemoryHandleTypeD3D12Resource,
-                                                                                .handle = {.win32 = {.handle = shared_handle}},
-                                                                                .size = total_size,
-                                                                                .flags = cudaExternalMemoryDedicated};
-
-        cudaExternalMemory_t render_target_memory;
-        auto result = cudaImportExternalMemory(&render_target_memory, &cuda_color_target_handle_desc);
-        if(result != cudaSuccess) {
-            const auto* const error_name = cudaGetErrorName(result);
-            const auto* const error = cudaGetErrorString(result);
-            logger->error("Could not share scene render target: {}: {}", error_name, error);
-            return false;
-
-        } else {
-            CloseHandle(shared_handle);
-        }
-
-        const auto buffer_desc = cudaExternalMemoryBufferDesc{.offset = 0, .size = total_size};
-        result = cudaExternalMemoryGetMappedBuffer(mapped_pointer, render_target_memory, &buffer_desc);
-        if(result != cudaSuccess) {
-            const auto* const error_name = cudaGetErrorName(result);
-            const auto* const error = cudaGetErrorString(result);
-            logger->error("Could not map scene render target to a device pointer: {}: {}", error_name, error);
-            return false;
-        }
-
-        return true;
-    }
-
     void Renderer::create_scene_framebuffer() {
         auto color_target_create_info = rhi::ImageCreateInfo{
             .name = SCENE_COLOR_RENDER_TARGET,
@@ -551,20 +498,6 @@ namespace renderer {
 
         const auto& denoised_color_target = get_image(denoised_color_target_handle);
         denoised_framebuffer = device->create_framebuffer({&denoised_color_target});
-
-        if(settings.use_optix_denoiser) {
-            // Expose the scene color output to OptiX
-            auto exposed = expose_render_target_to_optix(color_target, &mapped_scene_render_target);
-            if(!exposed) {
-                logger->error("Could not expose scene color target to OptiX");
-            }
-
-            // Expose the denoised scene output to OptiX
-            exposed = expose_render_target_to_optix(denoised_color_target, &mapped_denoised_render_target);
-            if(!exposed) {
-                logger->error("Could not expose denoised color target to OptiX");
-            }
-        }
     }
 
     void Renderer::create_accumulation_pipeline_and_material() {
@@ -672,157 +605,6 @@ namespace renderer {
     void Renderer::upload_material_data(const uint32_t frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, material_data_buffer->data(), material_data_buffer->size());
-    }
-
-    void Renderer::create_optix_context() {
-        {
-
-            const auto result = cudaFree(nullptr);
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not create CUDA context: {}: {}", error_name, error);
-            }
-        }
-
-        {
-            const auto result = optixInit();
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not create OptiX context: {}: {}", error_name, error);
-                return;
-            }
-        }
-
-        auto device_context_options = OptixDeviceContextOptions{
-            .logCallbackFunction =
-                +[](const unsigned int level, const char* tag, const char* message, void* data) {
-                    constexpr uint32_t LOG_LEVEL_FATAL = 1;
-                    constexpr uint32_t LOG_LEVEL_ERROR = 2;
-                    constexpr uint32_t LOG_LEVEL_WARNING = 3;
-                    constexpr uint32_t LOG_LEVEL_PRINT = 4;
-
-                    auto* logger = static_cast<spdlog::logger*>(data);
-                    if(level == LOG_LEVEL_FATAL || level == LOG_LEVEL_ERROR) {
-                        logger->error("[{}]: {}", tag, message);
-
-                    } else if(level == LOG_LEVEL_WARNING) {
-                        logger->warn("[{}]: {}", tag, message);
-
-                    } else {
-                        logger->info("[{}]: {}", tag, message);
-                    }
-                },
-            .logCallbackData = logger.get(),
-#ifndef NDEBUG
-            .logCallbackLevel = 4,
-#else
-            .logCallbackLevel = 3
-#endif
-        };
-
-        {
-            const auto result = optixDeviceContextCreate(nullptr, &device_context_options, &optix_context);
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not create OptiX context: {}: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto denoiser_options = OptixDenoiserOptions{.inputKind = OPTIX_DENOISER_INPUT_RGB,
-                                                               .pixelFormat = OPTIX_PIXEL_FORMAT_FLOAT3};
-            const auto result = optixDenoiserCreate(optix_context, &denoiser_options, &optix_denoiser);
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not create OptiX denoiser: {}: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = optixDenoiserSetModel(optix_denoiser, OPTIX_DENOISER_MODEL_KIND_HDR, nullptr, 0);
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not set denoiser model: {}: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = optixDenoiserComputeMemoryResources(optix_denoiser,
-                                                                    output_framebuffer_size.x,
-                                                                    output_framebuffer_size.y,
-                                                                    &optix_sizes);
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not compute denoiser memory sizes: {}: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = cudaStreamCreate(&denoiser_stream);
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not create CUDA stream - [{}]: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = cudaMalloc(reinterpret_cast<void**>(&denoiser_state), optix_sizes.stateSizeInBytes);
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not allocate OptiX state - [{}]: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = cudaMalloc(reinterpret_cast<void**>(&denoiser_scratch), optix_sizes.recommendedScratchSizeInBytes);
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not allocate OptiX scratch memory - [{}]: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = optixDenoiserSetup(optix_denoiser,
-                                                   denoiser_stream,
-                                                   output_framebuffer_size.x,
-                                                   output_framebuffer_size.y,
-                                                   denoiser_state,
-                                                   optix_sizes.stateSizeInBytes,
-                                                   denoiser_scratch,
-                                                   optix_sizes.recommendedScratchSizeInBytes);
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not setup denoiser: {}: {}", error_name, error);
-                return;
-            }
-        }
-
-        {
-            const auto result = cudaMalloc(reinterpret_cast<void**>(&intensity_ptr), sizeof(double));
-            if(result != cudaSuccess) {
-                const auto* const error_name = cudaGetErrorName(result);
-                const auto* const error = cudaGetErrorString(result);
-                logger->error("Could not allocate memory to hold intensity - [{}]: {}", error_name, error);
-                return;
-            }
-        }
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
@@ -1062,117 +844,64 @@ namespace renderer {
     }
 
     void Renderer::render_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        if(settings.use_optix_denoiser) {
-            // TODO: Figure out how to get this to work
+        {
+            const auto
+                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
+                                                                            .BeginningAccess =
+                                                                                {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                                                                            .EndingAccess = {
+                                                                                .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-            const auto input_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_scene_render_target),
-                                                  .width = output_framebuffer_size.x,
-                                                  .height = output_framebuffer_size.y,
-                                                  .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
-                                                  .pixelStrideInBytes = 4 * 4,
-                                                  .format = OPTIX_PIXEL_FORMAT_FLOAT4};
+            commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+        }
 
-            const auto output_layer = OptixImage2D{.data = reinterpret_cast<CUdeviceptr>(mapped_denoised_render_target),
-                                                   .width = output_framebuffer_size.x,
-                                                   .height = output_framebuffer_size.y,
-                                                   .rowStrideInBytes = output_framebuffer_size.x * 4 * 4,
-                                                   .pixelStrideInBytes = 4 * 4,
-                                                   .format = OPTIX_PIXEL_FORMAT_FLOAT4};
+        commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
-            auto result = optixDenoiserComputeIntensity(optix_denoiser,
-                                                        denoiser_stream,
-                                                        &input_layer,
-                                                        intensity_ptr,
-                                                        denoiser_scratch,
-                                                        optix_sizes.recommendedScratchSizeInBytes);
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not compute render target intensity: {}: {}", error_name, error);
-                return;
-            }
+        commands->SetGraphicsRoot32BitConstant(0, accumulation_material_handle.index, 1);
 
-            const auto params = OptixDenoiserParams{.denoiseAlpha = 0, .hdrIntensity = intensity_ptr, .blendFactor = false};
+        const auto& accumulation_image = *all_images[accumulation_target_handle.index];
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commands->ResourceBarrier(1, &barrier);
+        }
 
-            result = optixDenoiserInvoke(optix_denoiser,
-                                         denoiser_stream,
-                                         &params,
-                                         denoiser_state,
-                                         optix_sizes.stateSizeInBytes,
-                                         &input_layer,
-                                         1,
-                                         0,
-                                         0,
-                                         &output_layer,
-                                         denoiser_scratch,
-                                         optix_sizes.recommendedScratchSizeInBytes);
+        commands->DrawInstanced(3, 1, 0, 0);
 
-            if(result != OPTIX_SUCCESS) {
-                const auto* const error_name = optixGetErrorName(result);
-                const auto* const error = optixGetErrorString(result);
-                logger->error("Could not invoke denoiser: {}: {}", error_name, error);
-            }
+        commands->EndRenderPass();
 
-        } else {
-            // No OptiX? Just accumulate rays!
+        const auto& denoised_image = *all_images[denoised_color_target_handle.index];
 
-            {
-                const auto render_target_access =
-                    D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
-                                                         .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
-                                                         .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+        {
+            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                                   D3D12_RESOURCE_STATE_COPY_DEST),
+                                              CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
 
-                commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
-            }
+        {
+            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
+                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                       .SubresourceIndex = 0};
 
-            commands->SetPipelineState(accumulation_pipeline->pso.Get());
+            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
+                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                       .SubresourceIndex = 0};
 
-            commands->SetGraphicsRoot32BitConstant(0, accumulation_material_handle.index, 1);
+            const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
 
-            const auto& accumulation_image = *all_images[accumulation_target_handle.index];
-            {
-                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-                commands->ResourceBarrier(1, &barrier);
-            }
+            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
+        }
 
-            commands->DrawInstanced(3, 1, 0, 0);
-
-            commands->EndRenderPass();
-
-            const auto& denoised_image = *all_images[denoised_color_target_handle.index];
-
-            {
-                const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                                                       D3D12_RESOURCE_STATE_COPY_DEST),
-                                                  CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
-                                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                       D3D12_RESOURCE_STATE_COPY_SOURCE)};
-                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-            }
-
-            {
-                const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
-                                                                           .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                           .SubresourceIndex = 0};
-
-                const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
-                                                                           .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                           .SubresourceIndex = 0};
-
-                const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
-
-                commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
-            }
-
-            {
-                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
-                                                                          D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                                                          D3D12_RESOURCE_STATE_RENDER_TARGET);
-                commands->ResourceBarrier(1, &barrier);
-            }
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commands->ResourceBarrier(1, &barrier);
         }
     }
 

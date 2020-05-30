@@ -2,10 +2,7 @@
 
 #include <queue>
 
-#include <cuda.h>
-#include <cuda_runtime_api.h>
 #include <entt/fwd.hpp>
-#include <optix.h>
 
 #include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
@@ -187,30 +184,6 @@ namespace renderer {
          * \brief Handle to the framebuffer that renders to the accumulation texture
          */
         std::unique_ptr<rhi::Framebuffer> denoised_framebuffer;
-
-#pragma region OptiX
-        OptixDeviceContext optix_context{};
-
-        OptixDenoiser optix_denoiser{};
-
-        OptixDenoiserSizes optix_sizes;
-
-        CUstream denoiser_stream{};
-
-        CUdeviceptr intensity_ptr{};
-
-        CUdeviceptr denoiser_state{};
-
-        CUdeviceptr denoiser_scratch{};
-
-        void* mapped_scene_render_target;
-
-        void* mapped_denoised_render_target;
-
-        void create_optix_context();
-
-        [[nodiscard]] bool expose_render_target_to_optix(const rhi::Image& render_target, void** mapped_pointer) const;
-#pragma endregion
 
         void render_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 #pragma endregion
