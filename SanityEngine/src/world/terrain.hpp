@@ -56,6 +56,8 @@ private:
 
     uint32_t max_terrain_height;
 
+    void load_terrain_textures_and_create_material();
+
     void generate_tile(const glm::uvec2& tilecoord);
 
     /*!

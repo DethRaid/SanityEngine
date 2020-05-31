@@ -47,6 +47,12 @@ namespace renderer {
         template <typename MaterialDataStruct>
         [[nodiscard]] MaterialHandle get_next_free_material();
 
+        /*!
+         * \brief Creates a new material of the specified type, forwarding the provided args to the new material
+         */
+        template <typename MaterialDataStruct, typename... Args>
+        [[nodiscard]] MaterialHandle create_material(Args&&... args);
+
         [[nodiscard]] uint8_t* data() const;
 
         [[nodiscard]] uint32_t size() const;
@@ -100,5 +106,14 @@ namespace renderer {
             num_allocated_bytes);
 
         return {new_idx};
+    }
+
+    template <typename MaterialDataStruct, typename ... Args>
+    MaterialHandle MaterialDataBuffer::create_material(Args&&... args) {
+        const auto handle = get_next_free_material<MaterialDataStruct>();
+        auto& material = get<MaterialDataStruct>(handle);
+        material = MaterialDataStruct{std::forward<Args>(args)...};
+
+        return handle;
     }
 } // namespace renderer

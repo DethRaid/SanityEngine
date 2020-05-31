@@ -4,7 +4,9 @@
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-
+#include "../core/ensure.hpp"
+#include "../loading/image_loading.hpp"
+#include "../renderer/standard_material.hpp"
 #include "../renderer/textures.hpp"
 #include "../rhi/render_device.hpp"
 
@@ -30,7 +32,10 @@ Terrain::Terrain(const uint32_t max_latitude_in,
       max_latitude{max_latitude_in},
       max_longitude{max_longitude_in},
       min_terrain_height{min_terrain_height_in},
-      max_terrain_height{max_terrain_height_in} {}
+      max_terrain_height{max_terrain_height_in} {
+    // TODO: Make a good data structure to load the terrain material(s) at runtime
+    load_terrain_textures_and_create_material();
+}
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
     MTR_SCOPE("Terrain", "load_terrain_around_player");
@@ -49,6 +54,99 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
 
 glm::uvec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& position) {
     return glm::uvec2{static_cast<uint32_t>(position.x), static_cast<uint32_t>(position.y)} / TILE_SIZE;
+}
+
+void Terrain::load_terrain_textures_and_create_material() {
+    auto& device = renderer->get_render_device();
+    const auto commands = device.create_command_list();
+
+    renderer::TextureHandle albedo_handle{};
+    renderer::TextureHandle normals_roughness_handle{};
+
+    bool success;
+
+    {
+        constexpr auto texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmufua_8K_Albedo.jpg";
+
+        uint32_t width, height;
+        std::vector<uint8_t> pixels;
+
+        success = load_image(texture_name, width, height, pixels);
+        if(!success) {
+            logger->error("Could not load grass albedo texture {}", texture_name);
+        } else {
+            const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
+                                                          .usage = rhi::ImageUsage::SampledImage,
+                                                          .format = rhi::ImageFormat::Rgba8,
+                                                          .width = width,
+                                                          .height = height};
+
+            albedo_handle = renderer->create_image(create_info, pixels.data(), commands);
+        }
+    }
+
+    {
+        constexpr auto normal_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmufua_8K_Normal.jpg";
+
+        uint32_t normal_width, normal_height;
+        std::vector<uint8_t> normal_pixels;
+
+        success = load_image(normal_texture_name, normal_width, normal_height, normal_pixels);
+        if(!success) {
+            logger->error("Could not load grass normal texture {}", normal_texture_name);
+
+        } else {
+            constexpr auto roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmufua_8K_Roughness.jpg";
+
+            uint32_t roughness_width, roughness_height;
+            std::vector<uint8_t> roughness_pixels;
+
+            success = load_image(roughness_texture_name, roughness_width, roughness_height, roughness_pixels);
+            if(!success) {
+                logger->error("Could not load grass roughness texture {}", roughness_texture_name);
+
+            } else {
+                ENSURE(normal_width == roughness_width, "Roughness and normal textures must have the same width");
+                ENSURE(normal_height == roughness_height, "Normal and roughness textures must have the same height");
+                ENSURE(normal_pixels.size() == roughness_pixels.size(),
+                       "Normal and roughness textures must have the same amount of pixel data");
+
+                std::vector<uint8_t> normal_roughness_pixels(normal_pixels.size());
+
+                // Copy normal RGB into normal/roughness RGB, and roughness R into normal/roughness A
+                for(uint32_t i = 0; i < normal_pixels.size(); i++) {
+                    if(i % 4 != 3) {
+                        normal_roughness_pixels[i] = normal_pixels[i];
+
+                    } else {
+                        normal_roughness_pixels[i] = roughness_pixels[i - 3];
+                    }
+                }
+
+                const auto create_info = rhi::ImageCreateInfo{.name = "Terrain normal roughness texture",
+                                                              .usage = rhi::ImageUsage::SampledImage,
+                                                              .format = rhi::ImageFormat::Rgba8,
+                                                              .width = normal_width,
+                                                              .height = normal_height};
+
+                normals_roughness_handle = renderer->create_image(create_info, normal_roughness_pixels.data(), commands);
+            }
+        }
+
+        device.submit_command_list(commands);
+
+        if(!success) {
+            logger->error("Could not load terrain textures");
+            albedo_handle = renderer->get_pink_texture();
+        }
+
+        auto& materials = renderer->get_material_data_buffer();
+        terrain_material = materials.get_next_free_material<StandardMaterial>();
+        auto& material = materials.at<StandardMaterial>(terrain_material);
+        material.albedo = albedo_handle;
+        material.normal_roughness = normals_roughness_handle;
+        material.noise = renderer->get_noise_texture();
+    }
 }
 
 void Terrain::generate_tile(const glm::uvec2& tilecoord) {
