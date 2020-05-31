@@ -30,7 +30,7 @@ bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height
             pixels[write_idx + 3] = texture_data[read_idx + 3];
 
         } else {
-            pixels[write_idx + 4] = 0xFF;
+            pixels[write_idx + 3] = 0xFF;
         }
     }
 
