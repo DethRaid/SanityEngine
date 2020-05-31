@@ -14,6 +14,9 @@ namespace rhi {
           device{&device_in},
           vertex_buffer{std::move(vertex_buffer_in)},
           index_buffer{std::move(index_buffer_in)} {
+
+        logger->set_level(spdlog::level::trace);
+
         vertex_bindings.reserve(4);
         vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, position), sizeof(StandardVertex)});
         vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, normal), sizeof(StandardVertex)});
@@ -59,7 +62,6 @@ namespace rhi {
         offset_indices.reserve(indices.size());
 
         std::transform(indices.begin(), indices.end(), std::back_inserter(offset_indices), [&](const uint32_t idx) {
-            logger->trace("idx: {} new idx: {}", idx, idx + next_vertex_offset);
             return idx + next_vertex_offset;
         });
 
@@ -72,7 +74,12 @@ namespace rhi {
         upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
 
         logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
-        upload_data_with_staging_buffer(commands, *device, index_resource, indices.data(), index_data_size, index_buffer_byte_offset);
+        upload_data_with_staging_buffer(commands,
+                                        *device,
+                                        index_resource,
+                                        offset_indices.data(),
+                                        index_data_size,
+                                        index_buffer_byte_offset);
 
         const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(StandardVertex));
 
