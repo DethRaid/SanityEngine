@@ -42,7 +42,7 @@ namespace renderer {
 
     template <typename RandomDeviceType>
     HostTexture2D HostTexture2D::create_random(const glm::uvec2& size, RandomDeviceType& rng) {
-        std::vector<uint32_t> texels{size.x * size.y};
+        std::vector<uint32_t> texels(size.x * size.y);
 
         for(auto& texel : texels) {
             texel = rng();
@@ -50,6 +50,6 @@ namespace renderer {
 
         const auto* typed_texels = reinterpret_cast<glm::u8vec4*>(texels.data());
 
-        return {size, {}};
+        return {size, {typed_texels, typed_texels + texels.size()}};
     }
 } // namespace renderer

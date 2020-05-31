@@ -95,7 +95,19 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    load_3d_object("data/models/bounce_house.obj");
+    world = World::create({.seed = 0xdeadbeef,
+                           .height = 512,
+                           .width = 512,
+                           .max_ocean_depth = 8,
+                           .min_terrain_depth_under_ocean = 8,
+                           .max_height_above_sea_level = 16},
+                          player,
+                          registry,
+                          *renderer);
+
+    world->tick(0);
+
+    load_3d_object("data/models/davifactory.obj");
 }
 
 SanityEngine::~SanityEngine() {
@@ -127,7 +139,7 @@ void SanityEngine::run() {
 
             // There might not be a world if the player is still in the main menu
             if(world) {
-                // world->tick(last_frame_duration);
+                world->tick(last_frame_duration);
             }
 
             if(frame_count == 1) {

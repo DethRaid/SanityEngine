@@ -21,23 +21,23 @@ struct TerrainTile {
 class Terrain {
 public:
     // TODO: Make this configurable
-    constexpr static uint32_t TILE_SIZE = 512;
+    constexpr static uint32_t TILE_SIZE = 16;
 
     static [[nodiscard]] glm::uvec2 get_coords_of_tile_containing_position(const glm::vec3& position);
 
     explicit Terrain(uint32_t max_latitude_in,
                      uint32_t max_longitude_in,
                      uint32_t min_terrain_height_in,
-                     uint32_t max_terrain_heightA_in,
+                     uint32_t max_terrain_height_in,
                      renderer::Renderer& renderer_in,
                      renderer::HostTexture2D& noise_texture_in,
                      entt::registry& registry_in);
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    bool is_tile_loaded(const glm::uvec2& tilecoord);
-
 private:
+    static std::shared_ptr<spdlog::logger> logger;
+
     renderer::Renderer* renderer;
 
     renderer::HostTexture2D* noise_texture;
@@ -46,7 +46,7 @@ private:
 
     std::unordered_map<glm::uvec2, TerrainTile> loaded_terrain_tiles;
 
-    renderer::MaterialHandle terrain_material{0};
+    renderer::MaterialHandle terrain_material{1};
 
     uint32_t max_latitude;
 
@@ -63,7 +63,6 @@ private:
      *
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
-     * \param noise_texture Noise texture to sample for the terrain
      */
     [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& top_left,
                                                                              const glm::uvec2& size);

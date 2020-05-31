@@ -1,9 +1,12 @@
 #include "terrain.hpp"
 
 #include <entt/entity/registry.hpp>
+#include <minitrace.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../rhi/render_device.hpp"
+
 #include "../renderer/textures.hpp"
+#include "../rhi/render_device.hpp"
 
 struct TerrainSamplerParams {
     uint32_t latitude{};
@@ -12,10 +15,12 @@ struct TerrainSamplerParams {
     float spread_reduction_rate{spread};
 };
 
+std::shared_ptr<spdlog::logger> Terrain::logger = spdlog::stdout_color_st("Terrain");
+
 Terrain::Terrain(const uint32_t max_latitude_in,
                  const uint32_t max_longitude_in,
                  const uint32_t min_terrain_height_in,
-                 const uint32_t max_terrain_heightA_in,
+                 const uint32_t max_terrain_height_in,
                  renderer::Renderer& renderer_in,
                  renderer::HostTexture2D& noise_texture_in,
                  entt::registry& registry_in)
@@ -25,9 +30,10 @@ Terrain::Terrain(const uint32_t max_latitude_in,
       max_latitude{max_latitude_in},
       max_longitude{max_longitude_in},
       min_terrain_height{min_terrain_height_in},
-      max_terrain_height{max_terrain_heightA_in} {}
+      max_terrain_height{max_terrain_height_in} {}
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
+    MTR_SCOPE("Terrain", "load_terrain_around_player");
     const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(player_transform.position);
 
     // V0: load the tile the player is in and nothing else
@@ -36,27 +42,20 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
 
     // TODO: Define some maximum number of tiles that may be loaded/generated in a given frame
     // Also TODO: Generate terrain tiles in in separate threads as part of the tasking system
-    is_tile_loaded(coords_of_tile_containing_player);
+    if(!loaded_terrain_tiles.contains(coords_of_tile_containing_player)) {
+        generate_tile(coords_of_tile_containing_player);
+    }
 }
 
 glm::uvec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& position) {
     return glm::uvec2{static_cast<uint32_t>(position.x), static_cast<uint32_t>(position.y)} / TILE_SIZE;
 }
 
-bool Terrain::is_tile_loaded(const glm::uvec2& tilecoord) {
-    if(loaded_terrain_tiles.contains(tilecoord)) {
-        // Tile is already loaded, our work here is done
-        return true;
-    }
-
-    generate_tile(tilecoord);
-
-    return false;
-}
-
 void Terrain::generate_tile(const glm::uvec2& tilecoord) {
     const auto top_left = tilecoord * TILE_SIZE;
     const auto size = glm::uvec2{TILE_SIZE};
+
+    logger->info("Generating tile ({}, {}) with size ({}, {})", tilecoord.x, tilecoord.y, size.x, size.y);
 
     const auto tile_heightmap = generate_terrain_heightmap(top_left, size);
 
@@ -71,18 +70,19 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
         for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
             const auto z = tile_heightmap_row[x];
 
-            tile_vertices.push_back(StandardVertex{.position = {x, y, z}, .normal = {0, 0, 1}, .color = 0xFF808080, .texcoord = {x, y}});
+            tile_vertices.push_back(StandardVertex{.position = {x, 1, y}, .normal = {0, 0, 1}, .color = 0xFF808080, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
-                const auto face_start_idx = x * y;
+                const auto width = tile_heightmap_row.size();
+                const auto face_start_idx = y * width + x;
 
                 tile_indices.push_back(face_start_idx);
+                tile_indices.push_back(face_start_idx + width);
                 tile_indices.push_back(face_start_idx + 1);
-                tile_indices.push_back(face_start_idx + tile_heightmap_row.size());
 
+                tile_indices.push_back(face_start_idx + width);
                 tile_indices.push_back(face_start_idx + 1);
-                tile_indices.push_back(face_start_idx + tile_heightmap_row.size());
-                tile_indices.push_back(face_start_idx + tile_heightmap_row.size() + 1);
+                tile_indices.push_back(face_start_idx + width + 1);
             }
         }
     }
@@ -99,8 +99,7 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
     loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 }
 
-std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::uvec2& top_left,
-                                                                    const glm::uvec2& size) {
+std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::uvec2& top_left, const glm::uvec2& size) {
     auto heightmap = std::vector<std::vector<float>>(size.y, std::vector<float>(size.x));
 
     for(uint32_t y = 0; y < size.y; y++) {
@@ -134,8 +133,7 @@ float Terrain::get_terrain_height(const TerrainSamplerParams& params) {
     // etc
 
     const glm::vec2 octave_0_scale = noise_texture->get_size() / 4u;
-    glm::vec2 texcoord = glm::vec2{params.longitude / (max_longitude * 2), params.latitude / (max_latitude * 2)} *
-                         octave_0_scale;
+    glm::vec2 texcoord = glm::vec2{params.longitude / (max_longitude * 2), params.latitude / (max_latitude * 2)} * octave_0_scale;
 
     double terrain_height = 0;
     float spread = params.spread;

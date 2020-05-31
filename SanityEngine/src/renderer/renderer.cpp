@@ -370,6 +370,7 @@ namespace renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
+            .rasterizer_state = {.cull_mode = rhi::CullMode::None},
             .render_target_formats = {rhi::ImageFormat::Rgba32F},
             .depth_stencil_format = rhi::ImageFormat::Depth32,
         };

@@ -179,7 +179,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in Texture2D noise) {
     uint num_indirect_rays = 1;
 
-    uint num_bounces = 3;
+    uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -195,7 +195,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     float3 surface_albedo = albedo;
     float3 view_vector = eye_vector;
 
-    for(uint light_sample_idx = 1; light_sample_idx <= num_indirect_rays; light_sample_idx++) {
+    for(uint ray_idx = 1; ray_idx <= num_indirect_rays; ray_idx++) {
         float3 reflection_factor = 1;
         float3 light_sample = 0;
 
@@ -204,7 +204,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
             // float3 ray_direction = normalize(CosineSampleHemisphere(nums));
             // float3x3 onb = construct_ONB_frisvad(surface_normal);
             // ray_direction = normalize(mul(onb, ray_direction));
-            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rgb * 2.0 - 1.0);
+            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rgb * 2.0 - 1.0);
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;
@@ -215,8 +215,14 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
             StandardVertex hit_vertex;
             MaterialData hit_material;
 
-            float4
-                incoming_light = get_incoming_light(ray_origin, ray_direction, sun, query, noise_texcoord, noise, hit_vertex, hit_material);
+            float4 incoming_light = get_incoming_light(ray_origin,
+                                                       ray_direction,
+                                                       sun,
+                                                       query,
+                                                       noise_texcoord * ray_idx * bounce_idx,
+                                                       noise,
+                                                       hit_vertex,
+                                                       hit_material);
             light_sample += reflection_factor * incoming_light.rgb;
             if(incoming_light.a > 0.05) {
 
@@ -286,5 +292,5 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float3 total_reflected_light = indirect_light + direct_light;
 
-    return float4(total_reflected_light, albedo.a);
+    return float4(total_reflected_light, 1);
 }
