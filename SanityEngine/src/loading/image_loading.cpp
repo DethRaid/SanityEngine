@@ -1,12 +1,15 @@
 #include "image_loading.hpp"
 
 #include <stb_image.h>
+#include <spdlog/spdlog.h>
 
 bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels) {
     int raw_width, raw_height, num_components;
 
     const auto* texture_data = stbi_load(image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
     if(texture_data == nullptr) {
+        const auto* failure_reason = stbi_failure_reason();
+        spdlog::error("Could not load image {}: {}", image_name, failure_reason);
         return false;
     }
 
