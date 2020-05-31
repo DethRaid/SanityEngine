@@ -66,7 +66,8 @@ void Terrain::load_terrain_textures_and_create_material() {
     bool success;
 
     {
-        constexpr auto texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmufua_8K_Albedo.jpg";
+        MTR_SCOPE("Terrain", "Load grass albedo");
+        constexpr auto texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_8K_Albedo.jpg";
 
         uint32_t width, height;
         std::vector<uint8_t> pixels;
@@ -86,7 +87,8 @@ void Terrain::load_terrain_textures_and_create_material() {
     }
 
     {
-        constexpr auto normal_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmufua_8K_Normal.jpg";
+        MTR_SCOPE("Terrain", "Load grass normal/roughness");
+        constexpr auto normal_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_8K_Normal.jpg";
 
         uint32_t normal_width, normal_height;
         std::vector<uint8_t> normal_pixels;
@@ -96,7 +98,7 @@ void Terrain::load_terrain_textures_and_create_material() {
             logger->error("Could not load grass normal texture {}", normal_texture_name);
 
         } else {
-            constexpr auto roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmufua_8K_Roughness.jpg";
+            constexpr auto roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_8K_Roughness.jpg";
 
             uint32_t roughness_width, roughness_height;
             std::vector<uint8_t> roughness_pixels;
@@ -175,8 +177,8 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
                 const auto face_start_idx = y * width + x;
 
                 tile_indices.push_back(face_start_idx);
-                tile_indices.push_back(face_start_idx + width);
                 tile_indices.push_back(face_start_idx + 1);
+                tile_indices.push_back(face_start_idx + width);
 
                 tile_indices.push_back(face_start_idx + width);
                 tile_indices.push_back(face_start_idx + 1);
