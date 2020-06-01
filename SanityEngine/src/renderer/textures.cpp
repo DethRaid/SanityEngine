@@ -15,20 +15,20 @@ namespace renderer {
         const auto texcoord_in_texels = texcoord * size;
 
         const auto texcoord_0_0 = floor(texcoord_in_texels);
-        const auto texcoord_1_1 = ceil(texcoord);
+        const auto texcoord_1_1 = texcoord + 1.0f;
         const auto texcoord_1_0 = glm::vec2{texcoord_1_1.x, texcoord_0_0.y};
         const auto texcoord_0_1 = glm::vec2{texcoord_0_0.x, texcoord_1_1.y};
 
-        const auto texel_0_0 = sample_point(sampler_desc, texcoord_0_0);
-        const auto texel_0_1 = sample_point(sampler_desc, texcoord_0_1);
-        const auto texel_1_0 = sample_point(sampler_desc, texcoord_1_0);
-        const auto texel_1_1 = sample_point(sampler_desc, texcoord_1_1);
+        const auto texel_0_0 = sample_point(sampler_desc, texcoord_0_0 / size);
+        const auto texel_0_1 = sample_point(sampler_desc, texcoord_0_1 / size);
+        const auto texel_1_0 = sample_point(sampler_desc, texcoord_1_0 / size);
+        const auto texel_1_1 = sample_point(sampler_desc, texcoord_1_1 / size);
 
         const auto interpolation_amt = glm::fract(texcoord_in_texels);
 
-        const auto top_texel = glm::vec4{texel_0_0} * interpolation_amt.x + glm::vec4{texel_0_1} * (1.0f - interpolation_amt.x);
-        const auto bottom_texel = glm::vec4{texel_1_0} * interpolation_amt.x + glm::vec4{texel_1_1} * (1.0f - interpolation_amt.x);
-        const auto actual_texel = bottom_texel * (1.0f - interpolation_amt.y) + top_texel * interpolation_amt.y;
+        const auto top_texel = mix(glm::vec4{texel_0_1}, glm::vec4{texel_0_0}, interpolation_amt.x);
+        const auto bottom_texel = mix(glm::vec4{texel_1_1}, glm::vec4{texel_1_0}, interpolation_amt.x);
+        const auto actual_texel = mix(bottom_texel, top_texel, interpolation_amt.y);
 
         return glm::u8vec4{actual_texel};
     }
