@@ -33,6 +33,9 @@ Terrain::Terrain(const uint32_t max_latitude_in,
       max_longitude{max_longitude_in},
       min_terrain_height{min_terrain_height_in},
       max_terrain_height{max_terrain_height_in} {
+
+    logger->set_level(spdlog::level::trace);
+
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
 }
@@ -67,7 +70,7 @@ void Terrain::load_terrain_textures_and_create_material() {
 
     {
         MTR_SCOPE("Terrain", "Load grass albedo");
-        constexpr auto texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_8K_Albedo.jpg";
+        constexpr auto texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
 
         uint32_t width, height;
         std::vector<uint8_t> pixels;
@@ -88,67 +91,41 @@ void Terrain::load_terrain_textures_and_create_material() {
 
     {
         MTR_SCOPE("Terrain", "Load grass normal/roughness");
-        constexpr auto normal_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_8K_Normal.jpg";
+        constexpr auto
+            normal_roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
 
-        uint32_t normal_width, normal_height;
-        std::vector<uint8_t> normal_pixels;
+        uint32_t normal_roughness_width, normal_roughness_height;
+        std::vector<uint8_t> normal_roughness_pixels;
 
-        success = load_image(normal_texture_name, normal_width, normal_height, normal_pixels);
+        success = load_image(normal_roughness_texture_name, normal_roughness_width, normal_roughness_height, normal_roughness_pixels);
         if(!success) {
-            logger->error("Could not load grass normal texture {}", normal_texture_name);
+            logger->error("Could not load grass normal/roughness texture {}", normal_roughness_texture_name);
 
         } else {
-            constexpr auto roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_8K_Roughness.jpg";
 
-            uint32_t roughness_width, roughness_height;
-            std::vector<uint8_t> roughness_pixels;
+            const auto create_info = rhi::ImageCreateInfo{.name = "Terrain normal roughness texture",
+                                                          .usage = rhi::ImageUsage::SampledImage,
+                                                          .format = rhi::ImageFormat::Rgba8,
+                                                          .width = normal_roughness_width,
+                                                          .height = normal_roughness_height};
 
-            success = load_image(roughness_texture_name, roughness_width, roughness_height, roughness_pixels);
-            if(!success) {
-                logger->error("Could not load grass roughness texture {}", roughness_texture_name);
-
-            } else {
-                ENSURE(normal_width == roughness_width, "Roughness and normal textures must have the same width");
-                ENSURE(normal_height == roughness_height, "Normal and roughness textures must have the same height");
-                ENSURE(normal_pixels.size() == roughness_pixels.size(),
-                       "Normal and roughness textures must have the same amount of pixel data");
-
-                std::vector<uint8_t> normal_roughness_pixels(normal_pixels.size());
-
-                // Copy normal RGB into normal/roughness RGB, and roughness R into normal/roughness A
-                for(uint32_t i = 0; i < normal_pixels.size(); i++) {
-                    if(i % 4 != 3) {
-                        normal_roughness_pixels[i] = normal_pixels[i];
-
-                    } else {
-                        normal_roughness_pixels[i] = roughness_pixels[i - 3];
-                    }
-                }
-
-                const auto create_info = rhi::ImageCreateInfo{.name = "Terrain normal roughness texture",
-                                                              .usage = rhi::ImageUsage::SampledImage,
-                                                              .format = rhi::ImageFormat::Rgba8,
-                                                              .width = normal_width,
-                                                              .height = normal_height};
-
-                normals_roughness_handle = renderer->create_image(create_info, normal_roughness_pixels.data(), commands);
-            }
+            normals_roughness_handle = renderer->create_image(create_info, normal_roughness_pixels.data(), commands);
         }
-
-        device.submit_command_list(commands);
-
-        if(!success) {
-            logger->error("Could not load terrain textures");
-            albedo_handle = renderer->get_pink_texture();
-        }
-
-        auto& materials = renderer->get_material_data_buffer();
-        terrain_material = materials.get_next_free_material<StandardMaterial>();
-        auto& material = materials.at<StandardMaterial>(terrain_material);
-        material.albedo = albedo_handle;
-        material.normal_roughness = normals_roughness_handle;
-        material.noise = renderer->get_noise_texture();
     }
+
+    device.submit_command_list(commands);
+
+    if(!success) {
+        logger->error("Could not load terrain textures");
+        albedo_handle = renderer->get_pink_texture();
+    }
+
+    auto& materials = renderer->get_material_data_buffer();
+    terrain_material = materials.get_next_free_material<StandardMaterial>();
+    auto& material = materials.at<StandardMaterial>(terrain_material);
+    material.albedo = albedo_handle;
+    material.normal_roughness = normals_roughness_handle;
+    material.noise = renderer->get_noise_texture();
 }
 
 void Terrain::generate_tile(const glm::uvec2& tilecoord) {
@@ -168,9 +145,10 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
     for(uint32_t y = 0; y < tile_heightmap.size(); y++) {
         const auto& tile_heightmap_row = tile_heightmap[y];
         for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
-            const auto z = tile_heightmap_row[x];
+            const auto height = tile_heightmap_row[x];
 
-            tile_vertices.push_back(StandardVertex{.position = {x, 1, y}, .normal = {0, 0, 1}, .color = 0xFF808080, .texcoord = {x, y}});
+            tile_vertices.push_back(
+                StandardVertex{.position = {x, height, y}, .normal = {0, 1, 0}, .color = 0xFF808080, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = tile_heightmap_row.size();
@@ -199,7 +177,7 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
     loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 }
 
-std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::uvec2& top_left, const glm::uvec2& size) {
+std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::uvec2& top_left, const glm::uvec2& size) const {
     auto heightmap = std::vector<std::vector<float>>(size.y, std::vector<float>(size.x));
 
     for(uint32_t y = 0; y < size.y; y++) {
@@ -212,9 +190,9 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
     return heightmap;
 }
 
-constexpr uint32_t NUM_OCTAVES = 5;
+constexpr uint32_t NUM_OCTAVES = 10;
 
-float Terrain::get_terrain_height(const TerrainSamplerParams& params) {
+float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
                                                   .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
                                                   .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP};
@@ -232,8 +210,10 @@ float Terrain::get_terrain_height(const TerrainSamplerParams& params) {
     //
     // etc
 
-    const glm::vec2 octave_0_scale = noise_texture->get_size() / 4u;
-    glm::vec2 texcoord = glm::vec2{params.longitude / (max_longitude * 2), params.latitude / (max_latitude * 2)} * octave_0_scale;
+    const glm::vec2 octave_0_scale = glm::vec2{1.0f} / glm::vec2{noise_texture->get_size() / 4u};
+    glm::vec2 texcoord = glm::vec2{static_cast<float>(params.longitude) / (max_longitude * 2.0f),
+                                   static_cast<float>(params.latitude) / (max_latitude * 2.0f)};
+    texcoord *= octave_0_scale;
 
     double terrain_height = 0;
     float spread = params.spread;

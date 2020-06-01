@@ -66,11 +66,10 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& top_left,
-                                                                             const glm::uvec2& size);
+    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& top_left, const glm::uvec2& size) const;
 
     /*!
      * \brief Gets the terrain height at a specific location
      */
-    [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params);
+    [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params) const;
 };

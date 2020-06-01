@@ -96,8 +96,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
     world = World::create({.seed = 0xdeadbeef,
-                           .height = 512,
-                           .width = 512,
+                           .height = 32,
+                           .width = 32,
                            .max_ocean_depth = 8,
                            .min_terrain_depth_under_ocean = 8,
                            .max_height_above_sea_level = 16},
