@@ -2,8 +2,12 @@
 
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
+#include <ftl/task.h>
+#include <ftl/atomic_counter.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+
+#include "../sanity_engine.hpp"
 #include "../core/ensure.hpp"
 #include "../loading/image_loading.hpp"
 #include "../renderer/standard_material.hpp"
@@ -60,72 +64,40 @@ glm::uvec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& posi
 }
 
 void Terrain::load_terrain_textures_and_create_material() {
-    auto& device = renderer->get_render_device();
-    const auto commands = device.create_command_list();
+    ftl::AtomicCounter counter{task_scheduler.get()};
 
-    renderer::TextureHandle albedo_handle{};
-    renderer::TextureHandle normals_roughness_handle{};
+    std::unique_ptr<LoadImageToGpuData> albedo_image_data = std::make_unique<LoadImageToGpuData>();
+    albedo_image_data->texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    albedo_image_data->renderer = renderer;
 
-    bool success;
+    task_scheduler->AddTask({load_image_to_gpu, albedo_image_data.get()}, &counter);
 
-    {
-        MTR_SCOPE("Terrain", "Load grass albedo");
-        constexpr auto texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    std::unique_ptr<LoadImageToGpuData> normal_roughness_image_data = std::make_unique<LoadImageToGpuData>();
+    normal_roughness_image_data->texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    normal_roughness_image_data->renderer = renderer;
 
-        uint32_t width, height;
-        std::vector<uint8_t> pixels;
-
-        success = load_image(texture_name, width, height, pixels);
-        if(!success) {
-            logger->error("Could not load grass albedo texture {}", texture_name);
-        } else {
-            const auto create_info = rhi::ImageCreateInfo{.name = texture_name,
-                                                          .usage = rhi::ImageUsage::SampledImage,
-                                                          .format = rhi::ImageFormat::Rgba8,
-                                                          .width = width,
-                                                          .height = height};
-
-            albedo_handle = renderer->create_image(create_info, pixels.data(), commands);
-        }
-    }
-
-    {
-        MTR_SCOPE("Terrain", "Load grass normal/roughness");
-        constexpr auto
-            normal_roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
-
-        uint32_t normal_roughness_width, normal_roughness_height;
-        std::vector<uint8_t> normal_roughness_pixels;
-
-        success = load_image(normal_roughness_texture_name, normal_roughness_width, normal_roughness_height, normal_roughness_pixels);
-        if(!success) {
-            logger->error("Could not load grass normal/roughness texture {}", normal_roughness_texture_name);
-
-        } else {
-
-            const auto create_info = rhi::ImageCreateInfo{.name = "Terrain normal roughness texture",
-                                                          .usage = rhi::ImageUsage::SampledImage,
-                                                          .format = rhi::ImageFormat::Rgba8,
-                                                          .width = normal_roughness_width,
-                                                          .height = normal_roughness_height};
-
-            normals_roughness_handle = renderer->create_image(create_info, normal_roughness_pixels.data(), commands);
-        }
-    }
-
-    device.submit_command_list(commands);
-
-    if(!success) {
-        logger->error("Could not load terrain textures");
-        albedo_handle = renderer->get_pink_texture();
-    }
+    task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
 
     auto& materials = renderer->get_material_data_buffer();
     terrain_material = materials.get_next_free_material<StandardMaterial>();
     auto& material = materials.at<StandardMaterial>(terrain_material);
-    material.albedo = albedo_handle;
-    material.normal_roughness = normals_roughness_handle;
     material.noise = renderer->get_noise_texture();
+
+    task_scheduler->WaitForCounter(&counter, 0);
+
+    if(albedo_image_data->handle) {
+        material.albedo = *albedo_image_data->handle;
+    } else {
+        logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name);
+        material.albedo = renderer->get_pink_texture();
+    }
+
+    if(normal_roughness_image_data->handle) {
+        material.normal_roughness = *normal_roughness_image_data->handle;
+    } else {
+        logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name);
+        material.normal_roughness = renderer->get_default_normal_roughness_texture();
+    }
 }
 
 void Terrain::generate_tile(const glm::uvec2& tilecoord) {

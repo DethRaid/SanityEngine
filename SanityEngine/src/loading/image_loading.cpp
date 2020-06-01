@@ -1,7 +1,12 @@
 #include "image_loading.hpp"
 
-#include <stb_image.h>
+#include <minitrace.h>
 #include <spdlog/spdlog.h>
+#include <stb_image.h>
+
+#include "../renderer/renderer.hpp"
+#include "../rhi/render_device.hpp"
+#include "../rhi/resources.hpp"
 
 bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels) {
     int raw_width, raw_height, num_components;
@@ -35,4 +40,30 @@ bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height
     }
 
     return true;
+}
+
+void load_image_to_gpu(ftl::TaskScheduler* /* scheduler */, void* data) {
+    auto* load_data = static_cast<LoadImageToGpuData*>(data);
+
+    const auto message = fmt::format("Load image {}", load_data->texture_name);
+    MTR_SCOPE("Image Loading", message.c_str());
+
+    uint32_t width, height;
+    std::vector<uint8_t> pixels;
+    const auto success = load_image(load_data->texture_name, width, height, pixels);
+    if(!success) {
+        load_data->handle = std::nullopt;
+        return;
+    }
+
+    const auto create_info = rhi::ImageCreateInfo{.name = load_data->texture_name,
+                                                  .usage = rhi::ImageUsage::SampledImage,
+                                                  .format = rhi::ImageFormat::Rgba8,
+                                                  .width = width,
+                                                  .height = height};
+
+    auto& device = load_data->renderer->get_render_device();
+    const auto commands = device.create_command_list();
+    load_data->handle = load_data->renderer->create_image(create_info, pixels.data(), commands);
+    device.submit_command_list(commands);
 }
