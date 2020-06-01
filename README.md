@@ -14,8 +14,6 @@ A 3D video game engine made to increase my sanity
 - `dxc` must be in your PATH
 - Visual Studio 16.6
 - Windows Kit 10.0.19042.0
-- OptiX 7
-- CUDA 10.2 (or other version that's compatible with OptiX 7)
 
 ## Runtime requirements
 
