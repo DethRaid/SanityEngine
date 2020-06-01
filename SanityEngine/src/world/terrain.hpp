@@ -21,7 +21,7 @@ struct TerrainTile {
 class Terrain {
 public:
     // TODO: Make this configurable
-    constexpr static uint32_t TILE_SIZE = 16;
+    constexpr static uint32_t TILE_SIZE = 64;
 
     static [[nodiscard]] glm::uvec2 get_coords_of_tile_containing_position(const glm::vec3& position);
 

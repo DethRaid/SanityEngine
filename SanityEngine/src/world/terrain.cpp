@@ -147,7 +147,8 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
         for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
-            tile_vertices.push_back(StandardVertex{.position = {x, height, y}, .normal = {0, 1, 0}, .color = 0xFF808080, .texcoord = {x, y}});
+            tile_vertices.push_back(
+                StandardVertex{.position = {x, height, y}, .normal = {0, 1, 0}, .color = 0xFF808080, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = tile_heightmap_row.size();
@@ -189,7 +190,7 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
     return heightmap;
 }
 
-constexpr uint32_t NUM_OCTAVES = 5;
+constexpr uint32_t NUM_OCTAVES = 7;
 
 float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
@@ -209,7 +210,7 @@ float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     //
     // etc
 
-    const glm::vec2 octave_0_scale = glm::vec2{1.0f} / glm::vec2{noise_texture->get_size() / 4u};
+    const glm::vec2 octave_0_scale = glm::vec2{4.0f} / glm::vec2{noise_texture->get_size()};
     glm::vec2 texcoord = glm::vec2{static_cast<float>(params.longitude) / (max_longitude * 2.0f),
                                    static_cast<float>(params.latitude) / (max_latitude * 2.0f)};
     texcoord *= octave_0_scale;
