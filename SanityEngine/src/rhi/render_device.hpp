@@ -100,7 +100,7 @@ namespace rhi {
         void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state);
 
         void destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> pipeline_state);
-
+        
         [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
@@ -167,7 +167,7 @@ namespace rhi {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        std::vector<ComPtr<ID3D12CommandAllocator>> direct_command_allocators;
+        std::vector<std::unordered_map<std::thread::id, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
         std::vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
@@ -308,6 +308,8 @@ namespace rhi {
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);
+
+        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const std::thread::id& id);
 
         void flush_batched_command_lists();
 

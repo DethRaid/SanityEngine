@@ -1,8 +1,8 @@
 #pragma once
+
 #include <optional>
 #include <string>
 #include <vector>
-#include <glm/vec4.hpp>
 
 #include "../renderer/handles.hpp"
 

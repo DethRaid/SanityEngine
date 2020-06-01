@@ -109,7 +109,6 @@
     <ClInclude Include="src\rhi\resources.hpp" />
     <ClInclude Include="src\rhi\resource_command_list.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
-    <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
     <ClInclude Include="src\ui\fps_display.hpp" />
@@ -310,7 +309,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;spdlogd.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;spdlogd.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>

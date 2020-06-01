@@ -148,9 +148,9 @@ namespace rhi {
     }
 
     std::unique_ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
-        auto format = to_dxgi_format(create_info.format);   // TODO: Different to_dxgi_format functions for the different kinds of things
+        auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
-            format = DXGI_FORMAT_R32_TYPELESS;  // Create depth buffers with a TYPELESS format
+            format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
         }
         auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
                                                  static_cast<uint32_t>(round(create_info.width)),
@@ -419,15 +419,18 @@ namespace rhi {
     }
 
     ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list() {
+        const auto thread_id = std::this_thread::get_id();
+        auto* command_allocator = get_direct_command_allocator_for_thread(thread_id);
+
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0,
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      direct_command_allocators[cur_gpu_frame_idx].Get(),
+                                                      command_allocator,
                                                       nullptr,
                                                       IID_PPV_ARGS(cmds.GetAddressOf()));
         if(FAILED(result)) {
-            logger->error("Could not create resource command list");
+            logger->error("Could not create command list");
             return {};
         }
 
@@ -435,6 +438,7 @@ namespace rhi {
 
         return commands;
     }
+
     void RenderDevice::submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands) {
         commands->Close();
 
@@ -804,16 +808,8 @@ namespace rhi {
         copy_command_allocators.resize(settings.num_in_flight_gpu_frames);
 
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            HRESULT result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                            IID_PPV_ARGS(direct_command_allocators[i].GetAddressOf()));
-            if(FAILED(result)) {
-                critical_error(fmt::format("Could not create direct command allocator for frame {}", i));
-            }
-
-            set_object_name(direct_command_allocators[i].Get(), fmt::format("Direct Command Allocator {}", i));
-
-            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
-                                                    IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
+            auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
+                                                         IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
                 critical_error(fmt::format("Could not create compute command allocator for frame {}", i));
             }
@@ -1273,6 +1269,26 @@ namespace rhi {
         return pipeline;
     }
 
+    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const std::thread::id& id) {
+        auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
+        if(const auto& itr = command_allocators_for_frame.find(id); itr != command_allocators_for_frame.end()) {
+            return itr->second.Get();
+
+        } else {
+            ComPtr<ID3D12CommandAllocator> allocator;
+            const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+            if(FAILED(result)) {
+                critical_error(fmt::format("Could not create compute command allocator"));
+
+            } else {
+                command_allocators_for_frame.emplace(id, allocator);
+                return allocator.Get();
+            }
+        }
+
+        return nullptr;
+    }
+
     void RenderDevice::flush_batched_command_lists() {
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
@@ -1312,7 +1328,11 @@ namespace rhi {
     }
 
     void RenderDevice::reset_command_allocators_for_frame(const uint32_t frame_idx) {
-        direct_command_allocators[frame_idx]->Reset();
+        const auto& direct_allocators_for_frame = direct_command_allocators[frame_idx];
+        for(const auto& [thread_id, allocator] : direct_allocators_for_frame) {
+            allocator->Reset();
+        }
+
         copy_command_allocators[frame_idx]->Reset();
         compute_command_allocators[frame_idx]->Reset();
     }

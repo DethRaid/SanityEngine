@@ -233,9 +233,6 @@
     <ClInclude Include="src\sanity_engine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\settings.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\components.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
