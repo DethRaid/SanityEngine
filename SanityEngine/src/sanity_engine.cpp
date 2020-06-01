@@ -57,6 +57,9 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     logger->info("HELLO HUMAN");
 
+    task_scheduler = std::make_unique<ftl::TaskScheduler>();
+    task_scheduler->Init();
+
     {
         MTR_SCOPE("SanityEngine", "glfwInit");
         if(!glfwInit()) {

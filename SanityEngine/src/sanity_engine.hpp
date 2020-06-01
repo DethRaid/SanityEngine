@@ -3,6 +3,7 @@
 
 #include <assimp/Importer.hpp>
 #include <entt/entity/registry.hpp>
+#include <ftl/task_scheduler.h>
 
 #include "bve/bve_wrapper.hpp"
 #include "input/input_manager.hpp"
@@ -12,6 +13,8 @@
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
+
+inline std::unique_ptr<ftl::TaskScheduler> task_scheduler;
 
 /*!
  * \brief Main class for my glorious engine
@@ -83,4 +86,3 @@ private:
     void load_3d_object(const std::string& filename);
 #pragma endregion
 };
-
