@@ -147,8 +147,7 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
         for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
-            tile_vertices.push_back(
-                StandardVertex{.position = {x, height, y}, .normal = {0, 1, 0}, .color = 0xFF808080, .texcoord = {x, y}});
+            tile_vertices.push_back(StandardVertex{.position = {x, height, y}, .normal = {0, 1, 0}, .color = 0xFF808080, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = tile_heightmap_row.size();
@@ -190,7 +189,7 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
     return heightmap;
 }
 
-constexpr uint32_t NUM_OCTAVES = 10;
+constexpr uint32_t NUM_OCTAVES = 5;
 
 float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
