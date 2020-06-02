@@ -35,4 +35,6 @@ struct Task {
 	void *ArgData;
 };
 
+#define FTL_TASK_ENTRY_POINT(functionName) void functionName(ftl::TaskScheduler* taskScheduler, void* arg)
+
 } // End of namespace ftl

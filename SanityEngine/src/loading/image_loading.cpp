@@ -3,6 +3,7 @@
 #include <minitrace.h>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
+#include <ftl/task.h>
 
 #include "../renderer/renderer.hpp"
 #include "../rhi/render_device.hpp"
@@ -42,28 +43,28 @@ bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height
     return true;
 }
 
-void load_image_to_gpu(ftl::TaskScheduler* /* scheduler */, void* data) {
-    auto* load_data = static_cast<LoadImageToGpuData*>(data);
+FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
+    auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
 
-    const auto message = fmt::format("Load image {}", load_data->texture_name);
+    const auto message = fmt::format("Load image {}", load_data->texture_name_in);
     MTR_SCOPE("Image Loading", message.c_str());
 
     uint32_t width, height;
     std::vector<uint8_t> pixels;
-    const auto success = load_image(load_data->texture_name, width, height, pixels);
+    const auto success = load_image(load_data->texture_name_in, width, height, pixels);
     if(!success) {
-        load_data->handle = std::nullopt;
+        load_data->handle_out = std::nullopt;
         return;
     }
 
-    const auto create_info = rhi::ImageCreateInfo{.name = load_data->texture_name,
+    const auto create_info = rhi::ImageCreateInfo{.name = load_data->texture_name_in,
                                                   .usage = rhi::ImageUsage::SampledImage,
                                                   .format = rhi::ImageFormat::Rgba8,
                                                   .width = width,
                                                   .height = height};
 
-    auto& device = load_data->renderer->get_render_device();
+    auto& device = load_data->renderer_in->get_render_device();
     const auto commands = device.create_command_list();
-    load_data->handle = load_data->renderer->create_image(create_info, pixels.data(), commands);
+    load_data->handle_out = load_data->renderer_in->create_image(create_info, pixels.data(), commands);
     device.submit_command_list(commands);
 }

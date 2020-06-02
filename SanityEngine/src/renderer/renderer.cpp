@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <entt/entity/registry.hpp>
+#include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -19,6 +20,7 @@
 #include "../rhi/helpers.hpp"
 #include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
+#include "../sanity_engine.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "render_components.hpp"
 
@@ -177,26 +179,18 @@ namespace renderer {
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {
-        uint32_t width, height;
-        std::vector<uint8_t> pixels;
+        auto args = LoadImageToGpuArgs{.texture_name_in = filepath, .renderer_in = this};
+        ftl::AtomicCounter counter{task_scheduler.get()};
+        task_scheduler->AddTask({load_image_to_gpu, &args}, &counter);
 
-        const auto success = load_image(filepath, width, height, pixels);
-        if(!success) {
+        task_scheduler->WaitForCounter(&counter, 0);
+
+        if(!args.handle_out) {
             logger->error("Could not load noise texture {}", filepath);
             return;
         }
 
-        auto commands = device->create_command_list();
-
-        noise_texture_handle = create_image(rhi::ImageCreateInfo{.name = "Noise Texture",
-                                                                 .usage = rhi::ImageUsage::SampledImage,
-                                                                 .format = rhi::ImageFormat::Rgba8,
-                                                                 .width = width,
-                                                                 .height = height},
-                                            pixels.data(),
-                                            commands);
-
-        device->submit_command_list(std::move(commands));
+        noise_texture_handle = *args.handle_out;
     }
 
     void Renderer::begin_frame(const uint64_t frame_count) {

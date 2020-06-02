@@ -66,17 +66,17 @@ glm::uvec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& posi
 void Terrain::load_terrain_textures_and_create_material() {
     ftl::AtomicCounter counter{task_scheduler.get()};
 
-    std::unique_ptr<LoadImageToGpuData> albedo_image_data = std::make_unique<LoadImageToGpuData>();
-    albedo_image_data->texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
-    albedo_image_data->renderer = renderer;
+    std::unique_ptr<LoadImageToGpuArgs> albedo_image_data = std::make_unique<LoadImageToGpuArgs>();
+    albedo_image_data->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    albedo_image_data->renderer_in = renderer;
 
     task_scheduler->AddTask({load_image_to_gpu, albedo_image_data.get()}, &counter);
 
-    std::unique_ptr<LoadImageToGpuData> normal_roughness_image_data = std::make_unique<LoadImageToGpuData>();
-    normal_roughness_image_data->texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
-    normal_roughness_image_data->renderer = renderer;
+    std::unique_ptr<LoadImageToGpuArgs> normal_roughness_image_data = std::make_unique<LoadImageToGpuArgs>();
+    normal_roughness_image_data->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    normal_roughness_image_data->renderer_in = renderer;
 
-    task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
+    // task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
 
     auto& materials = renderer->get_material_data_buffer();
     terrain_material = materials.get_next_free_material<StandardMaterial>();
@@ -85,17 +85,17 @@ void Terrain::load_terrain_textures_and_create_material() {
 
     task_scheduler->WaitForCounter(&counter, 0);
 
-    if(albedo_image_data->handle) {
-        material.albedo = *albedo_image_data->handle;
+    if(albedo_image_data->handle_out) {
+        material.albedo = *albedo_image_data->handle_out;
     } else {
-        logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name);
+        logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name_in);
         material.albedo = renderer->get_pink_texture();
     }
 
-    if(normal_roughness_image_data->handle) {
-        material.normal_roughness = *normal_roughness_image_data->handle;
+    if(normal_roughness_image_data->handle_out) {
+        material.normal_roughness = *normal_roughness_image_data->handle_out;
     } else {
-        logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name);
+        logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name_in);
         material.normal_roughness = renderer->get_default_normal_roughness_texture();
     }
 }

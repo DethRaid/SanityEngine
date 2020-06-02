@@ -3,6 +3,8 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <ftl/task.h>
+
 
 #include "../renderer/handles.hpp"
 
@@ -14,10 +16,10 @@ namespace ftl {
     class TaskScheduler;
 }
 
-struct LoadImageToGpuData {
-    std::string texture_name;
-    std::optional<renderer::TextureHandle> handle;
-    renderer::Renderer* renderer;
+struct LoadImageToGpuArgs {
+    std::string texture_name_in;
+    std::optional<renderer::TextureHandle> handle_out;
+    renderer::Renderer* renderer_in;
 };
 
 /*!
@@ -27,4 +29,4 @@ struct LoadImageToGpuData {
  */
 bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels);
 
-void load_image_to_gpu(ftl::TaskScheduler* scheduler, void* data);
+FTL_TASK_ENTRY_POINT(load_image_to_gpu);

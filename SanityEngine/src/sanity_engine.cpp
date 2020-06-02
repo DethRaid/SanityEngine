@@ -60,6 +60,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     task_scheduler = std::make_unique<ftl::TaskScheduler>();
     task_scheduler->Init();
 
+    task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
+
     {
         MTR_SCOPE("SanityEngine", "glfwInit");
         if(!glfwInit()) {
