@@ -1,9 +1,9 @@
 #include "flycam_controller.hpp"
 
 #include <entt/entity/registry.hpp>
+#include <glm/ext/quaternion_transform.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
-#include <glm/ext/quaternion_transform.hpp> 
 
 #include "../core/components.hpp"
 #include "../core/ensure.hpp"
@@ -20,6 +20,8 @@ FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity con
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
+
+void FlycamController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }
 
 void FlycamController::update_player_transform(const float delta_time) {
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
@@ -56,6 +58,16 @@ void FlycamController::update_player_transform(const float delta_time) {
     } else if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         // Move the player along the global down direction
         player_transform.position -= glm::vec3{0, delta_time, 0};
+    }
+
+    // Make sure they're on the terrain
+    if(terrain) {
+        const auto height = terrain->get_terrain_height(
+            TerrainSamplerParams{.latitude = static_cast<uint32_t>(player_transform.position.z),
+                                 .longitude = static_cast<uint32_t>(player_transform.position.x)});
+        if(player_transform.position.y < height + 1.5) {
+            player_transform.position.y = height + 1.5;
+        }
     }
 
     // Rotation

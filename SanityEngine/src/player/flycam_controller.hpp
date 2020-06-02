@@ -5,12 +5,16 @@
 #include <glm/vec2.hpp>
 #include <spdlog/logger.h>
 
+#include "../world/terrain.hpp"
+
 /*!
  * \brief Simple controller for a simple flycam
  */
 class FlycamController {
 public:
     explicit FlycamController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
+
+    void set_current_terrain(Terrain& terrain_in);
 
     void update_player_transform(float delta_time);
 
@@ -32,4 +36,6 @@ private:
     entt::registry* registry;
 
     glm::dvec2 last_mouse_pos;
+
+    Terrain* terrain{nullptr};
 };

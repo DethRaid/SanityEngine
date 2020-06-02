@@ -110,6 +110,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
                           registry,
                           *renderer);
 
+    player_controller->set_current_terrain(world->get_terrain());
+
     world->tick(0);
 
     load_3d_object("data/models/davifactory.obj");

@@ -1,25 +1,17 @@
 #include "terrain.hpp"
 
 #include <entt/entity/registry.hpp>
-#include <minitrace.h>
-#include <ftl/task.h>
 #include <ftl/atomic_counter.h>
+#include <ftl/task.h>
+#include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-
-#include "../sanity_engine.hpp"
 #include "../core/ensure.hpp"
 #include "../loading/image_loading.hpp"
 #include "../renderer/standard_material.hpp"
 #include "../renderer/textures.hpp"
 #include "../rhi/render_device.hpp"
-
-struct TerrainSamplerParams {
-    uint32_t latitude{};
-    uint32_t longitude{};
-    float spread{0.5};
-    float spread_reduction_rate{spread};
-};
+#include "../sanity_engine.hpp"
 
 std::shared_ptr<spdlog::logger> Terrain::logger = spdlog::stdout_color_st("Terrain");
 
@@ -73,17 +65,18 @@ void Terrain::load_terrain_textures_and_create_material() {
     task_scheduler->AddTask({load_image_to_gpu, albedo_image_data.get()}, &counter);
 
     std::unique_ptr<LoadImageToGpuArgs> normal_roughness_image_data = std::make_unique<LoadImageToGpuArgs>();
-    normal_roughness_image_data->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    normal_roughness_image_data
+        ->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
     normal_roughness_image_data->renderer_in = renderer;
 
-    // task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
+    task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
 
     auto& materials = renderer->get_material_data_buffer();
     terrain_material = materials.get_next_free_material<StandardMaterial>();
     auto& material = materials.at<StandardMaterial>(terrain_material);
     material.noise = renderer->get_noise_texture();
 
-    task_scheduler->WaitForCounter(&counter, 0);
+    task_scheduler->WaitForCounter(&counter, 0, true);
 
     if(albedo_image_data->handle_out) {
         material.albedo = *albedo_image_data->handle_out;

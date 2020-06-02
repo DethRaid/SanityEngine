@@ -1,10 +1,17 @@
 #pragma once
 
+#include <ftl/atomic_counter.h>
+#include <ftl/task.h>
 #include <glm/gtx/hash.hpp>
 
 #include "../renderer/renderer.hpp"
 
-struct TerrainSamplerParams;
+struct TerrainSamplerParams {
+    uint32_t latitude{};
+    uint32_t longitude{};
+    float spread{0.5};
+    float spread_reduction_rate{spread};
+};
 
 namespace renderer {
     class HostTexture2D;
@@ -23,6 +30,8 @@ public:
     // TODO: Make this configurable
     constexpr static uint32_t TILE_SIZE = 64;
 
+    static std::shared_ptr<spdlog::logger> logger;
+
     static [[nodiscard]] glm::uvec2 get_coords_of_tile_containing_position(const glm::vec3& position);
 
     explicit Terrain(uint32_t max_latitude_in,
@@ -35,9 +44,12 @@ public:
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-private:
-    static std::shared_ptr<spdlog::logger> logger;
+    /*!
+     * \brief Gets the terrain height at a specific location
+     */
+    [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params) const;
 
+private:
     renderer::Renderer* renderer;
 
     renderer::HostTexture2D* noise_texture;
@@ -68,8 +80,5 @@ private:
      */
     [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& top_left, const glm::uvec2& size) const;
 
-    /*!
-     * \brief Gets the terrain height at a specific location
-     */
-    [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params) const;
+    static FTL_TASK_ENTRY_POINT(generate_tile);
 };

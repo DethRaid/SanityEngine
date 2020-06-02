@@ -183,7 +183,7 @@ namespace renderer {
         ftl::AtomicCounter counter{task_scheduler.get()};
         task_scheduler->AddTask({load_image_to_gpu, &args}, &counter);
 
-        task_scheduler->WaitForCounter(&counter, 0);
+        task_scheduler->WaitForCounter(&counter, 0, true);
 
         if(!args.handle_out) {
             logger->error("Could not load noise texture {}", filepath);
