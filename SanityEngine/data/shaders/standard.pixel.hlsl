@@ -248,10 +248,6 @@ float4 main(VertexOutput input) : SV_TARGET {
     Texture2D albedo_texture = textures[material.albedo_idx];
     Texture2D normal_roughness_texture = textures[material.normal_idx];
     float4 albedo = albedo_texture.Sample(bilinear_sampler, input.texcoord) * input.color;
-    float4 normal_roughness = normal_roughness_texture.Sample(bilinear_sampler, input.texcoord);
-
-    float3 normal = normalize(normal_roughness.xyz * 2.0 - 1.0);
-    normal = normal.xzy;
 
     if(albedo.a == 0) {
         // Early-out to avoid the expensive raytrace on completely transparent surfaces
@@ -267,7 +263,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     float3 view_vector_viewspace = normalize(position_viewspace.xyz);
     float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
 
-    float3 light_from_sun = brdf(albedo.rgb, 0.02, normal_roughness.a, normal, -sun.direction, view_vector_worldspace);
+    float3 light_from_sun = brdf(albedo.rgb, 0.02, 0.5, input.normal, -sun.direction, view_vector_worldspace);
 
     float sun_shadow = 1;
 

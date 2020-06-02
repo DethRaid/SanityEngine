@@ -65,6 +65,8 @@ public:
     [[nodiscard]] Terrain& get_terrain();
 
 private:
+    static std::shared_ptr<spdlog::logger> logger;
+
     glm::uvec2 size;
 
     renderer::HostTexture2D noise_texture;

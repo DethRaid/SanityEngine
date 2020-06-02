@@ -1,14 +1,20 @@
 #include "world.hpp"
 
 #include <random>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 
 #include "../core/components.hpp"
+
+std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World");
 
 std::unique_ptr<World> World::create(const WorldParameters& params,
                                      const entt::entity player_in,
                                      entt::registry& registry_in,
                                      renderer::Renderer& renderer_in) {
     std::mt19937 rng{params.seed};
+
+    logger->info("Creating world with seed {}", params.seed);
 
     auto noise_texture = renderer::HostTexture2D::create_random({256, 256}, rng);
 

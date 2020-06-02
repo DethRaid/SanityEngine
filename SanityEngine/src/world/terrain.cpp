@@ -112,8 +112,9 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
         for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
-            tile_vertices.push_back(
-                StandardVertex{.position = {x, height, y}, .normal = {0, 1, 0}, .color = 0xFF808080, .texcoord = {x, y}});
+            const auto normal = get_normal_at_location(y, x);
+
+            tile_vertices.push_back(StandardVertex{.position = {x, height, y}, .normal = normal, .color = 0xFFFFFFFF, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = tile_heightmap_row.size();
@@ -147,7 +148,8 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
 
     for(uint32_t y = 0; y < size.y; y++) {
         for(uint32_t x = 0; x < size.x; x++) {
-            const auto params = TerrainSamplerParams{.latitude = y + top_left.y, .longitude = x + top_left.x};
+            const auto params = TerrainSamplerParams{.latitude = static_cast<double>(y + top_left.y),
+                                                     .longitude = static_cast<double>(x + top_left.x)};
             heightmap[y][x] = get_terrain_height(params);
         }
     }
@@ -155,7 +157,7 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
     return heightmap;
 }
 
-constexpr uint32_t NUM_OCTAVES = 7;
+constexpr uint32_t NUM_OCTAVES = 25;
 
 float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
@@ -176,8 +178,7 @@ float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     // etc
 
     const glm::vec2 octave_0_scale = glm::vec2{4.0f} / glm::vec2{noise_texture->get_size()};
-    glm::vec2 texcoord = glm::vec2{static_cast<float>(params.longitude) / (max_longitude * 2.0f),
-                                   static_cast<float>(params.latitude) / (max_latitude * 2.0f)};
+    glm::vec2 texcoord = glm::vec2{params.longitude / (max_longitude * 2.0f), params.latitude / (max_latitude * 2.0f)};
     texcoord *= octave_0_scale;
 
     double terrain_height = 0;
@@ -194,4 +195,15 @@ float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
 
     const auto terrain_height_range = max_terrain_height - min_terrain_height;
     return static_cast<float>(terrain_height * terrain_height_range + min_terrain_height);
+}
+
+glm::vec3 Terrain::get_normal_at_location(const float y, const float x) const {
+    const auto height_top_middle = get_terrain_height({.latitude = y + 1, .longitude = x});
+    const auto height_middle_left = get_terrain_height({.latitude = y, .longitude = x - 1});
+    const auto height_middle_right = get_terrain_height({.latitude = y, .longitude = x + 1});
+    const auto height_bottom_middle = get_terrain_height({.latitude = y - 1, .longitude = x});
+
+    const auto va = normalize(glm::vec3{2.0, 0.0, height_middle_right - height_middle_left});
+    const auto vb = normalize(glm::vec3{0.0, 2.0, height_bottom_middle - height_top_middle});
+    return cross(va, vb);
 }

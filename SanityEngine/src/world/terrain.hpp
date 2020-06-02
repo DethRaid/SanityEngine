@@ -7,9 +7,9 @@
 #include "../renderer/renderer.hpp"
 
 struct TerrainSamplerParams {
-    uint32_t latitude{};
-    uint32_t longitude{};
-    float spread{0.5};
+    double latitude{};
+    double longitude{};
+    float spread{0.75};
     float spread_reduction_rate{spread};
 };
 
@@ -48,6 +48,8 @@ public:
      * \brief Gets the terrain height at a specific location
      */
     [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params) const;
+
+    [[nodiscard]] glm::vec3 get_normal_at_location(float y, float x) const;
 
 private:
     renderer::Renderer* renderer;
