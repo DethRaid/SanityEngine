@@ -131,7 +131,7 @@ float3 atmosphere(float maxDepth,
     float3 atmos = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
 
     if(!any(isnan(atmos))) {
-        return atmos;
+        return atmos * PI;
     }
 
     return 0.0;

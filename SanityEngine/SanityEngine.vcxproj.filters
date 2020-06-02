@@ -228,6 +228,9 @@
     <ClCompile Include="src\world\terrain.cpp">
       <Filter>Source Files\world</Filter>
     </ClCompile>
+    <ClCompile Include="first_person_controller.cpp">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -394,6 +397,9 @@
     </ClInclude>
     <ClInclude Include="src\world\terrain.hpp">
       <Filter>Header Files\world</Filter>
+    </ClInclude>
+    <ClInclude Include="first_person_controller.hpp">
+      <Filter>Header Files\player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

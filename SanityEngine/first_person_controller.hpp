@@ -1,23 +1,25 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include <memory>
+
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
 #include <spdlog/logger.h>
 
-#include "../world/terrain.hpp"
+class Terrain;
 
-/*!
- * \brief Simple controller for a simple flycam
- */
-class FlycamController {
+struct GLFWwindow;
+
+class FirstPersonController {
 public:
-    explicit FlycamController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
+    explicit FirstPersonController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
 
     void update_player_transform(float delta_time);
 
+    void set_current_terrain(Terrain& terrain_in);
+
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    static std::shared_ptr<spdlog::logger> logger;
     /*!
      * \brief Window that will receive input
      */

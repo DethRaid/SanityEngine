@@ -112,7 +112,7 @@ float4 get_incoming_light(in float3 ray_origin,
             return 0;
         }
 
-        float shadow = raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise);
+        float shadow = saturate(raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise));
 
         // Calculate the diffuse light reflected by the hit point along the ray
         float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color * shadow /
@@ -145,7 +145,7 @@ float3 CosineSampleHemisphere(float2 uv) {
     float theta = 2 * PI * uv.y;
     float x = r * cos(theta);
     float z = r * sin(theta);
-    return float3(x, sqrt(max(0, 1 - uv.x)), z);
+    return float3(-x, sqrt(max(0, 1 - uv.x)), z);
 }
 
 // Adapted from https://github.com/NVIDIA/Q2RTX/blob/9d987e755063f76ea86e426043313c2ba564c3b7/src/refresh/vkpt/shader/utils.glsl#L240
@@ -164,6 +164,14 @@ float3x3 construct_ONB_frisvad(float3 normal) {
     return ret;
 }
 
+float2 wang_hash(uint2 seed) {
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return float2(seed) / (int((uint(1) << 31)) - 1);
+}
 
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
@@ -177,7 +185,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in Texture2D noise) {
     uint num_indirect_rays = 1;
 
-    uint num_bounces = 2;
+    uint num_bounces = 3;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -198,11 +206,12 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            // float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * light_sample_idx * bounce_idx).rg * 2.0 - 1.0;
-            // float3 ray_direction = normalize(CosineSampleHemisphere(nums));
-            // float3x3 onb = construct_ONB_frisvad(surface_normal);
+            // float2 wang = wang_hash((noise_texcoord + 1.0) * ray_idx * bounce_idx);
+            // float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
+            // float3 ray_direction = normalize(CosineSampleHemisphere(wang));
+            // float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
             // ray_direction = normalize(mul(onb, ray_direction));
-            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rgb * 2.0 - 1.0);
+            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx * 2).rgb * 2.0 - 1.0);
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;

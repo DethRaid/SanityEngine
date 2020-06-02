@@ -27,6 +27,7 @@
     <ClCompile Include="extern\imgui\src\imgui_draw.cpp" />
     <ClCompile Include="extern\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="extern\minitrace\src\minitrace.c" />
+    <ClCompile Include="first_person_controller.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
     <ClCompile Include="src\core\abort.cpp" />
     <ClCompile Include="src\core\ensure.cpp" />
@@ -68,6 +69,7 @@
     <ClInclude Include="extern\imgui\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="extern\imgui\include\imgui\imstb_textedit.h" />
     <ClInclude Include="extern\imgui\include\imgui\imstb_truetype.h" />
+    <ClInclude Include="first_person_controller.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\core\abort.hpp" />

@@ -1,18 +1,19 @@
-#include "flycam_controller.hpp"
+#include "first_person_controller.hpp"
 
+#include <GLFW/glfw3.h>
 #include <entt/entity/registry.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "../core/components.hpp"
-#include "../core/ensure.hpp"
+#include "src/core/components.hpp"
+#include "src/core/ensure.hpp"
+#include "src/world/terrain.hpp"
 
-FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
-    : logger{spdlog::stdout_color_st("FlycamController")},
-      window{window_in},
-      controlled_entity{controlled_entity_in},
-      registry{&registry_in} {
+std::shared_ptr<spdlog::logger> FirstPersonController::logger{spdlog::stdout_color_st("FirstPersonController")};
+
+FirstPersonController::FirstPersonController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
+    : window{window_in}, controlled_entity{controlled_entity_in}, registry{&registry_in} {
     // Quick validation
     ENSURE(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
@@ -21,7 +22,9 @@ FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity con
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
 
-void FlycamController::update_player_transform(const float delta_time) {
+void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }
+
+void FirstPersonController::update_player_transform(const float delta_time) {
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
     auto& player_transform = registry->get<TransformComponent>(controlled_entity);
@@ -61,8 +64,7 @@ void FlycamController::update_player_transform(const float delta_time) {
     // Make sure they're on the terrain
     if(terrain) {
         const auto height = terrain->get_terrain_height(
-            TerrainSamplerParams{.latitude = player_transform.position.z,
-                                 .longitude = player_transform.position.x});
+            TerrainSamplerParams{.latitude = player_transform.position.z, .longitude = player_transform.position.x});
         if(player_transform.position.y < height + 1.5) {
             player_transform.position.y = height + 1.5;
         }
