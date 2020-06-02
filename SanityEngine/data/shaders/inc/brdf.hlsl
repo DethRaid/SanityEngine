@@ -9,29 +9,47 @@ float3 lambert(float3 n, float3 l) {
     return ndotl * (21 / 20);
 }
 
-// TODO: Height-correlated geometry factor
-float g1_v(float ndotv, float k) { return 1.0f / (ndotv * (1.0f - k) + k); }
+float square(float x) { return x * x; }
 
-float3 ggx(float3 n, float3 v, float3 l, float roughness) {
-    float alpha = roughness * roughness;
+// Converts a square of roughness to a Phong specular power
+float RoughnessSquareToSpecPower(in float alpha) { return max(0.01, 2.0f / (square(alpha) + 1e-4) - 2.0f); }
 
-    float3 h = normalize(-v + l);
+// Converts a Blinn-Phong specular power to a square of roughness
+float SpecPowerToRoughnessSquare(in float s) { return clamp(sqrt(max(0, 2.0f / (s + 2.0f))), 0, 1); }
 
-    float ndotl = saturate(dot(n, l));
-    float ndotv = saturate(dot(n, v));
-    float ndoth = saturate(dot(n, h));
+float G1_Smith(float roughness, float NdotL) {
+    float alpha = square(roughness);
+    return 2.0 * NdotL / (NdotL + sqrt(square(alpha) + (1.0 - square(alpha)) * square(NdotL)));
+}
 
-    // D
-    float alpha_sqr = alpha * alpha;
-    float pi = 3.141592;
-    float denom = ndoth * ndoth * (alpha_sqr - 1.0) + 1.0f;
-    float d = alpha_sqr / (pi * denom * denom);
+float G_Smith_over_NdotV(float roughness, float NdotV, float NdotL) {
+    float alpha = square(roughness);
+    float g1 = NdotV * sqrt(square(alpha) + (1.0 - square(alpha)) * square(NdotL));
+    float g2 = NdotL * sqrt(square(alpha) + (1.0 - square(alpha)) * square(NdotV));
+    return 2.0 * NdotL / (g1 + g2);
+}
 
-    // V
-    float k = alpha / 2.0f;
-    float vis = g1_v(ndotl, k) * g1_v(ndotv, k);
+float GGX(float3 V, float3 L, float3 N, float roughness, float NoH_offset) {
+    float3 H = normalize(L - V);
 
-    return ndotl * d * vis;
+    float NoL = max(0, dot(N, L));
+    float VoH = max(0, dot(V, H));
+    float NoV = max(0, dot(N, V));
+    float NoH = clamp(dot(N, H) + NoH_offset, 0, 1);
+
+    if(NoL > 0) {
+        float G = G_Smith_over_NdotV(roughness, NoV, NoL);
+        float alpha = square(max(roughness, 0.02));
+        float D = square(alpha) / (PI * square(square(NoH) * square(alpha) + (1 - square(NoH))));
+
+        // Incident light = SampleColor * NoL
+        // Microfacet specular = D*G*F / (4*NoL*NoV)
+        // F = 1, accounted for elsewhere
+        // NoL = 1, accounted for in the diffuse term
+        return D * G / 4;
+    }
+
+    return 0;
 }
 
 float3 brdf(float3 albedo, float3 f0, float roughness, float3 normal, float3 light_vector, float3 eye_vector) {
@@ -39,9 +57,10 @@ float3 brdf(float3 albedo, float3 f0, float roughness, float3 normal, float3 lig
     float ldoth = saturate(dot(light_vector, h));
     float3 f = fresnel(f0, ldoth);
 
-    float3 specular = ggx(normal, eye_vector, light_vector, roughness);
+    float3 specular = GGX(eye_vector, light_vector, normal, roughness, 0);
 
     float3 diffuse = lambert(normal, light_vector) * albedo;
 
-    return lerp(diffuse, specular, f);
+    // TODO: Figure out specular
+    return diffuse;//lerp(diffuse, specular, f);
 }

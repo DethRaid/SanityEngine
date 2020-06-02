@@ -28,6 +28,8 @@ struct StandardVertex {
 
 #define BYTES_PER_VERTEX 9
 
+#define STANDARD_ROUGHNESS 0.01
+
 uint3 get_indices(uint triangle_index) {
     uint base_index = (triangle_index * 3);
     int address = (base_index * 4);
@@ -115,8 +117,8 @@ float4 get_incoming_light(in float3 ray_origin,
         float shadow = saturate(raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise));
 
         // Calculate the diffuse light reflected by the hit point along the ray
-        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, 0.5, vertex.normal, -sun.direction, ray.Direction) * sun.color * shadow /
-                                          max(query.CommittedRayT() * query.CommittedRayT(), 1.0);
+        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, STANDARD_ROUGHNESS, vertex.normal, -sun.direction, ray.Direction) *
+                                          sun.color * shadow;
         return float4(reflected_direct_diffuse, 1.0);
 
     } else {
@@ -145,7 +147,7 @@ float3 CosineSampleHemisphere(float2 uv) {
     float theta = 2 * PI * uv.y;
     float x = r * cos(theta);
     float z = r * sin(theta);
-    return float3(-x, sqrt(max(0, 1 - uv.x)), z);
+    return float3(x, sqrt(max(0, 1 - uv.x)), z);
 }
 
 // Adapted from https://github.com/NVIDIA/Q2RTX/blob/9d987e755063f76ea86e426043313c2ba564c3b7/src/refresh/vkpt/shader/utils.glsl#L240
@@ -183,9 +185,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 1;
+    uint num_indirect_rays = 16;
 
-    uint num_bounces = 3;
+    uint num_bounces = 1;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -201,23 +203,25 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     float3 surface_albedo = albedo;
     float3 view_vector = eye_vector;
 
+    float num_samples = 0;
+
     for(uint ray_idx = 1; ray_idx <= num_indirect_rays; ray_idx++) {
         float3 reflection_factor = 1;
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            // float2 wang = wang_hash((noise_texcoord + 1.0) * ray_idx * bounce_idx);
-            // float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
-            // float3 ray_direction = normalize(CosineSampleHemisphere(wang));
-            // float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
-            // ray_direction = normalize(mul(onb, ray_direction));
-            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx * 2).rgb * 2.0 - 1.0);
+            float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
+            float3 ray_direction = CosineSampleHemisphere(nums);
+            float pdf = ray_direction.y;
+            float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
+            ray_direction = normalize(mul(onb, ray_direction));
+            // ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rgb * 2.0 - 1.0);
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;
             }
 
-            reflection_factor *= brdf(surface_albedo, 0.02, 0.5, surface_normal, ray_direction, view_vector);
+            reflection_factor *= brdf(surface_albedo, 0.02, STANDARD_ROUGHNESS, surface_normal, ray_direction, view_vector) / pdf;
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -247,9 +251,10 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
         }
 
         indirect_light += light_sample;
+        num_samples += 1.0f;
     }
 
-    return indirect_light / num_indirect_rays;
+    return indirect_light / num_samples;
 }
 
 float4 main(VertexOutput input) : SV_TARGET {
@@ -272,7 +277,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     float3 view_vector_viewspace = normalize(position_viewspace.xyz);
     float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
 
-    float3 light_from_sun = brdf(albedo.rgb, 0.02, 0.5, input.normal, -sun.direction, view_vector_worldspace);
+    float3 light_from_sun = brdf(albedo.rgb, 0.02, STANDARD_ROUGHNESS, input.normal, -sun.direction, view_vector_worldspace);
 
     float sun_shadow = 1;
 
