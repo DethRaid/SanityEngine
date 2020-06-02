@@ -12,7 +12,7 @@ struct MaterialData {
 
 #include "inc/standard_root_signature.hlsl"
 
-const static float ACCUMULATION_POWER = 0.25;
+const static float ACCUMULATION_POWER = 0.05;
 
 // TODO: Sample from the accumulation buffer from the camera's viewpoint last frame
 
@@ -49,9 +49,11 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
 
         float3 final_color = lerp(accumulated_color, scene_color.rgb, ACCUMULATION_POWER);
 
-        return float4(final_color, scene_color.a);
+        if(!any(isnan(final_color))) {
+            return float4(final_color, scene_color.a);
+        }
 
-    } else {
-        return scene_color;
-    }
+    } 
+
+    return scene_color;
 }

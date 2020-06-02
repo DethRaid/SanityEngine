@@ -2,7 +2,7 @@
 
 #include "standard_root_signature.hlsl"
 
-#define NUM_SHADOW_RAYS 4
+#define NUM_SHADOW_RAYS 1
 
 // from https://gist.github.com/keijiro/ee439d5e7388f3aafc5296005c8c3f33
 // Rotation with angle (in radians) and axis

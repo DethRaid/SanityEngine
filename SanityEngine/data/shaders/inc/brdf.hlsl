@@ -6,7 +6,7 @@ float3 fresnel(float3 f0, float ldoth) { return f0 + (1.0 - f0) * pow(1.0f - ldo
 
 float3 lambert(float3 n, float3 l) {
     float ndotl = saturate(dot(n, l));
-    return ndotl * (21 / 20);
+    return ndotl * 1.05;
 }
 
 float square(float x) { return x * x; }
@@ -62,5 +62,6 @@ float3 brdf(float3 albedo, float3 f0, float roughness, float3 normal, float3 lig
     float3 diffuse = lambert(normal, light_vector) * albedo;
 
     // TODO: Figure out specular
-    return diffuse;//lerp(diffuse, specular, f);
+    // float normalization = (1 - pow(1 - ldoth, 5));
+    return diffuse; // lerp(diffuse * normalization, specular, f);
 }
