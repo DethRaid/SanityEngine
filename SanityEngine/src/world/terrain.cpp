@@ -157,7 +157,7 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
     return heightmap;
 }
 
-constexpr uint32_t NUM_OCTAVES = 25;
+constexpr uint32_t NUM_OCTAVES = 3;
 
 float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
@@ -205,5 +205,6 @@ glm::vec3 Terrain::get_normal_at_location(const float y, const float x) const {
 
     const auto va = normalize(glm::vec3{2.0, 0.0, height_middle_right - height_middle_left});
     const auto vb = normalize(glm::vec3{0.0, 2.0, height_bottom_middle - height_top_middle});
-    return cross(va, vb);
+    const auto normal = normalize(cross(va, vb));
+    return {normal.x, normal.z, -normal.y};
 }

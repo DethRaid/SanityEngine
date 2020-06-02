@@ -19,7 +19,7 @@ namespace renderer {
          */
         glm::vec3 color{glm::normalize(glm::vec3{1, 1, 1}) * 22.0f};
 
-        glm::vec3 direction{glm::normalize(glm::vec3{-1, -3, 1})};
+        glm::vec3 direction{glm::normalize(glm::vec3{-1, -1, 1})};
 
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights

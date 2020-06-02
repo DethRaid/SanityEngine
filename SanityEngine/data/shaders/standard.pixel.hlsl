@@ -185,7 +185,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 2;
+    uint num_indirect_rays = 1;
 
     uint num_bounces = 8;
 
@@ -257,6 +257,8 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
 }
 
 float4 main(VertexOutput input) : SV_TARGET {
+    input.normal = normalize(input.normal);
+
     MaterialData material = material_buffer[constants.material_index];
     Texture2D albedo_texture = textures[material.albedo_idx];
     Texture2D normal_roughness_texture = textures[material.normal_idx];

@@ -100,19 +100,19 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    // world = World::create({.seed = static_cast<uint32_t>(rand() >> 32),
-    //                        .height = 128,
-    //                        .width = 128,
-    //                        .max_ocean_depth = 8,
-    //                        .min_terrain_depth_under_ocean = 8,
-    //                        .max_height_above_sea_level = 16},
-    //                       player,
-    //                       registry,
-    //                       *renderer);
-    // 
-    // player_controller->set_current_terrain(world->get_terrain());
-    // 
-    // world->tick(0);
+    world = World::create({.seed = static_cast<uint32_t>(rand() >> 32),
+                           .height = 128,
+                           .width = 128,
+                           .max_ocean_depth = 8,
+                           .min_terrain_depth_under_ocean = 8,
+                           .max_height_above_sea_level = 16},
+                          player,
+                          registry,
+                          *renderer);
+    
+    player_controller->set_current_terrain(world->get_terrain());
+    
+    world->tick(0);
 
     load_3d_object("data/models/davifactory.obj");
 }
@@ -229,7 +229,7 @@ void SanityEngine::create_flycam_player() {
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 
-    player_controller = std::make_unique<FlycamController>(window, player, registry);
+    player_controller = std::make_unique<FirstPersonController>(window, player, registry);
 
     logger->info("Created flycam");
 }

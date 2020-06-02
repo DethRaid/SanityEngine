@@ -10,6 +10,7 @@
 #include "player/flycam_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
+#include "../first_person_controller.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
@@ -66,7 +67,7 @@ private:
      */
     entt::entity player;
 
-    std::unique_ptr<FlycamController> player_controller;
+    std::unique_ptr<FirstPersonController> player_controller;
 
     Assimp::Importer importer;
 
