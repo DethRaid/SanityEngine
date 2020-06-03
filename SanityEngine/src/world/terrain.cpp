@@ -157,7 +157,7 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::u
     return heightmap;
 }
 
-constexpr uint32_t NUM_OCTAVES = 3;
+constexpr uint32_t NUM_OCTAVES = 4;
 
 float Terrain::get_terrain_height(const TerrainSamplerParams& params) const {
     const static D3D12_SAMPLER_DESC NOISE_SAMPLER{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,

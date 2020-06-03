@@ -280,7 +280,7 @@ float4 main(VertexOutput input) : SV_TARGET {
 
     float3 light_from_sun = brdf(albedo.rgb, 0.02, STANDARD_ROUGHNESS, input.normal, -sun.direction, view_vector_worldspace);
 
-    float sun_shadow = 1;
+    float sun_shadow = 0;
 
     Texture2D noise = textures[material.noise_idx];
     uint2 noise_tex_size;
@@ -302,7 +302,7 @@ float4 main(VertexOutput input) : SV_TARGET {
                                                      albedo,
                                                      noise_texcoord,
                                                      sun,
-                                                     noise) / PI;
+                                                     noise) / (2.0f * PI);
 
     float3 total_reflected_light = indirect_light + direct_light;
 
