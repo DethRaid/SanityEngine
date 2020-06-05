@@ -25,6 +25,16 @@ struct TerrainTile {
     entt::entity entity;
 };
 
+class Terrain;
+
+struct TerrainTileComponent {
+    glm::uvec2 coords;
+
+    Terrain* terrain;
+
+    rhi::RaytracingMesh ray_mesh;
+};
+
 class Terrain {
 public:
     // TODO: Make this configurable

@@ -232,7 +232,8 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                                        noise_texcoord * ray_idx * bounce_idx,
                                                        noise,
                                                        hit_vertex,
-                                                       hit_material);
+                                                       hit_material) /
+                                    (2.0f * PI);
             light_sample += reflection_factor * incoming_light.rgb;
             if(incoming_light.a > 0.05) {
 
@@ -302,7 +303,7 @@ float4 main(VertexOutput input) : SV_TARGET {
                                                      albedo,
                                                      noise_texcoord,
                                                      sun,
-                                                     noise) / (2.0f * PI);
+                                                     noise);
 
     float3 total_reflected_light = indirect_light + direct_light;
 

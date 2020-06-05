@@ -10,6 +10,7 @@
 #include "../loading/image_loading.hpp"
 #include "../renderer/standard_material.hpp"
 #include "../renderer/textures.hpp"
+#include "../rhi/helpers.hpp"
 #include "../rhi/render_device.hpp"
 #include "../sanity_engine.hpp"
 
@@ -133,12 +134,33 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
 
     auto& device = renderer->get_render_device();
     const auto commands = device.create_command_list();
-    const auto tile_mesh = renderer->get_static_mesh_store().add_mesh(tile_vertices, tile_indices, commands);
+    auto& meshes = renderer->get_static_mesh_store();
+
+    meshes.begin_adding_meshes(commands);
+
+    const auto tile_mesh = meshes.add_mesh(tile_vertices, tile_indices, commands);
+    const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
+
+    {
+        const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                               D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+                                          CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
+                                                                               D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+    }
+
+    auto as = rhi::build_acceleration_structure_for_meshes(commands, device, vertex_buffer, meshes.get_index_buffer(), {tile_mesh});
+
     device.submit_command_list(commands);
+
+    renderer->add_raytracing_objects_to_scene({rhi::RaytracingObject{.blas_buffer = as.blas_buffer.get(), .material = {0}}});
 
     const auto tile_entity = registry->create();
 
     registry->assign<renderer::StaticMeshRenderableComponent>(tile_entity, tile_mesh, terrain_material);
+    registry->assign<TerrainTileComponent>(tile_entity, tilecoord, this, std::move(as));
 
     loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 }

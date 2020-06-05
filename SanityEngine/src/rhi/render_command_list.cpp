@@ -199,4 +199,3 @@ namespace rhi {
         ComputeCommandList::prepare_for_submission();
     }
 } // namespace rhi
-
