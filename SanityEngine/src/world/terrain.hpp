@@ -31,8 +31,6 @@ struct TerrainTileComponent {
     glm::uvec2 coords;
 
     Terrain* terrain;
-
-    rhi::RaytracingMesh ray_mesh;
 };
 
 class Terrain {

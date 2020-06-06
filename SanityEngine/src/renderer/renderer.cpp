@@ -18,7 +18,6 @@
 #include "../loading/shader_loading.hpp"
 #include "../rhi/d3dx12.hpp"
 #include "../rhi/helpers.hpp"
-#include "../rhi/render_command_list.hpp"
 #include "../rhi/render_device.hpp"
 #include "../sanity_engine.hpp"
 #include "camera_matrix_buffer.hpp"
@@ -315,6 +314,18 @@ namespace renderer {
     TextureHandle Renderer::get_default_normal_roughness_texture() const { return normal_roughness_texture_handle; }
 
     TextureHandle Renderer::get_default_specular_color_emission_texture() const { return specular_emission_texture_handle; }
+
+    RaytracableGeometryHandle Renderer::create_raytracing_geometry(const rhi::Buffer& vertex_buffer,
+                                                                   const rhi::Buffer& index_buffer,
+                                                                   const std::vector<rhi::Mesh>& meshes,
+                                                                   const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+        auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
+
+        const auto handle_idx = static_cast<uint32_t>(raytracing_geometries.size());
+        raytracing_geometries.push_back(std::move(new_ray_geo));
+
+        return {handle_idx};
+    }
 
     void Renderer::create_static_mesh_storage() {
         const auto vertex_create_info = rhi::BufferCreateInfo{
@@ -631,7 +642,9 @@ namespace renderer {
 
                 desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
-                const auto& buffer = static_cast<const rhi::Buffer&>(*object.blas_buffer);
+                const auto& ray_geo = raytracing_geometries.at(object.geometry_handle.index);
+
+                const auto& buffer = static_cast<const rhi::Buffer&>(*ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
             }
 
@@ -697,30 +710,6 @@ namespace renderer {
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         return material_bind_group_builder.build();
-    }
-
-    void Renderer::render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources) {
-        MTR_SCOPE("Renderer", "render_shadows");
-        const auto depth_access = rhi::RenderTargetAccess{.begin = {.type = rhi::RenderTargetBeginningAccessType::Clear,
-                                                                    .clear_color = glm::vec4{0},
-                                                                    .format = rhi::ImageFormat::Depth32},
-                                                          .end = {.type = rhi::RenderTargetEndingAccessType::Preserve}};
-
-        command_list.begin_render_pass(*shadow_map_framebuffer, {}, depth_access);
-
-        command_list.bind_pipeline_state(*shadow_pipeline);
-
-        command_list.set_camera_idx(shadow_camera_index);
-        command_list.bind_render_resources(resources);
-
-        command_list.bind_mesh_data(*static_mesh_storage);
-
-        {
-            registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
-                command_list.set_material_idx(mesh_renderable.material.index);
-                command_list.draw(mesh_renderable.mesh.num_indices, mesh_renderable.mesh.first_index);
-            });
-        }
     }
 
     void Renderer::draw_objects_in_scene(entt::registry& registry,

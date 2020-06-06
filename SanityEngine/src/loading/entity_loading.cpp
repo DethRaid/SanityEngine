@@ -141,9 +141,6 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
         material.specular_color_emission = renderer.get_default_specular_color_emission_texture();
     }
 
-    const auto object_entity = registry.create();
-    auto& ray_mesh = registry.assign<renderer::RaytracableMeshComponent>(object_entity);
-
     const auto& index_buffer = mesh_data.get_index_buffer();
     const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
 
@@ -159,7 +156,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    ray_mesh.raytracing_mesh = build_acceleration_structure_for_meshes(commands, device, vertex_buffer, index_buffer, meshes);
+    const auto ray_geo_handle = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, meshes, commands);
 
     {
         std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
@@ -174,7 +171,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     }
 
     renderer.add_raytracing_objects_to_scene(
-        {rhi::RaytracingObject{.blas_buffer = ray_mesh.raytracing_mesh.blas_buffer.get(), .material = {mesh_renderer.material.index}}});
+        {rhi::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {mesh_renderer.material.index}}});
 
     device.submit_command_list(std::move(commands));
 

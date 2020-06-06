@@ -119,7 +119,7 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = tile_heightmap_row.size();
-                const auto face_start_idx = y * width + x;
+                const auto face_start_idx = static_cast<uint32_t>(y * width + x);
 
                 tile_indices.push_back(face_start_idx);
                 tile_indices.push_back(face_start_idx + 1);
@@ -151,16 +151,15 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    auto as = rhi::build_acceleration_structure_for_meshes(commands, device, vertex_buffer, meshes.get_index_buffer(), {tile_mesh});
+    const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), {tile_mesh}, commands);
 
     device.submit_command_list(commands);
 
-    renderer->add_raytracing_objects_to_scene({rhi::RaytracingObject{.blas_buffer = as.blas_buffer.get(), .material = {0}}});
+    renderer->add_raytracing_objects_to_scene({rhi::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
 
     const auto tile_entity = registry->create();
 
     registry->assign<renderer::StaticMeshRenderableComponent>(tile_entity, tile_mesh, terrain_material);
-    registry->assign<TerrainTileComponent>(tile_entity, tilecoord, this, std::move(as));
 
     loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 }

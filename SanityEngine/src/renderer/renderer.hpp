@@ -6,6 +6,7 @@
 
 #include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
+#include "../rhi/framebuffer.hpp"
 #include "../rhi/mesh_data_store.hpp"
 #include "../rhi/render_pipeline_state.hpp"
 #include "../settings.hpp"
@@ -83,6 +84,11 @@ namespace renderer {
         [[nodiscard]] TextureHandle get_default_normal_roughness_texture() const;
 
         [[nodiscard]] TextureHandle get_default_specular_color_emission_texture() const;
+
+        [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const rhi::Buffer& vertex_buffer,
+                                                                           const rhi::Buffer& index_buffer,
+                                                                           const std::vector<rhi::Mesh>& meshes,
+                                                                           const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
     private:
         std::shared_ptr<spdlog::logger> logger;
@@ -163,6 +169,8 @@ namespace renderer {
         void upload_material_data(uint32_t frame_idx);
 
 #pragma region Raytracing
+        std::vector<rhi::RaytracableGeometry> raytracing_geometries;
+
         std::vector<rhi::RaytracingObject> raytracing_objects;
 
         rhi::RaytracingScene raytracing_scene;
@@ -201,8 +209,6 @@ namespace renderer {
         void update_lights(entt::registry& registry, uint32_t frame_idx);
 
         [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_resources_for_frame(uint32_t frame_idx);
-
-        void render_shadow_pass(entt::registry& registry, rhi::RenderCommandList& command_list, const rhi::BindGroup& resources);
 
         void draw_objects_in_scene(entt::registry& registry,
                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,

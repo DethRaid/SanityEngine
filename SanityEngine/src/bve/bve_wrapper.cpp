@@ -89,9 +89,6 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
             return false;
         }
 
-        const auto train_entity = registry.create();
-        auto& train_component = registry.assign<renderer::RaytracableMeshComponent>(train_entity);
-
         auto train_path = std::filesystem::path{filename};
 
         auto& device = renderer.get_render_device();
@@ -217,11 +214,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        train_component.raytracing_mesh = build_acceleration_structure_for_meshes(commands,
-                                                                                  device,
-                                                                                  vertex_buffer,
-                                                                                  index_buffer,
-                                                                                  train_meshes);
+        const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
 
         {
             std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
@@ -237,7 +230,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
         device.submit_command_list(std::move(commands));
 
-        renderer.add_raytracing_objects_to_scene({rhi::RaytracingObject{.blas_buffer = train_component.raytracing_mesh.blas_buffer.get()}});
+        renderer.add_raytracing_objects_to_scene({rhi::RaytracingObject{.geometry_handle = ray_mesh}});
 
         logger->info("Loaded file {}", filename);
 

@@ -4,6 +4,8 @@
 
 #include "resources.hpp"
 
+#include "../renderer/handles.hpp"
+
 namespace rhi {
     constexpr uint32_t OPAQUE_OBJECT_BIT = 0x01;
     constexpr uint32_t TRANSPARENT_OBJECT_BIT = 0x02;
@@ -14,7 +16,7 @@ namespace rhi {
      *
      * In general, you should create one of these for each of the meshes in the scene
      */
-    struct RaytracingMesh {
+    struct RaytracableGeometry {
         /*!
          * \brief Buffer that holds the bottom-level acceleration structure
          */
@@ -29,7 +31,7 @@ namespace rhi {
         /*!
          * \brief Buffer that holds the object's bottom-level acceleration structure
          */
-        const Buffer* blas_buffer{nullptr};
+        renderer::RaytracableGeometryHandle geometry_handle{0};
 
         /*!
          * \brief Material to render this RaytracingObject with
