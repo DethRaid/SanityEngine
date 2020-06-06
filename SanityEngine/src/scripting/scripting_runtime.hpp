@@ -1,11 +1,12 @@
 #pragma once
 
 #include <spdlog/logger.h>
-#include <wrl/client.h>
 
 #import "../../../ScriptingApi/bin/Release/scriptingapi.tlb" raw_interfaces_only
 
-using Microsoft::WRL::ComPtr;
+struct ScriptingComponent {
+    ScriptingApi::_GameplayComponentPtr ptr;
+};
 
 class ScriptingRuntime {
 public:

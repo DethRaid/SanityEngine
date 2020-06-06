@@ -1,10 +1,11 @@
 #include "world.hpp"
 
 #include <random>
+
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-
 #include "../core/components.hpp"
+#include "../scripting/scripting_runtime.hpp"
 
 std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World");
 
@@ -30,9 +31,11 @@ std::unique_ptr<World> World::create(const WorldParameters& params,
                                             renderer_in});
 }
 
-void World::tick(float delta_time) {
+void World::tick(const float delta_time) {
     const auto& player_transform = registry->get<TransformComponent>(player);
     terrain.load_terrain_around_player(player_transform);
+
+    tick_script_components(delta_time);
 }
 
 Terrain& World::get_terrain() { return terrain; }
@@ -50,3 +53,7 @@ World::World(const glm::uvec2& size_in,
       registry{&registry_in},
       renderer{&renderer_in},
       terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, noise_texture, registry_in} {}
+
+void World::tick_script_components(float delta_time) {
+    registry->view<ScriptingComponent>().each([&](const ScriptingComponent& script_component) { script_component.ptr->Tick(delta_time); });
+}

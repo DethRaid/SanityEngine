@@ -95,4 +95,6 @@ private:
      * First loads the tiles in the player's frustum, from closest to farthest, then loads the tiles around the player
      */
     void load_terrain_around_player();
+
+    void tick_script_components(float delta_time);
 };
