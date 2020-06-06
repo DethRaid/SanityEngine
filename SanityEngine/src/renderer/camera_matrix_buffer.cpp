@@ -6,7 +6,6 @@
 #include "../core/ensure.hpp"
 #include "../rhi/helpers.hpp"
 #include "../rhi/render_device.hpp"
-#include "../rhi/resource_command_list.hpp"
 
 namespace renderer {
     void CameraMatrices::copy_matrices_to_previous() {

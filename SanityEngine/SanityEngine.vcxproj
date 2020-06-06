@@ -44,15 +44,11 @@
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\textures.cpp" />
     <ClCompile Include="src\rhi\bind_group.cpp" />
-    <ClCompile Include="src\rhi\command_list.cpp" />
-    <ClCompile Include="src\rhi\compute_command_list.cpp" />
     <ClCompile Include="src\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\rhi\helpers.cpp" />
     <ClCompile Include="src\rhi\mesh_data_store.cpp" />
-    <ClCompile Include="src\rhi\render_command_list.cpp" />
     <ClCompile Include="src\rhi\render_device.cpp" />
     <ClCompile Include="src\rhi\resources.cpp" />
-    <ClCompile Include="src\rhi\resource_command_list.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
@@ -96,8 +92,6 @@
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\renderer\textures.hpp" />
     <ClInclude Include="src\rhi\bind_group.hpp" />
-    <ClInclude Include="src\rhi\command_list.hpp" />
-    <ClInclude Include="src\rhi\compute_command_list.hpp" />
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp" />
     <ClInclude Include="src\rhi\d3dx12.hpp" />
     <ClInclude Include="src\rhi\descriptor_allocator.hpp" />
@@ -105,11 +99,9 @@
     <ClInclude Include="src\rhi\helpers.hpp" />
     <ClInclude Include="src\rhi\mesh_data_store.hpp" />
     <ClInclude Include="src\rhi\raytracing_structs.hpp" />
-    <ClInclude Include="src\rhi\render_command_list.hpp" />
     <ClInclude Include="src\rhi\render_device.hpp" />
     <ClInclude Include="src\rhi\render_pipeline_state.hpp" />
     <ClInclude Include="src\rhi\resources.hpp" />
-    <ClInclude Include="src\rhi\resource_command_list.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />

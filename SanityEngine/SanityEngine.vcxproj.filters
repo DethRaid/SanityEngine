@@ -171,18 +171,6 @@
     <ClCompile Include="src\rhi\bind_group.cpp">
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
-    <ClCompile Include="src\rhi\command_list.cpp">
-      <Filter>Source Files\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rhi\resource_command_list.cpp">
-      <Filter>Source Files\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rhi\compute_command_list.cpp">
-      <Filter>Source Files\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rhi\render_command_list.cpp">
-      <Filter>Source Files\rhi</Filter>
-    </ClCompile>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp">
       <Filter>Source Files\rhi</Filter>
     </ClCompile>
@@ -272,12 +260,6 @@
     <ClInclude Include="src\rhi\bind_group.hpp">
       <Filter>Header Files\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\rhi\command_list.hpp">
-      <Filter>Header Files\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\compute_command_list.hpp">
-      <Filter>Header Files\rhi</Filter>
-    </ClInclude>
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp">
       <Filter>Header Files\rhi</Filter>
     </ClInclude>
@@ -287,13 +269,7 @@
     <ClInclude Include="src\rhi\mesh_data_store.hpp">
       <Filter>Header Files\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\rhi\render_command_list.hpp">
-      <Filter>Header Files\rhi</Filter>
-    </ClInclude>
     <ClInclude Include="src\rhi\render_device.hpp">
-      <Filter>Header Files\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rhi\resource_command_list.hpp">
       <Filter>Header Files\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\render_pipeline_state.hpp">

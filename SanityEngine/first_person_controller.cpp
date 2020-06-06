@@ -65,8 +65,8 @@ void FirstPersonController::update_player_transform(const float delta_time) {
     if(terrain) {
         const auto height = terrain->get_terrain_height(
             TerrainSamplerParams{.latitude = player_transform.position.z, .longitude = player_transform.position.x});
-        if(player_transform.position.y < height + 1.5) {
-            player_transform.position.y = height + 1.5;
+        if(player_transform.position.y < height + 1.5f) {
+            player_transform.position.y = height + 1.5f;
         }
     }
 

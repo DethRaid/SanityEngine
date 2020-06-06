@@ -6,6 +6,8 @@
 #include <d3d12.h>
 #include <glm/vec4.hpp>
 
+#include "resources.hpp"
+
 namespace rhi {
     struct Framebuffer {
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;

@@ -364,7 +364,7 @@ namespace rhi {
         return ss.str();
     }
 
-    RaytracingMesh build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+    RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                            RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,

@@ -56,7 +56,7 @@ namespace rhi {
 
     std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
 
-    RaytracingMesh build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+    RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                            RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,

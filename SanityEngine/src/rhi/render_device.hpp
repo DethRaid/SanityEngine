@@ -15,12 +15,12 @@
 
 #include "../settings.hpp"
 #include "bind_group.hpp"
-#include "compute_command_list.hpp"
+#include "compute_pipeline_state.hpp"
 #include "d3dx12.hpp"
 #include "descriptor_allocator.hpp"
+#include "framebuffer.hpp"
 #include "raytracing_structs.hpp"
-#include "render_command_list.hpp"
-#include "resource_command_list.hpp"
+#include "render_pipeline_state.hpp"
 
 struct GLFWwindow;
 
@@ -100,7 +100,7 @@ namespace rhi {
         void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state);
 
         void destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> pipeline_state);
-        
+
         [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
