@@ -50,6 +50,7 @@
     <ClCompile Include="src\rhi\render_device.cpp" />
     <ClCompile Include="src\rhi\resources.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
+    <ClCompile Include="src\scripting\scripting_runtime.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />
@@ -103,6 +104,7 @@
     <ClInclude Include="src\rhi\render_pipeline_state.hpp" />
     <ClInclude Include="src\rhi\resources.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
+    <ClInclude Include="src\scripting\scripting_runtime.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
     <ClInclude Include="src\ui\fps_display.hpp" />
@@ -212,6 +214,7 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
     </FxCompile>
+    <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -269,8 +272,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\ftl\third_party\nonius\include;E:\Documents\SanityEngine\SanityEngine\extern\ftl\third_party\catch2\include;E:\Documents\SanityEngine\SanityEngine\extern\ftl\third_party\boost_context\include;E:\Documents\SanityEngine\SanityEngine\extern\ftl\include;E:\Documents\SanityEngine\SanityEngine\extern\assimp\include;E:\Documents\SanityEngine\SanityEngine\extern\imgui\include;E:\Documents\SanityEngine\SanityEngine\extern\stb\include;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\include;E:\Documents\SanityEngine\SanityEngine\extern\minitrace\include;E:\Documents\SanityEngine\SanityEngine\extern\glm\include;E:\Documents\SanityEngine\SanityEngine\extern\entt\include;E:\Documents\SanityEngine\SanityEngine\extern\glfw\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Documents\SanityEngine\SanityEngine\extern\ftl\lib;E:\Documents\SanityEngine\SanityEngine\extern\assimp\lib;E:\Documents\SanityEngine\SanityEngine\extern\bve\lib;E:\Documents\SanityEngine\SanityEngine\extern\spdlog\lib;E:\Documents\SanityEngine\SanityEngine\extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\minitrace\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

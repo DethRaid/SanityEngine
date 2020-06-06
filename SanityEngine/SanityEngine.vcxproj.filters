@@ -109,6 +109,12 @@
     <Filter Include="Source Files\world\generation">
       <UniqueIdentifier>{079276f9-ecbf-4978-bcaa-b29edfddb308}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\scripting">
+      <UniqueIdentifier>{8ea576e0-5011-41c7-a254-583cdf43f142}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\scripting">
+      <UniqueIdentifier>{e1488741-592e-40bc-9fb2-d994385b2e3a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -218,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="first_person_controller.cpp">
       <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scripting\scripting_runtime.cpp">
+      <Filter>Source Files\scripting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -377,6 +386,9 @@
     <ClInclude Include="first_person_controller.hpp">
       <Filter>Header Files\player</Filter>
     </ClInclude>
+    <ClInclude Include="src\scripting\scripting_runtime.hpp">
+      <Filter>Header Files\scripting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -423,5 +435,6 @@
     <None Include="data\shaders\inc\standard_root_signature.hlsl">
       <Filter>Shaders\inc</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
