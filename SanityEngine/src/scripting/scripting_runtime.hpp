@@ -2,7 +2,7 @@
 
 #include <spdlog/logger.h>
 
-#import "../../../ScriptingApi/bin/Release/scriptingapi.tlb" raw_interfaces_only
+#import "scriptingapi.tlb" raw_interfaces_only
 
 struct ScriptingComponent {
     ScriptingApi::_GameplayComponentPtr ptr;
@@ -24,7 +24,7 @@ public:
 
     void unload_library(const std::wstring& library_path);
 
-    ScriptingApi::_GameplayComponentPtr create_script_component(CLSID class_guid);
+    ScriptingApi::_GameplayComponentPtr create_component(CLSID class_guid);
 
 private:
     static std::shared_ptr<spdlog::logger> logger;

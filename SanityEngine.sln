@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SanityEngine", "SanityEngin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptingApi", "ScriptingApi\ScriptingApi.csproj", "{27F3AB9A-D8EB-4BE1-B0AC-DC0AF46AAED0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VillageSim", "VillageSim\VillageSim.csproj", "{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,18 @@ Global
 		{27F3AB9A-D8EB-4BE1-B0AC-DC0AF46AAED0}.Release|x64.Build.0 = Release|Any CPU
 		{27F3AB9A-D8EB-4BE1-B0AC-DC0AF46AAED0}.Release|x86.ActiveCfg = Release|Any CPU
 		{27F3AB9A-D8EB-4BE1-B0AC-DC0AF46AAED0}.Release|x86.Build.0 = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Debug|x64.ActiveCfg = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Debug|x64.Build.0 = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Debug|x86.Build.0 = Debug|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Release|x64.ActiveCfg = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Release|x64.Build.0 = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Release|x86.ActiveCfg = Release|Any CPU
+		{E1583FCD-85A1-49E6-A36C-00AF1DF7F0E4}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

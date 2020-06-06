@@ -75,6 +75,8 @@ private:
     void create_debug_plane();
 #pragma endregion
 
+    ScriptingRuntime scripting_runtime;
+
 #pragma region Spawning
     void create_planetary_atmosphere();
 

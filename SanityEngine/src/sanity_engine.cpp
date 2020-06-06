@@ -6,8 +6,6 @@
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -15,11 +13,10 @@
 
 #include "core/abort.hpp"
 #include "loading/entity_loading.hpp"
-#include "loading/image_loading.hpp"
-#include "renderer/standard_material.hpp"
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
+#include "world/world.hpp"
 
 struct AtmosphereMaterial {
     glm::vec3 sun_vector;
@@ -109,12 +106,14 @@ SanityEngine::SanityEngine(const Settings& settings_in)
                           player,
                           registry,
                           *renderer);
-    
+
     player_controller->set_current_terrain(world->get_terrain());
-    
+
     world->tick(0);
 
     load_3d_object("data/models/davifactory.obj");
+
+    create_simple_boi(registry, scripting_runtime);
 }
 
 SanityEngine::~SanityEngine() {

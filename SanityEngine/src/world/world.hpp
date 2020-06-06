@@ -4,11 +4,14 @@
 #include <entt/entity/observer.hpp>
 
 #include "../renderer/textures.hpp"
+#include "../scripting/scripting_runtime.hpp"
 #include "terrain.hpp"
 
 namespace renderer {
     class Renderer;
 }
+
+void create_simple_boi(entt::registry& registry, ScriptingRuntime& scripting_runtime);
 
 /*!
  * \brief Parameters for generating SanityEngine's world
@@ -82,12 +85,14 @@ private:
     Terrain terrain;
 
     explicit World(const glm::uvec2& size_in,
-                   const uint32_t min_terrain_height,
-                   const uint32_t max_terrain_height,
+                   uint32_t min_terrain_height,
+                   uint32_t max_terrain_height,
                    renderer::HostTexture2D noise_texture_in,
                    entt::entity player_in,
                    entt::registry& registry_in,
                    renderer::Renderer& renderer_in);
+
+    void register_component(ScriptingApi::_GameplayComponentPtr component);
 
     /*!
      * \brief Loads the terrain tiles around the player

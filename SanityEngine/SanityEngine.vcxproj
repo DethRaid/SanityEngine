@@ -292,7 +292,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\5.0.0-preview.4.20251.6\runtimes\win-x64\native;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\minitrace\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\5.0.0-preview.4.20251.6\runtimes\win-x64\native;$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\VillageSim\bin\Release;$(ProjectDir)..\ScriptingApi\bin\Release;C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\5.0.0-preview.4.20251.6\runtimes\win-x64\native;$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
