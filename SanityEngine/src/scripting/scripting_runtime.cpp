@@ -1,6 +1,7 @@
 #include "scripting_runtime.hpp"
 
 #include <filesystem>
+#include <utility>
 
 #include <Windows.h>
 #include <hostfxr.h>
@@ -44,13 +45,57 @@ std::optional<ScriptingRuntime> ScriptingRuntime::create(const std::string& asse
 
     const auto config_path = std::filesystem::path{assembly_path} / assembly_path / ".json";
     if(exists(config_path)) {
-        const load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer_local = get_dotnet_load_assembly(config_path);
+        const load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer_local = get_dotnet_load_assembly(
+            config_path);
         ENSURE(load_assembly_and_get_function_pointer_local != nullptr, "Failure: get_dotnet_load_assembly()");
 
         return std::make_optional<ScriptingRuntime>(load_assembly_and_get_function_pointer_local);
     }
 
     return std::nullopt;
+}
+
+std::optional<ComponentClass> ScriptingRuntime::load_scripting_class(const std::wstring& class_name) const {
+    constexpr const char_t* create_method_name = L"Create";
+    CreateScriptingComponent create_ptr;
+    auto rc = load_assembly_and_get_function_pointer(assembly_path.c_str(),
+                                                     class_name.c_str(),
+                                                     create_method_name,
+                                                     nullptr,
+                                                     nullptr,
+                                                     reinterpret_cast<void**>(&create_ptr));
+    if(rc != 0) {
+        logger->error("Could not load method {}::{} from assembly {}: {#x}", class_name, create_method_name, assembly_path, rc);
+        return std::nullopt;
+    }
+
+    constexpr const char_t* tick_method_name = L"Tick";
+    TickScriptingComponent tick_ptr;
+    rc = load_assembly_and_get_function_pointer(assembly_path.c_str(),
+                                                class_name.c_str(),
+                                                tick_method_name,
+                                                nullptr,
+                                                nullptr,
+                                                reinterpret_cast<void**>(&tick_ptr));
+    if(rc != 0) {
+        logger->error("Could not load method {}::{} from assembly {}: {#x}", class_name, tick_method_name, assembly_path, rc);
+        return std::nullopt;
+    }
+
+    constexpr const char_t* destroy_method_name = L"Destroy";
+    DestroyScriptingComponent destroy_ptr;
+    rc = load_assembly_and_get_function_pointer(assembly_path.c_str(),
+                                                class_name.c_str(),
+                                                destroy_method_name,
+                                                nullptr,
+                                                nullptr,
+                                                reinterpret_cast<void**>(&destroy_ptr));
+    if(rc != 0) {
+        logger->error("Could not load method {}::{} from assembly {}: {#x}", class_name, destroy_method_name, assembly_path, rc);
+        return std::nullopt;
+    }
+
+    return std::make_optional<ComponentClass>(create_ptr, tick_ptr, destroy_ptr);
 }
 
 load_assembly_and_get_function_pointer_fn ScriptingRuntime::get_dotnet_load_assembly(const std::filesystem::path& config_path) {
@@ -74,5 +119,6 @@ load_assembly_and_get_function_pointer_fn ScriptingRuntime::get_dotnet_load_asse
     return static_cast<load_assembly_and_get_function_pointer_fn>(load_assembly_and_get_function_pointer);
 }
 
-ScriptingRuntime::ScriptingRuntime(const load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer_in)
-    : load_assembly_and_get_function_pointer{load_assembly_and_get_function_pointer_in} {}
+ScriptingRuntime::ScriptingRuntime(std::wstring assembly_path_in,
+                                   const load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer_in)
+    : assembly_path{std::move(assembly_path_in)}, load_assembly_and_get_function_pointer{load_assembly_and_get_function_pointer_in} {}
