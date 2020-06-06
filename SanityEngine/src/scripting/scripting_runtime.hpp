@@ -1,8 +1,11 @@
 #pragma once
 
 #include <spdlog/logger.h>
+#include <wrl/client.h>
 
 #import "scriptingapi.tlb" raw_interfaces_only
+
+using Microsoft::WRL::ComPtr;
 
 struct ScriptingComponent {
     ScriptingApi::_GameplayComponentPtr ptr;
@@ -28,4 +31,8 @@ public:
 
 private:
     static std::shared_ptr<spdlog::logger> logger;
+
+    std::unordered_map<std::wstring, HINSTANCE> loaded_libraries;
+
+    // std::unordered_map<CLSID, ComPtr<IClassFactory>> class_factories;
 };

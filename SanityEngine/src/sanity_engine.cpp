@@ -47,6 +47,12 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
 
+    auto scripting_api_path = std::wstring{L"ScriptingApi/bin/release"};
+    scripting_runtime.load_library(scripting_api_path);
+
+    auto village_sim_path = std::wstring{L"VillageSim/bin/release"};
+    scripting_runtime.load_library(village_sim_path);
+
     // spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
     spdlog::set_pattern("[%n] [%^%l%$] %v");
 
