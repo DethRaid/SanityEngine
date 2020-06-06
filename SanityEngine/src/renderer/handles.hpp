@@ -4,7 +4,7 @@
 
 namespace renderer {
     struct TextureHandle {
-        uint32_t index{0};
+        size_t index{0};
     };
 
     struct MaterialHandle {
@@ -12,10 +12,10 @@ namespace renderer {
     };
 
     struct LightHandle {
-        uint32_t index{0};
+        size_t index{0};
     };
 
     struct RaytracableGeometryHandle {
-        uint32_t index{0};
+        size_t index{0};
     };
 } // namespace renderer
