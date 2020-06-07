@@ -5,12 +5,11 @@
 #include <entt/entity/registry.hpp>
 #include <ftl/task_scheduler.h>
 
+#include "../first_person_controller.hpp"
 #include "bve/bve_wrapper.hpp"
 #include "input/input_manager.hpp"
-#include "player/flycam_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
-#include "../first_person_controller.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"

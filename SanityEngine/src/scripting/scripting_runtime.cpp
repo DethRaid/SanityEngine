@@ -100,7 +100,7 @@ void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path
 
             rewind(file);
 
-            auto* const module_contents = new char[length];
+            auto* const module_contents = new char[length + 1];
 
             result = fread(module_contents, 1, length, file);
             if(result == 0) {
@@ -111,6 +111,7 @@ void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path
                 fclose(file);
                 continue;
             }
+            module_contents[result] = 0;
 
             fclose(file);
 
