@@ -92,7 +92,7 @@ private:
                    entt::registry& registry_in,
                    renderer::Renderer& renderer_in);
 
-    void register_component(ScriptingApi::_GameplayComponentPtr component);
+    void register_component(ScriptingComponent& component);
 
     /*!
      * \brief Loads the terrain tiles around the player

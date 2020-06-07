@@ -3,66 +3,140 @@
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../core/errors.hpp"
 #include "../rhi/helpers.hpp"
 
-std::shared_ptr<spdlog::logger> ScriptingRuntime::logger{spdlog::stdout_color_st("ScriptingRuntime")};
+std::shared_ptr<spdlog::logger> ScriptingRuntime::script_logger{spdlog::stdout_color_mt("Wren")};
 
-ScriptingRuntime::ScriptingRuntime() {
-    MTR_SCOPE("ScriptingRuntime", "ScriptingRuntime");
-    const auto result = CoInitialize(nullptr);
-    if(FAILED(result)) {
-        logger->error("Could not initialize COM: {} (Error code {x}", to_string(result), result);
-        throw std::exception{"Can't initialize COM"};
+static const std::string SANITY_ENGINE_MODULE_NAME = "SanityEngine";
+
+void ScriptingRuntime::wren_error(
+    WrenVM* /* vm */, WrenErrorType /* type */, const char* module_name, const int line, const char* message) {
+    script_logger->error("[{}] Line {}: {}", module_name, line, message);
+}
+
+void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) { script_logger->info("{}", text); }
+
+WrenForeignMethodFn ScriptingRuntime::wren_resolve_foreign_method(
+    WrenVM* vm, const char* module_name, const char* class_name, const bool is_static, const char* signature) {
+    auto* user_data = wrenGetUserData(vm);
+    if(user_data != nullptr) {
+        auto* runtime = static_cast<ScriptingRuntime*>(user_data);
+        return runtime->resolve_foreign_method(module_name, class_name, is_static, signature);
     }
 }
 
-ScriptingRuntime::~ScriptingRuntime() { CoUninitialize(); }
+WrenForeignMethodFn ScriptingRuntime::resolve_foreign_method(const std::string& module_name,
+                                                             const std::string& class_name,
+                                                             const bool is_static,
+                                                             const std::string& signature) {
+    if(module_name != SANITY_ENGINE_MODULE_NAME) {
+        // TODO: forward the result to the game code
+        return nullptr;
+    }
 
-void ScriptingRuntime::load_library(std::wstring& library_path) {
-    const auto library_handle = LoadLibrary(library_path.c_str());
-    loaded_libraries.emplace(library_path, library_handle);
+    if(class_name == "Entity" && signature == "get_tags(_)" && !is_static) {
+        
+    }
+
+    return nullptr;
 }
 
-void ScriptingRuntime::unload_library(const std::wstring& library_path) {
-    if(const auto lib_itr = loaded_libraries.find(library_path); lib_itr != loaded_libraries.end()) {
-        FreeLibrary(lib_itr->second);
-        loaded_libraries.erase(library_path);
+std::optional<ScriptingRuntime> ScriptingRuntime::create() {
+    MTR_SCOPE("ScriptingRuntime", "create");
+
+    auto config = WrenConfiguration{};
+    wrenInitConfiguration(&config);
+
+    config.errorFn = wren_error;
+    config.writeFn = wren_log;
+    config.bindForeignMethodFn = wren_resolve_foreign_method;
+
+    auto* vm = wrenNewVM(&config);
+    if(vm == nullptr) {
+        logger->error("Could not initialize Wren");
+        return std::nullopt;
+    }
+
+    const auto methods = ScriptComponentMethods{.init_handle = wrenMakeCallHandle(vm, ""),
+                                                .begin_play_handle = wrenMakeCallHandle(vm, ""),
+                                                .tick_handle = wrenMakeCallHandle(vm, ""),
+                                                .end_play_handle = wrenMakeCallHandle(vm, "")};
+
+    auto loaded_component_class = true;
+    if(methods.init_handle == nullptr) {
+        loaded_component_class = false;
+        logger->error("Could not load component init method");
+    }
+    if(methods.begin_play_handle == nullptr) {
+        loaded_component_class = false;
+        logger->error("Could not load component begin play method");
+    }
+    if(methods.tick_handle == nullptr) {
+        loaded_component_class = false;
+        logger->error("Could not load component tick method");
+    }
+    if(methods.end_play_handle == nullptr) {
+        loaded_component_class = false;
+        logger->error("Could not load end play handle");
+    }
+    if(!loaded_component_class) {
+        return std::nullopt;
+    }
+
+    return std::make_optional<ScriptingRuntime>(vm, methods);
+}
+
+ScriptingRuntime::ScriptingRuntime(WrenVM* vm_in, const ScriptComponentMethods& methods_in) : vm{vm_in}, methods{methods_in} {
+    wrenSetUserData(vm, this);
+}
+
+ScriptingRuntime::ScriptingRuntime(ScriptingRuntime&& old) noexcept : vm{old.vm}, methods{old.methods} {
+    old.vm = nullptr;
+
+    wrenSetUserData(vm, this);
+}
+
+ScriptingRuntime& ScriptingRuntime::operator=(ScriptingRuntime&& old) noexcept {
+    vm = old.vm;
+    methods = old.methods;
+
+    old.vm = nullptr;
+
+    wrenSetUserData(vm, this);
+
+    return *this;
+}
+
+ScriptingRuntime::~ScriptingRuntime() {
+    if(vm != nullptr) {
+        wrenFreeVM(vm);
     }
 }
 
-ScriptingApi::_GameplayComponentPtr ScriptingRuntime::create_component(const CLSID class_guid) {
-    MTR_SCOPE("ScriptingRuntime", "create_component");
-
-    ScriptingApi::_GameplayComponentPtr component;
-
-   /* if(const auto class_factory_itr = class_factories.find(class_guid); class_factory_itr != class_factories.end()) {
-        class_factory_itr->second->CreateInstance(nullptr, IID_PPV_ARGS(&component));
-
-    } else {*/
-        for(const auto& [name, library] : loaded_libraries) {
-            const auto dll_get_class_object = reinterpret_cast<LPFNGETCLASSOBJECT>(GetProcAddress(library, "DllGetClassObject"));
-            if(dll_get_class_object == nullptr) {
-                logger->error("Could not load DllGetClassObject method from library {}", rhi::from_wide_string(name));
-                continue;
-            }
-
-            ComPtr<IClassFactory> class_factory;
-            const auto result = dll_get_class_object(class_guid, IID_PPV_ARGS(&class_factory));
-            if(FAILED(result)) {
-                // That library didn't have a factory for our type, try the next one
-                continue;
-            }
-
-            // class_factories.emplace(class_guid, class_factory);
-
-            class_factory->CreateInstance(nullptr, IID_PPV_ARGS(&component));
-        }
-    //}
-
-    if(component == nullptr) {
-        logger->error("Could not create component");
+std::optional<ScriptingComponent> ScriptingRuntime::create_component(const std::string& component_class_name) {
+    const auto full_signature = fmt::format("{}::new()", component_class_name);
+    auto* constructor_handle = wrenMakeCallHandle(vm, full_signature.c_str());
+    if(constructor_handle == nullptr) {
+        logger->error("Could not get handle to constructor for {}", component_class_name);
+        return std::nullopt;
     }
 
-    return component;
+    wrenEnsureSlots(vm, 1);
+    wrenGetVariable(vm, "main", component_class_name.c_str(), 0);
+
+    const auto result = wrenCall(vm, constructor_handle);
+    if(result == WREN_RESULT_COMPILE_ERROR) {
+        logger->error("Compilation error when creating an instance of {}", component_class_name);
+        return std::nullopt;
+    } else if(result == WREN_RESULT_RUNTIME_ERROR) {
+        logger->error("Runtime error when creating an instance of {}", component_class_name);
+        return std::nullopt;
+    }
+
+    auto* component_handle = wrenGetSlotHandle(vm, 0);
+    if(component_handle == nullptr) {
+        logger->error("Could not create instance of class {}", component_class_name);
+    }
+
+    return ScriptingComponent{.class_methods = methods, .component_handle = component_handle};
 }

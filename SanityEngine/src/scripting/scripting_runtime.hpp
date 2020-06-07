@@ -1,38 +1,59 @@
 #pragma once
 
+#include <optional>
+
 #include <spdlog/logger.h>
-#include <wrl/client.h>
+#include <wren/wren.hpp>
 
-#import "scriptingapi.tlb" raw_interfaces_only
+struct ScriptComponentMethods {
+    WrenHandle* init_handle;
 
-using Microsoft::WRL::ComPtr;
+    WrenHandle* begin_play_handle;
+
+    WrenHandle* tick_handle;
+
+    WrenHandle* end_play_handle;
+};
 
 struct ScriptingComponent {
-    ScriptingApi::_GameplayComponentPtr ptr;
+    ScriptComponentMethods class_methods;
+
+    WrenHandle* component_handle;
 };
 
 class ScriptingRuntime {
 public:
-    ScriptingRuntime();
+    static std::optional<ScriptingRuntime> create();
+
+    explicit ScriptingRuntime(WrenVM* vm_in, const ScriptComponentMethods& methods_in);
 
     ScriptingRuntime(const ScriptingRuntime& other) = delete;
     ScriptingRuntime& operator=(const ScriptingRuntime& other) = delete;
 
-    ScriptingRuntime(ScriptingRuntime&& old) noexcept = default;
-    ScriptingRuntime& operator=(ScriptingRuntime&& old) noexcept = default;
+    ScriptingRuntime(ScriptingRuntime&& old) noexcept;
+    ScriptingRuntime& operator=(ScriptingRuntime&& old) noexcept;
 
     ~ScriptingRuntime();
 
-    void load_library(std::wstring& library_path);
-
-    void unload_library(const std::wstring& library_path);
-
-    ScriptingApi::_GameplayComponentPtr create_component(CLSID class_guid);
+    [[nodiscard]] std::optional<ScriptingComponent> create_component(const std::string& component_class_name);
 
 private:
     static std::shared_ptr<spdlog::logger> logger;
+    static std::shared_ptr<spdlog::logger> script_logger;
 
-    std::unordered_map<std::wstring, HINSTANCE> loaded_libraries;
+    static void wren_error(WrenVM* vm, WrenErrorType type, const char* module_name, int line, const char* message);
 
-    // std::unordered_map<CLSID, ComPtr<IClassFactory>> class_factories;
+    static void wren_log(WrenVM* vm, const char* text);
+
+    static WrenForeignMethodFn wren_resolve_foreign_method(
+        WrenVM* vm, const char* module_name, const char* class_name, bool is_static, const char* signature);
+
+    WrenVM* vm{nullptr};
+
+    ScriptComponentMethods methods;
+
+    WrenForeignMethodFn resolve_foreign_method(const std::string& module_name,
+                                               const std::string& class_name,
+                                               bool is_static,
+                                               const std::string& signature);
 };
