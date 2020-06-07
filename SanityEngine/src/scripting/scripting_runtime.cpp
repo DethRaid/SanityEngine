@@ -308,15 +308,17 @@ void ScriptingRuntime::register_script_function(const ScriptingFunctionName& nam
 
 std::optional<ScriptingComponent> ScriptingRuntime::create_component(const std::string& module_name,
                                                                      const std::string& component_class_name) const {
-    const auto full_signature = fmt::format("{}.{}::new()", module_name, component_class_name);
-    auto* constructor_handle = wrenMakeCallHandle(vm, full_signature.c_str());
+
+    // Load the class into a slot so we can get methods from it
+    wrenEnsureSlots(vm, 1);
+    wrenGetVariable(vm, module_name.c_str(), component_class_name.c_str(), 0);
+
+    const auto full_signature = fmt::format("new()", module_name, component_class_name);
+    auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
     if(constructor_handle == nullptr) {
         logger->error("Could not get handle to constructor for {}", component_class_name);
         return std::nullopt;
     }
-
-    wrenEnsureSlots(vm, 1);
-    wrenGetVariable(vm, module_name.c_str(), component_class_name.c_str(), 0);
 
     const auto result = wrenCall(vm, constructor_handle);
     switch(result) {
@@ -331,10 +333,10 @@ std::optional<ScriptingComponent> ScriptingRuntime::create_component(const std::
             const auto tick_signature = fmt::format("{}::tick(_)", component_class_name);
             const auto end_play_signature = fmt::format("{}::end_play()", component_class_name);
 
-            const auto methods = ScriptComponentMethods{.init_handle = wrenMakeCallHandle(vm, init_signature.c_str()),
-                                                        .begin_play_handle = wrenMakeCallHandle(vm, begin_play_signature.c_str()),
-                                                        .tick_handle = wrenMakeCallHandle(vm, tick_signature.c_str()),
-                                                        .end_play_handle = wrenMakeCallHandle(vm, end_play_signature.c_str())};
+            const auto methods = ScriptComponentMethods{.init_handle = wrenMakeCallHandle(vm, "init_self()"),
+                                                        .begin_play_handle = wrenMakeCallHandle(vm, "begin_play(_)"),
+                                                        .tick_handle = wrenMakeCallHandle(vm, "tick(_)"),
+                                                        .end_play_handle = wrenMakeCallHandle(vm, "end_play()")};
 
             auto loaded_component_class = true;
             if(methods.init_handle == nullptr) {
