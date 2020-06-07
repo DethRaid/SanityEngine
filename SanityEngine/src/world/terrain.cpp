@@ -113,12 +113,12 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
         for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
-            const auto normal = get_normal_at_location(y, x);
+            const auto normal = get_normal_at_location(static_cast<float>(y), static_cast<float>(x));
 
             tile_vertices.push_back(StandardVertex{.position = {x, height, y}, .normal = normal, .color = 0xFFFFFFFF, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
-                const auto width = tile_heightmap_row.size();
+                const auto width = static_cast<uint32_t>(tile_heightmap_row.size());
                 const auto face_start_idx = static_cast<uint32_t>(y * width + x);
 
                 tile_indices.push_back(face_start_idx);

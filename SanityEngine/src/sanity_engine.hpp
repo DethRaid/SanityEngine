@@ -71,11 +71,13 @@ private:
 
     Assimp::Importer importer;
 
+    void initialize_scripting_runtime();
+
 #pragma region Debug
     void create_debug_plane();
 #pragma endregion
 
-    ScriptingRuntime scripting_runtime;
+    std::unique_ptr<ScriptingRuntime> scripting_runtime;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

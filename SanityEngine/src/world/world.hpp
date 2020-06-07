@@ -67,6 +67,11 @@ public:
 
     [[nodiscard]] Terrain& get_terrain();
 
+#pragma region Scripting
+    // ReSharper disable once CppInconsistentNaming
+    [[nodiscard]] WrenHandle* _get_wren_handle() const;
+#pragma endregion
+
 private:
     static std::shared_ptr<spdlog::logger> logger;
 
@@ -83,6 +88,8 @@ private:
     renderer::Renderer* renderer;
 
     Terrain terrain;
+
+    WrenHandle* handle;
 
     explicit World(const glm::uvec2& size_in,
                    uint32_t min_terrain_height,

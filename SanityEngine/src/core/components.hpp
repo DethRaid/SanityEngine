@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -32,3 +34,7 @@ inline glm::vec3 TransformComponent::get_up_vector() const {
     constexpr auto global_up = glm::vec3{0, 1, 0};
     return global_up * rotation;
 }
+
+struct TagComponent {
+    std::unordered_set<std::string> tags;
+};

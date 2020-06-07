@@ -47,12 +47,6 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
 
-    auto scripting_api_path = std::wstring{L"ScriptingApi/bin/release"};
-    scripting_runtime.load_library(scripting_api_path);
-
-    auto village_sim_path = std::wstring{L"VillageSim/bin/release"};
-    scripting_runtime.load_library(village_sim_path);
-
     // spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
     spdlog::set_pattern("[%n] [%^%l%$] %v");
 
@@ -93,6 +87,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     renderer = std::make_unique<renderer::Renderer>(window, settings);
     logger->info("Initialized renderer");
 
+    initialize_scripting_runtime();
+
     bve = std::make_unique<BveWrapper>(renderer->get_render_device());
 
     create_flycam_player();
@@ -119,7 +115,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     load_3d_object("data/models/davifactory.obj");
 
-    create_simple_boi(registry, scripting_runtime);
+    create_simple_boi(registry, *scripting_runtime);
 }
 
 SanityEngine::~SanityEngine() {
@@ -174,6 +170,18 @@ void SanityEngine::run() {
         }
 
         mtr_flush();
+    }
+}
+
+void SanityEngine::initialize_scripting_runtime() {
+    scripting_runtime = ScriptingRuntime::create(registry);
+    if(!scripting_runtime) {
+        throw std::exception("Could not initialize scripting runtime");
+    }
+
+    const auto success = scripting_runtime->add_script_directory("E:\\Documents\\SanityEngine\\SanityEngine\\scripts");
+    if(!success) {
+        throw std::exception{"Could not register SanityEngine builtin scripts modifier"};
     }
 }
 

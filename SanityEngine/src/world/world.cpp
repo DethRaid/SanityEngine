@@ -7,19 +7,15 @@
 
 #include "../core/components.hpp"
 
-#import "villagesim.tlb" raw_interfaces_only
-#import "scriptingapi.tlb" raw_interfaces_only
-
 std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World");
 
 void create_simple_boi(entt::registry& registry, ScriptingRuntime& scripting_runtime) {
     const auto entity = registry.create();
 
-    CLSID test_component_id;
-    CLSIDFromString(L"{7bde59b0-edb1-36b0-9c98-204e198e4c9f}", &test_component_id); 
-    auto component = scripting_runtime.create_component(test_component_id);
-
-    registry.assign<ScriptingComponent>(entity, component);
+    auto component = scripting_runtime.create_component("sanity_engine", "Component");
+    if(component) {
+        registry.assign<ScriptingComponent>(entity, *component);
+    }
 }
 
 std::unique_ptr<World> World::create(const WorldParameters& params,
@@ -55,6 +51,11 @@ void World::tick(const float delta_time) {
 
 Terrain& World::get_terrain() { return terrain; }
 
+// ReSharper disable once CppInconsistentNaming
+WrenHandle* World::_get_wren_handle() const {
+    return handle;
+}
+
 World::World(const glm::uvec2& size_in,
              const uint32_t min_terrain_height,
              const uint32_t max_terrain_height,
@@ -67,13 +68,12 @@ World::World(const glm::uvec2& size_in,
       player{player_in},
       registry{&registry_in},
       renderer{&renderer_in},
-      terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, noise_texture, registry_in} {
-}
+      terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, noise_texture, registry_in} {}
 
-void World::register_component(ScriptingApi::_GameplayComponentPtr component) { component->BeginPlay(/* this */); }
+void World::register_component(ScriptingComponent& component) { component.begin_play(*this); }
 
 void World::tick_script_components(float delta_time) {
     MTR_SCOPE("World", "tick_script_components");
 
-    registry->view<ScriptingComponent>().each([&](const ScriptingComponent& script_component) { script_component.ptr->Tick(delta_time); });
+    registry->view<ScriptingComponent>().each([&](ScriptingComponent& script_component) { script_component.tick(delta_time); });
 }
