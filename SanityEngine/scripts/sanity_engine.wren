@@ -5,10 +5,10 @@ foreign class SanityEngine {}
 foreign class Entity {
     foreign get_tags()
 
-    foreign World get_world()
+    foreign get_world()
 }
 
-foreign class Component {
+class Component {
     /*!
      * \brief Initializes the component in a context without an active game world
      *
@@ -20,12 +20,12 @@ foreign class Component {
     /*!
      * \brief Initializes this component and its interactions with other objects in a world, including its entity or other components
      */
-    begin_play(World world) {}
+    begin_play(world) {}
 
     /*!
      * \brief Initializes this component's internal simulation, advancing internal state by the provided time step
      */
-    tick(Num delta_time) {}
+    tick(delta_time) {}
 
     /*!
      * \brief Does everything necessary to prepare for destroying this component
@@ -36,7 +36,7 @@ foreign class Component {
 }
 
 class TestComponent is Component {
-    tick(Num delta_time) {
+    tick(delta_time) {
         System.print("Ticking...")
     }
 }

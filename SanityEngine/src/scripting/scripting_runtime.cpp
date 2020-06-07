@@ -64,43 +64,47 @@ char* ScriptingRuntime::wren_load_module(WrenVM* vm, const char* module_name) {
 }
 
 void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path& directory) const {
-    for(auto itr = std::filesystem::directory_iterator{directory}; itr._At_end(); ++itr) {
-        if(!itr->is_directory() && itr->path().extension() == ".wren") {
-            auto potential_filename = itr->path();
-            auto* file = fopen(potential_filename.string().c_str(), "r");
+    if(!exists(directory)) {
+        logger->error("Could not load scripts in directory {}: directory does not exist");
+        return;
+    }
+    if(!is_directory(directory)) {
+        logger->error("Could not load scripts in directory {}: This path does not refer to a directory");
+        return;
+    }
+    uint32_t num_loaded_modules{0};
+    for(const auto& module_entry : std::filesystem::directory_iterator{directory}) {
+        const auto& module_path = module_entry.path();
+        if(!module_entry.is_directory() && module_path.extension() == ".wren") {
+            auto* file = fopen(module_path.string().c_str(), "r");
             if(file == nullptr) {
                 // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
-                logger->error("Could not open file {}", potential_filename);
+                logger->error("Could not open file {}", module_entry);
                 fclose(file);
                 continue;
             }
 
             auto result = static_cast<size_t>(fseek(file, 0, SEEK_END));
             if(result != 0) {
-                logger->error("Could not get length of file {}", potential_filename);
+                logger->error("Could not get length of file {}", module_entry);
                 fclose(file);
                 continue;
             }
 
             const auto length = ftell(file);
             if(length == 0) {
-                logger->error("File {} exists, but it has a length of 0", potential_filename);
+                logger->error("File {} exists, but it has a length of 0", module_entry);
                 fclose(file);
                 continue;
             }
 
-            result = fseek(file, 0, SEEK_SET);
-            if(result != 0) {
-                logger->error("Could not reset file pointer for file {}", potential_filename);
-                fclose(file);
-                continue;
-            }
+            rewind(file);
 
             auto* const module_contents = new char[length];
 
-            result = fread(module_contents, length * sizeof(char), 1, file);
+            result = fread(module_contents, 1, length, file);
             if(result == 0) {
-                logger->error("Could not read contents of file {}", potential_filename);
+                logger->error("Could not read contents of file {}", module_entry);
 
                 delete[] module_contents;
 
@@ -110,10 +114,19 @@ void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path
 
             fclose(file);
 
-            wrenInterpret(vm, potential_filename.filename().string().c_str(), module_contents);
+            const auto& module_file_name = module_path.filename();
+
+            wrenInterpret(vm, module_file_name.string().c_str(), module_contents);
+            logger->info("Successfully loaded script {}", module_entry);
+            num_loaded_modules++;
 
             delete[] module_contents;
         }
+    }
+    if(num_loaded_modules > 0) {
+        logger->warn(
+            "No modules loaded from directory {}. If you are planning on adding scripts here while the application is running, you may ignore this warning",
+            directory);
     }
 }
 
