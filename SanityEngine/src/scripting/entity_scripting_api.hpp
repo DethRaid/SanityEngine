@@ -42,13 +42,15 @@ namespace horus {
 
     class [[horus::class(module = sanity_engine)]] Entity {
     public:
-        [[horus::constructor]] explicit Entity(entt::entity entity_in, entt::registry & registry_in);
+        [[horus::constructor]] explicit Entity(WrenHandle* handle_in, entt::entity entity_in, entt::registry & registry_in);
 
         [[horus::method]] void add_tag(const std::string& tag) const;
 
         [[horus::method]] [[nodiscard]] bool has_tag(const std::string& tag) const;
 
         [[horus::method]] [[nodiscard]] std::unordered_set<std::string> get_tags() const;
+
+        [[horus::method]] [[nodiscard]] World* get_world() const;
 
         /*!
          * \brief Retrieves a component of the given type
@@ -60,7 +62,11 @@ namespace horus {
         template <NativeComponent ComponentType>
         [[horus::method]] ComponentType& get_component() const;
 
+        [[nodiscard]] WrenHandle* get_handle() const;
+
     private:
+        WrenHandle* handle;
+
         entt::entity entity;
 
         entt::registry& registry;

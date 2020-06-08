@@ -180,6 +180,8 @@ entt::entity SanityEngine::get_player() const { return player; }
 
 entt::registry& SanityEngine::get_registry() { return registry; }
 
+World* SanityEngine::get_world() const { return world.get(); }
+
 void SanityEngine::initialize_scripting_runtime() {
     scripting_runtime = horus::ScriptingRuntime::create(registry);
     if(!scripting_runtime) {

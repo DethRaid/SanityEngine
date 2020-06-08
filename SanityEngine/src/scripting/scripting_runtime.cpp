@@ -116,16 +116,32 @@ namespace horus {
 
                 fclose(file);
 
-                const auto& module_file_name = module_path.filename();
+                const auto& module_name_string = module_path.stem().string();
 
-                wrenInterpret(vm, module_file_name.string().c_str(), module_contents);
-                logger->info("Successfully loaded script {}", module_entry);
-                num_loaded_modules++;
+                const auto wren_result = wrenInterpret(vm, module_name_string.c_str(), module_contents);
+                switch(wren_result) {
+                    case WREN_RESULT_SUCCESS:
+                        logger->info("Successfully loaded module {}", module_entry);
+                        num_loaded_modules++;
+                        break;
+
+                    case WREN_RESULT_COMPILE_ERROR:
+                        logger->error("Compile error while loading module {}", module_name_string);
+                        break;
+
+                    case WREN_RESULT_RUNTIME_ERROR:
+                        logger->error("Runtime error when loading module {} - are you sure you defined all your foreign methods?",
+                                      module_name_string);
+                        break;
+
+                    default:
+                        logger->error("Unknown error when loading module {}");
+                }
 
                 delete[] module_contents;
             }
         }
-        if(num_loaded_modules > 0) {
+        if(num_loaded_modules == 0) {
             logger->warn(
                 "No modules loaded from directory {}. If you are planning on adding scripts here while the application is running, you may ignore this warning",
                 directory);
@@ -240,6 +256,8 @@ namespace horus {
             return {};
         }
 
+        logger->set_level(spdlog::level::trace);
+
         return std::make_unique<ScriptingRuntime>(vm, registry_in);
     }
 
@@ -291,6 +309,45 @@ namespace horus {
         auto& wren_class = wren_module[name.class_name];
 
         wren_class.emplace(name.method_signature, function);
+    }
+
+    WrenHandle* ScriptingRuntime::create_entity() const {
+        // Load the class into a slot so we can get methods from it
+        wrenEnsureSlots(vm, 1);
+        wrenGetVariable(vm, "sanity_engine", "Entity", 0);
+
+        auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
+        if(constructor_handle == nullptr) {
+            logger->error("Could not get handle to constructor for Entity");
+            return nullptr;
+        }
+
+        const auto result = wrenCall(vm, constructor_handle);
+        switch(result) {
+            case WREN_RESULT_SUCCESS: {
+                auto* component_handle = wrenGetSlotHandle(vm, 0);
+                if(component_handle == nullptr) {
+                    logger->error("Could not create instance of Entity");
+                }
+
+                return component_handle;
+            }
+
+            case WREN_RESULT_COMPILE_ERROR: {
+                logger->error("Compilation error when creating an Entity");
+                return nullptr;
+            }
+
+            case WREN_RESULT_RUNTIME_ERROR: {
+                logger->error("Runtime error when creating an Entity");
+                return nullptr;
+            }
+
+            default: {
+                logger->error("Unknown error when creating an Entity");
+                return nullptr;
+            }
+        }
     }
 
     std::optional<Component> ScriptingRuntime::create_component(const entt::entity entity,

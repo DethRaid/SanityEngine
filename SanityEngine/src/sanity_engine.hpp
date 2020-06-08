@@ -40,6 +40,8 @@ public:
 
     [[nodiscard]] entt::registry& get_registry();
 
+   [[nodiscard]] World* get_world() const;
+
 private:
     std::shared_ptr<spdlog::logger> logger;
 

@@ -59,6 +59,8 @@ namespace horus {
 
         void register_script_function(const ScriptingFunctionName& name, WrenForeignMethodFn function);
 
+        [[nodiscard]] WrenHandle* create_entity() const;
+
         [[nodiscard]] std::optional<Component> create_component(entt::entity entity,
                                                                 const std::string& module_name,
                                                                 const std::string& component_class_name) const;
