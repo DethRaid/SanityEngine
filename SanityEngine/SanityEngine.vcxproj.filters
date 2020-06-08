@@ -115,6 +115,9 @@
     <Filter Include="Header Files\scripting">
       <UniqueIdentifier>{e1488741-592e-40bc-9fb2-d994385b2e3a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\serialization">
+      <UniqueIdentifier>{de8b31ff-9489-48fe-895e-ba659d086844}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -230,6 +233,9 @@
     </ClCompile>
     <ClCompile Include="src\scripting\entity_scripting_api.cpp">
       <Filter>Source Files\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\globals.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -397,6 +403,9 @@
     </ClInclude>
     <ClInclude Include="src\globals.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serialization\serialization.hpp">
+      <Filter>Header Files\serialization</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

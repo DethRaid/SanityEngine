@@ -6,7 +6,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-// The horus::component
+#include "../serialization/serialization.hpp"
+
+// The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
 
 struct [[horus::component]] TransformComponent {
     [[horus::field]] glm::vec3 position{0};
@@ -47,3 +49,7 @@ inline glm::vec3 TransformComponent::get_up_vector() const {
 struct [[component]] TagComponent {
     [[serialize]] std::unordered_set<std::string> tags;
 };
+
+JSON5_CLASS(TransformComponent, position, rotation, scale)
+
+JSON5_CLASS(TagComponent, tags);
