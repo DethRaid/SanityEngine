@@ -1,5 +1,7 @@
 #include "entity_scripting_api.hpp"
 
+#include <wren/wren.hpp>
+
 #include "../globals.hpp"
 #include "../sanity_engine.hpp"
 #include "../world/world.hpp"

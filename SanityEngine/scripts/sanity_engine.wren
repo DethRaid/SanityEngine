@@ -19,7 +19,7 @@ class Entity {
  * This has a number of implications. The constructor of a Component may access all fields within the class, along 
  * with any foreign code except for `get_entity()`. 
  */
-foreign class Component {
+class Component {
     /*!
      * \brief Initializes the component in a context without an active game world
      *
@@ -30,7 +30,7 @@ foreign class Component {
      * Should NOT try to reference the entity that this component is attached to, other components on the entity, etc
      * Should ONLY touch values in this component
      */
-    foreign construct new()
+    construct new() {}
 
     /*!
      * \brief Initializes this component and its interactions with other objects in a world, including its entity or 

@@ -2,4 +2,4 @@
 
 class SanityEngine;
 
-SanityEngine* g_engine;
+extern SanityEngine* g_engine;

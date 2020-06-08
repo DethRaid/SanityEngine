@@ -4,7 +4,8 @@
 #include <unordered_set>
 
 #include <entt/entity/fwd.hpp>
-#include <wren/wren.h>
+#include <entt/entity/registry.hpp>
+#include <wren/wren.hpp>
 
 class World;
 
@@ -64,6 +65,11 @@ namespace horus {
 
         entt::registry& registry;
     };
+
+    template <NativeComponent ComponentType>
+    ComponentType& Entity::get_component() const {
+        return registry.get<ComponentType>(entity);
+    }
 
     class [[horus::class(module = sanity_engine)]] Component {
     public:

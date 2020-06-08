@@ -12,7 +12,7 @@ std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World")
 void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& scripting_runtime) {
     const auto entity = registry.create();
 
-    auto component = scripting_runtime.create_component(entity, "sanity_engine", "Component");
+    auto component = scripting_runtime.create_component(entity, "sanity_engine", "TestComponent");
     if(component) {
         registry.assign<horus::Component>(entity, *component);
     }

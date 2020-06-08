@@ -2,7 +2,6 @@
 
 #include <optional>
 #include <set>
-#include <unordered_set>
 
 #include <entt/entity/fwd.hpp>
 #include <spdlog/logger.h>
