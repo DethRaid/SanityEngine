@@ -9,12 +9,12 @@
 
 std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World");
 
-void create_simple_boi(entt::registry& registry, ScriptingRuntime& scripting_runtime) {
+void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& scripting_runtime) {
     const auto entity = registry.create();
 
-    auto component = scripting_runtime.create_component("sanity_engine", "Component");
+    auto component = scripting_runtime.create_component(entity, "sanity_engine", "Component");
     if(component) {
-        registry.assign<ScriptingComponent>(entity, *component);
+        registry.assign<horus::Component>(entity, *component);
     }
 }
 
@@ -70,10 +70,10 @@ World::World(const glm::uvec2& size_in,
       renderer{&renderer_in},
       terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, noise_texture, registry_in} {}
 
-void World::register_component(ScriptingComponent& component) { component.begin_play(*this); }
+void World::register_component(horus::Component& component) { component.begin_play(*this); }
 
 void World::tick_script_components(float delta_time) {
     MTR_SCOPE("World", "tick_script_components");
 
-    registry->view<ScriptingComponent>().each([&](ScriptingComponent& script_component) { script_component.tick(delta_time); });
+    registry->view<horus::Component>().each([&](horus::Component& script_component) {if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) { script_component.tick(delta_time); }});
 }

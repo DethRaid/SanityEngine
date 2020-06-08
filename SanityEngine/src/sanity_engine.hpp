@@ -38,6 +38,8 @@ public:
 
     [[nodiscard]] entt::entity get_player() const;
 
+    [[nodiscard]] entt::registry& get_registry();
+
 private:
     std::shared_ptr<spdlog::logger> logger;
 
@@ -72,11 +74,13 @@ private:
 
     void initialize_scripting_runtime();
 
+    void register_horus_api() const;
+
 #pragma region Debug
     void create_debug_plane();
 #pragma endregion
 
-    std::unique_ptr<ScriptingRuntime> scripting_runtime;
+    std::unique_ptr<horus::ScriptingRuntime> scripting_runtime;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

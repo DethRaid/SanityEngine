@@ -50,6 +50,7 @@
     <ClCompile Include="src\rhi\render_device.cpp" />
     <ClCompile Include="src\rhi\resources.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
+    <ClCompile Include="src\scripting\entity_scripting_api.cpp" />
     <ClCompile Include="src\scripting\scripting_runtime.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
@@ -78,6 +79,7 @@
     <ClInclude Include="src\core\ensure.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
     <ClInclude Include="src\game\game.hpp" />
+    <ClInclude Include="src\globals.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
     <ClInclude Include="src\loading\entity_loading.hpp" />
     <ClInclude Include="src\loading\image_loading.hpp" />
@@ -104,6 +106,7 @@
     <ClInclude Include="src\rhi\render_pipeline_state.hpp" />
     <ClInclude Include="src\rhi\resources.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
+    <ClInclude Include="src\scripting\entity_scripting_api.hpp" />
     <ClInclude Include="src\scripting\scripting_runtime.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />

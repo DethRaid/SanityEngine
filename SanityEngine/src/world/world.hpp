@@ -11,7 +11,7 @@ namespace renderer {
     class Renderer;
 }
 
-void create_simple_boi(entt::registry& registry, ScriptingRuntime& scripting_runtime);
+void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& scripting_runtime);
 
 /*!
  * \brief Parameters for generating SanityEngine's world
@@ -99,7 +99,7 @@ private:
                    entt::registry& registry_in,
                    renderer::Renderer& renderer_in);
 
-    void register_component(ScriptingComponent& component);
+    void register_component(horus::Component& component);
 
     /*!
      * \brief Loads the terrain tiles around the player

@@ -12,6 +12,7 @@
 #include <stb_image.h>
 
 #include "core/abort.hpp"
+#include "globals.hpp"
 #include "loading/entity_loading.hpp"
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
@@ -26,11 +27,13 @@ int main() {
     Settings settings{};
     // settings.enable_gpu_crash_reporting = true;
 
-    SanityEngine engine{settings};
+    g_engine = new SanityEngine{settings};
 
-    engine.run();
+    g_engine->run();
 
     spdlog::warn("REMAIN INDOORS");
+
+    delete g_engine;
 }
 
 static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
@@ -173,16 +176,31 @@ void SanityEngine::run() {
     }
 }
 
+entt::entity SanityEngine::get_player() const { return player; }
+
+entt::registry& SanityEngine::get_registry() { return registry; }
+
 void SanityEngine::initialize_scripting_runtime() {
-    scripting_runtime = ScriptingRuntime::create(registry);
+    scripting_runtime = horus::ScriptingRuntime::create(registry);
     if(!scripting_runtime) {
         throw std::exception("Could not initialize scripting runtime");
     }
+
+    register_horus_api();
 
     const auto success = scripting_runtime->add_script_directory("E:\\Documents\\SanityEngine\\SanityEngine\\scripts");
     if(!success) {
         throw std::exception{"Could not register SanityEngine builtin scripts modifier"};
     }
+}
+
+void SanityEngine::register_horus_api() const {
+    /*
+     * Everything in this method is auto-generated when the code is re-built. You should not put any code you care about in this method, nor
+     * should you modify the code in this method in any way
+     */
+
+    _scripting_entity_scripting_api_register_with_scripting_runtime(*scripting_runtime);
 }
 
 void SanityEngine::create_debug_plane() {

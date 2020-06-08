@@ -228,6 +228,9 @@
     <ClCompile Include="src\scripting\scripting_runtime.cpp">
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
+    <ClCompile Include="src\scripting\entity_scripting_api.cpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -388,6 +391,12 @@
     </ClInclude>
     <ClInclude Include="src\scripting\scripting_runtime.hpp">
       <Filter>Header Files\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scripting\entity_scripting_api.hpp">
+      <Filter>Header Files\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\globals.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
