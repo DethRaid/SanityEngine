@@ -74,23 +74,23 @@ void Terrain::load_terrain_textures_and_create_material() {
 
     auto& materials = renderer->get_material_data_buffer();
     terrain_material = materials.get_next_free_material<StandardMaterial>();
-    auto& material = materials.at<StandardMaterial>(terrain_material);
-    material.noise = renderer->get_noise_texture();
+    auto* material = materials.at<StandardMaterial>(terrain_material);
+    material->noise = renderer->get_noise_texture();
 
     task_scheduler->WaitForCounter(&counter, 0, true);
 
     if(albedo_image_data->handle_out) {
-        material.albedo = *albedo_image_data->handle_out;
+        material->albedo = *albedo_image_data->handle_out;
     } else {
         logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name_in);
-        material.albedo = renderer->get_pink_texture();
+        material->albedo = renderer->get_pink_texture();
     }
 
     if(normal_roughness_image_data->handle_out) {
-        material.normal_roughness = *normal_roughness_image_data->handle_out;
+        material->normal_roughness = *normal_roughness_image_data->handle_out;
     } else {
         logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name_in);
-        material.normal_roughness = renderer->get_default_normal_roughness_texture();
+        material->normal_roughness = renderer->get_default_normal_roughness_texture();
     }
 }
 
@@ -159,7 +159,7 @@ void Terrain::generate_tile(const glm::uvec2& tilecoord) {
 
     const auto tile_entity = registry->create();
 
-    registry->assign<renderer::StaticMeshRenderableComponent>(tile_entity, tile_mesh, terrain_material);
+    registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
 
     loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 }

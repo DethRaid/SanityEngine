@@ -113,7 +113,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
             const auto entity = registry.create();
 
-            auto& mesh_component = registry.assign<renderer::StaticMeshRenderableComponent>(entity);
+            auto& mesh_component = registry.assign<renderer::StandardRenderableComponent>(entity);
 
             mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
             train_meshes.push_back(mesh_component.mesh);
@@ -130,11 +130,11 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
                     auto& material_data = renderer.get_material_data_buffer();
                     const auto material_handle = material_data.get_next_free_material<StandardMaterial>();
-                    auto& material = material_data.at<StandardMaterial>(material_handle);
-                    material.albedo = *texture_handle_maybe;
-                    material.normal_roughness = renderer.get_default_normal_roughness_texture();
-                    material.specular_color_emission = renderer.get_default_specular_color_emission_texture();
-                    material.noise = renderer.get_noise_texture();
+                    auto* material = material_data.at<StandardMaterial>(material_handle);
+                    material->albedo = *texture_handle_maybe;
+                    material->normal_roughness = renderer.get_default_normal_roughness_texture();
+                    material->specular_color_emission = renderer.get_default_specular_color_emission_texture();
+                    material->noise = renderer.get_noise_texture();
 
                     mesh_component.material = material_handle;
 
@@ -184,8 +184,8 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
                         auto& material_data = renderer.get_material_data_buffer();
                         const auto material_handle = material_data.get_next_free_material<StandardMaterial>();
-                        auto& material = material_data.at<StandardMaterial>(material_handle);
-                        material.albedo = texture_handle;
+                        auto* material = material_data.at<StandardMaterial>(material_handle);
+                        material->albedo = texture_handle;
 
                         mesh_component.material = material_handle;
 

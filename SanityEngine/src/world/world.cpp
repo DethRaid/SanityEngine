@@ -56,9 +56,7 @@ void World::tick(const float delta_time) {
 Terrain& World::get_terrain() { return terrain; }
 
 // ReSharper disable once CppInconsistentNaming
-WrenHandle* World::_get_wren_handle() const {
-    return handle;
-}
+WrenHandle* World::_get_wren_handle() const { return handle; }
 
 World::World(const glm::uvec2& size_in,
              const uint32_t min_terrain_height,
@@ -79,5 +77,9 @@ void World::register_component(horus::Component& component) { component.begin_pl
 void World::tick_script_components(float delta_time) {
     MTR_SCOPE("World", "tick_script_components");
 
-    registry->view<horus::Component>().each([&](horus::Component& script_component) {if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) { script_component.tick(delta_time); }});
+    // registry->view<horus::Component>().each([&](horus::Component& script_component) {
+    //     if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) {
+    //         script_component.tick(delta_time);
+    //     }
+    // });
 }

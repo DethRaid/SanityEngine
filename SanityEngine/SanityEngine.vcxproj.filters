@@ -237,6 +237,9 @@
     <ClCompile Include="src\globals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -406,6 +409,15 @@
     </ClInclude>
     <ClInclude Include="src\serialization\serialization.hpp">
       <Filter>Header Files\serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\material.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpass.hpp">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

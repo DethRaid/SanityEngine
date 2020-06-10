@@ -90,7 +90,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     renderer = std::make_unique<renderer::Renderer>(window, settings);
     logger->info("Initialized renderer");
 
-    initialize_scripting_runtime();
+    // initialize_scripting_runtime();
 
     bve = std::make_unique<BveWrapper>(renderer->get_render_device());
 
@@ -118,7 +118,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     load_3d_object("data/models/davifactory.obj");
 
-    create_simple_boi(registry, *scripting_runtime);
+    // create_simple_boi(registry, *scripting_runtime);
 }
 
 SanityEngine::~SanityEngine() {
@@ -228,7 +228,7 @@ void SanityEngine::create_debug_plane() {
 
     const auto plane_entity = registry.create();
 
-    registry.assign<renderer::StaticMeshRenderableComponent>(plane_entity, std::move(plane_renderable));
+    registry.assign<renderer::StandardRenderableComponent>(plane_entity, std::move(plane_renderable));
 
     logger->info("Created plane");
 }

@@ -67,7 +67,7 @@ namespace renderer {
                 } else if(texcoord.y > 1) {
                     texel_coords.y = size.y;
                 } else {
-                    texel_coords.y = texcoord.y * size.y;
+                    texel_coords.y = static_cast<uint32_t>(round(texcoord.y * size.y));
                 }
                 break;
 
@@ -76,7 +76,7 @@ namespace renderer {
                 texel_coords.y = 0;
         }
 
-        const auto texel_index = round(texel_coords.y * size.y) + texel_coords.x;
+        const auto texel_index = static_cast<uint32_t>(round(texel_coords.y * size.y) + texel_coords.x);
 
         return texels[texel_index];
     }

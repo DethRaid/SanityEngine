@@ -150,7 +150,7 @@ void DearImguiAdapter::initialize_style() {
 
     /// 0 = FLAT APPEARENCE
     /// 1 = MORE "3D" LOOK
-    int is_3d = 0;
+    int is_3d = 1;
 
     colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -254,7 +254,8 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
 
     auto& materials = renderer.get_material_data_buffer();
     font_material = materials.get_next_free_material<ImGuiMaterial>();
-    materials.at<ImGuiMaterial>(font_material).image = font_atlas;
+    auto* material = materials.at<ImGuiMaterial>(font_material);
+    material->image = font_atlas;
 
     const uint64_t imgui_tex_id = font_material.index;
 

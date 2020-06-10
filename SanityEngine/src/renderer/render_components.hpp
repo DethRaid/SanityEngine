@@ -7,15 +7,16 @@
 #include "handles.hpp"
 #include "lights.hpp"
 #include "material_data_buffer.hpp"
+#include "standard_material.hpp"
 
 namespace renderer {
     /*!
      * \brief Renders a static mesh with some material
      */
-    struct StaticMeshRenderableComponent {
+    struct StandardRenderableComponent {
         rhi::Mesh mesh;
 
-        MaterialHandle material{0};
+        StandardMaterial material{};
     };
 
     /*!
