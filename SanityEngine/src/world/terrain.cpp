@@ -73,8 +73,8 @@ void Terrain::load_terrain_textures_and_create_material() {
     task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
 
     auto& materials = renderer->get_material_data_buffer();
-    terrain_material = materials.get_next_free_material<StandardMaterial>();
-    auto* material = materials.at<StandardMaterial>(terrain_material);
+    terrain_material = materials.get_next_free_material<renderer::StandardMaterial>();
+    auto* material = materials.at<renderer::StandardMaterial>(terrain_material);
     material->noise = renderer->get_noise_texture();
 
     task_scheduler->WaitForCounter(&counter, 0, true);

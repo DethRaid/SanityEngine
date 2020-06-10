@@ -1,0 +1,139 @@
+#include "denoiser_pass.hpp"
+
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include "../../loading/shader_loading.hpp"
+#include "../../rhi/d3dx12.hpp"
+#include "../../rhi/render_device.hpp"
+#include "../renderer.hpp"
+
+namespace renderer {
+    constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
+    constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
+
+    struct AccumulationMaterial {
+        TextureHandle accumulation_texture;
+        TextureHandle scene_output_texture;
+        TextureHandle scene_depth_texture;
+    };
+
+    std::shared_ptr<spdlog::logger> DenoiserPass::logger{spdlog::stdout_color_st("DenoiserPass")};
+
+    DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass)
+        : renderer{&renderer_in} {
+        auto& device = renderer->get_render_device();
+
+        const auto pipeline_create_info = rhi::RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
+                                                                             .vertex_shader = load_shader("fullscreen.vertex"),
+                                                                             .pixel_shader = load_shader("raytracing_accumulation.pixel"),
+                                                                             .depth_stencil_state = {.enable_depth_test = false,
+                                                                                                     .enable_depth_write = false},
+                                                                             .render_target_formats = {rhi::ImageFormat::Rgba32F}};
+
+        accumulation_pipeline = device.create_render_pipeline_state(pipeline_create_info);
+
+        create_framebuffer(render_resolution, forward_pass);
+    }
+
+    void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, uint32_t /* frame_idx */) {
+        {
+            const auto
+                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
+                                                                            .BeginningAccess =
+                                                                                {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                                                                            .EndingAccess = {
+                                                                                .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+
+            commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+        }
+
+        commands->SetPipelineState(accumulation_pipeline->pso.Get());
+
+        commands->SetGraphicsRoot32BitConstant(0, accumulation_material_handle.index, 1);
+
+        const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commands->ResourceBarrier(1, &barrier);
+        }
+
+        commands->DrawInstanced(3, 1, 0, 0);
+
+        commands->EndRenderPass();
+
+        const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
+
+        {
+            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                                   D3D12_RESOURCE_STATE_COPY_DEST),
+                                              CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+
+        {
+            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
+                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                       .SubresourceIndex = 0};
+
+            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
+                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                                       .SubresourceIndex = 0};
+
+            const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
+
+            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
+        }
+
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commands->ResourceBarrier(1, &barrier);
+        }
+    }
+
+    void DenoiserPass::create_framebuffer(const glm::uvec2& render_resolution, const ForwardPass& forward_pass) {
+        auto& device = renderer->get_render_device();
+
+        {
+            const auto color_target_create_info = rhi::ImageCreateInfo{
+                .name = DENOISED_SCENE_RENDER_TARGET,
+                .usage = rhi::ImageUsage::RenderTarget,
+                .format = rhi::ImageFormat::Rgba32F,
+                .width = render_resolution.x,
+                .height = render_resolution.y,
+                .enable_resource_sharing = true,
+            };
+            denoised_color_target_handle = renderer->create_image(color_target_create_info);
+
+            const auto& denoised_color_target = renderer->get_image(denoised_color_target_handle);
+            denoised_framebuffer = device.create_framebuffer({&denoised_color_target});
+        }
+
+        {
+            const auto accumulation_target_create_info = rhi::ImageCreateInfo{
+                .name = ACCUMULATION_RENDER_TARGET,
+                .usage = rhi::ImageUsage::SampledImage,
+                .format = rhi::ImageFormat::Rgba32F,
+                .width = render_resolution.x,
+                .height = render_resolution.y,
+                .enable_resource_sharing = true,
+            };
+            accumulation_target_handle = renderer->create_image(accumulation_target_create_info);
+        }
+
+        const auto scene_color_target_handle = forward_pass.get_color_target_handle();
+        const auto scene_depth_target_handle = forward_pass.get_depth_target_handle();
+
+        accumulation_material_handle = material_data_buffer->get_next_free_material<AccumulationMaterial>();
+        AccumulationMaterial* accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
+        accumulation_material->accumulation_texture = accumulation_target_handle;
+        accumulation_material->scene_output_texture = scene_color_target_handle;
+        accumulation_material->scene_depth_texture = scene_depth_target_handle;
+    }
+} // namespace renderer

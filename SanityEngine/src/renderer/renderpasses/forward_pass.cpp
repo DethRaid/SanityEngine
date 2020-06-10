@@ -6,24 +6,99 @@
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "../../loading/shader_loading.hpp"
+#include "../../rhi/render_device.hpp"
 #include "../render_components.hpp"
+#include "../renderer.hpp"
 
 namespace renderer {
+    constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
+    constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
+
     std::shared_ptr<spdlog::logger> ForwardPass::logger{spdlog::stdout_color_st("ForwardPass")};
+
+    ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
+        auto& device = renderer_in.get_render_device();
+
+        {
+            const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
+                .name = "Standard material pipeline",
+                .vertex_shader = load_shader("standard.vertex"),
+                .pixel_shader = load_shader("standard.pixel"),
+                .render_target_formats = {rhi::ImageFormat::Rgba32F},
+                .depth_stencil_format = rhi::ImageFormat::Depth32,
+            };
+
+            standard_pipeline = device.create_render_pipeline_state(standard_pipeline_create_info);
+
+            logger->info("Created standard pipeline");
+        }
+
+        {
+            const auto atmospheric_sky_create_info = rhi::RenderPipelineStateCreateInfo{
+                .name = "Atmospheric Sky",
+                .vertex_shader = load_shader("fullscreen.vertex"),
+                .pixel_shader = load_shader("atmospheric_sky.pixel"),
+                .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
+                .render_target_formats = {rhi::ImageFormat::Rgba32F},
+                .depth_stencil_format = rhi::ImageFormat::Depth32,
+            };
+
+            atmospheric_sky_pipeline = device.create_render_pipeline_state(atmospheric_sky_create_info);
+        }
+
+        create_framebuffer(render_resolution);
+    }
 
     ForwardPass::~ForwardPass() {
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
     }
 
-    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry) {
+    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const uint32_t frame_idx) {
         begin_render_pass(commands);
 
-        draw_objects_in_scene(commands, registry, material_bind_group);
+        const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
+
+        draw_objects_in_scene(commands, registry, *bind_group);
 
         draw_sky(commands, registry);
 
         commands->EndRenderPass();
     }
+
+    void ForwardPass::create_framebuffer(const glm::uvec2& render_resolution) {
+        auto& device = renderer->get_render_device();
+
+        const auto color_target_create_info = rhi::ImageCreateInfo{
+            .name = SCENE_COLOR_RENDER_TARGET,
+            .usage = rhi::ImageUsage::RenderTarget,
+            .format = rhi::ImageFormat::Rgba32F,
+            .width = render_resolution.x,
+            .height = render_resolution.y,
+            .enable_resource_sharing = true,
+        };
+
+        color_target_handle = renderer->create_image(color_target_create_info);
+
+        const auto depth_target_create_info = rhi::ImageCreateInfo{
+            .name = SCENE_DEPTH_TARGET,
+            .usage = rhi::ImageUsage::DepthStencil,
+            .format = rhi::ImageFormat::Depth32,
+            .width = render_resolution.x,
+            .height = render_resolution.y,
+        };
+
+        depth_target_handle = renderer->create_image(depth_target_create_info);
+
+        const auto& color_target = renderer->get_image(color_target_handle);
+        const auto& depth_target = renderer->get_image(depth_target_handle);
+
+        scene_framebuffer = device.create_framebuffer({&color_target}, &depth_target);
+    }
+
+    TextureHandle ForwardPass::get_color_target_handle() const { return color_target_handle; }
+
+    TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
 
     void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
         const auto render_target_accesses = std::vector{
@@ -73,7 +148,9 @@ namespace renderer {
         commands->SetGraphicsRoot32BitConstant(0, 0, 0);
 
         material_bind_group.bind_to_graphics_signature(commands);
-        static_mesh_storage->bind_to_command_list(commands);
+
+        const auto& mesh_storage = renderer->get_static_mesh_store();
+        mesh_storage.bind_to_command_list(commands);
 
         {
             MTR_SCOPE("Renderer", "Render static meshes");

@@ -11,6 +11,6 @@ namespace renderer {
     public:
         virtual ~RenderPass() = default;
 
-        virtual void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry) = 0;
+        virtual void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) = 0;
     };
 }

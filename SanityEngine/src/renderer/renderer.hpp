@@ -14,6 +14,8 @@
 #include "handles.hpp"
 #include "material_data_buffer.hpp"
 #include "render_components.hpp"
+#include "renderpasses/denoiser_pass.hpp"
+#include "renderpasses/forward_pass.hpp"
 
 namespace rhi {
     class RenderCommandList;
@@ -90,6 +92,8 @@ namespace renderer {
                                                                            const std::vector<rhi::Mesh>& meshes,
                                                                            const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
+        [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_global_resources_for_frame(uint32_t frame_idx);
+
     private:
         std::shared_ptr<spdlog::logger> logger;
 
@@ -106,14 +110,10 @@ namespace renderer {
         PerFrameData per_frame_data;
         std::vector<std::unique_ptr<rhi::Buffer>> per_frame_data_buffers;
 
-        std::unique_ptr<rhi::RenderPipelineState> standard_pipeline;
-
         std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
         std::unique_ptr<MaterialDataBuffer> material_data_buffer;
         std::vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
-
-        std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
 
         std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
         MaterialHandle backbuffer_output_material;
@@ -121,15 +121,11 @@ namespace renderer {
         std::unordered_map<std::string, uint32_t> image_name_to_index;
         std::vector<std::unique_ptr<rhi::Image>> all_images;
 
-        TextureHandle scene_depth_target_handle;
-
         std::array<Light, MAX_NUM_LIGHTS> lights;
         std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
 
         std::queue<rhi::Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
-
-        std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
 
         TextureHandle noise_texture_handle;
         TextureHandle pink_texture_handle;
@@ -142,10 +138,6 @@ namespace renderer {
         void create_per_frame_data_buffers();
 
         void create_material_data_buffers();
-
-        void create_standard_pipeline();
-
-        void create_atmospheric_sky_pipeline();
 
         void create_scene_framebuffer();
 
@@ -175,25 +167,9 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
+        std::unique_ptr<DenoiserPass> denoiser_pass;
+
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
-
-        std::unique_ptr<rhi::RenderPipelineState> accumulation_pipeline;
-
-        MaterialHandle accumulation_material_handle;
-
-        TextureHandle accumulation_target_handle;
-
-        /*!
-         * \brief Handle to the texture that holds
-         */
-        TextureHandle denoised_color_target_handle;
-
-        /*!
-         * \brief Handle to the framebuffer that renders to the accumulation texture
-         */
-        std::unique_ptr<rhi::Framebuffer> denoised_framebuffer;
-
-        void render_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 #pragma endregion
 
 #pragma region 3D Scene
@@ -204,27 +180,13 @@ namespace renderer {
 
         std::unique_ptr<rhi::RenderPipelineState> shadow_pipeline;
 
-        TextureHandle scene_color_target_handle;
+        std::unique_ptr<ForwardPass> forward_pass;
 
         void update_lights(entt::registry& registry, uint32_t frame_idx);
 
-        [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_resources_for_frame(uint32_t frame_idx);
-
-        void draw_objects_in_scene(entt::registry& registry,
-                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                   const rhi::BindGroup& material_bind_group);
-
-        void bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
-
-        void render_forward_pass(entt::registry& registry,
-                                 const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                 const rhi::BindGroup& material_bind_group);
-
-        void draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const;
-
         void render_backbuffer_output_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
-        void render_3d_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx);
+        void render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, uint32_t frame_idx);
 #pragma endregion
 
 #pragma region UI

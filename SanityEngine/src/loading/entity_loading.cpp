@@ -34,7 +34,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     auto& device = renderer.get_render_device();
     auto commands = device.create_command_list();
 
-    std::unordered_map<uint32_t, renderer::MaterialHandle> materials;
+    std::unordered_map<uint32_t, renderer::StandardMaterial> materials;
 
     std::vector<rhi::Mesh> meshes;
     std::vector<rhi::RaytracingObject> raytracing_objects;
@@ -92,12 +92,12 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
 
     } else {
         auto& material_store = renderer.get_material_data_buffer();
-        const auto material_handle = material_store.get_next_free_material<StandardMaterial>();
-        auto* material = material_store.at<StandardMaterial>(material_handle);
+        const auto material_handle = material_store.get_next_free_material<renderer::StandardMaterial>();
+        auto* material = material_store.at<renderer::StandardMaterial>(material_handle);
 
         material->noise = renderer.get_noise_texture();
 
-        mesh_renderer.material = material_handle;
+        mesh_renderer.material = *material;
 
         const auto* ass_material = scene->mMaterials[ass_mesh->mMaterialIndex];
 
@@ -171,7 +171,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     }
 
     renderer.add_raytracing_objects_to_scene(
-        {rhi::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {mesh_renderer.material.index}}});
+        {rhi::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {0}}});
 
     device.submit_command_list(std::move(commands));
 

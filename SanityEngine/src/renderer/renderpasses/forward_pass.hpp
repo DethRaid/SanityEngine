@@ -2,26 +2,50 @@
 
 #include <memory>
 
+#include <glm/fwd.hpp>
 #include <spdlog/logger.h>
 
+
+#include "../handles.hpp"
 #include "../../rhi/framebuffer.hpp"
 #include "../../rhi/render_pipeline_state.hpp"
 #include "../renderpass.hpp"
 
+namespace rhi {
+    struct BindGroup;
+    class RenderDevice;
+} // namespace rhi
+
 namespace renderer {
+    class Renderer;
+
     class ForwardPass final : public virtual RenderPass {
     public:
+        explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
+
         ~ForwardPass() override;
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry) override;
+#pragma region RenderPass
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) override;
+#pragma endregion
+
+        [[nodiscard]] TextureHandle get_color_target_handle() const;
+
+        [[nodiscard]] TextureHandle get_depth_target_handle() const;
 
     private:
         static std::shared_ptr<spdlog::logger> logger;
 
-        std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
+        Renderer* renderer;
 
         std::unique_ptr<rhi::RenderPipelineState> standard_pipeline;
         std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
+
+        TextureHandle color_target_handle;
+        TextureHandle depth_target_handle;
+        std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
+
+        void create_framebuffer(const glm::uvec2& render_resolution);
 
         void begin_render_pass(ID3D12GraphicsCommandList4* commands) const;
 

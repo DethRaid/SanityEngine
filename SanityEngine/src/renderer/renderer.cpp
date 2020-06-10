@@ -24,22 +24,11 @@
 #include "render_components.hpp"
 
 namespace renderer {
-    constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
-    constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
-
-    constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
-    constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
 
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     struct BackbufferOutputMaterial {
         TextureHandle scene_output_image;
-    };
-
-    struct AccumulationMaterial {
-        TextureHandle accumulation_texture;
-        TextureHandle scene_output_texture;
-        TextureHandle scene_depth_texture;
     };
 
 #pragma region Cube
@@ -154,10 +143,6 @@ namespace renderer {
 
         create_material_data_buffers();
 
-        create_standard_pipeline();
-
-        create_atmospheric_sky_pipeline();
-
         create_ui_pipeline();
 
         create_ui_mesh_buffers();
@@ -175,6 +160,9 @@ namespace renderer {
         create_light_buffers();
 
         create_builtin_images();
+
+        forward_pass = std::make_unique<ForwardPass>(*this, output_framebuffer_size);
+        denoiser_pass = std::make_unique<DenoiserPass>(*this, output_framebuffer_size, *forward_pass);
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {
@@ -221,7 +209,7 @@ namespace renderer {
         upload_material_data(frame_idx);
 
         // render_3d_scene binds all the render targets it needs
-        render_3d_scene(registry, command_list, frame_idx);
+        render_3d_scene(registry, command_list.Get(), frame_idx);
 
         // At the end of render_3d_scene, the backbuffer framebuffer is bound. render_ui thus simply renders directly onto the backbuffer
         render_ui(command_list, frame_idx);
@@ -370,33 +358,6 @@ namespace renderer {
         }
     }
 
-    void Renderer::create_standard_pipeline() {
-        const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
-            .name = "Standard material pipeline",
-            .vertex_shader = load_shader("standard.vertex"),
-            .pixel_shader = load_shader("standard.pixel"),
-            .render_target_formats = {rhi::ImageFormat::Rgba32F},
-            .depth_stencil_format = rhi::ImageFormat::Depth32,
-        };
-
-        standard_pipeline = device->create_render_pipeline_state(standard_pipeline_create_info);
-
-        logger->info("Created standard pipeline");
-    }
-
-    void Renderer::create_atmospheric_sky_pipeline() {
-        const auto atmospheric_sky_create_info = rhi::RenderPipelineStateCreateInfo{
-            .name = "Atmospheric Sky",
-            .vertex_shader = load_shader("fullscreen.vertex"),
-            .pixel_shader = load_shader("atmospheric_sky.pixel"),
-            .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
-            .render_target_formats = {rhi::ImageFormat::Rgba32F},
-            .depth_stencil_format = rhi::ImageFormat::Depth32,
-        };
-
-        atmospheric_sky_pipeline = device->create_render_pipeline_state(atmospheric_sky_create_info);
-    }
-
     void Renderer::create_backbuffer_output_pipeline_and_material() {
         const auto create_info = rhi::RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
@@ -471,69 +432,6 @@ namespace renderer {
     }
 
     void Renderer::create_scene_framebuffer() {
-        auto color_target_create_info = rhi::ImageCreateInfo{
-            .name = SCENE_COLOR_RENDER_TARGET,
-            .usage = rhi::ImageUsage::RenderTarget,
-            .format = rhi::ImageFormat::Rgba32F,
-            .width = output_framebuffer_size.x,
-            .height = output_framebuffer_size.y,
-            .enable_resource_sharing = true,
-        };
-
-        scene_color_target_handle = create_image(color_target_create_info);
-
-        const auto depth_target_create_info = rhi::ImageCreateInfo{
-            .name = SCENE_DEPTH_TARGET,
-            .usage = rhi::ImageUsage::DepthStencil,
-            .format = rhi::ImageFormat::Depth32,
-            .width = output_framebuffer_size.x,
-            .height = output_framebuffer_size.y,
-        };
-
-        scene_depth_target_handle = create_image(depth_target_create_info);
-
-        const auto& color_target = get_image(scene_color_target_handle);
-        const auto& depth_target = get_image(scene_depth_target_handle);
-
-        scene_framebuffer = device->create_framebuffer({&color_target}, &depth_target);
-
-        color_target_create_info.name = DENOISED_SCENE_RENDER_TARGET;
-        denoised_color_target_handle = create_image(color_target_create_info);
-
-        const auto& denoised_color_target = get_image(denoised_color_target_handle);
-        denoised_framebuffer = device->create_framebuffer({&denoised_color_target});
-    }
-
-    void Renderer::create_accumulation_pipeline_and_material() {
-        const auto pipeline_create_info = rhi::RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
-                                                                             .vertex_shader = load_shader("fullscreen.vertex"),
-                                                                             .pixel_shader = load_shader("raytracing_accumulation.pixel"),
-                                                                             .depth_stencil_state = {.enable_depth_test = false,
-                                                                                                     .enable_depth_write = false},
-                                                                             .render_target_formats = {rhi::ImageFormat::Rgba32F}};
-
-        accumulation_pipeline = device->create_render_pipeline_state(pipeline_create_info);
-
-        const auto accumulation_target_create_info = rhi::ImageCreateInfo{
-            .name = ACCUMULATION_RENDER_TARGET,
-            .usage = rhi::ImageUsage::SampledImage,
-            .format = rhi::ImageFormat::Rgba32F,
-            .width = output_framebuffer_size.x,
-            .height = output_framebuffer_size.y,
-            .enable_resource_sharing = true,
-        };
-        accumulation_target_handle = create_image(accumulation_target_create_info);
-
-        accumulation_material_handle = material_data_buffer->get_next_free_material<AccumulationMaterial>();
-        auto* accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
-        accumulation_material->accumulation_texture = accumulation_target_handle;
-        accumulation_material->scene_output_texture = scene_color_target_handle;
-        accumulation_material->scene_depth_texture = scene_depth_target_handle;
-
-        logger->trace("Accumulation material idx: {} Accumulation texture idx: {} scene output texture idx: {}",
-                      accumulation_material_handle.index,
-                      accumulation_target_handle.index,
-                      scene_color_target_handle.index);
     }
 
     void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {
@@ -696,18 +594,19 @@ namespace renderer {
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
-    std::unique_ptr<rhi::BindGroup> Renderer::bind_resources_for_frame(const uint32_t frame_idx) {
+    std::unique_ptr<rhi::BindGroup> Renderer::bind_global_resources_for_frame(const uint32_t frame_idx) {
         auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
-        material_bind_group_builder.set_buffer("material_buffer", *material_device_buffers[frame_idx]);
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
+        material_bind_group_builder.set_buffer("per_frame_data", *per_frame_data_buffers[frame_idx]);
+        material_bind_group_builder.set_image_array("textures", get_texture_array());
+
+        // TODO: We may have to rethink raytracing if we start using multiple buffers for mesh data storage
         material_bind_group_builder.set_buffer("indices", static_mesh_storage->get_index_buffer());
         material_bind_group_builder.set_buffer("vertices", *static_mesh_storage->get_vertex_bindings()[0].buffer);
-        material_bind_group_builder.set_buffer("per_frame_data", *per_frame_data_buffers[frame_idx]);
         if(raytracing_scene.buffer) {
             material_bind_group_builder.set_raytracing_scene("raytracing_scene", raytracing_scene);
         }
-        material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         return material_bind_group_builder.build();
     }
@@ -745,83 +644,16 @@ namespace renderer {
         commands->EndRenderPass();
     }
 
-    void Renderer::render_denoiser_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        {
-            const auto
-                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
-                                                                            .BeginningAccess =
-                                                                                {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
-                                                                            .EndingAccess = {
-                                                                                .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
-
-            commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
-        }
-
-        commands->SetPipelineState(accumulation_pipeline->pso.Get());
-
-        commands->SetGraphicsRoot32BitConstant(0, accumulation_material_handle.index, 1);
-
-        const auto& accumulation_image = *all_images[accumulation_target_handle.index];
-        {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commands->ResourceBarrier(1, &barrier);
-        }
-
-        commands->DrawInstanced(3, 1, 0, 0);
-
-        commands->EndRenderPass();
-
-        const auto& denoised_image = *all_images[denoised_color_target_handle.index];
-
-        {
-            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                                                   D3D12_RESOURCE_STATE_COPY_DEST),
-                                              CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-
-        {
-            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
-                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                       .SubresourceIndex = 0};
-
-            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
-                                                                       .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                       .SubresourceIndex = 0};
-
-            const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
-
-            commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
-        }
-
-        {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commands->ResourceBarrier(1, &barrier);
-        }
-    }
-
-    void Renderer::render_3d_scene(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) {
+    void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const uint32_t frame_idx) {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
         update_lights(registry, frame_idx);
 
         memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
 
-        const auto material_bind_group = bind_resources_for_frame(frame_idx);
+        forward_pass->execute(commands, registry, frame_idx);
 
-        // Smol brain v1 - don't use a shadowmap, just cast shadow rays from every ray hit
-        // render_shadow_pass(registry, command_list, *material_bind_group);
-
-        render_forward_pass(registry, commands, *material_bind_group);
-
-        render_denoiser_pass(commands);
+        denoiser_pass->execute(commands, registry, frame_idx);
 
         render_backbuffer_output_pass(commands);
     }
