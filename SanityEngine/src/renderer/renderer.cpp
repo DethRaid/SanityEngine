@@ -27,10 +27,6 @@ namespace renderer {
 
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
-    struct BackbufferOutputMaterial {
-        TextureHandle scene_output_image;
-    };
-
 #pragma region Cube
     std::vector<StandardVertex> Renderer::cube_vertices{
         // Front
@@ -358,22 +354,6 @@ namespace renderer {
         }
     }
 
-    void Renderer::create_backbuffer_output_pipeline_and_material() {
-        const auto create_info = rhi::RenderPipelineStateCreateInfo{
-            .name = "Backbuffer output",
-            .vertex_shader = load_shader("fullscreen.vertex"),
-            .pixel_shader = load_shader("backbuffer_output.pixel"),
-            .render_target_formats = {rhi::ImageFormat::Rgba8},
-        };
-
-        backbuffer_output_pipeline = device->create_render_pipeline_state(create_info);
-
-        backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
-        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material)->scene_output_image = denoised_color_target_handle;
-
-        logger->debug("Initialized backbuffer output pass");
-    }
-
     void Renderer::create_light_buffers() {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
@@ -429,9 +409,6 @@ namespace renderer {
         }
 
         device->submit_command_list(commands);
-    }
-
-    void Renderer::create_scene_framebuffer() {
     }
 
     void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {

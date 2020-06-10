@@ -22,9 +22,6 @@
     <Filter Include="Header Files\player">
       <UniqueIdentifier>{ce81fb57-f087-41ba-8a69-c623a2357816}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\rhi">
-      <UniqueIdentifier>{2c159e03-43e2-4eb5-bf89-4783c114c27a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\stats">
       <UniqueIdentifier>{62b758d5-0892-4b48-ab1a-6c8975b5198a}</UniqueIdentifier>
     </Filter>
@@ -48,9 +45,6 @@
     </Filter>
     <Filter Include="Source Files\renderer">
       <UniqueIdentifier>{c86f38f1-4114-4e8a-a8c6-16bfc0a4ed28}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\rhi">
-      <UniqueIdentifier>{fdcf90b2-5e89-4abc-a753-46c545b33be1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\stats">
       <UniqueIdentifier>{72d684aa-47d4-4a90-8118-acc6d90029a3}</UniqueIdentifier>
@@ -118,6 +112,18 @@
     <Filter Include="Header Files\serialization">
       <UniqueIdentifier>{de8b31ff-9489-48fe-895e-ba659d086844}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\renderer\renderpass">
+      <UniqueIdentifier>{b00051d9-d912-43d2-827c-9c06ad410405}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer\renderpass">
+      <UniqueIdentifier>{8cf28641-5473-40a5-a8ce-e828c26dc71a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\renderer\rhi">
+      <UniqueIdentifier>{2c159e03-43e2-4eb5-bf89-4783c114c27a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer\rhi">
+      <UniqueIdentifier>{fdcf90b2-5e89-4abc-a753-46c545b33be1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -145,13 +151,13 @@
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\resources.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\render_device.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\mesh_data_store.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\stats\framerate_tracker.cpp">
       <Filter>Source Files\stats</Filter>
@@ -172,16 +178,16 @@
       <Filter>Header Files\renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\helpers.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\descriptor_allocator.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\rhi\bind_group.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp">
-      <Filter>Source Files\rhi</Filter>
+      <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\loading\shader_loading.cpp">
       <Filter>Source Files\loading</Filter>
@@ -237,10 +243,13 @@
     <ClCompile Include="src\globals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp">
+      <Filter>Source Files\renderer\renderpass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp">
+      <Filter>Source Files\renderer\renderpass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -282,25 +291,25 @@
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\bind_group.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\framebuffer.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\mesh_data_store.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\render_device.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\render_pipeline_state.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\resources.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\stats\framerate_tracker.hpp">
       <Filter>Header Files\stats</Filter>
@@ -318,7 +327,7 @@
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\raytracing_structs.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\core\align.hpp">
       <Filter>Header Files\core</Filter>
@@ -336,13 +345,13 @@
       <Filter>Header Files\bve</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\descriptor_allocator.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\d3dx12.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\helpers.hpp">
-      <Filter>Header Files\rhi</Filter>
+      <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\loading\shader_loading.hpp">
       <Filter>Header Files\loading</Filter>
@@ -416,13 +425,16 @@
     <ClInclude Include="src\renderer\material.hpp">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpass.hpp">
-      <Filter>Header Files\renderer</Filter>
+    <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
+      <Filter>Header Files\renderer\renderpass</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\renderer\renderpass</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
+    <ClInclude Include="src\renderer\renderpass.hpp">
+      <Filter>Header Files\renderer\renderpass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

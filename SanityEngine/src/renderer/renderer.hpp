@@ -115,7 +115,6 @@ namespace renderer {
         std::unique_ptr<MaterialDataBuffer> material_data_buffer;
         std::vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
 
-        std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
         MaterialHandle backbuffer_output_material;
 
         std::unordered_map<std::string, uint32_t> image_name_to_index;

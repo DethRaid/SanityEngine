@@ -43,6 +43,7 @@
     <ClCompile Include="src\renderer\handles.hpp" />
     <ClCompile Include="src\renderer\material_data_buffer.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp" />
     <ClCompile Include="src\renderer\textures.cpp" />
@@ -93,6 +94,7 @@
     <ClInclude Include="src\renderer\material.hpp" />
     <ClInclude Include="src\renderer\mesh.hpp" />
     <ClInclude Include="src\renderer\renderpass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
