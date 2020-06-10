@@ -26,6 +26,8 @@ namespace renderer {
 
         void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) override;
 
+        [[nodiscard]] TextureHandle get_output_image() const;
+
     private:
         static std::shared_ptr<spdlog::logger> logger;
 

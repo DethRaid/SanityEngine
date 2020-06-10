@@ -47,6 +47,8 @@ namespace rhi {
      */
     class RenderDevice {
     public:
+        inline static uint32_t material_buffer_root_parameter_index = 2;
+
         ComPtr<ID3D12Device> device;
         ComPtr<ID3D12Device1> device1;
         ComPtr<ID3D12Device5> device5;

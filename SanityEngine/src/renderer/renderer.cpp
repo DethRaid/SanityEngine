@@ -159,6 +159,7 @@ namespace renderer {
 
         forward_pass = std::make_unique<ForwardPass>(*this, output_framebuffer_size);
         denoiser_pass = std::make_unique<DenoiserPass>(*this, output_framebuffer_size, *forward_pass);
+        backbuffer_output_pass = std::make_unique<BackbufferOutputPass>(*this, *denoiser_pass);
     }
 
     void Renderer::load_noise_texture(const std::string& filepath) {
@@ -588,39 +589,6 @@ namespace renderer {
         return material_bind_group_builder.build();
     }
 
-    void Renderer::render_backbuffer_output_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        const auto* framebuffer = device->get_backbuffer_framebuffer();
-
-        const auto
-            render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = framebuffer->rtv_handles[0],
-                                                                        .BeginningAccess =
-                                                                            {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                             .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-                                                                                                      .Color = {0, 0, 0, 0}}}},
-                                                                        .EndingAccess = {
-                                                                            .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
-
-        commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
-
-        D3D12_VIEWPORT viewport{};
-        viewport.MinDepth = 0;
-        viewport.MaxDepth = 1;
-        viewport.Width = framebuffer->width;
-        viewport.Height = framebuffer->height;
-        commands->RSSetViewports(1, &viewport);
-
-        D3D12_RECT scissor_rect{};
-        scissor_rect.right = static_cast<LONG>(framebuffer->width);
-        scissor_rect.bottom = static_cast<LONG>(framebuffer->height);
-        commands->RSSetScissorRects(1, &scissor_rect);
-
-        commands->SetGraphicsRoot32BitConstant(0, backbuffer_output_material.index, 1);
-        commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
-        commands->DrawInstanced(3, 1, 0, 0);
-
-        commands->EndRenderPass();
-    }
-
     void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const uint32_t frame_idx) {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
@@ -632,7 +600,7 @@ namespace renderer {
 
         denoiser_pass->execute(commands, registry, frame_idx);
 
-        render_backbuffer_output_pass(commands);
+        backbuffer_output_pass->execute(commands, registry, frame_idx);
     }
 
     void Renderer::create_ui_pipeline() {

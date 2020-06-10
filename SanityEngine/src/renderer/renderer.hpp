@@ -14,6 +14,7 @@
 #include "handles.hpp"
 #include "material_data_buffer.hpp"
 #include "render_components.hpp"
+#include "renderpasses/backbuffer_output_pass.hpp"
 #include "renderpasses/denoiser_pass.hpp"
 #include "renderpasses/forward_pass.hpp"
 
@@ -181,9 +182,9 @@ namespace renderer {
 
         std::unique_ptr<ForwardPass> forward_pass;
 
-        void update_lights(entt::registry& registry, uint32_t frame_idx);
+        std::unique_ptr<BackbufferOutputPass> backbuffer_output_pass;
 
-        void render_backbuffer_output_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
+        void update_lights(entt::registry& registry, uint32_t frame_idx);
 
         void render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, uint32_t frame_idx);
 #pragma endregion

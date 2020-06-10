@@ -52,7 +52,8 @@ namespace renderer {
         commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
-        commands->SetGraphicsRootShaderResourceView(0, denoiser_material_buffer->resource->GetGPUVirtualAddress());
+        commands->SetGraphicsRootShaderResourceView(rhi::RenderDevice::material_buffer_root_parameter_index,
+                                                    denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
         {
@@ -98,6 +99,10 @@ namespace renderer {
                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET);
             commands->ResourceBarrier(1, &barrier);
         }
+    }
+
+    TextureHandle DenoiserPass::get_output_image() const {
+        return denoised_color_target_handle;
     }
 
     void DenoiserPass::create_images_and_framebuffer(const glm::uvec2& render_resolution) {

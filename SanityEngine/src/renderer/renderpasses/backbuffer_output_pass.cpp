@@ -30,6 +30,10 @@ namespace renderer {
                                                                                        .usage = rhi::BufferUsage::StagingBuffer,
                                                                                        .size = sizeof(BackbufferOutputMaterial)});
 
+        const auto material = BackbufferOutputMaterial{.scene_output_image = denoiser_pass.get_output_image()};
+
+        memcpy(backbuffer_output_material_buffer->mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
+
         logger->debug("Initialized backbuffer output pass");
     }
 
@@ -60,7 +64,8 @@ namespace renderer {
         scissor_rect.bottom = static_cast<LONG>(framebuffer->height);
         commands->RSSetScissorRects(1, &scissor_rect);
 
-        commands->SetGraphicsRootShaderResourceView(0, backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
+        commands->SetGraphicsRootShaderResourceView(rhi::RenderDevice::material_buffer_root_parameter_index,
+                                                    backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
         commands->DrawInstanced(3, 1, 0, 0);
