@@ -408,7 +408,7 @@ namespace renderer {
         backbuffer_output_pipeline = device->create_render_pipeline_state(create_info);
 
         backbuffer_output_material = material_data_buffer->get_next_free_material<BackbufferOutputMaterial>();
-        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material).scene_output_image = denoised_color_target_handle;
+        material_data_buffer->at<BackbufferOutputMaterial>(backbuffer_output_material)->scene_output_image = denoised_color_target_handle;
 
         logger->debug("Initialized backbuffer output pass");
     }
@@ -525,10 +525,10 @@ namespace renderer {
         accumulation_target_handle = create_image(accumulation_target_create_info);
 
         accumulation_material_handle = material_data_buffer->get_next_free_material<AccumulationMaterial>();
-        auto& accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
-        accumulation_material.accumulation_texture = accumulation_target_handle;
-        accumulation_material.scene_output_texture = scene_color_target_handle;
-        accumulation_material.scene_depth_texture = scene_depth_target_handle;
+        auto* accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
+        accumulation_material->accumulation_texture = accumulation_target_handle;
+        accumulation_material->scene_output_texture = scene_color_target_handle;
+        accumulation_material->scene_depth_texture = scene_depth_target_handle;
 
         logger->trace("Accumulation material idx: {} Accumulation texture idx: {} scene output texture idx: {}",
                       accumulation_material_handle.index,
@@ -710,88 +710,6 @@ namespace renderer {
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         return material_bind_group_builder.build();
-    }
-
-    void Renderer::draw_objects_in_scene(entt::registry& registry,
-                                         const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                         const rhi::BindGroup& material_bind_group) {
-        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
-        commands->SetPipelineState(standard_pipeline->pso.Get());
-
-        // Hardcode camera 0 as the player camera
-        // TODO: Decide if this is fine
-        commands->SetGraphicsRoot32BitConstant(0, 0, 0);
-
-        material_bind_group.bind_to_graphics_signature(commands);
-        static_mesh_storage->bind_to_command_list(commands);
-
-        {
-            MTR_SCOPE("Renderer", "Render static meshes");
-            registry.view<StaticMeshRenderableComponent>().each([&](const StaticMeshRenderableComponent& mesh_renderable) {
-                commands->SetGraphicsRoot32BitConstant(0, mesh_renderable.material.index, 1);
-                commands->DrawIndexedInstanced(mesh_renderable.mesh.num_indices, 1, mesh_renderable.mesh.first_index, 0, 0);
-            });
-        }
-    }
-
-    void Renderer::bind_scene_framebuffer(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        const auto render_target_accesses = std::vector{
-            // Scene color
-            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
-                                                 .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                              .Color = {0, 0, 0, 0}}}},
-                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}}};
-
-        const auto
-            depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
-                                                                .DepthBeginningAccess =
-                                                                    {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                              .DepthStencil = {.Depth = 1.0}}}},
-                                                                .StencilBeginningAccess = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD,
-                                                                .DepthEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE,
-                                                                .StencilEndingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD};
-
-        commands->BeginRenderPass(static_cast<UINT>(render_target_accesses.size()),
-                                  render_target_accesses.data(),
-                                  &depth_access,
-                                  D3D12_RENDER_PASS_FLAG_NONE);
-
-        D3D12_VIEWPORT viewport{};
-        viewport.MinDepth = 0;
-        viewport.MaxDepth = 1;
-        viewport.Width = scene_framebuffer->width;
-        viewport.Height = scene_framebuffer->height;
-        commands->RSSetViewports(1, &viewport);
-
-        D3D12_RECT scissor_rect{};
-        scissor_rect.right = static_cast<LONG>(scene_framebuffer->width);
-        scissor_rect.bottom = static_cast<LONG>(scene_framebuffer->height);
-        commands->RSSetScissorRects(1, &scissor_rect);
-    }
-
-    void Renderer::render_forward_pass(entt::registry& registry,
-                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                       const rhi::BindGroup& material_bind_group) {
-        bind_scene_framebuffer(commands);
-
-        draw_objects_in_scene(registry, commands, material_bind_group);
-
-        draw_sky(registry, commands);
-
-        commands->EndRenderPass();
-    }
-
-    void Renderer::draw_sky(entt::registry& registry, const ComPtr<ID3D12GraphicsCommandList4>& command_list) const {
-        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
-        if(atmosphere_view.size() > 1) {
-            logger->error("May only have one atmospheric sky component in a scene");
-
-        } else {
-            command_list->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
-            command_list->DrawInstanced(3, 1, 0, 0);
-        }
     }
 
     void Renderer::render_backbuffer_output_pass(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
