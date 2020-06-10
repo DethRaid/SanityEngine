@@ -140,5 +140,10 @@ void _scripting_entity_scripting_api_register_with_scripting_runtime(horus::Scri
                                       .is_static = false,
                                       .method_signature = "get_entity()"},
                                      _component_get_entity);
+
+    runtime.register_script_object_allocator(
+        horus::ScriptingClassName{.module_name = "sanity_engine", .class_name = "Entity"},
+        WrenForeignClassMethods{.allocate = +[](WrenVM* vm) { auto* data = wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenHandle*)); },
+                                .finalize = +[](void* data) {}});
 }
 #pragma endregion
