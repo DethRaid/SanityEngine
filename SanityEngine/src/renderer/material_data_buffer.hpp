@@ -30,7 +30,7 @@ namespace renderer {
          * get from `get_next_free_index` with the same type as what you're requesting
          */
         template <typename MaterialDataStruct>
-        [[nodiscard]] MaterialDataStruct& at(MaterialHandle handle);
+        [[nodiscard]] MaterialDataStruct* at(MaterialHandle handle);
 
         /*!
          * \brief Provides access to an element in this array
@@ -39,7 +39,7 @@ namespace renderer {
          * get from `get_next_free_index` with the same type as what you're requesting
          */
         template <typename MaterialDataStruct>
-        [[nodiscard]] const MaterialDataStruct& at(MaterialHandle handle) const;
+        [[nodiscard]] const MaterialDataStruct* at(MaterialHandle handle) const;
 
         /*!
          * \brief Gets the index of the next free element of the requested type
@@ -68,18 +68,18 @@ namespace renderer {
     };
 
     template <typename MaterialDataStruct>
-    MaterialDataStruct& MaterialDataBuffer::at(MaterialHandle handle) {
-        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.index];
+    MaterialDataStruct* MaterialDataBuffer::at(MaterialHandle handle) {
+        return reinterpret_cast<MaterialDataStruct*>(buffer) + handle.index;
     }
 
     template <typename MaterialDataStruct>
-    const MaterialDataStruct& MaterialDataBuffer::at(MaterialHandle handle) const {
-        return reinterpret_cast<MaterialDataStruct*>(buffer)[handle.index];
+    const MaterialDataStruct* MaterialDataBuffer::at(MaterialHandle handle) const {
+        return reinterpret_cast<MaterialDataStruct*>(buffer) + handle.index;
     }
 
     template <typename MaterialDataStruct>
     MaterialHandle MaterialDataBuffer::get_next_free_material() {
-        constexpr uint32_t struct_size = sizeof(MaterialDataStruct);
+        constexpr auto struct_size = sizeof(MaterialDataStruct);
 
         // Here's a Al Gore rhythm for your soul
 
@@ -93,7 +93,7 @@ namespace renderer {
         // structs and avoid wasting _too_ much data, but who knows
 
         // Intentionally using integer division
-        const auto new_idx = (num_allocated_bytes / struct_size) + 1;
+        const auto new_idx = static_cast<uint32_t>(ceil(num_allocated_bytes / static_cast<double>(struct_size)));
         const auto old_num_allocated_bytes = num_allocated_bytes;
 
         num_allocated_bytes = struct_size * (new_idx + 1);
@@ -111,8 +111,8 @@ namespace renderer {
     template <typename MaterialDataStruct, typename ... Args>
     MaterialHandle MaterialDataBuffer::create_material(Args&&... args) {
         const auto handle = get_next_free_material<MaterialDataStruct>();
-        auto& material = get<MaterialDataStruct>(handle);
-        material = MaterialDataStruct{std::forward<Args>(args)...};
+        auto* material = get<MaterialDataStruct>(handle);
+        *material = MaterialDataStruct{std::forward<Args>(args)...};
 
         return handle;
     }
