@@ -48,6 +48,10 @@ namespace renderer {
          */
         std::unique_ptr<rhi::Framebuffer> denoised_framebuffer;
 
-        void create_framebuffer(const glm::uvec2& render_resolution, const ForwardPass& forward_pass);
+        std::unique_ptr<rhi::Buffer> denoiser_material_buffer;
+
+        void create_images_and_framebuffer(const glm::uvec2& render_resolution);
+
+        void create_material(const ForwardPass& forward_pass);
     };
 } // namespace renderer

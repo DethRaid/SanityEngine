@@ -32,7 +32,9 @@ namespace renderer {
 
         accumulation_pipeline = device.create_render_pipeline_state(pipeline_create_info);
 
-        create_framebuffer(render_resolution, forward_pass);
+        create_images_and_framebuffer(render_resolution);
+
+        create_material(forward_pass);
     }
 
     void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, uint32_t /* frame_idx */) {
@@ -49,7 +51,8 @@ namespace renderer {
 
         commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
-        commands->SetGraphicsRoot32BitConstant(0, accumulation_material_handle.index, 1);
+        commands->SetGraphicsRoot32BitConstant(0, 0, 1);
+        commands->SetGraphicsRootShaderResourceView(0, denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
         {
@@ -97,7 +100,7 @@ namespace renderer {
         }
     }
 
-    void DenoiserPass::create_framebuffer(const glm::uvec2& render_resolution, const ForwardPass& forward_pass) {
+    void DenoiserPass::create_images_and_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_device();
 
         {
@@ -126,14 +129,24 @@ namespace renderer {
             };
             accumulation_target_handle = renderer->create_image(accumulation_target_create_info);
         }
+    }
+
+    void DenoiserPass::create_material(const ForwardPass& forward_pass) {
+        auto& device = renderer->get_render_device();
 
         const auto scene_color_target_handle = forward_pass.get_color_target_handle();
         const auto scene_depth_target_handle = forward_pass.get_depth_target_handle();
 
-        accumulation_material_handle = material_data_buffer->get_next_free_material<AccumulationMaterial>();
-        AccumulationMaterial* accumulation_material = material_data_buffer->at<AccumulationMaterial>(accumulation_material_handle);
-        accumulation_material->accumulation_texture = accumulation_target_handle;
-        accumulation_material->scene_output_texture = scene_color_target_handle;
-        accumulation_material->scene_depth_texture = scene_depth_target_handle;
+        const auto accumulation_material = AccumulationMaterial{
+            .accumulation_texture = accumulation_target_handle,
+            .scene_output_texture = scene_color_target_handle,
+            .scene_depth_texture = scene_depth_target_handle,
+        };
+
+        denoiser_material_buffer = device.create_buffer(rhi::BufferCreateInfo{.name = "Denoiser material buffer",
+                                                                              .usage = rhi::BufferUsage::StagingBuffer,
+                                                                              .size = static_cast<uint32_t>(sizeof(AccumulationMaterial))});
+
+        memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
     }
 } // namespace renderer
