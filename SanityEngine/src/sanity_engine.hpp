@@ -89,7 +89,7 @@ private:
 
     void make_frametime_display();
 
-    void create_flycam_player();
+    void create_first_person_player();
 
     void load_bve_train(const std::string& filename);
 

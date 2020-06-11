@@ -4,6 +4,7 @@
 
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <spdlog/logger.h>
 
 class Terrain;
@@ -20,8 +21,13 @@ public:
 
 private:
     static std::shared_ptr<spdlog::logger> logger;
+
+    float normal_move_speed = 5;
+
     /*!
      * \brief Window that will receive input
+     *
+     * This player controller queries GLFW for key states directly. This may or may not be a Bad Idea
      */
     GLFWwindow* window;
 
@@ -37,5 +43,9 @@ private:
 
     glm::dvec2 last_mouse_pos;
 
+    glm::vec3 previous_location{};
+    glm::vec3 velocity{0};
+
     Terrain* terrain{nullptr};
+    bool is_grounded{true};
 };

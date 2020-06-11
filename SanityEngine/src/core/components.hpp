@@ -11,7 +11,7 @@
 // The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
 
 struct [[horus::component]] TransformComponent {
-    [[horus::field]] glm::vec3 position{0};
+    [[horus::field]] glm::vec3 location{0};
 
     [[horus::field]] glm::quat rotation{};
 
@@ -50,6 +50,6 @@ struct [[component]] TagComponent {
     [[serialize]] std::unordered_set<std::string> tags;
 };
 
-JSON5_CLASS(TransformComponent, position, rotation, scale)
+JSON5_CLASS(TransformComponent, location, rotation, scale)
 
 JSON5_CLASS(TagComponent, tags)

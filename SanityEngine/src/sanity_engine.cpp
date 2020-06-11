@@ -24,7 +24,7 @@ struct AtmosphereMaterial {
 };
 
 int main() {
-    Settings settings{};
+    const Settings settings{};
     // settings.enable_gpu_crash_reporting = true;
 
     g_engine = new SanityEngine{settings};
@@ -94,7 +94,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     bve = std::make_unique<BveWrapper>(renderer->get_render_device());
 
-    create_flycam_player();
+    create_first_person_player();
 
     create_planetary_atmosphere();
 
@@ -102,7 +102,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
     imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
 
-    world = World::create({.seed = static_cast<uint32_t>(rand()),
+    world = World::create({.seed = 666,
                            .height = 128,
                            .width = 128,
                            .max_ocean_depth = 8,
@@ -253,12 +253,12 @@ void SanityEngine::make_frametime_display() {
     registry.assign<ui::UiComponent>(frametime_display, std::make_unique<ui::FramerateDisplay>(framerate_tracker));
 }
 
-void SanityEngine::create_flycam_player() {
+void SanityEngine::create_first_person_player() {
     player = registry.create();
 
     auto& transform = registry.assign<TransformComponent>(player);
-    transform.position.z = 5;
-    transform.position.y = 2;
+    transform.location.z = 5;
+    transform.location.y = 2;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 

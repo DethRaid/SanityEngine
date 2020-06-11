@@ -39,7 +39,7 @@ Terrain::Terrain(const uint32_t max_latitude_in,
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
     MTR_SCOPE("Terrain", "load_terrain_around_player");
-    const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(player_transform.position);
+    const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(player_transform.location);
 
     // V0: load the tile the player is in and nothing else
 
