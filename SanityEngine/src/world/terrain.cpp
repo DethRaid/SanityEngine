@@ -118,6 +118,10 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
 
     const auto tile_heightmap = generate_terrain_heightmap(top_left, size);
 
+    const auto tile_entity = registry->create();
+
+    loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
+
     std::vector<StandardVertex> tile_vertices;
     tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
 
@@ -173,11 +177,7 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
 
     renderer->add_raytracing_objects_to_scene({rhi::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
 
-    const auto tile_entity = registry->create();
-
     registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
-
-    loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 }
 
 std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::ivec2& top_left,
@@ -200,10 +200,10 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::i
 }
 
 glm::vec3 Terrain::get_normal_at_location(const glm::vec2& location) {
-    const auto height_top_middle = get_terrain_height(location + glm::vec2{1, 0});
-    const auto height_middle_left = get_terrain_height(location + glm::vec2{0, -1});
-    const auto height_middle_right = get_terrain_height(location + glm::vec2{0, 1});
-    const auto height_bottom_middle = get_terrain_height(location + glm::vec2{ -1, 0});
+    const auto height_middle_right= get_terrain_height(location + glm::vec2{1, 0});
+    const auto height_bottom_middle = get_terrain_height(location + glm::vec2{0, -1});
+    const auto height_top_middle = get_terrain_height(location + glm::vec2{0, 1});
+    const auto height_middle_left= get_terrain_height(location + glm::vec2{-1, 0});
     
     const auto va = normalize(glm::vec3{2.0, 0.0, height_middle_right - height_middle_left});
     const auto vb = normalize(glm::vec3{0.0, 2.0, height_bottom_middle - height_top_middle});

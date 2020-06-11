@@ -12,7 +12,7 @@ struct MaterialData {
 
 #include "inc/standard_root_signature.hlsl"
 
-const static float ACCUMULATION_POWER = 0.005;
+const static float ACCUMULATION_POWER = 0.025;
 
 // TODO: Sample from the accumulation buffer from the camera's viewpoint last frame
 
