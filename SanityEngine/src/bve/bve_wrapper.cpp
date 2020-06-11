@@ -128,15 +128,14 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                 if(texture_handle_maybe) {
                     logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->index);
 
-                    auto& material_data = renderer.get_material_data_buffer();
-                    const auto material_handle = material_data.get_next_free_material<renderer::StandardMaterial>();
-                    auto* material = material_data.at<renderer::StandardMaterial>(material_handle);
-                    material->albedo = *texture_handle_maybe;
-                    material->normal_roughness = renderer.get_default_normal_roughness_texture();
-                    material->specular_color_emission = renderer.get_default_specular_color_emission_texture();
-                    material->noise = renderer.get_noise_texture();
+                    const auto material = renderer::StandardMaterial{
+                        .albedo = *texture_handle_maybe,
+                        .normal_roughness = renderer.get_default_normal_roughness_texture(),
+                        .specular_color_emission = renderer.get_default_specular_color_emission_texture(),
+                        .noise = renderer.get_noise_texture(),
+                    };
 
-                    mesh_component.material = *material;
+                    mesh_component.material = renderer.allocate_standard_material(material);
 
                 } else {
                     const auto texture_path = train_path.replace_filename(texture_name).string();
@@ -182,12 +181,12 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
                         logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.index);
 
-                        auto& material_data = renderer.get_material_data_buffer();
-                        const auto material_handle = material_data.get_next_free_material<renderer::StandardMaterial>();
-                        auto* material = material_data.at<renderer::StandardMaterial>(material_handle);
-                        material->albedo = texture_handle;
+                        const auto material = renderer::StandardMaterial{
+                            .albedo = texture_handle,
+                            .noise = renderer.get_noise_texture(),
+                        };
 
-                        mesh_component.material = *material;
+                        mesh_component.material = renderer.allocate_standard_material(material);
 
                         delete[] texture_data;
                     }

@@ -72,26 +72,26 @@ void Terrain::load_terrain_textures_and_create_material() {
 
     task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
 
-    auto& materials = renderer->get_material_data_buffer();
-    terrain_material = materials.get_next_free_material<renderer::StandardMaterial>();
-    auto* material = materials.at<renderer::StandardMaterial>(terrain_material);
-    material->noise = renderer->get_noise_texture();
+    auto material = renderer::StandardMaterial{};
+    material.noise = renderer->get_noise_texture();
 
     task_scheduler->WaitForCounter(&counter, 0, true);
 
     if(albedo_image_data->handle_out) {
-        material->albedo = *albedo_image_data->handle_out;
+        material.albedo = *albedo_image_data->handle_out;
     } else {
         logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name_in);
-        material->albedo = renderer->get_pink_texture();
+        material.albedo = renderer->get_pink_texture();
     }
 
     if(normal_roughness_image_data->handle_out) {
-        material->normal_roughness = *normal_roughness_image_data->handle_out;
+        material.normal_roughness = *normal_roughness_image_data->handle_out;
     } else {
         logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name_in);
-        material->normal_roughness = renderer->get_default_normal_roughness_texture();
+        material.normal_roughness = renderer->get_default_normal_roughness_texture();
     }
+
+    terrain_material = renderer->allocate_standard_material(material);
 }
 
 void Terrain::generate_tile(const glm::uvec2& tilecoord) {

@@ -34,7 +34,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     auto& device = renderer.get_render_device();
     auto commands = device.create_command_list();
 
-    std::unordered_map<uint32_t, renderer::StandardMaterial> materials;
+    std::unordered_map<uint32_t, renderer::StandardMaterialHandle> materials;
 
     std::vector<rhi::Mesh> meshes;
     std::vector<rhi::RaytracingObject> raytracing_objects;
@@ -91,13 +91,8 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
         mesh_renderer.material = mat->second;
 
     } else {
-        auto& material_store = renderer.get_material_data_buffer();
-        const auto material_handle = material_store.get_next_free_material<renderer::StandardMaterial>();
-        auto* material = material_store.at<renderer::StandardMaterial>(material_handle);
-
-        material->noise = renderer.get_noise_texture();
-
-        mesh_renderer.material = *material;
+        auto material = renderer::StandardMaterial{};
+        material.noise = renderer.get_noise_texture();
 
         const auto* ass_material = scene->mMaterials[ass_mesh->mMaterialIndex];
 
@@ -108,7 +103,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
             // Load texture into Sanity Engine and set on material
 
             if(const auto existing_image_handle = renderer.get_image_handle(ass_texture_path.C_Str())) {
-                material->albedo = *existing_image_handle;
+                material.albedo = *existing_image_handle;
 
             } else {
                 auto path = std::filesystem::path{filename};
@@ -120,7 +115,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                 if(!was_image_loaded) {
                     logger->warn("Could not load texture {}", texture_path.string());
 
-                    material->albedo = renderer.get_pink_texture();
+                    material.albedo = renderer.get_pink_texture();
 
                 } else {
                     const auto create_info = rhi::ImageCreateInfo{.name = ass_texture_path.C_Str(),
@@ -129,7 +124,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                                                                   .height = height};
 
                     const auto image_handle = renderer.create_image(create_info, pixels.data(), commands);
-                    material->albedo = image_handle;
+                    material.albedo = image_handle;
                 }
             }
         } else {
@@ -137,8 +132,10 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
             // If there's no material base color, use a pure white texture
         }
 
-        material->normal_roughness = renderer.get_default_normal_roughness_texture();
-        material->specular_color_emission = renderer.get_default_specular_color_emission_texture();
+        material.normal_roughness = renderer.get_default_normal_roughness_texture();
+        material.specular_color_emission = renderer.get_default_specular_color_emission_texture();
+
+        mesh_renderer.material = renderer.allocate_standard_material(material);
     }
 
     const auto& index_buffer = mesh_data.get_index_buffer();

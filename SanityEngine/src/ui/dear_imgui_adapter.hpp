@@ -6,7 +6,6 @@
 
 #include "ui_components.hpp"
 #include "../renderer/handles.hpp"
-#include "../renderer/material_data_buffer.hpp"
 
 namespace renderer {
     class Renderer;
