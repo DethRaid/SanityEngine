@@ -12,8 +12,9 @@
 #include "../settings.hpp"
 #include "camera_matrix_buffer.hpp"
 #include "handles.hpp"
-#include "material_data_buffer.hpp"
 #include "render_components.hpp"
+#include "standard_material.hpp"
+#include "../rhi/raytracing_structs.hpp"
 #include "renderpasses/backbuffer_output_pass.hpp"
 #include "renderpasses/denoiser_pass.hpp"
 #include "renderpasses/forward_pass.hpp"
@@ -70,7 +71,11 @@ namespace renderer {
 
         void schedule_texture_destruction(const TextureHandle& image_handle);
 
-        [[nodiscard]] MaterialDataBuffer& get_material_data_buffer() const;
+        [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
+
+        [[nodiscard]] rhi::Buffer& get_standard_material_buffer_for_frame(uint32_t frame_idx) const;
+
+        void deallocate_standard_material(StandardMaterialHandle handle);
 
         [[nodiscard]] rhi::RenderDevice& get_render_device() const;
 
@@ -113,10 +118,9 @@ namespace renderer {
 
         std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
-        std::unique_ptr<MaterialDataBuffer> material_data_buffer;
+        std::vector<StandardMaterial> standard_materials;
+        std::vector<StandardMaterialHandle> free_material_handles;
         std::vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
-
-        MaterialHandle backbuffer_output_material;
 
         std::unordered_map<std::string, uint32_t> image_name_to_index;
         std::vector<std::unique_ptr<rhi::Image>> all_images;
@@ -139,14 +143,6 @@ namespace renderer {
 
         void create_material_data_buffers();
 
-        void create_scene_framebuffer();
-
-        void create_accumulation_pipeline_and_material();
-
-        void create_shadowmap_framebuffer_and_pipeline(QualityLevel quality_level);
-
-        void create_backbuffer_output_pipeline_and_material();
-
         void create_light_buffers();
 
         void create_builtin_images();
@@ -160,29 +156,20 @@ namespace renderer {
 
         void upload_material_data(uint32_t frame_idx);
 
-#pragma region Raytracing
+#pragma region 3D Scene
         std::vector<rhi::RaytracableGeometry> raytracing_geometries;
 
         std::vector<rhi::RaytracingObject> raytracing_objects;
 
         rhi::RaytracingScene raytracing_scene;
 
-        std::unique_ptr<DenoiserPass> denoiser_pass;
-
-        void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
-#pragma endregion
-
-#pragma region 3D Scene
-        std::unique_ptr<rhi::Image> shadow_map_image;
-        std::unique_ptr<rhi::Framebuffer> shadow_map_framebuffer;
-
-        uint32_t shadow_camera_index;
-
-        std::unique_ptr<rhi::RenderPipelineState> shadow_pipeline;
-
         std::unique_ptr<ForwardPass> forward_pass;
 
+        std::unique_ptr<DenoiserPass> denoiser_pass;
+
         std::unique_ptr<BackbufferOutputPass> backbuffer_output_pass;
+
+        void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void update_lights(entt::registry& registry, uint32_t frame_idx);
 

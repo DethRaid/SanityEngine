@@ -7,7 +7,7 @@ namespace renderer {
         size_t index{0};
     };
 
-    struct MaterialHandle {
+    struct StandardMaterialHandle {
         uint32_t index{0};
     };
 

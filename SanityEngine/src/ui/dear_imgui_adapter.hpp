@@ -35,7 +35,7 @@ private:
     double last_start_time{0};
 
     renderer::TextureHandle font_atlas;
-    renderer::MaterialHandle font_material;
+    renderer::StandardMaterialHandle font_material;
 
     void initialize_style();
 

@@ -3,11 +3,8 @@
 #include <cstdint>
 
 #include "../rhi/mesh_data_store.hpp"
-#include "../rhi/raytracing_structs.hpp"
 #include "handles.hpp"
 #include "lights.hpp"
-#include "material_data_buffer.hpp"
-#include "standard_material.hpp"
 
 namespace renderer {
     /*!
@@ -16,7 +13,7 @@ namespace renderer {
     struct StandardRenderableComponent {
         rhi::Mesh mesh;
 
-        StandardMaterial material{};
+        StandardMaterialHandle material{};
     };
 
     /*!
@@ -24,7 +21,7 @@ namespace renderer {
      */
     struct PostProcessingPassComponent {
         uint32_t draw_idx{0};
-        MaterialHandle material{0};
+        StandardMaterialHandle material{0};
     };
 
     /*!

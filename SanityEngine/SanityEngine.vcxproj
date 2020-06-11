@@ -41,7 +41,6 @@
     <ClCompile Include="src\player\flycam_controller.cpp" />
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
     <ClCompile Include="src\renderer\handles.hpp" />
-    <ClCompile Include="src\renderer\material_data_buffer.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
@@ -99,7 +98,6 @@
     <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\lights.hpp" />
-    <ClInclude Include="src\renderer\material_data_buffer.hpp" />
     <ClInclude Include="src\renderer\renderer.hpp" />
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\renderer\textures.hpp" />

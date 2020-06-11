@@ -127,6 +127,8 @@ namespace renderer {
 
         // logger->set_level(spdlog::level::debug);
 
+        ENSURE(settings.render_scale > 0, "Render scale may not be 0 or less");
+
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
@@ -142,16 +144,6 @@ namespace renderer {
         create_ui_pipeline();
 
         create_ui_mesh_buffers();
-
-        ENSURE(settings_in.render_scale > 0, "Render scale may not be 0 or less");
-
-        create_scene_framebuffer();
-
-        create_accumulation_pipeline_and_material();
-
-        create_shadowmap_framebuffer_and_pipeline(settings.shadow_quality);
-
-        create_backbuffer_output_pipeline_and_material();
 
         create_light_buffers();
 
@@ -282,7 +274,25 @@ namespace renderer {
         device->schedule_image_destruction(std::move(image));
     }
 
-    MaterialDataBuffer& Renderer::get_material_data_buffer() const { return *material_data_buffer; }
+    StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
+        if(!free_material_handles.empty()) {
+            const auto handle = *free_material_handles.rbegin();
+            free_material_handles.pop_back();
+            standard_materials[handle.index] = material;
+            return handle;
+        }
+
+        const auto handle = StandardMaterialHandle{.index = static_cast<uint32_t>(standard_materials.size())};
+        standard_materials.push_back(material);
+
+        return handle;
+    }
+
+    rhi::Buffer& Renderer::get_standard_material_buffer_for_frame(const uint32_t frame_idx) const {
+        return *material_device_buffers.at(frame_idx);
+    }
+
+    void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
 
     rhi::RenderDevice& Renderer::get_render_device() const { return *device; }
 
@@ -345,8 +355,6 @@ namespace renderer {
     }
 
     void Renderer::create_material_data_buffers() {
-        material_data_buffer = std::make_unique<MaterialDataBuffer>(MATERIAL_DATA_BUFFER_SIZE);
-
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(settings.num_in_flight_gpu_frames);
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
@@ -412,52 +420,6 @@ namespace renderer {
         device->submit_command_list(commands);
     }
 
-    void Renderer::create_shadowmap_framebuffer_and_pipeline(const QualityLevel quality_level) {
-        {
-            const auto shadowmap_resolution = [&]() {
-                // TODO: Scale based on  current hardware
-                switch(quality_level) {
-                    case QualityLevel::Low:
-                        return 512u;
-
-                    case QualityLevel::Medium:
-                        return 1024u;
-
-                    case QualityLevel::High:
-                        return 2048u;
-
-                    case QualityLevel::Ultra:
-                        return 4096u;
-                }
-
-                return 1024u;
-            }();
-
-            const auto create_info = rhi::ImageCreateInfo{
-                .name = "Sun Shadowmap",
-                .usage = rhi::ImageUsage::DepthStencil,
-                .format = rhi::ImageFormat::Depth32,
-                .width = shadowmap_resolution,
-                .height = shadowmap_resolution,
-            };
-
-            shadow_map_image = device->create_image(create_info);
-
-            shadow_map_framebuffer = device->create_framebuffer({}, shadow_map_image.get());
-        }
-
-        {
-            const auto create_info = rhi::RenderPipelineStateCreateInfo{
-                .name = "Shadow",
-                .vertex_shader = load_shader("standard.vertex"),
-                .pixel_shader = load_shader("shadow.pixel"),
-                .depth_stencil_format = rhi::ImageFormat::Depth32,
-            };
-
-            shadow_pipeline = device->create_render_pipeline_state(create_info);
-        }
-    }
-
     std::vector<const rhi::Image*> Renderer::get_texture_array() const {
         std::vector<const rhi::Image*> images;
         images.reserve(all_images.size());
@@ -484,7 +446,7 @@ namespace renderer {
 
     void Renderer::upload_material_data(const uint32_t frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
-        memcpy(buffer.mapped_ptr, material_data_buffer->data(), material_data_buffer->size());
+        memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {

@@ -68,7 +68,7 @@ private:
 
     std::unordered_map<glm::uvec2, TerrainTile> loaded_terrain_tiles;
 
-    renderer::MaterialHandle terrain_material{1};
+    renderer::StandardMaterialHandle terrain_material{1};
 
     uint32_t max_latitude;
 

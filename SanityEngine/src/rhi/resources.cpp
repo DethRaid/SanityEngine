@@ -1,6 +1,20 @@
 #include "resources.hpp"
 
+#include <D3D12MemAlloc.h>
+
 namespace rhi {
+    Buffer::~Buffer() {
+        if(allocation) {
+            allocation->Release();
+        }
+    }
+
+    Image::~Image() {
+        if(allocation) {
+            allocation->Release();
+        }
+    }
+
     uint32_t size_in_bytes(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:
@@ -18,4 +32,4 @@ namespace rhi {
                 return 4;
         }
     }
-} // namespace render
+} // namespace rhi

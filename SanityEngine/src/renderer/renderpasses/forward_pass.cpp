@@ -59,9 +59,9 @@ namespace renderer {
 
         const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
 
-        draw_objects_in_scene(commands, registry, *bind_group);
+        draw_objects_in_scene(commands, registry, *bind_group, frame_idx);
 
-        draw_sky(commands, registry);
+        draw_atmosphere(commands, registry);
 
         commands->EndRenderPass();
     }
@@ -139,7 +139,8 @@ namespace renderer {
 
     void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
                                             entt::registry& registry,
-                                            const rhi::BindGroup& material_bind_group) {
+                                            const rhi::BindGroup& material_bind_group,
+                                            const uint32_t frame_idx) {
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -152,23 +153,22 @@ namespace renderer {
         const auto& mesh_storage = renderer->get_static_mesh_store();
         mesh_storage.bind_to_command_list(commands);
 
+        auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
+
+        commands->SetGraphicsRootShaderResourceView(rhi::RenderDevice::material_buffer_root_parameter_index,
+                                                    material_buffer.resource->GetGPUVirtualAddress());
+
         {
             MTR_SCOPE("Renderer", "Render static meshes");
             const auto& renderable_view = registry.view<StandardRenderableComponent>();
-            std::vector<StandardMaterial> materials_for_draw;
-            materials_for_draw.reserve(renderable_view.size());
-
             renderable_view.each([&](const StandardRenderableComponent& mesh_renderable) {
-                const auto material_idx = static_cast<uint32_t>(materials_for_draw.size());
-                materials_for_draw.push_back(mesh_renderable.material);
-
-                commands->SetGraphicsRoot32BitConstant(0, material_idx, 1);
+                commands->SetGraphicsRoot32BitConstant(0, mesh_renderable.material.index, 1);
                 commands->DrawIndexedInstanced(mesh_renderable.mesh.num_indices, 1, mesh_renderable.mesh.first_index, 0, 0);
             });
         }
     }
 
-    void ForwardPass::draw_sky(ID3D12GraphicsCommandList4* command_list, entt::registry& registry) const {
+    void ForwardPass::draw_atmosphere(ID3D12GraphicsCommandList4* command_list, entt::registry& registry) const {
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");

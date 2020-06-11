@@ -168,9 +168,6 @@
     <ClCompile Include="extern\minitrace\src\minitrace.c">
       <Filter>Source Files\external</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\material_data_buffer.cpp">
-      <Filter>Source Files\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\bve\bve_wrapper.cpp">
       <Filter>Source Files\bve</Filter>
     </ClCompile>
@@ -316,9 +313,6 @@
     </ClInclude>
     <ClInclude Include="src\windows\windows_helpers.hpp">
       <Filter>Header Files\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\material_data_buffer.hpp">
-      <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\lights.hpp">
       <Filter>Header Files\renderer</Filter>
