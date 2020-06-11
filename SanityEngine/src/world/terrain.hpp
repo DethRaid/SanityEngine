@@ -9,7 +9,7 @@
 struct TerrainSamplerParams {
     double latitude{};
     double longitude{};
-    float spread{0.75};
+    float spread{0.5};
     float spread_reduction_rate{spread};
 };
 

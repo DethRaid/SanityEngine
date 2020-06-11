@@ -28,6 +28,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
 
     Texture2D accumulation_texture = textures[material.accumulation_texture_idx];
     Texture2D scene_output_texture = textures[material.scene_output_texture_idx];
+
     Texture2D depth_texture = textures[material.scene_depth_texture_idx];
     float cur_depth = depth_texture.Sample(point_sampler, input.texcoord).r;
 
@@ -39,7 +40,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
     float4 previous_position_viewspace = mul(camera.previous_view, position_worldspace);
     float4 previous_position_clipspace = mul(camera.previous_projection, previous_position_viewspace);
     previous_position_clipspace /= previous_position_clipspace.w;
-    float2 previous_texcoord = previous_position_clipspace.xy * 0.5 + 0.5;
+    float2 previous_texcoord = previous_position_clipspace.xy * 0.5 + 0.5;    
 
     float4 scene_color = scene_output_texture.Sample(point_sampler, input.texcoord);
 
@@ -52,7 +53,6 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
         if(!any(isnan(final_color))) {
             return float4(final_color, scene_color.a);
         }
-
     } 
 
     return scene_color;

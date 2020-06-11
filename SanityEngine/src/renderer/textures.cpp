@@ -38,7 +38,7 @@ namespace renderer {
 
         switch(sampler_desc.AddressU) {
             case D3D12_TEXTURE_ADDRESS_MODE_WRAP:
-                texel_coords.x = glm::fract(texcoord.x) * size.x;
+                texel_coords.x = static_cast<uint32_t>(glm::fract(texcoord.x) * size.x);
                 break;
 
             case D3D12_TEXTURE_ADDRESS_MODE_CLAMP:
@@ -47,7 +47,7 @@ namespace renderer {
                 } else if(texcoord.x > 1) {
                     texel_coords.x = size.x;
                 } else {
-                    texel_coords.x = texcoord.x * size.x;
+                    texel_coords.x = static_cast<uint32_t>(texcoord.x * size.x);
                 }
                 break;
 
@@ -58,14 +58,14 @@ namespace renderer {
 
         switch(sampler_desc.AddressV) {
             case D3D12_TEXTURE_ADDRESS_MODE_WRAP:
-                texel_coords.y = glm::fract(texcoord.y) * size.y;
+                texel_coords.y = static_cast<uint32_t>(glm::fract(texcoord.y) * size.y);
                 break;
 
             case D3D12_TEXTURE_ADDRESS_MODE_CLAMP:
                 if(texcoord.y < 0) {
                     texel_coords.y = 0;
                 } else if(texcoord.y > 1) {
-                    texel_coords.y = size.y;
+                    texel_coords.y = static_cast<uint32_t>(size.y);
                 } else {
                     texel_coords.y = static_cast<uint32_t>(round(texcoord.y * size.y));
                 }

@@ -54,6 +54,8 @@ namespace rhi {
                 return DXGI_FORMAT_R32_FLOAT;
 
             case ImageFormat::Rgba8:
+                [[fallthrough]];
+            default:
                 return DXGI_FORMAT_R8G8B8A8_UNORM;
         }
     }
