@@ -52,4 +52,4 @@ struct [[component]] TagComponent {
 
 JSON5_CLASS(TransformComponent, position, rotation, scale)
 
-JSON5_CLASS(TagComponent, tags);
+JSON5_CLASS(TagComponent, tags)

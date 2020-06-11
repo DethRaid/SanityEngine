@@ -11,10 +11,6 @@
 #include "../rhi/resources.hpp"
 #include "../rhi/render_device.hpp"
 
-struct ImGuiMaterial {
-    renderer::TextureHandle image;
-};
-
 static GLFWmousebuttonfun prev_mouse_button_callback;
 static GLFWscrollfun prev_scroll_callback;
 static GLFWkeyfun prev_key_callback;
@@ -252,12 +248,7 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
 
     renderer.get_render_device().submit_command_list(commands);
 
-    auto& materials = renderer.get_material_data_buffer();
-    font_material = materials.get_next_free_material<ImGuiMaterial>();
-    auto* material = materials.at<ImGuiMaterial>(font_material);
-    material->image = font_atlas;
-
-    const uint64_t imgui_tex_id = font_material.index;
+    const uint64_t imgui_tex_id = font_atlas.index;
 
     io.Fonts->TexID = reinterpret_cast<ImTextureID>(imgui_tex_id);
 }

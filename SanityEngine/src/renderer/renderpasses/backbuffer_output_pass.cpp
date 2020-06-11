@@ -12,7 +12,7 @@ namespace renderer {
         TextureHandle scene_output_image;
     };
 
-    std::shared_ptr<spdlog::logger> logger{spdlog::stdout_color_st("BackbufferOutputPass")};
+    std::shared_ptr<spdlog::logger> BackbufferOutputPass::logger{spdlog::stdout_color_st("BackbufferOutputPass")};
 
     BackbufferOutputPass::BackbufferOutputPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
         auto& device = renderer->get_render_device();

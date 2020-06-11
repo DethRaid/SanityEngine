@@ -696,8 +696,8 @@ namespace renderer {
 
                 } else {
                     const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
-                    const auto material_idx = static_cast<uint32_t>(imgui_material_idx);
-                    commands->SetGraphicsRoot32BitConstant(0, material_idx, 1);
+                    const auto texture_idx = static_cast<uint32_t>(imgui_material_idx);
+                    commands->SetGraphicsRoot32BitConstant(0, texture_idx, 1);
 
                     {
                         const auto& clip_rect = cmd.ClipRect;

@@ -22,8 +22,6 @@ namespace rhi {
         D3D12MA::Allocation* allocation;
 
         void* mapped_ptr{nullptr};
-
-        ~Buffer();
     };
 
     struct StagingBuffer : Buffer {
@@ -77,8 +75,6 @@ namespace rhi {
         D3D12MA::Allocation* allocation;
 
         ImageFormat format;
-
-        ~Image();
     };
 
     struct ImageCreateInfo {
