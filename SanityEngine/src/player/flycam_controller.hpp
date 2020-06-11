@@ -34,6 +34,4 @@ private:
     entt::registry* registry;
 
     glm::dvec2 last_mouse_pos;
-
-    Terrain* terrain{nullptr};
 };

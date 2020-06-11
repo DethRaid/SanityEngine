@@ -58,16 +58,6 @@ void FlycamController::update_player_transform(const float delta_time) {
         player_transform.position -= glm::vec3{0, delta_time, 0};
     }
 
-    // Make sure they're on the terrain
-    if(terrain) {
-        const auto height = terrain->get_terrain_height(
-            TerrainSamplerParams{.latitude = player_transform.position.z,
-                                 .longitude = player_transform.position.x});
-        if(player_transform.position.y < height + 1.5f) {
-            player_transform.position.y = height + 1.5f;
-        }
-    }
-
     // Rotation
     glm::dvec2 mouse_pos;
     glfwGetCursorPos(window, &mouse_pos.x, &mouse_pos.y);

@@ -77,7 +77,7 @@ private:
 
     glm::uvec2 size;
 
-    renderer::HostTexture2D noise_texture;
+    std::unique_ptr<FastNoiseSIMD> noise_generator;
 
     entt::entity player;
 
@@ -94,7 +94,7 @@ private:
     explicit World(const glm::uvec2& size_in,
                    uint32_t min_terrain_height,
                    uint32_t max_terrain_height,
-                   renderer::HostTexture2D noise_texture_in,
+                   std::unique_ptr<FastNoiseSIMD> noise_generator_in,
                    entt::entity player_in,
                    entt::registry& registry_in,
                    renderer::Renderer& renderer_in);

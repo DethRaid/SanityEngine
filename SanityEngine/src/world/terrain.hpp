@@ -4,6 +4,7 @@
 #include <ftl/task.h>
 #include <glm/gtx/hash.hpp>
 
+#include "../noise/FastNoiseSIMD/FastNoiseSIMD.h"
 #include "../renderer/renderer.hpp"
 
 struct TerrainSamplerParams {
@@ -33,36 +34,39 @@ struct TerrainTileComponent {
     Terrain* terrain;
 };
 
+/*!
+ * \brief Best terrain class in the entire multiverse
+ *
+ * The terrain has a resolution of one meter. This terrain class is made for a game that uses voxels with a resolution of one meter, so
+ * everything should be groovy
+ */
 class Terrain {
 public:
     // TODO: Make this configurable
-    constexpr static uint32_t TILE_SIZE = 64;
+    constexpr static int32_t TILE_SIZE = 64;
 
     static std::shared_ptr<spdlog::logger> logger;
 
-    static [[nodiscard]] glm::uvec2 get_coords_of_tile_containing_position(const glm::vec3& position);
+    static [[nodiscard]] glm::ivec2 get_coords_of_tile_containing_position(const glm::vec3& position);
 
     explicit Terrain(uint32_t max_latitude_in,
                      uint32_t max_longitude_in,
                      uint32_t min_terrain_height_in,
                      uint32_t max_terrain_height_in,
                      renderer::Renderer& renderer_in,
-                     renderer::HostTexture2D& noise_texture_in,
+                     FastNoiseSIMD& noise_generator_in,
                      entt::registry& registry_in);
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    /*!
-     * \brief Gets the terrain height at a specific location
-     */
-    [[nodiscard]] float get_terrain_height(const TerrainSamplerParams& params) const;
+    [[nodiscard]] float get_terrain_height(const glm::vec2& location);
 
-    [[nodiscard]] glm::vec3 get_normal_at_location(float y, float x) const;
+    [[nodiscard]] glm::vec3 get_normal_at_location(const glm::vec2& location);
 
 private:
     renderer::Renderer* renderer;
 
-    renderer::HostTexture2D* noise_texture;
+    FastNoiseSIMD* noise_generator;
 
     entt::registry* registry;
 
@@ -80,7 +84,7 @@ private:
 
     void load_terrain_textures_and_create_material();
 
-    void generate_tile(const glm::uvec2& tilecoord);
+    void generate_tile(const glm::ivec2& tilecoord);
 
     /*!
      * \brief Generates a terrain heightmap of a specific size
@@ -88,7 +92,8 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::uvec2& top_left, const glm::uvec2& size) const;
+    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::ivec2& top_left,
+                                                                             const glm::uvec2& size) const;
 
     static FTL_TASK_ENTRY_POINT(generate_tile);
 };

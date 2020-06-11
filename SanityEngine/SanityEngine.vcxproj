@@ -38,6 +38,13 @@
     <ClCompile Include="src\loading\entity_loading.cpp" />
     <ClCompile Include="src\loading\image_loading.cpp" />
     <ClCompile Include="src\loading\shader_loading.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx512.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_neon.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse2.cpp" />
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp" />
     <ClCompile Include="src\player\flycam_controller.cpp" />
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
     <ClCompile Include="src\renderer\handles.hpp" />
@@ -87,6 +94,8 @@
     <ClInclude Include="src\loading\entity_loading.hpp" />
     <ClInclude Include="src\loading\image_loading.hpp" />
     <ClInclude Include="src\loading\shader_loading.hpp" />
+    <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.h" />
+    <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h" />
     <ClInclude Include="src\player\components.hpp" />
     <ClInclude Include="src\player\flycam_controller.hpp" />
     <ClInclude Include="src\renderer\camera_matrix_buffer.hpp" />
@@ -327,6 +336,8 @@
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableModules>true</EnableModules>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

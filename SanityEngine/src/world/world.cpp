@@ -26,11 +26,17 @@ std::unique_ptr<World> World::create(const WorldParameters& params,
                                      const entt::entity player_in,
                                      entt::registry& registry_in,
                                      renderer::Renderer& renderer_in) {
-    std::mt19937 rng{params.seed};
-
     logger->info("Creating world with seed {}", params.seed);
 
-    auto noise_texture = renderer::HostTexture2D::create_random({256, 256}, rng);
+    auto noise_generator = std::unique_ptr<FastNoiseSIMD>{FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
+
+    // Settings gotten from messing around in the demo application. High chance these should be tuned in-game
+    noise_generator->SetNoiseType(FastNoiseSIMD::PerlinFractal);
+    noise_generator->SetFrequency(1.0f / 64.0f);
+    noise_generator->SetFractalType(FastNoiseSIMD::FBM);
+    noise_generator->SetFractalOctaves(10);
+    noise_generator->SetFractalLacunarity(2);
+    noise_generator->SetFractalGain(0.5f);
 
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
@@ -38,7 +44,7 @@ std::unique_ptr<World> World::create(const WorldParameters& params,
     return std::unique_ptr<World>(new World{glm::uvec2{params.width, params.height},
                                             min_terrain_height,
                                             max_terrain_height,
-                                            std::move(noise_texture),
+                                            std::move(noise_generator),
                                             player_in,
                                             registry_in,
                                             renderer_in});
@@ -61,16 +67,16 @@ WrenHandle* World::_get_wren_handle() const { return handle; }
 World::World(const glm::uvec2& size_in,
              const uint32_t min_terrain_height,
              const uint32_t max_terrain_height,
-             renderer::HostTexture2D noise_texture_in,
+             std::unique_ptr<FastNoiseSIMD> noise_generator_in,
              entt::entity player_in,
              entt::registry& registry_in,
              renderer::Renderer& renderer_in)
     : size{size_in},
-      noise_texture{std::move(noise_texture_in)},
+      noise_generator{std::move(noise_generator_in)},
       player{player_in},
       registry{&registry_in},
       renderer{&renderer_in},
-      terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, noise_texture, registry_in} {}
+      terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, *noise_generator, registry_in} {}
 
 void World::register_component(horus::Component& component) { component.begin_play(*this); }
 
