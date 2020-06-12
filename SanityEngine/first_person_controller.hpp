@@ -24,6 +24,8 @@ private:
 
     float normal_move_speed = 5;
 
+    float jump_velocity = 5;
+
     /*!
      * \brief Window that will receive input
      *

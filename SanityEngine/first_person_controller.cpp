@@ -41,44 +41,55 @@ void FirstPersonController::update_player_transform(const float delta_time) {
         const auto forward_move_vector = normalize(glm::vec3{forward.x, 0, forward.z});
         const auto right_move_vector = normalize(glm::vec3{right.x, 0, right.z});
 
+        velocity = glm::vec3{0};
+
         // Translation
         if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             // Move the player entity in its forward direction
-            player_transform.location -= forward_move_vector * normal_move_speed * delta_time;
+            velocity -= forward_move_vector * normal_move_speed;
 
         } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
             // Move the player entity in its backward direction
-            player_transform.location += forward_move_vector * normal_move_speed * delta_time;
+            velocity += forward_move_vector * normal_move_speed;
         }
 
         if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             // Move the player entity in its right direction
-            player_transform.location += right_move_vector * normal_move_speed * delta_time;
+            velocity += right_move_vector * normal_move_speed;
 
         } else if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
             // Move the player entity in its left direction
-            player_transform.location -= right_move_vector * normal_move_speed * delta_time;
+            velocity -= right_move_vector * normal_move_speed;
         }
 
-        velocity = player_transform.location - previous_location;
+        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            velocity.y = jump_velocity;
+            is_grounded = false;
+        }
     } else {
         // Gravity
         velocity.y -= 9.8f * delta_time;
-
-        player_transform.location += velocity * delta_time;
     }
+
+    player_transform.location += velocity * delta_time;
 
     logger->info("Player velocity: ({:.3}, {:.3}, {:.3})", velocity.x, velocity.y, velocity.z);
 
     // Make sure they're on the terrain
     if(terrain) {
-        is_grounded = false;
-
         const auto height = terrain->get_terrain_height(glm::vec2{player_transform.location.x, player_transform.location.z});
-        if(player_transform.location.y < height + 1.5f) {
+        if(player_transform.location.y < height + 1.51f) {
             player_transform.location.y = height + 1.5f;
+
+            if(!is_grounded) {
+                // If the player has just landed on the ground, reset their vertical velocity
+                velocity.y = 0;
+            }
+
             is_grounded = true;
-            velocity = glm::vec3{0};
+
+        } else {
+            is_grounded = false;
         }
     }
 
