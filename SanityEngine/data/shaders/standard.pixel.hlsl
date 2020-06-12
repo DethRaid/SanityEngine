@@ -3,6 +3,7 @@ struct VertexOutput {
     float3 position_worldspace : WORLDPOS;
     float3 normal : NORMAL;
     float4 color : COLOR;
+    uint material_index : MATERIALINDEX;
     float2 texcoord : TEXCOORD;
 };
 
@@ -23,6 +24,7 @@ struct StandardVertex {
     float3 position : Position;
     float3 normal : Normal;
     float4 color : Color;
+    uint material_index : MATERIALINDEX;
     float2 texcoord : Texcoord;
 };
 

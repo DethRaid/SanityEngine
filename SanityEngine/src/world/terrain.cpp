@@ -35,6 +35,8 @@ Terrain::Terrain(const uint32_t max_latitude_in,
 
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
+
+
 }
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
@@ -52,7 +54,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     }
 }
 
-float Terrain::get_terrain_height(const glm::vec2& location) {
+float Terrain::get_terrain_height(const glm::vec2& location) const {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
     const auto tile_start_location = tilecoords * TILE_SIZE;

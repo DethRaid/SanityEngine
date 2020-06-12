@@ -59,7 +59,7 @@ public:
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] float get_terrain_height(const glm::vec2& location);
+    [[nodiscard]] float get_terrain_height(const glm::vec2& location) const;
 
     [[nodiscard]] glm::vec3 get_normal_at_location(const glm::vec2& location);
 
@@ -92,8 +92,7 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::ivec2& top_left,
-                                                                             const glm::uvec2& size) const;
+    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const;
 
     static FTL_TASK_ENTRY_POINT(generate_tile);
 };

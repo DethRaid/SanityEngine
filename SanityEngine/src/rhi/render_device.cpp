@@ -1056,7 +1056,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_pipeline_input_layouts() {
-        standard_graphics_pipeline_input_layout.reserve(4);
+        standard_graphics_pipeline_input_layout.reserve(5);
 
         standard_graphics_pipeline_input_layout.push_back(
             D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Position",
@@ -1080,6 +1080,15 @@ namespace rhi {
             D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Color",
                                      .SemanticIndex = 0,
                                      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                                     .InputSlot = 0,
+                                     .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                                     .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                                     .InstanceDataStepRate = 0});
+
+        standard_graphics_pipeline_input_layout.push_back(
+            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "MaterialIndex",
+                                     .SemanticIndex = 0,
+                                     .Format = DXGI_FORMAT_R32_UINT,
                                      .InputSlot = 0,
                                      .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
                                      .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
@@ -1525,3 +1534,4 @@ namespace rhi {
         return {};
     }
 } // namespace rhi
+

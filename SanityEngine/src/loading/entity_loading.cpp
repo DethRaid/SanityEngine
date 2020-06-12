@@ -57,7 +57,6 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     for(uint32_t vert_idx = 0; vert_idx < ass_mesh->mNumVertices; vert_idx++) {
         const auto& position = ass_mesh->mVertices[vert_idx];
         const auto& normal = ass_mesh->mNormals[vert_idx];
-        // const auto& tangent = mesh->mTangents[vert_idx];
         // const auto& color = mesh->mColors[0][vert_idx];
         const auto& texcoord = ass_mesh->mTextureCoords[0][vert_idx];
 

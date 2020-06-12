@@ -276,6 +276,12 @@
     <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
       <Filter>Source Files\noise</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\chunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\block_registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -463,6 +469,12 @@
     </ClInclude>
     <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h">
       <Filter>Header Files\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\chunk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\block_registry.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -73,8 +73,6 @@ void FirstPersonController::update_player_transform(const float delta_time) {
 
     player_transform.location += velocity * delta_time;
 
-    logger->info("Player velocity: ({:.3}, {:.3}, {:.3})", velocity.x, velocity.y, velocity.z);
-
     // Make sure they're on the terrain
     if(terrain) {
         const auto height = terrain->get_terrain_height(glm::vec2{player_transform.location.x, player_transform.location.z});

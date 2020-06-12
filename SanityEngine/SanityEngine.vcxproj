@@ -67,6 +67,8 @@
     <ClCompile Include="src\ui\fps_display.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
+    <ClCompile Include="src\world\block_registry.cpp" />
+    <ClCompile Include="src\world\chunk.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
     <ClCompile Include="src\world\world.cpp" />
   </ItemGroup>
@@ -131,6 +133,8 @@
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
+    <ClInclude Include="src\world\block_registry.hpp" />
+    <ClInclude Include="src\world\chunk.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
