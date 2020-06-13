@@ -2,9 +2,10 @@
 
 #include <array>
 #include <optional>
-#include <vector>
 
 #include <d3d12.h>
+#include <rx/core/string.h>
+#include <rx/core/vector.h>
 #include <wrl/client.h>
 
 #include "resources.hpp"

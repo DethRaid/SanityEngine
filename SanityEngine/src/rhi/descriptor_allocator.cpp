@@ -24,8 +24,8 @@ namespace rhi {
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorAllocator::get_next_free_descriptor() {
-        if(!available_handles.empty()) {
-            const auto handle = *available_handles.end();
+        if(!available_handles.is_empty()) {
+            const auto& handle = available_handles.last();
             available_handles.pop_back();
 
             return handle;

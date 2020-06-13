@@ -28,7 +28,7 @@ namespace renderer {
                                                                              .pixel_shader = load_shader("raytracing_accumulation.pixel"),
                                                                              .depth_stencil_state = {.enable_depth_test = false,
                                                                                                      .enable_depth_write = false},
-                                                                             .render_target_formats = {rhi::ImageFormat::Rgba32F}};
+                                                                             .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba32F}};
 
         accumulation_pipeline = device.create_render_pipeline_state(pipeline_create_info);
 
@@ -70,12 +70,12 @@ namespace renderer {
         const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
 
         {
-            const auto barriers = Rx::Vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                                                   D3D12_RESOURCE_STATE_COPY_DEST),
-                                              CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
-                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                                 D3D12_RESOURCE_STATE_COPY_DEST),
+                                            CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                                                                 D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                 D3D12_RESOURCE_STATE_COPY_SOURCE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
@@ -101,9 +101,7 @@ namespace renderer {
         }
     }
 
-    TextureHandle DenoiserPass::get_output_image() const {
-        return denoised_color_target_handle;
-    }
+    TextureHandle DenoiserPass::get_output_image() const { return denoised_color_target_handle; }
 
     void DenoiserPass::create_images_and_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_device();
@@ -120,7 +118,7 @@ namespace renderer {
             denoised_color_target_handle = renderer->create_image(color_target_create_info);
 
             const auto& denoised_color_target = renderer->get_image(denoised_color_target_handle);
-            denoised_framebuffer = device.create_framebuffer({&denoised_color_target});
+            denoised_framebuffer = device.create_framebuffer(Rx::Array{&denoised_color_target});
         }
 
         {

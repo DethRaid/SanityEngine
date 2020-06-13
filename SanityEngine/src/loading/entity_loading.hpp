@@ -1,8 +1,10 @@
 #pragma once
 
-#include <string>
-
 #include <entt/entity/fwd.hpp>
+
+namespace Rx {
+    struct String;
+}
 
 namespace renderer {
     class Renderer;

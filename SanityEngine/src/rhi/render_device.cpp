@@ -336,7 +336,7 @@ namespace rhi {
         const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
         const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
 
-        ENSURE(descriptor_table_descriptors.empty() == descriptor_table_handles.empty(),
+        ENSURE(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
                "If you specify descriptor table descriptors, you must also specift descriptor table handles");
 
         return std::make_unique<BindGroupBuilder>(*device.Get(),
@@ -795,7 +795,7 @@ namespace rhi {
         frame_fence_values.resize(settings.num_in_flight_gpu_frames);
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
-        set_object_name(frame_fences.Get(), fmt::format("Frame Synchronization Fence"));
+        set_object_name(frame_fences.Get(), fmt::format("Frame Synchronization Fence").c_str());
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
@@ -811,17 +811,17 @@ namespace rhi {
             auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                          IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                critical_error(fmt::format("Could not create compute command allocator for frame {}", i));
+                critical_error(fmt::format("Could not create compute command allocator for frame {}", i).c_str());
             }
 
-            set_object_name(compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i));
+            set_object_name(compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i).c_str());
 
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                critical_error(fmt::format("Could not create copy command allocator for frame {}", i));
+                critical_error(fmt::format("Could not create copy command allocator for frame {}", i).c_str());
             }
 
-            set_object_name(copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i));
+            set_object_name(copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i).c_str());
         }
     }
 
@@ -862,7 +862,7 @@ namespace rhi {
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
-            set_object_name(swapchain_images[i].Get(), fmt::format("Swapchain image {}", i));
+            set_object_name(swapchain_images[i].Get(), fmt::format("Swapchain image {}", i).c_str());
         }
     }
 
@@ -1020,13 +1020,13 @@ namespace rhi {
 
     void RenderDevice::create_material_resource_binders() {
         Rx::Map<Rx::String, RootDescriptorDescription> root_descriptors;
-        root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
-        root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
-        root_descriptors.emplace("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
-        root_descriptors.emplace("raytracing_scene", RootDescriptorDescription{4, DescriptorType::ShaderResource});
-        root_descriptors.emplace("indices", RootDescriptorDescription{5, DescriptorType::ShaderResource});
-        root_descriptors.emplace("vertices", RootDescriptorDescription{6, DescriptorType::ShaderResource});
-        root_descriptors.emplace("per_frame_data", RootDescriptorDescription{7, DescriptorType::ShaderResource});
+        root_descriptors.insert("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
+        root_descriptors.insert("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
+        root_descriptors.insert("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
+        root_descriptors.insert("raytracing_scene", RootDescriptorDescription{4, DescriptorType::ShaderResource});
+        root_descriptors.insert("indices", RootDescriptorDescription{5, DescriptorType::ShaderResource});
+        root_descriptors.insert("vertices", RootDescriptorDescription{6, DescriptorType::ShaderResource});
+        root_descriptors.insert("per_frame_data", RootDescriptorDescription{7, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_gpu_frames);
 
@@ -1040,10 +1040,10 @@ namespace rhi {
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
-            descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
+            descriptor_tables.insert("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
             Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.emplace(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
+            descriptor_table_gpu_handles.insert(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
 
             material_bind_group_builder.push_back(
                 create_bind_group_builder(root_descriptors, descriptor_tables, descriptor_table_gpu_handles));
@@ -1287,10 +1287,10 @@ namespace rhi {
             ComPtr<ID3D12CommandAllocator> allocator;
             const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
             if(FAILED(result)) {
-                critical_error(fmt::format("Could not create compute command allocator"));
+                critical_error(fmt::format("Could not create compute command allocator").c_str());
 
             } else {
-                command_allocators_for_frame.emplace(id, allocator);
+                command_allocators_for_frame.insert(id, allocator);
                 return allocator.Get();
             }
         }
@@ -1333,7 +1333,7 @@ namespace rhi {
 
     void RenderDevice::return_staging_buffers_for_frame(const uint32_t frame_idx) {
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
-        staging_buffers.insert(staging_buffers.end(), staging_buffers_for_frame.begin(), staging_buffers_for_frame.begin());
+        staging_buffers += staging_buffers_for_frame;
     }
 
     void RenderDevice::reset_command_allocators_for_frame(const uint32_t frame_idx) {
@@ -1441,7 +1441,7 @@ namespace rhi {
         D3D12_RANGE range{0, num_bytes};
         buffer.resource->Map(0, &range, &buffer.ptr);
 
-        set_object_name(buffer.resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx));
+        set_object_name(buffer.resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx).c_str());
         staging_buffer_idx++;
 
         return std::move(buffer);
@@ -1473,7 +1473,7 @@ namespace rhi {
     }
 
     ComPtr<ID3D12Fence> RenderDevice::get_next_command_list_done_fence() {
-        if(!command_list_done_fences.empty()) {
+        if(!command_list_done_fences.is_empty()) {
             auto fence = command_list_done_fences[command_list_done_fences.size() - 1];
             command_list_done_fences.pop_back();
 

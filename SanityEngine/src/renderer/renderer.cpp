@@ -596,7 +596,7 @@ namespace renderer {
                     .enable_depth_write{false},
                 },
 
-            .render_target_formats = {rhi::ImageFormat::Rgba8},
+            .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba8},
         };
 
         ui_pipeline = device->create_render_pipeline_state(create_info);

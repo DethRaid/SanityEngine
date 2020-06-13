@@ -2437,7 +2437,7 @@ private:
     D3D12_STATE_OBJECT_DESC m_Desc;
     std::list<SUBOBJECT_WRAPPER> m_SubobjectList;        // Pointers to list nodes handed out so
                                                          // these can be edited live
-    Rx::Vector<D3D12_STATE_SUBOBJECT> m_SubobjectArray; // Built at the end, copying list contents
+    std::vector<D3D12_STATE_SUBOBJECT> m_SubobjectArray; // Built at the end, copying list contents
 
     std::list<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> m_RepointedAssociations; // subobject type that contains pointers to other subobjects,
                                                                                // repointed to flattened array
@@ -2550,7 +2550,7 @@ private:
     void* Data() { return &m_Desc; }
     D3D12_DXIL_LIBRARY_DESC m_Desc;
     CD3DX12_STATE_OBJECT_DESC::StringContainer m_Strings;
-    Rx::Vector<D3D12_EXPORT_DESC> m_Exports;
+    std::vector<D3D12_EXPORT_DESC> m_Exports;
 };
 
 //------------------------------------------------------------------------------------------------
@@ -2601,7 +2601,7 @@ private:
     D3D12_EXISTING_COLLECTION_DESC m_Desc;
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_CollectionRef;
     CD3DX12_STATE_OBJECT_DESC::StringContainer m_Strings;
-    Rx::Vector<D3D12_EXPORT_DESC> m_Exports;
+    std::vector<D3D12_EXPORT_DESC> m_Exports;
 };
 
 //------------------------------------------------------------------------------------------------
@@ -2645,7 +2645,7 @@ private:
     void* Data() { return &m_Desc; }
     D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION m_Desc;
     CD3DX12_STATE_OBJECT_DESC::StringContainer m_Strings;
-    Rx::Vector<LPCWSTR> m_Exports;
+    std::vector<LPCWSTR> m_Exports;
 };
 
 //------------------------------------------------------------------------------------------------
@@ -2691,7 +2691,7 @@ private:
     D3D12_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION m_Desc;
     CD3DX12_STATE_OBJECT_DESC::StringContainer m_Strings;
     CD3DX12_STATE_OBJECT_DESC::StringContainer m_SubobjectName;
-    Rx::Vector<LPCWSTR> m_Exports;
+    std::vector<LPCWSTR> m_Exports;
 };
 
 //------------------------------------------------------------------------------------------------

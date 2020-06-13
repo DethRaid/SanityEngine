@@ -46,7 +46,7 @@ bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height,
 FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
 
-    const auto message = fmt::format("Load image {}", load_data->texture_name_in);
+    const auto message = fmt::format("Load image {}", load_data->texture_name_in.data());
     MTR_SCOPE("Image Loading", message.c_str());
 
     uint32_t width, height;

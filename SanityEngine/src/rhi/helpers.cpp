@@ -13,9 +13,9 @@
 namespace rhi {
 
     std::wstring to_wide_string(const Rx::String& string) {
-        const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, nullptr, 0);
+        const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, nullptr, 0);
         wchar_t* wide_char_string = new wchar_t[wide_string_length];
-        MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, wide_char_string, wide_string_length);
+        MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, wide_char_string, wide_string_length);
 
         std::wstring wide_string{wide_char_string};
 
@@ -292,7 +292,7 @@ namespace rhi {
     }
 
     Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs) {
-        Rx::Stringstream ss;
+        std::stringstream ss;
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
 
@@ -305,7 +305,7 @@ namespace rhi {
                                                 from_wide_string(cur_node->pCommandQueueDebugNameW) :
                                                 "Unknown command queue";
 
-            ss << "Command list [" << command_list_name << "] executing on command queue [" << command_queue_name << "] ";
+            ss << "Command list [" << command_list_name.data() << "] executing on command queue [" << command_queue_name.data() << "] ";
 
             if(cur_node->pLastBreadcrumbValue != nullptr) {
                 ss << "has completed " << *cur_node->pLastBreadcrumbValue << " render operations";
@@ -317,7 +317,7 @@ namespace rhi {
 
             if(cur_node->BreadcrumbCount > 0) {
                 for(uint32_t i = 0; i < cur_node->BreadcrumbCount; i++) {
-                    ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]);
+                    ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]).data();
                 }
             }
 
@@ -326,10 +326,10 @@ namespace rhi {
             cur_node = cur_node->pNext;
         }
 
-        return ss.str();
+        return ss.str().c_str();
     }
 
-    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE* head, Rx::Stringstream& ss) {
+    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE* head, std::stringstream& ss) {
         const auto* allocation = head;
         while(allocation != nullptr) {
             ss << "\n\t";
@@ -337,19 +337,19 @@ namespace rhi {
                 ss << allocation->ObjectNameA;
 
             } else if(allocation->ObjectNameW != nullptr) {
-                ss << from_wide_string(allocation->ObjectNameW);
+                ss << from_wide_string(allocation->ObjectNameW).data();
 
             } else {
                 ss << "Unnamed allocation";
             }
-            ss << " (" << allocation_type_to_string(allocation->AllocationType) << ")";
+            ss << " (" << allocation_type_to_string(allocation->AllocationType).data() << ")";
 
             allocation = allocation->pNext;
         }
     }
 
     Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output) {
-        Rx::Stringstream ss;
+        std::stringstream ss;
 
         ss << "Page fault at GPU virtual address " << page_fault_output.PageFaultVA;
 
@@ -363,7 +363,7 @@ namespace rhi {
             print_allocation_chain(page_fault_output.pHeadRecentFreedAllocationNode, ss);
         }
 
-        return ss.str();
+        return ss.str().c_str();
     }
 
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
@@ -579,7 +579,7 @@ namespace rhi {
         }
     }
 
-    Rx::String allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type) {
+    Rx::String allocation_type_to_string(const D3D12_DRED_ALLOCATION_TYPE type) {
         switch(type) {
             case D3D12_DRED_ALLOCATION_TYPE_COMMAND_QUEUE:
                 return "Command queue";

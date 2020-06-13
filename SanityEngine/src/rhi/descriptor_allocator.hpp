@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vector>
-
 #include <d3d12.h>
+#include <rx/core/vector.h>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
@@ -33,4 +32,4 @@ namespace rhi {
 
         Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> available_handles;
     };
-} // namespace render
+} // namespace rhi

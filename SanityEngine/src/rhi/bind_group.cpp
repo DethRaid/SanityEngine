@@ -93,9 +93,6 @@ namespace rhi {
         } else {
             logger = spdlog::stdout_color_st("BindGroupBuilder");
         }
-
-        bound_buffers.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
-        bound_images.reserve(root_descriptor_descriptions.size() + descriptor_table_descriptor_mappings.size());
     }
 
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
@@ -105,7 +102,9 @@ namespace rhi {
         return *this;
     }
 
-    BindGroupBuilder& BindGroupBuilder::set_image(const Rx::String& name, const Image& image) { return set_image_array(name, {&image}); }
+    BindGroupBuilder& BindGroupBuilder::set_image(const Rx::String& name, const Image& image) {
+        return set_image_array(name, Rx::Array{&image});
+    }
 
     BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<const Image*>& images) {
         Rx::Vector<const Image*> d3d12_images;
@@ -122,7 +121,7 @@ namespace rhi {
 
     BindGroupBuilder& BindGroupBuilder::set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene) {
         const auto* d3d12_buffer = static_cast<const Buffer*>(scene.buffer.get());
-        bound_raytracing_scenes.emplace(name, d3d12_buffer);
+        bound_raytracing_scenes.insert(name, d3d12_buffer);
 
         return *this;
     }

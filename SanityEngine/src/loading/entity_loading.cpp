@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <entt/entity/registry.hpp>
+#include <rx/core/string.h>
 #include <spdlog/sinks/stdout_color_sinks-inl.h>
 
 #include "../core/ensure.hpp"
@@ -166,8 +167,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    renderer.add_raytracing_objects_to_scene(
-        {rhi::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {0}}});
+    renderer.add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {0}}});
 
     device.submit_command_list(std::move(commands));
 

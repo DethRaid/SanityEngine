@@ -1,12 +1,13 @@
 #pragma once
 
 #include <random>
-#include <vector>
 
 #include <d3d12.h>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 #include <spdlog/logger.h>
+
+#include <rx/core/vector.h>
 
 namespace renderer {
     class HostTexture2D {
@@ -50,6 +51,6 @@ namespace renderer {
 
         const auto* typed_texels = reinterpret_cast<glm::u8vec4*>(texels.data());
 
-        return {size, {typed_texels, typed_texels + texels.size()}};
+        return {size, Rx::Vector{texels.disown()}};
     }
 } // namespace renderer

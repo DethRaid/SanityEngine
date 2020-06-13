@@ -1,19 +1,15 @@
 #pragma once
 
 #include <optional>
-#include <string>
-#include <vector>
+
 #include <ftl/task.h>
+#include <rx/core/string.h>
+#include <rx/core/vector.h>
 
-
-#include "../renderer/handles.hpp"
+#include "renderer/handles.hpp"
 
 namespace renderer {
     class Renderer;
-}
-
-namespace ftl {
-    class TaskScheduler;
 }
 
 struct LoadImageToGpuArgs {

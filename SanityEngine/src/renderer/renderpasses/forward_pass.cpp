@@ -1,15 +1,13 @@
 #include "forward_pass.hpp"
 
-#include <vector>
-
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../../loading/shader_loading.hpp"
-#include "../../rhi/render_device.hpp"
-#include "../render_components.hpp"
-#include "../renderer.hpp"
+#include "loading/shader_loading.hpp"
+#include "rhi/render_device.hpp"
+#include "renderer/render_components.hpp"
+#include "renderer/renderer.hpp"
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -25,7 +23,7 @@ namespace renderer {
                 .name = "Standard material pipeline",
                 .vertex_shader = load_shader("standard.vertex"),
                 .pixel_shader = load_shader("standard.pixel"),
-                .render_target_formats = {rhi::ImageFormat::Rgba32F},
+                .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba32F},
                 .depth_stencil_format = rhi::ImageFormat::Depth32,
             };
 
@@ -40,7 +38,7 @@ namespace renderer {
                 .vertex_shader = load_shader("fullscreen.vertex"),
                 .pixel_shader = load_shader("atmospheric_sky.pixel"),
                 .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
-                .render_target_formats = {rhi::ImageFormat::Rgba32F},
+                .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba32F},
                 .depth_stencil_format = rhi::ImageFormat::Depth32,
             };
 
@@ -93,7 +91,7 @@ namespace renderer {
         const auto& color_target = renderer->get_image(color_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
-        scene_framebuffer = device.create_framebuffer({&color_target}, &depth_target);
+        scene_framebuffer = device.create_framebuffer(Rx::Array{&color_target}, &depth_target);
     }
 
     TextureHandle ForwardPass::get_color_target_handle() const { return color_target_handle; }
@@ -101,7 +99,7 @@ namespace renderer {
     TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
 
     void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
-        const auto render_target_accesses = Rx::Vector{
+        const auto render_target_accesses = Rx::Array{
             // Scene color
             D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
                                                  .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
