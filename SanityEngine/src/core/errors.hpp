@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-
 #include <Windows.h>
+#include <rx/core/string.h>
 
-std::string to_string(HRESULT hr);
+Rx::String to_string(HRESULT hr);

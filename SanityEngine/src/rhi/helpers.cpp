@@ -12,7 +12,7 @@
 
 namespace rhi {
 
-    std::wstring to_wide_string(const std::string& string) {
+    std::wstring to_wide_string(const Rx::String& string) {
         const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, nullptr, 0);
         wchar_t* wide_char_string = new wchar_t[wide_string_length];
         MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, wide_char_string, wide_string_length);
@@ -24,16 +24,16 @@ namespace rhi {
         return wide_string;
     }
 
-    std::string from_wide_string(const std::wstring& wide_string) {
+    Rx::String from_wide_string(const std::wstring& wide_string) {
         const int string_length = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, nullptr, 0, nullptr, nullptr);
-        std::string string;
+        Rx::String string;
         string.resize(string_length);
         WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, string.data(), static_cast<int>(string.size()), nullptr, nullptr);
 
         return string;
     }
 
-    void set_object_name(ID3D12Object* object, const std::string& name) {
+    void set_object_name(ID3D12Object* object, const Rx::String& name) {
         const auto wide_name = to_wide_string(name);
 
         object->SetName(reinterpret_cast<LPCWSTR>(wide_name.c_str()));
@@ -291,8 +291,8 @@ namespace rhi {
         return d3d12_access;
     }
 
-    std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs) {
-        std::stringstream ss;
+    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs) {
+        Rx::Stringstream ss;
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
 
@@ -329,7 +329,7 @@ namespace rhi {
         return ss.str();
     }
 
-    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE* head, std::stringstream& ss) {
+    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE* head, Rx::Stringstream& ss) {
         const auto* allocation = head;
         while(allocation != nullptr) {
             ss << "\n\t";
@@ -348,8 +348,8 @@ namespace rhi {
         }
     }
 
-    std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output) {
-        std::stringstream ss;
+    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output) {
+        Rx::Stringstream ss;
 
         ss << "Page fault at GPU virtual address " << page_fault_output.PageFaultVA;
 
@@ -370,9 +370,9 @@ namespace rhi {
                                                            RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,
-                                                           const std::vector<Mesh>& meshes) {
+                                                           const Rx::Vector<Mesh>& meshes) {
 
-        std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
+        Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
         for(const auto& [first_vertex, num_vertices, first_index, num_indices] : meshes) {
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
@@ -443,7 +443,7 @@ namespace rhi {
         device.return_staging_buffer(std::move(staging_buffer));
     }
 
-    std::string breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
+    Rx::String breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
         switch(op) {
             case D3D12_AUTO_BREADCRUMB_OP_SETMARKER:
                 return "Set marker";
@@ -579,7 +579,7 @@ namespace rhi {
         }
     }
 
-    std::string allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type) {
+    Rx::String allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type) {
         switch(type) {
             case D3D12_DRED_ALLOCATION_TYPE_COMMAND_QUEUE:
                 return "Command queue";

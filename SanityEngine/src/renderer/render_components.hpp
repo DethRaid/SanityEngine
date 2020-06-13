@@ -17,6 +17,15 @@ namespace renderer {
     };
 
     /*!
+     * \brief Component for a mesh in a chunk
+     *
+     * This will probably change a lot as time goes on, but for now this should work
+     */
+    struct ChunkMeshComponent {
+        rhi::Mesh mesh;
+    };
+
+    /*!
      * \brief Renders a postprocessing pass
      */
     struct PostProcessingPassComponent {

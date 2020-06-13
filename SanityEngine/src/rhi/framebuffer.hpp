@@ -10,10 +10,10 @@
 
 namespace rhi {
     struct Framebuffer {
-        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
+        Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
         std::optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;
 
-        std::vector<const Image*> render_targets;
+        Rx::Vector<const Image*> render_targets;
         const Image* depth_target;
 
         float width;

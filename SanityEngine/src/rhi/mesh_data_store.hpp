@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <rx/core/vector.h>
 #include <spdlog/logger.h>
 
 #include "resources.hpp"
@@ -61,7 +61,7 @@ namespace rhi {
 
         ~MeshDataStore();
 
-        [[nodiscard]] const std::vector<VertexBufferBinding>& get_vertex_bindings() const;
+        [[nodiscard]] const Rx::Vector<VertexBufferBinding>& get_vertex_bindings() const;
 
         [[nodiscard]] const Buffer& get_index_buffer() const;
 
@@ -74,8 +74,8 @@ namespace rhi {
          * \brief Adds new mesh data to the vertex and index buffers. Must be called after `begin_mesh_data_upload` and before
          * `end_mesh_data_upload`
          */
-        [[nodiscard]] Mesh add_mesh(const std::vector<StandardVertex>& vertices,
-                                    const std::vector<uint32_t>& indices,
+        [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices,
+                                    const Rx::Vector<uint32_t>& indices,
                                     const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         /*!
@@ -94,7 +94,7 @@ namespace rhi {
 
         std::unique_ptr<Buffer> index_buffer;
 
-        std::vector<VertexBufferBinding> vertex_bindings{};
+        Rx::Vector<VertexBufferBinding> vertex_bindings{};
 
         /*!
          * \brief Index of the byte in the vertex buffer where the next mesh can be uploaded to

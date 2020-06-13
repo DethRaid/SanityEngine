@@ -126,11 +126,11 @@ namespace rhi {
     };
 
     struct RenderPipelineStateCreateInfo {
-        std::string name;
+        Rx::String name;
 
-        std::vector<uint8_t> vertex_shader{};
+        Rx::Vector<uint8_t> vertex_shader{};
 
-        std::optional<std::vector<uint8_t>> pixel_shader{std::nullopt};
+        std::optional<Rx::Vector<uint8_t>> pixel_shader{std::nullopt};
 
         InputAssemblerLayout input_assembler_layout{InputAssemblerLayout::StandardVertex};
 
@@ -145,7 +145,7 @@ namespace rhi {
         /*!
          * \brief Formats of any render target this render pipeline outputs to
          */
-        std::vector<ImageFormat> render_target_formats;
+        Rx::Vector<ImageFormat> render_target_formats;
 
         /*!
          * \brief Format of the depth/stencil target that this render pipeline outputs to

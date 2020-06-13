@@ -1,5 +1,7 @@
 #pragma once
 
-#include <string>
+namespace Rx {
+    struct String;
+}
 
-void critical_error(const std::string& message);
+void critical_error(const Rx::String& message);

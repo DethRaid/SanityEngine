@@ -9,10 +9,10 @@
 #include "../rhi/render_device.hpp"
 #include "../rhi/resources.hpp"
 
-bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels) {
+bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height, Rx::Vector<uint8_t>& pixels) {
     int raw_width, raw_height, num_components;
 
-    const auto* texture_data = stbi_load(image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
+    const auto* texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
     if(texture_data == nullptr) {
         const auto* failure_reason = stbi_failure_reason();
         spdlog::error("Could not load image {}: {}", image_name, failure_reason);
@@ -50,7 +50,7 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     MTR_SCOPE("Image Loading", message.c_str());
 
     uint32_t width, height;
-    std::vector<uint8_t> pixels;
+    Rx::Vector<uint8_t> pixels;
     const auto success = load_image(load_data->texture_name_in, width, height, pixels);
     if(!success) {
         load_data->handle_out = std::nullopt;

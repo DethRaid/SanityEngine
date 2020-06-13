@@ -1,10 +1,10 @@
 #pragma once
 
-#include <unordered_set>
-
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <rx/core/set.h>
+#include <rx/core/string.h>
 
 #include "../serialization/serialization.hpp"
 
@@ -47,7 +47,7 @@ inline glm::vec3 TransformComponent::get_up_vector() const {
 }
 
 struct [[component]] TagComponent {
-    std::unordered_set<std::string> tags;
+    Rx::Set<Rx::String> tags;
 };
 
 JSON5_CLASS(TransformComponent, location, rotation, scale)

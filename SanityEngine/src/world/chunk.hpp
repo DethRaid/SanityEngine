@@ -2,11 +2,17 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 
+#include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include "block_registry.hpp"
+
+namespace renderer {
+    class Renderer;
+}
 
 class Terrain;
 
@@ -20,22 +26,30 @@ public:
     static constexpr uint32_t DEPTH{32};
 
 public:
-    explicit Chunk(const glm::ivec2& lower_left_corner_in, const Terrain& terrain);
+    static std::optional<Chunk> create(const glm::ivec2& lower_left_corner, const Terrain& terrain, renderer::Renderer& renderer, entt::registry& registry);
 
     void __forceinline set_block_at_location(const glm::ivec3& location, BlockId block_id);
 
     [[nodiscard]] BlockId __forceinline get_block_at_location(const glm::ivec3& location) const;
 
 private:
+    static uint32_t __forceinline chunk_pos_to_block_index(const glm::uvec3& chunk_pos);
+
+    glm::ivec2 lower_left_corner;
+
     /*!
      * \brief All the blocks in this chunk
      *
      * This array takes up about a MB of space, meaning you need one MB of RAM for each chunk. This is probably fine - if it ends up not
      * being fine, I'll worry about it then
      */
-    std::array<BlockId, WIDTH * HEIGHT * DEPTH> blocks;
+    std::array<BlockId, WIDTH * HEIGHT * DEPTH> block_data;
 
-    glm::ivec2 lower_left_corner;
+    entt::entity entity;
+
+    explicit Chunk(const glm::ivec2& lower_left_corner_in,
+                   const std::array<BlockId, WIDTH * HEIGHT * DEPTH>& block_data_in,
+                   entt::entity entity_in);
 };
 
 inline void Chunk::set_block_at_location(const glm::ivec3& location, const BlockId block_id) {
@@ -47,6 +61,10 @@ inline void Chunk::set_block_at_location(const glm::ivec3& location, const Block
         return;
     }
 
-    const auto idx = x + z * WIDTH + y * WIDTH * DEPTH;
-    blocks[idx] = block_id;
+    const auto idx = chunk_pos_to_block_index({x, y, z});
+    block_data[idx] = block_id;
+}
+
+inline uint32_t Chunk::chunk_pos_to_block_index(const glm::uvec3& chunk_pos) {
+    return chunk_pos.x + chunk_pos.z * WIDTH + chunk_pos.y * WIDTH * DEPTH;
 }

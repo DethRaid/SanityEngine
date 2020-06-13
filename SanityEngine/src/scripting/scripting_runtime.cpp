@@ -14,7 +14,7 @@ namespace horus {
     std::shared_ptr<spdlog::logger> ScriptingRuntime::logger{spdlog::stdout_color_st("ScriptingRuntime")};
     std::shared_ptr<spdlog::logger> ScriptingRuntime::script_logger{spdlog::stdout_color_mt("Wren")};
 
-    static const std::string SANITY_ENGINE_MODULE_NAME = "SanityEngine";
+    static const Rx::String SANITY_ENGINE_MODULE_NAME = "SanityEngine";
 
     void ScriptingRuntime::wren_error(
         WrenVM* /* vm */, WrenErrorType /* type */, const char* module_name, const int line, const char* message) {
@@ -148,10 +148,10 @@ namespace horus {
         }
     }
 
-    WrenForeignMethodFn ScriptingRuntime::bind_foreign_method(const std::string& module_name,
-                                                              const std::string& class_name,
+    WrenForeignMethodFn ScriptingRuntime::bind_foreign_method(const Rx::String& module_name,
+                                                              const Rx::String& class_name,
                                                               const bool is_static,
-                                                              const std::string& signature) const {
+                                                              const Rx::String& signature) const {
         if(const auto& program_itr = registered_script_functions.find(is_static); program_itr != registered_script_functions.end()) {
             if(const auto& module_itr = program_itr->second.find(module_name); module_itr != program_itr->second.end()) {
                 if(const auto& class_itr = module_itr->second.classes.find(class_name); class_itr != module_itr->second.classes.end()) {
@@ -165,7 +165,7 @@ namespace horus {
         return nullptr;
     }
 
-    WrenForeignClassMethods ScriptingRuntime::bind_foreign_class(const std::string& module_name, const std::string& class_name) const {
+    WrenForeignClassMethods ScriptingRuntime::bind_foreign_class(const Rx::String& module_name, const Rx::String& class_name) const {
         if(const auto& program_itr = registered_script_functions.find(true); program_itr != registered_script_functions.end()) {
             if(const auto& module_itr = program_itr->second.find(module_name); module_itr != program_itr->second.end()) {
                 if(const auto& class_allocator_itr = module_itr->second.object_allocators.find(class_name);
@@ -178,7 +178,7 @@ namespace horus {
         return {};
     }
 
-    char* ScriptingRuntime::load_module(const std::string& module_name) const { // Check all of the registered script paths
+    char* ScriptingRuntime::load_module(const Rx::String& module_name) const { // Check all of the registered script paths
         if(module_paths.empty()) {
             logger->error("No registered script module paths! You must register a script module path if you want to load scripts");
             return nullptr;
@@ -351,8 +351,8 @@ namespace horus {
     }
 
     std::optional<Component> ScriptingRuntime::create_component(const entt::entity entity,
-                                                                const std::string& module_name,
-                                                                const std::string& component_class_name) const {
+                                                                const Rx::String& module_name,
+                                                                const Rx::String& component_class_name) const {
 
         // Load the class into a slot so we can get methods from it
         wrenEnsureSlots(vm, 1);

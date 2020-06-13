@@ -19,19 +19,19 @@ namespace std {
 
 namespace horus {
     struct ScriptingClassName {
-        std::string module_name{};
+        Rx::String module_name{};
 
-        std::string class_name{};
+        Rx::String class_name{};
     };
 
     struct ScriptingFunctionName {
-        std::string module_name{};
+        Rx::String module_name{};
 
-        std::string class_name{};
+        Rx::String class_name{};
 
         bool is_static{false};
 
-        std::string method_signature{};
+        Rx::String method_signature{};
     };
 
     class ScriptingRuntime {
@@ -62,8 +62,8 @@ namespace horus {
         [[nodiscard]] WrenHandle* create_entity() const;
 
         [[nodiscard]] std::optional<Component> create_component(entt::entity entity,
-                                                                const std::string& module_name,
-                                                                const std::string& component_class_name) const;
+                                                                const Rx::String& module_name,
+                                                                const Rx::String& component_class_name) const;
 
         // The codegen will place generated methods in this region. Everything within this region will be destroyed whenever the scripting
         // API is regenerated - aka very often. DO NOT put any code you care about saving in this region
@@ -77,17 +77,17 @@ namespace horus {
         static std::shared_ptr<spdlog::logger> logger;
         static std::shared_ptr<spdlog::logger> script_logger;
 
-        using WrenClass = std::unordered_map<std::string, WrenForeignMethodFn>;
+        using WrenClass = Rx::Map<Rx::String, WrenForeignMethodFn>;
 
         struct WrenModule {
-            std::unordered_map<std::string, WrenClass> classes;
-            std::unordered_map<std::string, WrenForeignClassMethods> object_allocators;
+            Rx::Map<Rx::String, WrenClass> classes;
+            Rx::Map<Rx::String, WrenForeignClassMethods> object_allocators;
         };
 
-        using WrenProgram = std::unordered_map<std::string, WrenModule>;
+        using WrenProgram = Rx::Map<Rx::String, WrenModule>;
 
         // One WrenProgram for static methods, one for non-static
-        std::unordered_map<bool, WrenProgram> registered_script_functions{};
+        Rx::Map<bool, WrenProgram> registered_script_functions{};
 
         static void wren_error(WrenVM* vm, WrenErrorType type, const char* module_name, int line, const char* message);
 
@@ -110,13 +110,13 @@ namespace horus {
 
         void load_all_scripts_in_directory(const std::filesystem::path& directory) const;
 
-        [[nodiscard]] WrenForeignMethodFn bind_foreign_method(const std::string& module_name,
-                                                              const std::string& class_name,
+        [[nodiscard]] WrenForeignMethodFn bind_foreign_method(const Rx::String& module_name,
+                                                              const Rx::String& class_name,
                                                               bool is_static,
-                                                              const std::string& signature) const;
+                                                              const Rx::String& signature) const;
 
-        [[nodiscard]] WrenForeignClassMethods bind_foreign_class(const std::string& module_name, const std::string& class_name) const;
+        [[nodiscard]] WrenForeignClassMethods bind_foreign_class(const Rx::String& module_name, const Rx::String& class_name) const;
 
-        [[nodiscard]] char* load_module(const std::string& module_name) const;
+        [[nodiscard]] char* load_module(const Rx::String& module_name) const;
     };
 } // namespace horus

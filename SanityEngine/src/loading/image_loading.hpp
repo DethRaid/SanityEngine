@@ -17,7 +17,7 @@ namespace ftl {
 }
 
 struct LoadImageToGpuArgs {
-    std::string texture_name_in;
+    Rx::String texture_name_in;
     std::optional<renderer::TextureHandle> handle_out;
     renderer::Renderer* renderer_in;
 };
@@ -27,6 +27,6 @@ struct LoadImageToGpuArgs {
  *
  * Currently only supports RGB and RGBA images
  */
-bool load_image(const std::string& image_name, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels);
+bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height, Rx::Vector<uint8_t>& pixels);
 
 FTL_TASK_ENTRY_POINT(load_image_to_gpu);

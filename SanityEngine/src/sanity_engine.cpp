@@ -206,14 +206,14 @@ void SanityEngine::register_horus_api() const {
 }
 
 void SanityEngine::create_debug_plane() {
-    const auto vertices = std::vector<StandardVertex>{
+    const auto vertices = Rx::Vector<StandardVertex>{
         {/* .position = */ {-5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {-5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
     };
 
-    const auto indices = std::vector<uint32_t>{0, 1, 2, 0, 3, 1};
+    const auto indices = Rx::Vector<uint32_t>{0, 1, 2, 0, 3, 1};
 
     auto& device = renderer->get_render_device();
     auto commands = device.create_command_list();
@@ -267,14 +267,14 @@ void SanityEngine::create_first_person_player() {
     logger->info("Created flycam");
 }
 
-void SanityEngine::load_bve_train(const std::string& filename) {
+void SanityEngine::load_bve_train(const Rx::String& filename) {
     const auto success = bve->add_train_to_scene(filename, registry, *renderer);
     if(!success) {
         logger->error("Could not load train file {}", filename);
     }
 }
 
-void SanityEngine::load_3d_object(const std::string& filename) {
+void SanityEngine::load_3d_object(const Rx::String& filename) {
     const auto msg = fmt::format("load_3d_object({})", filename);
     MTR_SCOPE("SanityEngine", msg.c_str());
     load_static_mesh(filename, registry, *renderer);

@@ -5,12 +5,12 @@
 
 #include <bve/bve.hpp>
 #include <entt/entity/fwd.hpp>
+#include <rx/core/vector.h>
 #include <spdlog/logger.h>
 
-
-#include "../rhi/bind_group.hpp"
-#include "../rhi/mesh_data_store.hpp"
-#include "../rhi/compute_pipeline_state.hpp"
+#include "rhi/bind_group.hpp"
+#include "rhi/compute_pipeline_state.hpp"
+#include "rhi/mesh_data_store.hpp"
 
 namespace renderer {
     class Renderer;
@@ -22,7 +22,7 @@ class BveWrapper {
 public:
     explicit BveWrapper(rhi::RenderDevice& device);
 
-    [[nodiscard]] bool add_train_to_scene(const std::string& filename, entt::registry& registry, renderer::Renderer& renderer);
+    [[nodiscard]] bool add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer);
     std::unique_ptr<rhi::BindGroupBuilder> create_texture_processor_bind_group_builder(rhi::RenderDevice& device);
 
 private:
@@ -34,7 +34,7 @@ private:
 
     [[nodiscard]] bve::BVE_User_Error_Data get_printable_error(const bve::BVE_Mesh_Error& error);
 
-    [[nodiscard]] BveMeshHandle load_mesh_from_file(const std::string& filename);
+    [[nodiscard]] BveMeshHandle load_mesh_from_file(const Rx::String& filename);
 
-    [[nodiscard]] std::pair<std::vector<StandardVertex>, std::vector<uint32_t>> process_vertices(const bve::BVE_Mesh& mesh) const;
+    [[nodiscard]] std::pair<Rx::Vector<StandardVertex>, Rx::Vector<uint32_t>> process_vertices(const bve::BVE_Mesh& mesh) const;
 };

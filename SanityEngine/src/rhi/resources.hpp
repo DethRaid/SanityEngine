@@ -1,8 +1,10 @@
 #pragma once
 
-#include <string>
+#include <cstdint>
+#include <concepts>
 
 #include <d3d12.h>
+#include <rx/core/string.h>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
@@ -13,7 +15,7 @@ namespace D3D12MA {
 
 namespace rhi {
     struct Buffer {
-        std::string name;
+        Rx::String name;
 
         uint32_t size{};
 
@@ -47,7 +49,7 @@ namespace rhi {
     };
 
     struct BufferCreateInfo {
-        std::string name{};
+        Rx::String name{};
 
         BufferUsage usage;
         uint32_t size{0};
@@ -64,7 +66,7 @@ namespace rhi {
     };
 
     struct Image {
-        std::string name;
+        Rx::String name;
 
         uint32_t width{1};
         uint32_t height{1};
@@ -78,7 +80,7 @@ namespace rhi {
     };
 
     struct ImageCreateInfo {
-        std::string name;
+        Rx::String name;
 
         ImageUsage usage;
         ImageFormat format;

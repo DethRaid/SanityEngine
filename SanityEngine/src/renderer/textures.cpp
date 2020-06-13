@@ -8,7 +8,7 @@
 namespace renderer {
     std::shared_ptr<spdlog::logger> HostTexture2D::logger = spdlog::stdout_color_st("Texture2D");
 
-    HostTexture2D::HostTexture2D(const glm::uvec2& size_in, std::vector<glm::u8vec4> texels_in)
+    HostTexture2D::HostTexture2D(const glm::uvec2& size_in, Rx::Vector<glm::u8vec4> texels_in)
         : size{size_in}, texel_size{1.0f / size}, texels{std::move(texels_in)} {}
 
     glm::u8vec4 HostTexture2D::sample_linear(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& texcoord) const {

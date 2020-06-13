@@ -29,7 +29,7 @@ namespace rhi {
         device->schedule_buffer_destruction(std::move(index_buffer));
     }
 
-    const std::vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
+    const Rx::Vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
@@ -37,7 +37,7 @@ namespace rhi {
         auto* vertex_resource = vertex_buffer->resource.Get();
         auto* index_resource = index_buffer->resource.Get();
 
-        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
                                                            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                                            D3D12_RESOURCE_STATE_COPY_DEST);
@@ -48,8 +48,8 @@ namespace rhi {
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    Mesh MeshDataStore::add_mesh(const std::vector<StandardVertex>& vertices,
-                                 const std::vector<uint32_t>& indices,
+    Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
+                                 const Rx::Vector<uint32_t>& indices,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
         logger->trace("Current vertex offset: {} Current index offset: {}", next_vertex_offset, next_index_offset);
@@ -58,7 +58,7 @@ namespace rhi {
         const auto index_data_size = static_cast<uint32_t>(indices.size() * sizeof(uint32_t));
 
         // Offset the indices so they'll refer to the right vertex
-        std::vector<uint32_t> offset_indices;
+        Rx::Vector<uint32_t> offset_indices;
         offset_indices.reserve(indices.size());
 
         std::transform(indices.begin(), indices.end(), std::back_inserter(offset_indices), [&](const uint32_t idx) {
@@ -102,7 +102,7 @@ namespace rhi {
         auto* vertex_resource = vertex_buffer->resource.Get();
         auto* index_resource = index_buffer->resource.Get();
 
-        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
                                                            D3D12_RESOURCE_STATE_COPY_DEST,
                                                            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);

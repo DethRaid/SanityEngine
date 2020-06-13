@@ -3,9 +3,11 @@
 #include <ftl/atomic_counter.h>
 #include <ftl/task.h>
 #include <glm/gtx/hash.hpp>
+#include <rx/core/map.h>
+#include <rx/core/vector.h>
 
-#include "../noise/FastNoiseSIMD/FastNoiseSIMD.h"
-#include "../renderer/renderer.hpp"
+#include "noise/FastNoiseSIMD/FastNoiseSIMD.h"
+#include "renderer/renderer.hpp"
 
 struct TerrainSamplerParams {
     double latitude{};
@@ -19,7 +21,7 @@ namespace renderer {
 }
 
 struct TerrainTile {
-    std::vector<std::vector<float>> heightmap;
+    Rx::Vector<Rx::Vector<float>> heightmap;
 
     glm::uvec2 coord;
 
@@ -61,7 +63,7 @@ public:
 
     [[nodiscard]] float get_terrain_height(const glm::vec2& location) const;
 
-    [[nodiscard]] glm::vec3 get_normal_at_location(const glm::vec2& location);
+    [[nodiscard]] glm::vec3 get_normal_at_location(const glm::vec2& location) const;
 
 private:
     renderer::Renderer* renderer;
@@ -70,7 +72,7 @@ private:
 
     entt::registry* registry;
 
-    std::unordered_map<glm::uvec2, TerrainTile> loaded_terrain_tiles;
+    Rx::Map<glm::uvec2, TerrainTile> loaded_terrain_tiles;
 
     renderer::StandardMaterialHandle terrain_material{1};
 
@@ -92,7 +94,5 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] std::vector<std::vector<float>> generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const;
-
-    static FTL_TASK_ENTRY_POINT(generate_tile);
+    [[nodiscard]] Rx::Vector<Rx::Vector<float>> generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const;
 };

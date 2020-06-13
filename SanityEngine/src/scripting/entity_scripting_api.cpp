@@ -11,12 +11,12 @@ namespace horus {
     Entity::Entity(WrenHandle* handle_in, const entt::entity entity_in, entt::registry& registry_in)
         : handle{handle_in}, entity{entity_in}, registry{registry_in} {}
 
-    void Entity::add_tag(const std::string& tag) const {
+    void Entity::add_tag(const Rx::String& tag) const {
         auto& tags = registry.get_or_assign<TagComponent>(entity);
         tags.tags.insert(tag);
     }
 
-    bool Entity::has_tag(const std::string& tag) const {
+    bool Entity::has_tag(const Rx::String& tag) const {
         if(registry.has<TagComponent>(entity)) {
             const auto& tags = registry.get<TagComponent>(entity);
             return tags.tags.find(tag) != tags.tags.end();
@@ -25,7 +25,7 @@ namespace horus {
         return false;
     }
 
-    std::unordered_set<std::string> Entity::get_tags() const {
+    std::unordered_set<Rx::String> Entity::get_tags() const {
         if(registry.has<TagComponent>(entity)) {
             const auto& tag_component = registry.get<TagComponent>(entity);
             return tag_component.tags;

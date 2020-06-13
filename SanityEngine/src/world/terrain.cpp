@@ -4,6 +4,7 @@
 #include <ftl/atomic_counter.h>
 #include <ftl/task.h>
 #include <minitrace.h>
+#include <rx/core/array.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "../core/ensure.hpp"
@@ -35,8 +36,6 @@ Terrain::Terrain(const uint32_t max_latitude_in,
 
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
-
-
 }
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
@@ -49,7 +48,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
 
     // TODO: Define some maximum number of tiles that may be loaded/generated in a given frame
     // Also TODO: Generate terrain tiles in in separate threads as part of the tasking system
-    if(!loaded_terrain_tiles.contains(coords_of_tile_containing_player)) {
+    if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
         generate_tile(coords_of_tile_containing_player);
     }
 }
@@ -60,9 +59,8 @@ float Terrain::get_terrain_height(const glm::vec2& location) const {
     const auto tile_start_location = tilecoords * TILE_SIZE;
     const auto location_within_tile = glm::uvec2{abs(round(location - glm::vec2{tile_start_location}))};
 
-    if(const auto itr = loaded_terrain_tiles.find(tilecoords); itr != loaded_terrain_tiles.end()) {
-        const auto& tile = itr->second;
-        return tile.heightmap[location_within_tile.y][location_within_tile.x];
+    if(const auto* tile = loaded_terrain_tiles.find(tilecoords)) {
+        return tile->heightmap[location_within_tile.y][location_within_tile.x];
 
     } else {
         // Tile isn't loaded yet. Figure out how to handle this. Right now I don't want to deal with it, so I won't
@@ -122,12 +120,12 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
 
     const auto tile_entity = registry->create();
 
-    loaded_terrain_tiles.emplace(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
+    loaded_terrain_tiles.insert(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 
-    std::vector<StandardVertex> tile_vertices;
+    Rx::Vector<StandardVertex> tile_vertices;
     tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
 
-    std::vector<uint32_t> tile_indices;
+    Rx::Vector<uint32_t> tile_indices;
     tile_indices.reserve(tile_vertices.size() * 6);
 
     for(uint32_t y = 0; y < tile_heightmap.size(); y++) {
@@ -164,31 +162,31 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
     const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
 
     {
-        const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                               D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                          CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
-                                                                               D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
+        const Rx::Vector<D3D12_RESOURCE_BARRIER>
+            barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+                                 CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), {tile_mesh}, commands);
+    const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh}, commands);
 
     device.submit_command_list(commands);
 
-    renderer->add_raytracing_objects_to_scene({rhi::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
+    renderer->add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
 
     registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
 }
 
-std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::ivec2& top_left,
-                                                                    const glm::uvec2& size) const {
+Rx::Vector<Rx::Vector<float>> Terrain::generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const {
     const auto height_range = max_terrain_height - min_terrain_height;
 
-    auto heightmap = std::vector<std::vector<float>>(size.y, std::vector<float>(size.x));
+    Rx::Vector<Rx::Vector<float>> heightmap;
 
-    auto raw_noise = std::vector<float>(size.y * size.x);
+    auto raw_noise = Rx::Vector<float>{size.y * size.x};
 
     noise_generator->FillNoiseSet(raw_noise.data(), top_left.x, top_left.y, 1, size.x, size.y, 1);
 
@@ -201,12 +199,12 @@ std::vector<std::vector<float>> Terrain::generate_terrain_heightmap(const glm::i
     return heightmap;
 }
 
-glm::vec3 Terrain::get_normal_at_location(const glm::vec2& location) {
-    const auto height_middle_right= get_terrain_height(location + glm::vec2{1, 0});
+glm::vec3 Terrain::get_normal_at_location(const glm::vec2& location) const {
+    const auto height_middle_right = get_terrain_height(location + glm::vec2{1, 0});
     const auto height_bottom_middle = get_terrain_height(location + glm::vec2{0, -1});
     const auto height_top_middle = get_terrain_height(location + glm::vec2{0, 1});
-    const auto height_middle_left= get_terrain_height(location + glm::vec2{-1, 0});
-    
+    const auto height_middle_left = get_terrain_height(location + glm::vec2{-1, 0});
+
     const auto va = normalize(glm::vec3{2.0, 0.0, height_middle_right - height_middle_left});
     const auto vb = normalize(glm::vec3{0.0, 2.0, height_bottom_middle - height_top_middle});
     const auto normal = normalize(cross(va, vb));

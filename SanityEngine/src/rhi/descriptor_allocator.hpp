@@ -31,6 +31,6 @@ namespace rhi {
 
         INT next_free_descriptor{0};
 
-        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> available_handles;
+        Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> available_handles;
     };
 } // namespace render

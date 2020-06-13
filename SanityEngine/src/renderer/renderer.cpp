@@ -28,45 +28,45 @@ namespace renderer {
     constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
 #pragma region Cube
-    std::vector<StandardVertex> Renderer::cube_vertices{
+    Rx::Vector<StandardVertex> Renderer::cube_vertices = Rx::Array{
         // Front
-        {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
 
         // Right
-        {.position = {-0.5f, -0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, 0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, -0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, 0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
 
         // Left
-        {.position = {0.5f, 0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, -0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, -0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, 0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
 
         // Back
-        {.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
 
         // Top
-        {.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
 
         // Bottom
-        {.position = {0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        {.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
     };
 
-    std::vector<uint32_t> Renderer::cube_indices{
+    Rx::Vector<uint32_t> Renderer::cube_indices = Rx::Array{
         // front face
         0,
         1,
@@ -154,7 +154,7 @@ namespace renderer {
         backbuffer_output_pass = std::make_unique<BackbufferOutputPass>(*this, *denoiser_pass);
     }
 
-    void Renderer::load_noise_texture(const std::string& filepath) {
+    void Renderer::load_noise_texture(const Rx::String& filepath) {
         auto args = LoadImageToGpuArgs{.texture_name_in = filepath, .renderer_in = this};
         ftl::AtomicCounter counter{task_scheduler.get()};
         task_scheduler->AddTask({load_image_to_gpu, &args}, &counter);
@@ -208,8 +208,8 @@ namespace renderer {
 
     void Renderer::end_frame() const { device->end_frame(); }
 
-    void Renderer::add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects) {
-        raytracing_objects.insert(raytracing_objects.end(), new_objects.begin(), new_objects.end());
+    void Renderer::add_raytracing_objects_to_scene(const Rx::Vector<rhi::RaytracingObject>& new_objects) {
+        raytracing_objects += new_objects;
         raytracing_scene_dirty = true;
     }
 
@@ -217,7 +217,7 @@ namespace renderer {
         const auto idx = static_cast<uint32_t>(all_images.size());
 
         all_images.push_back(device->create_image(create_info));
-        image_name_to_index.emplace(create_info.name, idx);
+        image_name_to_index.insert(create_info.name, idx);
 
         logger->debug("Created texture {} with index {}", create_info.name, idx);
 
@@ -248,23 +248,23 @@ namespace renderer {
         return handle;
     }
 
-    std::optional<TextureHandle> Renderer::get_image_handle(const std::string& name) {
-        if(const auto itr = image_name_to_index.find(name); itr != image_name_to_index.end()) {
-            return TextureHandle{itr->second};
+    std::optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
+        if(const auto* idx = image_name_to_index.find(name)) {
+            return TextureHandle{*idx};
 
         } else {
             return std::nullopt;
         }
     }
 
-    rhi::Image& Renderer::get_image(const std::string& image_name) const {
-        if(!image_name_to_index.contains(image_name)) {
+    rhi::Image& Renderer::get_image(const Rx::String& image_name) const {
+        if(const auto* idx = image_name_to_index.find(image_name)) {
+            return *all_images[*idx];
+
+        } else {
             const auto message = fmt::format("Image '{}' does not exist", image_name);
             throw std::exception(message.c_str());
         }
-
-        const auto idx = image_name_to_index.at(image_name);
-        return *all_images[idx];
     }
 
     rhi::Image& Renderer::get_image(const TextureHandle handle) const { return *all_images[handle.index]; }
@@ -275,8 +275,8 @@ namespace renderer {
     }
 
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
-        if(!free_material_handles.empty()) {
-            const auto handle = *free_material_handles.rbegin();
+        if(!free_material_handles.is_empty()) {
+            const auto& handle = free_material_handles.last();
             free_material_handles.pop_back();
             standard_materials[handle.index] = material;
             return handle;
@@ -289,7 +289,7 @@ namespace renderer {
     }
 
     rhi::Buffer& Renderer::get_standard_material_buffer_for_frame(const uint32_t frame_idx) const {
-        return *material_device_buffers.at(frame_idx);
+        return *material_device_buffers[frame_idx];
     }
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
@@ -312,7 +312,7 @@ namespace renderer {
 
     RaytracableGeometryHandle Renderer::create_raytracing_geometry(const rhi::Buffer& vertex_buffer,
                                                                    const rhi::Buffer& index_buffer,
-                                                                   const std::vector<rhi::Mesh>& meshes,
+                                                                   const Rx::Vector<rhi::Mesh>& meshes,
                                                                    const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
 
@@ -349,7 +349,7 @@ namespace renderer {
         };
 
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = fmt::format("Per frame data buffer {}", i);
+            create_info.name = fmt::format("Per frame data buffer {}", i).c_str();
             per_frame_data_buffers.push_back(device->create_buffer(create_info));
         }
     }
@@ -358,7 +358,7 @@ namespace renderer {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(settings.num_in_flight_gpu_frames);
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = fmt::format("Material Data Buffer {}", 1);
+            create_info.name = fmt::format("Material Data Buffer {}", 1).c_str();
             material_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
@@ -367,7 +367,7 @@ namespace renderer {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = fmt::format("Light Buffer {}", i);
+            create_info.name = fmt::format("Light Buffer {}", i).c_str();
             light_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
@@ -384,7 +384,11 @@ namespace renderer {
                                                                        .width = 8,
                                                                        .height = 8};
 
-            const auto pink_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0xFFFF00FF);
+            auto pink_texture_pixel = Rx::Vector<uint32_t>{};
+            pink_texture_pixel.reserve(64);
+            for(uint32_t i = 0; i < 64; i++) {
+                pink_texture_pixel.push_back(0xFFFF00FF);
+            }
 
             pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
         }
@@ -396,7 +400,11 @@ namespace renderer {
                                                                                    .width = 8,
                                                                                    .height = 8};
 
-            const auto normal_roughness_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0x80FF8080);
+            auto normal_roughness_texture_pixel = Rx::Vector<uint32_t>{};
+            normal_roughness_texture_pixel.reserve(64);
+            for(uint32_t i = 0; i < 64; i++) {
+                normal_roughness_texture_pixel.push_back(0x80FF8080);
+            }
 
             normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
                                                            normal_roughness_texture_pixel.data(),
@@ -410,7 +418,11 @@ namespace renderer {
                                                                                     .width = 8,
                                                                                     .height = 8};
 
-            const auto specular_emission_texture_pixel = std::vector<uint32_t>(static_cast<size_t>(64), 0x00373737);
+            auto specular_emission_texture_pixel = Rx::Vector<uint32_t>{};
+            specular_emission_texture_pixel.reserve(64);
+            for(uint32_t i = 0; i < 64; i++) {
+                specular_emission_texture_pixel.push_back(0x00373737);
+            }
 
             specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
                                                             specular_emission_texture_pixel.data(),
@@ -420,13 +432,11 @@ namespace renderer {
         device->submit_command_list(commands);
     }
 
-    std::vector<const rhi::Image*> Renderer::get_texture_array() const {
-        std::vector<const rhi::Image*> images;
+    Rx::Vector<const rhi::Image*> Renderer::get_texture_array() const {
+        Rx::Vector<const rhi::Image*> images;
         images.reserve(all_images.size());
 
-        for(const auto& image : all_images) {
-            images.push_back(image.get());
-        }
+        all_images.each_fwd([&](const auto& image) { images.push_back(image.get()); });
 
         return images;
     }
@@ -456,7 +466,7 @@ namespace renderer {
             device->schedule_buffer_destruction(std::move(raytracing_scene.buffer));
         }
 
-        if(!raytracing_objects.empty()) {
+        if(!raytracing_objects.is_empty()) {
             constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
 
             ENSURE(raytracing_objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
@@ -480,7 +490,7 @@ namespace renderer {
 
                 desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
-                const auto& ray_geo = raytracing_geometries.at(object.geometry_handle.index);
+                const auto& ray_geo = raytracing_geometries[object.geometry_handle.index];
 
                 const auto& buffer = static_cast<const rhi::Buffer&>(*ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
@@ -520,7 +530,7 @@ namespace renderer {
 
             commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-            const auto barriers = std::vector<D3D12_RESOURCE_BARRIER>{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
+            const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
             raytracing_scene = {std::move(as_buffer)};

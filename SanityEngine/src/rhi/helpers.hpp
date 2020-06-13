@@ -22,11 +22,11 @@ namespace rhi {
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
     constexpr uint32_t FRAME_COMPLETE = 128;
 
-    std::wstring to_wide_string(const std::string& string);
+    std::wstring to_wide_string(const Rx::String& string);
 
-    std::string from_wide_string(const std::wstring& wide_string);
+    Rx::String from_wide_string(const std::wstring& wide_string);
 
-    void set_object_name(ID3D12Object* object, const std::string& name);
+    void set_object_name(ID3D12Object* object, const Rx::String& name);
 
     DXGI_FORMAT to_dxgi_format(ImageFormat format);
 
@@ -48,19 +48,19 @@ namespace rhi {
 
     D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access);
 
-    std::string breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
+    Rx::String breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
 
-    std::string allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type);
+    Rx::String allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type);
 
-    std::string breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs);
+    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs);
 
-    std::string page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
+    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
 
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                            RenderDevice& device,
                                                            const Buffer& vertex_buffer,
                                                            const Buffer& index_buffer,
-                                                           const std::vector<Mesh>& meshes);
+                                                           const Rx::Vector<Mesh>& meshes);
 
     void upload_data_with_staging_buffer(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                          RenderDevice& device,

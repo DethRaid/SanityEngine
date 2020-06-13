@@ -2,12 +2,15 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include <d3d12.h>
+#include <rx/core/vector.h>
 #include <spdlog/logger.h>
 #include <wrl/client.h>
+
+#include <rx/core/map.h>
+
+#include "rx/core/string.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -57,9 +60,9 @@ namespace rhi {
 
     struct BindGroup {
         explicit BindGroup(ID3D12DescriptorHeap& heap_in,
-                           std::vector<RootParameter> root_parameters_in,
-                           std::vector<BoundResource<Image>> used_images_in,
-                           std::vector<BoundResource<Buffer>> used_buffers_in);
+                           Rx::Vector<RootParameter> root_parameters_in,
+                           Rx::Vector<BoundResource<Image>> used_images_in,
+                           Rx::Vector<BoundResource<Buffer>> used_buffers_in);
 
         BindGroup(const BindGroup& other) = default;
         BindGroup& operator=(const BindGroup& other) = default;
@@ -81,13 +84,13 @@ namespace rhi {
 
         ID3D12DescriptorHeap* heap;
 
-        std::vector<RootParameter> root_parameters;
+        Rx::Vector<RootParameter> root_parameters;
 
-        std::vector<BoundResource<Image>> used_images;
-        std::vector<BoundResource<Buffer>> used_buffers;
+        Rx::Vector<BoundResource<Image>> used_images;
+        Rx::Vector<BoundResource<Buffer>> used_buffers;
     };
 
-    using RootDescriptorDescription = std::pair<uint32_t, DescriptorType>;
+    using RootDescriptorDescription = Rx::Pair<uint32_t, DescriptorType>;
 
     struct DescriptorTableDescriptorDescription {
         DescriptorType type;
@@ -119,13 +122,12 @@ namespace rhi {
          * \param descriptor_table_handles_in Mapping from the index of each descriptor table in the root signature to the GPU handle for
          * the start of that descriptor table
          */
-        explicit BindGroupBuilder(
-            ID3D12Device& device_in,
-            ID3D12DescriptorHeap& heap_in,
-            UINT descriptor_size_in,
-            std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions_in,
-            std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
-            std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
+        explicit BindGroupBuilder(ID3D12Device& device_in,
+                                  ID3D12DescriptorHeap& heap_in,
+                                  UINT descriptor_size_in,
+                                  Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions_in,
+                                  Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
+                                  Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
 
         BindGroupBuilder(const BindGroupBuilder& other) = default;
         BindGroupBuilder& operator=(const BindGroupBuilder& other) = default;
@@ -135,13 +137,13 @@ namespace rhi {
 
         ~BindGroupBuilder() = default;
 
-        BindGroupBuilder& set_buffer(const std::string& name, const Buffer& buffer);
+        BindGroupBuilder& set_buffer(const Rx::String& name, const Buffer& buffer);
 
-        BindGroupBuilder& set_image(const std::string& name, const Image& image);
+        BindGroupBuilder& set_image(const Rx::String& name, const Image& image);
 
-        BindGroupBuilder& set_image_array(const std::string& name, const std::vector<const Image*>& images);
+        BindGroupBuilder& set_image_array(const Rx::String& name, const Rx::Vector<const Image*>& images);
 
-        BindGroupBuilder& set_raytracing_scene(const std::string& name, const RaytracingScene& scene);
+        BindGroupBuilder& set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene);
 
         std::unique_ptr<BindGroup> build();
 
@@ -154,14 +156,14 @@ namespace rhi {
 
         UINT descriptor_size;
 
-        std::unordered_map<std::string, const Buffer*> bound_buffers{};
+        Rx::Map<Rx::String, const Buffer*> bound_buffers{};
 
-        std::unordered_map<std::string, std::vector<const Image*>> bound_images{};
+        Rx::Map<Rx::String, Rx::Vector<const Image*>> bound_images{};
 
-        std::unordered_map<std::string, const Buffer*> bound_raytracing_scenes{};
+        Rx::Map<Rx::String, const Buffer*> bound_raytracing_scenes{};
 
-        std::unordered_map<std::string, RootDescriptorDescription> root_descriptor_descriptions;
-        std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;
-        std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
+        Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions;
+        Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;
+        Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
     };
 } // namespace rhi

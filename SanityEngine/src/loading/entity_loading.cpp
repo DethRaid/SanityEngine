@@ -23,8 +23,8 @@ static Assimp::Importer importer;
 
 static std::shared_ptr<spdlog::logger> logger = spdlog::stdout_color_mt("Entity Loading");
 
-bool load_static_mesh(const std::string& filename, entt::registry& registry, renderer::Renderer& renderer) {
-    const auto* scene = importer.ReadFile(filename, aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
+bool load_static_mesh(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
+    const auto* scene = importer.ReadFile(filename.data(), aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
 
     if(scene == nullptr) {
         logger->error("Could not load {}: {}", filename, importer.GetErrorString());
@@ -34,10 +34,10 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     auto& device = renderer.get_render_device();
     auto commands = device.create_command_list();
 
-    std::unordered_map<uint32_t, renderer::StandardMaterialHandle> materials;
+    Rx::Map<uint32_t, renderer::StandardMaterialHandle> materials;
 
-    std::vector<rhi::Mesh> meshes;
-    std::vector<rhi::RaytracingObject> raytracing_objects;
+    Rx::Vector<rhi::Mesh> meshes;
+    Rx::Vector<rhi::RaytracingObject> raytracing_objects;
 
     auto& mesh_data = renderer.get_static_mesh_store();
 
@@ -51,7 +51,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     const auto* ass_mesh = scene->mMeshes[ass_mesh_handle];
 
     // Convert it to our vertex format
-    std::vector<StandardVertex> vertices;
+    Rx::Vector<StandardVertex> vertices;
     vertices.reserve(ass_mesh->mNumVertices);
 
     for(uint32_t vert_idx = 0; vert_idx < ass_mesh->mNumVertices; vert_idx++) {
@@ -65,7 +65,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                                           .texcoord = {texcoord.x, texcoord.y}});
     }
 
-    std::vector<uint32_t> indices;
+    Rx::Vector<uint32_t> indices;
     indices.reserve(ass_mesh->mNumFaces * 3);
     for(uint32_t face_idx = 0; face_idx < ass_mesh->mNumFaces; face_idx++) {
         const auto& face = ass_mesh->mFaces[face_idx];
@@ -86,8 +86,8 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
 
     meshes.push_back(mesh);
 
-    if(const auto& mat = materials.find(ass_mesh->mMaterialIndex); mat != materials.end()) {
-        mesh_renderer.material = mat->second;
+    if(const auto* mat = materials.find(ass_mesh->mMaterialIndex)) {
+        mesh_renderer.material = *mat;
 
     } else {
         auto material = renderer::StandardMaterial{};
@@ -105,12 +105,12 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
                 material.albedo = *existing_image_handle;
 
             } else {
-                auto path = std::filesystem::path{filename};
+                auto path = std::filesystem::path{filename.data()};
                 const auto texture_path = path.replace_filename(ass_texture_path.C_Str());
 
                 uint32_t width, height;
-                std::vector<uint8_t> pixels;
-                const auto was_image_loaded = load_image(texture_path.string(), width, height, pixels);
+                Rx::Vector<uint8_t> pixels;
+                const auto was_image_loaded = load_image(texture_path.string().c_str(), width, height, pixels);
                 if(!was_image_loaded) {
                     logger->warn("Could not load texture {}", texture_path.string());
 
@@ -141,7 +141,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
 
     {
-        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
                                                            D3D12_RESOURCE_STATE_INDEX_BUFFER,
                                                            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -155,7 +155,7 @@ bool load_static_mesh(const std::string& filename, entt::registry& registry, ren
     const auto ray_geo_handle = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, meshes, commands);
 
     {
-        std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
                                                            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                            D3D12_RESOURCE_STATE_INDEX_BUFFER);

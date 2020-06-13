@@ -1,7 +1,8 @@
 #pragma once
 
 #include <functional>
-#include <vector>
+
+#include <rx/core/vector.h>
 
 class InputManager {
 public:
@@ -10,5 +11,5 @@ public:
     void register_key_callback(std::function<void(int, int, int)>&& callback);
 
 private:
-    std::vector<std::function<void(int, int, int)>> key_callbacks;
+    Rx::Vector<std::function<void(int, int, int)>> key_callbacks;
 };

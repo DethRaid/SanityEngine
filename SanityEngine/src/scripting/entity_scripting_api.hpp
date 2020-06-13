@@ -44,11 +44,11 @@ namespace horus {
     public:
         [[horus::constructor]] explicit Entity(WrenHandle* handle_in, entt::entity entity_in, entt::registry & registry_in);
 
-        [[horus::method]] void add_tag(const std::string& tag) const;
+        [[horus::method]] void add_tag(const Rx::String& tag) const;
 
-        [[horus::method]] [[nodiscard]] bool has_tag(const std::string& tag) const;
+        [[horus::method]] [[nodiscard]] bool has_tag(const Rx::String& tag) const;
 
-        [[horus::method]] [[nodiscard]] std::unordered_set<std::string> get_tags() const;
+        [[horus::method]] [[nodiscard]] std::unordered_set<Rx::String> get_tags() const;
 
         [[horus::method]] [[nodiscard]] World* get_world() const;
 

@@ -20,7 +20,7 @@ namespace renderer {
          * \param size_in Size, in pixels, of the texture
          * \param texels_in Pixels of the texture, in row-major order
          */
-        HostTexture2D(const glm::uvec2& size_in, std::vector<glm::u8vec4> texels_in);
+        HostTexture2D(const glm::uvec2& size_in, Rx::Vector<glm::u8vec4> texels_in);
 
         [[nodiscard]] glm::u8vec4 sample_linear(const D3D12_SAMPLER_DESC& sampler_desc, const glm::vec2& texcoord) const;
 
@@ -37,12 +37,12 @@ namespace renderer {
 
         glm::vec2 texel_size;
 
-        std::vector<glm::u8vec4> texels;
+        Rx::Vector<glm::u8vec4> texels;
     };
 
     template <typename RandomDeviceType>
     HostTexture2D HostTexture2D::create_random(const glm::uvec2& size, RandomDeviceType& rng) {
-        std::vector<uint32_t> texels(size.x * size.y);
+        Rx::Vector<uint32_t> texels(size.x * size.y);
 
         for(auto& texel : texels) {
             texel = rng();

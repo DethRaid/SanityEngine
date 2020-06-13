@@ -1,6 +1,9 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include <rx/core/vector.h>
 
-std::vector<uint8_t> load_shader(const std::string& shader_filename);
+namespace Rx {
+    struct String;
+}
+
+Rx::Vector<uint8_t> load_shader(const Rx::String& shader_filename);

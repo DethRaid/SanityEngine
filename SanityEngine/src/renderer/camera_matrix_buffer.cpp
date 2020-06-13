@@ -54,16 +54,14 @@ namespace renderer {
                                                  .size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS};
 
         for(uint32_t i = 0; i < num_in_flight_frames; i++) {
-            create_info.name = fmt::format("Camera Matrix Buffer {}", i);
+            create_info.name = fmt::format("Camera Matrix Buffer {}", i).c_str();
             auto buffer = device->create_buffer(create_info);
             device_data.push_back(buffer.release());
         }
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        for(auto* buffer : device_data) {
-            device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>{buffer});
-        }
+        device_data.each_fwd([&](const auto* buffer) { device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>{buffer}); });
     }
 
     CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) {

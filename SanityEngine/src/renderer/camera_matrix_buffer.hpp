@@ -1,9 +1,9 @@
 #pragma once
 
 #include <array>
-#include <vector>
 
 #include <glm/glm.hpp>
+#include <rx/core/vector.h>
 #include <stdint.h>
 
 #include "../core/components.hpp"
@@ -66,6 +66,6 @@ namespace renderer {
 
         std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data{};
 
-        std::vector<rhi::Buffer*> device_data;
+        Rx::Vector<rhi::Buffer*> device_data;
     };
 } // namespace renderer

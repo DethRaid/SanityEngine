@@ -68,7 +68,7 @@ namespace rhi {
 
         [[nodiscard]] std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
-        [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const std::vector<const Image*>& render_targets,
+        [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const Rx::Vector<const Image*>& render_targets,
                                                                       const Image* depth_target = nullptr) const;
 
         Framebuffer* get_backbuffer_framebuffer();
@@ -90,11 +90,11 @@ namespace rhi {
          * \param descriptor_table_handles Mapping from root parameters index to GPU handle to the descriptor table to bind to that index
          */
         [[nodiscard]] std::unique_ptr<BindGroupBuilder> create_bind_group_builder(
-            const std::unordered_map<std::string, RootDescriptorDescription>& root_descriptors = {},
-            const std::unordered_map<std::string, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
-            const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
+            const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
+            const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
+            const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
-        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const std::vector<uint8_t>& compute_shader,
+        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
                                                                                           ComPtr<ID3D12RootSignature> root_signature) const;
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
@@ -169,24 +169,24 @@ namespace rhi {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        std::vector<std::unordered_map<std::thread::id, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
+        Rx::Vector<Rx::Map<std::thread::id, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
-        std::vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
+        Rx::Vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
-        std::vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
+        Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
-        std::vector<std::vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_by_frame;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_by_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
-        std::vector<ComPtr<ID3D12Resource>> swapchain_images;
-        std::vector<Framebuffer> swapchain_framebuffers;
+        Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
+        Rx::Vector<Framebuffer> swapchain_framebuffers;
 
         HANDLE frame_event;
         ComPtr<ID3D12Fence> frame_fences;
-        std::vector<uint64_t> frame_fence_values;
+        Rx::Vector<uint64_t> frame_fence_values;
 
-        std::vector<std::vector<std::unique_ptr<Buffer>>> buffer_deletion_list;
-        std::vector<std::vector<std::unique_ptr<Image>>> image_deletion_list;
+        Rx::Vector<Rx::Vector<std::unique_ptr<Buffer>>> buffer_deletion_list;
+        Rx::Vector<Rx::Vector<std::unique_ptr<Image>>> image_deletion_list;
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
@@ -200,21 +200,21 @@ namespace rhi {
 
         ComPtr<ID3D12RootSignature> standard_root_signature;
 
-        std::vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
-        std::vector<D3D12_INPUT_ELEMENT_DESC> dear_imgui_graphics_pipeline_input_layout;
+        Rx::Vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
+        Rx::Vector<D3D12_INPUT_ELEMENT_DESC> dear_imgui_graphics_pipeline_input_layout;
 
         uint64_t staging_buffer_idx{0};
-        std::vector<StagingBuffer> staging_buffers;
+        Rx::Vector<StagingBuffer> staging_buffers;
 
         /*!
          * \brief Array of array of staging buffers to free on a frame. index 0 gets freed on the next frame 0, index 1 gets freed on the
          * next frame 1, etc
          */
-        std::vector<std::vector<StagingBuffer>> staging_buffers_to_free;
+        Rx::Vector<Rx::Vector<StagingBuffer>> staging_buffers_to_free;
 
         uint32_t scratch_buffer_counter{0};
-        std::vector<Buffer> scratch_buffers;
-        std::vector<std::vector<Buffer>> scratch_buffers_to_free;
+        Rx::Vector<Buffer> scratch_buffers;
+        Rx::Vector<Rx::Vector<Buffer>> scratch_buffers_to_free;
 
         /*!
          * \brief Indicates whether this device has a Unified Memory Architecture
@@ -241,9 +241,9 @@ namespace rhi {
 
         DXGI_FORMAT swapchain_format{DXGI_FORMAT_R8G8B8A8_UNORM};
 
-        std::vector<ComPtr<ID3D12Fence>> command_list_done_fences;
+        Rx::Vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
-        std::vector<std::unique_ptr<BindGroupBuilder>> material_bind_group_builder;
+        Rx::Vector<std::unique_ptr<BindGroupBuilder>> material_bind_group_builder;
 
         /*!
          * \brief Index of the swapchain image we're currently rendering to
@@ -306,7 +306,7 @@ namespace rhi {
         void create_pipeline_input_layouts();
 #pragma endregion
 
-        [[nodiscard]] std::vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const std::vector<uint8_t>& shader) const;
+        [[nodiscard]] Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const Rx::Vector<uint8_t>& shader) const;
 
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);

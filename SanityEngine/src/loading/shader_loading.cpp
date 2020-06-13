@@ -1,9 +1,10 @@
 #include "shader_loading.hpp"
 
 #include <minitrace.h>
+#include <rx/core/string.h>
 #include <spdlog/spdlog.h>
 
-std::vector<uint8_t> load_shader(const std::string& shader_filename) {
+Rx::Vector<uint8_t> load_shader(const Rx::String& shader_filename) {
     const auto shader_filepath = fmt::format("data/shaders/{}", shader_filename);
 
     auto* shader_file = fopen(shader_filepath.c_str(), "rb");
@@ -15,7 +16,7 @@ std::vector<uint8_t> load_shader(const std::string& shader_filename) {
     fseek(shader_file, 0, SEEK_END);
     const auto file_size = ftell(shader_file);
 
-    auto shader = std::vector<uint8_t>(file_size);
+    auto shader = Rx::Vector<uint8_t>(file_size);
 
     rewind(shader_file);
 

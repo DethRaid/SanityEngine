@@ -3,6 +3,7 @@
 #include <queue>
 
 #include <entt/fwd.hpp>
+#include <rx/core/vector.h>
 
 #include "../rhi/bind_group.hpp"
 #include "../rhi/compute_pipeline_state.hpp"
@@ -44,8 +45,8 @@ namespace renderer {
      */
     class Renderer {
     public:
-        static std::vector<StandardVertex> cube_vertices;
-        static std::vector<uint32_t> cube_indices;
+        static Rx::Vector<StandardVertex> cube_vertices;
+        static Rx::Vector<uint32_t> cube_indices;
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
@@ -55,7 +56,7 @@ namespace renderer {
 
         void end_frame() const;
 
-        void add_raytracing_objects_to_scene(const std::vector<rhi::RaytracingObject>& new_objects);
+        void add_raytracing_objects_to_scene(const Rx::Vector<rhi::RaytracingObject>& new_objects);
 
         [[yesdiscard]] TextureHandle create_image(const rhi::ImageCreateInfo& create_info);
 
@@ -63,9 +64,9 @@ namespace renderer {
                                                  const void* image_data,
                                                  const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        [[nodiscard]] std::optional<TextureHandle> get_image_handle(const std::string& name);
+        [[nodiscard]] std::optional<TextureHandle> get_image_handle(const Rx::String& name);
 
-        [[nodiscard]] rhi::Image& get_image(const std::string& image_name) const;
+        [[nodiscard]] rhi::Image& get_image(const Rx::String& image_name) const;
 
         [[nodiscard]] rhi::Image& get_image(TextureHandle handle) const;
 
@@ -95,7 +96,7 @@ namespace renderer {
 
         [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const rhi::Buffer& vertex_buffer,
                                                                            const rhi::Buffer& index_buffer,
-                                                                           const std::vector<rhi::Mesh>& meshes,
+                                                                           const Rx::Vector<rhi::Mesh>& meshes,
                                                                            const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_global_resources_for_frame(uint32_t frame_idx);
@@ -114,19 +115,19 @@ namespace renderer {
         std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
 
         PerFrameData per_frame_data;
-        std::vector<std::unique_ptr<rhi::Buffer>> per_frame_data_buffers;
+        Rx::Vector<std::unique_ptr<rhi::Buffer>> per_frame_data_buffers;
 
         std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
-        std::vector<StandardMaterial> standard_materials;
-        std::vector<StandardMaterialHandle> free_material_handles;
-        std::vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
+        Rx::Vector<StandardMaterial> standard_materials;
+        Rx::Vector<StandardMaterialHandle> free_material_handles;
+        Rx::Vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
 
-        std::unordered_map<std::string, uint32_t> image_name_to_index;
-        std::vector<std::unique_ptr<rhi::Image>> all_images;
+        Rx::Map<Rx::String, uint32_t> image_name_to_index;
+        Rx::Vector<std::unique_ptr<rhi::Image>> all_images;
 
         std::array<Light, MAX_NUM_LIGHTS> lights;
-        std::vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
+        Rx::Vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
 
         std::queue<rhi::Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
@@ -147,19 +148,19 @@ namespace renderer {
 
         void create_builtin_images();
 
-        void load_noise_texture(const std::string& filepath);
+        void load_noise_texture(const Rx::String& filepath);
 #pragma endregion
 
-        [[nodiscard]] std::vector<const rhi::Image*> get_texture_array() const;
+        [[nodiscard]] Rx::Vector<const rhi::Image*> get_texture_array() const;
 
         void update_cameras(entt::registry& registry, uint32_t frame_idx) const;
 
         void upload_material_data(uint32_t frame_idx);
 
 #pragma region 3D Scene
-        std::vector<rhi::RaytracableGeometry> raytracing_geometries;
+        Rx::Vector<rhi::RaytracableGeometry> raytracing_geometries;
 
-        std::vector<rhi::RaytracingObject> raytracing_objects;
+        Rx::Vector<rhi::RaytracingObject> raytracing_objects;
 
         rhi::RaytracingScene raytracing_scene;
 
@@ -179,8 +180,8 @@ namespace renderer {
 #pragma region UI
         std::unique_ptr<rhi::RenderPipelineState> ui_pipeline;
 
-        std::vector<std::unique_ptr<rhi::Buffer>> ui_vertex_buffers;
-        std::vector<std::unique_ptr<rhi::Buffer>> ui_index_buffers;
+        Rx::Vector<std::unique_ptr<rhi::Buffer>> ui_vertex_buffers;
+        Rx::Vector<std::unique_ptr<rhi::Buffer>> ui_index_buffers;
 
         void create_ui_pipeline();
 

@@ -70,7 +70,7 @@ namespace renderer {
         const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
 
         {
-            const auto barriers = std::vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+            const auto barriers = Rx::Vector{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
                                                                                    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                                    D3D12_RESOURCE_STATE_COPY_DEST),
                                               CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),

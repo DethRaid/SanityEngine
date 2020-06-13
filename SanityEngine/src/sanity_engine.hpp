@@ -91,8 +91,8 @@ private:
 
     void create_first_person_player();
 
-    void load_bve_train(const std::string& filename);
+    void load_bve_train(const Rx::String& filename);
 
-    void load_3d_object(const std::string& filename);
+    void load_3d_object(const Rx::String& filename);
 #pragma endregion
 };

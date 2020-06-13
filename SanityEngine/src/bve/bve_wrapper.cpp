@@ -62,7 +62,7 @@ BveWrapper::BveWrapper(rhi::RenderDevice& device) {
     create_texture_filter_pipeline(device);
 }
 
-bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry& registry, renderer::Renderer& renderer) {
+bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
     const auto train_msg = fmt::format("Load train {}", filename);
     MTR_SCOPE("SanityEngine", train_msg.c_str());
 
@@ -89,7 +89,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
             return false;
         }
 
-        auto train_path = std::filesystem::path{filename};
+        auto train_path = std::filesystem::path{filename.data()};
 
         auto& device = renderer.get_render_device();
 
@@ -101,7 +101,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
         commands->SetPipelineState(bve_texture_pipeline->pso.Get());
 
-        std::vector<rhi::Mesh> train_meshes;
+        Rx::Vector<rhi::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
 
         mesh_data.begin_adding_meshes(commands);
@@ -150,7 +150,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
                             texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
                         }
 
-                        auto create_info = rhi::ImageCreateInfo{.name = fmt::format("Scratch Texture {}", texture_name),
+                        auto create_info = rhi::ImageCreateInfo{.name = fmt::format("Scratch Texture {}", texture_name).c_str(),
                                                                 .usage = rhi::ImageUsage::SampledImage,
                                                                 .format = rhi::ImageFormat::Rgba8,
                                                                 .width = static_cast<uint32_t>(width),
@@ -202,7 +202,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
 
         {
-            std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
             barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
                                                                D3D12_RESOURCE_STATE_INDEX_BUFFER,
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -216,7 +216,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
         const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
 
         {
-            std::vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
             barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                D3D12_RESOURCE_STATE_INDEX_BUFFER);
@@ -229,7 +229,7 @@ bool BveWrapper::add_train_to_scene(const std::string& filename, entt::registry&
 
         device.submit_command_list(std::move(commands));
 
-        renderer.add_raytracing_objects_to_scene({rhi::RaytracingObject{.geometry_handle = ray_mesh}});
+        renderer.add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_mesh}});
 
         logger->info("Loaded file {}", filename);
 
@@ -241,11 +241,15 @@ std::unique_ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind
     auto [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
     const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
-    const std::unordered_map<std::string, rhi::DescriptorTableDescriptorDescription> descriptors =
-        {{"input_texture", {.type = rhi::DescriptorType::ShaderResource, .handle = cpu_handle}},
-         {"output_texture", {.type = rhi::DescriptorType::UnorderedAccess, .handle = cpu_handle.Offset(descriptor_size)}}};
+    const Rx::Map<Rx::String, rhi::DescriptorTableDescriptorDescription>
+        descriptors = Rx::Array{Rx::Pair{"input_texture",
+                                         rhi::DescriptorTableDescriptorDescription{.type = rhi::DescriptorType::ShaderResource,
+                                                                                   .handle = cpu_handle}},
+                                Rx::Pair{"output_texture",
+                                         rhi::DescriptorTableDescriptorDescription{.type = rhi::DescriptorType::UnorderedAccess,
+                                                                                   .handle = cpu_handle.Offset(descriptor_size)}}};
 
-    const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = {{0, gpu_handle}};
+    const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = Rx::Array{Rx::Pair{0, gpu_handle}};
 
     return device.create_bind_group_builder({}, descriptors, tables);
 }
@@ -253,9 +257,9 @@ std::unique_ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind
 void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
     MTR_SCOPE("Renderer", "create_bve_texture_alpha_pipeline");
 
-    std::vector<CD3DX12_ROOT_PARAMETER> root_params{1};
+    Rx::Vector<CD3DX12_ROOT_PARAMETER> root_params{1};
 
-    std::vector<CD3DX12_DESCRIPTOR_RANGE> ranges{2};
+    Rx::Vector<CD3DX12_DESCRIPTOR_RANGE> ranges{2};
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
     ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
@@ -272,8 +276,8 @@ void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
 
 BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error) { return BVE_Mesh_Error_to_data(&error); }
 
-BveMeshHandle BveWrapper::load_mesh_from_file(const std::string& filename) {
-    auto* mesh = bve_load_mesh_from_file(filename.c_str());
+BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
+    auto* mesh = bve_load_mesh_from_file(filename.data());
 
     if(mesh == nullptr) {
         logger->error("BVE failed to load anything for mesh '{}'", filename);
@@ -282,11 +286,11 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const std::string& filename) {
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
 }
 
-std::pair<std::vector<StandardVertex>, std::vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
+std::pair<Rx::Vector<StandardVertex>, Rx::Vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
     ENSURE(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
 
     const auto& bve_vertices = mesh.vertices;
-    auto vertices = std::vector<StandardVertex>{};
+    auto vertices = Rx::Vector<StandardVertex>{};
     vertices.reserve(bve_vertices.count);
 
     std::transform(bve_vertices.ptr, bve_vertices.ptr + bve_vertices.count, std::back_inserter(vertices), [](const BVE_Vertex& bve_vertex) {
@@ -297,7 +301,7 @@ std::pair<std::vector<StandardVertex>, std::vector<uint32_t>> BveWrapper::proces
     });
 
     const auto& bve_indices = mesh.indices;
-    auto indices = std::vector<uint32_t>{};
+    auto indices = Rx::Vector<uint32_t>{};
     indices.reserve(bve_indices.count * 2); // worst-case
 
     for(uint32_t i = 0; i < bve_indices.count; i += 3) {

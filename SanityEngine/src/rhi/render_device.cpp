@@ -210,7 +210,7 @@ namespace rhi {
         return image;
     }
 
-    std::unique_ptr<Framebuffer> RenderDevice::create_framebuffer(const std::vector<const Image*>& render_targets,
+    std::unique_ptr<Framebuffer> RenderDevice::create_framebuffer(const Rx::Vector<const Image*>& render_targets,
                                                                   const Image* depth_target) const {
         auto framebuffer = std::make_unique<Framebuffer>();
 
@@ -332,9 +332,9 @@ namespace rhi {
     }
 
     std::unique_ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
-        const std::unordered_map<std::string, RootDescriptorDescription>& root_descriptors,
-        const std::unordered_map<std::string, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
-        const std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
+        const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors,
+        const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
+        const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
 
         ENSURE(descriptor_table_descriptors.empty() == descriptor_table_handles.empty(),
                "If you specify descriptor table descriptors, you must also specift descriptor table handles");
@@ -348,7 +348,7 @@ namespace rhi {
     }
 
     std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(
-        const std::vector<uint8_t>& compute_shader, const ComPtr<ID3D12RootSignature> root_signature) const {
+        const Rx::Vector<uint8_t>& compute_shader, const ComPtr<ID3D12RootSignature> root_signature) const {
         auto compute_pipeline = std::make_unique<ComputePipelineState>();
 
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
@@ -619,7 +619,7 @@ namespace rhi {
         // - Not integrated, if possible
 
         // TODO: Figure out how to get the number of adapters in advance
-        std::vector<ComPtr<IDXGIAdapter>> adapters;
+        Rx::Vector<ComPtr<IDXGIAdapter>> adapters;
         adapters.reserve(5);
 
         {
@@ -904,7 +904,7 @@ namespace rhi {
     void RenderDevice::create_standard_root_signature() {
         MTR_SCOPE("RenderDevice", "create_standard_root_signature");
 
-        std::vector<CD3DX12_ROOT_PARAMETER> root_parameters{9};
+        Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{9};
 
         // Root constants for material index and camera index
         root_parameters[0].InitAsConstants(2, 0);
@@ -931,7 +931,7 @@ namespace rhi {
         root_parameters[7].InitAsShaderResourceView(6);
 
         // Textures array
-        std::vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
+        Rx::Vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
         descriptor_table_ranges.push_back(D3D12_DESCRIPTOR_RANGE{
             .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
             .NumDescriptors = MAX_NUM_TEXTURES,
@@ -942,7 +942,7 @@ namespace rhi {
 
         root_parameters[8].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
-        std::vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
+        Rx::Vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
         // Point sampler
         auto& point_sampler = static_samplers[0];
@@ -986,7 +986,7 @@ namespace rhi {
         ComPtr<ID3DBlob> error_blob;
         auto result = D3D12SerializeVersionedRootSignature(&versioned_desc, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
-            const std::string msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
+            const Rx::String msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
             logger->error("Could not create root signature: {}", msg);
             return {};
         }
@@ -1019,7 +1019,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_material_resource_binders() {
-        std::unordered_map<std::string, RootDescriptorDescription> root_descriptors;
+        Rx::Map<Rx::String, RootDescriptorDescription> root_descriptors;
         root_descriptors.emplace("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
         root_descriptors.emplace("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
         root_descriptors.emplace("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
@@ -1038,11 +1038,11 @@ namespace rhi {
                                                  cbv_srv_uav_size};
 
         for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            std::unordered_map<std::string, DescriptorTableDescriptorDescription> descriptor_tables;
+            Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.emplace("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
-            std::unordered_map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
+            Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
             descriptor_table_gpu_handles.emplace(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
 
             material_bind_group_builder.push_back(
@@ -1133,7 +1133,7 @@ namespace rhi {
                                      .InstanceDataStepRate = 0});
     }
 
-    std::vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const std::vector<uint8_t>& shader) const {
+    Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<uint8_t>& shader) const {
         ComPtr<ID3D12ShaderReflection> reflection;
         auto result = D3DReflect(shader.data(), shader.size() * sizeof(uint8_t), IID_PPV_ARGS(&reflection));
         if(FAILED(result)) {
@@ -1146,7 +1146,7 @@ namespace rhi {
             logger->error("Could not get shader description");
         }
 
-        std::vector<D3D12_SHADER_INPUT_BIND_DESC> input_descs(desc.BoundResources);
+        Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> input_descs(desc.BoundResources);
 
         for(uint32_t i = 0; i < desc.BoundResources; i++) {
             result = reflection->GetResourceBindingDesc(i, &input_descs[i]);
