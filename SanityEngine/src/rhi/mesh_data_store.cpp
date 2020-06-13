@@ -4,7 +4,6 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-
 #include "helpers.hpp"
 #include "render_device.hpp"
 
@@ -61,9 +60,7 @@ namespace rhi {
         Rx::Vector<uint32_t> offset_indices;
         offset_indices.reserve(indices.size());
 
-        std::transform(indices.begin(), indices.end(), std::back_inserter(offset_indices), [&](const uint32_t idx) {
-            return idx + next_vertex_offset;
-        });
+        indices.each_fwd([&](const uint32_t idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
         auto* vertex_resource = vertex_buffer->resource.Get();
         auto* index_resource = index_buffer->resource.Get();

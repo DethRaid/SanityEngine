@@ -367,14 +367,15 @@ namespace rhi {
     }
 
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                                           RenderDevice& device,
-                                                           const Buffer& vertex_buffer,
-                                                           const Buffer& index_buffer,
-                                                           const Rx::Vector<Mesh>& meshes) {
+                                                                RenderDevice& device,
+                                                                const Buffer& vertex_buffer,
+                                                                const Buffer& index_buffer,
+                                                                const Rx::Vector<Mesh>& meshes) {
 
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
-        for(const auto& [first_vertex, num_vertices, first_index, num_indices] : meshes) {
+        meshes.each_fwd([&](const Mesh& mesh) {
+            auto& [first_vertex, num_vertices, first_index, num_indices] = mesh;
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
                                                             .Triangles = {.Transform3x4 = 0,
@@ -389,7 +390,7 @@ namespace rhi {
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(std::move(geom_desc));
-        }
+        });
 
         const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
             .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,

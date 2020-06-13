@@ -77,9 +77,7 @@ namespace rhi {
 
         wait_gpu_idle(0);
 
-        for(auto& buffer : staging_buffers) {
-            buffer.allocation->Release();
-        }
+        staging_buffers.each_fwd([&](const StagingBuffer& buffer) { buffer.allocation->Release(); });
 
         device_allocator->Release();
     }
@@ -222,7 +220,7 @@ namespace rhi {
 
         framebuffer->rtv_handles.reserve(render_targets.size());
         uint32_t i{0};
-        for(const auto* image : render_targets) {
+        render_targets.each_fwd([&](const Image* image) {
             if(width != 0 && width != image->width) {
                 logger->error(
                     "Render target {} has width {}, which is different from the width {} of the previous render target. All render targets must have the same width",
@@ -250,7 +248,7 @@ namespace rhi {
             framebuffer->rtv_handles.push_back(handle);
 
             i++;
-        }
+        });
 
         if(depth_target != nullptr) {
             if(width != 0 && width != depth_target->width) {
@@ -527,7 +525,7 @@ namespace rhi {
         if(best_fit_idx < staging_buffers.size()) {
             // We found a valid staging buffer!
             auto buffer = std::move(staging_buffers[best_fit_idx]);
-            staging_buffers.erase(staging_buffers.begin() + best_fit_idx);
+            staging_buffers.erase(best_fit_idx, best_fit_idx);
 
             return buffer;
 
@@ -555,7 +553,7 @@ namespace rhi {
         if(best_fit_idx < scratch_buffers.size()) {
             // We already have a suitable scratch buffer!
             auto buffer = std::move(scratch_buffers[best_fit_idx]);
-            scratch_buffers.erase(scratch_buffers.begin() + best_fit_idx);
+            scratch_buffers.erase(best_fit_idx, best_fit_idx);
 
             return buffer;
 
@@ -1280,8 +1278,8 @@ namespace rhi {
 
     ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const std::thread::id& id) {
         auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
-        if(const auto& itr = command_allocators_for_frame.find(id); itr != command_allocators_for_frame.end()) {
-            return itr->second.Get();
+        if(const auto* itr = command_allocators_for_frame.find(id)) {
+            return itr->Get();
 
         } else {
             ComPtr<ID3D12CommandAllocator> allocator;
@@ -1534,4 +1532,3 @@ namespace rhi {
         return {};
     }
 } // namespace rhi
-
