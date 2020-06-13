@@ -158,7 +158,7 @@ namespace rhi {
 
         Rx::Map<Rx::String, const Buffer*> bound_buffers{};
 
-        Rx::Map<Rx::String, Rx::Vector<const Image*>> bound_images{};
+        Rx::Map<Rx::String, Rx::Vector<const Image*>> bound_image_arrays{};
 
         Rx::Map<Rx::String, const Buffer*> bound_raytracing_scenes{};
 

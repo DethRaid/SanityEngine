@@ -436,7 +436,7 @@ namespace renderer {
         Rx::Vector<const rhi::Image*> images;
         images.reserve(all_images.size());
 
-        all_images.each_fwd([&](const auto& image) { images.push_back(image.get()); });
+        all_images.each_fwd([&](const std::unique_ptr<rhi::Image>& image) { images.push_back(image.get()); });
 
         return images;
     }

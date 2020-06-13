@@ -1466,7 +1466,7 @@ namespace rhi {
         }
 
         scratch_buffer.size = num_bytes;
-        set_object_name(scratch_buffer.resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter));
+        set_object_name(scratch_buffer.resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter).c_str());
         scratch_buffer_counter++;
 
         return scratch_buffer;

@@ -74,13 +74,12 @@ namespace rhi {
         }
     }
 
-    BindGroupBuilder::BindGroupBuilder(
-        ID3D12Device& device_in,
-        ID3D12DescriptorHeap& heap_in,
-        const UINT descriptor_size_in,
-        Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions_in,
-        Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
-        Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
+    BindGroupBuilder::BindGroupBuilder(ID3D12Device& device_in,
+                                       ID3D12DescriptorHeap& heap_in,
+                                       const UINT descriptor_size_in,
+                                       Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions_in,
+                                       Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
+                                       Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
         : device{&device_in},
           heap{&heap_in},
           descriptor_size{descriptor_size_in},
@@ -97,7 +96,7 @@ namespace rhi {
 
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
         const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
-        bound_buffers.insert_or_assign(name, &d3d12_buffer);
+        bound_buffers.insert(name, &d3d12_buffer);
 
         return *this;
     }
@@ -107,21 +106,13 @@ namespace rhi {
     }
 
     BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<const Image*>& images) {
-        Rx::Vector<const Image*> d3d12_images;
-        d3d12_images.reserve(images.size());
-
-        for(const auto* image : images) {
-            d3d12_images.push_back(static_cast<const Image*>(image));
-        }
-
-        bound_images.insert_or_assign(name, d3d12_images);
+        bound_image_arrays.insert(name, images);
 
         return *this;
     }
 
     BindGroupBuilder& BindGroupBuilder::set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene) {
-        const auto* d3d12_buffer = static_cast<const Buffer*>(scene.buffer.get());
-        bound_raytracing_scenes.insert(name, d3d12_buffer);
+        bound_raytracing_scenes.insert(name, scene.buffer.get());
 
         return *this;
     }
@@ -131,18 +122,18 @@ namespace rhi {
         Rx::Vector<RootParameter> root_parameters{64};
 
         // Save descriptor table information
-        for(const auto& [idx, handle] : descriptor_table_handles) {
+        descriptor_table_handles.each_pair([&](const uint32_t idx, const D3D12_GPU_DESCRIPTOR_HANDLE& handle) {
             ENSURE(idx < 64, "May not have more than 64 descriptor tables in a single bind group");
 
             root_parameters[idx].type = RootParameterType::DescriptorTable;
             root_parameters[idx].table.handle = handle;
-        }
+        });
 
         Rx::Vector<BoundResource<Image>> used_images;
         Rx::Vector<BoundResource<Buffer>> used_buffers;
 
         // Save root descriptor information
-        for(const auto& [name, desc] : root_descriptor_descriptions) {
+        root_descriptor_descriptions.each_pair([&](const Rx::String& name, const RootDescriptorDescription& desc) {
             const auto& [idx, type] = desc;
             ENSURE(idx < 32, "May not have more than 32 root descriptors in a single bind group");
 
@@ -151,9 +142,9 @@ namespace rhi {
             root_parameters[idx].type = RootParameterType::Descriptor;
             root_parameters[idx].descriptor.type = type;
 
-            if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
-                root_parameters[idx].descriptor.address = buffer_itr->second->resource->GetGPUVirtualAddress();
-                logger->trace("Binding buffer {} to root descriptor {}", buffer_itr->second->name, name);
+            if(const Buffer** bound_buffer = bound_buffers.find(name)) {
+                root_parameters[idx].descriptor.address = (*bound_buffer)->resource->GetGPUVirtualAddress();
+                logger->trace("Binding buffer {} to root descriptor {}", (*bound_buffer)->name, name);
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -163,11 +154,11 @@ namespace rhi {
                     states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                 }
 
-                used_buffers.emplace_back(buffer_itr->second, states);
+                used_buffers.emplace_back(bound_buffer, states);
 
-            } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
-                ENSURE(image_itr->second.size() == 1, "May only bind a single image to a root descriptor");
-                root_parameters[idx].descriptor.address = image_itr->second[0]->resource->GetGPUVirtualAddress();
+            } else if(const Rx::Vector<const Image*>* bound_image = bound_image_arrays.find(name)) {
+                ENSURE(bound_image->size() == 1, "May only bind a single image to a root descriptor");
+                root_parameters[idx].descriptor.address = (*bound_image)[0]->resource->GetGPUVirtualAddress();
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -177,28 +168,26 @@ namespace rhi {
                     states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                 }
 
-                used_images.emplace_back(image_itr->second[0], states);
+                used_images.emplace_back((*bound_image)[0], states);
 
-            } else if(const auto& scene_itr = bound_raytracing_scenes.find(name); scene_itr != bound_raytracing_scenes.end()) {
+            } else if(const Buffer** scene = bound_raytracing_scenes.find(name)) {
                 ENSURE(type == DescriptorType::ShaderResource,
                        "May only bind raytracing acceleration structure {} as a shader resource",
-                       scene_itr->second->name);
+                       (*scene)->name);
 
-                const auto* scene = scene_itr->second;
-
-                root_parameters[idx].descriptor.address = scene->resource->GetGPUVirtualAddress();
+                root_parameters[idx].descriptor.address = (*scene)->resource->GetGPUVirtualAddress();
 
                 // Don't need to issue barriers for raytracing acceleration structures
 
             } else {
                 // logger->warn("No resources bound to root descriptor {}", name);
             }
-        }
+        });
 
         // Bind resources to descriptor table descriptors
-        for(const auto& [name, desc] : descriptor_table_descriptor_mappings) {
-            if(const auto& buffer_itr = bound_buffers.find(name); buffer_itr != bound_buffers.end()) {
-                auto* buffer = buffer_itr->second;
+        descriptor_table_descriptor_mappings.each_pair([&](const Rx::String& name, const DescriptorTableDescriptorDescription& desc) {
+            if(const Buffer** buffer_itr = bound_buffers.find(name)) {
+                auto* buffer = *buffer_itr;
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 
@@ -243,7 +232,7 @@ namespace rhi {
 
                 used_buffers.emplace_back(buffer, states);
 
-            } else if(const auto& image_itr = bound_images.find(name); image_itr != bound_images.end()) {
+            } else if(const auto* images = bound_image_arrays.find(name)) {
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
                         logger->warn("Can not bind images to constant buffer {}", name);
@@ -255,7 +244,7 @@ namespace rhi {
 
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
-                        for(const auto* image : image_itr->second) {
+                        images->each_fwd([&](const Image* image) {
                             if(image != nullptr) {
                                 D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
                                 srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -273,13 +262,13 @@ namespace rhi {
                             }
 
                             handle.Offset(descriptor_size);
-                        }
+                        });
                     } break;
 
                     case DescriptorType::UnorderedAccess: {
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
-                        for(const auto* image : image_itr->second) {
+                        images->each_fwd([&](const Image* image) {
                             D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc{};
                             uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
                             uav_desc.Format = to_dxgi_format(image->format);
@@ -289,14 +278,14 @@ namespace rhi {
                             device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &uav_desc, handle);
 
                             handle.Offset(descriptor_size);
-                        }
+                        });
                     } break;
                 }
             } else {
                 // logger->warn("No resource bound to descriptor {}", name);
             }
-        }
+        });
 
         return std::make_unique<BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
-    }
+    } // namespace rhi
 } // namespace rhi

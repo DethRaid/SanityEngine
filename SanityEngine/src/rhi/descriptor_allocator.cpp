@@ -2,23 +2,21 @@
 
 #include "d3dx12.hpp"
 
-using std::move;
-
 namespace rhi {
     DescriptorAllocator::DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
-        : heap{move(heap_in)}, descriptor_size{descriptor_size_in} {}
+        : heap{Rx::Utility::move(heap_in)}, descriptor_size{descriptor_size_in} {}
 
     DescriptorAllocator::DescriptorAllocator(DescriptorAllocator&& old) noexcept
-        : heap{move(old.heap)},
+        : heap{Rx::Utility::move(old.heap)},
           descriptor_size{old.descriptor_size},
           next_free_descriptor{old.next_free_descriptor},
-          available_handles{move(old.available_handles)} {}
+          available_handles{Rx::Utility::move(old.available_handles)} {}
 
     DescriptorAllocator& DescriptorAllocator::operator=(DescriptorAllocator&& old) noexcept {
-        heap = move(old.heap);
+        heap = Rx::Utility::move(old.heap);
         descriptor_size = old.descriptor_size;
         next_free_descriptor = old.next_free_descriptor;
-        available_handles = move(old.available_handles);
+        available_handles = Rx::Utility::move(old.available_handles);
 
         return *this;
     }
