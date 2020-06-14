@@ -1,8 +1,7 @@
 #pragma once
 
-#include <optional>
-
 #include <ftl/task.h>
+#include <rx/core/optional.h>
 #include <rx/core/string.h>
 #include <rx/core/vector.h>
 
@@ -14,7 +13,7 @@ namespace renderer {
 
 struct LoadImageToGpuArgs {
     Rx::String texture_name_in;
-    std::optional<renderer::TextureHandle> handle_out;
+    Rx::Optional<renderer::TextureHandle> handle_out;
     renderer::Renderer* renderer_in;
 };
 

@@ -349,7 +349,7 @@ namespace horus {
         }
     }
 
-    std::optional<Component> ScriptingRuntime::create_component(const entt::entity entity,
+    Rx::Optional<Component> ScriptingRuntime::create_component(const entt::entity entity,
                                                                 const char* module_name,
                                                                 const char* component_class_name) const {
 

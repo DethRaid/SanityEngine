@@ -1,10 +1,9 @@
 #pragma once
 
-#include <optional>
-#include <set>
-
 #include <entt/entity/fwd.hpp>
 #include <rx/core/map.h>
+#include <rx/core/optional.h>
+#include <rx/core/ptr.h>
 #include <rx/core/string.h>
 #include <wren/wren.hpp>
 
@@ -62,9 +61,9 @@ namespace horus {
 
         [[nodiscard]] WrenHandle* create_entity() const;
 
-        [[nodiscard]] std::optional<Component> create_component(entt::entity entity,
-                                                                const char* module_name,
-                                                                const char* component_class_name) const;
+        [[nodiscard]] Rx::Optional<Component> create_component(entt::entity entity,
+                                                               const char* module_name,
+                                                               const char* component_class_name) const;
 
         // The codegen will place generated methods in this region. Everything within this region will be destroyed whenever the scripting
         // API is regenerated - aka very often. DO NOT put any code you care about saving in this region
@@ -75,7 +74,6 @@ namespace horus {
 #pragma endregion
 
     private:
-
         using WrenClass = Rx::Map<Rx::String, WrenForeignMethodFn>;
 
         struct WrenModule {
@@ -105,7 +103,7 @@ namespace horus {
 
         entt::registry* registry;
 
-        std::set<std::filesystem::path> module_paths{};
+        Rx::Set<std::filesystem::path> module_paths{};
 
         void load_all_scripts_in_directory(const std::filesystem::path& directory) const;
 

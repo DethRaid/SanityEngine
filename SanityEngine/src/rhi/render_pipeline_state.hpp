@@ -1,9 +1,8 @@
 #pragma once
 
-#include <array>
-#include <optional>
-
 #include <d3d12.h>
+#include <rx/core/array.h>
+#include <rx/core/optional.h>
 #include <rx/core/string.h>
 #include <rx/core/vector.h>
 #include <wrl/client.h>
@@ -52,7 +51,7 @@ namespace rhi {
     struct BlendState {
         bool enable_alpha_to_coverage{false};
 
-        std::array<RenderTargetBlendState, 8> render_target_blends;
+        Rx::Array<RenderTargetBlendState[8]> render_target_blends;
     };
 
     enum class FillMode {
@@ -131,7 +130,7 @@ namespace rhi {
 
         Rx::Vector<uint8_t> vertex_shader{};
 
-        std::optional<Rx::Vector<uint8_t>> pixel_shader{std::nullopt};
+        Rx::Optional<Rx::Vector<uint8_t>> pixel_shader{Rx::nullopt};
 
         InputAssemblerLayout input_assembler_layout{InputAssemblerLayout::StandardVertex};
 
@@ -151,7 +150,7 @@ namespace rhi {
         /*!
          * \brief Format of the depth/stencil target that this render pipeline outputs to
          */
-        std::optional<ImageFormat> depth_stencil_format;
+        Rx::Optional<ImageFormat> depth_stencil_format;
     };
 
     struct RenderPipelineState {

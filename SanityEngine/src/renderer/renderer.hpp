@@ -66,7 +66,7 @@ namespace renderer {
                                                  const void* image_data,
                                                  const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        [[nodiscard]] std::optional<TextureHandle> get_image_handle(const Rx::String& name);
+        [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
         [[nodiscard]] rhi::Image& get_image(const Rx::String& image_name) const;
 

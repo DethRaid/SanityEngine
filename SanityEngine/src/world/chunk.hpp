@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstdint>
-#include <optional>
+#include <rx/core/optional.h>
 
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
@@ -26,7 +26,7 @@ public:
     static constexpr uint32_t DEPTH{32};
 
 public:
-    static std::optional<Chunk> create(const glm::ivec2& lower_left_corner, const Terrain& terrain, renderer::Renderer& renderer, entt::registry& registry);
+    static Rx::Optional<Chunk> create(const glm::ivec2& lower_left_corner, const Terrain& terrain, renderer::Renderer& renderer, entt::registry& registry);
 
     void __forceinline set_block_at_location(const glm::ivec3& location, BlockId block_id);
 

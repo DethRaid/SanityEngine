@@ -1,17 +1,15 @@
 #pragma once
 
-#include <optional>
-#include <vector>
-
 #include <d3d12.h>
 #include <glm/vec4.hpp>
+#include <rx/core/optional.h>
 
 #include "resources.hpp"
 
 namespace rhi {
     struct Framebuffer {
         Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
-        std::optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;
+        Rx::Optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;
 
         Rx::Vector<const Image*> render_targets;
         const Image* depth_target;

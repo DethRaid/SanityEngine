@@ -249,7 +249,7 @@ namespace renderer {
         return handle;
     }
 
-    std::optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
+    Rx::Optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
         if(const auto* idx = image_name_to_index.find(name)) {
             return TextureHandle{*idx};
 

@@ -5,7 +5,7 @@
 #include "renderer/renderer.hpp"
 #include "world/terrain.hpp"
 
-std::optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
+Rx::Optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
                                    const Terrain& terrain,
                                    renderer::Renderer& renderer,
                                    entt::registry& registry) {
@@ -38,7 +38,7 @@ std::optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
 
     auto chunk = Chunk{lower_left_corner, block_data, chunk_entity};
 
-    return std::optional<Chunk>{std::move(chunk)};
+    return Rx::Optional<Chunk>{std::move(chunk)};
 }
 
 Chunk::Chunk(const glm::ivec2& lower_left_corner_in,
