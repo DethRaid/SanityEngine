@@ -320,9 +320,9 @@ namespace rhi {
     }
 
     void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) const {
-        for(const D3D12_CPU_DESCRIPTOR_HANDLE handle : framebuffer->rtv_handles) {
+        framebuffer->rtv_handles.each_fwd([&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) {
             rtv_allocator->return_descriptor(handle);
-        }
+        });
 
         if(framebuffer->dsv_handle) {
             dsv_allocator->return_descriptor(*framebuffer->dsv_handle);
@@ -631,13 +631,13 @@ namespace rhi {
 
         // TODO: Score adapters based on things like supported feature level and available vram
 
-        for(const ComPtr<IDXGIAdapter>& cur_adapter : adapters) {
+        adapters.each_fwd([&](const ComPtr<IDXGIAdapter>& cur_adapter) {
             DXGI_ADAPTER_DESC desc;
             cur_adapter->GetDesc(&desc);
 
             if(desc.VendorId == INTEL_PCI_VENDOR_ID && adapters.size() > 1) {
                 // Prefer something other then the Intel GPU
-                continue;
+                return true;
             }
 
             ComPtr<ID3D12Device> try_device;
@@ -654,7 +654,7 @@ namespace rhi {
                     logger->warn("Ignoring adapter {} - Doesn't have the flexible resource binding that Sanity Engine needs",
                                  from_wide_string(desc.Description));
 
-                    continue;
+                    return true;
                 }
 
                 D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_5};
@@ -664,7 +664,7 @@ namespace rhi {
                                  from_wide_string(desc.Description),
                                  to_string(res));
 
-                    continue;
+                    return true;
 
                 } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_5) {
                     // Only supports old-ass shaders
@@ -672,7 +672,7 @@ namespace rhi {
                     logger->warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
                                  from_wide_string(desc.Description));
 
-                    // continue;
+                    return true;
                 }
 
                 adapter = cur_adapter;
@@ -706,14 +706,14 @@ namespace rhi {
                 }
 #endif
 
-                break;
+                return false;
 
             } else {
                 logger->warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description));
             }
 
-            continue;
-        }
+            return true;
+        });
 
         if(!device) {
             critical_error("Could not find a suitable D3D12 adapter");
