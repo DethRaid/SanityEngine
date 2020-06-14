@@ -236,7 +236,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
     }
 }
 
-std::unique_ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(rhi::RenderDevice& device) {
+Rx::Ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(rhi::RenderDevice& device) {
     auto [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
     const auto descriptor_size = device.get_shader_resource_descriptor_size();
 

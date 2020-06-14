@@ -9,8 +9,6 @@
 #include <minitrace.h>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 #include <stb_image.h>
 
 #include "globals.hpp"
@@ -19,6 +17,12 @@
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
 #include "world/world.hpp"
+
+static Rx::GlobalGroup s_sanity_engine_globals{"SanityEngine"};
+
+static Rx::Global<ftl::TaskScheduler> task_scheduler{"SanityEngine", "TaskScheduler"};
+
+RX_LOG("SanityEngine", logger);
 
 struct AtmosphereMaterial {
     glm::vec3 sun_vector;
@@ -32,12 +36,12 @@ int main() {
 
     g_engine->run();
 
-    spdlog::warn("REMAIN INDOORS");
+    logger->warning("REMAIN INDOORS");
 
     delete g_engine;
 }
 
-static void error_callback(const int error, const char* description) { spdlog::error("{} (GLFW error {}}", description, error); }
+static void error_callback(const int error, const char* description) { logger->error("%s (GLFW error %d}", description, error); }
 
 static void key_func(GLFWwindow* window, const int key, int /* scancode */, const int action, const int mods) {
     auto* input_manager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
@@ -45,9 +49,8 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-RX_LOG("SanityEngine", logger);
 
-SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
+SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>()} {
     mtr_init("SanityEngine.json");
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
@@ -55,7 +58,7 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     logger->info("HELLO HUMAN");
 
-    task_scheduler = std::make_unique<ftl::TaskScheduler>();
+    task_scheduler = Rx::make_ptr<ftl::TaskScheduler>();
     task_scheduler->Init();
 
     task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
@@ -85,12 +88,12 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     glfwSetKeyCallback(window, key_func);
 
-    renderer = std::make_unique<renderer::Renderer>(window, settings);
+    renderer = Rx::make_ptr<renderer::Renderer>(Rx::Memory::SystemAllocator::instance(), window, settings);
     logger->info("Initialized renderer");
 
     // initialize_scripting_runtime();
 
-    bve = std::make_unique<BveWrapper>(renderer->get_render_device());
+    bve = Rx::make_ptr<BveWrapper>(Rx::Memory::SystemAllocator::instance(), renderer->get_render_device());
 
     create_first_person_player();
 
@@ -98,7 +101,7 @@ SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in},
 
     make_frametime_display();
 
-    imgui_adapter = std::make_unique<DearImguiAdapter>(window, *renderer);
+    imgui_adapter = Rx::make_ptr<DearImguiAdapter>(Rx::Memory::SystemAllocator::instance(), window, *renderer);
 
     world = World::create({.seed = 666,
                            .height = 128,
@@ -183,14 +186,14 @@ World* SanityEngine::get_world() const { return world.get(); }
 void SanityEngine::initialize_scripting_runtime() {
     scripting_runtime = horus::ScriptingRuntime::create(registry);
     if(!scripting_runtime) {
-        throw std::exception("Could not initialize scripting runtime");
+        Rx::abort("Could not initialize scripting runtime");
     }
 
     register_horus_api();
 
     const auto success = scripting_runtime->add_script_directory("E:\\Documents\\SanityEngine\\SanityEngine\\scripts");
     if(!success) {
-        throw std::exception{"Could not register SanityEngine builtin scripts modifier"};
+       Rx::abort("Could not register SanityEngine builtin scripts modifier");
     }
 }
 
@@ -248,7 +251,8 @@ void SanityEngine::create_planetary_atmosphere() {
 
 void SanityEngine::make_frametime_display() {
     const auto frametime_display = registry.create();
-    registry.assign<ui::UiComponent>(frametime_display, std::make_unique<ui::FramerateDisplay>(framerate_tracker));
+    registry.assign<ui::UiComponent>(frametime_display,
+                                     Rx::make_ptr<ui::FramerateDisplay>(Rx::Memory::SystemAllocator::instance(), framerate_tracker));
 }
 
 void SanityEngine::create_first_person_player() {
@@ -260,7 +264,7 @@ void SanityEngine::create_first_person_player() {
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 
-    player_controller = std::make_unique<FirstPersonController>(window, player, registry);
+    player_controller = Rx::make_ptr<FirstPersonController>(Rx::Memory::SystemAllocator::instance(), window, player, registry);
 
     logger->info("Created flycam");
 }
@@ -273,7 +277,7 @@ void SanityEngine::load_bve_train(const Rx::String& filename) {
 }
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {
-    const auto msg = fmt::format("load_3d_object({})", filename.data());
-    MTR_SCOPE("SanityEngine", msg.c_str());
+    const auto msg = Rx::String::format("load_3d_object(%s)", filename);
+    MTR_SCOPE("SanityEngine", msg.data());
     load_static_mesh(filename, registry, *renderer);
 }

@@ -123,7 +123,7 @@ namespace renderer {
         : start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
-          camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
+          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
 
         // logger->set_level(spdlog::level::debug);
@@ -150,9 +150,9 @@ namespace renderer {
 
         create_builtin_images();
 
-        forward_pass = std::make_unique<ForwardPass>(*this, output_framebuffer_size);
-        denoiser_pass = std::make_unique<DenoiserPass>(*this, output_framebuffer_size, *forward_pass);
-        backbuffer_output_pass = std::make_unique<BackbufferOutputPass>(*this, *denoiser_pass);
+        forward_pass = Rx::make_ptr<ForwardPass>(*this, output_framebuffer_size);
+        denoiser_pass = Rx::make_ptr<DenoiserPass>(*this, output_framebuffer_size, *forward_pass);
+        backbuffer_output_pass = Rx::make_ptr<BackbufferOutputPass>(*this, *denoiser_pass);
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
@@ -338,7 +338,7 @@ namespace renderer {
 
         auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = std::make_unique<rhi::MeshDataStore>(*device, std::move(vertex_buffer), std::move(index_buffer));
+        static_mesh_storage = Rx::make_ptr<rhi::MeshDataStore>(*device, std::move(vertex_buffer), std::move(index_buffer));
     }
 
     void Renderer::create_per_frame_data_buffers() {
@@ -437,7 +437,7 @@ namespace renderer {
         Rx::Vector<const rhi::Image*> images;
         images.reserve(all_images.size());
 
-        all_images.each_fwd([&](const std::unique_ptr<rhi::Image>& image) { images.push_back(image.get()); });
+        all_images.each_fwd([&](const Rx::Ptr<rhi::Image>& image) { images.push_back(image.get()); });
 
         return images;
     }
@@ -545,7 +545,7 @@ namespace renderer {
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
-    std::unique_ptr<rhi::BindGroup> Renderer::bind_global_resources_for_frame(const uint32_t frame_idx) {
+    Rx::Ptr<rhi::BindGroup> Renderer::bind_global_resources_for_frame(const uint32_t frame_idx) {
         auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);

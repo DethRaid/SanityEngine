@@ -37,7 +37,7 @@ namespace horus {
 
     class ScriptingRuntime {
     public:
-        static std::unique_ptr<ScriptingRuntime> create(entt::registry& registry_in);
+        static Rx::Ptr<ScriptingRuntime> create(entt::registry& registry_in);
 
         explicit ScriptingRuntime(WrenVM* vm_in, entt::registry& registry_in);
 

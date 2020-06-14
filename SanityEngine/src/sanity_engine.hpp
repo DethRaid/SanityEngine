@@ -4,6 +4,7 @@
 #include <assimp/Importer.hpp>
 #include <entt/entity/registry.hpp>
 #include <ftl/task_scheduler.h>
+#include <rx/core/ptr.h>
 
 #include "../first_person_controller.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
@@ -14,8 +15,6 @@
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
-
-inline std::unique_ptr<ftl::TaskScheduler> task_scheduler;
 
 /*!
  * \brief Main class for my glorious engine
@@ -48,19 +47,19 @@ private:
 
     Settings settings;
 
-    std::unique_ptr<InputManager> input_manager;
+    Rx::Ptr<InputManager> input_manager;
 
-    std::unique_ptr<renderer::Renderer> renderer;
+    Rx::Ptr<renderer::Renderer> renderer;
 
-    std::unique_ptr<DearImguiAdapter> imgui_adapter;
+    Rx::Ptr<DearImguiAdapter> imgui_adapter;
 
     FramerateTracker framerate_tracker{1000};
 
-    std::unique_ptr<BveWrapper> bve;
+    Rx::Ptr<BveWrapper> bve;
 
     GLFWwindow* window;
 
-    std::unique_ptr<World> world;
+    Rx::Ptr<World> world;
 
     entt::registry registry;
 
@@ -71,7 +70,7 @@ private:
      */
     entt::entity player;
 
-    std::unique_ptr<FirstPersonController> player_controller;
+    Rx::Ptr<FirstPersonController> player_controller;
 
     Assimp::Importer importer;
 
@@ -83,7 +82,7 @@ private:
     void create_debug_plane();
 #pragma endregion
 
-    std::unique_ptr<horus::ScriptingRuntime> scripting_runtime;
+    Rx::Ptr<horus::ScriptingRuntime> scripting_runtime;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

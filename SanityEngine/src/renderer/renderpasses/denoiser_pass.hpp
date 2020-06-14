@@ -1,7 +1,7 @@
 #pragma once
-#include <memory>
 
 #include <glm/fwd.hpp>
+#include <rx/core/ptr.h>
 
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
@@ -30,7 +30,7 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        std::unique_ptr<rhi::RenderPipelineState> accumulation_pipeline;
+        Rx::Ptr<rhi::RenderPipelineState> accumulation_pipeline;
 
         /*!
          * \brief Handle to the texture that holds the accumulated scene
@@ -45,9 +45,9 @@ namespace renderer {
         /*!
          * \brief Framebuffer for the final denoised image
          */
-        std::unique_ptr<rhi::Framebuffer> denoised_framebuffer;
+        Rx::Ptr<rhi::Framebuffer> denoised_framebuffer;
 
-        std::unique_ptr<rhi::Buffer> denoiser_material_buffer;
+        Rx::Ptr<rhi::Buffer> denoiser_material_buffer;
 
         void create_images_and_framebuffer(const glm::uvec2& render_resolution);
 

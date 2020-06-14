@@ -57,7 +57,7 @@ public:
     /*!
      * \brief Created a world with the provided parameters
      */
-    static std::unique_ptr<World> create(const WorldParameters& params,
+    static Rx::Ptr<World> create(const WorldParameters& params,
                                          entt::entity player_in,
                                          entt::registry& registry_in,
                                          renderer::Renderer& renderer_in);
@@ -74,7 +74,7 @@ public:
 private:
     glm::uvec2 size;
 
-    std::unique_ptr<FastNoiseSIMD> noise_generator;
+    Rx::Ptr<FastNoiseSIMD> noise_generator;
 
     entt::entity player;
 
@@ -91,7 +91,7 @@ private:
     explicit World(const glm::uvec2& size_in,
                    uint32_t min_terrain_height,
                    uint32_t max_terrain_height,
-                   std::unique_ptr<FastNoiseSIMD> noise_generator_in,
+                   Rx::Ptr<FastNoiseSIMD> noise_generator_in,
                    entt::entity player_in,
                    entt::registry& registry_in,
                    renderer::Renderer& renderer_in);

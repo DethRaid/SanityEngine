@@ -375,7 +375,7 @@ namespace rhi {
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
         meshes.each_fwd([&](const Mesh& mesh) {
-            auto& [first_vertex, num_vertices, first_index, num_indices] = mesh;
+            const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh;
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
                                                             .Triangles = {.Transform3x4 = 0,

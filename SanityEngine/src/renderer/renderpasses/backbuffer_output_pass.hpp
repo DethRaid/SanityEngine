@@ -1,9 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include "renderer/renderpass.hpp"
 #include "rhi/render_pipeline_state.hpp"
+#include <rx/core/ptr.h>
 
 namespace renderer {
     class Renderer;
@@ -20,8 +19,8 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
+        Rx::Ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
 
-        std::unique_ptr<rhi::Buffer> backbuffer_output_material_buffer;
+        Rx::Ptr<rhi::Buffer> backbuffer_output_material_buffer;
     };
 } // namespace renderer

@@ -81,7 +81,7 @@ namespace rhi {
         device_allocator->Release();
     }
 
-    std::unique_ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
+    Rx::Ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
 
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
@@ -118,7 +118,7 @@ namespace rhi {
                 logger->warning("Unknown buffer usage %u", create_info.usage);
         }
 
-        auto buffer = std::make_unique<Buffer>();
+        auto buffer = Rx::make_ptr<Buffer>();
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
@@ -144,7 +144,7 @@ namespace rhi {
         return move(buffer);
     }
 
-    std::unique_ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
+    Rx::Ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
         auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
@@ -159,7 +159,7 @@ namespace rhi {
             alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
         }
 
-        auto image = std::make_unique<Image>();
+        auto image = Rx::make_ptr<Image>();
         image->format = create_info.format;
 
         D3D12_RESOURCE_STATES initial_state{};
@@ -207,9 +207,9 @@ namespace rhi {
         return image;
     }
 
-    std::unique_ptr<Framebuffer> RenderDevice::create_framebuffer(const Rx::Vector<const Image*>& render_targets,
+    Rx::Ptr<Framebuffer> RenderDevice::create_framebuffer(const Rx::Vector<const Image*>& render_targets,
                                                                   const Image* depth_target) const {
-        auto framebuffer = std::make_unique<Framebuffer>();
+        auto framebuffer = Rx::make_ptr<Framebuffer>();
 
         framebuffer->render_targets = render_targets;
         framebuffer->depth_target = depth_target;
@@ -310,15 +310,15 @@ namespace rhi {
         return ptr;
     }
 
-    void RenderDevice::schedule_buffer_destruction(std::unique_ptr<Buffer> buffer) {
+    void RenderDevice::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Buffer*>(buffer.release()));
     }
 
-    void RenderDevice::schedule_image_destruction(std::unique_ptr<Image> image) {
+    void RenderDevice::schedule_image_destruction(Rx::Ptr<Image> image) {
         image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Image*>(image.release()));
     }
 
-    void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) const {
+    void RenderDevice::destroy_framebuffer(const Rx::Ptr<Framebuffer> framebuffer) const {
         framebuffer->rtv_handles.each_fwd([&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) { rtv_allocator->return_descriptor(handle); });
 
         if(framebuffer->dsv_handle) {
@@ -326,7 +326,7 @@ namespace rhi {
         }
     }
 
-    std::unique_ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
+    Rx::Ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
         const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors,
         const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
         const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
@@ -334,7 +334,7 @@ namespace rhi {
         RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
                   "If you specify descriptor table descriptors, you must also specify descriptor table handles");
 
-        return std::make_unique<BindGroupBuilder>(*device.Get(),
+        return Rx::make_ptr<BindGroupBuilder>(*device.Get(),
                                                   *cbv_srv_uav_heap.Get(),
                                                   cbv_srv_uav_size,
                                                   root_descriptors,
@@ -342,9 +342,9 @@ namespace rhi {
                                                   descriptor_table_handles);
     }
 
-    std::unique_ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(
+    Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(
         const Rx::Vector<uint8_t>& compute_shader, const ComPtr<ID3D12RootSignature> root_signature) const {
-        auto compute_pipeline = std::make_unique<ComputePipelineState>();
+        auto compute_pipeline = Rx::make_ptr<ComputePipelineState>();
 
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
             .pRootSignature = root_signature.Get(),
@@ -362,7 +362,7 @@ namespace rhi {
         return compute_pipeline;
     }
 
-    std::unique_ptr<RenderPipelineState> RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
+    Rx::Ptr<RenderPipelineState> RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
         return create_pipeline_state(create_info, *standard_root_signature.Get());
     }
 
@@ -405,11 +405,11 @@ namespace rhi {
         }
     }
 
-    void RenderDevice::destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> /* pipeline_state */) {
+    void RenderDevice::destroy_compute_pipeline_state(Rx::Ptr<ComputePipelineState> /* pipeline_state */) {
         // Nothing to explicitly do, the destructors will take care of us
     }
 
-    void RenderDevice::destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> /* pipeline_state */) {
+    void RenderDevice::destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> /* pipeline_state */) {
         // Nothing to do, destructors will take care of it
     }
 
@@ -830,10 +830,10 @@ namespace rhi {
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        rtv_allocator = std::make_unique<DescriptorAllocator>(rtv_heap, rtv_size);
+        rtv_allocator = Rx::make_ptr<DescriptorAllocator>(rtv_heap, rtv_size);
 
         const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        dsv_allocator = std::make_unique<DescriptorAllocator>(dsv_heap, dsv_size);
+        dsv_allocator = Rx::make_ptr<DescriptorAllocator>(dsv_heap, dsv_size);
     }
 
     void RenderDevice::initialize_swapchain_descriptors() {
@@ -1152,7 +1152,7 @@ namespace rhi {
         return input_descs;
     }
 
-    std::unique_ptr<RenderPipelineState> RenderDevice::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
+    Rx::Ptr<RenderPipelineState> RenderDevice::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                              ID3D12RootSignature& root_signature) {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
@@ -1258,7 +1258,7 @@ namespace rhi {
             desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
         }
 
-        auto pipeline = std::make_unique<RenderPipelineState>();
+        auto pipeline = Rx::make_ptr<RenderPipelineState>();
         pipeline->root_signature = &root_signature;
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
@@ -1341,12 +1341,12 @@ namespace rhi {
 
     void RenderDevice::destroy_resources_for_frame(const uint32_t frame_idx) {
         auto& buffers = buffer_deletion_list[frame_idx];
-        buffers.each_fwd([&](const std::unique_ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
+        buffers.each_fwd([&](const Rx::Ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
 
         buffers.clear();
 
         auto& images = image_deletion_list[cur_gpu_frame_idx];
-        images.each_fwd([&](const std::unique_ptr<Image>& image) { destroy_resource_immediate(*image); });
+        images.each_fwd([&](const Rx::Ptr<Image>& image) { destroy_resource_immediate(*image); });
         images.clear();
     }
 
@@ -1504,7 +1504,7 @@ namespace rhi {
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
-    std::unique_ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const Settings& settings) {
+    Rx::Ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const Settings& settings) {
         switch(backend) {
             case RenderBackend::D3D12: {
                 auto hwnd = glfwGetWin32Window(window);
@@ -1514,7 +1514,7 @@ namespace rhi {
 
                 logger->info("Creating D3D12 backend");
 
-                return std::make_unique<RenderDevice>(hwnd, framebuffer_size, settings);
+                return Rx::make_ptr<RenderDevice>(hwnd, framebuffer_size, settings);
             }
         }
 

@@ -4,6 +4,7 @@
 #include <queue>
 
 #include <entt/fwd.hpp>
+#include <rx/core/ptr.h>
 #include <rx/core/vector.h>
 
 #include "renderer/camera_matrix_buffer.hpp"
@@ -100,7 +101,7 @@ namespace renderer {
                                                                            const Rx::Vector<rhi::Mesh>& meshes,
                                                                            const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_global_resources_for_frame(uint32_t frame_idx);
+        [[nodiscard]] Rx::Ptr<rhi::BindGroup> bind_global_resources_for_frame(uint32_t frame_idx);
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -109,24 +110,24 @@ namespace renderer {
 
         glm::uvec2 output_framebuffer_size;
 
-        std::unique_ptr<rhi::RenderDevice> device;
+        Rx::Ptr<rhi::RenderDevice> device;
 
-        std::unique_ptr<rhi::MeshDataStore> static_mesh_storage;
+        Rx::Ptr<rhi::MeshDataStore> static_mesh_storage;
 
         PerFrameData per_frame_data;
-        Rx::Vector<std::unique_ptr<rhi::Buffer>> per_frame_data_buffers;
+        Rx::Vector<Rx::Ptr<rhi::Buffer>> per_frame_data_buffers;
 
-        std::unique_ptr<CameraMatrixBuffer> camera_matrix_buffers;
+        Rx::Ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
         Rx::Vector<StandardMaterial> standard_materials;
         Rx::Vector<StandardMaterialHandle> free_material_handles;
-        Rx::Vector<std::unique_ptr<rhi::Buffer>> material_device_buffers;
+        Rx::Vector<Rx::Ptr<rhi::Buffer>> material_device_buffers;
 
         Rx::Map<Rx::String, uint32_t> image_name_to_index;
-        Rx::Vector<std::unique_ptr<rhi::Image>> all_images;
+        Rx::Vector<Rx::Ptr<rhi::Image>> all_images;
 
         std::array<Light, MAX_NUM_LIGHTS> lights;
-        Rx::Vector<std::unique_ptr<rhi::Buffer>> light_device_buffers;
+        Rx::Vector<Rx::Ptr<rhi::Buffer>> light_device_buffers;
 
         std::queue<rhi::Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
@@ -163,11 +164,11 @@ namespace renderer {
 
         rhi::RaytracingScene raytracing_scene;
 
-        std::unique_ptr<ForwardPass> forward_pass;
+        Rx::Ptr<ForwardPass> forward_pass;
 
-        std::unique_ptr<DenoiserPass> denoiser_pass;
+        Rx::Ptr<DenoiserPass> denoiser_pass;
 
-        std::unique_ptr<BackbufferOutputPass> backbuffer_output_pass;
+        Rx::Ptr<BackbufferOutputPass> backbuffer_output_pass;
 
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
@@ -177,10 +178,10 @@ namespace renderer {
 #pragma endregion
 
 #pragma region UI
-        std::unique_ptr<rhi::RenderPipelineState> ui_pipeline;
+        Rx::Ptr<rhi::RenderPipelineState> ui_pipeline;
 
-        Rx::Vector<std::unique_ptr<rhi::Buffer>> ui_vertex_buffers;
-        Rx::Vector<std::unique_ptr<rhi::Buffer>> ui_index_buffers;
+        Rx::Vector<Rx::Ptr<rhi::Buffer>> ui_vertex_buffers;
+        Rx::Vector<Rx::Ptr<rhi::Buffer>> ui_index_buffers;
 
         void create_ui_pipeline();
 

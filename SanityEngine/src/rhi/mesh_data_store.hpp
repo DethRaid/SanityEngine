@@ -1,9 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <rx/core/ptr.h>
 #include <rx/core/vector.h>
 
 #include "resources.hpp"
@@ -50,7 +49,7 @@ namespace rhi {
 
     class MeshDataStore {
     public:
-        MeshDataStore(RenderDevice& device_in, std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in);
+        MeshDataStore(RenderDevice& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
         MeshDataStore& operator=(const MeshDataStore& other) = delete;
@@ -87,9 +86,9 @@ namespace rhi {
     private:
         RenderDevice* device;
 
-        std::unique_ptr<Buffer> vertex_buffer;
+        Rx::Ptr<Buffer> vertex_buffer;
 
-        std::unique_ptr<Buffer> index_buffer;
+        Rx::Ptr<Buffer> index_buffer;
 
         Rx::Vector<VertexBufferBinding> vertex_bindings{};
 

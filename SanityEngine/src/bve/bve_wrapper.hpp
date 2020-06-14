@@ -10,6 +10,7 @@
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
 #include "rhi/mesh_data_store.hpp"
+#include <rx/core/ptr.h>
 
 namespace renderer {
     class Renderer;
@@ -22,10 +23,10 @@ public:
     explicit BveWrapper(rhi::RenderDevice& device);
 
     [[nodiscard]] bool add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer);
-    std::unique_ptr<rhi::BindGroupBuilder> create_texture_processor_bind_group_builder(rhi::RenderDevice& device);
+    Rx::Ptr<rhi::BindGroupBuilder> create_texture_processor_bind_group_builder(rhi::RenderDevice& device);
 
 private:
-    std::unique_ptr<rhi::ComputePipelineState> bve_texture_pipeline;
+    Rx::Ptr<rhi::ComputePipelineState> bve_texture_pipeline;
 
     void create_texture_filter_pipeline(rhi::RenderDevice& device);
 

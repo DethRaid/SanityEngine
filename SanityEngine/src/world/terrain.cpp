@@ -74,13 +74,13 @@ glm::ivec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& posi
 void Terrain::load_terrain_textures_and_create_material() {
     ftl::AtomicCounter counter{task_scheduler.get()};
 
-    std::unique_ptr<LoadImageToGpuArgs> albedo_image_data = std::make_unique<LoadImageToGpuArgs>();
+    Rx::Ptr<LoadImageToGpuArgs> albedo_image_data = Rx::make_ptr<LoadImageToGpuArgs>();
     albedo_image_data->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
     albedo_image_data->renderer_in = renderer;
 
     task_scheduler->AddTask({load_image_to_gpu, albedo_image_data.get()}, &counter);
 
-    std::unique_ptr<LoadImageToGpuArgs> normal_roughness_image_data = std::make_unique<LoadImageToGpuArgs>();
+    Rx::Ptr<LoadImageToGpuArgs> normal_roughness_image_data = Rx::make_ptr<LoadImageToGpuArgs>();
     normal_roughness_image_data
         ->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
     normal_roughness_image_data->renderer_in = renderer;

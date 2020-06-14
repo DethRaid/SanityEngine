@@ -237,7 +237,7 @@ namespace horus {
         return nullptr;
     }
 
-    std::unique_ptr<ScriptingRuntime> ScriptingRuntime::create(entt::registry& registry_in) {
+    Rx::Ptr<ScriptingRuntime> ScriptingRuntime::create(entt::registry& registry_in) {
         MTR_SCOPE("ScriptingRuntime", "create");
 
         auto config = WrenConfiguration{};
@@ -256,7 +256,7 @@ namespace horus {
             return {};
         }
 
-        return std::make_unique<ScriptingRuntime>(vm, registry_in);
+        return Rx::make_ptr<ScriptingRuntime>(vm, registry_in);
     }
 
     ScriptingRuntime::ScriptingRuntime(WrenVM* vm_in, entt::registry& registry_in) : vm{vm_in}, registry{&registry_in} {

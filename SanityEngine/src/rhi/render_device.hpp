@@ -62,22 +62,22 @@ namespace rhi {
         ~RenderDevice();
 
 #pragma region RenderDevice
-        [[nodiscard]] std::unique_ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
 
-        [[nodiscard]] std::unique_ptr<Image> create_image(const ImageCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
-        [[nodiscard]] std::unique_ptr<Framebuffer> create_framebuffer(const Rx::Vector<const Image*>& render_targets,
+        [[nodiscard]] Rx::Ptr<Framebuffer> create_framebuffer(const Rx::Vector<const Image*>& render_targets,
                                                                       const Image* depth_target = nullptr) const;
 
         Framebuffer* get_backbuffer_framebuffer();
 
         [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
 
-        void schedule_buffer_destruction(std::unique_ptr<Buffer> buffer);
+        void schedule_buffer_destruction(Rx::Ptr<Buffer> buffer);
 
-        void schedule_image_destruction(std::unique_ptr<Image> image);
+        void schedule_image_destruction(Rx::Ptr<Image> image);
 
-        void destroy_framebuffer(std::unique_ptr<Framebuffer> framebuffer) const;
+        void destroy_framebuffer(Rx::Ptr<Framebuffer> framebuffer) const;
 
         /*!
          * \brief Creates a bind group builder with the provided descriptors
@@ -87,19 +87,19 @@ namespace rhi {
          * to that descriptors
          * \param descriptor_table_handles Mapping from root parameters index to GPU handle to the descriptor table to bind to that index
          */
-        [[nodiscard]] std::unique_ptr<BindGroupBuilder> create_bind_group_builder(
+        [[nodiscard]] Rx::Ptr<BindGroupBuilder> create_bind_group_builder(
             const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
             const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
             const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
-        [[nodiscard]] std::unique_ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
+        [[nodiscard]] Rx::Ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
                                                                                           ComPtr<ID3D12RootSignature> root_signature) const;
 
-        [[nodiscard]] std::unique_ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
+        [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
-        void destroy_compute_pipeline_state(std::unique_ptr<ComputePipelineState> pipeline_state);
+        void destroy_compute_pipeline_state(Rx::Ptr<ComputePipelineState> pipeline_state);
 
-        void destroy_render_pipeline_state(std::unique_ptr<RenderPipelineState> pipeline_state);
+        void destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> pipeline_state);
 
         [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
 
@@ -181,16 +181,16 @@ namespace rhi {
         ComPtr<ID3D12Fence> frame_fences;
         Rx::Vector<uint64_t> frame_fence_values;
 
-        Rx::Vector<Rx::Vector<std::unique_ptr<Buffer>>> buffer_deletion_list;
-        Rx::Vector<Rx::Vector<std::unique_ptr<Image>>> image_deletion_list;
+        Rx::Vector<Rx::Vector<Rx::Ptr<Buffer>>> buffer_deletion_list;
+        Rx::Vector<Rx::Vector<Rx::Ptr<Image>>> image_deletion_list;
 
         ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
         UINT next_free_cbv_srv_uav_descriptor{0};
 
-        std::unique_ptr<DescriptorAllocator> rtv_allocator;
+        Rx::Ptr<DescriptorAllocator> rtv_allocator;
 
-        std::unique_ptr<DescriptorAllocator> dsv_allocator;
+        Rx::Ptr<DescriptorAllocator> dsv_allocator;
 
         D3D12MA::Allocator* device_allocator;
 
@@ -239,7 +239,7 @@ namespace rhi {
 
         Rx::Vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
-        Rx::Vector<std::unique_ptr<BindGroupBuilder>> material_bind_group_builder;
+        Rx::Vector<Rx::Ptr<BindGroupBuilder>> material_bind_group_builder;
 
         /*!
          * \brief Index of the swapchain image we're currently rendering to
@@ -304,7 +304,7 @@ namespace rhi {
 
         [[nodiscard]] Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const Rx::Vector<uint8_t>& shader) const;
 
-        [[nodiscard]] std::unique_ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
+        [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);
 
         [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const uint32_t& id);
@@ -337,7 +337,7 @@ namespace rhi {
         void retrieve_dred_report() const;
     };
 
-    [[nodiscard]] std::unique_ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
+    [[nodiscard]] Rx::Ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
 
     template <GpuResource ResourceType>
     void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {

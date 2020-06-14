@@ -21,13 +21,13 @@ void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& script
     }
 }
 
-std::unique_ptr<World> World::create(const WorldParameters& params,
+Rx::Ptr<World> World::create(const WorldParameters& params,
                                      const entt::entity player_in,
                                      entt::registry& registry_in,
                                      renderer::Renderer& renderer_in) {
     logger->info("Creating world with seed %d", params.seed);
 
-    auto noise_generator = std::unique_ptr<FastNoiseSIMD>{FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
+    auto noise_generator = Rx::Ptr<FastNoiseSIMD>{FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
 
     // Settings gotten from messing around in the demo application. High chance these should be tuned in-game
     noise_generator->SetNoiseType(FastNoiseSIMD::PerlinFractal);
@@ -40,7 +40,7 @@ std::unique_ptr<World> World::create(const WorldParameters& params,
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
 
-    return std::unique_ptr<World>(new World{glm::uvec2{params.width, params.height},
+    return Rx::Ptr<World>(new World{glm::uvec2{params.width, params.height},
                                             min_terrain_height,
                                             max_terrain_height,
                                             std::move(noise_generator),
@@ -66,7 +66,7 @@ WrenHandle* World::_get_wren_handle() const { return handle; }
 World::World(const glm::uvec2& size_in,
              const uint32_t min_terrain_height,
              const uint32_t max_terrain_height,
-             std::unique_ptr<FastNoiseSIMD> noise_generator_in,
+             Rx::Ptr<FastNoiseSIMD> noise_generator_in,
              entt::entity player_in,
              entt::registry& registry_in,
              renderer::Renderer& renderer_in)

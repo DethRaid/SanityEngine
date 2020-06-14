@@ -283,6 +283,6 @@ namespace rhi {
             }
         });
 
-        return std::make_unique<BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
+        return Rx::make_ptr<BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
     } // namespace rhi
 } // namespace rhi

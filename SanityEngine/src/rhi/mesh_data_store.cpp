@@ -9,7 +9,7 @@
 namespace rhi {
     RX_LOG("MeshDataStore", logger);
 
-    MeshDataStore::MeshDataStore(RenderDevice& device_in, std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in)
+    MeshDataStore::MeshDataStore(RenderDevice& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)
         : device{&device_in}, vertex_buffer{std::move(vertex_buffer_in)}, index_buffer{std::move(index_buffer_in)} {
 
         vertex_bindings.reserve(4);

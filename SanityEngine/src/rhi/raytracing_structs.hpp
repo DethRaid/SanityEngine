@@ -1,10 +1,9 @@
 #pragma once
 
-#include <memory>
-
-#include "resources.hpp"
+#include <rx/core/ptr.h>
 
 #include "renderer/handles.hpp"
+#include "resources.hpp"
 
 namespace rhi {
     constexpr uint32_t OPAQUE_OBJECT_BIT = 0x01;
@@ -20,7 +19,7 @@ namespace rhi {
         /*!
          * \brief Buffer that holds the bottom-level acceleration structure
          */
-        std::unique_ptr<Buffer> blas_buffer;
+        Rx::Ptr<Buffer> blas_buffer;
     };
 
     struct RaytracingMaterial {
@@ -43,6 +42,6 @@ namespace rhi {
      * \brief Struct for the top level acceleration structure that we can raytrace against
      */
     struct RaytracingScene {
-        std::unique_ptr<Buffer> buffer;
+        Rx::Ptr<Buffer> buffer;
     };
 } // namespace rhi

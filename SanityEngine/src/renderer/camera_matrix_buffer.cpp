@@ -60,30 +60,32 @@ namespace renderer {
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](rhi::Buffer* buffer) { device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>{buffer}); });
+        device_data.each_fwd([&](rhi::Buffer* buffer) {
+            device->schedule_buffer_destruction(Rx::Ptr<rhi::Buffer>{Rx::Memory::SystemAllocator::instance(), buffer});
+        });
     }
 
     CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) {
-        RX_ASSERT(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
+        RX_ASSERT(idx < MAX_NUM_CAMERAS, "Requested camera index %u is larger than the maximum number of cameras %u", idx, MAX_NUM_CAMERAS);
 
         return host_data[idx];
     }
 
     const CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) const {
-        RX_ASSERT(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
+        RX_ASSERT(idx < MAX_NUM_CAMERAS, "Requested camera index %u is larger than the maximum number of cameras %u", idx, MAX_NUM_CAMERAS);
 
         return host_data[idx];
     }
 
     void CameraMatrixBuffer::set_camera_matrices(const uint32_t camera_idx, const CameraMatrices& matrices) {
-        RX_ASSERT(camera_idx < MAX_NUM_CAMERAS, "Camera index {} must be less than MAX_NUM_CAMERAS ({})", camera_idx, MAX_NUM_CAMERAS);
+        RX_ASSERT(camera_idx < MAX_NUM_CAMERAS, "Camera index %u must be less than MAX_NUM_CAMERAS (%u)", camera_idx, MAX_NUM_CAMERAS);
 
         host_data[camera_idx] = matrices;
     }
 
     rhi::Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const uint32_t frame_idx) const {
         RX_ASSERT(frame_idx < device_data.size(),
-                  "Not enough device buffers! There are {} device buffers for camera matrices, but buffer {} was requested",
+                  "Not enough device buffers! There are %u device buffers for camera matrices, but buffer %u was requested",
                   device_data.size(),
                   frame_idx);
 
