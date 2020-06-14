@@ -49,16 +49,14 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-
-SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>()} {
+SanityEngine::SanityEngine(const Settings& settings_in)
+    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(Rx::Memory::SystemAllocator::instance())} {
     mtr_init("SanityEngine.json");
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
 
-
     logger->info("HELLO HUMAN");
 
-    task_scheduler = Rx::make_ptr<ftl::TaskScheduler>();
     task_scheduler->Init();
 
     task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
@@ -193,7 +191,7 @@ void SanityEngine::initialize_scripting_runtime() {
 
     const auto success = scripting_runtime->add_script_directory("E:\\Documents\\SanityEngine\\SanityEngine\\scripts");
     if(!success) {
-       Rx::abort("Could not register SanityEngine builtin scripts modifier");
+        Rx::abort("Could not register SanityEngine builtin scripts modifier");
     }
 }
 

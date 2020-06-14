@@ -303,9 +303,6 @@
     <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp">
       <Filter>Source Files\renderer\renderpass</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp">
       <Filter>Source Files\noise</Filter>
     </ClCompile>
@@ -326,12 +323,6 @@
     </ClCompile>
     <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
       <Filter>Source Files\noise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\chunk.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\block_registry.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="extern\rex\include\rx\core\abort.cpp">
       <Filter>Rex\core</Filter>
@@ -498,11 +489,20 @@
     <ClCompile Include="extern\rex\include\lib\json.c">
       <Filter>Rex</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp">
+      <Filter>Source Files\renderer\renderpass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\block_registry.cpp">
+      <Filter>Source Files\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\chunk.cpp">
+      <Filter>Source Files\world</Filter>
+    </ClCompile>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\adapters\rex</Filter>
     </ClCompile>
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\adapters\rex</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -674,20 +674,11 @@
     <ClInclude Include="src\renderer\renderpass.hpp">
       <Filter>Header Files\renderer\renderpass</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.h">
       <Filter>Header Files\noise</Filter>
     </ClInclude>
     <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h">
       <Filter>Header Files\noise</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\chunk.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\block_registry.hpp">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\algorithm\clamp.h">
       <Filter>Rex\core\algorithm</Filter>
@@ -1142,14 +1133,23 @@
     <ClInclude Include="extern\rex\include\lib\json.h">
       <Filter>Rex</Filter>
     </ClInclude>
-    <ClInclude Include="src\adapters\rex\rex_wrapper.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\adapters\rex\rex_wrapper.hpp">
+      <Filter>Header Files\adapters\rex</Filter>
+    </ClInclude>
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\adapters\rex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
+      <Filter>Header Files\renderer\renderpass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\block_registry.hpp">
+      <Filter>Header Files\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\chunk.hpp">
+      <Filter>Header Files\world</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

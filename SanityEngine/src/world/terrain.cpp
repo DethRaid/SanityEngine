@@ -6,7 +6,6 @@
 #include <minitrace.h>
 #include <rx/core/array.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/image_loading.hpp"
 #include "renderer/standard_material.hpp"
@@ -30,8 +29,6 @@ Terrain::Terrain(const uint32_t max_latitude_in,
       max_longitude{max_longitude_in},
       min_terrain_height{min_terrain_height_in},
       max_terrain_height{max_terrain_height_in} {
-
-    logger->set_level(spdlog::level::trace);
 
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
@@ -72,15 +69,18 @@ glm::ivec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& posi
 }
 
 void Terrain::load_terrain_textures_and_create_material() {
-    ftl::AtomicCounter counter{task_scheduler.get()};
+    auto* sanity_engine_global = Rx::Globals::find("SanityEngine");
+    auto* task_scheduler = sanity_engine_global->find("TaskScheduler")->cast<ftl::TaskScheduler>();
 
-    Rx::Ptr<LoadImageToGpuArgs> albedo_image_data = Rx::make_ptr<LoadImageToGpuArgs>();
+    ftl::AtomicCounter counter{task_scheduler};
+
+    Rx::Ptr<LoadImageToGpuArgs> albedo_image_data = Rx::make_ptr<LoadImageToGpuArgs>(Rx::Memory::SystemAllocator::instance());
     albedo_image_data->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
     albedo_image_data->renderer_in = renderer;
 
     task_scheduler->AddTask({load_image_to_gpu, albedo_image_data.get()}, &counter);
 
-    Rx::Ptr<LoadImageToGpuArgs> normal_roughness_image_data = Rx::make_ptr<LoadImageToGpuArgs>();
+    Rx::Ptr<LoadImageToGpuArgs> normal_roughness_image_data = Rx::make_ptr<LoadImageToGpuArgs>(Rx::Memory::SystemAllocator::instance());
     normal_roughness_image_data
         ->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
     normal_roughness_image_data->renderer_in = renderer;
