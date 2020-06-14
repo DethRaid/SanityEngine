@@ -1,11 +1,16 @@
 #pragma once
 
-#include <string>
-#include <unordered_set>
+#include <concepts>
 
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
+#include <rx/core/set.h>
+#include <rx/core/string.h>
 #include <wren/wren.hpp>
+
+namespace Rx {
+    struct String;
+}
 
 class World;
 
@@ -42,13 +47,13 @@ namespace horus {
 
     class [[horus::class(module = sanity_engine)]] Entity {
     public:
-        [[horus::constructor]] explicit Entity(WrenHandle* handle_in, entt::entity entity_in, entt::registry & registry_in);
+        [[horus::constructor]] explicit Entity(WrenHandle * handle_in, entt::entity entity_in, entt::registry & registry_in);
 
         [[horus::method]] void add_tag(const Rx::String& tag) const;
 
         [[horus::method]] [[nodiscard]] bool has_tag(const Rx::String& tag) const;
 
-        [[horus::method]] [[nodiscard]] std::unordered_set<Rx::String> get_tags() const;
+        [[horus::method]] [[nodiscard]] Rx::Set<Rx::String> get_tags() const;
 
         [[horus::method]] [[nodiscard]] World* get_world() const;
 

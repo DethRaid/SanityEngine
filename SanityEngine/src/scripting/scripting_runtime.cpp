@@ -152,11 +152,11 @@ namespace horus {
                                                               const Rx::String& class_name,
                                                               const bool is_static,
                                                               const Rx::String& signature) const {
-        if(const auto& program_itr = registered_script_functions.find(is_static); program_itr != registered_script_functions.end()) {
-            if(const auto& module_itr = program_itr->second.find(module_name); module_itr != program_itr->second.end()) {
-                if(const auto& class_itr = module_itr->second.classes.find(class_name); class_itr != module_itr->second.classes.end()) {
-                    if(const auto& method_itr = class_itr->second.find(signature); method_itr != class_itr->second.end()) {
-                        return method_itr->second;
+        if(const auto* wren_program = registered_script_functions.find(is_static)) {
+            if(const auto* wren_module = wren_program->find(module_name)) {
+                if(const auto* wren_class = wren_module->classes.find(class_name)) {
+                    if(const auto* wren_method = wren_class->find(signature)) {
+                        return *wren_method;
                     }
                 }
             }
@@ -166,11 +166,10 @@ namespace horus {
     }
 
     WrenForeignClassMethods ScriptingRuntime::bind_foreign_class(const Rx::String& module_name, const Rx::String& class_name) const {
-        if(const auto& program_itr = registered_script_functions.find(true); program_itr != registered_script_functions.end()) {
-            if(const auto& module_itr = program_itr->second.find(module_name); module_itr != program_itr->second.end()) {
-                if(const auto& class_allocator_itr = module_itr->second.object_allocators.find(class_name);
-                   class_allocator_itr != module_itr->second.object_allocators.end()) {
-                    return class_allocator_itr->second;
+        if(const auto* wren_program = registered_script_functions.find(true)) {
+            if(const auto* wren_module = wren_program->find(module_name)) {
+                if(const auto* wren_constructor = wren_module->object_allocators.find(class_name)) {
+                    return *wren_constructor;
                 }
             }
         }
@@ -185,10 +184,10 @@ namespace horus {
         }
 
         for(const auto& module_directory : module_paths) {
-            const auto& potential_filename = module_directory / module_name;
+            const auto& potential_filename = module_directory / module_name.data();
             logger->trace("Attempting to load file {} for module {}", potential_filename, module_name);
 
-            auto* file = fopen(module_name.c_str(), "r");
+            auto* file = fopen(module_name.data(), "r");
             if(file == nullptr) {
                 // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
                 logger->trace("Could not open file {}", potential_filename);
@@ -297,18 +296,19 @@ namespace horus {
         return true;
     }
 
-    void ScriptingRuntime::register_script_object_allocator(const ScriptingClassName& name, WrenForeignClassMethods allocator_methods) {
-        auto& wren_program = registered_script_functions[true]; // Allocators are always static
-        auto& allocators = wren_program[name.module_name].object_allocators;
-        allocators.emplace(name.class_name, allocator_methods);
+    void ScriptingRuntime::register_script_object_allocator(const ScriptingClassName& name,
+                                                            const WrenForeignClassMethods& allocator_methods) {
+        auto& wren_program = *registered_script_functions.find(true); // Allocators are always static
+        auto& allocators = wren_program.find(name.module_name)->object_allocators;
+        allocators.insert(name.class_name, allocator_methods);
     }
 
     void ScriptingRuntime::register_script_function(const ScriptingFunctionName& name, WrenForeignMethodFn function) {
-        auto& wren_program = registered_script_functions[name.is_static];
-        auto& wren_module = wren_program[name.module_name].classes;
-        auto& wren_class = wren_module[name.class_name];
+        auto& wren_program = *registered_script_functions.find(name.is_static);
+        auto& wren_module = wren_program.find(name.module_name)->classes;
+        auto& wren_class = *wren_module.find(name.class_name);
 
-        wren_class.emplace(name.method_signature, function);
+        wren_class.insert(name.method_signature, function);
     }
 
     WrenHandle* ScriptingRuntime::create_entity() const {
@@ -356,7 +356,7 @@ namespace horus {
 
         // Load the class into a slot so we can get methods from it
         wrenEnsureSlots(vm, 1);
-        wrenGetVariable(vm, module_name.c_str(), component_class_name.c_str(), 0);
+        wrenGetVariable(vm, module_name.data(), component_class_name.data(), 0);
 
         const auto full_signature = fmt::format("new()", module_name, component_class_name);
         auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
@@ -438,11 +438,11 @@ namespace horus {
         wrenSetSlotNewList(vm, 0);
 
         int list_idx = 0;
-        for(const auto& tag : tag_component.tags) {
-            wrenSetSlotString(vm, 1, tag.c_str());
+        tag_component.tags.each([&](const Rx::String& tag) {
+            wrenSetSlotString(vm, 1, tag.data());
 
             wrenInsertInList(vm, 0, list_idx, 1);
             list_idx++;
-        }
+        });
     }
 } // namespace horus

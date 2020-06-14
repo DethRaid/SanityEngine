@@ -1,16 +1,13 @@
 #pragma once
 
 #include <memory>
-#include <string>
 
 #include <d3d12.h>
+#include <rx/core/map.h>
+#include <rx/core/string.h>
 #include <rx/core/vector.h>
 #include <spdlog/logger.h>
 #include <wrl/client.h>
-
-#include <rx/core/map.h>
-
-#include "rx/core/string.h"
 
 using Microsoft::WRL::ComPtr;
 

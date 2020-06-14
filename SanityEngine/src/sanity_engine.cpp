@@ -206,14 +206,14 @@ void SanityEngine::register_horus_api() const {
 }
 
 void SanityEngine::create_debug_plane() {
-    const auto vertices = Rx::Vector<StandardVertex>{
+    const Rx::Vector<StandardVertex> vertices = Rx::Array{
         {/* .position = */ {-5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
         {/* .position = */ {-5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
     };
 
-    const auto indices = Rx::Vector<uint32_t>{0, 1, 2, 0, 3, 1};
+    const Rx::Vector<uint32_t> indices = Rx::Array{0, 1, 2, 0, 3, 1};
 
     auto& device = renderer->get_render_device();
     auto commands = device.create_command_list();

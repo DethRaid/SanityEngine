@@ -320,9 +320,7 @@ namespace rhi {
     }
 
     void RenderDevice::destroy_framebuffer(const std::unique_ptr<Framebuffer> framebuffer) const {
-        framebuffer->rtv_handles.each_fwd([&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) {
-            rtv_allocator->return_descriptor(handle);
-        });
+        framebuffer->rtv_handles.each_fwd([&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) { rtv_allocator->return_descriptor(handle); });
 
         if(framebuffer->dsv_handle) {
             dsv_allocator->return_descriptor(*framebuffer->dsv_handle);
@@ -1299,7 +1297,7 @@ namespace rhi {
     void RenderDevice::flush_batched_command_lists() {
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
-        for(auto& commands : lists) {
+        lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
             auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
 
             // First implementation - run everything on the same queue, because it's easy
@@ -1324,7 +1322,7 @@ namespace rhi {
 
                 CloseHandle(event);
             }
-        }
+        });
 
         lists.clear();
     }

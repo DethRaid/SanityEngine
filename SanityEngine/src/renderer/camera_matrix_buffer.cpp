@@ -61,7 +61,7 @@ namespace renderer {
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](const rhi::Buffer* buffer) { device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>{buffer}); });
+        device_data.each_fwd([&](rhi::Buffer* buffer) { device->schedule_buffer_destruction(std::unique_ptr<rhi::Buffer>{buffer}); });
     }
 
     CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) {

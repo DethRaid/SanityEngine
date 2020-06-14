@@ -4,6 +4,8 @@
 #include <set>
 
 #include <entt/entity/fwd.hpp>
+#include <rx/core/map.h>
+#include <rx/core/string.h>
 #include <spdlog/logger.h>
 #include <wren/wren.hpp>
 
@@ -55,7 +57,7 @@ namespace horus {
 
         void remove_script_directory(const std::filesystem::path& directory);
 
-        void register_script_object_allocator(const ScriptingClassName& name, WrenForeignClassMethods allocator_methods);
+        void register_script_object_allocator(const ScriptingClassName& name, const WrenForeignClassMethods& allocator_methods);
 
         void register_script_function(const ScriptingFunctionName& name, WrenForeignMethodFn function);
 

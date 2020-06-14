@@ -1,11 +1,12 @@
 #include "entity_scripting_api.hpp"
 
+#include <rx/core/string.h>
 #include <wren/wren.hpp>
 
-#include "../globals.hpp"
-#include "../sanity_engine.hpp"
-#include "../world/world.hpp"
+#include "globals.hpp"
+#include "sanity_engine.hpp"
 #include "scripting_runtime.hpp"
+#include "world/world.hpp"
 
 namespace horus {
     Entity::Entity(WrenHandle* handle_in, const entt::entity entity_in, entt::registry& registry_in)
@@ -19,13 +20,13 @@ namespace horus {
     bool Entity::has_tag(const Rx::String& tag) const {
         if(registry.has<TagComponent>(entity)) {
             const auto& tags = registry.get<TagComponent>(entity);
-            return tags.tags.find(tag) != tags.tags.end();
+            return tags.tags.find(tag) != nullptr;
         }
 
         return false;
     }
 
-    std::unordered_set<Rx::String> Entity::get_tags() const {
+    Rx::Set<Rx::String> Entity::get_tags() const {
         if(registry.has<TagComponent>(entity)) {
             const auto& tag_component = registry.get<TagComponent>(entity);
             return tag_component.tags;
@@ -91,12 +92,12 @@ void _entity_get_tags(WrenVM* vm) {
     wrenSetSlotNewList(vm, 0);
 
     uint32_t i{0};
-    for(const auto& tag : tags) {
-        wrenSetSlotString(vm, 1, tag.c_str());
+    tags.each([&](const Rx::String& tag) {
+        wrenSetSlotString(vm, 1, tag.data());
         wrenInsertInList(vm, 0, i, 1);
 
         i++;
-    }
+    });
 }
 
 // ReSharper disable once CppInconsistentNaming
