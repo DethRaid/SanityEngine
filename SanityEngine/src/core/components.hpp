@@ -6,7 +6,7 @@
 #include <rx/core/set.h>
 #include <rx/core/string.h>
 
-#include "../serialization/serialization.hpp"
+#include "serialization/serialization.hpp"
 
 // The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
 

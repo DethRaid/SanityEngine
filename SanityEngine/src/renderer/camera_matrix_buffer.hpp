@@ -6,10 +6,10 @@
 #include <rx/core/vector.h>
 #include <stdint.h>
 
-#include "../core/components.hpp"
-#include "../core/constants.hpp"
-#include "../rhi/resources.hpp"
-#include "render_components.hpp"
+#include "core/components.hpp"
+#include "core/constants.hpp"
+#include "renderer/render_components.hpp"
+#include "rhi/resources.hpp"
 
 namespace rhi {
     class RenderDevice;

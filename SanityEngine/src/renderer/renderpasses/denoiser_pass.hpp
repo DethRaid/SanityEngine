@@ -1,13 +1,13 @@
 #pragma once
 #include <memory>
-#include <glm/fwd.hpp>
 
+#include <glm/fwd.hpp>
 #include <spdlog/logger.h>
 
-#include "../../rhi/framebuffer.hpp"
-#include "../../rhi/render_pipeline_state.hpp"
-#include "../handles.hpp"
-#include "../renderpass.hpp"
+#include "renderer/handles.hpp"
+#include "renderer/renderpass.hpp"
+#include "rhi/framebuffer.hpp"
+#include "rhi/render_pipeline_state.hpp"
 
 namespace renderer {
     class ForwardPass;

@@ -5,20 +5,20 @@
 #include <entt/fwd.hpp>
 #include <rx/core/vector.h>
 
-#include "../rhi/bind_group.hpp"
-#include "../rhi/compute_pipeline_state.hpp"
-#include "../rhi/framebuffer.hpp"
-#include "../rhi/mesh_data_store.hpp"
-#include "../rhi/render_pipeline_state.hpp"
-#include "../settings.hpp"
-#include "camera_matrix_buffer.hpp"
-#include "handles.hpp"
-#include "render_components.hpp"
-#include "standard_material.hpp"
-#include "../rhi/raytracing_structs.hpp"
-#include "renderpasses/backbuffer_output_pass.hpp"
-#include "renderpasses/denoiser_pass.hpp"
-#include "renderpasses/forward_pass.hpp"
+#include "renderer/camera_matrix_buffer.hpp"
+#include "renderer/handles.hpp"
+#include "renderer/render_components.hpp"
+#include "renderer/renderpasses/backbuffer_output_pass.hpp"
+#include "renderer/renderpasses/denoiser_pass.hpp"
+#include "renderer/renderpasses/forward_pass.hpp"
+#include "renderer/standard_material.hpp"
+#include "rhi/bind_group.hpp"
+#include "rhi/compute_pipeline_state.hpp"
+#include "rhi/framebuffer.hpp"
+#include "rhi/mesh_data_store.hpp"
+#include "rhi/raytracing_structs.hpp"
+#include "rhi/render_pipeline_state.hpp"
+#include "settings.hpp"
 
 namespace rhi {
     class RenderCommandList;

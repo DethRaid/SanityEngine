@@ -3,9 +3,9 @@
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/observer.hpp>
 
-#include "../renderer/textures.hpp"
-#include "../scripting/scripting_runtime.hpp"
-#include "terrain.hpp"
+#include "renderer/textures.hpp"
+#include "scripting/scripting_runtime.hpp"
+#include "world/terrain.hpp"
 
 namespace renderer {
     class Renderer;

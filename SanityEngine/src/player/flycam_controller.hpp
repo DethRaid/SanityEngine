@@ -5,8 +5,6 @@
 #include <glm/vec2.hpp>
 #include <spdlog/logger.h>
 
-#include "../world/terrain.hpp"
-
 /*!
  * \brief Simple controller for a simple flycam
  */

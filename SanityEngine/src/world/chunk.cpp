@@ -2,8 +2,8 @@
 
 #include <entt/entity/registry.hpp>
 
-#include "../renderer/renderer.hpp"
-#include "terrain.hpp"
+#include "renderer/renderer.hpp"
+#include "world/terrain.hpp"
 
 std::optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
                                    const Terrain& terrain,

@@ -4,8 +4,8 @@
 
 #include <spdlog/logger.h>
 
-#include "../../rhi/render_pipeline_state.hpp"
-#include "../renderpass.hpp"
+#include "renderer/renderpass.hpp"
+#include "rhi/render_pipeline_state.hpp"
 
 namespace renderer {
     class Renderer;

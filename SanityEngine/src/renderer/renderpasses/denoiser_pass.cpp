@@ -2,10 +2,10 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../../loading/shader_loading.hpp"
-#include "../../rhi/d3dx12.hpp"
-#include "../../rhi/render_device.hpp"
-#include "../renderer.hpp"
+#include "loading/shader_loading.hpp"
+#include "renderer/renderer.hpp"
+#include "rhi/d3dx12.hpp"
+#include "rhi/render_device.hpp"
 
 namespace renderer {
     constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";

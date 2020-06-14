@@ -3,7 +3,7 @@
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../core/components.hpp"
+#include "core/components.hpp"
 
 std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World");
 

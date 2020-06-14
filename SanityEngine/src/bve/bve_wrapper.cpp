@@ -9,12 +9,12 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <stb_image.h>
 
-#include "../loading/shader_loading.hpp"
-#include "../renderer/renderer.hpp"
-#include "../renderer/standard_material.hpp"
-#include "../rhi/d3dx12.hpp"
-#include "../rhi/helpers.hpp"
-#include "../rhi/render_device.hpp"
+#include "loading/shader_loading.hpp"
+#include "renderer/renderer.hpp"
+#include "renderer/standard_material.hpp"
+#include "rhi/d3dx12.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_device.hpp"
 
 using namespace bve;
 

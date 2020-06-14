@@ -2,10 +2,10 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../../loading/shader_loading.hpp"
-#include "../../rhi/render_device.hpp"
-#include "../renderer.hpp"
-#include "denoiser_pass.hpp"
+#include "loading/shader_loading.hpp"
+#include "renderer/renderer.hpp"
+#include "renderer/renderpasses/denoiser_pass.hpp"
+#include "rhi/render_device.hpp"
 
 namespace renderer {
     struct BackbufferOutputMaterial {

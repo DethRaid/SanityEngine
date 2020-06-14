@@ -2,7 +2,7 @@
 
 #include <imgui/imgui.h>
 
-#include "../stats/framerate_tracker.hpp"
+#include "stats/framerate_tracker.hpp"
 
 namespace ui {
     FramerateDisplay::FramerateDisplay(FramerateTracker& tracker_in) : UiPanel{}, tracker{&tracker_in} {}

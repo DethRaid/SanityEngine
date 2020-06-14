@@ -7,9 +7,9 @@
 #include <imgui/imgui.h>
 
 
-#include "../renderer/renderer.hpp"
-#include "../rhi/resources.hpp"
-#include "../rhi/render_device.hpp"
+#include "renderer/renderer.hpp"
+#include "rhi/resources.hpp"
+#include "rhi/render_device.hpp"
 
 static GLFWmousebuttonfun prev_mouse_button_callback;
 static GLFWscrollfun prev_scroll_callback;

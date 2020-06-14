@@ -4,8 +4,8 @@
 #include <entt/entity/view.hpp>
 #include <imgui/imgui.h>
 
-#include "ui_components.hpp"
-#include "../renderer/handles.hpp"
+#include "renderer/handles.hpp"
+#include "ui/ui_components.hpp"
 
 namespace renderer {
     class Renderer;

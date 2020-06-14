@@ -5,11 +5,10 @@
 #include <glm/fwd.hpp>
 #include <spdlog/logger.h>
 
-
-#include "../handles.hpp"
-#include "../../rhi/framebuffer.hpp"
-#include "../../rhi/render_pipeline_state.hpp"
-#include "../renderpass.hpp"
+#include "renderer/handles.hpp"
+#include "renderer/renderpass.hpp"
+#include "rhi/framebuffer.hpp"
+#include "rhi/render_pipeline_state.hpp"
 
 namespace rhi {
     struct BindGroup;

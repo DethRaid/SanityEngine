@@ -1,5 +1,6 @@
 #pragma once
-#include "../rhi/resources.hpp"
+
+#include "rhi/resources.hpp"
 
 namespace renderer {
     /*!

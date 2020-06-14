@@ -6,9 +6,9 @@
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../core/components.hpp"
-#include "../rhi/helpers.hpp"
-#include "../world/world.hpp"
+#include "core/components.hpp"
+#include "rhi/helpers.hpp"
+#include "world/world.hpp"
 
 namespace horus {
     std::shared_ptr<spdlog::logger> ScriptingRuntime::logger{spdlog::stdout_color_st("ScriptingRuntime")};

@@ -4,7 +4,7 @@
 
 #include "resources.hpp"
 
-#include "../renderer/handles.hpp"
+#include "renderer/handles.hpp"
 
 namespace rhi {
     constexpr uint32_t OPAQUE_OBJECT_BIT = 0x01;

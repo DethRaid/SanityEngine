@@ -45,7 +45,7 @@ namespace renderer {
                 if(texcoord.x < 0) {
                     texel_coords.x = 0;
                 } else if(texcoord.x > 1) {
-                    texel_coords.x = size.x;
+                    texel_coords.x = static_cast<uint32_t>(size.x);
                 } else {
                     texel_coords.x = static_cast<uint32_t>(texcoord.x * size.x);
                 }

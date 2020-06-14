@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include "../rhi/mesh_data_store.hpp"
-#include "handles.hpp"
-#include "lights.hpp"
+#include "rhi/mesh_data_store.hpp"
+#include "renderer/handles.hpp"
+#include "renderer/lights.hpp"
 
 namespace renderer {
     /*!

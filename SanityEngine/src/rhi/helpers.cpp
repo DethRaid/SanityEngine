@@ -4,8 +4,8 @@
 
 #include <d3d12.h>
 
-#include "../core/align.hpp"
-#include "../core/defer.hpp"
+#include "core/align.hpp"
+#include "core/defer.hpp"
 #include "d3dx12.hpp"
 #include "framebuffer.hpp"
 #include "render_device.hpp"

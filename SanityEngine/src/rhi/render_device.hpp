@@ -13,14 +13,14 @@
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
 
-#include "../settings.hpp"
-#include "bind_group.hpp"
-#include "compute_pipeline_state.hpp"
-#include "d3dx12.hpp"
-#include "descriptor_allocator.hpp"
-#include "framebuffer.hpp"
-#include "raytracing_structs.hpp"
-#include "render_pipeline_state.hpp"
+#include "rhi/bind_group.hpp"
+#include "rhi/compute_pipeline_state.hpp"
+#include "rhi/d3dx12.hpp"
+#include "rhi/descriptor_allocator.hpp"
+#include "rhi/framebuffer.hpp"
+#include "rhi/raytracing_structs.hpp"
+#include "rhi/render_pipeline_state.hpp"
+#include "settings.hpp"
 
 struct GLFWwindow;
 

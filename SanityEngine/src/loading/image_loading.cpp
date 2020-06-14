@@ -5,9 +5,9 @@
 #include <stb_image.h>
 #include <ftl/task.h>
 
-#include "../renderer/renderer.hpp"
-#include "../rhi/render_device.hpp"
-#include "../rhi/resources.hpp"
+#include "renderer/renderer.hpp"
+#include "rhi/render_device.hpp"
+#include "rhi/resources.hpp"
 
 bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height, Rx::Vector<uint8_t>& pixels) {
     int raw_width, raw_height, num_components;
