@@ -162,7 +162,7 @@ namespace renderer {
         task_scheduler->WaitForCounter(&counter, 0, true);
 
         if(!args.handle_out) {
-            logger->error("Could not load noise texture {}", filepath);
+            logger->error("Could not load noise texture {}", filepath.data());
             return;
         }
 
@@ -219,7 +219,7 @@ namespace renderer {
         all_images.push_back(device->create_image(create_info));
         image_name_to_index.insert(create_info.name, idx);
 
-        logger->debug("Created texture {} with index {}", create_info.name, idx);
+        logger->debug("Created texture {} with index {}", create_info.name.data(), idx);
 
         return {idx};
     }
@@ -262,7 +262,7 @@ namespace renderer {
             return *all_images[*idx];
 
         } else {
-            const auto message = fmt::format("Image '{}' does not exist", image_name);
+            const auto message = fmt::format("Image '{}' does not exist", image_name.data());
             throw std::exception(message.c_str());
         }
     }

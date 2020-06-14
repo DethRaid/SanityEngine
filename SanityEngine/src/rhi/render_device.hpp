@@ -169,7 +169,7 @@ namespace rhi {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        Rx::Vector<Rx::Map<std::thread::id, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
+        Rx::Vector<Rx::Map<uint32_t, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
@@ -311,7 +311,7 @@ namespace rhi {
         [[nodiscard]] std::unique_ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);
 
-        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const std::thread::id& id);
+        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const uint32_t& id);
 
         void flush_batched_command_lists();
 

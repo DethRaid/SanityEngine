@@ -5,7 +5,7 @@
 #include <spdlog/spdlog.h>
 
 Rx::Vector<uint8_t> load_shader(const Rx::String& shader_filename) {
-    const auto shader_filepath = fmt::format("data/shaders/{}", shader_filename);
+    const auto shader_filepath = fmt::format("data/shaders/{}", shader_filename.data());
 
     auto* shader_file = fopen(shader_filepath.c_str(), "rb");
     if(shader_file == nullptr) {

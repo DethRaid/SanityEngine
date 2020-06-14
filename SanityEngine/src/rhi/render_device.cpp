@@ -127,7 +127,7 @@ namespace rhi {
                                                              &buffer->allocation,
                                                              IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
-            logger->error("Could not create buffer {}: {}", create_info.name, to_string(result));
+            logger->error("Could not create buffer {}: {}", create_info.name.data(), to_string(result).data());
             return {};
         }
 
@@ -195,7 +195,7 @@ namespace rhi {
                                                              &image->allocation,
                                                              IID_PPV_ARGS(&image->resource));
         if(FAILED(result)) {
-            logger->error("Could not create image %s", create_info.name);
+            logger->error("Could not create image %s", create_info.name.data());
             return {};
         }
 
@@ -415,7 +415,7 @@ namespace rhi {
     }
 
     ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list() {
-        const auto thread_id = std::this_thread::get_id();
+        const auto thread_id = 0_u32;
         auto* command_allocator = get_direct_command_allocator_for_thread(thread_id);
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
@@ -572,7 +572,7 @@ namespace rhi {
             debug_controller->EnableDebugLayer();
 
         } else {
-            logger->error("Could not enable the D3D12 validation layer: {}", to_string(result));
+            logger->error("Could not enable the D3D12 validation layer: {}", to_string(result).data());
         }
 
         if(settings.enable_gpu_crash_reporting) {
@@ -650,7 +650,7 @@ namespace rhi {
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
                     logger->warn("Ignoring adapter {} - Doesn't have the flexible resource binding that Sanity Engine needs",
-                                 from_wide_string(desc.Description));
+                                 from_wide_string(desc.Description).data());
 
                     return true;
                 }
@@ -659,8 +659,8 @@ namespace rhi {
                 res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
                 if(FAILED(res)) {
                     logger->warn("Ignoring adapter {} - Could not check the supported shader model: {}",
-                                 from_wide_string(desc.Description),
-                                 to_string(res));
+                                 from_wide_string(desc.Description).data(),
+                                 to_string(res).data());
 
                     return true;
 
@@ -668,7 +668,7 @@ namespace rhi {
                     // Only supports old-ass shaders
 
                     logger->warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
-                                 from_wide_string(desc.Description));
+                                 from_wide_string(desc.Description).data());
 
                     return true;
                 }
@@ -707,7 +707,7 @@ namespace rhi {
                 return false;
 
             } else {
-                logger->warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description));
+                logger->warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description).data());
             }
 
             return true;
@@ -777,7 +777,7 @@ namespace rhi {
                                                   nullptr,
                                                   swapchain1.GetAddressOf());
         if(FAILED(hr)) {
-            const auto msg = fmt::format("Could not create swapchain: {}", to_string(hr));
+            const auto msg = fmt::format("Could not create swapchain: {}", to_string(hr).data());
             critical_error(msg.data());
         }
 
@@ -874,7 +874,7 @@ namespace rhi {
 
         const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
         if(FAILED(result)) {
-            logger->error("Could not create descriptor heap: {}", to_string(result));
+            logger->error("Could not create descriptor heap: {}", to_string(result).data());
 
             return {{}, 0};
         }
@@ -983,7 +983,7 @@ namespace rhi {
         auto result = D3D12SerializeVersionedRootSignature(&versioned_desc, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
             const Rx::String msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
-            logger->error("Could not create root signature: {}", msg);
+            logger->error("Could not create root signature: {}", msg.data());
             return {};
         }
 
@@ -993,7 +993,7 @@ namespace rhi {
                                              root_signature_blob->GetBufferSize(),
                                              IID_PPV_ARGS(&sig));
         if(FAILED(result)) {
-            logger->error("Could not create root signature: {}", to_string(result));
+            logger->error("Could not create root signature: {}", to_string(result).data());
             return {};
         }
 
@@ -1016,13 +1016,13 @@ namespace rhi {
 
     void RenderDevice::create_material_resource_binders() {
         Rx::Map<Rx::String, RootDescriptorDescription> root_descriptors;
-        root_descriptors.insert("cameras", RootDescriptorDescription{1, DescriptorType::ShaderResource});
-        root_descriptors.insert("material_buffer", RootDescriptorDescription{2, DescriptorType::ShaderResource});
-        root_descriptors.insert("lights", RootDescriptorDescription{3, DescriptorType::ShaderResource});
-        root_descriptors.insert("raytracing_scene", RootDescriptorDescription{4, DescriptorType::ShaderResource});
-        root_descriptors.insert("indices", RootDescriptorDescription{5, DescriptorType::ShaderResource});
-        root_descriptors.insert("vertices", RootDescriptorDescription{6, DescriptorType::ShaderResource});
-        root_descriptors.insert("per_frame_data", RootDescriptorDescription{7, DescriptorType::ShaderResource});
+        root_descriptors.insert("cameras", RootDescriptorDescription{1_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("material_buffer", RootDescriptorDescription{2_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("lights", RootDescriptorDescription{3_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("raytracing_scene", RootDescriptorDescription{4_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("indices", RootDescriptorDescription{5_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("vertices", RootDescriptorDescription{6_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("per_frame_data", RootDescriptorDescription{7_u32, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_gpu_frames);
 
@@ -1133,7 +1133,7 @@ namespace rhi {
         ComPtr<ID3D12ShaderReflection> reflection;
         auto result = D3DReflect(shader.data(), shader.size() * sizeof(uint8_t), IID_PPV_ARGS(&reflection));
         if(FAILED(result)) {
-            logger->error("Could not retrieve shader reflection information: {}", to_string(result));
+            logger->error("Could not retrieve shader reflection information: {}", to_string(result).data());
         }
 
         D3D12_SHADER_DESC desc;
@@ -1265,7 +1265,7 @@ namespace rhi {
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
         if(FAILED(result)) {
-            logger->error("Could not create render pipeline {}: {}", create_info.name, to_string(result));
+            logger->error("Could not create render pipeline {}: {}", create_info.name.data(), to_string(result).data());
             return {};
         }
 
@@ -1274,7 +1274,7 @@ namespace rhi {
         return pipeline;
     }
 
-    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const std::thread::id& id) {
+    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const uint32_t& id) {
         auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
         if(const auto* itr = command_allocators_for_frame.find(id)) {
             return itr->Get();
@@ -1334,9 +1334,8 @@ namespace rhi {
 
     void RenderDevice::reset_command_allocators_for_frame(const uint32_t frame_idx) {
         const auto& direct_allocators_for_frame = direct_command_allocators[frame_idx];
-        for(const auto& [thread_id, allocator] : direct_allocators_for_frame) {
-            allocator->Reset();
-        }
+        direct_allocators_for_frame.each_pair(
+            [](const uint32_t& /* thread_id */, const ComPtr<ID3D12CommandAllocator>& allocator) { allocator->Reset(); });
 
         copy_command_allocators[frame_idx]->Reset();
         compute_command_allocators[frame_idx]->Reset();
@@ -1344,16 +1343,12 @@ namespace rhi {
 
     void RenderDevice::destroy_resources_for_frame(const uint32_t frame_idx) {
         auto& buffers = buffer_deletion_list[frame_idx];
-        for(const auto& buffer : buffers) {
-            destroy_resource_immediate(*buffer);
-        }
+        buffers.each_fwd([&](const std::unique_ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
 
         buffers.clear();
 
         auto& images = image_deletion_list[cur_gpu_frame_idx];
-        for(const auto& image : images) {
-            destroy_resource_immediate(*image);
-        }
+        images.each_fwd([&](const std::unique_ptr<Image>& image) { destroy_resource_immediate(*image); });
         images.clear();
     }
 
@@ -1400,7 +1395,7 @@ namespace rhi {
                 logger->error("Waiting for GPU frame {} timed out", frame_index);
 
             } else if(result == WAIT_FAILED) {
-                logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error());
+                logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error().data());
             }
 
             ENSURE(result == WAIT_OBJECT_0, "Waiting for frame {} failed", frame_index);
@@ -1429,7 +1424,7 @@ namespace rhi {
                                                              &buffer.allocation,
                                                              IID_PPV_ARGS(&buffer.resource));
         if(FAILED(result)) {
-            logger->error("Could not create staging buffer: {}", to_string(result));
+            logger->error("Could not create staging buffer: {}", to_string(result).data());
             return {};
         }
 
@@ -1458,7 +1453,7 @@ namespace rhi {
                                                              &scratch_buffer.allocation,
                                                              IID_PPV_ARGS(&scratch_buffer.resource));
         if(FAILED(result)) {
-            logger->error("Could not create scratch buffer: {}", to_string(result));
+            logger->error("Could not create scratch buffer: {}", to_string(result).data());
         }
 
         scratch_buffer.size = num_bytes;
@@ -1479,9 +1474,9 @@ namespace rhi {
         ComPtr<ID3D12Fence> fence;
         const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
         if(FAILED(result)) {
-            logger->error("Could not create fence: {}", to_string(result));
+            logger->error("Could not create fence: {}", to_string(result).data());
             const auto removed_reason = device->GetDeviceRemovedReason();
-            logger->error("Device removed reason: {}", to_string(removed_reason));
+            logger->error("Device removed reason: {}", to_string(removed_reason).data());
         }
 
         return fence;
@@ -1507,8 +1502,8 @@ namespace rhi {
             return;
         }
 
-        logger->error("Command history:\n{}", breadcrumb_output_to_string(breadcrumbs));
-        logger->error(page_fault_output_to_string(page_faults));
+        logger->error("Command history:\n{}", breadcrumb_output_to_string(breadcrumbs).data());
+        logger->error(page_fault_output_to_string(page_faults).data());
     }
 
     std::unique_ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const Settings& settings) {

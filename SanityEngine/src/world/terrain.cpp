@@ -96,14 +96,14 @@ void Terrain::load_terrain_textures_and_create_material() {
     if(albedo_image_data->handle_out) {
         material.albedo = *albedo_image_data->handle_out;
     } else {
-        logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name_in);
+        logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name_in.data());
         material.albedo = renderer->get_pink_texture();
     }
 
     if(normal_roughness_image_data->handle_out) {
         material.normal_roughness = *normal_roughness_image_data->handle_out;
     } else {
-        logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name_in);
+        logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name_in.data());
         material.normal_roughness = renderer->get_default_normal_roughness_texture();
     }
 

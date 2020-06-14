@@ -66,11 +66,11 @@ namespace horus {
 
     void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path& directory) const {
         if(!exists(directory)) {
-            logger->error("Could not load scripts in directory {}: directory does not exist");
+            logger->error("Could not load scripts in directory {}: directory does not exist", directory);
             return;
         }
         if(!is_directory(directory)) {
-            logger->error("Could not load scripts in directory {}: This path does not refer to a directory");
+            logger->error("Could not load scripts in directory {}: This path does not refer to a directory", directory);
             return;
         }
         uint32_t num_loaded_modules{0};
@@ -185,7 +185,7 @@ namespace horus {
 
         for(const auto& module_directory : module_paths) {
             const auto& potential_filename = module_directory / module_name.data();
-            logger->trace("Attempting to load file {} for module {}", potential_filename, module_name);
+            logger->trace("Attempting to load file {} for module {}", potential_filename, module_name.data());
 
             auto* file = fopen(module_name.data(), "r");
             if(file == nullptr) {
@@ -351,12 +351,12 @@ namespace horus {
     }
 
     std::optional<Component> ScriptingRuntime::create_component(const entt::entity entity,
-                                                                const Rx::String& module_name,
-                                                                const Rx::String& component_class_name) const {
+                                                                const char* module_name,
+                                                                const char* component_class_name) const {
 
         // Load the class into a slot so we can get methods from it
         wrenEnsureSlots(vm, 1);
-        wrenGetVariable(vm, module_name.data(), component_class_name.data(), 0);
+        wrenGetVariable(vm, module_name, component_class_name, 0);
 
         const auto full_signature = fmt::format("new()", module_name, component_class_name);
         auto* constructor_handle = wrenMakeCallHandle(vm, "new()");

@@ -38,7 +38,6 @@
     <ClCompile Include="extern\rex\include\rx\core\concurrency\thread_pool.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\concurrency\wait_group.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\concurrency\yield.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\cpprt.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\dynamic_pool.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\filesystem\directory.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\filesystem\file.cpp" />

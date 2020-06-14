@@ -339,9 +339,6 @@
     <ClCompile Include="extern\rex\include\rx\core\bitset.cpp">
       <Filter>Rex\core</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\cpprt.cpp">
-      <Filter>Rex\core</Filter>
-    </ClCompile>
     <ClCompile Include="extern\rex\include\rx\core\dynamic_pool.cpp">
       <Filter>Rex\core</Filter>
     </ClCompile>

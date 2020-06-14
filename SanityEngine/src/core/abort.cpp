@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 void critical_error(const Rx::String& message) {
-    spdlog::error(message);
+    spdlog::error(message.data());
 
 #ifndef NDEBUG
     DebugBreak();

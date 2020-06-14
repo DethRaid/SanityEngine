@@ -15,7 +15,7 @@ bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height,
     const auto* texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
     if(texture_data == nullptr) {
         const auto* failure_reason = stbi_failure_reason();
-        spdlog::error("Could not load image {}: {}", image_name, failure_reason);
+        spdlog::error("Could not load image {}: {}", image_name.data(), failure_reason);
         return false;
     }
 

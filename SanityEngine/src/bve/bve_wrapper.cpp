@@ -63,17 +63,17 @@ BveWrapper::BveWrapper(rhi::RenderDevice& device) {
 }
 
 bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
-    const auto train_msg = fmt::format("Load train {}", filename);
+    const auto train_msg = fmt::format("Load train {}", filename.data());
     MTR_SCOPE("SanityEngine", train_msg.c_str());
 
     const auto train = load_mesh_from_file(filename);
     if(!train) {
-        logger->error("BVE returned absolutely nothing for train '{}'", filename);
+        logger->error("BVE returned absolutely nothing for train '{}'", filename.data());
 
         return false;
 
     } else if(train->errors.count > 0) {
-        logger->error("Could not load train '{}'", filename);
+        logger->error("Could not load train '{}'", filename.data());
 
         for(uint32_t i = 0; i < train->errors.count; i++) {
             const auto& error = train->errors.ptr[i];
@@ -85,7 +85,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
     } else {
         if(train->meshes.count == 0) {
-            logger->error("No meshes loaded for train '{}'", filename);
+            logger->error("No meshes loaded for train '{}'", filename.data());
             return false;
         }
 
@@ -231,7 +231,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
         renderer.add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_mesh}});
 
-        logger->info("Loaded file {}", filename);
+        logger->info("Loaded file {}", filename.data());
 
         return true;
     }
@@ -280,7 +280,7 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
     auto* mesh = bve_load_mesh_from_file(filename.data());
 
     if(mesh == nullptr) {
-        logger->error("BVE failed to load anything for mesh '{}'", filename);
+        logger->error("BVE failed to load anything for mesh '{}'", filename.data());
     }
 
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
@@ -293,12 +293,13 @@ std::pair<Rx::Vector<StandardVertex>, Rx::Vector<uint32_t>> BveWrapper::process_
     auto vertices = Rx::Vector<StandardVertex>{};
     vertices.reserve(bve_vertices.count);
 
-    std::transform(bve_vertices.ptr, bve_vertices.ptr + bve_vertices.count, std::back_inserter(vertices), [](const BVE_Vertex& bve_vertex) {
-        return StandardVertex{.position = to_glm_vec3(bve_vertex.position),
-                              .normal = {bve_vertex.normal.x, bve_vertex.normal.y, -bve_vertex.normal.z},
-                              .color = to_uint32_t(bve_vertex.color),
-                              .texcoord = to_glm_vec2(bve_vertex.coord)};
-    });
+    for(uint32_t i = 0; i < bve_vertices.count; i++) {
+        const auto& bve_vertex = bve_vertices.ptr[i];
+        vertices.push_back(StandardVertex{.position = to_glm_vec3(bve_vertex.position),
+                                          .normal = {bve_vertex.normal.x, bve_vertex.normal.y, -bve_vertex.normal.z},
+                                          .color = to_uint32_t(bve_vertex.color),
+                                          .texcoord = to_glm_vec2(bve_vertex.coord)});
+    }
 
     const auto& bve_indices = mesh.indices;
     auto indices = Rx::Vector<uint32_t>{};

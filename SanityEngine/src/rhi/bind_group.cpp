@@ -144,7 +144,7 @@ namespace rhi {
 
             if(const Buffer** bound_buffer = bound_buffers.find(name)) {
                 root_parameters[idx].descriptor.address = (*bound_buffer)->resource->GetGPUVirtualAddress();
-                logger->trace("Binding buffer {} to root descriptor {}", (*bound_buffer)->name, name);
+                logger->trace("Binding buffer {} to root descriptor {}", (*bound_buffer)->name.data(), name.data());
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -154,7 +154,7 @@ namespace rhi {
                     states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                 }
 
-                used_buffers.emplace_back(bound_buffer, states);
+                used_buffers.emplace_back(*bound_buffer, states);
 
             } else if(const Rx::Vector<const Image*>* bound_image = bound_image_arrays.find(name)) {
                 ENSURE(bound_image->size() == 1, "May only bind a single image to a root descriptor");
@@ -173,7 +173,7 @@ namespace rhi {
             } else if(const Buffer** scene = bound_raytracing_scenes.find(name)) {
                 ENSURE(type == DescriptorType::ShaderResource,
                        "May only bind raytracing acceleration structure {} as a shader resource",
-                       (*scene)->name);
+                       (*scene)->name.data());
 
                 root_parameters[idx].descriptor.address = (*scene)->resource->GetGPUVirtualAddress();
 
@@ -235,12 +235,12 @@ namespace rhi {
             } else if(const auto* images = bound_image_arrays.find(name)) {
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
-                        logger->warn("Can not bind images to constant buffer {}", name);
+                        logger->warn("Can not bind images to constant buffer {}", name.data());
                     } break;
 
                     case DescriptorType::ShaderResource: {
-                        ENSURE(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array {}", name);
-                        ENSURE(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array {}", name);
+                        ENSURE(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array {}", name.data());
+                        ENSURE(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array {}", name.data());
 
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 

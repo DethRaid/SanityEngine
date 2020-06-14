@@ -28,7 +28,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
     const auto* scene = importer.ReadFile(filename.data(), aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
 
     if(scene == nullptr) {
-        logger->error("Could not load {}: {}", filename, importer.GetErrorString());
+        logger->error("Could not load {}: {}", filename.data(), importer.GetErrorString());
         return false;
     }
 
@@ -113,7 +113,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
                 Rx::Vector<uint8_t> pixels;
                 const auto was_image_loaded = load_image(texture_path.string().c_str(), width, height, pixels);
                 if(!was_image_loaded) {
-                    logger->warn("Could not load texture {}", texture_path.string());
+                    logger->warn("Could not load texture {}", texture_path);
 
                     material.albedo = renderer.get_pink_texture();
 

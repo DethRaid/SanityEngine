@@ -64,8 +64,8 @@ namespace horus {
         [[nodiscard]] WrenHandle* create_entity() const;
 
         [[nodiscard]] std::optional<Component> create_component(entt::entity entity,
-                                                                const Rx::String& module_name,
-                                                                const Rx::String& component_class_name) const;
+                                                                const char* module_name,
+                                                                const char* component_class_name) const;
 
         // The codegen will place generated methods in this region. Everything within this region will be destroyed whenever the scripting
         // API is regenerated - aka very often. DO NOT put any code you care about saving in this region
