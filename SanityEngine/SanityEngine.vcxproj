@@ -84,7 +84,6 @@
     <ClCompile Include="extern\rex\include\rx\core\vector.cpp" />
     <ClCompile Include="first_person_controller.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
-    <ClCompile Include="src\core\abort.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\globals.cpp" />
@@ -287,7 +286,6 @@
     <ClInclude Include="first_person_controller.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
-    <ClInclude Include="src\core\abort.hpp" />
     <ClInclude Include="src\core\align.hpp" />
     <ClInclude Include="src\core\async\mutex.hpp" />
     <ClInclude Include="src\core\components.hpp" />

@@ -7,7 +7,6 @@
 #include <spdlog/spdlog.h>
 
 #include "src/core/components.hpp"
-#include "src/core/ensure.hpp"
 #include "src/world/terrain.hpp"
 
 std::shared_ptr<spdlog::logger> FirstPersonController::logger{spdlog::stdout_color_st("FirstPersonController")};
@@ -15,7 +14,7 @@ std::shared_ptr<spdlog::logger> FirstPersonController::logger{spdlog::stdout_col
 FirstPersonController::FirstPersonController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
     : window{window_in}, controlled_entity{controlled_entity_in}, registry{&registry_in} {
     // Quick validation
-    ENSURE(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
+    RX_ASSERT(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
     previous_location = registry->get<TransformComponent>(controlled_entity).location;
 

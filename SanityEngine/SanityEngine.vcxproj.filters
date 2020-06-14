@@ -183,9 +183,6 @@
     <ClCompile Include="src\sanity_engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\abort.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\errors.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -498,9 +495,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\components.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\abort.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\constants.hpp">
