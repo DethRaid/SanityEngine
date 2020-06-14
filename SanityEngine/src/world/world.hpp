@@ -58,9 +58,9 @@ public:
      * \brief Created a world with the provided parameters
      */
     static Rx::Ptr<World> create(const WorldParameters& params,
-                                         entt::entity player_in,
-                                         entt::registry& registry_in,
-                                         renderer::Renderer& renderer_in);
+                                         entt::entity player,
+                                         entt::registry& registry,
+                                         renderer::Renderer& renderer);
 
     void tick(float delta_time);
 
@@ -72,6 +72,13 @@ public:
 #pragma endregion
 
 private:
+    static Rx::Vector<float> generate_terrain_heightmap(FastNoiseSIMD& noise_generator, const WorldParameters& params);
+
+    /*!
+     * \brief Runs the Sanity Engine's climate model on the provided world data
+     */
+    static void generate_climate_data(const Rx::Vector<float>& heightmap, const WorldParameters& params, renderer::Renderer& renderer);
+
     glm::uvec2 size;
 
     Rx::Ptr<FastNoiseSIMD> noise_generator;
