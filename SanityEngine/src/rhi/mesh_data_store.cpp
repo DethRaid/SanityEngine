@@ -1,20 +1,16 @@
 #include "mesh_data_store.hpp"
 
-#include <algorithm>
-
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "helpers.hpp"
 #include "render_device.hpp"
 
 namespace rhi {
-    MeshDataStore::MeshDataStore(RenderDevice& device_in, std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in)
-        : logger{spdlog::stdout_color_st("MeshDataStore")},
-          device{&device_in},
-          vertex_buffer{std::move(vertex_buffer_in)},
-          index_buffer{std::move(index_buffer_in)} {
+    RX_LOG("MeshDataStore", logger);
 
-        logger->set_level(spdlog::level::trace);
+    MeshDataStore::MeshDataStore(RenderDevice& device_in, std::unique_ptr<Buffer> vertex_buffer_in, std::unique_ptr<Buffer> index_buffer_in)
+        : device{&device_in}, vertex_buffer{std::move(vertex_buffer_in)}, index_buffer{std::move(index_buffer_in)} {
 
         vertex_bindings.reserve(4);
         vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, position), sizeof(StandardVertex)});
@@ -50,8 +46,8 @@ namespace rhi {
     Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
                                  const Rx::Vector<uint32_t>& indices,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        logger->debug("Adding mesh with {} vertices and {} indices", vertices.size(), indices.size());
-        logger->trace("Current vertex offset: {} Current index offset: {}", next_vertex_offset, next_index_offset);
+        logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
+        logger->verbose("Current vertex offset: %u Current index offset: %u", next_vertex_offset, next_index_offset);
 
         const auto vertex_data_size = static_cast<uint32_t>(vertices.size() * sizeof(StandardVertex));
         const auto index_data_size = static_cast<uint32_t>(indices.size() * sizeof(uint32_t));
@@ -67,10 +63,10 @@ namespace rhi {
 
         const auto index_buffer_byte_offset = static_cast<uint32_t>(next_index_offset * sizeof(uint32_t));
 
-        logger->trace("Copying {} bytes of vertex data into the vertex buffer, offset of {}", vertex_data_size, next_free_vertex_byte);
+        logger->verbose("Copying %u bytes of vertex data into the vertex buffer, offset of %u", vertex_data_size, next_free_vertex_byte);
         upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
 
-        logger->trace("Copying {} bytes of index data into the index buffer, offset of {}", index_data_size, index_buffer_byte_offset);
+        logger->verbose("Copying %u bytes of index data into the index buffer, offset of %u", index_data_size, index_buffer_byte_offset);
         upload_data_with_staging_buffer(commands,
                                         *device,
                                         index_resource,
@@ -87,7 +83,7 @@ namespace rhi {
         next_vertex_offset += static_cast<uint32_t>(vertices.size());
         next_index_offset += static_cast<uint32_t>(indices.size());
 
-        logger->trace("New vertex offset: {} New index offset: {}", next_vertex_offset, next_index_offset);
+        logger->verbose("New vertex offset: %u New index offset: %u", next_vertex_offset, next_index_offset);
 
         return {.first_vertex = vertex_offset,
                 .num_vertices = static_cast<uint32_t>(vertices.size()),

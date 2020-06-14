@@ -5,16 +5,16 @@
 #include <ftl/task.h>
 #include <minitrace.h>
 #include <rx/core/array.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/image_loading.hpp"
 #include "renderer/standard_material.hpp"
-#include "renderer/textures.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 #include "sanity_engine.hpp"
 
-std::shared_ptr<spdlog::logger> Terrain::logger = spdlog::stdout_color_st("Terrain");
+RX_LOG("Terrain", logger);
 
 Terrain::Terrain(const uint32_t max_latitude_in,
                  const uint32_t max_longitude_in,
@@ -95,14 +95,14 @@ void Terrain::load_terrain_textures_and_create_material() {
     if(albedo_image_data->handle_out) {
         material.albedo = *albedo_image_data->handle_out;
     } else {
-        logger->error("Could not load terrain albedo texture {}", albedo_image_data->texture_name_in.data());
+        logger->error("Could not load terrain albedo texture %s", albedo_image_data->texture_name_in);
         material.albedo = renderer->get_pink_texture();
     }
 
     if(normal_roughness_image_data->handle_out) {
         material.normal_roughness = *normal_roughness_image_data->handle_out;
     } else {
-        logger->error("Could not load terrain normal roughness texture {}", normal_roughness_image_data->texture_name_in.data());
+        logger->error("Could not load terrain normal roughness texture %s", normal_roughness_image_data->texture_name_in);
         material.normal_roughness = renderer->get_default_normal_roughness_texture();
     }
 
@@ -113,7 +113,7 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
     const auto top_left = tilecoord * TILE_SIZE;
     const auto size = glm::uvec2{TILE_SIZE};
 
-    logger->info("Generating tile ({}, {}) with size ({}, {})", tilecoord.x, tilecoord.y, size.x, size.y);
+    logger->info("Generating tile (%d, %d) with size (%d, %d)", tilecoord.x, tilecoord.y, size.x, size.y);
 
     const auto tile_heightmap = generate_terrain_heightmap(top_left, size);
 

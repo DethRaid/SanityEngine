@@ -279,9 +279,6 @@
     <ClCompile Include="src\game\game.cpp">
       <Filter>Source Files\game</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\textures.cpp">
-      <Filter>Source Files\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\world\world.cpp">
       <Filter>Source Files\world</Filter>
     </ClCompile>
@@ -643,9 +640,6 @@
     </ClInclude>
     <ClInclude Include="src\game\game.hpp">
       <Filter>Header Files\game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\textures.hpp">
-      <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\world\world.hpp">
       <Filter>Header Files\world</Filter>

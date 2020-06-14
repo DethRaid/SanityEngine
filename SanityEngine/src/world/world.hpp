@@ -3,7 +3,6 @@
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/observer.hpp>
 
-#include "renderer/textures.hpp"
 #include "scripting/scripting_runtime.hpp"
 #include "world/terrain.hpp"
 
@@ -73,8 +72,6 @@ public:
 #pragma endregion
 
 private:
-    static std::shared_ptr<spdlog::logger> logger;
-
     glm::uvec2 size;
 
     std::unique_ptr<FastNoiseSIMD> noise_generator;

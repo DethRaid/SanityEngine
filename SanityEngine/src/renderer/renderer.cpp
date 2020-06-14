@@ -5,6 +5,7 @@
 #include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
 #include <minitrace.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -116,9 +117,10 @@ namespace renderer {
     };
 #pragma endregion
 
+    RX_LOG("Renderer", logger);
+
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
-        : logger{spdlog::stdout_color_st("Renderer")},
-          start_time{std::chrono::high_resolution_clock::now()},
+        : start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{std::make_unique<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
@@ -161,7 +163,7 @@ namespace renderer {
         task_scheduler->WaitForCounter(&counter, 0, true);
 
         if(!args.handle_out) {
-            logger->error("Could not load noise texture {}", filepath.data());
+            logger->error("Could not load noise texture %s", filepath);
             return;
         }
 
@@ -218,7 +220,7 @@ namespace renderer {
         all_images.push_back(device->create_image(create_info));
         image_name_to_index.insert(create_info.name, idx);
 
-        logger->debug("Created texture {} with index {}", create_info.name.data(), idx);
+        logger->verbose("Created texture %s with index %u", create_info.name, idx);
 
         return {idx};
     }
@@ -241,7 +243,7 @@ namespace renderer {
 
         const auto result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0 || FAILED(result)) {
-            spdlog::error("Could not upload texture data");
+            logger->error("Could not upload texture data");
         }
 
         return handle;
@@ -468,7 +470,7 @@ namespace renderer {
         if(!raytracing_objects.is_empty()) {
             constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
 
-            RX_ASSERT(raytracing_objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
+            RX_ASSERT(raytracing_objects.size() < max_num_objects, "May not have more than %u objects because uint32", max_num_objects);
 
             const auto instance_buffer_size = static_cast<uint32_t>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
             auto instance_buffer = device->get_staging_buffer(instance_buffer_size);

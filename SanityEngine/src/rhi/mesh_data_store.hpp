@@ -86,8 +86,6 @@ namespace rhi {
         void bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
     private:
-        std::shared_ptr<spdlog::logger> logger;
-
         RenderDevice* device;
 
         std::unique_ptr<Buffer> vertex_buffer;

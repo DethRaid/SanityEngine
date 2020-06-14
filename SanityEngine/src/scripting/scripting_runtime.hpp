@@ -76,8 +76,6 @@ namespace horus {
 #pragma endregion
 
     private:
-        static std::shared_ptr<spdlog::logger> logger;
-        static std::shared_ptr<spdlog::logger> script_logger;
 
         using WrenClass = Rx::Map<Rx::String, WrenForeignMethodFn>;
 

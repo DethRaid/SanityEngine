@@ -47,8 +47,6 @@ public:
     // TODO: Make this configurable
     constexpr static int32_t TILE_SIZE = 64;
 
-    static std::shared_ptr<spdlog::logger> logger;
-
     static [[nodiscard]] glm::ivec2 get_coords_of_tile_containing_position(const glm::vec3& position);
 
     explicit Terrain(uint32_t max_latitude_in,

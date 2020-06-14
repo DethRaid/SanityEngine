@@ -1,5 +1,6 @@
 #include "denoiser_pass.hpp"
 
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/shader_loading.hpp"
@@ -17,7 +18,7 @@ namespace renderer {
         TextureHandle scene_depth_texture;
     };
 
-    std::shared_ptr<spdlog::logger> DenoiserPass::logger{spdlog::stdout_color_st("DenoiserPass")};
+    RX_LOG("DenoiserPass", logger);
 
     DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass)
         : renderer{&renderer_in} {

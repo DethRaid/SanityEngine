@@ -29,8 +29,6 @@ namespace renderer {
         [[nodiscard]] TextureHandle get_output_image() const;
 
     private:
-        static std::shared_ptr<spdlog::logger> logger;
-
         Renderer* renderer;
 
         std::unique_ptr<rhi::RenderPipelineState> accumulation_pipeline;

@@ -20,8 +20,6 @@ namespace renderer {
         void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) override;
 
     private:
-        static std::shared_ptr<spdlog::logger> logger;
-
         Renderer* renderer;
 
         std::unique_ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;

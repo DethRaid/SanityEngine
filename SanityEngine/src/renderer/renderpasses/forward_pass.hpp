@@ -33,8 +33,6 @@ namespace renderer {
         [[nodiscard]] TextureHandle get_depth_target_handle() const;
 
     private:
-        static std::shared_ptr<spdlog::logger> logger;
-
         Renderer* renderer;
 
         std::unique_ptr<rhi::RenderPipelineState> standard_pipeline;

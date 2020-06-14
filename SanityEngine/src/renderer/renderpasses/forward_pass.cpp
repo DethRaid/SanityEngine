@@ -2,18 +2,19 @@
 
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/shader_loading.hpp"
-#include "rhi/render_device.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderer.hpp"
+#include "rhi/render_device.hpp"
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 
-    std::shared_ptr<spdlog::logger> ForwardPass::logger{spdlog::stdout_color_st("ForwardPass")};
+    RX_LOG("ForwardPass", logger);
 
     ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         auto& device = renderer_in.get_render_device();
@@ -29,7 +30,7 @@ namespace renderer {
 
             standard_pipeline = device.create_render_pipeline_state(standard_pipeline_create_info);
 
-            logger->info("Created standard pipeline");
+            logger->verbose("Created standard pipeline");
         }
 
         {

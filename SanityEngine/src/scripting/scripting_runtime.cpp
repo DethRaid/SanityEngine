@@ -4,6 +4,7 @@
 
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "core/components.hpp"
@@ -11,17 +12,17 @@
 #include "world/world.hpp"
 
 namespace horus {
-    std::shared_ptr<spdlog::logger> ScriptingRuntime::logger{spdlog::stdout_color_st("ScriptingRuntime")};
-    std::shared_ptr<spdlog::logger> ScriptingRuntime::script_logger{spdlog::stdout_color_mt("Wren")};
+    RX_LOG("ScriptingRuntime", logger);
+    RX_LOG("Wren", script_logger); // namespace horus
 
     static const Rx::String SANITY_ENGINE_MODULE_NAME = "SanityEngine";
 
     void ScriptingRuntime::wren_error(
         WrenVM* /* vm */, WrenErrorType /* type */, const char* module_name, const int line, const char* message) {
-        script_logger->error("[{}] Line {}: {}", module_name, line, message);
+        script_logger->error("[%s] Line %d: %s", module_name, line, message);
     }
 
-    void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) { script_logger->info("{}", text); }
+    void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) { script_logger->info("%s", text); }
 
     WrenForeignMethodFn ScriptingRuntime::wren_bind_foreign_method(
         WrenVM* vm, const char* module_name, const char* class_name, const bool is_static, const char* signature) {
@@ -66,11 +67,11 @@ namespace horus {
 
     void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path& directory) const {
         if(!exists(directory)) {
-            logger->error("Could not load scripts in directory {}: directory does not exist", directory);
+            logger->error("Could not load scripts in directory %s: directory does not exist", directory.string().c_str());
             return;
         }
         if(!is_directory(directory)) {
-            logger->error("Could not load scripts in directory {}: This path does not refer to a directory", directory);
+            logger->error("Could not load scripts in directory %s: This path does not refer to a directory", directory.string().c_str());
             return;
         }
         uint32_t num_loaded_modules{0};
@@ -80,21 +81,21 @@ namespace horus {
                 auto* file = fopen(module_path.string().c_str(), "r");
                 if(file == nullptr) {
                     // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
-                    logger->error("Could not open file {}", module_entry);
+                    logger->error("Could not open file %s", module_entry);
                     fclose(file);
                     continue;
                 }
 
                 auto result = static_cast<size_t>(fseek(file, 0, SEEK_END));
                 if(result != 0) {
-                    logger->error("Could not get length of file {}", module_entry);
+                    logger->error("Could not get length of file %s", module_entry);
                     fclose(file);
                     continue;
                 }
 
                 const auto length = ftell(file);
                 if(length == 0) {
-                    logger->error("File {} exists, but it has a length of 0", module_entry);
+                    logger->error("File %s exists, but it has a length of 0", module_entry);
                     fclose(file);
                     continue;
                 }
@@ -105,7 +106,7 @@ namespace horus {
 
                 result = fread(module_contents, 1, length, file);
                 if(result == 0) {
-                    logger->error("Could not read contents of file {}", module_entry);
+                    logger->error("Could not read contents of file %s", module_entry);
 
                     delete[] module_contents;
 
@@ -121,30 +122,30 @@ namespace horus {
                 const auto wren_result = wrenInterpret(vm, module_name_string.c_str(), module_contents);
                 switch(wren_result) {
                     case WREN_RESULT_SUCCESS:
-                        logger->info("Successfully loaded module {}", module_entry);
+                        logger->info("Successfully loaded module %s", module_entry);
                         num_loaded_modules++;
                         break;
 
                     case WREN_RESULT_COMPILE_ERROR:
-                        logger->error("Compile error while loading module {}", module_name_string);
+                        logger->error("Compile error while loading module %s", module_name_string);
                         break;
 
                     case WREN_RESULT_RUNTIME_ERROR:
-                        logger->error("Runtime error when loading module {} - are you sure you defined all your foreign methods?",
+                        logger->error("Runtime error when loading module %s - are you sure you defined all your foreign methods?",
                                       module_name_string);
                         break;
 
                     default:
-                        logger->error("Unknown error when loading module {}");
+                        logger->error("Unknown error when loading module %s");
                 }
 
                 delete[] module_contents;
             }
         }
         if(num_loaded_modules == 0) {
-            logger->warn(
-                "No modules loaded from directory {}. If you are planning on adding scripts here while the application is running, you may ignore this warning",
-                directory);
+            logger->warning(
+                "No modules loaded from directory %s. If you are planning on adding scripts here while the application is running, you may ignore this warning",
+                directory.string().c_str());
         }
     }
 
@@ -185,33 +186,33 @@ namespace horus {
 
         for(const auto& module_directory : module_paths) {
             const auto& potential_filename = module_directory / module_name.data();
-            logger->trace("Attempting to load file {} for module {}", potential_filename, module_name.data());
+            logger->verbose("Attempting to load file %s for module %s", potential_filename, module_name);
 
             auto* file = fopen(module_name.data(), "r");
             if(file == nullptr) {
                 // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
-                logger->trace("Could not open file {}", potential_filename);
+                logger->verbose("Could not open file %s", potential_filename);
                 fclose(file);
                 return nullptr;
             }
 
             auto result = static_cast<size_t>(fseek(file, 0, SEEK_END));
             if(result != 0) {
-                logger->warn("Could not get length of file {}", potential_filename);
+                logger->verbose("Could not get length of file %s", potential_filename);
                 fclose(file);
                 continue;
             }
 
             const auto length = ftell(file);
             if(length == 0) {
-                logger->warn("File {} exists, but it has a length of 0", potential_filename);
+                logger->verbose("File %s exists, but it has a length of 0", potential_filename);
                 fclose(file);
                 continue;
             }
 
             result = fseek(file, 0, SEEK_SET);
             if(result != 0) {
-                logger->warn("Could not reset file pointer for file {}", potential_filename);
+                logger->verbose("Could not reset file pointer for file %s", potential_filename);
                 fclose(file);
                 continue;
             }
@@ -220,7 +221,7 @@ namespace horus {
 
             result = fread(module_contents, length * sizeof(char), 1, file);
             if(result == 0) {
-                logger->warn("Could not read contents of file {}", potential_filename);
+                logger->verbose("Could not read contents of file %s", potential_filename);
 
                 delete[] module_contents;
 
@@ -254,8 +255,6 @@ namespace horus {
             logger->error("Could not initialize Wren");
             return {};
         }
-
-        logger->set_level(spdlog::level::trace);
 
         return std::make_unique<ScriptingRuntime>(vm, registry_in);
     }
@@ -361,7 +360,7 @@ namespace horus {
         const auto full_signature = fmt::format("new()", module_name, component_class_name);
         auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
         if(constructor_handle == nullptr) {
-            logger->error("Could not get handle to constructor for {}", component_class_name);
+            logger->error("Could not get handle to constructor for %s", component_class_name);
             return std::nullopt;
         }
 
@@ -386,19 +385,19 @@ namespace horus {
                 auto loaded_component_class = true;
                 if(methods.init_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load method {}::init");
+                    logger->error("Could not load method %s", init_signature.c_str());
                 }
                 if(methods.begin_play_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load component {}::begin_play(_)");
+                    logger->error("Could not load method %s", begin_play_signature.c_str());
                 }
                 if(methods.tick_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load component {}::tick(_)");
+                    logger->error("Could not load method %s", tick_signature.c_str());
                 }
                 if(methods.end_play_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load end play handle");
+                    logger->error("Could not load method %s", end_play_signature.c_str());
                 }
                 if(!loaded_component_class) {
                     return std::nullopt;
@@ -408,17 +407,17 @@ namespace horus {
             }
 
             case WREN_RESULT_COMPILE_ERROR: {
-                logger->error("Compilation error when creating an instance of {}", component_class_name);
+                logger->error("Compilation error when creating an instance of %s", component_class_name);
                 return std::nullopt;
             }
 
             case WREN_RESULT_RUNTIME_ERROR: {
-                logger->error("Runtime error when creating an instance of {}", component_class_name);
+                logger->error("Runtime error when creating an instance of %s", component_class_name);
                 return std::nullopt;
             }
 
             default: {
-                logger->error("Unknown error when creating an instance of {}", component_class_name);
+                logger->error("Unknown error when creating an instance of %s", component_class_name);
                 return std::nullopt;
             }
         }

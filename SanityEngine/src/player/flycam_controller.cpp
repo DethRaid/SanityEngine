@@ -2,20 +2,20 @@
 
 #include <entt/entity/registry.hpp>
 #include <glm/ext/quaternion_transform.hpp>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include "core/components.hpp"
 
+RX_LOG("FlycamController", logger);
+
 FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
-    : logger{spdlog::stdout_color_st("FlycamController")},
-      window{window_in},
+    : window{window_in},
       controlled_entity{controlled_entity_in},
       registry{&registry_in} {
     // Quick validation
     RX_ASSERT(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
-
-    logger->set_level(spdlog::level::debug);
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }

@@ -8,6 +8,7 @@
 #include <dxgi1_3.h>
 #include <minitrace.h>
 #include <rx/core/abort.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -21,11 +22,12 @@
 #include "windows/windows_helpers.hpp"
 
 namespace rhi {
+    RX_LOG("RenderDevice", logger);
+
     RenderDevice::RenderDevice(HWND window_handle,
                                const glm::uvec2& window_size,
                                const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : settings{settings_in},
-          logger{spdlog::stdout_color_st("RenderDevice")},
           command_lists_by_frame{settings.num_in_flight_gpu_frames},
           buffer_deletion_list{settings.num_in_flight_gpu_frames},
           image_deletion_list{settings.num_in_flight_gpu_frames},
@@ -37,8 +39,6 @@ namespace rhi {
         if(FAILED(result)) {
             enable_debugging();
         }
-
-        logger->set_level(spdlog::level::debug);
 #endif
 
         initialize_dxgi();
@@ -115,7 +115,7 @@ namespace rhi {
                 break;
 
             default:
-                logger->warn("Unknown buffer usage {}", create_info.usage);
+                logger->warning("Unknown buffer usage %u", create_info.usage);
         }
 
         auto buffer = std::make_unique<Buffer>();
@@ -126,7 +126,7 @@ namespace rhi {
                                                              &buffer->allocation,
                                                              IID_PPV_ARGS(&buffer->resource));
         if(FAILED(result)) {
-            logger->error("Could not create buffer {}: {}", create_info.name.data(), to_string(result).data());
+            logger->error("Could not create buffer %s: %s", create_info.name, to_string(result));
             return {};
         }
 
@@ -194,7 +194,7 @@ namespace rhi {
                                                              &image->allocation,
                                                              IID_PPV_ARGS(&image->resource));
         if(FAILED(result)) {
-            logger->error("Could not create image %s", create_info.name.data());
+            logger->error("Could not create image %s", create_info.name);
             return {};
         }
 
@@ -222,7 +222,7 @@ namespace rhi {
         render_targets.each_fwd([&](const Image* image) {
             if(width != 0 && width != image->width) {
                 logger->error(
-                    "Render target {} has width {}, which is different from the width {} of the previous render target. All render targets must have the same width",
+                    "Render target %u has width %u, which is different from the width %u of the previous render target. All render targets must have the same width",
                     i,
                     image->width,
                     width);
@@ -232,7 +232,7 @@ namespace rhi {
 
             if(height != 0 && height != image->height) {
                 logger->error(
-                    "Render target {} has height {}, which is different from the height {} of the previous render target. All render targets must have the same height",
+                    "Render target %u has height %u, which is different from the height %u of the previous render target. All render targets must have the same height",
                     i,
                     image->height,
                     height);
@@ -252,7 +252,7 @@ namespace rhi {
         if(depth_target != nullptr) {
             if(width != 0 && width != depth_target->width) {
                 logger->error(
-                    "Depth target has width {}, which is different from the width {} of the render targets. The depth target must have the same width as the render targets",
+                    "Depth target %u has width %u, which is different from the width %u of the render targets. The depth target must have the same width as the render targets",
                     i,
                     depth_target->width,
                     width);
@@ -262,7 +262,7 @@ namespace rhi {
 
             if(height != 0 && height != depth_target->height) {
                 logger->error(
-                    "Depth target has height {}, which is different from the height {} of the render targets. The depth target must have the same height as the render targets",
+                    "Depth target %u has height %u, which is different from the height %u of the render targets. The depth target must have the same height as the render targets",
                     i,
                     depth_target->height,
                     height);
@@ -400,7 +400,7 @@ namespace rhi {
             case D3D_SIT_UAV_FEEDBACKTEXTURE:
                 [[fallthrough]];
             default:
-                spdlog::error("Unknown descriptor type, defaulting to UAV");
+                logger->error("Unknown descriptor type, defaulting to UAV");
                 return DescriptorType::UnorderedAccess;
         }
     }
@@ -648,8 +648,8 @@ namespace rhi {
                     // descriptor arrays, so we need it
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
-                    logger->warn("Ignoring adapter {} - Doesn't have the flexible resource binding that Sanity Engine needs",
-                                 from_wide_string(desc.Description).data());
+                    logger->warning("Ignoring adapter %s - Doesn't have the flexible resource binding that Sanity Engine needs",
+                                 from_wide_string(desc.Description));
 
                     return true;
                 }
@@ -657,18 +657,17 @@ namespace rhi {
                 D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_5};
                 res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
                 if(FAILED(res)) {
-                    logger->warn("Ignoring adapter {} - Could not check the supported shader model: {}",
-                                 from_wide_string(desc.Description).data(),
-                                 to_string(res).data());
+                    logger->warning("Ignoring adapter %s - Could not check the supported shader model: %s",
+                                 from_wide_string(desc.Description),
+                                 to_string(res));
 
                     return true;
 
                 } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_5) {
                     // Only supports old-ass shaders
 
-                    logger->warn("Ignoring adapter {} - Doesn't support the shader model Sanity Engine uses",
-                                 from_wide_string(desc.Description).data());
-
+                    logger->warning("Ignoring adapter %s - Doesn't support the shader model Sanity Engine uses",
+                                 from_wide_string(desc.Description));
                     return true;
                 }
 
@@ -706,7 +705,7 @@ namespace rhi {
                 return false;
 
             } else {
-                logger->warn("Ignoring adapter {} - doesn't support D3D12", from_wide_string(desc.Description).data());
+                logger->warning("Ignoring adapter %s - doesn't support D3D12", from_wide_string(desc.Description));
             }
 
             return true;
@@ -746,7 +745,7 @@ namespace rhi {
 
             result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(&async_copy_queue));
             if(FAILED(result)) {
-                logger->warn("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
+                logger->warning("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
             } else {
                 set_object_name(async_copy_queue.Get(), "DMA queue");
@@ -873,7 +872,7 @@ namespace rhi {
 
         const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
         if(FAILED(result)) {
-            logger->error("Could not create descriptor heap: {}", to_string(result).data());
+            logger->error("Could not create descriptor heap: %s", to_string(result));
 
             return {{}, 0};
         }
@@ -982,7 +981,7 @@ namespace rhi {
         auto result = D3D12SerializeVersionedRootSignature(&versioned_desc, &root_signature_blob, &error_blob);
         if(FAILED(result)) {
             const Rx::String msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
-            logger->error("Could not create root signature: {}", msg.data());
+            logger->error("Could not create root signature: %s", msg);
             return {};
         }
 
@@ -992,7 +991,7 @@ namespace rhi {
                                              root_signature_blob->GetBufferSize(),
                                              IID_PPV_ARGS(&sig));
         if(FAILED(result)) {
-            logger->error("Could not create root signature: {}", to_string(result).data());
+            logger->error("Could not create root signature: %s", to_string(result));
             return {};
         }
 
@@ -1132,7 +1131,7 @@ namespace rhi {
         ComPtr<ID3D12ShaderReflection> reflection;
         auto result = D3DReflect(shader.data(), shader.size() * sizeof(uint8_t), IID_PPV_ARGS(&reflection));
         if(FAILED(result)) {
-            logger->error("Could not retrieve shader reflection information: {}", to_string(result).data());
+            logger->error("Could not retrieve shader reflection information: %s", to_string(result));
         }
 
         D3D12_SHADER_DESC desc;
@@ -1146,7 +1145,7 @@ namespace rhi {
         for(uint32_t i = 0; i < desc.BoundResources; i++) {
             result = reflection->GetResourceBindingDesc(i, &input_descs[i]);
             if(FAILED(result)) {
-                logger->error("Could not get binding information for resource idx {}", i);
+                logger->error("Could not get binding information for resource idx %u", i);
             }
         }
 
@@ -1264,7 +1263,7 @@ namespace rhi {
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
         if(FAILED(result)) {
-            logger->error("Could not create render pipeline {}: {}", create_info.name.data(), to_string(result).data());
+            logger->error("Could not create render pipeline %s: %s", create_info.name, to_string(result));
             return {};
         }
 
@@ -1388,13 +1387,13 @@ namespace rhi {
             frame_fences->SetEventOnCompletion(desired_fence_value, frame_event);
             const auto result = WaitForSingleObject(frame_event, INFINITE);
             if(result == WAIT_ABANDONED) {
-                logger->error("Waiting for GPU frame {} was abandoned", frame_index);
+                logger->error("Waiting for GPU frame %u was abandoned", frame_index);
 
             } else if(result == WAIT_TIMEOUT) {
-                logger->error("Waiting for GPU frame {} timed out", frame_index);
+                logger->error("Waiting for GPU frame %u timed out", frame_index);
 
             } else if(result == WAIT_FAILED) {
-                logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error().data());
+                logger->error("Waiting for GPU fence %u failed: %s", frame_index, get_last_windows_error());
             }
 
             RX_ASSERT(result == WAIT_OBJECT_0, "Waiting for frame %d failed", frame_index);
@@ -1423,7 +1422,7 @@ namespace rhi {
                                                              &buffer.allocation,
                                                              IID_PPV_ARGS(&buffer.resource));
         if(FAILED(result)) {
-            logger->error("Could not create staging buffer: {}", to_string(result).data());
+            logger->error("Could not create staging buffer: %s", to_string(result));
             return {};
         }
 
@@ -1452,7 +1451,7 @@ namespace rhi {
                                                              &scratch_buffer.allocation,
                                                              IID_PPV_ARGS(&scratch_buffer.resource));
         if(FAILED(result)) {
-            logger->error("Could not create scratch buffer: {}", to_string(result).data());
+            logger->error("Could not create scratch buffer: %s", to_string(result));
         }
 
         scratch_buffer.size = num_bytes;
@@ -1473,9 +1472,9 @@ namespace rhi {
         ComPtr<ID3D12Fence> fence;
         const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
         if(FAILED(result)) {
-            logger->error("Could not create fence: {}", to_string(result).data());
+            logger->error("Could not create fence: %s", to_string(result));
             const auto removed_reason = device->GetDeviceRemovedReason();
-            logger->error("Device removed reason: {}", to_string(removed_reason).data());
+            logger->error("Device removed reason: %s", to_string(removed_reason));
         }
 
         return fence;
@@ -1501,7 +1500,7 @@ namespace rhi {
             return;
         }
 
-        logger->error("Command history:\n{}", breadcrumb_output_to_string(breadcrumbs).data());
+        logger->error("Command history:\n%s", breadcrumb_output_to_string(breadcrumbs));
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
@@ -1513,13 +1512,13 @@ namespace rhi {
                 glm::ivec2 framebuffer_size{};
                 glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
 
-                spdlog::info("Creating D3D12 backend");
+                logger->info("Creating D3D12 backend");
 
                 return std::make_unique<RenderDevice>(hwnd, framebuffer_size, settings);
             }
         }
 
-        spdlog::error("Unrecognized render backend type");
+        logger->error("Unrecognized render backend type");
 
         return {};
     }

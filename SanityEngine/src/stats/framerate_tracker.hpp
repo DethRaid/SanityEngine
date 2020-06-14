@@ -32,6 +32,4 @@ private:
     uint32_t max_num_samples;
 
     std::list<double> frame_times;
-
-    std::shared_ptr<spdlog::logger> logger;
 };

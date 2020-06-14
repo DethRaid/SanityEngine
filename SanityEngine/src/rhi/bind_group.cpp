@@ -3,14 +3,17 @@
 #include <utility>
 
 #include <minitrace.h>
-#include <spdlog/spdlog.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "raytracing_structs.hpp"
 
 namespace rhi {
+    RX_LOG("BindGroupBuilder", logger);
+
     RootParameter::RootParameter() = default;
 
     BindGroup::BindGroup(ID3D12DescriptorHeap& heap_in,
@@ -86,12 +89,6 @@ namespace rhi {
           root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
           descriptor_table_handles{std::move(descriptor_table_handles_in)} {
-        if(const auto loggy = spdlog::get("BindGroupBuilder")) {
-            logger = loggy;
-
-        } else {
-            logger = spdlog::stdout_color_st("BindGroupBuilder");
-        }
     }
 
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
@@ -144,7 +141,7 @@ namespace rhi {
 
             if(const Buffer** bound_buffer = bound_buffers.find(name)) {
                 root_parameters[idx].descriptor.address = (*bound_buffer)->resource->GetGPUVirtualAddress();
-                logger->trace("Binding buffer {} to root descriptor {}", (*bound_buffer)->name.data(), name.data());
+                logger->verbose("Binding buffer %s to root descriptor %s", (*bound_buffer)->name, name);
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -172,8 +169,8 @@ namespace rhi {
 
             } else if(const Buffer** scene = bound_raytracing_scenes.find(name)) {
                 RX_ASSERT(type == DescriptorType::ShaderResource,
-                       "May only bind raytracing acceleration structure %s as a shader resource",
-                       (*scene)->name);
+                          "May only bind raytracing acceleration structure %s as a shader resource",
+                          (*scene)->name);
 
                 root_parameters[idx].descriptor.address = (*scene)->resource->GetGPUVirtualAddress();
 
@@ -235,7 +232,7 @@ namespace rhi {
             } else if(const auto* images = bound_image_arrays.find(name)) {
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
-                        logger->warn("Can not bind images to constant buffer {}", name.data());
+                        logger->warning("Can not bind images to constant buffer %s", name);
                     } break;
 
                     case DescriptorType::ShaderResource: {

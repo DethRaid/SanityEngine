@@ -153,8 +153,6 @@ namespace rhi {
          */
         bool in_init_phase{true};
 
-        std::shared_ptr<spdlog::logger> logger;
-
         ComPtr<ID3D12Debug> debug_controller;
         ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
         ComPtr<IDXGraphicsAnalysis> graphics_analysis;

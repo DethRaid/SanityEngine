@@ -20,7 +20,7 @@ std::optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
             const auto height = terrain.get_terrain_height(terrain_sample_pos);
             const auto height_where_air_begins = std::min(static_cast<uint32_t>(round(height)), HEIGHT);
 
-            for(int32_t y = 0; y < height_where_air_begins; y++) {
+            for(int32_t y = 0; y < static_cast<int32_t>(height_where_air_begins); y++) {
                 const auto idx = chunk_pos_to_block_index({x, y, z});
                 block_data[idx] = BlockRegistry::DIRT;
             }

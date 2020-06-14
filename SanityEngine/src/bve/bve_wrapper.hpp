@@ -26,8 +26,6 @@ public:
     std::unique_ptr<rhi::BindGroupBuilder> create_texture_processor_bind_group_builder(rhi::RenderDevice& device);
 
 private:
-    static std::shared_ptr<spdlog::logger> logger;
-
     std::unique_ptr<rhi::ComputePipelineState> bve_texture_pipeline;
 
     void create_texture_filter_pipeline(rhi::RenderDevice& device);

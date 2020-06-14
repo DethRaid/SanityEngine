@@ -145,8 +145,6 @@ namespace rhi {
         std::unique_ptr<BindGroup> build();
 
     private:
-        std::shared_ptr<spdlog::logger> logger;
-
         ID3D12Device* device;
 
         ID3D12DescriptorHeap* heap;

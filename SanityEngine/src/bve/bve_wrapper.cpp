@@ -15,6 +15,7 @@
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
 
 using namespace bve;
 
@@ -53,7 +54,7 @@ static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const in
     return new_data;
 }
 
-std::shared_ptr<spdlog::logger> BveWrapper::logger{spdlog::stdout_color_st("Bve")};
+RX_LOG("Bve", logger);
 
 BveWrapper::BveWrapper(rhi::RenderDevice& device) {
     bve_init();
@@ -67,24 +68,24 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
     const auto train = load_mesh_from_file(filename);
     if(!train) {
-        logger->error("BVE returned absolutely nothing for train '{}'", filename.data());
+        logger->error("BVE returned absolutely nothing for train '%s'", filename);
 
         return false;
 
     } else if(train->errors.count > 0) {
-        logger->error("Could not load train '{}'", filename.data());
+        logger->error("Could not load train '%s'", filename);
 
         for(uint32_t i = 0; i < train->errors.count; i++) {
             const auto& error = train->errors.ptr[i];
             const auto error_data = get_printable_error(error);
-            logger->error("{}", error_data.description);
+            logger->error("%s", error_data.description);
         }
 
         return false;
 
     } else {
         if(train->meshes.count == 0) {
-            logger->error("No meshes loaded for train '{}'", filename.data());
+            logger->error("No meshes loaded for train '%s'", filename);
             return false;
         }
 
@@ -125,7 +126,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
                 const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
                 if(texture_handle_maybe) {
-                    logger->debug("Texture {} has existing handle {}", texture_name, texture_handle_maybe->index);
+                    logger->verbose("Texture %s has existing handle %d", texture_name, texture_handle_maybe->index);
 
                     const auto material = renderer::StandardMaterial{
                         .albedo = *texture_handle_maybe,
@@ -142,7 +143,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
                     int width, height, num_channels;
                     const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 0);
                     if(texture_data == nullptr) {
-                        logger->error("Could not load texture {}", texture_name);
+                        logger->error("Could not load texture %s", texture_name);
 
                     } else {
                         if(num_channels == 3) {
@@ -178,7 +179,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
                         renderer.schedule_texture_destruction(scratch_texture_handle);
 
-                        logger->debug("Newly loaded image {} has handle {}", texture_name, texture_handle.index);
+                        logger->verbose("Newly loaded image %s has handle %d", texture_name, texture_handle.index);
 
                         const auto material = renderer::StandardMaterial{
                             .albedo = texture_handle,
@@ -230,7 +231,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
         renderer.add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_mesh}});
 
-        logger->info("Loaded file {}", filename.data());
+        logger->info("Loaded file %s", filename);
 
         return true;
     }
@@ -279,7 +280,7 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
     auto* mesh = bve_load_mesh_from_file(filename.data());
 
     if(mesh == nullptr) {
-        logger->error("BVE failed to load anything for mesh '{}'", filename.data());
+        logger->error("BVE failed to load anything for mesh '%s'", filename);
     }
 
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};

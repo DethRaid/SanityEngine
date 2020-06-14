@@ -7,9 +7,11 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <entt/entity/registry.hpp>
+#include <rx/core/log.h>
 #include <rx/core/string.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "image_loading.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
@@ -17,17 +19,16 @@
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_device.hpp"
-#include "image_loading.hpp"
 
 static Assimp::Importer importer;
 
-static std::shared_ptr<spdlog::logger> logger = spdlog::stdout_color_mt("Entity Loading");
+RX_LOG("EntityLoading", logger);
 
 bool load_static_mesh(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
     const auto* scene = importer.ReadFile(filename.data(), aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
 
     if(scene == nullptr) {
-        logger->error("Could not load {}: {}", filename.data(), importer.GetErrorString());
+        logger->error("Could not load %s: %s", filename, importer.GetErrorString());
         return false;
     }
 
@@ -112,7 +113,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
                 Rx::Vector<uint8_t> pixels;
                 const auto was_image_loaded = load_image(texture_path.string().c_str(), width, height, pixels);
                 if(!was_image_loaded) {
-                    logger->warn("Could not load texture {}", texture_path);
+                    logger->warning("Could not load texture %s", texture_path.string().c_str());
 
                     material.albedo = renderer.get_pink_texture();
 

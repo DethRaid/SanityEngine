@@ -1,11 +1,12 @@
 #include "world.hpp"
 
 #include <minitrace.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "core/components.hpp"
 
-std::shared_ptr<spdlog::logger> World::logger = spdlog::stdout_color_st("World");
+RX_LOG("World", logger);
 
 void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& scripting_runtime) {
     const auto entity = registry.create();
@@ -24,7 +25,7 @@ std::unique_ptr<World> World::create(const WorldParameters& params,
                                      const entt::entity player_in,
                                      entt::registry& registry_in,
                                      renderer::Renderer& renderer_in) {
-    logger->info("Creating world with seed {}", params.seed);
+    logger->info("Creating world with seed %d", params.seed);
 
     auto noise_generator = std::unique_ptr<FastNoiseSIMD>{FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
 

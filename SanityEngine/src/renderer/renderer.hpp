@@ -102,8 +102,6 @@ namespace renderer {
         [[nodiscard]] std::unique_ptr<rhi::BindGroup> bind_global_resources_for_frame(uint32_t frame_idx);
 
     private:
-        std::shared_ptr<spdlog::logger> logger;
-
         std::chrono::high_resolution_clock::time_point start_time;
 
         Settings settings;

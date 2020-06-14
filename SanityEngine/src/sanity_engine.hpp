@@ -44,8 +44,6 @@ public:
     [[nodiscard]] World* get_world() const;
 
 private:
-    static std::shared_ptr<spdlog::logger> logger;
-
     rex::Wrapper rex;
 
     Settings settings;

@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
 #include <rx/core/abort.h>
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
@@ -44,18 +45,13 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-std::shared_ptr<spdlog::logger> SanityEngine::logger{spdlog::stdout_color_st("SanityEngine")};
+RX_LOG("SanityEngine", logger);
 
-SanityEngine::SanityEngine(const Settings& settings_in)
-    : settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
+SanityEngine::SanityEngine(const Settings& settings_in) : settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
     mtr_init("SanityEngine.json");
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
 
-    // spdlog::set_pattern("[%H:%M:%S.%e] [%n] [%^%l%$] %v");
-    spdlog::set_pattern("[%n] [%^%l%$] %v");
-
-    logger->set_level(spdlog::level::debug);
 
     logger->info("HELLO HUMAN");
 

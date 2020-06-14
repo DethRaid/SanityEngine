@@ -15,7 +15,6 @@ public:
     void update_player_transform(float delta_time);
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
     /*!
      * \brief Window that will receive input
      */

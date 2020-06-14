@@ -1,5 +1,6 @@
 #include "backbuffer_output_pass.hpp"
 
+#include <rx/core/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/shader_loading.hpp"
@@ -12,7 +13,7 @@ namespace renderer {
         TextureHandle scene_output_image;
     };
 
-    std::shared_ptr<spdlog::logger> BackbufferOutputPass::logger{spdlog::stdout_color_st("BackbufferOutputPass")};
+    RX_LOG("BackbufferOutputPass", logger);
 
     BackbufferOutputPass::BackbufferOutputPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
         auto& device = renderer->get_render_device();
@@ -34,7 +35,7 @@ namespace renderer {
 
         memcpy(backbuffer_output_material_buffer->mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
 
-        logger->debug("Initialized backbuffer output pass");
+        logger->verbose("Initialized backbuffer output pass");
     }
 
     void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, uint32_t /* frame_idx */) {
