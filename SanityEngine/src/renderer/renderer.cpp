@@ -25,7 +25,7 @@
 
 namespace renderer {
 
-    constexpr uint32_t MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
+    constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
 #pragma region Cube
     Rx::Vector<StandardVertex> Renderer::cube_vertices = Rx::Array{
@@ -66,7 +66,7 @@ namespace renderer {
         StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
     };
 
-    Rx::Vector<uint32_t> Renderer::cube_indices = Rx::Array{
+    Rx::Vector<Uint32> Renderer::cube_indices = Rx::Array{
         // front face
         0,
         1,
@@ -133,8 +133,8 @@ namespace renderer {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        output_framebuffer_size = {static_cast<uint32_t>(width * settings.render_scale),
-                                   static_cast<uint32_t>(height * settings.render_scale)};
+        output_framebuffer_size = {static_cast<Uint32>(width * settings.render_scale),
+                                   static_cast<Uint32>(height * settings.render_scale)};
 
         create_static_mesh_storage();
 
@@ -178,7 +178,7 @@ namespace renderer {
         const auto ns_since_start = std::chrono::duration_cast<std::chrono::nanoseconds>(duration_since_start).count();
         const auto time_since_start = static_cast<double>(ns_since_start) / 1000000000.0;
 
-        per_frame_data.time_since_start = static_cast<float>(time_since_start);
+        per_frame_data.time_since_start = static_cast<Float32>(time_since_start);
     }
 
     void Renderer::render_all(entt::registry& registry) {
@@ -215,7 +215,7 @@ namespace renderer {
     }
 
     TextureHandle Renderer::create_image(const rhi::ImageCreateInfo& create_info) {
-        const auto idx = static_cast<uint32_t>(all_images.size());
+        const auto idx = static_cast<Uint32>(all_images.size());
 
         all_images.push_back(device->create_image(create_info));
         image_name_to_index.insert(create_info.name, idx);
@@ -283,13 +283,13 @@ namespace renderer {
             return handle;
         }
 
-        const auto handle = StandardMaterialHandle{.index = static_cast<uint32_t>(standard_materials.size())};
+        const auto handle = StandardMaterialHandle{.index = static_cast<Uint32>(standard_materials.size())};
         standard_materials.push_back(material);
 
         return handle;
     }
 
-    rhi::Buffer& Renderer::get_standard_material_buffer_for_frame(const uint32_t frame_idx) const {
+    rhi::Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const {
         return *material_device_buffers[frame_idx];
     }
 
@@ -317,7 +317,7 @@ namespace renderer {
                                                                    const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
 
-        const auto handle_idx = static_cast<uint32_t>(raytracing_geometries.size());
+        const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(std::move(new_ray_geo));
 
         return {handle_idx};
@@ -349,7 +349,7 @@ namespace renderer {
             .size = sizeof(PerFrameData),
         };
 
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = fmt::format("Per frame data buffer {}", i).c_str();
             per_frame_data_buffers.push_back(device->create_buffer(create_info));
         }
@@ -358,7 +358,7 @@ namespace renderer {
     void Renderer::create_material_data_buffers() {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(settings.num_in_flight_gpu_frames);
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = fmt::format("Material Data Buffer {}", 1).c_str();
             material_device_buffers.push_back(device->create_buffer(create_info));
         }
@@ -367,7 +367,7 @@ namespace renderer {
     void Renderer::create_light_buffers() {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = fmt::format("Light Buffer {}", i).c_str();
             light_device_buffers.push_back(device->create_buffer(create_info));
         }
@@ -385,9 +385,9 @@ namespace renderer {
                                                                        .width = 8,
                                                                        .height = 8};
 
-            auto pink_texture_pixel = Rx::Vector<uint32_t>{};
+            auto pink_texture_pixel = Rx::Vector<Uint32>{};
             pink_texture_pixel.reserve(64);
-            for(uint32_t i = 0; i < 64; i++) {
+            for(Uint32 i = 0; i < 64; i++) {
                 pink_texture_pixel.push_back(0xFFFF00FF);
             }
 
@@ -401,9 +401,9 @@ namespace renderer {
                                                                                    .width = 8,
                                                                                    .height = 8};
 
-            auto normal_roughness_texture_pixel = Rx::Vector<uint32_t>{};
+            auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
             normal_roughness_texture_pixel.reserve(64);
-            for(uint32_t i = 0; i < 64; i++) {
+            for(Uint32 i = 0; i < 64; i++) {
                 normal_roughness_texture_pixel.push_back(0x80FF8080);
             }
 
@@ -419,9 +419,9 @@ namespace renderer {
                                                                                     .width = 8,
                                                                                     .height = 8};
 
-            auto specular_emission_texture_pixel = Rx::Vector<uint32_t>{};
+            auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
             specular_emission_texture_pixel.reserve(64);
-            for(uint32_t i = 0; i < 64; i++) {
+            for(Uint32 i = 0; i < 64; i++) {
                 specular_emission_texture_pixel.push_back(0x00373737);
             }
 
@@ -442,7 +442,7 @@ namespace renderer {
         return images;
     }
 
-    void Renderer::update_cameras(entt::registry& registry, const uint32_t frame_idx) const {
+    void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
         MTR_SCOPE("Renderer", "update_cameras");
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
@@ -455,7 +455,7 @@ namespace renderer {
         camera_matrix_buffers->upload_data(frame_idx);
     }
 
-    void Renderer::upload_material_data(const uint32_t frame_idx) {
+    void Renderer::upload_material_data(const Uint32 frame_idx) {
         auto& buffer = *material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
     }
@@ -472,11 +472,11 @@ namespace renderer {
 
             RX_ASSERT(raytracing_objects.size() < max_num_objects, "May not have more than %u objects because uint32", max_num_objects);
 
-            const auto instance_buffer_size = static_cast<uint32_t>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
+            const auto instance_buffer_size = static_cast<Uint32>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
             auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
             auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.ptr);
 
-            for(uint32_t i = 0; i < raytracing_objects.size(); i++) {
+            for(Uint32 i = 0; i < raytracing_objects.size(); i++) {
                 const auto& object = raytracing_objects[i];
                 auto& desc = instance_buffer_array[i];
                 desc = {};
@@ -513,11 +513,11 @@ namespace renderer {
             prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                            prebuild_info.ResultDataMaxSizeInBytes);
 
-            auto scratch_buffer = device->get_scratch_buffer(static_cast<uint32_t>(prebuild_info.ScratchDataSizeInBytes));
+            auto scratch_buffer = device->get_scratch_buffer(static_cast<Uint32>(prebuild_info.ScratchDataSizeInBytes));
 
             const auto as_buffer_create_info = rhi::BufferCreateInfo{.name = "Raytracing Scene",
                                                                      .usage = rhi::BufferUsage::RaytracingAccelerationStructure,
-                                                                     .size = static_cast<uint32_t>(prebuild_info.ResultDataMaxSizeInBytes)};
+                                                                     .size = static_cast<Uint32>(prebuild_info.ResultDataMaxSizeInBytes)};
             auto as_buffer = device->create_buffer(as_buffer_create_info);
 
             const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
@@ -538,14 +538,14 @@ namespace renderer {
         }
     }
 
-    void Renderer::update_lights(entt::registry& registry, const uint32_t frame_idx) {
+    void Renderer::update_lights(entt::registry& registry, const Uint32 frame_idx) {
         registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
-    Rx::Ptr<rhi::BindGroup> Renderer::bind_global_resources_for_frame(const uint32_t frame_idx) {
+    Rx::Ptr<rhi::BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
         auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
@@ -562,7 +562,7 @@ namespace renderer {
         return material_bind_group_builder.build();
     }
 
-    void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const uint32_t frame_idx) {
+    void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
         MTR_SCOPE("Renderer", "render_3d_scene");
 
         update_lights(registry, frame_idx);
@@ -604,27 +604,27 @@ namespace renderer {
     }
 
     void Renderer::create_ui_mesh_buffers() {
-        constexpr uint32_t num_ui_vertices = 1 << 20;
+        constexpr Uint32 num_ui_vertices = 1 << 20;
         const auto vert_buffer_create_info = rhi::BufferCreateInfo{
             .name = "Dear ImGUI Vertex Buffer",
             .usage = rhi::BufferUsage::VertexBuffer,
             .size = num_ui_vertices * sizeof(ImDrawVert),
         };
 
-        constexpr uint32_t num_ui_indices = 1 << 20;
+        constexpr Uint32 num_ui_indices = 1 << 20;
         const auto index_buffer_create_info = rhi::BufferCreateInfo{
             .name = "Dear ImGUI Index Buffer",
             .usage = rhi::BufferUsage::StagingBuffer,
             .size = num_ui_indices * sizeof(ImDrawIdx),
         };
 
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             ui_vertex_buffers.push_back(device->create_buffer(vert_buffer_create_info));
             ui_index_buffers.push_back(device->create_buffer(index_buffer_create_info));
         }
     }
 
-    void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const uint32_t frame_idx) const {
+    void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const Uint32 frame_idx) const {
         MTR_SCOPE("Renderer", "render_ui");
 
         {
@@ -660,16 +660,16 @@ namespace renderer {
             commands->RSSetViewports(1, &viewport);
         }
 
-        uint32_t vertex_offset{0};
-        uint32_t index_offset{0};
+        Uint32 vertex_offset{0};
+        Uint32 index_offset{0};
 
         for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
             const auto* cmd_list = draw_data->CmdLists[i];
             const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
             const auto* imgui_indices = cmd_list->IdxBuffer.Data;
 
-            const auto vertex_buffer_size = static_cast<uint32_t>(cmd_list->VtxBuffer.size_in_bytes());
-            const auto index_buffer_size = static_cast<uint32_t>(cmd_list->IdxBuffer.size_in_bytes());
+            const auto vertex_buffer_size = static_cast<Uint32>(cmd_list->VtxBuffer.size_in_bytes());
+            const auto index_buffer_size = static_cast<Uint32>(cmd_list->IdxBuffer.size_in_bytes());
 
             const auto vert_buffer_create_info = rhi::BufferCreateInfo{
                 .name = "Dear ImGUI Vertex Buffer",
@@ -707,7 +707,7 @@ namespace renderer {
 
                 } else {
                     const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
-                    const auto texture_idx = static_cast<uint32_t>(imgui_material_idx);
+                    const auto texture_idx = static_cast<Uint32>(imgui_material_idx);
                     commands->SetGraphicsRoot32BitConstant(0, texture_idx, 1);
 
                     {

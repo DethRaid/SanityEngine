@@ -10,8 +10,8 @@
 struct StandardVertex {
     glm::vec3 position;
     glm::vec3 normal;
-    uint32_t color{0xFFFFFFFF};
-    uint32_t material_idx{0};
+    Uint32 color{0xFFFFFFFF};
+    Uint32 material_idx{0};
     glm::vec2 texcoord;
 };
 
@@ -20,11 +20,11 @@ namespace rhi {
     class RenderDevice;
 
     struct Mesh {
-        uint32_t first_vertex{0};
-        uint32_t num_vertices{0};
+        Uint32 first_vertex{0};
+        Uint32 num_vertices{0};
 
-        uint32_t first_index{0};
-        uint32_t num_indices{0};
+        Uint32 first_index{0};
+        Uint32 num_indices{0};
     };
 
     /*!
@@ -39,12 +39,12 @@ namespace rhi {
         /*!
          * \brief Offset in bytes where the relevant data starts
          */
-        uint32_t offset;
+        Uint32 offset;
 
         /*!
          * \brief Size of a vertex, in bytes
          */
-        uint32_t vertex_size;
+        Uint32 vertex_size;
     };
 
     class MeshDataStore {
@@ -73,7 +73,7 @@ namespace rhi {
          * `end_mesh_data_upload`
          */
         [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices,
-                                    const Rx::Vector<uint32_t>& indices,
+                                    const Rx::Vector<Uint32>& indices,
                                     const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         /*!
@@ -97,16 +97,16 @@ namespace rhi {
          *
          * I'll eventually need a way to unload meshes, but that's more complicated
          */
-        uint32_t next_free_vertex_byte{0};
+        Uint32 next_free_vertex_byte{0};
 
         /*!
          * \brief The offset in the vertex buffer, in vertices, where the next mesh's vertex data should start
          */
-        uint32_t next_vertex_offset{0};
+        Uint32 next_vertex_offset{0};
 
         /*!
          * \brief The offset in the index buffer where the next mesh's indices should start
          */
-        uint32_t next_index_offset{0};
+        Uint32 next_index_offset{0};
     };
 } // namespace rhi

@@ -2,6 +2,8 @@
 
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/observer.hpp>
+#include <rx/core/types.h>
+#include <rx/core/vector.h>
 
 #include "scripting/scripting_runtime.hpp"
 #include "world/terrain.hpp"
@@ -19,29 +21,29 @@ struct WorldParameters {
     /*!
      * \brief RNG seed to use for this world. The same seed will generate exactly the same world every time it's used
      */
-    uint32_t seed;
+    Uint32 seed;
 
     /*!
      * \brief Height of the world, in meters
      *
      * Height is the distance from the north end to the south end
      */
-    uint32_t height;
+    Uint32 height;
 
     /*!
      * \brief Width of the world, in meters
      */
-    uint32_t width;
+    Uint32 width;
 
     /*!
      * \brief Maximum depth of the ocean, in meters
      */
-    uint32_t max_ocean_depth;
+    Uint32 max_ocean_depth;
 
     /*!
      * \brief Distance from the lowest point in the ocean to the bedrock layer
      */
-    uint32_t min_terrain_depth_under_ocean;
+    Uint32 min_terrain_depth_under_ocean;
 
     /*
      * \brief Height above sea level of the tallest possible mountain
@@ -58,11 +60,11 @@ public:
      * \brief Created a world with the provided parameters
      */
     static Rx::Ptr<World> create(const WorldParameters& params,
-                                         entt::entity player,
-                                         entt::registry& registry,
-                                         renderer::Renderer& renderer);
+                                 entt::entity player,
+                                 entt::registry& registry,
+                                 renderer::Renderer& renderer);
 
-    void tick(float delta_time);
+    void tick(Float32 delta_time);
 
     [[nodiscard]] Terrain& get_terrain();
 
@@ -72,12 +74,52 @@ public:
 #pragma endregion
 
 private:
-    static Rx::Vector<float> generate_terrain_heightmap(FastNoiseSIMD& noise_generator, const WorldParameters& params);
+    struct TerrainData {
+        Uint32 width;
+        Uint32 height;
+
+        Rx::Vector<Float32> heightmap;
+
+        /*!
+         * \brief Handle to a texture that has the raw height values for the terrain
+         */
+        renderer::TextureHandle heightmap_handle;
+
+        /*!
+         * \brief Handle to a texture that stores information about water on the surface
+         *
+         * The depth of the water is in the red channel of this texture. This is the depth above the terrain - 0 means no water, something
+         * else means some water
+         *
+         * We don't need to store any directions - lakes don't flow, the ocean currents are well-defined, rivers get their flow direction
+         * from the slope of the terrain beneath them
+         */
+        renderer::TextureHandle ground_water_handle;
+
+        /*!
+         * \brief Handle to a texture that stores wind information
+         *
+         * The RGB of this channel is the direction of the wind, the length of that vector is the wind strength in kmph
+         */
+        renderer::TextureHandle wind_map_handle;
+
+        /*!
+         * \brief Handle to a texture that stores the absolute humidity on each part of the world
+         */
+        renderer::TextureHandle humidity_map_handle;
+
+        /*!
+         * \brief Handle to a texture that stores the soil moisture percentage
+         */
+        renderer::TextureHandle soil_moisture_handle;
+    };
+
+    static Rx::Vector<Float32> generate_terrain_heightmap(FastNoiseSIMD& noise_generator, const WorldParameters& params);
 
     /*!
      * \brief Runs the Sanity Engine's climate model on the provided world data
      */
-    static void generate_climate_data(const Rx::Vector<float>& heightmap, const WorldParameters& params, renderer::Renderer& renderer);
+    static void generate_climate_data(const Rx::Vector<Float32>& heightmap, const WorldParameters& params, renderer::Renderer& renderer);
 
     glm::uvec2 size;
 
@@ -96,8 +138,8 @@ private:
     WrenHandle* handle;
 
     explicit World(const glm::uvec2& size_in,
-                   uint32_t min_terrain_height,
-                   uint32_t max_terrain_height,
+                   Uint32 min_terrain_height,
+                   Uint32 max_terrain_height,
                    Rx::Ptr<FastNoiseSIMD> noise_generator_in,
                    entt::entity player_in,
                    entt::registry& registry_in,
@@ -112,5 +154,5 @@ private:
      */
     void load_terrain_around_player();
 
-    void tick_script_components(float delta_time);
+    void tick_script_components(Float32 delta_time);
 };

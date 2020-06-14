@@ -37,8 +37,8 @@ void scroll_callback(GLFWwindow* window, const double x_offset, const double y_o
     }
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheelH += static_cast<float>(x_offset);
-    io.MouseWheel += static_cast<float>(y_offset);
+    io.MouseWheelH += static_cast<Float32>(x_offset);
+    io.MouseWheel += static_cast<Float32>(y_offset);
 }
 
 void key_callback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods) {
@@ -118,15 +118,15 @@ void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclud
     int display_w, display_h;
     glfwGetWindowSize(window, &w, &h);
     glfwGetFramebufferSize(window, &display_w, &display_h);
-    io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
+    io.DisplaySize = ImVec2(static_cast<Float32>(w), static_cast<Float32>(h));
     if(w > 0 && h > 0) {
-        io.DisplayFramebufferScale = ImVec2(static_cast<float>(display_w) / static_cast<float>(w),
-                                            static_cast<float>(display_h) / static_cast<float>(h));
+        io.DisplayFramebufferScale = ImVec2(static_cast<Float32>(display_w) / static_cast<Float32>(w),
+                                            static_cast<Float32>(display_h) / static_cast<Float32>(h));
     }
 
     // Setup time step
     const double current_time = glfwGetTime();
-    io.DeltaTime = last_start_time > 0.0 ? static_cast<float>(current_time - last_start_time) : static_cast<float>(1.0f / 60.0f);
+    io.DeltaTime = last_start_time > 0.0 ? static_cast<Float32>(current_time - last_start_time) : static_cast<Float32>(1.0f / 60.0f);
     last_start_time = current_time;
 
     update_mouse_pos_and_buttons();
@@ -203,7 +203,7 @@ void DearImguiAdapter::initialize_style() {
     style.WindowBorderSize = 1;
     style.ChildBorderSize = 1;
     style.PopupBorderSize = 1;
-    style.FrameBorderSize = static_cast<float>(is_3d);
+    style.FrameBorderSize = static_cast<Float32>(is_3d);
 
     style.WindowRounding = 3;
     style.ChildRounding = 3;
@@ -241,8 +241,8 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     const auto create_info = rhi::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
                                                   .usage = rhi::ImageUsage::SampledImage,
                                                   .format = rhi::ImageFormat::Rgba8,
-                                                  .width = static_cast<uint32_t>(width),
-                                                  .height = static_cast<uint32_t>(height)};
+                                                  .width = static_cast<Uint32>(width),
+                                                  .height = static_cast<Uint32>(height)};
 
     font_atlas = renderer.create_image(create_info, pixels, commands);
 
@@ -274,7 +274,7 @@ void DearImguiAdapter::update_mouse_pos_and_buttons() const {
         } else {
             double mouse_x, mouse_y;
             glfwGetCursorPos(window, &mouse_x, &mouse_y);
-            io.MousePos = ImVec2(static_cast<float>(mouse_x), static_cast<float>(mouse_y));
+            io.MousePos = ImVec2(static_cast<Float32>(mouse_x), static_cast<Float32>(mouse_y));
         }
     }
 }

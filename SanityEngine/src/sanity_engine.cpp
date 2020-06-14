@@ -131,7 +131,7 @@ SanityEngine::~SanityEngine() {
 void SanityEngine::run() {
     uint64_t frame_count = 1;
 
-    float last_frame_duration = 0;
+    Float32 last_frame_duration = 0;
 
     while(!glfwWindowShouldClose(window)) {
         {
@@ -164,7 +164,7 @@ void SanityEngine::run() {
 
             const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time)
                                                         .count();
-            last_frame_duration = static_cast<float>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
+            last_frame_duration = static_cast<Float32>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
 
             framerate_tracker.add_frame_time(last_frame_duration);
 
@@ -212,7 +212,7 @@ void SanityEngine::create_debug_plane() {
         StandardVertex{/* .position = */ {-5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
     };
 
-    const Rx::Vector<uint32_t> indices = Rx::Array{0, 1, 2, 0, 3, 1};
+    const Rx::Vector<Uint32> indices = Rx::Array{0, 1, 2, 0, 3, 1};
 
     auto& device = renderer->get_render_device();
     auto commands = device.create_command_list();

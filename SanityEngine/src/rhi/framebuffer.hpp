@@ -14,8 +14,8 @@ namespace rhi {
         Rx::Vector<const Image*> render_targets;
         const Image* depth_target;
 
-        float width;
-        float height;
+        Float32 width;
+        Float32 height;
     };
 
     enum class RenderTargetBeginningAccessType {

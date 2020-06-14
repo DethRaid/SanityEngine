@@ -6,9 +6,9 @@
 #include "resources.hpp"
 
 namespace rhi {
-    constexpr uint32_t OPAQUE_OBJECT_BIT = 0x01;
-    constexpr uint32_t TRANSPARENT_OBJECT_BIT = 0x02;
-    constexpr uint32_t LIGHT_SOURCE_BIT = 0x10;
+    constexpr Uint32 OPAQUE_OBJECT_BIT = 0x01;
+    constexpr Uint32 TRANSPARENT_OBJECT_BIT = 0x02;
+    constexpr Uint32 LIGHT_SOURCE_BIT = 0x10;
 
     /*!
      * \brief Represents an object that can be raytraced against
@@ -23,7 +23,7 @@ namespace rhi {
     };
 
     struct RaytracingMaterial {
-        uint32_t handle : 24;
+        Uint32 handle : 24;
     };
 
     struct RaytracingObject {

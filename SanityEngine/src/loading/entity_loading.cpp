@@ -35,7 +35,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
     auto& device = renderer.get_render_device();
     auto commands = device.create_command_list();
 
-    Rx::Map<uint32_t, renderer::StandardMaterialHandle> materials;
+    Rx::Map<Uint32, renderer::StandardMaterialHandle> materials;
 
     Rx::Vector<rhi::Mesh> meshes;
     Rx::Vector<rhi::RaytracingObject> raytracing_objects;
@@ -55,7 +55,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
     Rx::Vector<StandardVertex> vertices;
     vertices.reserve(ass_mesh->mNumVertices);
 
-    for(uint32_t vert_idx = 0; vert_idx < ass_mesh->mNumVertices; vert_idx++) {
+    for(Uint32 vert_idx = 0; vert_idx < ass_mesh->mNumVertices; vert_idx++) {
         const auto& position = ass_mesh->mVertices[vert_idx];
         const auto& normal = ass_mesh->mNormals[vert_idx];
         // const auto& color = mesh->mColors[0][vert_idx];
@@ -66,9 +66,9 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
                                           .texcoord = {texcoord.x, texcoord.y}});
     }
 
-    Rx::Vector<uint32_t> indices;
+    Rx::Vector<Uint32> indices;
     indices.reserve(ass_mesh->mNumFaces * 3);
-    for(uint32_t face_idx = 0; face_idx < ass_mesh->mNumFaces; face_idx++) {
+    for(Uint32 face_idx = 0; face_idx < ass_mesh->mNumFaces; face_idx++) {
         const auto& face = ass_mesh->mFaces[face_idx];
         indices.push_back(face.mIndices[0]);
         indices.push_back(face.mIndices[1]);
@@ -109,7 +109,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
                 auto path = std::filesystem::path{filename.data()};
                 const auto texture_path = path.replace_filename(ass_texture_path.C_Str());
 
-                uint32_t width, height;
+                Uint32 width, height;
                 Rx::Vector<uint8_t> pixels;
                 const auto was_image_loaded = load_image(texture_path.string().c_str(), width, height, pixels);
                 if(!was_image_loaded) {

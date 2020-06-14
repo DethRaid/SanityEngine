@@ -74,7 +74,7 @@ namespace horus {
             logger->error("Could not load scripts in directory %s: This path does not refer to a directory", directory.string().c_str());
             return;
         }
-        uint32_t num_loaded_modules{0};
+        Uint32 num_loaded_modules{0};
         for(const auto& module_entry : std::filesystem::directory_iterator{directory}) {
             const auto& module_path = module_entry.path();
             if(!module_entry.is_directory() && module_path.extension() == ".wren") {

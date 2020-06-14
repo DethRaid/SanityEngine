@@ -19,7 +19,7 @@ namespace rhi {
     constexpr uint64_t FENCE_UNSIGNALED = 0;
     constexpr uint64_t CPU_FENCE_SIGNALED = 32;
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
-    constexpr uint32_t FRAME_COMPLETE = 128;
+    constexpr Uint32 FRAME_COMPLETE = 128;
 
     std::wstring to_wide_string(const Rx::String& string);
 
@@ -65,6 +65,6 @@ namespace rhi {
                                          RenderDevice& device,
                                          ID3D12Resource* dst,
                                          const void* src,
-                                         uint32_t size,
-                                         uint32_t dst_offset = 0);
+                                         Uint32 size,
+                                         Uint32 dst_offset = 0);
 } // namespace rhi

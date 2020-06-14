@@ -12,8 +12,8 @@
 struct TerrainSamplerParams {
     double latitude{};
     double longitude{};
-    float spread{0.5};
-    float spread_reduction_rate{spread};
+    Float32 spread{0.5};
+    Float32 spread_reduction_rate{spread};
 };
 
 namespace renderer {
@@ -21,7 +21,7 @@ namespace renderer {
 }
 
 struct TerrainTile {
-    Rx::Vector<Rx::Vector<float>> heightmap;
+    Rx::Vector<Rx::Vector<Float32>> heightmap;
 
     glm::uvec2 coord;
 
@@ -49,17 +49,17 @@ public:
 
     static [[nodiscard]] glm::ivec2 get_coords_of_tile_containing_position(const glm::vec3& position);
 
-    explicit Terrain(uint32_t max_latitude_in,
-                     uint32_t max_longitude_in,
-                     uint32_t min_terrain_height_in,
-                     uint32_t max_terrain_height_in,
+    explicit Terrain(Uint32 max_latitude_in,
+                     Uint32 max_longitude_in,
+                     Uint32 min_terrain_height_in,
+                     Uint32 max_terrain_height_in,
                      renderer::Renderer& renderer_in,
                      FastNoiseSIMD& noise_generator_in,
                      entt::registry& registry_in);
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] float get_terrain_height(const glm::vec2& location) const;
+    [[nodiscard]] Float32 get_terrain_height(const glm::vec2& location) const;
 
     [[nodiscard]] glm::vec3 get_normal_at_location(const glm::vec2& location) const;
 
@@ -74,13 +74,13 @@ private:
 
     renderer::StandardMaterialHandle terrain_material{1};
 
-    uint32_t max_latitude;
+    Uint32 max_latitude;
 
-    uint32_t max_longitude;
+    Uint32 max_longitude;
 
-    uint32_t min_terrain_height;
+    Uint32 min_terrain_height;
 
-    uint32_t max_terrain_height;
+    Uint32 max_terrain_height;
 
     void load_terrain_textures_and_create_material();
 
@@ -92,5 +92,5 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] Rx::Vector<Rx::Vector<float>> generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const;
+    [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const;
 };

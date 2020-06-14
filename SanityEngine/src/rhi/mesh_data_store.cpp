@@ -44,24 +44,24 @@ namespace rhi {
     }
 
     Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
-                                 const Rx::Vector<uint32_t>& indices,
+                                 const Rx::Vector<Uint32>& indices,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
         logger->verbose("Current vertex offset: %u Current index offset: %u", next_vertex_offset, next_index_offset);
 
-        const auto vertex_data_size = static_cast<uint32_t>(vertices.size() * sizeof(StandardVertex));
-        const auto index_data_size = static_cast<uint32_t>(indices.size() * sizeof(uint32_t));
+        const auto vertex_data_size = static_cast<Uint32>(vertices.size() * sizeof(StandardVertex));
+        const auto index_data_size = static_cast<Uint32>(indices.size() * sizeof(Uint32));
 
         // Offset the indices so they'll refer to the right vertex
-        Rx::Vector<uint32_t> offset_indices;
+        Rx::Vector<Uint32> offset_indices;
         offset_indices.reserve(indices.size());
 
-        indices.each_fwd([&](const uint32_t idx) { offset_indices.push_back(idx + next_vertex_offset); });
+        indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
         auto* vertex_resource = vertex_buffer->resource.Get();
         auto* index_resource = index_buffer->resource.Get();
 
-        const auto index_buffer_byte_offset = static_cast<uint32_t>(next_index_offset * sizeof(uint32_t));
+        const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
         logger->verbose("Copying %u bytes of vertex data into the vertex buffer, offset of %u", vertex_data_size, next_free_vertex_byte);
         upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
@@ -74,21 +74,21 @@ namespace rhi {
                                         index_data_size,
                                         index_buffer_byte_offset);
 
-        const auto vertex_offset = static_cast<uint32_t>(next_free_vertex_byte / sizeof(StandardVertex));
+        const auto vertex_offset = static_cast<Uint32>(next_free_vertex_byte / sizeof(StandardVertex));
 
         next_free_vertex_byte += vertex_data_size;
 
         const auto index_offset = next_index_offset;
 
-        next_vertex_offset += static_cast<uint32_t>(vertices.size());
-        next_index_offset += static_cast<uint32_t>(indices.size());
+        next_vertex_offset += static_cast<Uint32>(vertices.size());
+        next_index_offset += static_cast<Uint32>(indices.size());
 
         logger->verbose("New vertex offset: %u New index offset: %u", next_vertex_offset, next_index_offset);
 
         return {.first_vertex = vertex_offset,
-                .num_vertices = static_cast<uint32_t>(vertices.size()),
+                .num_vertices = static_cast<Uint32>(vertices.size()),
                 .first_index = index_offset,
-                .num_indices = static_cast<uint32_t>(indices.size())};
+                .num_indices = static_cast<Uint32>(indices.size())};
     }
 
     void MeshDataStore::end_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
@@ -111,7 +111,7 @@ namespace rhi {
 
         // If we have more than 16 vertex attributes, we probably have bigger problems
         std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views{};
-        for(uint32_t i = 0; i < vertex_bindings.size(); i++) {
+        for(Uint32 i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
             const auto* buffer = static_cast<const Buffer*>(binding.buffer);
 

@@ -5,7 +5,7 @@
 #include <glm/vec3.hpp>
 
 namespace renderer {
-    constexpr uint32_t MAX_NUM_LIGHTS = 32;
+    constexpr Uint32 MAX_NUM_LIGHTS = 32;
 
     enum class LightType {
         Directional = 0,
@@ -24,7 +24,7 @@ namespace renderer {
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights
          */
-        float angular_size{glm::radians(0.53f)};
+        Float32 angular_size{glm::radians(0.53f)};
         // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 } // namespace renderer

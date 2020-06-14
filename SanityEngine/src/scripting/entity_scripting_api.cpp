@@ -53,7 +53,7 @@ namespace horus {
         wrenCall(vm, class_methods.begin_play_handle);
     }
 
-    void Component::tick(const float delta_seconds) const {
+    void Component::tick(const Float32 delta_seconds) const {
         wrenEnsureSlots(vm, 2);
         wrenSetSlotHandle(vm, 0, component_handle);
         wrenSetSlotDouble(vm, 1, delta_seconds);
@@ -91,7 +91,7 @@ void _entity_get_tags(WrenVM* vm) {
 
     wrenSetSlotNewList(vm, 0);
 
-    uint32_t i{0};
+    Uint32 i{0};
     tags.each([&](const Rx::String& tag) {
         wrenSetSlotString(vm, 1, tag.data());
         wrenInsertInList(vm, 0, i, 1);

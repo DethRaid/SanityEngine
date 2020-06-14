@@ -38,7 +38,7 @@ namespace renderer {
         logger->verbose("Initialized backbuffer output pass");
     }
 
-    void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, uint32_t /* frame_idx */) {
+    void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         auto& device = renderer->get_render_device();
         const auto* framebuffer = device.get_backbuffer_framebuffer();
 

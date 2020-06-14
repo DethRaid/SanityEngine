@@ -24,7 +24,7 @@ namespace renderer {
         ~ForwardPass() override;
 
 #pragma region RenderPass
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) override;
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 #pragma endregion
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;
@@ -48,7 +48,7 @@ namespace renderer {
         void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
                                    entt::registry& registry,
                                    const rhi::BindGroup& material_bind_group,
-                                   uint32_t frame_idx);
+                                   Uint32 frame_idx);
 
         void draw_atmosphere(ID3D12GraphicsCommandList4* command_list, entt::registry& registry) const;
     };

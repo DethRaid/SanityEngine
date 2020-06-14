@@ -86,7 +86,7 @@ namespace rhi {
         Rx::Vector<BoundResource<Buffer>> used_buffers;
     };
 
-    using RootDescriptorDescription = Rx::Pair<uint32_t, DescriptorType>;
+    using RootDescriptorDescription = Rx::Pair<Uint32, DescriptorType>;
 
     struct DescriptorTableDescriptorDescription {
         DescriptorType type;
@@ -95,12 +95,12 @@ namespace rhi {
         /*!
          * \brief Number of elements in the array, if this descriptor is for a structures buffer that holds an array
          */
-        uint32_t num_structured_buffer_elements{1};
+        Uint32 num_structured_buffer_elements{1};
 
         /*!
          * \brief Size of one element in the structured buffer, if this binding is for a structured buffer
          */
-        uint32_t structured_buffer_element_size{0};
+        Uint32 structured_buffer_element_size{0};
     };
 
     class BindGroupBuilder {
@@ -123,7 +123,7 @@ namespace rhi {
                                   UINT descriptor_size_in,
                                   Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions_in,
                                   Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
-                                  Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
+                                  Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in);
 
         BindGroupBuilder(const BindGroupBuilder& other) = default;
         BindGroupBuilder& operator=(const BindGroupBuilder& other) = default;
@@ -158,6 +158,6 @@ namespace rhi {
 
         Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions;
         Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;
-        Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
+        Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
     };
 } // namespace rhi

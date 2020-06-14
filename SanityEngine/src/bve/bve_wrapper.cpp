@@ -18,11 +18,11 @@
 
 using namespace bve;
 
-constexpr uint32_t THREAD_GROUP_WIDTH = 8;
-constexpr uint32_t THREAD_GROUP_HEIGHT = 8;
+constexpr Uint32 THREAD_GROUP_WIDTH = 8;
+constexpr Uint32 THREAD_GROUP_HEIGHT = 8;
 
-static uint32_t to_uint32_t(const BVE_Vector4<uint8_t>& bve_color) {
-    uint32_t color{0};
+static Uint32 to_Uint32(const BVE_Vector4<uint8_t>& bve_color) {
+    Uint32 color{0};
     color |= bve_color.x;
     color |= bve_color.y << 8;
     color |= bve_color.z << 16;
@@ -31,9 +31,9 @@ static uint32_t to_uint32_t(const BVE_Vector4<uint8_t>& bve_color) {
     return color;
 }
 
-static glm::vec2 to_glm_vec2(const BVE_Vector2<float>& bve_vec2) { return glm::vec2{bve_vec2.x, bve_vec2.y}; }
+static glm::vec2 to_glm_vec2(const BVE_Vector2<Float32>& bve_vec2) { return glm::vec2{bve_vec2.x, bve_vec2.y}; }
 
-static glm::vec3 to_glm_vec3(const BVE_Vector3<float>& bve_vec3) { return glm::vec3{bve_vec3.x, bve_vec3.y, bve_vec3.z}; }
+static glm::vec3 to_glm_vec3(const BVE_Vector3<Float32>& bve_vec3) { return glm::vec3{bve_vec3.x, bve_vec3.y, bve_vec3.z}; }
 
 static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const int width, const int height) {
     const auto num_pixels = width * height;
@@ -74,7 +74,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
     } else if(train->errors.count > 0) {
         logger->error("Could not load train '%s'", filename);
 
-        for(uint32_t i = 0; i < train->errors.count; i++) {
+        for(Uint32 i = 0; i < train->errors.count; i++) {
             const auto& error = train->errors.ptr[i];
             const auto error_data = get_printable_error(error);
             logger->error("%s", error_data.description);
@@ -105,7 +105,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
         mesh_data.begin_adding_meshes(commands);
 
-        for(uint32_t i = 0; i < train->meshes.count; i++) {
+        for(Uint32 i = 0; i < train->meshes.count; i++) {
             const auto& bve_mesh = train->meshes.ptr[i];
 
             const auto [vertices, indices] = process_vertices(bve_mesh);
@@ -152,8 +152,8 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
                         auto create_info = rhi::ImageCreateInfo{.name = fmt::format("Scratch Texture {}", texture_name).c_str(),
                                                                 .usage = rhi::ImageUsage::SampledImage,
                                                                 .format = rhi::ImageFormat::Rgba8,
-                                                                .width = static_cast<uint32_t>(width),
-                                                                .height = static_cast<uint32_t>(height),
+                                                                .width = static_cast<Uint32>(width),
+                                                                .height = static_cast<Uint32>(height),
                                                                 .depth = 1};
                         const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
                         const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
@@ -248,7 +248,7 @@ Rx::Ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_b
                                          rhi::DescriptorTableDescriptorDescription{.type = rhi::DescriptorType::UnorderedAccess,
                                                                                    .handle = cpu_handle.Offset(descriptor_size)}}};
 
-    const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> tables = Rx::Array{Rx::Pair{0, gpu_handle}};
+    const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> tables = Rx::Array{Rx::Pair{0, gpu_handle}};
 
     return device.create_bind_group_builder({}, descriptors, tables);
 }
@@ -285,29 +285,29 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
 }
 
-std::pair<Rx::Vector<StandardVertex>, Rx::Vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
+std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
     RX_ASSERT(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
 
     const auto& bve_vertices = mesh.vertices;
     auto vertices = Rx::Vector<StandardVertex>{};
     vertices.reserve(bve_vertices.count);
 
-    for(uint32_t i = 0; i < bve_vertices.count; i++) {
+    for(Uint32 i = 0; i < bve_vertices.count; i++) {
         const auto& bve_vertex = bve_vertices.ptr[i];
         vertices.push_back(StandardVertex{.position = to_glm_vec3(bve_vertex.position),
                                           .normal = {bve_vertex.normal.x, bve_vertex.normal.y, -bve_vertex.normal.z},
-                                          .color = to_uint32_t(bve_vertex.color),
+                                          .color = to_Uint32(bve_vertex.color),
                                           .texcoord = to_glm_vec2(bve_vertex.coord)});
     }
 
     const auto& bve_indices = mesh.indices;
-    auto indices = Rx::Vector<uint32_t>{};
+    auto indices = Rx::Vector<Uint32>{};
     indices.reserve(bve_indices.count * 2); // worst-case
 
-    for(uint32_t i = 0; i < bve_indices.count; i += 3) {
-        const auto i0 = static_cast<uint32_t>(bve_indices.ptr[i]);
-        const auto i1 = static_cast<uint32_t>(bve_indices.ptr[i + 1]);
-        const auto i2 = static_cast<uint32_t>(bve_indices.ptr[i + 2]);
+    for(Uint32 i = 0; i < bve_indices.count; i += 3) {
+        const auto i0 = static_cast<Uint32>(bve_indices.ptr[i]);
+        const auto i1 = static_cast<Uint32>(bve_indices.ptr[i + 1]);
+        const auto i2 = static_cast<Uint32>(bve_indices.ptr[i + 2]);
 
         indices.push_back(i0);
         indices.push_back(i1);

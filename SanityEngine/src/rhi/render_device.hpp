@@ -45,7 +45,7 @@ namespace rhi {
      */
     class RenderDevice {
     public:
-        inline static uint32_t material_buffer_root_parameter_index = 2;
+        inline static Uint32 material_buffer_root_parameter_index = 2;
 
         ComPtr<ID3D12Device> device;
         ComPtr<ID3D12Device1> device1;
@@ -90,7 +90,7 @@ namespace rhi {
         [[nodiscard]] Rx::Ptr<BindGroupBuilder> create_bind_group_builder(
             const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
             const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
-            const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
+            const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
         [[nodiscard]] Rx::Ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
                                                                                           ComPtr<ID3D12RootSignature> root_signature) const;
@@ -105,13 +105,13 @@ namespace rhi {
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
 
-        BindGroupBuilder& get_material_bind_group_builder_for_frame(uint32_t frame_idx);
+        BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
         void begin_frame(uint64_t frame_count);
 
         void end_frame();
 
-        [[nodiscard]] uint32_t get_cur_gpu_frame_idx() const;
+        [[nodiscard]] Uint32 get_cur_gpu_frame_idx() const;
 
         void begin_capture() const;
 
@@ -120,11 +120,11 @@ namespace rhi {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] StagingBuffer get_staging_buffer(uint32_t num_bytes);
+        [[nodiscard]] StagingBuffer get_staging_buffer(Uint32 num_bytes);
 
         void return_staging_buffer(StagingBuffer&& buffer);
 
-        [[nodiscard]] Buffer get_scratch_buffer(uint32_t num_bytes);
+        [[nodiscard]] Buffer get_scratch_buffer(Uint32 num_bytes);
 
         void return_scratch_buffer(Buffer&& buffer);
 
@@ -139,7 +139,7 @@ namespace rhi {
          * the table. All descriptors in the table are tightly packed
          */
         [[nodiscard]] std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> allocate_descriptor_table(
-            uint32_t num_descriptors);
+            Uint32 num_descriptors);
 
     private:
         Settings settings;
@@ -165,7 +165,7 @@ namespace rhi {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        Rx::Vector<Rx::Map<uint32_t, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
+        Rx::Vector<Rx::Map<Uint32, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
@@ -208,7 +208,7 @@ namespace rhi {
          */
         Rx::Vector<Rx::Vector<StagingBuffer>> staging_buffers_to_free;
 
-        uint32_t scratch_buffer_counter{0};
+        Uint32 scratch_buffer_counter{0};
         Rx::Vector<Buffer> scratch_buffers;
         Rx::Vector<Rx::Vector<Buffer>> scratch_buffers_to_free;
 
@@ -249,7 +249,7 @@ namespace rhi {
         /*!
          * \brief Index of the GPU frame we're currently recording
          */
-        uint32_t cur_gpu_frame_idx{0};
+        Uint32 cur_gpu_frame_idx{0};
 
         /*!
          * \brief Description for a point sampler
@@ -291,7 +291,7 @@ namespace rhi {
         void initialize_swapchain_descriptors();
 
         [[nodiscard]] std::pair<ID3D12DescriptorHeap*, UINT> create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
-                                                                                    uint32_t num_descriptors) const;
+                                                                                    Uint32 num_descriptors) const;
 
         void initialize_dma();
 
@@ -307,18 +307,18 @@ namespace rhi {
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);
 
-        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const uint32_t& id);
+        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const Uint32& id);
 
         void flush_batched_command_lists();
 
-        void return_staging_buffers_for_frame(uint32_t frame_idx);
+        void return_staging_buffers_for_frame(Uint32 frame_idx);
 
-        void reset_command_allocators_for_frame(uint32_t frame_idx);
+        void reset_command_allocators_for_frame(Uint32 frame_idx);
 
         template <GpuResource ResourceType>
         void destroy_resource_immediate(const ResourceType& resource);
 
-        void destroy_resources_for_frame(uint32_t frame_idx);
+        void destroy_resources_for_frame(Uint32 frame_idx);
 
         void transition_swapchain_image_to_render_target();
 
@@ -328,9 +328,9 @@ namespace rhi {
 
         void wait_gpu_idle(uint64_t frame_index);
 
-        [[nodiscard]] StagingBuffer create_staging_buffer(uint32_t num_bytes);
+        [[nodiscard]] StagingBuffer create_staging_buffer(Uint32 num_bytes);
 
-        [[nodiscard]] Buffer create_scratch_buffer(uint32_t num_bytes);
+        [[nodiscard]] Buffer create_scratch_buffer(Uint32 num_bytes);
 
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 

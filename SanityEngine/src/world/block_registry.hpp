@@ -3,7 +3,7 @@
 #include <cstdint>
 
 struct BlockId {
-    uint32_t id{0};
+    Uint32 id{0};
 };
 
 class BlockRegistry {

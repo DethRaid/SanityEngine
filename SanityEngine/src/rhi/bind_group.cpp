@@ -28,7 +28,7 @@ namespace rhi {
     void BindGroup::bind_to_graphics_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const {
         cmds->SetDescriptorHeaps(1, &heap);
 
-        for(uint32_t i = 0; i < root_parameters.size(); i++) {
+        for(Uint32 i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
             if(param.type == RootParameterType::Descriptor) {
                 switch(param.descriptor.type) {
@@ -54,7 +54,7 @@ namespace rhi {
     void BindGroup::bind_to_compute_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const {
         cmds->SetDescriptorHeaps(1, &heap);
 
-        for(uint32_t i = 0; i < root_parameters.size(); i++) {
+        for(Uint32 i = 0; i < root_parameters.size(); i++) {
             const auto& param = root_parameters[i];
             if(param.type == RootParameterType::Descriptor) {
                 switch(param.descriptor.type) {
@@ -82,7 +82,7 @@ namespace rhi {
                                        const UINT descriptor_size_in,
                                        Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions_in,
                                        Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings_in,
-                                       Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
+                                       Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles_in)
         : device{&device_in},
           heap{&heap_in},
           descriptor_size{descriptor_size_in},
@@ -119,7 +119,7 @@ namespace rhi {
         Rx::Vector<RootParameter> root_parameters{64};
 
         // Save descriptor table information
-        descriptor_table_handles.each_pair([&](const uint32_t idx, const D3D12_GPU_DESCRIPTOR_HANDLE& handle) {
+        descriptor_table_handles.each_pair([&](const Uint32 idx, const D3D12_GPU_DESCRIPTOR_HANDLE& handle) {
             RX_ASSERT(idx < 64, "May not have more than 64 descriptor tables in a single bind group");
 
             root_parameters[idx].type = RootParameterType::DescriptorTable;

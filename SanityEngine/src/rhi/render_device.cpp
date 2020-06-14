@@ -69,7 +69,7 @@ namespace rhi {
     }
 
     RenderDevice::~RenderDevice() {
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             wait_for_frame(i);
             direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
         }
@@ -150,8 +150,8 @@ namespace rhi {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
         }
         auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
-                                                 static_cast<uint32_t>(round(create_info.width)),
-                                                 static_cast<uint32_t>(round(create_info.height)));
+                                                 static_cast<Uint32>(round(create_info.width)),
+                                                 static_cast<Uint32>(round(create_info.height)));
 
         D3D12MA::ALLOCATION_DESC alloc_desc{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
 
@@ -199,7 +199,7 @@ namespace rhi {
         }
 
         image->name = create_info.name;
-        image->width = static_cast<uint32_t>(desc.Width);
+        image->width = static_cast<Uint32>(desc.Width);
         image->height = desc.Height;
 
         set_object_name(image->resource.Get(), create_info.name);
@@ -214,11 +214,11 @@ namespace rhi {
         framebuffer->render_targets = render_targets;
         framebuffer->depth_target = depth_target;
 
-        float width = 0;
-        float height = 0;
+        Float32 width = 0;
+        Float32 height = 0;
 
         framebuffer->rtv_handles.reserve(render_targets.size());
-        uint32_t i{0};
+        Uint32 i{0};
         render_targets.each_fwd([&](const Image* image) {
             if(width != 0 && width != image->width) {
                 logger->error(
@@ -228,7 +228,7 @@ namespace rhi {
                     width);
             }
 
-            width = static_cast<float>(image->width);
+            width = static_cast<Float32>(image->width);
 
             if(height != 0 && height != image->height) {
                 logger->error(
@@ -238,7 +238,7 @@ namespace rhi {
                     height);
             }
 
-            height = static_cast<float>(image->height);
+            height = static_cast<Float32>(image->height);
 
             const auto handle = rtv_allocator->get_next_free_descriptor();
 
@@ -258,7 +258,7 @@ namespace rhi {
                     width);
             }
 
-            width = static_cast<float>(depth_target->width);
+            width = static_cast<Float32>(depth_target->width);
 
             if(height != 0 && height != depth_target->height) {
                 logger->error(
@@ -268,7 +268,7 @@ namespace rhi {
                     height);
             }
 
-            height = static_cast<float>(depth_target->height);
+            height = static_cast<Float32>(depth_target->height);
 
             D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
             desc.Format = to_dxgi_format(depth_target->format);
@@ -329,7 +329,7 @@ namespace rhi {
     Rx::Ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
         const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors,
         const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
-        const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
+        const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
 
         RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
                   "If you specify descriptor table descriptors, you must also specify descriptor table handles");
@@ -440,7 +440,7 @@ namespace rhi {
         command_lists_by_frame[cur_gpu_frame_idx].push_back(commands);
     }
 
-    BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
+    BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
         RX_ASSERT(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
 
         return *material_bind_group_builder[frame_idx];
@@ -492,7 +492,7 @@ namespace rhi {
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_gpu_frames;
     }
 
-    uint32_t RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
+    Uint32 RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
 
     void RenderDevice::begin_capture() const {
         if(graphics_analysis) {
@@ -508,7 +508,7 @@ namespace rhi {
 
     bool RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    StagingBuffer RenderDevice::get_staging_buffer(const uint32_t num_bytes) {
+    StagingBuffer RenderDevice::get_staging_buffer(const Uint32 num_bytes) {
         size_t best_fit_idx = staging_buffers.size();
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
@@ -536,7 +536,7 @@ namespace rhi {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer));
     }
 
-    Buffer RenderDevice::get_scratch_buffer(const uint32_t num_bytes) {
+    Buffer RenderDevice::get_scratch_buffer(const Uint32 num_bytes) {
         size_t best_fit_idx = scratch_buffers.size();
         for(size_t i = 0; i < scratch_buffers.size(); i++) {
             if(scratch_buffers[i].size >= num_bytes) {
@@ -801,7 +801,7 @@ namespace rhi {
         compute_command_allocators.resize(settings.num_in_flight_gpu_frames);
         copy_command_allocators.resize(settings.num_in_flight_gpu_frames);
 
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                          IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
@@ -842,7 +842,7 @@ namespace rhi {
         swapchain_images.resize(desc.BufferCount);
         swapchain_framebuffers.reserve(desc.BufferCount);
 
-        for(uint32_t i = 0; i < desc.BufferCount; i++) {
+        for(Uint32 i = 0; i < desc.BufferCount; i++) {
             swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_images[i]));
 
             const auto rtv_handle = rtv_allocator->get_next_free_descriptor();
@@ -851,8 +851,8 @@ namespace rhi {
 
             Framebuffer framebuffer;
             framebuffer.rtv_handles.push_back(rtv_handle);
-            framebuffer.width = static_cast<float>(desc.Width);
-            framebuffer.height = static_cast<float>(desc.Height);
+            framebuffer.width = static_cast<Float32>(desc.Width);
+            framebuffer.height = static_cast<Float32>(desc.Height);
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
@@ -861,7 +861,7 @@ namespace rhi {
     }
 
     std::pair<ID3D12DescriptorHeap*, UINT> RenderDevice::create_descriptor_heap(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
-                                                                                const uint32_t num_descriptors) const {
+                                                                                const Uint32 num_descriptors) const {
         ID3D12DescriptorHeap* heap;
 
         D3D12_DESCRIPTOR_HEAP_DESC heap_desc{};
@@ -999,7 +999,7 @@ namespace rhi {
     }
 
     std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> RenderDevice::allocate_descriptor_table(
-        const uint32_t num_descriptors) {
+        const Uint32 num_descriptors) {
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
@@ -1031,13 +1031,13 @@ namespace rhi {
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
 
-        for(uint32_t i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.insert("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
 
-            Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.insert(static_cast<uint32_t>(root_descriptors.size() + 1), gpu_handle);
+            Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
+            descriptor_table_gpu_handles.insert(static_cast<Uint32>(root_descriptors.size() + 1), gpu_handle);
 
             material_bind_group_builder.push_back(
                 create_bind_group_builder(root_descriptors, descriptor_tables, descriptor_table_gpu_handles));
@@ -1142,7 +1142,7 @@ namespace rhi {
 
         Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> input_descs(desc.BoundResources);
 
-        for(uint32_t i = 0; i < desc.BoundResources; i++) {
+        for(Uint32 i = 0; i < desc.BoundResources; i++) {
             result = reflection->GetResourceBindingDesc(i, &input_descs[i]);
             if(FAILED(result)) {
                 logger->error("Could not get binding information for resource idx %u", i);
@@ -1227,7 +1227,7 @@ namespace rhi {
         {
             const auto& blend_state = create_info.blend_state;
             desc.BlendState.AlphaToCoverageEnable = blend_state.enable_alpha_to_coverage ? 1 : 0;
-            for(uint32_t i = 0; i < blend_state.render_target_blends.size(); i++) {
+            for(Uint32 i = 0; i < blend_state.render_target_blends.size(); i++) {
                 auto& output_rt_blend = desc.BlendState.RenderTarget[i];
                 const auto& rt_blend = blend_state.render_target_blends[i];
 
@@ -1249,7 +1249,7 @@ namespace rhi {
                   create_info.render_target_formats.size());
 
         desc.NumRenderTargets = static_cast<UINT>(create_info.render_target_formats.size());
-        for(uint32_t i = 0; i < create_info.render_target_formats.size(); i++) {
+        for(Uint32 i = 0; i < create_info.render_target_formats.size(); i++) {
             desc.RTVFormats[i] = to_dxgi_format(create_info.render_target_formats[i]);
         }
         if(create_info.depth_stencil_format) {
@@ -1272,7 +1272,7 @@ namespace rhi {
         return pipeline;
     }
 
-    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const uint32_t& id) {
+    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const Uint32& id) {
         auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
         if(const auto* itr = command_allocators_for_frame.find(id)) {
             return itr->Get();
@@ -1325,21 +1325,21 @@ namespace rhi {
         lists.clear();
     }
 
-    void RenderDevice::return_staging_buffers_for_frame(const uint32_t frame_idx) {
+    void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
         staging_buffers += staging_buffers_for_frame;
     }
 
-    void RenderDevice::reset_command_allocators_for_frame(const uint32_t frame_idx) {
+    void RenderDevice::reset_command_allocators_for_frame(const Uint32 frame_idx) {
         const auto& direct_allocators_for_frame = direct_command_allocators[frame_idx];
         direct_allocators_for_frame.each_pair(
-            [](const uint32_t& /* thread_id */, const ComPtr<ID3D12CommandAllocator>& allocator) { allocator->Reset(); });
+            [](const Uint32& /* thread_id */, const ComPtr<ID3D12CommandAllocator>& allocator) { allocator->Reset(); });
 
         copy_command_allocators[frame_idx]->Reset();
         compute_command_allocators[frame_idx]->Reset();
     }
 
-    void RenderDevice::destroy_resources_for_frame(const uint32_t frame_idx) {
+    void RenderDevice::destroy_resources_for_frame(const Uint32 frame_idx) {
         auto& buffers = buffer_deletion_list[frame_idx];
         buffers.each_fwd([&](const Rx::Ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
 
@@ -1406,7 +1406,7 @@ namespace rhi {
         wait_for_frame(frame_index);
     }
 
-    StagingBuffer RenderDevice::create_staging_buffer(const uint32_t num_bytes) {
+    StagingBuffer RenderDevice::create_staging_buffer(const Uint32 num_bytes) {
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
 
         const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
@@ -1436,7 +1436,7 @@ namespace rhi {
         return std::move(buffer);
     }
 
-    Buffer RenderDevice::create_scratch_buffer(const uint32_t num_bytes) {
+    Buffer RenderDevice::create_scratch_buffer(const Uint32 num_bytes) {
         constexpr auto alignment = std::max(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                             D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, alignment);

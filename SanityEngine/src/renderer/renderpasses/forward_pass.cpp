@@ -53,7 +53,7 @@ namespace renderer {
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
     }
 
-    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const uint32_t frame_idx) {
+    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         begin_render_pass(commands);
 
         const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
@@ -139,7 +139,7 @@ namespace renderer {
     void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
                                             entt::registry& registry,
                                             const rhi::BindGroup& material_bind_group,
-                                            const uint32_t frame_idx) {
+                                            const Uint32 frame_idx) {
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 

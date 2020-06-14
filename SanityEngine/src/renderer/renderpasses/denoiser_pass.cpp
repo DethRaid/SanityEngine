@@ -38,7 +38,7 @@ namespace renderer {
         create_material(forward_pass);
     }
 
-    void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, uint32_t /* frame_idx */) {
+    void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         {
             const auto
                 render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
@@ -149,7 +149,7 @@ namespace renderer {
 
         denoiser_material_buffer = device.create_buffer(rhi::BufferCreateInfo{.name = "Denoiser material buffer",
                                                                               .usage = rhi::BufferUsage::StagingBuffer,
-                                                                              .size = static_cast<uint32_t>(sizeof(AccumulationMaterial))});
+                                                                              .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
 
         memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
     }

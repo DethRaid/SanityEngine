@@ -39,7 +39,7 @@ namespace renderer {
      */
     class CameraMatrixBuffer {
     public:
-        CameraMatrixBuffer(rhi::RenderDevice& device_in, uint32_t num_in_flight_frames);
+        CameraMatrixBuffer(rhi::RenderDevice& device_in, Uint32 num_in_flight_frames);
 
         CameraMatrixBuffer(const CameraMatrixBuffer& other) = delete;
         CameraMatrixBuffer& operator=(const CameraMatrixBuffer& other) = delete;
@@ -49,17 +49,17 @@ namespace renderer {
 
         ~CameraMatrixBuffer();
 
-        [[nodiscard]] CameraMatrices& get_camera_matrices(uint32_t idx);
+        [[nodiscard]] CameraMatrices& get_camera_matrices(Uint32 idx);
 
-        [[nodiscard]] const CameraMatrices& get_camera_matrices(uint32_t idx) const;
+        [[nodiscard]] const CameraMatrices& get_camera_matrices(Uint32 idx) const;
 
-        void set_camera_matrices(uint32_t camera_idx, const CameraMatrices& matrices);
+        void set_camera_matrices(Uint32 camera_idx, const CameraMatrices& matrices);
 
-        [[nodiscard]] rhi::Buffer& get_device_buffer_for_frame(uint32_t frame_idx) const;
+        [[nodiscard]] rhi::Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
 
         [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
 
-        void upload_data(uint32_t frame_idx) const;
+        void upload_data(Uint32 frame_idx) const;
 
     private:
         rhi::RenderDevice* device;

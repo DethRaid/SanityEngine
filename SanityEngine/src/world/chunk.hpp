@@ -21,9 +21,9 @@ class Terrain;
  */
 class Chunk {
 public:
-    static constexpr uint32_t WIDTH{32};
-    static constexpr uint32_t HEIGHT{256};
-    static constexpr uint32_t DEPTH{32};
+    static constexpr Uint32 WIDTH{32};
+    static constexpr Uint32 HEIGHT{256};
+    static constexpr Uint32 DEPTH{32};
 
 public:
     static Rx::Optional<Chunk> create(const glm::ivec2& lower_left_corner, const Terrain& terrain, renderer::Renderer& renderer, entt::registry& registry);
@@ -33,7 +33,7 @@ public:
     [[nodiscard]] BlockId __forceinline get_block_at_location(const glm::ivec3& location) const;
 
 private:
-    static uint32_t __forceinline chunk_pos_to_block_index(const glm::uvec3& chunk_pos);
+    static Uint32 __forceinline chunk_pos_to_block_index(const glm::uvec3& chunk_pos);
 
     glm::ivec2 lower_left_corner;
 
@@ -65,6 +65,6 @@ inline void Chunk::set_block_at_location(const glm::ivec3& location, const Block
     block_data[idx] = block_id;
 }
 
-inline uint32_t Chunk::chunk_pos_to_block_index(const glm::uvec3& chunk_pos) {
+inline Uint32 Chunk::chunk_pos_to_block_index(const glm::uvec3& chunk_pos) {
     return chunk_pos.x + chunk_pos.z * WIDTH + chunk_pos.y * WIDTH * DEPTH;
 }

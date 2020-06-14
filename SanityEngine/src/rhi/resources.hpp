@@ -17,7 +17,7 @@ namespace rhi {
     struct Buffer {
         Rx::String name;
 
-        uint32_t size{};
+        Uint32 size{};
 
         ComPtr<ID3D12Resource> resource;
 
@@ -52,7 +52,7 @@ namespace rhi {
         Rx::String name{};
 
         BufferUsage usage;
-        uint32_t size{0};
+        Uint32 size{0};
     };
 
     enum class ImageUsage { RenderTarget, DepthStencil, SampledImage, UnorderedAccess };
@@ -68,9 +68,9 @@ namespace rhi {
     struct Image {
         Rx::String name;
 
-        uint32_t width{1};
-        uint32_t height{1};
-        uint32_t depth{1};
+        Uint32 width{1};
+        Uint32 height{1};
+        Uint32 depth{1};
 
         ComPtr<ID3D12Resource> resource;
 
@@ -85,9 +85,9 @@ namespace rhi {
         ImageUsage usage;
         ImageFormat format;
 
-        uint32_t width{1};
-        uint32_t height{1};
-        uint32_t depth{1};
+        Uint32 width{1};
+        Uint32 height{1};
+        Uint32 depth{1};
 
         /*!
          * \brief If true, this resource may be shared with other APIs, such as CUDA
@@ -95,7 +95,7 @@ namespace rhi {
         bool enable_resource_sharing{false};
     };
 
-    [[nodiscard]] uint32_t size_in_bytes(ImageFormat format);
+    [[nodiscard]] Uint32 size_in_bytes(ImageFormat format);
 
     template <typename T>
     concept GpuResource = requires(T a) {

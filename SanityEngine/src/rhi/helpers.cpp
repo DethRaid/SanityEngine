@@ -316,7 +316,7 @@ namespace rhi {
             }
 
             if(cur_node->BreadcrumbCount > 0) {
-                for(uint32_t i = 0; i < cur_node->BreadcrumbCount; i++) {
+                for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
                     ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]).data();
                 }
             }
@@ -384,7 +384,7 @@ namespace rhi {
                                                                           .IndexCount = num_indices,
                                                                           .VertexCount = num_vertices,
                                                                           .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
-                                                                                         (first_index * sizeof(uint32_t)),
+                                                                                         (first_index * sizeof(Uint32)),
                                                                           .VertexBuffer = {.StartAddress = vertex_buffer.resource
                                                                                                                ->GetGPUVirtualAddress(),
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
@@ -407,11 +407,11 @@ namespace rhi {
         as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                           as_prebuild_info.ResultDataMaxSizeInBytes);
 
-        auto scratch_buffer = device.get_scratch_buffer(static_cast<uint32_t>(as_prebuild_info.ScratchDataSizeInBytes));
+        auto scratch_buffer = device.get_scratch_buffer(static_cast<Uint32>(as_prebuild_info.ScratchDataSizeInBytes));
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
-                                                                .size = static_cast<uint32_t>(as_prebuild_info.ResultDataMaxSizeInBytes)};
+                                                                .size = static_cast<Uint32>(as_prebuild_info.ResultDataMaxSizeInBytes)};
 
         auto result_buffer = device.create_buffer(result_buffer_create_info);
 
@@ -434,8 +434,8 @@ namespace rhi {
                                          RenderDevice& device,
                                          ID3D12Resource* dst,
                                          const void* src,
-                                         const uint32_t size,
-                                         const uint32_t dst_offset) {
+                                         const Uint32 size,
+                                         const Uint32 dst_offset) {
         auto staging_buffer = device.get_staging_buffer(size);
         memcpy(staging_buffer.ptr, src, size);
 

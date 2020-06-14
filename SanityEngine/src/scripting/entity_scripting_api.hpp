@@ -100,7 +100,7 @@ namespace horus {
 
         [[horus::implemented_in_script]] void begin_play(World & world) const;
 
-        [[horus::implemented_in_script]] void tick(float delta_seconds) const;
+        [[horus::implemented_in_script]] void tick(Float32 delta_seconds) const;
 
         [[horus::implemented_in_script]] void end_play() const;
 

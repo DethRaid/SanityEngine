@@ -1,8 +1,9 @@
 #pragma once
 
+#include <rx/core/ptr.h>
+
 #include "renderer/renderpass.hpp"
 #include "rhi/render_pipeline_state.hpp"
-#include <rx/core/ptr.h>
 
 namespace renderer {
     class Renderer;
@@ -14,7 +15,7 @@ namespace renderer {
 
         ~BackbufferOutputPass() override = default;
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) override;
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
     private:
         Renderer* renderer;

@@ -6,7 +6,7 @@ struct Settings {
     /*!
      * \brief Number of frames to submit tot he GPU before waiting for it to finish any of them
      */
-    uint32_t num_in_flight_gpu_frames = 3;
+    Uint32 num_in_flight_gpu_frames = 3;
 
     /*!
      * \brief Enables tracking GPU progress to debug GPU crashes
@@ -18,7 +18,7 @@ struct Settings {
     /*!
      * \brief Scale of the internal render resolution relative to the screen resolution
      */
-    float render_scale{1.0f};
+    Float32 render_scale{1.0f};
 
     /*!
      * \brief Quality to render the shadowmap at

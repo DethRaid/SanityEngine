@@ -1,21 +1,21 @@
 #pragma once
 
-#include <cstdint>
+#include <rx/core/types.h>
 
 namespace renderer {
     struct TextureHandle {
-        uint32_t index{0};
+        Uint32 index{0};
     };
 
     struct StandardMaterialHandle {
-        uint32_t index{0};
+        Uint32 index{0};
     };
 
     struct LightHandle {
-        uint32_t index{0};
+        Uint32 index{0};
     };
 
     struct RaytracableGeometryHandle {
-        uint32_t index{0};
+        Uint32 index{0};
     };
 } // namespace renderer

@@ -53,7 +53,7 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
                                renderer);
 }
 
-void World::tick(const float delta_time) {
+void World::tick(const Float32 delta_time) {
     MTR_SCOPE("World", "tick");
 
     const auto& player_transform = registry->get<TransformComponent>(player);
@@ -67,23 +67,25 @@ Terrain& World::get_terrain() { return terrain; }
 // ReSharper disable once CppInconsistentNaming
 WrenHandle* World::_get_wren_handle() const { return handle; }
 
-Rx::Vector<float> World::generate_terrain_heightmap(FastNoiseSIMD& noise_generator, const WorldParameters& params) {
+Rx::Vector<Float32> World::generate_terrain_heightmap(FastNoiseSIMD& noise_generator, const WorldParameters& params) {
     const auto num_height_samples = params.width * 2 * params.height * 2;
     auto* height_noise = noise_generator.GetNoiseSet(-params.width, -params.height, 0, params.width * 2, params.height * 2, 1);
 
-    auto return_value = Rx::Vector<float>{num_height_samples};
-    memcpy(return_value.data(), height_noise, num_height_samples * sizeof(float));
+    auto return_value = Rx::Vector<Float32>{num_height_samples};
+    memcpy(return_value.data(), height_noise, num_height_samples * sizeof(Float32));
 
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
     const auto height_range = max_terrain_height - min_terrain_height;
 
-    return_value.each_fwd([&](float& height) { height = height * height_range + min_terrain_height; });
+    return_value.each_fwd([&](Float32& height) { height = height * height_range + min_terrain_height; });
+
+    // Todo: 
 
     return return_value;
 }
 
-void World::generate_climate_data(const Rx::Vector<float>& heightmap, const WorldParameters& params, renderer::Renderer& renderer) {
+void World::generate_climate_data(const Rx::Vector<Float32>& heightmap, const WorldParameters& params, renderer::Renderer& renderer) {
     /*
      * Runs a basic climate simulation on the the heightmap
      *
@@ -106,13 +108,15 @@ void World::generate_climate_data(const Rx::Vector<float>& heightmap, const Worl
      * part of the temperature range, while humidity that isn't from a body of water will both raise and lower max temperature. Temperature
      * range gets saved to a RG8 texture - min in the red, max in the green
      *
+     * After that process is finished, Sanity Engine runs more compute shaders to calculate other things - 
+     *
      * After the computations are done, we copy those textures back to the CPU so that they can be used for biome generation
      */
 }
 
 World::World(const glm::uvec2& size_in,
-             const uint32_t min_terrain_height,
-             const uint32_t max_terrain_height,
+             const Uint32 min_terrain_height,
+             const Uint32 max_terrain_height,
              Rx::Ptr<FastNoiseSIMD> noise_generator_in,
              entt::entity player_in,
              entt::registry& registry_in,
@@ -126,7 +130,7 @@ World::World(const glm::uvec2& size_in,
 
 void World::register_component(horus::Component& component) { component.begin_play(*this); }
 
-void World::tick_script_components(float delta_time) {
+void World::tick_script_components(Float32 delta_time) {
     MTR_SCOPE("World", "tick_script_components");
 
     // registry->view<horus::Component>().each([&](horus::Component& script_component) {

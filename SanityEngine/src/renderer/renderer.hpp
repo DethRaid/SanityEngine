@@ -37,7 +37,7 @@ namespace renderer {
         /*!
          * \brief Number of seconds since the program started
          */
-        float time_since_start{0};
+        Float32 time_since_start{0};
     };
 
     /*!
@@ -48,7 +48,7 @@ namespace renderer {
     class Renderer {
     public:
         static Rx::Vector<StandardVertex> cube_vertices;
-        static Rx::Vector<uint32_t> cube_indices;
+        static Rx::Vector<Uint32> cube_indices;
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
@@ -76,7 +76,7 @@ namespace renderer {
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
-        [[nodiscard]] rhi::Buffer& get_standard_material_buffer_for_frame(uint32_t frame_idx) const;
+        [[nodiscard]] rhi::Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
 
         void deallocate_standard_material(StandardMaterialHandle handle);
 
@@ -101,7 +101,7 @@ namespace renderer {
                                                                            const Rx::Vector<rhi::Mesh>& meshes,
                                                                            const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        [[nodiscard]] Rx::Ptr<rhi::BindGroup> bind_global_resources_for_frame(uint32_t frame_idx);
+        [[nodiscard]] Rx::Ptr<rhi::BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -123,7 +123,7 @@ namespace renderer {
         Rx::Vector<StandardMaterialHandle> free_material_handles;
         Rx::Vector<Rx::Ptr<rhi::Buffer>> material_device_buffers;
 
-        Rx::Map<Rx::String, uint32_t> image_name_to_index;
+        Rx::Map<Rx::String, Uint32> image_name_to_index;
         Rx::Vector<Rx::Ptr<rhi::Image>> all_images;
 
         std::array<Light, MAX_NUM_LIGHTS> lights;
@@ -153,9 +153,9 @@ namespace renderer {
 
         [[nodiscard]] Rx::Vector<const rhi::Image*> get_texture_array() const;
 
-        void update_cameras(entt::registry& registry, uint32_t frame_idx) const;
+        void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
-        void upload_material_data(uint32_t frame_idx);
+        void upload_material_data(Uint32 frame_idx);
 
 #pragma region 3D Scene
         Rx::Vector<rhi::RaytracableGeometry> raytracing_geometries;
@@ -172,9 +172,9 @@ namespace renderer {
 
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        void update_lights(entt::registry& registry, uint32_t frame_idx);
+        void update_lights(entt::registry& registry, Uint32 frame_idx);
 
-        void render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, uint32_t frame_idx);
+        void render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, Uint32 frame_idx);
 #pragma endregion
 
 #pragma region UI
@@ -187,7 +187,7 @@ namespace renderer {
 
         void create_ui_mesh_buffers();
 
-        void render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, uint32_t frame_idx) const;
+        void render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, Uint32 frame_idx) const;
 #pragma endregion
     };
 } // namespace renderer

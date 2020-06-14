@@ -68,11 +68,11 @@ namespace rhi {
 
         bool front_face_counter_clockwise{false};
 
-        float depth_bias{0};
-        float max_depth_bias{0};
-        float slope_scaled_depth_bias{0};
+        Float32 depth_bias{0};
+        Float32 max_depth_bias{0};
+        Float32 slope_scaled_depth_bias{0};
 
-        uint32_t num_msaa_samples{1};
+        Uint32 num_msaa_samples{1};
 
         bool enable_line_antialiasing{false};
 

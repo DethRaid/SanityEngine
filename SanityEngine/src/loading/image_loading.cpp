@@ -11,7 +11,7 @@
 
 RX_LOG("ImageLoading", logger);
 
-bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height, Rx::Vector<uint8_t>& pixels) {
+bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<uint8_t>& pixels) {
     int raw_width, raw_height, num_components;
 
     const auto* texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
@@ -21,12 +21,12 @@ bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height,
         return false;
     }
 
-    width = static_cast<uint32_t>(raw_width);
-    height = static_cast<uint32_t>(raw_height);
+    width = static_cast<Uint32>(raw_width);
+    height = static_cast<Uint32>(raw_height);
 
     const auto num_pixels = width * height;
     pixels.resize(num_pixels * 4);
-    for(uint32_t i = 0; i < num_pixels; i++) {
+    for(Uint32 i = 0; i < num_pixels; i++) {
         const auto read_idx = i * num_components;
         const auto write_idx = i * 4;
 
@@ -51,7 +51,7 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     const auto message = Rx::String::format("Load image %s", load_data->texture_name_in);
     MTR_SCOPE("Image Loading", message.data());
 
-    uint32_t width, height;
+    Uint32 width, height;
     Rx::Vector<uint8_t> pixels;
     const auto success = load_image(load_data->texture_name_in, width, height, pixels);
     if(!success) {

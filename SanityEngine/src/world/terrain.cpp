@@ -15,10 +15,10 @@
 
 RX_LOG("Terrain", logger);
 
-Terrain::Terrain(const uint32_t max_latitude_in,
-                 const uint32_t max_longitude_in,
-                 const uint32_t min_terrain_height_in,
-                 const uint32_t max_terrain_height_in,
+Terrain::Terrain(const Uint32 max_latitude_in,
+                 const Uint32 max_longitude_in,
+                 const Uint32 min_terrain_height_in,
+                 const Uint32 max_terrain_height_in,
                  renderer::Renderer& renderer_in,
                  FastNoiseSIMD& noise_generator_in,
                  entt::registry& registry_in)
@@ -49,7 +49,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     }
 }
 
-float Terrain::get_terrain_height(const glm::vec2& location) const {
+Float32 Terrain::get_terrain_height(const glm::vec2& location) const {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
     const auto tile_start_location = tilecoords * TILE_SIZE;
@@ -124,12 +124,12 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
     Rx::Vector<StandardVertex> tile_vertices;
     tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
 
-    Rx::Vector<uint32_t> tile_indices;
+    Rx::Vector<Uint32> tile_indices;
     tile_indices.reserve(tile_vertices.size() * 6);
 
-    for(uint32_t y = 0; y < tile_heightmap.size(); y++) {
+    for(Uint32 y = 0; y < tile_heightmap.size(); y++) {
         const auto& tile_heightmap_row = tile_heightmap[y];
-        for(uint32_t x = 0; x < tile_heightmap_row.size(); x++) {
+        for(Uint32 x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
             const auto normal = get_normal_at_location(glm::vec2{x, y});
@@ -137,8 +137,8 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
             tile_vertices.push_back(StandardVertex{.position = {x, height, y}, .normal = normal, .color = 0xFFFFFFFF, .texcoord = {x, y}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
-                const auto width = static_cast<uint32_t>(tile_heightmap_row.size());
-                const auto face_start_idx = static_cast<uint32_t>(y * width + x);
+                const auto width = static_cast<Uint32>(tile_heightmap_row.size());
+                const auto face_start_idx = static_cast<Uint32>(y * width + x);
 
                 tile_indices.push_back(face_start_idx);
                 tile_indices.push_back(face_start_idx + 1);
@@ -180,17 +180,17 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
     registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
 }
 
-Rx::Vector<Rx::Vector<float>> Terrain::generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const {
+Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const {
     const auto height_range = max_terrain_height - min_terrain_height;
 
-    Rx::Vector<Rx::Vector<float>> heightmap;
+    Rx::Vector<Rx::Vector<Float32>> heightmap;
 
-    auto raw_noise = Rx::Vector<float>{size.y * size.x};
+    auto raw_noise = Rx::Vector<Float32>{size.y * size.x};
 
     noise_generator->FillNoiseSet(raw_noise.data(), top_left.x, top_left.y, 1, size.x, size.y, 1);
 
-    for(uint32_t y = 0; y < size.y; y++) {
-        for(uint32_t x = 0; x < size.x; x++) {
+    for(Uint32 y = 0; y < size.y; y++) {
+        for(Uint32 x = 0; x < size.x; x++) {
             heightmap[y][x] = raw_noise[y * size.x + x] * height_range + min_terrain_height;
         }
     }

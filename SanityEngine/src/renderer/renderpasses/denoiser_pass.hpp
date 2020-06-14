@@ -23,7 +23,7 @@ namespace renderer {
          */
         explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass);
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, uint32_t frame_idx) override;
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
         [[nodiscard]] TextureHandle get_output_image() const;
 

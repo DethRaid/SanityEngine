@@ -29,7 +29,7 @@ namespace renderer {
      * \brief Renders a postprocessing pass
      */
     struct PostProcessingPassComponent {
-        uint32_t draw_idx{0};
+        Uint32 draw_idx{0};
         StandardMaterialHandle material{0};
     };
 
@@ -37,7 +37,7 @@ namespace renderer {
      * \brief Sets up a camera to render with
      */
     struct CameraComponent {
-        uint32_t idx;
+        Uint32 idx;
 
         double fov{90};
         double aspect_ratio{9.0f / 16.0f};

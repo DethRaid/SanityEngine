@@ -22,6 +22,6 @@ struct LoadImageToGpuArgs {
  *
  * Currently only supports RGB and RGBA images
  */
-bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height, Rx::Vector<uint8_t>& pixels);
+bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<uint8_t>& pixels);
 
 FTL_TASK_ENTRY_POINT(load_image_to_gpu);

@@ -1,13 +1,10 @@
 #pragma once
 
-#include <cstdint>
 #include <list>
 
-enum class FramerateDisplayMode {
-    FrameTime,
-    FramesPerSecond,
-    Both
-};
+#include <rx/core/types.h>
+
+enum class FramerateDisplayMode { FrameTime, FramesPerSecond, Both };
 
 struct FrametimeStats {
     double average;
@@ -17,7 +14,7 @@ struct FrametimeStats {
 
 class FramerateTracker {
 public:
-    explicit FramerateTracker(uint32_t max_num_samples_in);
+    explicit FramerateTracker(Uint32 max_num_samples_in);
 
     void add_frame_time(double frame_time);
 
@@ -26,7 +23,7 @@ public:
     [[nodiscard]] FrametimeStats calculate_frametime_stats() const;
 
 private:
-    uint32_t max_num_samples;
+    Uint32 max_num_samples;
 
     std::list<double> frame_times;
 };
