@@ -10,16 +10,15 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "../core/abort.hpp"
-#include "../core/constants.hpp"
-#include "../core/ensure.hpp"
-#include "../core/errors.hpp"
-#include "../settings.hpp"
-#include "../windows/windows_helpers.hpp"
-#include "compute_pipeline_state.hpp"
-#include "d3dx12.hpp"
-#include "helpers.hpp"
-#include "render_pipeline_state.hpp"
+#include "core/abort.hpp"
+#include "core/constants.hpp"
+#include "core/errors.hpp"
+#include "rhi/compute_pipeline_state.hpp"
+#include "rhi/d3dx12.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_pipeline_state.hpp"
+#include "settings.hpp"
+#include "windows/windows_helpers.hpp"
 
 namespace rhi {
     RenderDevice::RenderDevice(HWND window_handle,
@@ -292,8 +291,8 @@ namespace rhi {
     Framebuffer* RenderDevice::get_backbuffer_framebuffer() {
         const auto cur_swapchain_index = swapchain->GetCurrentBackBufferIndex();
 
-        ENSURE(cur_swapchain_index < swapchain_framebuffers.size(),
-               "Not enough swapchain framebuffers for current swapchain index {}",
+        RX_ASSERT(cur_swapchain_index < swapchain_framebuffers.size(),
+               "Not enough swapchain framebuffers for current swapchain index %d",
                cur_swapchain_index);
 
         return &swapchain_framebuffers[cur_swapchain_index];
@@ -332,8 +331,8 @@ namespace rhi {
         const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
         const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
 
-        ENSURE(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
-               "If you specify descriptor table descriptors, you must also specift descriptor table handles");
+        RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
+               "If you specify descriptor table descriptors, you must also specify descriptor table handles");
 
         return std::make_unique<BindGroupBuilder>(*device.Get(),
                                                   *cbv_srv_uav_heap.Get(),
@@ -442,7 +441,7 @@ namespace rhi {
     }
 
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const uint32_t frame_idx) {
-        ENSURE(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
+        RX_ASSERT(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
 
         return *material_bind_group_builder[frame_idx];
     }
@@ -1244,10 +1243,10 @@ namespace rhi {
             }
         }
 
-        ENSURE(create_info.render_target_formats.size() + (create_info.depth_stencil_format ? 1 : 0) > 0,
+        RX_ASSERT(create_info.render_target_formats.size() + (create_info.depth_stencil_format ? 1 : 0) > 0,
                "Must have at least one render target or depth target");
-        ENSURE(create_info.render_target_formats.size() < 8,
-               "May not have more than 8 render targets - you have {}",
+        RX_ASSERT(create_info.render_target_formats.size() < 8,
+               "May not have more than 8 render targets - you have &d",
                create_info.render_target_formats.size());
 
         desc.NumRenderTargets = static_cast<UINT>(create_info.render_target_formats.size());
@@ -1398,7 +1397,7 @@ namespace rhi {
                 logger->error("Waiting for GPU fence {} failed: {}", frame_index, get_last_windows_error().data());
             }
 
-            ENSURE(result == WAIT_OBJECT_0, "Waiting for frame {} failed", frame_index);
+            RX_ASSERT(result == WAIT_OBJECT_0, "Waiting for frame %d failed", frame_index);
         }
     }
 

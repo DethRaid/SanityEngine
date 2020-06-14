@@ -8,16 +8,15 @@
 #include <assimp/scene.h>
 #include <entt/entity/registry.hpp>
 #include <rx/core/string.h>
-#include <spdlog/sinks/stdout_color_sinks-inl.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../core/ensure.hpp"
-#include "../renderer/render_components.hpp"
-#include "../renderer/renderer.hpp"
-#include "../renderer/standard_material.hpp"
-#include "../rhi/helpers.hpp"
-#include "../rhi/mesh_data_store.hpp"
-#include "../rhi/raytracing_structs.hpp"
-#include "../rhi/render_device.hpp"
+#include "renderer/render_components.hpp"
+#include "renderer/renderer.hpp"
+#include "renderer/standard_material.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/mesh_data_store.hpp"
+#include "rhi/raytracing_structs.hpp"
+#include "rhi/render_device.hpp"
 #include "image_loading.hpp"
 
 static Assimp::Importer importer;
@@ -46,7 +45,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
 
     // Initial revision: import the first child node and hope it's fine
     const auto* node = scene->mRootNode->mChildren[0];
-    ENSURE(node->mNumMeshes == 1, "Sanity Engine currently only supports one mesh");
+    RX_ASSERT(node->mNumMeshes == 1, "Sanity Engine currently only supports one mesh");
     // Get the mesh at this index
     const auto ass_mesh_handle = node->mMeshes[0];
     const auto* ass_mesh = scene->mMeshes[ass_mesh_handle];

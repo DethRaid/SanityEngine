@@ -5,7 +5,6 @@
 #include <minitrace.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../core/ensure.hpp"
 #include "d3dx12.hpp"
 #include "helpers.hpp"
 #include "raytracing_structs.hpp"
@@ -123,7 +122,7 @@ namespace rhi {
 
         // Save descriptor table information
         descriptor_table_handles.each_pair([&](const uint32_t idx, const D3D12_GPU_DESCRIPTOR_HANDLE& handle) {
-            ENSURE(idx < 64, "May not have more than 64 descriptor tables in a single bind group");
+            RX_ASSERT(idx < 64, "May not have more than 64 descriptor tables in a single bind group");
 
             root_parameters[idx].type = RootParameterType::DescriptorTable;
             root_parameters[idx].table.handle = handle;
@@ -135,9 +134,9 @@ namespace rhi {
         // Save root descriptor information
         root_descriptor_descriptions.each_pair([&](const Rx::String& name, const RootDescriptorDescription& desc) {
             const auto& [idx, type] = desc;
-            ENSURE(idx < 32, "May not have more than 32 root descriptors in a single bind group");
+            RX_ASSERT(idx < 32, "May not have more than 32 root descriptors in a single bind group");
 
-            ENSURE(root_parameters[idx].type == RootParameterType::Empty, "Root parameter index {} already used", idx);
+            RX_ASSERT(root_parameters[idx].type == RootParameterType::Empty, "Root parameter index %d already used", idx);
 
             root_parameters[idx].type = RootParameterType::Descriptor;
             root_parameters[idx].descriptor.type = type;
@@ -157,7 +156,7 @@ namespace rhi {
                 used_buffers.emplace_back(*bound_buffer, states);
 
             } else if(const Rx::Vector<const Image*>* bound_image = bound_image_arrays.find(name)) {
-                ENSURE(bound_image->size() == 1, "May only bind a single image to a root descriptor");
+                RX_ASSERT(bound_image->size() == 1, "May only bind a single image to a root descriptor");
                 root_parameters[idx].descriptor.address = (*bound_image)[0]->resource->GetGPUVirtualAddress();
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
@@ -171,9 +170,9 @@ namespace rhi {
                 used_images.emplace_back((*bound_image)[0], states);
 
             } else if(const Buffer** scene = bound_raytracing_scenes.find(name)) {
-                ENSURE(type == DescriptorType::ShaderResource,
-                       "May only bind raytracing acceleration structure {} as a shader resource",
-                       (*scene)->name.data());
+                RX_ASSERT(type == DescriptorType::ShaderResource,
+                       "May only bind raytracing acceleration structure %s as a shader resource",
+                       (*scene)->name);
 
                 root_parameters[idx].descriptor.address = (*scene)->resource->GetGPUVirtualAddress();
 
@@ -239,8 +238,8 @@ namespace rhi {
                     } break;
 
                     case DescriptorType::ShaderResource: {
-                        ENSURE(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array {}", name.data());
-                        ENSURE(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array {}", name.data());
+                        RX_ASSERT(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array %s", name);
+                        RX_ASSERT(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array %s", name);
 
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 

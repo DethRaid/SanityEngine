@@ -1,12 +1,11 @@
 #include "framerate_tracker.hpp"
 
+#include <rx/core/assert.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-
-#include "../core/ensure.hpp"
 
 FramerateTracker::FramerateTracker(const uint32_t max_num_samples_in)
     : max_num_samples{max_num_samples_in}, logger{spdlog::stdout_color_st("FramerateTracker")} {
-    ENSURE(max_num_samples_in > 0, "Must allow more than 0 frame time samples");
+    RX_ASSERT(max_num_samples_in > 0, "Must allow more than 0 frame time samples");
 }
 
 void FramerateTracker::add_frame_time(const double frame_time) {
@@ -52,5 +51,5 @@ FrametimeStats FramerateTracker::calculate_frametime_stats() const {
 
     average /= frame_times.size();
 
-    return { .average = average, .minimum = min_time, .maximum = max_time};
+    return {.average = average, .minimum = min_time, .maximum = max_time};
 }

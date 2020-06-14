@@ -5,8 +5,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "../core/components.hpp"
-#include "../core/ensure.hpp"
+#include "core/components.hpp"
 
 FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
     : logger{spdlog::stdout_color_st("FlycamController")},
@@ -14,7 +13,7 @@ FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity con
       controlled_entity{controlled_entity_in},
       registry{&registry_in} {
     // Quick validation
-    ENSURE(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
+    RX_ASSERT(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
     logger->set_level(spdlog::level::debug);
 

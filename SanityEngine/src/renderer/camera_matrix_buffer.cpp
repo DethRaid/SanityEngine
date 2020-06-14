@@ -2,10 +2,9 @@
 
 #include <glm/gtx/quaternion.hpp>
 
-#include "../core/components.hpp"
-#include "../core/ensure.hpp"
-#include "../rhi/helpers.hpp"
-#include "../rhi/render_device.hpp"
+#include "core/components.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_device.hpp"
 
 namespace renderer {
     void CameraMatrices::copy_matrices_to_previous() {
@@ -24,7 +23,7 @@ namespace renderer {
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
-        ENSURE(camera.fov >= 0, "Field of view must not be negative");
+        RX_ASSERT(camera.fov >= 0, "Field of view must not be negative");
 
         projection_matrix = {};
 
@@ -65,28 +64,28 @@ namespace renderer {
     }
 
     CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) {
-        ENSURE(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
+        RX_ASSERT(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
 
         return host_data[idx];
     }
 
     const CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const uint32_t idx) const {
-        ENSURE(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
+        RX_ASSERT(idx < MAX_NUM_CAMERAS, "Requested camera index {} is larger than the maximum number of cameras {}", idx, MAX_NUM_CAMERAS);
 
         return host_data[idx];
     }
 
     void CameraMatrixBuffer::set_camera_matrices(const uint32_t camera_idx, const CameraMatrices& matrices) {
-        ENSURE(camera_idx < MAX_NUM_CAMERAS, "Camera index {} must be less than MAX_NUM_CAMERAS ({})", camera_idx, MAX_NUM_CAMERAS);
+        RX_ASSERT(camera_idx < MAX_NUM_CAMERAS, "Camera index {} must be less than MAX_NUM_CAMERAS ({})", camera_idx, MAX_NUM_CAMERAS);
 
         host_data[camera_idx] = matrices;
     }
 
     rhi::Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const uint32_t frame_idx) const {
-        ENSURE(frame_idx < device_data.size(),
-               "Not enough device buffers! There are {} device buffers for camera matrices, but buffer {} was requested",
-               device_data.size(),
-               frame_idx);
+        RX_ASSERT(frame_idx < device_data.size(),
+                  "Not enough device buffers! There are {} device buffers for camera matrices, but buffer {} was requested",
+                  device_data.size(),
+                  frame_idx);
 
         return *device_data[frame_idx];
     }

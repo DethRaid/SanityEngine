@@ -9,7 +9,6 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <stb_image.h>
 
-#include "../core/ensure.hpp"
 #include "../loading/shader_loading.hpp"
 #include "../renderer/renderer.hpp"
 #include "../renderer/standard_material.hpp"
@@ -287,7 +286,7 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
 }
 
 std::pair<Rx::Vector<StandardVertex>, Rx::Vector<uint32_t>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
-    ENSURE(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
+    RX_ASSERT(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
 
     const auto& bve_vertices = mesh.vertices;
     auto vertices = Rx::Vector<StandardVertex>{};

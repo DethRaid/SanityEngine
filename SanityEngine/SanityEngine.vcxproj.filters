@@ -186,9 +186,6 @@
     <ClCompile Include="src\core\abort.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\ensure.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\errors.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -507,9 +504,6 @@
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\constants.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\ensure.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\errors.hpp">

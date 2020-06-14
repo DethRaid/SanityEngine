@@ -7,13 +7,12 @@
 #include <rx/core/array.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "../core/ensure.hpp"
-#include "../loading/image_loading.hpp"
-#include "../renderer/standard_material.hpp"
-#include "../renderer/textures.hpp"
-#include "../rhi/helpers.hpp"
-#include "../rhi/render_device.hpp"
-#include "../sanity_engine.hpp"
+#include "loading/image_loading.hpp"
+#include "renderer/standard_material.hpp"
+#include "renderer/textures.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_device.hpp"
+#include "sanity_engine.hpp"
 
 std::shared_ptr<spdlog::logger> Terrain::logger = spdlog::stdout_color_st("Terrain");
 

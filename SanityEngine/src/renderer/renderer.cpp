@@ -8,20 +8,19 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "../core/align.hpp"
-#include "../core/components.hpp"
-#include "../core/constants.hpp"
-#include "../core/defer.hpp"
-#include "../core/ensure.hpp"
-#include "../core/errors.hpp"
-#include "../loading/image_loading.hpp"
-#include "../loading/shader_loading.hpp"
-#include "../rhi/d3dx12.hpp"
-#include "../rhi/helpers.hpp"
-#include "../rhi/render_device.hpp"
-#include "../sanity_engine.hpp"
-#include "camera_matrix_buffer.hpp"
-#include "render_components.hpp"
+#include "core/align.hpp"
+#include "core/components.hpp"
+#include "core/constants.hpp"
+#include "core/defer.hpp"
+#include "core/errors.hpp"
+#include "loading/image_loading.hpp"
+#include "loading/shader_loading.hpp"
+#include "renderer/camera_matrix_buffer.hpp"
+#include "renderer/render_components.hpp"
+#include "rhi/d3dx12.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_device.hpp"
+#include "sanity_engine.hpp"
 
 namespace renderer {
 
@@ -127,7 +126,7 @@ namespace renderer {
 
         // logger->set_level(spdlog::level::debug);
 
-        ENSURE(settings.render_scale > 0, "Render scale may not be 0 or less");
+        RX_ASSERT(settings.render_scale > 0, "Render scale may not be 0 or less");
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -469,7 +468,7 @@ namespace renderer {
         if(!raytracing_objects.is_empty()) {
             constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
 
-            ENSURE(raytracing_objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
+            RX_ASSERT(raytracing_objects.size() < max_num_objects, "May not have more than {} objects because uint32", max_num_objects);
 
             const auto instance_buffer_size = static_cast<uint32_t>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
             auto instance_buffer = device->get_staging_buffer(instance_buffer_size);

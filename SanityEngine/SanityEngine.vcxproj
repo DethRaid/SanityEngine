@@ -85,7 +85,6 @@
     <ClCompile Include="first_person_controller.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
     <ClCompile Include="src\core\abort.cpp" />
-    <ClCompile Include="src\core\ensure.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\globals.cpp" />
@@ -294,7 +293,6 @@
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
-    <ClInclude Include="src\core\ensure.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\globals.hpp" />
@@ -542,7 +540,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLM_ENABLE_EXPERIMENTAL;MTR_COPY_EVENT_CATEGORY_AND_NAME;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;MTR_ENABLED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;MTR_COPY_EVENT_CATEGORY_AND_NAME;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;MTR_ENABLED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableModules>true</EnableModules>
