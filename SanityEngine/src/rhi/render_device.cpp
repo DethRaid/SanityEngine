@@ -7,10 +7,10 @@
 #include <d3dcompiler.h>
 #include <dxgi1_3.h>
 #include <minitrace.h>
+#include <rx/core/abort.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "core/abort.hpp"
 #include "core/constants.hpp"
 #include "core/errors.hpp"
 #include "rhi/compute_pipeline_state.hpp"
@@ -292,8 +292,8 @@ namespace rhi {
         const auto cur_swapchain_index = swapchain->GetCurrentBackBufferIndex();
 
         RX_ASSERT(cur_swapchain_index < swapchain_framebuffers.size(),
-               "Not enough swapchain framebuffers for current swapchain index %d",
-               cur_swapchain_index);
+                  "Not enough swapchain framebuffers for current swapchain index %d",
+                  cur_swapchain_index);
 
         return &swapchain_framebuffers[cur_swapchain_index];
     }
@@ -332,7 +332,7 @@ namespace rhi {
         const Rx::Map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
 
         RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
-               "If you specify descriptor table descriptors, you must also specify descriptor table handles");
+                  "If you specify descriptor table descriptors, you must also specify descriptor table handles");
 
         return std::make_unique<BindGroupBuilder>(*device.Get(),
                                                   *cbv_srv_uav_heap.Get(),
@@ -598,12 +598,12 @@ namespace rhi {
         ComPtr<IDXGIFactory> basic_factory;
         auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
         if(FAILED(result)) {
-            critical_error("Could not initialize DXGI");
+            Rx::abort("Could not initialize DXGI");
         }
 
         result = basic_factory->QueryInterface(factory.GetAddressOf());
         if(FAILED(result)) {
-            critical_error("DXGI is not at a new enough version, please update your graphics drivers");
+            Rx::abort("DXGI is not at a new enough version, please update your graphics drivers");
         }
     }
 
@@ -713,7 +713,7 @@ namespace rhi {
         });
 
         if(!device) {
-            critical_error("Could not find a suitable D3D12 adapter");
+            Rx::abort("Could not find a suitable D3D12 adapter");
         }
 
         set_object_name(device.Get(), "D3D12 Device");
@@ -730,7 +730,7 @@ namespace rhi {
 
         auto result = device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&direct_command_queue));
         if(FAILED(result)) {
-            critical_error("Could not create graphics command queue");
+            Rx::abort("Could not create graphics command queue");
         }
 
         set_object_name(direct_command_queue.Get(), "Direct Queue");
@@ -777,12 +777,12 @@ namespace rhi {
                                                   swapchain1.GetAddressOf());
         if(FAILED(hr)) {
             const auto msg = fmt::format("Could not create swapchain: {}", to_string(hr).data());
-            critical_error(msg.data());
+            Rx::abort(msg.data());
         }
 
         hr = swapchain1->QueryInterface(swapchain.GetAddressOf());
         if(FAILED(hr)) {
-            critical_error("Could not get new swapchain interface, please update your drivers");
+            Rx::abort("Could not get new swapchain interface, please update your drivers");
         }
     }
 
@@ -806,14 +806,14 @@ namespace rhi {
             auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                          IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                critical_error(fmt::format("Could not create compute command allocator for frame {}", i).c_str());
+                Rx::abort(fmt::format("Could not create compute command allocator for frame {}", i).c_str());
             }
 
             set_object_name(compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i).c_str());
 
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                critical_error(fmt::format("Could not create copy command allocator for frame {}", i).c_str());
+                Rx::abort(fmt::format("Could not create copy command allocator for frame {}", i).c_str());
             }
 
             set_object_name(copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i).c_str());
@@ -892,7 +892,7 @@ namespace rhi {
 
         const auto result = D3D12MA::CreateAllocator(&allocator_desc, &device_allocator);
         if(FAILED(result)) {
-            critical_error("Could not initialize DMA");
+            Rx::abort("Could not initialize DMA");
         }
     }
 
@@ -965,7 +965,7 @@ namespace rhi {
 
         standard_root_signature = compile_root_signature(root_signature_desc);
         if(!standard_root_signature) {
-            critical_error("Could not create standard root signature");
+            Rx::abort("Could not create standard root signature");
         }
 
         set_object_name(standard_root_signature.Get(), "Standard Root Signature");
@@ -1244,10 +1244,10 @@ namespace rhi {
         }
 
         RX_ASSERT(create_info.render_target_formats.size() + (create_info.depth_stencil_format ? 1 : 0) > 0,
-               "Must have at least one render target or depth target");
+                  "Must have at least one render target or depth target");
         RX_ASSERT(create_info.render_target_formats.size() < 8,
-               "May not have more than 8 render targets - you have &d",
-               create_info.render_target_formats.size());
+                  "May not have more than 8 render targets - you have &d",
+                  create_info.render_target_formats.size());
 
         desc.NumRenderTargets = static_cast<UINT>(create_info.render_target_formats.size());
         for(uint32_t i = 0; i < create_info.render_target_formats.size(); i++) {
@@ -1282,7 +1282,7 @@ namespace rhi {
             ComPtr<ID3D12CommandAllocator> allocator;
             const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
             if(FAILED(result)) {
-                critical_error(fmt::format("Could not create compute command allocator").c_str());
+                Rx::abort(fmt::format("Could not create compute command allocator").c_str());
 
             } else {
                 command_allocators_for_frame.insert(id, allocator);

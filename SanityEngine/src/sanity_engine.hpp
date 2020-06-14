@@ -6,6 +6,7 @@
 #include <ftl/task_scheduler.h>
 
 #include "../first_person_controller.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "bve/bve_wrapper.hpp"
 #include "input/input_manager.hpp"
 #include "renderer/renderer.hpp"
@@ -40,10 +41,12 @@ public:
 
     [[nodiscard]] entt::registry& get_registry();
 
-   [[nodiscard]] World* get_world() const;
+    [[nodiscard]] World* get_world() const;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    static std::shared_ptr<spdlog::logger> logger;
+
+    rex::Wrapper rex;
 
     Settings settings;
 

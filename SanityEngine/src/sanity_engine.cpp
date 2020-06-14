@@ -7,11 +7,11 @@
 
 #include <GLFW/glfw3.h>
 #include <minitrace.h>
+#include <rx/core/abort.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
 
-#include "core/abort.hpp"
 #include "globals.hpp"
 #include "loading/entity_loading.hpp"
 #include "rhi/render_device.hpp"
@@ -44,8 +44,10 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
+std::shared_ptr<spdlog::logger> SanityEngine::logger{spdlog::stdout_color_st("SanityEngine")};
+
 SanityEngine::SanityEngine(const Settings& settings_in)
-    : logger{spdlog::stdout_color_st("SanityEngine")}, settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
+    : settings{settings_in}, input_manager{std::make_unique<InputManager>()} {
     mtr_init("SanityEngine.json");
 
     MTR_SCOPE("SanityEngine", "SanityEngine");
@@ -65,7 +67,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     {
         MTR_SCOPE("SanityEngine", "glfwInit");
         if(!glfwInit()) {
-            critical_error("Could not initialize GLFW");
+            Rx::abort("Could not initialize GLFW");
         }
     }
 
@@ -76,7 +78,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(1000, 480, "Sanity Engine", nullptr, nullptr);
         if(window == nullptr) {
-            critical_error("Could not create GLFW window");
+            Rx::abort("Could not create GLFW window");
         }
     }
 

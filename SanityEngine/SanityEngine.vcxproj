@@ -83,6 +83,8 @@
     <ClCompile Include="extern\rex\include\rx\core\time\stop_watch.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\vector.cpp" />
     <ClCompile Include="first_person_controller.cpp" />
+    <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
+    <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />
@@ -284,6 +286,9 @@
     <ClInclude Include="extern\rex\include\rx\core\utility\uninitialized.h" />
     <ClInclude Include="extern\rex\include\rx\core\vector.h" />
     <ClInclude Include="first_person_controller.hpp" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
+    <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\core\align.hpp" />
@@ -455,6 +460,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SanityEngine.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

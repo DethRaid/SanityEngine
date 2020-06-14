@@ -55,12 +55,6 @@
     <Filter Include="Source Files\external">
       <UniqueIdentifier>{55598584-eda2-4739-8f3b-5a760cc1977e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\bve">
-      <UniqueIdentifier>{e92e3a3a-61c9-45f4-93bf-7266e7919eac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\bve">
-      <UniqueIdentifier>{60ef05e0-a35a-47a7-99f9-361e52b6ea5a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{d26769c1-973d-4a22-a087-0c4c979ffb58}</UniqueIdentifier>
     </Filter>
@@ -178,6 +172,24 @@
     <Filter Include="Rex\core\utility">
       <UniqueIdentifier>{a2389a3d-573c-47a3-aa91-30b839a0f6fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\adapters">
+      <UniqueIdentifier>{cc17f1a5-db21-4214-9e7e-f3f1f2141584}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\adapters">
+      <UniqueIdentifier>{7e1b3989-2ee9-4d9d-85a6-319a35e5c515}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\adapters\bve">
+      <UniqueIdentifier>{e92e3a3a-61c9-45f4-93bf-7266e7919eac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\adapters\rex">
+      <UniqueIdentifier>{9f87f9ae-ed89-42ba-9c72-1fd155fb13c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\adapters\bve">
+      <UniqueIdentifier>{60ef05e0-a35a-47a7-99f9-361e52b6ea5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\adapters\rex">
+      <UniqueIdentifier>{f25b5bde-0f7a-47df-bad2-5e66ffe78f45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -217,7 +229,7 @@
       <Filter>Source Files\external</Filter>
     </ClCompile>
     <ClCompile Include="src\bve\bve_wrapper.cpp">
-      <Filter>Source Files\bve</Filter>
+      <Filter>Source Files\adapters\bve</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\handles.hpp">
       <Filter>Header Files\renderer</Filter>
@@ -489,6 +501,12 @@
     <ClCompile Include="extern\rex\include\lib\json.c">
       <Filter>Rex</Filter>
     </ClCompile>
+    <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\adapters\rex\stdout_stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -567,10 +585,10 @@
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="src\bve\bve_wrapper.hpp">
-      <Filter>Header Files\bve</Filter>
+      <Filter>Header Files\adapters\bve</Filter>
     </ClInclude>
     <ClInclude Include="src\bve\train_components.hpp">
-      <Filter>Header Files\bve</Filter>
+      <Filter>Header Files\adapters\bve</Filter>
     </ClInclude>
     <ClInclude Include="src\rhi\descriptor_allocator.hpp">
       <Filter>Header Files\renderer\rhi</Filter>
@@ -1130,6 +1148,15 @@
     <ClInclude Include="extern\rex\include\lib\json.h">
       <Filter>Rex</Filter>
     </ClInclude>
+    <ClInclude Include="src\adapters\rex\rex_wrapper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\adapters\rex\stdout_stream.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -1177,5 +1204,10 @@
       <Filter>Shaders\inc</Filter>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SanityEngine.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

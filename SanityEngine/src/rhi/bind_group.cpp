@@ -3,6 +3,7 @@
 #include <utility>
 
 #include <minitrace.h>
+#include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "d3dx12.hpp"
