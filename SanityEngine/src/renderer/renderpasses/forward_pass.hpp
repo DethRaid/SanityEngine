@@ -3,7 +3,6 @@
 #include <memory>
 
 #include <glm/fwd.hpp>
-#include <spdlog/logger.h>
 
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"

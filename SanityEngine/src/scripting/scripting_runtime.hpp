@@ -6,7 +6,6 @@
 #include <entt/entity/fwd.hpp>
 #include <rx/core/map.h>
 #include <rx/core/string.h>
-#include <spdlog/logger.h>
 #include <wren/wren.hpp>
 
 #include "entity_scripting_api.hpp"

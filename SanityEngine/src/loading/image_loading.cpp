@@ -1,13 +1,15 @@
 #include "image_loading.hpp"
 
-#include <minitrace.h>
-#include <spdlog/spdlog.h>
-#include <stb_image.h>
 #include <ftl/task.h>
+#include <minitrace.h>
+#include <rx/core/log.h>
+#include <stb_image.h>
 
 #include "renderer/renderer.hpp"
 #include "rhi/render_device.hpp"
 #include "rhi/resources.hpp"
+
+RX_LOG("ImageLoading", logger);
 
 bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height, Rx::Vector<uint8_t>& pixels) {
     int raw_width, raw_height, num_components;
@@ -15,7 +17,7 @@ bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height,
     const auto* texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
     if(texture_data == nullptr) {
         const auto* failure_reason = stbi_failure_reason();
-        spdlog::error("Could not load image {}: {}", image_name.data(), failure_reason);
+        logger->error("Could not load image %s: %s", image_name, failure_reason);
         return false;
     }
 
@@ -46,8 +48,8 @@ bool load_image(const Rx::String& image_name, uint32_t& width, uint32_t& height,
 FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
 
-    const auto message = fmt::format("Load image {}", load_data->texture_name_in.data());
-    MTR_SCOPE("Image Loading", message.c_str());
+    const auto message = Rx::String::format("Load image %s", load_data->texture_name_in);
+    MTR_SCOPE("Image Loading", message.data());
 
     uint32_t width, height;
     Rx::Vector<uint8_t> pixels;

@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include <spdlog/logger.h>
-
 #include "renderer/renderpass.hpp"
 #include "rhi/render_pipeline_state.hpp"
 

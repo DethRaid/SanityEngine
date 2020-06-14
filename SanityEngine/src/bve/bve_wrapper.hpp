@@ -6,7 +6,6 @@
 #include <bve/bve.hpp>
 #include <entt/entity/fwd.hpp>
 #include <rx/core/vector.h>
-#include <spdlog/logger.h>
 
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"

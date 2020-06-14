@@ -1,11 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <spdlog/logger.h>
 
 class Terrain;
 
@@ -20,8 +17,6 @@ public:
     void set_current_terrain(Terrain& terrain_in);
 
 private:
-    static std::shared_ptr<spdlog::logger> logger;
-
     float normal_move_speed = 5;
 
     float jump_velocity = 5;

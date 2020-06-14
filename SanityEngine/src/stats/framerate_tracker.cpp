@@ -1,14 +1,13 @@
 #include "framerate_tracker.hpp"
 
-#include <rx/core/assert.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include <algorithm>
 
+#include <rx/core/assert.h>
 #include <rx/core/log.h>
 
 RX_LOG("FramerateTracker", logger);
 
-FramerateTracker::FramerateTracker(const uint32_t max_num_samples_in)
-    : max_num_samples{max_num_samples_in} {
+FramerateTracker::FramerateTracker(const uint32_t max_num_samples_in) : max_num_samples{max_num_samples_in} {
     RX_ASSERT(max_num_samples_in > 0, "Must allow more than 0 frame time samples");
 }
 

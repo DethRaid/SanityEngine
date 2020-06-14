@@ -53,7 +53,7 @@ namespace renderer {
                                                  .size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS};
 
         for(uint32_t i = 0; i < num_in_flight_frames; i++) {
-            create_info.name = fmt::format("Camera Matrix Buffer {}", i).c_str();
+            create_info.name = Rx::String::format("Camera Matrix Buffer {}", i);
             auto buffer = device->create_buffer(create_info);
             device_data.push_back(buffer.release());
         }

@@ -6,7 +6,6 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <minitrace.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <stb_image.h>
 
 #include "loading/shader_loading.hpp"
@@ -63,8 +62,8 @@ BveWrapper::BveWrapper(rhi::RenderDevice& device) {
 }
 
 bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
-    const auto train_msg = fmt::format("Load train {}", filename.data());
-    MTR_SCOPE("SanityEngine", train_msg.c_str());
+    const auto train_msg = Rx::String::format("Load train %s", filename);
+    MTR_SCOPE("SanityEngine", train_msg.data());
 
     const auto train = load_mesh_from_file(filename);
     if(!train) {

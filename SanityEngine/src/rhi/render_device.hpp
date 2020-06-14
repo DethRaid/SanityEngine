@@ -1,13 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi1_4.h>
 #include <glm/glm.hpp>
-#include <spdlog/logger.h>
 #include <wrl/client.h>
 
 // Must be this low in the include order, because this header doesn't include all the things it needs

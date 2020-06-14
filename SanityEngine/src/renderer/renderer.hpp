@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <queue>
 
 #include <entt/fwd.hpp>

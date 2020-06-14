@@ -1,10 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <list>
-
-#include <spdlog/logger.h>
 
 enum class FramerateDisplayMode {
     FrameTime,

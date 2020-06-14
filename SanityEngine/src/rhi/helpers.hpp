@@ -4,7 +4,6 @@
 
 #include <d3d12.h>
 #include <dxgi.h>
-#include <spdlog/fmt/ostr.h>
 
 #include "mesh_data_store.hpp"
 #include "raytracing_structs.hpp"

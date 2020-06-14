@@ -6,7 +6,6 @@
 #include <rx/core/map.h>
 #include <rx/core/string.h>
 #include <rx/core/vector.h>
-#include <spdlog/logger.h>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
