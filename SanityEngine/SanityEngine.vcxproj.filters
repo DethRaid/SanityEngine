@@ -237,9 +237,6 @@
     <ClCompile Include="src\windows\windows_helpers.cpp">
       <Filter>Source Files\windows</Filter>
     </ClCompile>
-    <ClCompile Include="extern\minitrace\src\minitrace.c">
-      <Filter>Source Files\external</Filter>
-    </ClCompile>
     <ClCompile Include="src\bve\bve_wrapper.cpp">
       <Filter>Source Files\adapters\bve</Filter>
     </ClCompile>

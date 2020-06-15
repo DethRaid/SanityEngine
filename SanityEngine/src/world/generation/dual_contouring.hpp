@@ -163,7 +163,9 @@ namespace _detail {
         for(Uint32 dy = 0; dy < 2; dy++) {
             for(Uint32 dx = 0; dx < 2; dx++) {
                 if((v[0][dy][dx] > 0) != (v[1][dy][dx] > 0)) {
-                    changes.emplace_back(x + dx, y + dy, z + adapt(v[0][dy][dx], v[1][dy][dx]));
+                    changes.emplace_back(static_cast<Float32>(x + dx),
+                                         static_cast<Float32>(y + dy),
+                                         static_cast<Float32>(z + adapt(v[0][dy][dx], v[1][dy][dx])));
                 }
             }
         }
@@ -171,7 +173,9 @@ namespace _detail {
         for(Uint32 dz = 0; dz < 2; dz++) {
             for(Uint32 dx = 0; dx < 2; dx++) {
                 if((v[dz][0][dx] > 0) != (v[dz][1][dx] > 0)) {
-                    changes.emplace_back(x + dx, y + adapt(v[dz][0][dx], v[dz][1][dx]), z + dz);
+                    changes.emplace_back(static_cast<Float32>(x + dx),
+                                         static_cast<Float32>(y + adapt(v[dz][0][dx], v[dz][1][dx])),
+                                         static_cast<Float32>(z + dz));
                 }
             }
         }
@@ -179,7 +183,9 @@ namespace _detail {
         for(Uint32 dz = 0; dz < 2; dz++) {
             for(Uint32 dy = 0; dy < 2; dy++) {
                 if((v[dz][dy][0] > 0) != (v[dz][dy][1] > 0)) {
-                    changes.emplace_back(x + adapt(v[dz][dy][0], v[dz][dy][1]), y + dy, z + dz);
+                    changes.emplace_back(static_cast<Float32>(x + adapt(v[dz][dy][0], v[dz][dy][1])),
+                                         static_cast<Float32>(y + dy),
+                                         static_cast<Float32>(z + dz));
                 }
             }
         }
