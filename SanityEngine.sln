@@ -10,6 +10,9 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		MemoryDebug|Any CPU = MemoryDebug|Any CPU
+		MemoryDebug|x64 = MemoryDebug|x64
+		MemoryDebug|x86 = MemoryDebug|x86
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
@@ -20,6 +23,11 @@ Global
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Debug|x64.Build.0 = Debug|x64
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Debug|x86.ActiveCfg = Debug|Win32
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Debug|x86.Build.0 = Debug|Win32
+		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.MemoryDebug|Any CPU.ActiveCfg = MemoryDebug|Win32
+		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.MemoryDebug|x64.ActiveCfg = MemoryDebug|x64
+		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.MemoryDebug|x64.Build.0 = MemoryDebug|x64
+		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.MemoryDebug|x86.ActiveCfg = MemoryDebug|Win32
+		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.MemoryDebug|x86.Build.0 = MemoryDebug|Win32
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Release|Any CPU.ActiveCfg = Release|Win32
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Release|x64.ActiveCfg = Release|x64
 		{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}.Release|x64.Build.0 = Release|x64

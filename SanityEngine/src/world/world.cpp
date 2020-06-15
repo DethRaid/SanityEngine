@@ -250,31 +250,33 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
 
     const auto chunk_location = Vec2i{chunk_x, chunk_y};
 
-    Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
-
-    if(available_chunks.find(chunk_location) != nullptr) {
-        // Chunk is loaded, all is good in the world
-        return;
-    }
-
-    // Chunk is not loaded, let's load it
     {
-        const auto task_idx = get_next_free_chunk_gen_task_idx();
-        if(task_idx == generate_chunk_blocks_args_pool.size()) {
-            generate_chunk_blocks_args_pool.push_back(
-                Rx::make_ptr<GenerateChunkBlocksArgs>(RX_SYSTEM_ALLOCATOR, this, task_idx, chunk_location, &terrain));
+        Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+
+        if(available_chunks.find(chunk_location) != nullptr) {
+            // Chunk is loaded, all is good in the world
+            return;
         }
 
-        auto* args = generate_chunk_blocks_args_pool[task_idx].get();
-        args->task_idx_in = task_idx;
-        args->location_in = chunk_location;
-        args->terrain_in = &terrain;
+        // Chunk is not loaded, let's load it
+        {
+            const auto task_idx = get_next_free_chunk_gen_task_idx();
+            if(task_idx == generate_chunk_blocks_args_pool.size()) {
+                generate_chunk_blocks_args_pool.push_back(
+                    Rx::make_ptr<GenerateChunkBlocksArgs>(RX_SYSTEM_ALLOCATOR, this, task_idx, chunk_location, &terrain));
+            }
 
-        // Add an empty chunk. Since chunks start out marked as uninitialized, we can insert a chunk into this map to mark that the chunk
-        // has started loading - the task that loads the chunk will update it's data as needed
-        available_chunks.insert(chunk_location, Chunk{.location = {chunk_location.x, chunk_location.y}});
+            auto* args = generate_chunk_blocks_args_pool[task_idx].get();
+            args->task_idx_in = task_idx;
+            args->location_in = chunk_location;
+            args->terrain_in = &terrain;
 
-        task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});
+            // Add an empty chunk. Since chunks start out marked as uninitialized, we can insert a chunk into this map to mark that the
+            // chunk has started loading - the task that loads the chunk will update it's data as needed
+            available_chunks.insert(chunk_location, Chunk{.location = {chunk_location.x, chunk_location.y}});
+
+            task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});
+        }
     }
 }
 

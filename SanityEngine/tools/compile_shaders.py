@@ -12,6 +12,7 @@ from pathlib import Path
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
+        print('Provided args: "{}"', str(sys.argv))
         print('Usage: compile_shaders.py <HLSL directory> <output directory>')
         exit(1)
 
