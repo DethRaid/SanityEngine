@@ -71,7 +71,7 @@ void FirstPersonController::update_player_transform(const float delta_time) {
 
     // Make sure they're on the terrain
     if(terrain) {
-        const auto height = terrain->get_terrain_height(glm::vec2{player_transform.location.x, player_transform.location.z});
+        const auto height = terrain->get_terrain_height(Vec2f{player_transform.location.x, player_transform.location.z});
         if(player_transform.location.y < height + 1.51f) {
             player_transform.location.y = height + 1.5f;
 

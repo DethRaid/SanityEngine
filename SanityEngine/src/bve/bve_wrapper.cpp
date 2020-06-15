@@ -31,9 +31,9 @@ static Uint32 to_Uint32(const BVE_Vector4<uint8_t>& bve_color) {
     return color;
 }
 
-static glm::vec2 to_glm_vec2(const BVE_Vector2<Float32>& bve_vec2) { return glm::vec2{bve_vec2.x, bve_vec2.y}; }
+static Vec2f to_rex_vec2(const BVE_Vector2<Float32>& bve_vec2) { return Vec2f{bve_vec2.x, bve_vec2.y}; }
 
-static glm::vec3 to_glm_vec3(const BVE_Vector3<Float32>& bve_vec3) { return glm::vec3{bve_vec3.x, bve_vec3.y, bve_vec3.z}; }
+static Vec3f to_rex_vec3(const BVE_Vector3<Float32>& bve_vec3) { return Vec3f{bve_vec3.x, bve_vec3.y, bve_vec3.z}; }
 
 static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const int width, const int height) {
     const auto num_pixels = width * height;
@@ -94,7 +94,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
         auto& mesh_data = renderer.get_static_mesh_store();
 
-        auto commands = device.create_command_list();
+        auto commands = device.create_command_list(0);
         mesh_data.bind_to_command_list(commands);
 
         commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
@@ -294,10 +294,10 @@ std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_ve
 
     for(Uint32 i = 0; i < bve_vertices.count; i++) {
         const auto& bve_vertex = bve_vertices.ptr[i];
-        vertices.push_back(StandardVertex{.position = to_glm_vec3(bve_vertex.position),
+        vertices.push_back(StandardVertex{.position = to_rex_vec3(bve_vertex.position),
                                           .normal = {bve_vertex.normal.x, bve_vertex.normal.y, -bve_vertex.normal.z},
                                           .color = to_Uint32(bve_vertex.color),
-                                          .texcoord = to_glm_vec2(bve_vertex.coord)});
+                                          .texcoord = to_rex_vec2(bve_vertex.coord)});
     }
 
     const auto& bve_indices = mesh.indices;

@@ -185,8 +185,8 @@ namespace horus {
 
         char* module_contents_output{nullptr};
 
-        module_paths.each([&](const Rx::String& module_directory) {
-            const auto& potential_filename = Rx::String::format("%s/%s", module_directory, module_name);
+        module_paths.each([&](const std::filesystem::path& module_directory) {
+            const auto& potential_filename = Rx::String::format("%s/%s", module_directory.string().c_str(), module_name);
             logger->verbose("Attempting to load file %s for module %s", potential_filename, module_name);
 
             auto* file = fopen(module_name.data(), "r");

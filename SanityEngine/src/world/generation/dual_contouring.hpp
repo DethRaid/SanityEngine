@@ -64,21 +64,24 @@ namespace _detail {
     template <Uint32 Width, Uint32 Height>
     [[nodiscard]] Size idx_from_xyz(const Vec3u& xyz);
 
+    template <Uint32 Width, Uint32 Height>
+    [[nodiscard]] Size idx_from_xyz(const Vec3f& xyz);
+
     template <Uint32 Width, Uint32 Height, Uint32 Depth>
     [[nodiscard]] DualContouringMesh dual_contour(const Rx::Array<Int32[Width * Height * Depth]>& distance_field) {
         Rx::Vector<Vec3f> vertices;
-        Rx::Map<Vec3u, Size> indices;
+        Rx::Map<Vec3u, Uint32> indices;
 
         for(Uint32 z = 0; z < Depth; z++) {
             for(Uint32 y = 0; y < Height; y++) {
                 for(Uint32 x = 0; x < Width; x++) {
-                    const auto vert = dual_contour_find_best_vertex(distance_field, x, y, z);
+                    const auto vert = dual_contour_find_best_vertex<Width, Height, Depth>(distance_field, x, y, z);
                     if(!vert) {
                         continue;
                     }
 
                     vertices.push_back(*vert);
-                    indices.insert(Vec3u{x, y, z}, vertices.size() - 1);
+                    indices.insert(Vec3u{x, y, z}, static_cast<Uint32>(vertices.size() - 1));
                 }
             }
         }
@@ -93,10 +96,10 @@ namespace _detail {
                         const auto solid1 = distance_field[idx_from_xyz<Width, Height>(x, y, z)] > 0;
                         const auto solid2 = distance_field[idx_from_xyz<Width, Height>(x, y, z + 1)] > 0;
                         if(solid1 != solid2) {
-                            faces.push_back(Quad{indices[idx_from_xyz<Width, Height, Depth>(x - 1, y - 1, z)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y - 1, z)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 1, y - 0, z)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y - 0, z)]}
+                            faces.push_back(Quad{*indices.find(Vec3u(x - 1, y - 1, z)),
+                                                 *indices.find(Vec3u(x - 0, y - 1, z)),
+                                                 *indices.find(Vec3u(x - 1, y - 0, z)),
+                                                 *indices.find(Vec3u(x - 0, y - 0, z))}
                                                 .swap(solid2));
                         }
                     }
@@ -105,10 +108,10 @@ namespace _detail {
                         const auto solid1 = distance_field[idx_from_xyz<Width, Height>(x, y, z)] > 0;
                         const auto solid2 = distance_field[idx_from_xyz<Width, Height>(x, y + 1, z)] > 0;
                         if(solid1 != solid2) {
-                            faces.push_back(Quad{indices[idx_from_xyz<Width, Height, Depth>(x - 1, y, z - 1)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y, z - 1)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y, z + 0)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 1, y, z + 0)]}
+                            faces.push_back(Quad{*indices.find(Vec3u(x - 1, y, z - 1)),
+                                                 *indices.find(Vec3u(x - 0, y, z - 1)),
+                                                 *indices.find(Vec3u(x - 0, y, z + 0)),
+                                                 *indices.find(Vec3u(x - 1, y, z + 0))}
                                                 .swap(solid1));
                         }
                     }
@@ -117,10 +120,10 @@ namespace _detail {
                         const auto solid1 = distance_field[idx_from_xyz<Width, Height>(x, y, z)] > 0;
                         const auto solid2 = distance_field[idx_from_xyz<Width, Height>(x + 1, y, z)] > 0;
                         if(solid1 != solid2) {
-                            faces.push_back(Quad{indices[idx_from_xyz<Width, Height, Depth>(x, y - 1, z - 1)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x, y - 0, z - 1)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x, y - 0, z - 0)],
-                                                 indices[idx_from_xyz<Width, Height, Depth>(x, y - 1, z - 0)]}
+                            faces.push_back(Quad{*indices.find(Vec3u(x, y - 1, z - 1)),
+                                                 *indices.find(Vec3u(x, y - 0, z - 1)),
+                                                 *indices.find(Vec3u(x, y - 0, z - 0)),
+                                                 *indices.find(Vec3u(x, y - 1, z - 0))}
                                                 .swap(solid2));
                         }
                     }
@@ -131,8 +134,9 @@ namespace _detail {
         Rx::Vector<Vec3f> normals;
         normals.reserve(vertices.size());
 
-        vertices.each_fwd(
-            [&](const Vec3f& vertex_location) { normals.push_back(normal_at_location<Width, Height>(distance_field, vertex_location)); });
+        vertices.each_fwd([&](const Vec3f& vertex_location) {
+            normals.push_back(normal_at_location<Width, Height, Depth>(distance_field, vertex_location));
+        });
 
         return DualContouringMesh{Rx::Utility::move(vertices), Rx::Utility::move(normals), Rx::Utility::move(faces)};
     }
@@ -192,7 +196,8 @@ namespace _detail {
 
         auto normals = Rx::Vector<Vec3f>{};
         normals.reserve(changes.size());
-        changes.each_fwd([&](const Vec3f& location) { normals.push_back(normal_at_location(distance_field, location)); });
+        changes.each_fwd(
+            [&](const Vec3f& location) { normals.push_back(normal_at_location<Width, Height, Depth>(distance_field, location)); });
 
         return solve_qef(x, y, z, changes, normals);
     }
@@ -219,6 +224,11 @@ namespace _detail {
     template <Uint32 Width, Uint32 Height>
     Size idx_from_xyz(const Vec3u& xyz) {
         return idx_from_xyz<Width, Height>(xyz.x, xyz.y, xyz.z);
+    }
+
+    template <Uint32 Width, Uint32 Height>
+    Size idx_from_xyz(const Vec3f& xyz) {
+        return idx_from_xyz<Width, Height>(static_cast<Uint32>(xyz.x), static_cast<Uint32>(xyz.y), static_cast<Uint32>(xyz.z));
     }
 } // namespace _detail
 

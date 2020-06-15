@@ -261,7 +261,8 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
     {
         const auto task_idx = get_next_free_chunk_gen_task_idx();
         if(task_idx == generate_chunk_blocks_args_pool.size()) {
-            generate_chunk_blocks_args_pool.push_back(Rx::make_ptr<GenerateChunkBlocksArgs>(RX_SYSTEM_ALLOCATOR, chunk_location, &terrain));
+            generate_chunk_blocks_args_pool.push_back(
+                Rx::make_ptr<GenerateChunkBlocksArgs>(RX_SYSTEM_ALLOCATOR, this, task_idx, chunk_location, &terrain));
         }
 
         auto* args = generate_chunk_blocks_args_pool[task_idx].get();

@@ -32,7 +32,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
     }
 
     auto& device = renderer.get_render_device();
-    auto commands = device.create_command_list();
+    auto commands = device.create_command_list(0);
 
     Rx::Map<Uint32, renderer::StandardMaterialHandle> materials;
 

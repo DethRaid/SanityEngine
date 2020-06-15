@@ -23,7 +23,7 @@ struct Event<R(Ts...)> {
     : Concepts::NoCopy
   {
     Handle(Event* _event, Size _index);
-    constexpr Handle(Handle&& _existing) noexcept;
+    constexpr Handle(Handle&& _existing) noexcept {};
     ~Handle();
   private:
     Event* m_event;
@@ -48,23 +48,23 @@ private:
 };
 
 template<typename R, typename... Ts>
-inline Event<R(Ts...)>::Handle::Handle(Event<R(Ts...)>* _event, Size _index)
+Event<R(Ts...)>::Handle::Handle(Event<R(Ts...)>* _event, Size _index)
   : m_event{_event}
   , m_index{_index}
 {
 }
 
-template<typename R, typename... Ts>
-inline constexpr Event<R(Ts...)>::Handle::Handle(Handle&& _existing) noexcept
-    : m_event{_existing.m_event}
-    , m_index{_existing.m_index}
-{
-    _existing.m_event = nullptr;
-    _existing.m_index = 0;
-}
+// template<typename R, typename... Ts>
+// Event<R(Ts...)>::Handle::Handle(Handle&& _existing) noexcept
+//     : m_event{_existing.m_event}
+//     , m_index{_existing.m_index}
+// {
+//     _existing.m_event = nullptr;
+//     _existing.m_index = 0;
+// }
 
 template<typename R, typename... Ts>
-inline Event<R(Ts...)>::Handle::~Handle() {
+Event<R(Ts...)>::Handle::~Handle() {
   if (m_event) {
     Concurrency::ScopeLock lock{m_event->m_lock};
     m_event->m_delegates[m_index] = nullptr;
@@ -72,19 +72,19 @@ inline Event<R(Ts...)>::Handle::~Handle() {
 }
 
 template<typename R, typename... Ts>
-inline Event<R(Ts...)>::Event(Memory::Allocator& _allocator)
+Event<R(Ts...)>::Event(Memory::Allocator& _allocator)
   : m_delegates{_allocator}
 {
 }
 
 template<typename R, typename... Ts>
-inline Event<R(Ts...)>::Event()
+Event<R(Ts...)>::Event()
   : Event{Memory::SystemAllocator::instance()}
 {
 }
 
 template<typename R, typename... Ts>
-inline void Event<R(Ts...)>::signal(Ts... _arguments) {
+void Event<R(Ts...)>::signal(Ts... _arguments) {
   Concurrency::ScopeLock lock{m_lock};
   m_delegates.each_fwd([&](Delegate& _delegate) {
     if (_delegate) {
@@ -94,7 +94,7 @@ inline void Event<R(Ts...)>::signal(Ts... _arguments) {
 }
 
 template<typename R, typename... Ts>
-inline typename Event<R(Ts...)>::Handle Event<R(Ts...)>::connect(Delegate&& delegate_) {
+typename Event<R(Ts...)>::Handle Event<R(Ts...)>::connect(Delegate&& delegate_) {
   Concurrency::ScopeLock lock{m_lock};
   const Size delegates = m_delegates.size();
   for (Size i{0}; i < delegates; i++) {
@@ -107,12 +107,12 @@ inline typename Event<R(Ts...)>::Handle Event<R(Ts...)>::connect(Delegate&& dele
 }
 
 template<typename R, typename... Ts>
-inline bool Event<R(Ts...)>::is_empty() const {
+bool Event<R(Ts...)>::is_empty() const {
   return size() == 0;
 }
 
 template<typename R, typename... Ts>
-inline Size Event<R(Ts...)>::size() const {
+Size Event<R(Ts...)>::size() const {
   Concurrency::ScopeLock lock{m_lock};
   // This is slightly annoying because |m_delegates| may have empty slots.
   Size result = 0;

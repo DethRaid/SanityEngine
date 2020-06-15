@@ -23,7 +23,7 @@ namespace renderer {
 struct TerrainTile {
     Rx::Vector<Rx::Vector<Float32>> heightmap;
 
-    glm::uvec2 coord;
+    Vec2i coord;
 
     entt::entity entity;
 };
@@ -31,7 +31,7 @@ struct TerrainTile {
 class Terrain;
 
 struct TerrainTileComponent {
-    glm::uvec2 coords;
+    Vec2i coords;
 
     Terrain* terrain;
 };
@@ -47,7 +47,7 @@ public:
     // TODO: Make this configurable
     constexpr static int32_t TILE_SIZE = 64;
 
-    static [[nodiscard]] glm::ivec2 get_coords_of_tile_containing_position(const glm::vec3& position);
+    static [[nodiscard]] Vec2i get_coords_of_tile_containing_position(const Vec3f& position);
 
     explicit Terrain(Uint32 max_latitude_in,
                      Uint32 max_longitude_in,
@@ -59,9 +59,9 @@ public:
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] Float32 get_terrain_height(const glm::vec2& location) const;
+    [[nodiscard]] Float32 get_terrain_height(const Vec2f& location) const;
 
-    [[nodiscard]] glm::vec3 get_normal_at_location(const glm::vec2& location) const;
+    [[nodiscard]] Vec3f get_normal_at_location(const Vec2f& location) const;
 
 private:
     renderer::Renderer* renderer;
@@ -70,7 +70,7 @@ private:
 
     entt::registry* registry;
 
-    Rx::Map<glm::uvec2, TerrainTile> loaded_terrain_tiles;
+    Rx::Map<Vec2i, TerrainTile> loaded_terrain_tiles;
 
     renderer::StandardMaterialHandle terrain_material{1};
 
@@ -84,7 +84,7 @@ private:
 
     void load_terrain_textures_and_create_material();
 
-    void generate_tile(const glm::ivec2& tilecoord);
+    void generate_tile(const Vec2i& tilecoord);
 
     /*!
      * \brief Generates a terrain heightmap of a specific size
@@ -92,5 +92,5 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const;
+    [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size) const;
 };

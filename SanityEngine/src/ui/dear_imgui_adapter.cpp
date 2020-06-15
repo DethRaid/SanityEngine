@@ -230,7 +230,7 @@ void DearImguiAdapter::initialize_style() {
 }
 
 void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
-    const auto commands = renderer.get_render_device().create_command_list();
+    const auto commands = renderer.get_render_device().create_command_list(0);
 
     auto& io = ImGui::GetIO();
     unsigned char* pixels;

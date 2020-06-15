@@ -93,6 +93,14 @@ public:
                                  entt::registry& registry,
                                  renderer::Renderer& renderer);
 
+    explicit World(const glm::uvec2& size_in,
+                   Uint32 min_terrain_height,
+                   Uint32 max_terrain_height,
+                   Rx::Ptr<FastNoiseSIMD> noise_generator_in,
+                   entt::entity player_in,
+                   entt::registry& registry_in,
+                   renderer::Renderer& renderer_in);
+
     void tick(Float32 delta_time);
 
     [[nodiscard]] Terrain& get_terrain();
@@ -184,14 +192,6 @@ private:
     WrenHandle* handle;
 
     ftl::TaskScheduler* task_scheduler;
-
-    explicit World(const glm::uvec2& size_in,
-                   Uint32 min_terrain_height,
-                   Uint32 max_terrain_height,
-                   Rx::Ptr<FastNoiseSIMD> noise_generator_in,
-                   entt::entity player_in,
-                   entt::registry& registry_in,
-                   renderer::Renderer& renderer_in);
 
     void register_component(horus::Component& component);
 

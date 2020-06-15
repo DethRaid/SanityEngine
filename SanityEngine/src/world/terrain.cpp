@@ -36,7 +36,8 @@ Terrain::Terrain(const Uint32 max_latitude_in,
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
     ZoneScopedN("load_terrain_around_player");
-    const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(player_transform.location);
+    const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(
+        {player_transform.location.x, player_transform.location.y, player_transform.location.z});
 
     // V0: load the tile the player is in and nothing else
 
@@ -49,11 +50,12 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     }
 }
 
-Float32 Terrain::get_terrain_height(const glm::vec2& location) const {
+Float32 Terrain::get_terrain_height(const Vec2f& location) const {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
     const auto tile_start_location = tilecoords * TILE_SIZE;
-    const auto location_within_tile = glm::uvec2{abs(round(location - glm::vec2{tile_start_location}))};
+    const auto location_within_tile = Vec2u{static_cast<Uint32>(abs(round(location.x - tile_start_location.x))),
+                                            static_cast<Uint32>(abs(round(location.y - tile_start_location.y)))};
 
     if(const auto* tile = loaded_terrain_tiles.find(tilecoords)) {
         return tile->heightmap[location_within_tile.y][location_within_tile.x];
@@ -64,8 +66,8 @@ Float32 Terrain::get_terrain_height(const glm::vec2& location) const {
     }
 }
 
-glm::ivec2 Terrain::get_coords_of_tile_containing_position(const glm::vec3& position) {
-    return glm::ivec2{round(position.x), round(position.z)} / TILE_SIZE;
+Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3f& position) {
+    return Vec2i{static_cast<Int32>(round(position.x)), static_cast<Int32>(round(position.z))} / TILE_SIZE;
 }
 
 void Terrain::load_terrain_textures_and_create_material() {
@@ -109,9 +111,9 @@ void Terrain::load_terrain_textures_and_create_material() {
     terrain_material = renderer->allocate_standard_material(material);
 }
 
-void Terrain::generate_tile(const glm::ivec2& tilecoord) {
+void Terrain::generate_tile(const Vec2i& tilecoord) {
     const auto top_left = tilecoord * TILE_SIZE;
-    const auto size = glm::uvec2{TILE_SIZE};
+    const auto size = Vec2u{TILE_SIZE, TILE_SIZE};
 
     logger->info("Generating tile (%d, %d) with size (%d, %d)", tilecoord.x, tilecoord.y, size.x, size.y);
 
@@ -132,9 +134,12 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
         for(Uint32 x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
-            const auto normal = get_normal_at_location(glm::vec2{x, y});
+            const auto normal = get_normal_at_location(Vec2f{static_cast<Float32>(x), static_cast<Float32>(y)});
 
-            tile_vertices.push_back(StandardVertex{.position = {x, height, y}, .normal = normal, .color = 0xFFFFFFFF, .texcoord = {x, y}});
+            tile_vertices.push_back(StandardVertex{.position = {static_cast<Float32>(x), height, static_cast<Float32>(y)},
+                                                   .normal = normal,
+                                                   .color = 0xFFFFFFFF,
+                                                   .texcoord = {static_cast<Float32>(x), static_cast<Float32>(y)}});
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = static_cast<Uint32>(tile_heightmap_row.size());
@@ -182,7 +187,7 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
     registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
 }
 
-Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const glm::ivec2& top_left, const glm::uvec2& size) const {
+Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size) const {
     const auto height_range = max_terrain_height - min_terrain_height;
 
     Rx::Vector<Rx::Vector<Float32>> heightmap;
@@ -200,14 +205,14 @@ Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const glm::i
     return heightmap;
 }
 
-glm::vec3 Terrain::get_normal_at_location(const glm::vec2& location) const {
-    const auto height_middle_right = get_terrain_height(location + glm::vec2{1, 0});
-    const auto height_bottom_middle = get_terrain_height(location + glm::vec2{0, -1});
-    const auto height_top_middle = get_terrain_height(location + glm::vec2{0, 1});
-    const auto height_middle_left = get_terrain_height(location + glm::vec2{-1, 0});
+Vec3f Terrain::get_normal_at_location(const Vec2f& location) const {
+    const auto height_middle_right = get_terrain_height(location + Vec2f{1, 0});
+    const auto height_bottom_middle = get_terrain_height(location + Vec2f{0, -1});
+    const auto height_top_middle = get_terrain_height(location + Vec2f{0, 1});
+    const auto height_middle_left = get_terrain_height(location + Vec2f{-1, 0});
 
-    const auto va = normalize(glm::vec3{2.0, 0.0, height_middle_right - height_middle_left});
-    const auto vb = normalize(glm::vec3{0.0, 2.0, height_bottom_middle - height_top_middle});
+    const auto va = normalize(Vec3f{2.0, 0.0, height_middle_right - height_middle_left});
+    const auto vb = normalize(Vec3f{0.0, 2.0, height_bottom_middle - height_top_middle});
     const auto normal = normalize(cross(va, vb));
     return {normal.x, normal.z, -normal.y};
 }

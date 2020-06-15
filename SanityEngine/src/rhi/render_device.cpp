@@ -6,9 +6,9 @@
 #include <D3D12MemAlloc.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#include <TracyD3D12.hpp>
 #include <d3dcompiler.h>
 #include <dxgi1_3.h>
-#include <TracyD3D12.hpp>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 
@@ -316,11 +316,11 @@ namespace rhi {
     }
 
     void RenderDevice::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
-        buffer_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Buffer*>(buffer.release()));
+        buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
     }
 
     void RenderDevice::schedule_image_destruction(Rx::Ptr<Image> image) {
-        image_deletion_list[cur_gpu_frame_idx].emplace_back(static_cast<Image*>(image.release()));
+        image_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Image*>(image.release()));
     }
 
     void RenderDevice::destroy_framebuffer(const Rx::Ptr<Framebuffer> framebuffer) const {
@@ -1526,7 +1526,8 @@ namespace rhi {
 
                 logger->info("Creating D3D12 backend");
 
-                return Rx::make_ptr<RenderDevice>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
+                auto* task_scheduler = Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>();
+                return Rx::make_ptr<RenderDevice>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings, *task_scheduler);
             }
         }
 
