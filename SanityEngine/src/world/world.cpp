@@ -2,6 +2,7 @@
 
 #include <ftl/task_scheduler.h>
 #include <minitrace.h>
+#include <Tracy.hpp>
 #include <rx/core/log.h>
 #include <rx/core/prng/mt19937.h>
 #include <rx/math/vec2.h>
@@ -60,7 +61,7 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 }
 
 void World::tick(const Float32 delta_time) {
-    MTR_SCOPE("World", "tick");
+    ZoneScopedN("tick");
 
     upload_new_chunk_meshes();
 
@@ -76,7 +77,7 @@ Terrain& World::get_terrain() { return terrain; }
 WrenHandle* World::_get_wren_handle() const { return handle; }
 
 World::TerrainData World::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
-    MTR_SCOPE("World", "generate_terrain_heightmap");
+    ZoneScopedN("generate_terrain_heightmap");
     auto& device = renderer.get_render_device();
     auto commands = device.create_command_list();
 
@@ -266,13 +267,13 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
 }
 
 void World::upload_new_chunk_meshes() {
-    MTR_SCOPE("World", "upload_chunk_meshes");
+    ZoneScopedN("upload_chunk_meshes");
 
     Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
 
     if(!mesh_data_ready_for_upload.is_empty()) {
         auto& device = renderer->get_render_device();
-        auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());;
+        auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());
 
         auto& meshes = renderer->get_static_mesh_store();
 
@@ -546,7 +547,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
 }
 
 void World::tick_script_components(Float32 delta_time) {
-    MTR_SCOPE("World", "tick_script_components");
+    ZoneScopedN("tick_script_components");
 
     // registry->view<horus::Component>().each([&](horus::Component& script_component) {
     //     if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) {

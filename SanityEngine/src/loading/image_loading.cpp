@@ -1,5 +1,6 @@
 #include "image_loading.hpp"
 
+#include <Tracy.hpp>
 #include <ftl/task.h>
 #include <minitrace.h>
 #include <rx/core/log.h>
@@ -49,7 +50,7 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
 
     const auto message = Rx::String::format("Load image %s", load_data->texture_name_in);
-    MTR_SCOPE("Image Loading", message.data());
+    ZoneScopedN(message.data());
 
     Uint32 width, height;
     Rx::Vector<uint8_t> pixels;

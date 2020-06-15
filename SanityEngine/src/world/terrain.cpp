@@ -1,5 +1,6 @@
 #include "terrain.hpp"
 
+#include <Tracy.hpp>
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <ftl/task.h>
@@ -35,7 +36,7 @@ Terrain::Terrain(const Uint32 max_latitude_in,
 }
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
-    MTR_SCOPE("Terrain", "load_terrain_around_player");
+    ZoneScopedN("load_terrain_around_player");
     const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(player_transform.location);
 
     // V0: load the tile the player is in and nothing else

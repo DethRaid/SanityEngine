@@ -2,14 +2,14 @@
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 
-#include <minitrace.h>
 #include <GLFW/glfw3native.h>
+#include <Tracy.hpp>
 #include <imgui/imgui.h>
-
+#include <minitrace.h>
 
 #include "renderer/renderer.hpp"
-#include "rhi/resources.hpp"
 #include "rhi/render_device.hpp"
+#include "rhi/resources.hpp"
 
 static GLFWmousebuttonfun prev_mouse_button_callback;
 static GLFWscrollfun prev_scroll_callback;
@@ -71,7 +71,7 @@ void char_callback(GLFWwindow* window, const unsigned int c) {
 }
 
 DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& renderer) : window{window_in} {
-    MTR_SCOPE("DearImguiAdapter", "DearImguiAdapter");
+    ZoneScopedN("DearImguiAdapter");
     ImGui::CreateContext();
 
     auto& io = ImGui::GetIO();
@@ -106,7 +106,7 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
 DearImguiAdapter::~DearImguiAdapter() { ImGui::DestroyContext(); }
 
 void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
-    MTR_SCOPE("DearImguiAdapter", "draw_ui");
+    ZoneScopedN("draw_ui");
 
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(

@@ -12,6 +12,7 @@
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 
+#include "adapters/tracy.hpp"
 #include "core/constants.hpp"
 #include "core/errors.hpp"
 #include "rhi/compute_pipeline_state.hpp"
@@ -450,7 +451,7 @@ namespace rhi {
     }
 
     void RenderDevice::begin_frame(const uint64_t frame_count, const Size thread_idx) {
-        MTR_SCOPE("RenderDevice", "begin_frame");
+        ZoneScopedN("begin_frame");
 
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
@@ -472,7 +473,7 @@ namespace rhi {
     }
 
     void RenderDevice::end_frame(const Size thread_idx) {
-        MTR_SCOPE("RenderDevice", "end_frame");
+        ZoneScoped;
         // Transition the swapchain image into the correct format and request presentation
         transition_swapchain_image_to_presentable(thread_idx);
 
@@ -481,7 +482,7 @@ namespace rhi {
         direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
 
         {
-            MTR_SCOPE("RenderDevice", "present");
+            ZoneScopedN("present");
             const auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
             if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
                 logger->error("Device lost on present :(");
@@ -596,7 +597,7 @@ namespace rhi {
     }
 
     void RenderDevice::initialize_dxgi() {
-        MTR_SCOPE("RenderDevice", "initialize_dxgi");
+        ZoneScopedN("initialize_dxgi");
 
         ComPtr<IDXGIFactory> basic_factory;
         auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
@@ -611,7 +612,7 @@ namespace rhi {
     }
 
     void RenderDevice::select_adapter() {
-        MTR_SCOPE("RenderDevice", "select_adapter");
+        ZoneScopedN("select_adapter");
 
         // We want an adapter:
         // - Not integrated, if possible
@@ -722,7 +723,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_queues() {
-        MTR_SCOPE("RenderDevice", "create_queues");
+        ZoneScopedN("create_queues");
 
         // One graphics queue and one optional DMA queue
         D3D12_COMMAND_QUEUE_DESC graphics_queue_desc{};
@@ -757,7 +758,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_swapchain(HWND window_handle, const glm::uvec2& window_size, const UINT num_images) {
-        MTR_SCOPE("RenderDevice", "create_swapchain");
+        ZoneScopedN("create_swapchain");
         DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
         swapchain_desc.Width = static_cast<UINT>(window_size.x);
         swapchain_desc.Height = static_cast<UINT>(window_size.y);
@@ -798,7 +799,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_command_allocators() {
-        MTR_SCOPE("RenderDevice", "create_command_allocators");
+        ZoneScopedN("create_command_allocators");
 
         direct_command_allocators.resize(settings.num_in_flight_gpu_frames);
         compute_command_allocators.resize(settings.num_in_flight_gpu_frames);
@@ -825,7 +826,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_descriptor_heaps() {
-        MTR_SCOPE("RenderDevice", "create_descriptor_heaps");
+        ZoneScopedN("create_descriptor_heaps");
 
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -888,7 +889,7 @@ namespace rhi {
     }
 
     void RenderDevice::initialize_dma() {
-        MTR_SCOPE("RenderDevice", "iniitialize_dma");
+        ZoneScopedN("iniitialize_dma");
 
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
         allocator_desc.pDevice = device.Get();
@@ -901,7 +902,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_standard_root_signature() {
-        MTR_SCOPE("RenderDevice", "create_standard_root_signature");
+        ZoneScopedN("create_standard_root_signature");
 
         Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{9};
 
@@ -976,7 +977,7 @@ namespace rhi {
     }
 
     ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
-        MTR_SCOPE("RenderDevice", "compile_root_signature");
+        ZoneScopedN("compile_root_signature");
 
         const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_0,
                                                                         .Desc_1_0 = root_signature_desc};

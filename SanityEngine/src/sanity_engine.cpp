@@ -6,11 +6,11 @@
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
-#include <minitrace.h>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 #include <stb_image.h>
 
+#include "adapters/tracy.hpp"
 #include "globals.hpp"
 #include "loading/entity_loading.hpp"
 #include "rhi/render_device.hpp"
@@ -51,9 +51,9 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 
 SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(Rx::Memory::SystemAllocator::instance())} {
-    mtr_init("SanityEngine.json");
+    // mtr_init("SanityEngine.json");
 
-    MTR_SCOPE("SanityEngine", "SanityEngine");
+    ZoneScoped(___tracy_scoped_zone, SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
 
     logger->info("HELLO HUMAN");
 
@@ -62,7 +62,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
 
     {
-        MTR_SCOPE("SanityEngine", "glfwInit");
+        ZoneScopedN("glfwInit", SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
         if(!glfwInit()) {
             Rx::abort("Could not initialize GLFW");
         }
@@ -71,7 +71,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     glfwSetErrorCallback(error_callback);
 
     {
-        MTR_SCOPE("SanityEngine", "glfwCreateWindow");
+        ZoneScopedN("glfwCreateWindow");
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(1000, 480, "Sanity Engine", nullptr, nullptr);
         if(window == nullptr) {
@@ -125,7 +125,7 @@ SanityEngine::~SanityEngine() {
 
     glfwTerminate();
 
-    mtr_shutdown();
+    // mtr_shutdown();
 }
 
 void SanityEngine::run() {
@@ -135,7 +135,7 @@ void SanityEngine::run() {
 
     while(!glfwWindowShouldClose(window)) {
         {
-            MTR_SCOPE("SanityEngine", "tick");
+            ZoneScopedN("tick", SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
             const auto frame_start_time = std::chrono::steady_clock::now();
             glfwPollEvents();
 
@@ -143,9 +143,11 @@ void SanityEngine::run() {
 
             imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
 
+            auto thread_idx = task_scheduler->GetCurrentThreadIndex();
+
             // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
             // generation, etc
-            renderer->begin_frame(frame_count);
+            renderer->begin_frame(frame_count, thread_idx);
 
             // There might not be a world if the player is still in the main menu
             if(world) {
@@ -158,7 +160,9 @@ void SanityEngine::run() {
 
             renderer->render_all(registry);
 
-            renderer->end_frame();
+            renderer->end_frame(thread_idx);
+
+            FrameMark;
 
             const auto frame_end_time = std::chrono::steady_clock::now();
 
@@ -171,7 +175,7 @@ void SanityEngine::run() {
             frame_count++;
         }
 
-        mtr_flush();
+        // mtr_flush();
     }
 }
 
@@ -215,7 +219,7 @@ void SanityEngine::create_debug_plane() {
     const Rx::Vector<Uint32> indices = Rx::Array{0, 1, 2, 0, 3, 1};
 
     auto& device = renderer->get_render_device();
-    auto commands = device.create_command_list();
+    auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());
 
     auto& mesh_store = renderer->get_static_mesh_store();
 
@@ -276,6 +280,6 @@ void SanityEngine::load_bve_train(const Rx::String& filename) {
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {
     const auto msg = Rx::String::format("load_3d_object(%s)", filename);
-    MTR_SCOPE("SanityEngine", msg.data());
+    ZoneScopedN(msg.data(), SUBSYSTEMS_TO_PROFILE & SubsystemStreaming);
     load_static_mesh(filename, registry, *renderer);
 }

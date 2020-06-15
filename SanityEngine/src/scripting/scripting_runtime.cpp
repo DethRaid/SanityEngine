@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include <Tracy.hpp>
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
 #include <rx/core/log.h>
@@ -240,7 +241,7 @@ namespace horus {
     }
 
     Rx::Ptr<ScriptingRuntime> ScriptingRuntime::create(entt::registry& registry_in) {
-        MTR_SCOPE("ScriptingRuntime", "create");
+        ZoneScopedN("create");
 
         auto config = WrenConfiguration{};
         wrenInitConfiguration(&config);

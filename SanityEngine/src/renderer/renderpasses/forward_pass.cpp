@@ -1,5 +1,6 @@
 #include "forward_pass.hpp"
 
+#include <Tracy.hpp>
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
 #include <rx/core/log.h>
@@ -157,7 +158,7 @@ namespace renderer {
                                                     material_buffer.resource->GetGPUVirtualAddress());
 
         {
-            MTR_SCOPE("Renderer", "Render static meshes");
+            ZoneScopedN("Render static meshes");
             const auto& renderable_view = registry.view<StandardRenderableComponent>();
             renderable_view.each([&](const StandardRenderableComponent& mesh_renderable) {
                 commands->SetGraphicsRoot32BitConstant(0, mesh_renderable.material.index, 1);

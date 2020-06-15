@@ -8,6 +8,7 @@
 #include <minitrace.h>
 #include <stb_image.h>
 
+#include "adapters/tracy.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
@@ -63,7 +64,7 @@ BveWrapper::BveWrapper(rhi::RenderDevice& device) {
 
 bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
     const auto train_msg = Rx::String::format("Load train %s", filename);
-    MTR_SCOPE("SanityEngine", train_msg.data());
+    ZoneScopedN(train_msg.data());
 
     const auto train = load_mesh_from_file(filename);
     if(!train) {
@@ -121,7 +122,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
                 const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
 
                 const auto texture_msg = Rx::String::format("Load texture %s", texture_name);
-                MTR_SCOPE("SanityEngine", texture_msg.data());
+                ZoneScopedN(texture_msg.data());
 
                 const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
                 if(texture_handle_maybe) {
@@ -254,7 +255,7 @@ Rx::Ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_b
 }
 
 void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
-    MTR_SCOPE("Renderer", "create_bve_texture_alpha_pipeline");
+    ZoneScopedN("create_bve_texture_alpha_pipeline");
 
     Rx::Vector<CD3DX12_ROOT_PARAMETER> root_params{1};
 

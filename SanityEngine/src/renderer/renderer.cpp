@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 
 #include <GLFW/glfw3.h>
+#include <Tracy.hpp>
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
@@ -124,7 +125,7 @@ namespace renderer {
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{
               Rx::make_ptr<CameraMatrixBuffer>(Rx::Memory::SystemAllocator::instance(), *device, settings_in.num_in_flight_gpu_frames)} {
-        MTR_SCOPE("Renderer", "Renderer");
+        ZoneScopedN("Renderer");
 
         // logger->set_level(spdlog::level::debug);
 
@@ -170,8 +171,8 @@ namespace renderer {
         noise_texture_handle = *args.handle_out;
     }
 
-    void Renderer::begin_frame(const uint64_t frame_count) {
-        device->begin_frame(frame_count);
+    void Renderer::begin_frame(const uint64_t frame_count, const Size thread_idx) {
+        device->begin_frame(frame_count, thread_idx);
 
         const auto cur_time = std::chrono::high_resolution_clock::now();
         const auto duration_since_start = cur_time - start_time;
@@ -182,7 +183,7 @@ namespace renderer {
     }
 
     void Renderer::render_all(entt::registry& registry) {
-        MTR_SCOPE("Renderer", "render_scene");
+        ZoneScopedN("render_scene");
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
 
@@ -207,7 +208,7 @@ namespace renderer {
         device->submit_command_list(std::move(command_list));
     }
 
-    void Renderer::end_frame() const { device->end_frame(); }
+    void Renderer::end_frame(const Size thread_idx) const { device->end_frame(thread_idx); }
 
     void Renderer::add_raytracing_objects_to_scene(const Rx::Vector<rhi::RaytracingObject>& new_objects) {
         raytracing_objects += new_objects;
@@ -446,7 +447,7 @@ namespace renderer {
     }
 
     void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
-        MTR_SCOPE("Renderer", "update_cameras");
+        ZoneScopedN("update_cameras");
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
 
@@ -566,7 +567,7 @@ namespace renderer {
     }
 
     void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
-        MTR_SCOPE("Renderer", "render_3d_scene");
+        ZoneScopedN("render_3d_scene");
 
         update_lights(registry, frame_idx);
 
@@ -628,7 +629,7 @@ namespace renderer {
     }
 
     void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const Uint32 frame_idx) const {
-        MTR_SCOPE("Renderer", "render_ui");
+        ZoneScopedN("render_ui");
 
         {
             const auto* backbuffer_framebuffer = device->get_backbuffer_framebuffer();

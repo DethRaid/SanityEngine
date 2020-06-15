@@ -1253,6 +1253,9 @@
     <ClInclude Include="src\world\generation\dual_contouring.hpp">
       <Filter>Header Files\world\generation</Filter>
     </ClInclude>
+    <ClInclude Include="src\adapters\tracy.hpp">
+      <Filter>Header Files\adapters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">

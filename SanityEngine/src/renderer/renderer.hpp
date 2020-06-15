@@ -52,11 +52,11 @@ namespace renderer {
 
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
-        void begin_frame(uint64_t frame_count);
+        void begin_frame(uint64_t frame_count, Size thread_idx);
 
         void render_all(entt::registry& registry);
 
-        void end_frame() const;
+        void end_frame(Size thread_idx) const;
 
         void add_raytracing_objects_to_scene(const Rx::Vector<rhi::RaytracingObject>& new_objects);
 

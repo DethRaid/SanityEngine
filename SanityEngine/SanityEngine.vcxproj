@@ -316,6 +316,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
+    <ClInclude Include="src\adapters\tracy.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\core\align.hpp" />
@@ -559,7 +560,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)src;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\wren\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\minitrace\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)src;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\wren\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)extern\wren\lib;$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
@@ -585,7 +586,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;MTR_COPY_EVENT_CATEGORY_AND_NAME;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;MTR_ENABLED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableModules>true</EnableModules>
