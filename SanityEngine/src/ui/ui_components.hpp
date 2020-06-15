@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
+#include <rx/core/ptr.h>
 
 #include "ui_panel.hpp"
 
 namespace ui {
     struct UiComponent {
-        std::unique_ptr<UiPanel> panel;
+        Rx::Ptr<UiPanel> panel;
 
         UiComponent() = default;
 
-        explicit UiComponent(std::unique_ptr<UiPanel> panel_in);
+        explicit UiComponent(Rx::Ptr<UiPanel> panel_in);
     };
 } // namespace ui

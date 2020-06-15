@@ -1,5 +1,7 @@
 #pragma once
 
+#include <compare>
+
 #include <rx/core/types.h>
 
 struct BlockId {

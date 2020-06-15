@@ -62,7 +62,7 @@ class World;
 struct GenerateChunkBlocksArgs {
     World* world_in;
 
-    Uint32 task_idx_in;
+    Size task_idx_in;
 
     Vec2i location_in;
 
@@ -76,7 +76,7 @@ struct DispatchChunkMeshGenerationTasksArgs {
 };
 
 struct GenerateChunkMeshArgs {
-    Uint32 task_idx_in;
+    Size task_idx_in;
 
     World* world_in;
 
@@ -216,7 +216,7 @@ private:
     /*
      * \brief List of the indices of args in `args_pool` that are free to use by a new chunk generation task
      */
-    Rx::Vector<Uint32> available_generate_chunk_blocks_task_args;
+    Rx::Vector<Size> available_generate_chunk_blocks_task_args;
 
     /*!
      * \brief Pool of argument structs for generate chunk tasks
@@ -226,7 +226,7 @@ private:
      */
     Rx::Vector<Rx::Ptr<GenerateChunkBlocksArgs>> generate_chunk_blocks_args_pool;
 
-    Rx::Vector<Uint32> available_generate_chunk_mesh_task_args;
+    Rx::Vector<Size> available_generate_chunk_mesh_task_args;
 
     Rx::Vector<Rx::Ptr<GenerateChunkMeshArgs>> generate_chunk_mesh_args_pool;
 
@@ -237,7 +237,7 @@ private:
      *
      * \note This method _must_ be externally synchronized
      */
-    [[nodiscard]] Uint32 get_next_free_chunk_gen_task_idx();
+    [[nodiscard]] Size get_next_free_chunk_gen_task_idx();
 
     void ensure_chunk_at_position_is_loaded(const glm::vec3& location);
 

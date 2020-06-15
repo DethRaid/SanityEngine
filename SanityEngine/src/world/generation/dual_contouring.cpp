@@ -9,6 +9,6 @@ namespace _detail {
     }
 
     Vec3f solve_qef(Uint32 x, Uint32 y, Uint32 z, const Rx::Vector<Vec3f>& vertices, const Rx::Vector<Vec3f>& normals) {
-        
+        return {};
     }
 } // namespace _detail

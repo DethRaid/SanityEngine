@@ -120,8 +120,8 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
             if(bve_mesh.texture.texture_id.exists) {
                 const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
 
-                const auto texture_msg = fmt::format("Load texture {}", texture_name);
-                MTR_SCOPE("SanityEngine", texture_msg.c_str());
+                const auto texture_msg = Rx::String::format("Load texture %s", texture_name);
+                MTR_SCOPE("SanityEngine", texture_msg.data());
 
                 const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
                 if(texture_handle_maybe) {
@@ -149,7 +149,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
                             texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
                         }
 
-                        auto create_info = rhi::ImageCreateInfo{.name = fmt::format("Scratch Texture {}", texture_name).c_str(),
+                        auto create_info = rhi::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
                                                                 .usage = rhi::ImageUsage::SampledImage,
                                                                 .format = rhi::ImageFormat::Rgba8,
                                                                 .width = static_cast<Uint32>(width),

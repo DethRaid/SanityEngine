@@ -1,7 +1,6 @@
 #include "mesh_data_store.hpp"
 
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "helpers.hpp"
 #include "render_device.hpp"
@@ -110,7 +109,7 @@ namespace rhi {
         const auto& vertex_bindings = get_vertex_bindings();
 
         // If we have more than 16 vertex attributes, we probably have bigger problems
-        std::array<D3D12_VERTEX_BUFFER_VIEW, 16> vertex_buffer_views{};
+        Rx::Array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views{};
         for(Uint32 i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
             const auto* buffer = static_cast<const Buffer*>(binding.buffer);

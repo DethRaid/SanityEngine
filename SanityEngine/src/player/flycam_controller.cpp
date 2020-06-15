@@ -3,8 +3,6 @@
 #include <entt/entity/registry.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 
 #include "core/components.hpp"
 

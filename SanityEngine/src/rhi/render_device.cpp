@@ -1,6 +1,7 @@
 #include "render_device.hpp"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
+#include <algorithm>
 #include <D3D12MemAlloc.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -9,8 +10,6 @@
 #include <minitrace.h>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 
 #include "core/constants.hpp"
 #include "core/errors.hpp"
@@ -118,7 +117,7 @@ namespace rhi {
                 logger->warning("Unknown buffer usage %u", create_info.usage);
         }
 
-        auto buffer = Rx::make_ptr<Buffer>();
+        auto buffer = Rx::make_ptr<Buffer>(RX_SYSTEM_ALLOCATOR);
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
@@ -141,7 +140,7 @@ namespace rhi {
 
         set_object_name(buffer->resource.Get(), create_info.name);
 
-        return move(buffer);
+        return Rx::Utility::move(buffer);
     }
 
     Rx::Ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
@@ -159,7 +158,7 @@ namespace rhi {
             alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
         }
 
-        auto image = Rx::make_ptr<Image>();
+        auto image = Rx::make_ptr<Image>(RX_SYSTEM_ALLOCATOR);
         image->format = create_info.format;
 
         D3D12_RESOURCE_STATES initial_state{};
@@ -207,9 +206,8 @@ namespace rhi {
         return image;
     }
 
-    Rx::Ptr<Framebuffer> RenderDevice::create_framebuffer(const Rx::Vector<const Image*>& render_targets,
-                                                                  const Image* depth_target) const {
-        auto framebuffer = Rx::make_ptr<Framebuffer>();
+    Rx::Ptr<Framebuffer> RenderDevice::create_framebuffer(const Rx::Vector<const Image*>& render_targets, const Image* depth_target) const {
+        auto framebuffer = Rx::make_ptr<Framebuffer>(RX_SYSTEM_ALLOCATOR);
 
         framebuffer->render_targets = render_targets;
         framebuffer->depth_target = depth_target;
@@ -334,17 +332,18 @@ namespace rhi {
         RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
                   "If you specify descriptor table descriptors, you must also specify descriptor table handles");
 
-        return Rx::make_ptr<BindGroupBuilder>(*device.Get(),
-                                                  *cbv_srv_uav_heap.Get(),
-                                                  cbv_srv_uav_size,
-                                                  root_descriptors,
-                                                  descriptor_table_descriptors,
-                                                  descriptor_table_handles);
+        return Rx::make_ptr<BindGroupBuilder>(RX_SYSTEM_ALLOCATOR,
+                                              *device.Get(),
+                                              *cbv_srv_uav_heap.Get(),
+                                              cbv_srv_uav_size,
+                                              root_descriptors,
+                                              descriptor_table_descriptors,
+                                              descriptor_table_handles);
     }
 
-    Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(
-        const Rx::Vector<uint8_t>& compute_shader, const ComPtr<ID3D12RootSignature> root_signature) const {
-        auto compute_pipeline = Rx::make_ptr<ComputePipelineState>();
+    Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
+                                                                              const ComPtr<ID3D12RootSignature> root_signature) const {
+        auto compute_pipeline = Rx::make_ptr<ComputePipelineState>(RX_SYSTEM_ALLOCATOR);
 
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
             .pRootSignature = root_signature.Get(),
@@ -649,7 +648,7 @@ namespace rhi {
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
                     logger->warning("Ignoring adapter %s - Doesn't have the flexible resource binding that Sanity Engine needs",
-                                 from_wide_string(desc.Description));
+                                    from_wide_string(desc.Description));
 
                     return true;
                 }
@@ -658,8 +657,8 @@ namespace rhi {
                 res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
                 if(FAILED(res)) {
                     logger->warning("Ignoring adapter %s - Could not check the supported shader model: %s",
-                                 from_wide_string(desc.Description),
-                                 to_string(res));
+                                    from_wide_string(desc.Description),
+                                    to_string(res));
 
                     return true;
 
@@ -667,7 +666,7 @@ namespace rhi {
                     // Only supports old-ass shaders
 
                     logger->warning("Ignoring adapter %s - Doesn't support the shader model Sanity Engine uses",
-                                 from_wide_string(desc.Description));
+                                    from_wide_string(desc.Description));
                     return true;
                 }
 
@@ -775,7 +774,7 @@ namespace rhi {
                                                   nullptr,
                                                   swapchain1.GetAddressOf());
         if(FAILED(hr)) {
-            const auto msg = fmt::format("Could not create swapchain: {}", to_string(hr).data());
+            const auto msg = Rx::String::format("Could not create swapchain: %s", to_string(hr));
             Rx::abort(msg.data());
         }
 
@@ -789,7 +788,7 @@ namespace rhi {
         frame_fence_values.resize(settings.num_in_flight_gpu_frames);
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
-        set_object_name(frame_fences.Get(), fmt::format("Frame Synchronization Fence").c_str());
+        set_object_name(frame_fences.Get(), "Frame Synchronization Fence");
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
@@ -805,17 +804,19 @@ namespace rhi {
             auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                          IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                Rx::abort(fmt::format("Could not create compute command allocator for frame {}", i).c_str());
+                const auto msg = Rx::String::format("Could not create compute command allocator for frame %s", i);
+                Rx::abort(msg.data());
             }
 
-            set_object_name(compute_command_allocators[i].Get(), fmt::format("Compute Command Allocator {}", i).c_str());
+            set_object_name(compute_command_allocators[i].Get(), Rx::String::format("Compute Command Allocator %d", i));
 
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                Rx::abort(fmt::format("Could not create copy command allocator for frame {}", i).c_str());
+                const auto msg = Rx::String::format("Could not create copy command allocator for frame %d", i);
+                Rx::abort(msg.data());
             }
 
-            set_object_name(copy_command_allocators[i].Get(), fmt::format("Copy Command Allocator {}", i).c_str());
+            set_object_name(copy_command_allocators[i].Get(), Rx::String::format("Copy Command Allocator %s", i));
         }
     }
 
@@ -830,10 +831,10 @@ namespace rhi {
         cbv_srv_uav_size = new_cbv_srv_uav_size;
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        rtv_allocator = Rx::make_ptr<DescriptorAllocator>(rtv_heap, rtv_size);
+        rtv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, rtv_heap, rtv_size);
 
         const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        dsv_allocator = Rx::make_ptr<DescriptorAllocator>(dsv_heap, dsv_size);
+        dsv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, dsv_heap, dsv_size);
     }
 
     void RenderDevice::initialize_swapchain_descriptors() {
@@ -856,7 +857,7 @@ namespace rhi {
 
             swapchain_framebuffers.push_back(std::move(framebuffer));
 
-            set_object_name(swapchain_images[i].Get(), fmt::format("Swapchain image {}", i).c_str());
+            set_object_name(swapchain_images[i].Get(), Rx::String::format("Swapchain image %d", i));
         }
     }
 
@@ -1153,7 +1154,7 @@ namespace rhi {
     }
 
     Rx::Ptr<RenderPipelineState> RenderDevice::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
-                                                                             ID3D12RootSignature& root_signature) {
+                                                                     ID3D12RootSignature& root_signature) {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
         desc.pRootSignature = &root_signature;
@@ -1258,7 +1259,7 @@ namespace rhi {
             desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
         }
 
-        auto pipeline = Rx::make_ptr<RenderPipelineState>();
+        auto pipeline = Rx::make_ptr<RenderPipelineState>(RX_SYSTEM_ALLOCATOR);
         pipeline->root_signature = &root_signature;
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
@@ -1281,7 +1282,7 @@ namespace rhi {
             ComPtr<ID3D12CommandAllocator> allocator;
             const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
             if(FAILED(result)) {
-                Rx::abort(fmt::format("Could not create compute command allocator").c_str());
+                Rx::abort("Could not create compute command allocator");
 
             } else {
                 command_allocators_for_frame.insert(id, allocator);
@@ -1430,7 +1431,7 @@ namespace rhi {
         D3D12_RANGE range{0, num_bytes};
         buffer.resource->Map(0, &range, &buffer.ptr);
 
-        set_object_name(buffer.resource.Get(), fmt::format("Staging Buffer {}", staging_buffer_idx).c_str());
+        set_object_name(buffer.resource.Get(), Rx::String::format("Staging Buffer %d", staging_buffer_idx));
         staging_buffer_idx++;
 
         return std::move(buffer);
@@ -1455,7 +1456,7 @@ namespace rhi {
         }
 
         scratch_buffer.size = num_bytes;
-        set_object_name(scratch_buffer.resource.Get(), fmt::format("Scratch buffer {}", scratch_buffer_counter).c_str());
+        set_object_name(scratch_buffer.resource.Get(), Rx::String::format("Scratch buffer %d", scratch_buffer_counter));
         scratch_buffer_counter++;
 
         return scratch_buffer;
@@ -1514,7 +1515,7 @@ namespace rhi {
 
                 logger->info("Creating D3D12 backend");
 
-                return Rx::make_ptr<RenderDevice>(hwnd, framebuffer_size, settings);
+                return Rx::make_ptr<RenderDevice>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
             }
         }
 

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <memory>
-
 #include <glm/fwd.hpp>
+#include <rx/core/ptr.h>
 
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
@@ -34,12 +33,12 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        std::unique_ptr<rhi::RenderPipelineState> standard_pipeline;
-        std::unique_ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
+        Rx::Ptr<rhi::RenderPipelineState> standard_pipeline;
+        Rx::Ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
 
         TextureHandle color_target_handle;
         TextureHandle depth_target_handle;
-        std::unique_ptr<rhi::Framebuffer> scene_framebuffer;
+        Rx::Ptr<rhi::Framebuffer> scene_framebuffer;
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 

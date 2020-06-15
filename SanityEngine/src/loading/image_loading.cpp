@@ -55,7 +55,7 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     Rx::Vector<uint8_t> pixels;
     const auto success = load_image(load_data->texture_name_in, width, height, pixels);
     if(!success) {
-        load_data->handle_out = std::nullopt;
+        load_data->handle_out = Rx::nullopt;
         return;
     }
 

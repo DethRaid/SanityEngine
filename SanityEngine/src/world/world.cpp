@@ -125,7 +125,7 @@ void World::place_water_sources(const WorldParameters& params,
                                 const unsigned total_pixels_in_maps) {
     Rx::Vector<Float32> water_depth_map{total_pixels_in_maps};
 
-    constexpr Float32 water_source_spawn_rate = 0.0001;
+    constexpr Float32 water_source_spawn_rate = 0.0001f;
 
     const auto num_water_sources = total_pixels_in_maps * water_source_spawn_rate;
 
@@ -218,7 +218,7 @@ World::World(const glm::uvec2& size_in,
 
 void World::register_component(horus::Component& component) { component.begin_play(*this); }
 
-Uint32 World::get_next_free_chunk_gen_task_idx() {
+Size World::get_next_free_chunk_gen_task_idx() {
     if(available_generate_chunk_blocks_task_args.is_empty()) {
         return generate_chunk_blocks_args_pool.size();
     }
@@ -230,8 +230,8 @@ Uint32 World::get_next_free_chunk_gen_task_idx() {
 }
 
 void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
-    const auto chunk_x = static_cast<Int32>(location.x / Chunk::WIDTH) * Chunk::WIDTH;
-    const auto chunk_y = static_cast<Int32>(location.z / Chunk::DEPTH) * Chunk::DEPTH;
+    const auto chunk_x = static_cast<Int32>((location.x / Chunk::WIDTH) * Chunk::WIDTH);
+    const auto chunk_y = static_cast<Int32>((location.z / Chunk::DEPTH) * Chunk::DEPTH);
 
     const auto chunk_location = Vec2i{chunk_x, chunk_y};
 
@@ -246,7 +246,7 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
     {
         const auto task_idx = get_next_free_chunk_gen_task_idx();
         if(task_idx == generate_chunk_blocks_args_pool.size()) {
-            generate_chunk_blocks_args_pool.push_back(Rx::make_ptr<GenerateChunkBlocksArgs>(SYSTEM_ALLOCATOR, chunk_location, &terrain));
+            generate_chunk_blocks_args_pool.push_back(Rx::make_ptr<GenerateChunkBlocksArgs>(RX_SYSTEM_ALLOCATOR, chunk_location, &terrain));
         }
 
         auto* args = generate_chunk_blocks_args_pool[task_idx].get();
@@ -300,7 +300,7 @@ void World::dispatch_needed_mesh_gen_tasks() {
             if(available_generate_chunk_mesh_task_args.is_empty()) {
                 // No available args - make a new one!
                 idx = generate_chunk_mesh_args_pool.size();
-                generate_chunk_mesh_args_pool.emplace_back(SYSTEM_ALLOCATOR);
+                generate_chunk_mesh_args_pool.emplace_back(RX_SYSTEM_ALLOCATOR);
 
             } else {
                 // Get index of an available args
@@ -322,7 +322,6 @@ void World::dispatch_needed_mesh_gen_tasks() {
 void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     // Scan the available chunk data, extracting surface information for the current chunk
     Rx::Array<Int32[(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)]> working_data;
-
 
     // Copy block data from the relevant chunks
     {
@@ -443,8 +442,6 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     }
 
     // Dual-contouring
-
-
 }
 
 void World::tick_script_components(Float32 delta_time) {
@@ -467,9 +464,10 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void*
     // TODO: Look at the water map to place water blocks
     for(Uint32 z = 0; z < static_cast<int32_t>(Chunk::DEPTH); z++) {
         for(Uint32 x = 0; x < static_cast<int32_t>(Chunk::WIDTH); x++) {
-            const auto terrain_sample_pos = Vec2f{args->location_in.x, args->location_in.y} + Vec2f{x, z};
+            const auto terrain_sample_pos = Vec2f{static_cast<Float32>(args->location_in.x), static_cast<Float32>(args->location_in.y)} +
+                                            Vec2f{static_cast<Float32>(x), static_cast<Float32>(z)};
             const auto height = args->terrain_in->get_terrain_height({terrain_sample_pos.x, terrain_sample_pos.y});
-            const auto height_where_air_begins = std::min(static_cast<Uint32>(round(height)), Chunk::HEIGHT);
+            const auto height_where_air_begins = glm::min(static_cast<Uint32>(round(height)), static_cast<Uint32>(Chunk::HEIGHT));
 
             for(Uint32 y = 0; y < height_where_air_begins; y++) {
                 const auto idx = chunk_pos_to_block_index({x, y, z});

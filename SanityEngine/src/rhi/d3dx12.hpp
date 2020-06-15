@@ -2479,7 +2479,7 @@ private:
     };
 
 #if(__cplusplus >= 201103L)
-    std::list<std::unique_ptr<const SUBOBJECT_HELPER_BASE>> m_OwnedSubobjectHelpers;
+    std::list<Rx::Ptr<const SUBOBJECT_HELPER_BASE>> m_OwnedSubobjectHelpers;
 #else
     class OWNED_HELPER {
     public:

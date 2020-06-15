@@ -8,9 +8,9 @@
 
 struct Chunk {
     // TODO: Is it worthwhile to try and make these cvars?
-    static constexpr Uint32 WIDTH{32};
-    static constexpr Uint32 HEIGHT{256};
-    static constexpr Uint32 DEPTH{32};
+    static constexpr Int32 WIDTH{32};
+    static constexpr Int32 HEIGHT{256};
+    static constexpr Int32 DEPTH{32};
 
     enum class Status {
         /*!

@@ -3,7 +3,6 @@
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/shader_loading.hpp"
 #include "renderer/render_components.hpp"

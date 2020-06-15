@@ -5,7 +5,6 @@
 #include <entt/entity/registry.hpp>
 #include <minitrace.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "core/components.hpp"
 #include "rhi/helpers.hpp"
@@ -179,13 +178,15 @@ namespace horus {
     }
 
     char* ScriptingRuntime::load_module(const Rx::String& module_name) const { // Check all of the registered script paths
-        if(module_paths.empty()) {
+        if(module_paths.is_empty()) {
             logger->error("No registered script module paths! You must register a script module path if you want to load scripts");
             return nullptr;
         }
 
-        for(const auto& module_directory : module_paths) {
-            const auto& potential_filename = module_directory / module_name.data();
+        char* module_contents_output{nullptr};
+
+        module_paths.each([&](const Rx::String& module_directory) {
+            const auto& potential_filename = Rx::String::format("%s/%s", module_directory, module_name);
             logger->verbose("Attempting to load file %s for module %s", potential_filename, module_name);
 
             auto* file = fopen(module_name.data(), "r");
@@ -193,28 +194,28 @@ namespace horus {
                 // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
                 logger->verbose("Could not open file %s", potential_filename);
                 fclose(file);
-                return nullptr;
+                return RX_ITERATION_STOP;
             }
 
             auto result = static_cast<size_t>(fseek(file, 0, SEEK_END));
             if(result != 0) {
                 logger->verbose("Could not get length of file %s", potential_filename);
                 fclose(file);
-                continue;
+                return RX_ITERATION_CONTINUE;
             }
 
             const auto length = ftell(file);
             if(length == 0) {
                 logger->verbose("File %s exists, but it has a length of 0", potential_filename);
                 fclose(file);
-                continue;
+                return RX_ITERATION_CONTINUE;
             }
 
             result = fseek(file, 0, SEEK_SET);
             if(result != 0) {
                 logger->verbose("Could not reset file pointer for file %s", potential_filename);
                 fclose(file);
-                continue;
+                return RX_ITERATION_CONTINUE;
             }
 
             auto* const module_contents = new char[length];
@@ -226,15 +227,16 @@ namespace horus {
                 delete[] module_contents;
 
                 fclose(file);
-                continue;
+                return RX_ITERATION_CONTINUE;
             }
 
             fclose(file);
 
-            return module_contents;
-        }
+            module_contents_output = module_contents;
+            return RX_ITERATION_STOP;
+        });
 
-        return nullptr;
+        return module_contents_output;
     }
 
     Rx::Ptr<ScriptingRuntime> ScriptingRuntime::create(entt::registry& registry_in) {
@@ -256,7 +258,7 @@ namespace horus {
             return {};
         }
 
-        return Rx::make_ptr<ScriptingRuntime>(vm, registry_in);
+        return Rx::make_ptr<ScriptingRuntime>(RX_SYSTEM_ALLOCATOR, vm, registry_in);
     }
 
     ScriptingRuntime::ScriptingRuntime(WrenVM* vm_in, entt::registry& registry_in) : vm{vm_in}, registry{&registry_in} {
@@ -350,18 +352,17 @@ namespace horus {
     }
 
     Rx::Optional<Component> ScriptingRuntime::create_component(const entt::entity entity,
-                                                                const char* module_name,
-                                                                const char* component_class_name) const {
+                                                               const char* module_name,
+                                                               const char* component_class_name) const {
 
         // Load the class into a slot so we can get methods from it
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, module_name, component_class_name, 0);
 
-        const auto full_signature = fmt::format("new()", module_name, component_class_name);
         auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
         if(constructor_handle == nullptr) {
             logger->error("Could not get handle to constructor for %s", component_class_name);
-            return std::nullopt;
+            return Rx::nullopt;
         }
 
         const auto result = wrenCall(vm, constructor_handle);
@@ -372,10 +373,10 @@ namespace horus {
                     logger->error("Could not create instance of class {}", component_class_name);
                 }
 
-                const auto init_signature = fmt::format("{}::init_self()", component_class_name);
-                const auto begin_play_signature = fmt::format("{}::begin_play(_)", component_class_name);
-                const auto tick_signature = fmt::format("{}::tick(_)", component_class_name);
-                const auto end_play_signature = fmt::format("{}::end_play()", component_class_name);
+                const auto init_signature = Rx::String::format("%s::init_self()", component_class_name);
+                const auto begin_play_signature = Rx::String::format("%s::begin_play(_)", component_class_name);
+                const auto tick_signature = Rx::String::format("%s::tick(_)", component_class_name);
+                const auto end_play_signature = Rx::String::format("%s::end_play()", component_class_name);
 
                 const auto methods = ScriptComponentMethods{.init_handle = wrenMakeCallHandle(vm, "init_self()"),
                                                             .begin_play_handle = wrenMakeCallHandle(vm, "begin_play(_)"),
@@ -385,22 +386,22 @@ namespace horus {
                 auto loaded_component_class = true;
                 if(methods.init_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load method %s", init_signature.c_str());
+                    logger->error("Could not load method %s", init_signature);
                 }
                 if(methods.begin_play_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load method %s", begin_play_signature.c_str());
+                    logger->error("Could not load method %s", begin_play_signature);
                 }
                 if(methods.tick_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load method %s", tick_signature.c_str());
+                    logger->error("Could not load method %s", tick_signature);
                 }
                 if(methods.end_play_handle == nullptr) {
                     loaded_component_class = false;
-                    logger->error("Could not load method %s", end_play_signature.c_str());
+                    logger->error("Could not load method %s", end_play_signature);
                 }
                 if(!loaded_component_class) {
-                    return std::nullopt;
+                    return Rx::nullopt;
                 }
 
                 return Component{entity, component_handle, methods, *vm};
@@ -408,17 +409,17 @@ namespace horus {
 
             case WREN_RESULT_COMPILE_ERROR: {
                 logger->error("Compilation error when creating an instance of %s", component_class_name);
-                return std::nullopt;
+                return Rx::nullopt;
             }
 
             case WREN_RESULT_RUNTIME_ERROR: {
                 logger->error("Runtime error when creating an instance of %s", component_class_name);
-                return std::nullopt;
+                return Rx::nullopt;
             }
 
             default: {
                 logger->error("Unknown error when creating an instance of %s", component_class_name);
-                return std::nullopt;
+                return Rx::nullopt;
             }
         }
     }

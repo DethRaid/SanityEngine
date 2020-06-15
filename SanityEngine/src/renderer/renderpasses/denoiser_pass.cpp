@@ -1,7 +1,6 @@
 #include "denoiser_pass.hpp"
 
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
