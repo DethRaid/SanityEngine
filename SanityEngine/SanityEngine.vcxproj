@@ -82,6 +82,15 @@
     <ClCompile Include="extern\rex\include\rx\core\time\span.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\time\stop_watch.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\vector.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\aabb.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\frustum.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\mat3x3.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\mat3x4.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\noise\perlin.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\quat.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\vec2.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\vec3.cpp" />
+    <ClCompile Include="extern\rex\include\rx\math\vec4.cpp" />
     <ClCompile Include="first_person_controller.cpp" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
@@ -123,6 +132,7 @@
     <ClCompile Include="src\windows\windows_helpers.cpp" />
     <ClCompile Include="src\world\block_registry.cpp" />
     <ClCompile Include="src\world\chunk.cpp" />
+    <ClCompile Include="src\world\generation\dual_contouring.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
     <ClCompile Include="src\world\world.cpp" />
   </ItemGroup>
@@ -284,6 +294,23 @@
     <ClInclude Include="extern\rex\include\rx\core\utility\swap.h" />
     <ClInclude Include="extern\rex\include\rx\core\utility\uninitialized.h" />
     <ClInclude Include="extern\rex\include\rx\core\vector.h" />
+    <ClInclude Include="extern\rex\include\rx\math\aabb.h" />
+    <ClInclude Include="extern\rex\include\rx\math\camera.h" />
+    <ClInclude Include="extern\rex\include\rx\math\compare.h" />
+    <ClInclude Include="extern\rex\include\rx\math\constants.h" />
+    <ClInclude Include="extern\rex\include\rx\math\frustum.h" />
+    <ClInclude Include="extern\rex\include\rx\math\mat3x3.h" />
+    <ClInclude Include="extern\rex\include\rx\math\mat3x4.h" />
+    <ClInclude Include="extern\rex\include\rx\math\mat4x4.h" />
+    <ClInclude Include="extern\rex\include\rx\math\noise\perlin.h" />
+    <ClInclude Include="extern\rex\include\rx\math\plane.h" />
+    <ClInclude Include="extern\rex\include\rx\math\quat.h" />
+    <ClInclude Include="extern\rex\include\rx\math\rectangle.h" />
+    <ClInclude Include="extern\rex\include\rx\math\transform.h" />
+    <ClInclude Include="extern\rex\include\rx\math\trig.h" />
+    <ClInclude Include="extern\rex\include\rx\math\vec2.h" />
+    <ClInclude Include="extern\rex\include\rx\math\vec3.h" />
+    <ClInclude Include="extern\rex\include\rx\math\vec4.h" />
     <ClInclude Include="first_person_controller.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
@@ -291,11 +318,12 @@
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\core\align.hpp" />
-    <ClInclude Include="src\core\async\mutex.hpp" />
+    <ClInclude Include="src\core\async\synchronized_resource.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
+    <ClInclude Include="src\core\types.hpp" />
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\globals.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
@@ -340,6 +368,7 @@
     <ClInclude Include="src\windows\windows_helpers.hpp" />
     <ClInclude Include="src\world\block_registry.hpp" />
     <ClInclude Include="src\world\chunk.hpp" />
+    <ClInclude Include="src\world\generation\dual_contouring.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
@@ -364,6 +393,17 @@
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="data\shaders\worldgen\compute_water_flow.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <None Include="data\shaders\inc\atmospheric_scattering.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>

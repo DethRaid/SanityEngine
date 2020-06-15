@@ -1,9 +1,11 @@
 #pragma once
 
-#include <cstdint>
+#include <rx/core/types.h>
 
 struct BlockId {
     Uint32 id{0};
+
+    auto operator<=>(const BlockId& other) const = default;
 };
 
 class BlockRegistry {

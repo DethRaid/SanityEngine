@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <rx/core/types.h>
 
 constexpr bool RX_ITERATION_CONTINUE = true;
 constexpr bool RX_ITERATION_STOP = false;

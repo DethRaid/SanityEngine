@@ -35,6 +35,7 @@ Rx::Optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
     const auto chunk_entity = registry.create();
 
     auto& opaque_mesh = registry.assign<renderer::ChunkMeshComponent>(chunk_entity);
+    opaque_mesh.mesh = create_chunk_mesh();
 
     auto chunk = Chunk{lower_left_corner, block_data, chunk_entity};
 
@@ -44,4 +45,4 @@ Rx::Optional<Chunk> Chunk::create(const glm::ivec2& lower_left_corner,
 Chunk::Chunk(const glm::ivec2& lower_left_corner_in,
              const std::array<BlockId, WIDTH * HEIGHT * DEPTH>& block_data_in,
              const entt::entity entity_in)
-    : lower_left_corner{lower_left_corner_in}, block_data{block_data_in}, entity{entity_in} {}
+    : location{lower_left_corner_in}, block_data{block_data_in}, entity{entity_in} {}

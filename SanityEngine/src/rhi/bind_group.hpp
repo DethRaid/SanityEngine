@@ -1,9 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include <d3d12.h>
 #include <rx/core/map.h>
+#include <rx/core/ptr.h>
 #include <rx/core/string.h>
 #include <rx/core/vector.h>
 #include <wrl/client.h>
@@ -141,7 +140,7 @@ namespace rhi {
 
         BindGroupBuilder& set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene);
 
-        std::unique_ptr<BindGroup> build();
+        Rx::Ptr<BindGroup> build();
 
     private:
         ID3D12Device* device;

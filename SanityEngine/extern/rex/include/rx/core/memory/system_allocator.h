@@ -31,6 +31,8 @@ private:
   static Global<SystemAllocator> s_instance;
 };
 
+#define SYSTEM_ALLOCATOR Rx::Memory::SystemAllocator::instance()
+
 inline StatsAllocator::Statistics SystemAllocator::stats() const {
   return m_stats_allocator.stats();
 }

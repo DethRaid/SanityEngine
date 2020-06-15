@@ -190,6 +190,15 @@
     <Filter Include="Source Files\adapters\rex">
       <UniqueIdentifier>{f25b5bde-0f7a-47df-bad2-5e66ffe78f45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\worldgen">
+      <UniqueIdentifier>{4a09053a-43cf-451d-937c-c3977694dd8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rex\math">
+      <UniqueIdentifier>{16d17dc3-dceb-4efe-a184-85ac87a252c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rex\math\noise">
+      <UniqueIdentifier>{55036128-eabc-47aa-ac3e-66f57fe8dd11}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -504,6 +513,36 @@
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp">
       <Filter>Source Files\adapters\rex</Filter>
     </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\aabb.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\frustum.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\mat3x3.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\mat3x4.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\quat.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\vec2.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\vec3.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\vec4.cpp">
+      <Filter>Rex\math</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\math\noise\perlin.cpp">
+      <Filter>Rex\math\noise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\generation\dual_contouring.cpp">
+      <Filter>Source Files\world\generation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -517,9 +556,6 @@
     </ClInclude>
     <ClInclude Include="src\core\errors.hpp">
       <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\async\mutex.hpp">
-      <Filter>Header Files\core\async</Filter>
     </ClInclude>
     <ClInclude Include="src\input\input_manager.hpp">
       <Filter>Header Files\input</Filter>
@@ -1151,6 +1187,66 @@
     <ClInclude Include="src\world\chunk.hpp">
       <Filter>Header Files\world</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\async\synchronized_resource.hpp">
+      <Filter>Header Files\core\async</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\aabb.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\camera.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\compare.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\constants.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\frustum.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\mat3x3.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\mat3x4.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\mat4x4.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\plane.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\quat.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\rectangle.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\transform.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\trig.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\vec2.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\vec3.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\vec4.h">
+      <Filter>Rex\math</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\math\noise\perlin.h">
+      <Filter>Rex\math\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\generation\dual_contouring.hpp">
+      <Filter>Header Files\world\generation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -1188,6 +1284,9 @@
     </FxCompile>
     <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\worldgen\compute_water_flow.hlsl">
+      <Filter>Shaders\worldgen</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

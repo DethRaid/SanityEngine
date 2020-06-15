@@ -22,16 +22,16 @@ struct Event<R(Ts...)> {
   struct RX_HINT_EMPTY_BASES Handle
     : Concepts::NoCopy
   {
-    constexpr Handle(Event* _event, Size _index);
-    constexpr Handle(Handle&& _existing);
+    Handle(Event* _event, Size _index);
+    Handle(Handle&& _existing);
     ~Handle();
   private:
     Event* m_event;
     Size m_index;
   };
 
-  constexpr Event(Memory::Allocator& _allocator);
-  constexpr Event();
+  Event(Memory::Allocator& _allocator);
+  Event();
 
   void signal(Ts... _arguments);
   Handle connect(Delegate&& function_);
@@ -39,7 +39,7 @@ struct Event<R(Ts...)> {
   Size size() const;
   bool is_empty() const;
 
-  constexpr Memory::Allocator& allocator() const;
+  Memory::Allocator& allocator() const;
 
 private:
   friend struct Handle;
@@ -48,14 +48,14 @@ private:
 };
 
 template<typename R, typename... Ts>
-inline constexpr Event<R(Ts...)>::Handle::Handle(Event<R(Ts...)>* _event, Size _index)
+inline Event<R(Ts...)>::Handle::Handle(Event<R(Ts...)>* _event, Size _index)
   : m_event{_event}
   , m_index{_index}
 {
 }
 
 template<typename R, typename... Ts>
-inline constexpr Event<R(Ts...)>::Handle::Handle(Handle&& handle_)
+inline Event<R(Ts...)>::Handle::Handle(Handle&& handle_)
   : m_event{Utility::exchange(handle_.m_event, nullptr)}
   , m_index{Utility::exchange(handle_.m_index, 0)}
 {
@@ -70,13 +70,13 @@ inline Event<R(Ts...)>::Handle::~Handle() {
 }
 
 template<typename R, typename... Ts>
-inline constexpr Event<R(Ts...)>::Event(Memory::Allocator& _allocator)
+inline Event<R(Ts...)>::Event(Memory::Allocator& _allocator)
   : m_delegates{_allocator}
 {
 }
 
 template<typename R, typename... Ts>
-inline constexpr Event<R(Ts...)>::Event()
+inline Event<R(Ts...)>::Event()
   : Event{Memory::SystemAllocator::instance()}
 {
 }
@@ -123,7 +123,7 @@ inline Size Event<R(Ts...)>::size() const {
 }
 
 template<typename R, typename... Ts>
-RX_HINT_FORCE_INLINE constexpr Memory::Allocator& Event<R(Ts...)>::allocator() const {
+RX_HINT_FORCE_INLINE Memory::Allocator& Event<R(Ts...)>::allocator() const {
   return m_delegates.allocator();
 }
 

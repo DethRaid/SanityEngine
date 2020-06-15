@@ -4,8 +4,6 @@
 
 #include <minitrace.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 
 #include "d3dx12.hpp"
 #include "helpers.hpp"
@@ -88,8 +86,7 @@ namespace rhi {
           descriptor_size{descriptor_size_in},
           root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
           descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
-          descriptor_table_handles{std::move(descriptor_table_handles_in)} {
-    }
+          descriptor_table_handles{std::move(descriptor_table_handles_in)} {}
 
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
         const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
@@ -114,7 +111,7 @@ namespace rhi {
         return *this;
     }
 
-    std::unique_ptr<BindGroup> BindGroupBuilder::build() {
+    Rx::Ptr<BindGroup> BindGroupBuilder::build() {
         // D3D12 has a maximum root signature size of 64 descriptor tables
         Rx::Vector<RootParameter> root_parameters{64};
 
@@ -170,7 +167,7 @@ namespace rhi {
             } else if(const Buffer** scene = bound_raytracing_scenes.find(name)) {
                 RX_ASSERT(type == DescriptorType::ShaderResource,
                           "May only bind raytracing acceleration structure %s as a shader resource",
-                          (*scene)->name);
+                          (*scene)->name.data());
 
                 root_parameters[idx].descriptor.address = (*scene)->resource->GetGPUVirtualAddress();
 
@@ -236,8 +233,8 @@ namespace rhi {
                     } break;
 
                     case DescriptorType::ShaderResource: {
-                        RX_ASSERT(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array %s", name);
-                        RX_ASSERT(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array %s", name);
+                        RX_ASSERT(desc.num_structured_buffer_elements == 1, "Cannot bind an image to structure array %s", name.data());
+                        RX_ASSERT(desc.structured_buffer_element_size == 0, "Cannot bind an image to structure array %s", name.data());
 
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
@@ -266,11 +263,12 @@ namespace rhi {
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
                         images->each_fwd([&](const Image* image) {
-                            D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc{};
-                            uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-                            uav_desc.Format = to_dxgi_format(image->format);
-                            uav_desc.Texture2D.MipSlice = 0;
-                            uav_desc.Texture2D.PlaneSlice = 0;
+                            const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = to_dxgi_format(image->format),
+                                                                                   .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+                                                                                   .Texture2D = {
+                                                                                       .MipSlice = 0,
+                                                                                       .PlaneSlice = 0,
+                                                                                   }};
 
                             device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &uav_desc, handle);
 
@@ -283,6 +281,10 @@ namespace rhi {
             }
         });
 
-        return Rx::make_ptr<BindGroup>(*heap, std::move(root_parameters), std::move(used_images), std::move(used_buffers));
+        return Rx::make_ptr<BindGroup>(Rx::Memory::SystemAllocator::instance(),
+                                       *heap,
+                                       std::move(root_parameters),
+                                       std::move(used_images),
+                                       std::move(used_buffers));
     } // namespace rhi
 } // namespace rhi

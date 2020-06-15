@@ -6,8 +6,6 @@
 #include <imgui/imgui.h>
 #include <minitrace.h>
 #include <rx/core/log.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 
 #include "core/align.hpp"
 #include "core/components.hpp"
@@ -21,6 +19,7 @@
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/abort.h"
 #include "sanity_engine.hpp"
 
 namespace renderer {
@@ -123,7 +122,8 @@ namespace renderer {
         : start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
           device{make_render_device(rhi::RenderBackend::D3D12, window, settings_in)},
-          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(*device, settings_in.num_in_flight_gpu_frames)} {
+          camera_matrix_buffers{
+              Rx::make_ptr<CameraMatrixBuffer>(Rx::Memory::SystemAllocator::instance(), *device, settings_in.num_in_flight_gpu_frames)} {
         MTR_SCOPE("Renderer", "Renderer");
 
         // logger->set_level(spdlog::level::debug);
@@ -133,8 +133,7 @@ namespace renderer {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        output_framebuffer_size = {static_cast<Uint32>(width * settings.render_scale),
-                                   static_cast<Uint32>(height * settings.render_scale)};
+        output_framebuffer_size = {static_cast<Uint32>(width * settings.render_scale), static_cast<Uint32>(height * settings.render_scale)};
 
         create_static_mesh_storage();
 
@@ -150,14 +149,15 @@ namespace renderer {
 
         create_builtin_images();
 
-        forward_pass = Rx::make_ptr<ForwardPass>(*this, output_framebuffer_size);
-        denoiser_pass = Rx::make_ptr<DenoiserPass>(*this, output_framebuffer_size, *forward_pass);
-        backbuffer_output_pass = Rx::make_ptr<BackbufferOutputPass>(*this, *denoiser_pass);
+        forward_pass = Rx::make_ptr<ForwardPass>(Rx::Memory::SystemAllocator::instance(), *this, output_framebuffer_size);
+        denoiser_pass = Rx::make_ptr<DenoiserPass>(Rx::Memory::SystemAllocator::instance(), *this, output_framebuffer_size, *forward_pass);
+        backbuffer_output_pass = Rx::make_ptr<BackbufferOutputPass>(Rx::Memory::SystemAllocator::instance(), *this, *denoiser_pass);
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
         auto args = LoadImageToGpuArgs{.texture_name_in = filepath, .renderer_in = this};
-        ftl::AtomicCounter counter{task_scheduler.get()};
+        auto task_scheduler = Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>();
+        ftl::AtomicCounter counter{task_scheduler};
         task_scheduler->AddTask({load_image_to_gpu, &args}, &counter);
 
         task_scheduler->WaitForCounter(&counter, 0, true);
@@ -254,7 +254,7 @@ namespace renderer {
             return TextureHandle{*idx};
 
         } else {
-            return std::nullopt;
+            return Rx::nullopt;
         }
     }
 
@@ -263,8 +263,8 @@ namespace renderer {
             return *all_images[*idx];
 
         } else {
-            const auto message = fmt::format("Image '{}' does not exist", image_name.data());
-            throw std::exception(message.c_str());
+            const auto message = Rx::String::format("Image '%s' does not exist", image_name);
+            Rx::abort(message.data());
         }
     }
 
@@ -338,7 +338,10 @@ namespace renderer {
 
         auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<rhi::MeshDataStore>(*device, std::move(vertex_buffer), std::move(index_buffer));
+        static_mesh_storage = Rx::make_ptr<rhi::MeshDataStore>(Rx::Memory::SystemAllocator::instance(),
+                                                               *device,
+                                                               std::move(vertex_buffer),
+                                                               std::move(index_buffer));
     }
 
     void Renderer::create_per_frame_data_buffers() {
@@ -350,7 +353,7 @@ namespace renderer {
         };
 
         for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = fmt::format("Per frame data buffer {}", i).c_str();
+            create_info.name = Rx::String::format("Per frame data buffer %d", i);
             per_frame_data_buffers.push_back(device->create_buffer(create_info));
         }
     }
@@ -359,7 +362,7 @@ namespace renderer {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(settings.num_in_flight_gpu_frames);
         for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = fmt::format("Material Data Buffer {}", 1).c_str();
+            create_info.name = Rx::String::format("Material Data Buffer %d", 1);
             material_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
@@ -368,7 +371,7 @@ namespace renderer {
         auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
         for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = fmt::format("Light Buffer {}", i).c_str();
+            create_info.name = Rx::String::format("Light Buffer %d", i);
             light_device_buffers.push_back(device->create_buffer(create_info));
         }
     }
@@ -593,8 +596,8 @@ namespace renderer {
 
             .depth_stencil_state =
                 rhi::DepthStencilState{
-                    .enable_depth_test{false},
-                    .enable_depth_write{false},
+                    .enable_depth_test = false,
+                    .enable_depth_write = false,
                 },
 
             .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba8},
