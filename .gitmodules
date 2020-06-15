@@ -1,0 +1,3 @@
+[submodule "SanityEngine/extern/tracy"]
+	path = SanityEngine/extern/tracy
+	url = https://github.com/wolfpld/tracy.git
