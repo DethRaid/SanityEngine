@@ -740,7 +740,9 @@ namespace rhi {
 
         set_object_name(direct_command_queue.Get(), "Direct Queue");
 
+#ifdef TRACY_ENABLE
         tracy_context = TracyD3D12Context(device.Get(), direct_command_queue.Get());
+#endif
 
         // TODO: Add an async compute queue, when the time comes
 
@@ -825,7 +827,7 @@ namespace rhi {
                 Rx::abort(msg.data());
             }
 
-            set_object_name(copy_command_allocators[i].Get(), Rx::String::format("Copy Command Allocator %s", i));
+            set_object_name(copy_command_allocators[i].Get(), Rx::String::format("Copy Command Allocator %d", i));
         }
     }
 

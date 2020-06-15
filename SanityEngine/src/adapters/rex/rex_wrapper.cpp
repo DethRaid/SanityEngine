@@ -22,6 +22,7 @@ namespace rex {
 
         // Explicitly initialize globals that need to be initialized in a specific
         // order for things to work.
+        system_group->find("heap_allocator")->init();
         system_group->find("allocator")->init();
         stdout_stream.init();
         system_group->find("logger")->init();
@@ -48,5 +49,6 @@ namespace rex {
         system_group->find("logger")->fini();
         stdout_stream.fini();
         system_group->find("allocator")->fini();
+        system_group->find("heap_allocator")->fini();
     }
 } // namespace rex

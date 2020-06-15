@@ -84,20 +84,22 @@ World::TerrainData World::generate_terrain(FastNoiseSIMD& noise_generator, const
     const auto commands = device.create_command_list(
         Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()->GetCurrentThreadIndex());
 
-    TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "GenerateTerrain");
-
     auto data = TerrainData{};
 
-    // Generate heightmap
-    const auto total_pixels_in_maps = params.width * params.height;
-    data.heightmap = Rx::Vector<Float32>{total_pixels_in_maps};
-    generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
+    {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "GenerateTerrain");
 
-    // Place water sources
-    place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
+        // Generate heightmap
+        const auto total_pixels_in_maps = params.width * params.height;
+        data.heightmap = Rx::Vector<Float32>{total_pixels_in_maps};
+        generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
 
-    // Let water flow around
-    compute_water_flow(renderer, commands, data);
+        // Place water sources
+        place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
+
+        // Let water flow around
+        compute_water_flow(renderer, commands, data);
+    }
 
     device.submit_command_list(commands);
 
@@ -170,12 +172,10 @@ void World::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12
         const Rx::Vector<D3D12_RESOURCE_BARRIER>
             barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(heightmap_image.resource.Get(),
                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
-                                                                          D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
                                  CD3DX12_RESOURCE_BARRIER::Transition(watermap_image.resource.Get(),
                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE |
-                                                                          D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
+                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
 
         commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
     }

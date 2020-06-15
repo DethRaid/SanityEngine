@@ -49,7 +49,9 @@ namespace rhi {
     class RenderDevice {
     public:
         inline static Uint32 material_buffer_root_parameter_index = 2;
+#ifdef TRACY_ENABLE
         inline static tracy::D3D12QueueCtx* tracy_context;
+#endif
 
         ComPtr<ID3D12Device> device;
         ComPtr<ID3D12Device1> device1;

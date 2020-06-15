@@ -5,7 +5,6 @@
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
-
 #include <rx/core/log.h>
 
 #include "core/align.hpp"
@@ -26,96 +25,6 @@
 namespace renderer {
 
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
-
-#pragma region Cube
-    Rx::Vector<StandardVertex> Renderer::cube_vertices = Rx::Array{
-        // Front
-        StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
-
-        // Right
-        StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-
-        // Left
-        StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-
-        // Back
-        StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
-
-        // Top
-        StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-
-        // Bottom
-        StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-        StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
-    };
-
-    Rx::Vector<Uint32> Renderer::cube_indices = Rx::Array{
-        // front face
-        0,
-        1,
-        2, // first triangle
-        0,
-        3,
-        1, // second triangle
-
-        // left face
-        4,
-        5,
-        6, // first triangle
-        4,
-        7,
-        5, // second triangle
-
-        // right face
-        8,
-        9,
-        10, // first triangle
-        8,
-        11,
-        9, // second triangle
-
-        // back face
-        12,
-        13,
-        14, // first triangle
-        12,
-        15,
-        13, // second triangle
-
-        // top face
-        16,
-        18,
-        17, // first triangle
-        16,
-        17,
-        19, // second triangle
-
-        // bottom face
-        20,
-        21,
-        22, // first triangle
-        20,
-        23,
-        21, // second triangle
-    };
-#pragma endregion
 
     RX_LOG("Renderer", logger);
 
@@ -382,58 +291,60 @@ namespace renderer {
 
         const auto commands = device->create_command_list(0);
 
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "CreateBuiltinImages");
-
         {
-            const auto pink_texture_create_info = rhi::ImageCreateInfo{.name = "Pink",
-                                                                       .usage = rhi::ImageUsage::SampledImage,
-                                                                       .format = rhi::ImageFormat::Rgba8,
-                                                                       .width = 8,
-                                                                       .height = 8};
+            TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "CreateBuiltinImages");
 
-            auto pink_texture_pixel = Rx::Vector<Uint32>{};
-            pink_texture_pixel.reserve(64);
-            for(Uint32 i = 0; i < 64; i++) {
-                pink_texture_pixel.push_back(0xFFFF00FF);
+            {
+                const auto pink_texture_create_info = rhi::ImageCreateInfo{.name = "Pink",
+                                                                           .usage = rhi::ImageUsage::SampledImage,
+                                                                           .format = rhi::ImageFormat::Rgba8,
+                                                                           .width = 8,
+                                                                           .height = 8};
+
+                auto pink_texture_pixel = Rx::Vector<Uint32>{};
+                pink_texture_pixel.reserve(64);
+                for(Uint32 i = 0; i < 64; i++) {
+                    pink_texture_pixel.push_back(0xFFFF00FF);
+                }
+
+                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
             }
 
-            pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
-        }
+            {
+                const auto normal_roughness_texture_create_info = rhi::ImageCreateInfo{.name = "Default Normal/Roughness",
+                                                                                       .usage = rhi::ImageUsage::SampledImage,
+                                                                                       .format = rhi::ImageFormat::Rgba8,
+                                                                                       .width = 8,
+                                                                                       .height = 8};
 
-        {
-            const auto normal_roughness_texture_create_info = rhi::ImageCreateInfo{.name = "Default Normal/Roughness",
-                                                                                   .usage = rhi::ImageUsage::SampledImage,
-                                                                                   .format = rhi::ImageFormat::Rgba8,
-                                                                                   .width = 8,
-                                                                                   .height = 8};
+                auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
+                normal_roughness_texture_pixel.reserve(64);
+                for(Uint32 i = 0; i < 64; i++) {
+                    normal_roughness_texture_pixel.push_back(0x80FF8080);
+                }
 
-            auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
-            normal_roughness_texture_pixel.reserve(64);
-            for(Uint32 i = 0; i < 64; i++) {
-                normal_roughness_texture_pixel.push_back(0x80FF8080);
+                normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
+                                                               normal_roughness_texture_pixel.data(),
+                                                               commands);
             }
 
-            normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
-                                                           normal_roughness_texture_pixel.data(),
-                                                           commands);
-        }
+            {
+                const auto specular_emission_texture_create_info = rhi::ImageCreateInfo{.name = "Default Specular Color/Emission",
+                                                                                        .usage = rhi::ImageUsage::SampledImage,
+                                                                                        .format = rhi::ImageFormat::Rgba8,
+                                                                                        .width = 8,
+                                                                                        .height = 8};
 
-        {
-            const auto specular_emission_texture_create_info = rhi::ImageCreateInfo{.name = "Default Specular Color/Emission",
-                                                                                    .usage = rhi::ImageUsage::SampledImage,
-                                                                                    .format = rhi::ImageFormat::Rgba8,
-                                                                                    .width = 8,
-                                                                                    .height = 8};
+                auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
+                specular_emission_texture_pixel.reserve(64);
+                for(Uint32 i = 0; i < 64; i++) {
+                    specular_emission_texture_pixel.push_back(0x00373737);
+                }
 
-            auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
-            specular_emission_texture_pixel.reserve(64);
-            for(Uint32 i = 0; i < 64; i++) {
-                specular_emission_texture_pixel.push_back(0x00373737);
+                specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
+                                                                specular_emission_texture_pixel.data(),
+                                                                commands);
             }
-
-            specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
-                                                            specular_emission_texture_pixel.data(),
-                                                            commands);
         }
 
         device->submit_command_list(commands);
@@ -638,7 +549,7 @@ namespace renderer {
         ZoneScopedN("render_ui");
 
         TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "RenderUI");
-        
+
         {
             const auto* backbuffer_framebuffer = device->get_backbuffer_framebuffer();
 

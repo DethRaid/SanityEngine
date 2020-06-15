@@ -47,9 +47,6 @@ namespace renderer {
      */
     class Renderer {
     public:
-        static Rx::Vector<StandardVertex> cube_vertices;
-        static Rx::Vector<Uint32> cube_indices;
-
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
         void begin_frame(uint64_t frame_count, Size thread_idx);
@@ -104,6 +101,96 @@ namespace renderer {
         [[nodiscard]] Rx::Ptr<rhi::BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 
     private:
+#pragma region Cube
+        Rx::Vector<StandardVertex> cube_vertices = Rx::Array{
+            // Front
+            StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 0, 1}, .color = 0xFFCDCDCD, .texcoord = {}},
+
+            // Right
+            StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {-1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+
+            // Left
+            StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {1, 0, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+
+            // Back
+            StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 0, -1}, .color = 0xFFCDCDCD, .texcoord = {}},
+
+            // Top
+            StandardVertex{.position = {-0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, 0.5f, -0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, 0.5f, 0.5f}, .normal = {0, 1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+
+            // Bottom
+            StandardVertex{.position = {0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {0.5f, -0.5f, -0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+            StandardVertex{.position = {-0.5f, -0.5f, 0.5f}, .normal = {0, -1, 0}, .color = 0xFFCDCDCD, .texcoord = {}},
+        };
+
+        Rx::Vector<Uint32> cube_indices = Rx::Array{
+            // front face
+            0,
+            1,
+            2, // first triangle
+            0,
+            3,
+            1, // second triangle
+
+            // left face
+            4,
+            5,
+            6, // first triangle
+            4,
+            7,
+            5, // second triangle
+
+            // right face
+            8,
+            9,
+            10, // first triangle
+            8,
+            11,
+            9, // second triangle
+
+            // back face
+            12,
+            13,
+            14, // first triangle
+            12,
+            15,
+            13, // second triangle
+
+            // top face
+            16,
+            18,
+            17, // first triangle
+            16,
+            17,
+            19, // second triangle
+
+            // bottom face
+            20,
+            21,
+            22, // first triangle
+            20,
+            23,
+            21, // second triangle
+        };
+#pragma endregion
+
         std::chrono::high_resolution_clock::time_point start_time;
 
         Settings settings;

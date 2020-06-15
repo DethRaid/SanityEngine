@@ -68,8 +68,10 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     auto& device = load_data->renderer_in->get_render_device();
     const auto commands = device.create_command_list(taskScheduler->GetCurrentThreadIndex());
 
-    TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), message.data());
-    load_data->handle_out = load_data->renderer_in->create_image(create_info, pixels.data(), commands);
+    {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), message.data());
+        load_data->handle_out = load_data->renderer_in->create_image(create_info, pixels.data(), commands);
+    }
 
     device.submit_command_list(commands);
 }

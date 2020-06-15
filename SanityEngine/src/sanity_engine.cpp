@@ -162,7 +162,9 @@ void SanityEngine::run() {
         renderer->end_frame(thread_idx);
 
         FrameMark;
+#ifdef TRACY_ENABLE
         TracyD3D12NewFrame(rhi::RenderDevice::tracy_context);
+#endif
 
         const auto frame_end_time = std::chrono::steady_clock::now();
 
