@@ -134,48 +134,47 @@ void SanityEngine::run() {
     Float32 last_frame_duration = 0;
 
     while(!glfwWindowShouldClose(window)) {
-        {
-            ZoneScopedN("tick", SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
-            const auto frame_start_time = std::chrono::steady_clock::now();
-            glfwPollEvents();
+        ZoneScopedN("tick", SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
+        const auto frame_start_time = std::chrono::steady_clock::now();
+        glfwPollEvents();
 
-            player_controller->update_player_transform(last_frame_duration);
+        player_controller->update_player_transform(last_frame_duration);
 
-            imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
+        imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
 
-            auto thread_idx = task_scheduler->GetCurrentThreadIndex();
+        auto thread_idx = task_scheduler->GetCurrentThreadIndex();
 
-            // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
-            // generation, etc
-            renderer->begin_frame(frame_count, thread_idx);
+        // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
+        // generation, etc
+        renderer->begin_frame(frame_count, thread_idx);
 
-            // There might not be a world if the player is still in the main menu
-            if(world) {
-                world->tick(last_frame_duration);
-            }
-
-            if(frame_count == 1) {
-                // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
-            }
-
-            renderer->render_all(registry);
-
-            renderer->end_frame(thread_idx);
-
-            FrameMark;
-
-            const auto frame_end_time = std::chrono::steady_clock::now();
-
-            const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time)
-                                                        .count();
-            last_frame_duration = static_cast<Float32>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
-
-            framerate_tracker.add_frame_time(last_frame_duration);
-
-            frame_count++;
+        // There might not be a world if the player is still in the main menu
+        if(world) {
+            world->tick(last_frame_duration);
         }
 
-        // mtr_flush();
+        if(frame_count == 1) {
+            // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
+        }
+
+        renderer->render_all(registry);
+
+        renderer->end_frame(thread_idx);
+
+        FrameMark;
+        TracyD3D12NewFrame(rhi::RenderDevice::tracy_context);
+
+        const auto frame_end_time = std::chrono::steady_clock::now();
+
+        const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time)
+                                                    .count();
+        last_frame_duration = static_cast<Float32>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
+
+        framerate_tracker.add_frame_time(last_frame_duration);
+
+        frame_count++;
+
+        TracyD3D12Collect(rhi::RenderDevice::tracy_context);
     }
 }
 

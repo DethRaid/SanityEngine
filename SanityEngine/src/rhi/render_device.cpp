@@ -82,6 +82,8 @@ namespace rhi {
 
         staging_buffers.each_fwd([&](const StagingBuffer& buffer) { buffer.allocation->Release(); });
 
+        TracyD3D12Destroy(tracy_context);
+
         device_allocator->Release();
     }
 
@@ -451,7 +453,7 @@ namespace rhi {
     }
 
     void RenderDevice::begin_frame(const uint64_t frame_count, const Size thread_idx) {
-        ZoneScopedN("begin_frame");
+        ZoneScoped;
 
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
@@ -597,7 +599,7 @@ namespace rhi {
     }
 
     void RenderDevice::initialize_dxgi() {
-        ZoneScopedN("initialize_dxgi");
+        ZoneScoped;
 
         ComPtr<IDXGIFactory> basic_factory;
         auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
@@ -612,7 +614,7 @@ namespace rhi {
     }
 
     void RenderDevice::select_adapter() {
-        ZoneScopedN("select_adapter");
+        ZoneScoped;
 
         // We want an adapter:
         // - Not integrated, if possible
@@ -723,7 +725,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_queues() {
-        ZoneScopedN("create_queues");
+        ZoneScoped;
 
         // One graphics queue and one optional DMA queue
         D3D12_COMMAND_QUEUE_DESC graphics_queue_desc{};
@@ -801,7 +803,7 @@ namespace rhi {
     }
 
     void RenderDevice::create_command_allocators() {
-        ZoneScopedN("create_command_allocators");
+        ZoneScoped;
 
         direct_command_allocators.resize(settings.num_in_flight_gpu_frames);
         compute_command_allocators.resize(settings.num_in_flight_gpu_frames);
@@ -891,7 +893,7 @@ namespace rhi {
     }
 
     void RenderDevice::initialize_dma() {
-        ZoneScopedN("iniitialize_dma");
+        ZoneScoped;
 
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
         allocator_desc.pDevice = device.Get();

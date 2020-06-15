@@ -23,7 +23,7 @@ struct Event<R(Ts...)> {
     : Concepts::NoCopy
   {
     Handle(Event* _event, Size _index);
-    constexpr Handle(Handle&& _existing);
+    constexpr Handle(Handle&& _existing) noexcept;
     ~Handle();
   private:
     Event* m_event;
@@ -55,10 +55,12 @@ inline Event<R(Ts...)>::Handle::Handle(Event<R(Ts...)>* _event, Size _index)
 }
 
 template<typename R, typename... Ts>
-inline constexpr Event<R(Ts...)>::Handle::Handle(Handle&& handle_)
-  : m_event{Utility::exchange(handle_.m_event, nullptr)}
-  , m_index{Utility::exchange(handle_.m_index, 0)}
+inline constexpr Event<R(Ts...)>::Handle::Handle(Handle&& _existing) noexcept
+    : m_event{_existing.m_event}
+    , m_index{_existing.m_index}
 {
+    _existing.m_event = nullptr;
+    _existing.m_index = 0;
 }
 
 template<typename R, typename... Ts>
