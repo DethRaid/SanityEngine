@@ -53,7 +53,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(Rx::Memory::SystemAllocator::instance())} {
     // mtr_init("SanityEngine.json");
 
-    ZoneScoped(___tracy_scoped_zone, SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
+    ZoneScoped;
 
     logger->info("HELLO HUMAN");
 
@@ -193,7 +193,7 @@ void SanityEngine::initialize_scripting_runtime() {
 
     register_horus_api();
 
-    const auto success = scripting_runtime->add_script_directory("E:\\Documents\\SanityEngine\\SanityEngine\\scripts");
+    const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
     if(!success) {
         Rx::abort("Could not register SanityEngine builtin scripts modifier");
     }

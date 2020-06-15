@@ -30,6 +30,8 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
                              const entt::entity player,
                              entt::registry& registry,
                              renderer::Renderer& renderer) {
+    ZoneScoped;
+
     logger->info("Creating world with seed %d", params.seed);
 
     auto noise_generator = Rx::Ptr<FastNoiseSIMD>{Rx::Memory::SystemAllocator::instance(), FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
@@ -60,7 +62,7 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 }
 
 void World::tick(const Float32 delta_time) {
-    ZoneScopedN("tick");
+    ZoneScoped;
 
     upload_new_chunk_meshes();
 
@@ -76,7 +78,8 @@ Terrain& World::get_terrain() { return terrain; }
 WrenHandle* World::_get_wren_handle() const { return handle; }
 
 World::TerrainData World::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
-    ZoneScopedN("generate_terrain_heightmap");
+    ZoneScoped;
+
     auto& device = renderer.get_render_device();
     const auto commands = device.create_command_list(
         Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()->GetCurrentThreadIndex());
@@ -224,7 +227,11 @@ World::World(const glm::uvec2& size_in,
       chunk_generation_fibtex{ftl::Fibtex{task_scheduler}},
       chunk_modified_event{task_scheduler} {}
 
-void World::register_component(horus::Component& component) { component.begin_play(*this); }
+void World::register_component(horus::Component& component) {
+    ZoneScoped;
+
+    component.begin_play(*this);
+}
 
 Size World::get_next_free_chunk_gen_task_idx() {
     if(available_generate_chunk_blocks_task_args.is_empty()) {
@@ -271,7 +278,7 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
 }
 
 void World::upload_new_chunk_meshes() {
-    ZoneScopedN("upload_chunk_meshes");
+    ZoneScoped;
 
     Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
 
@@ -414,6 +421,8 @@ Rx::Vector<Uint32> triangulate(const DualContouringMesh& mesh) {
 }
 
 void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
+    ZoneScoped;
+
     // Scan the available chunk data, extracting surface information for the current chunk
     Rx::Array<Int32[(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)]> working_data;
 
@@ -552,7 +561,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
 }
 
 void World::tick_script_components(Float32 delta_time) {
-    ZoneScopedN("tick_script_components");
+    ZoneScoped;
 
     // registry->view<horus::Component>().each([&](horus::Component& script_component) {
     //     if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) {

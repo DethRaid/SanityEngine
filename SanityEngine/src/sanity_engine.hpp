@@ -78,10 +78,6 @@ private:
 
     void register_horus_api() const;
 
-#pragma region Debug
-    void create_debug_plane();
-#pragma endregion
-
     Rx::Ptr<horus::ScriptingRuntime> scripting_runtime;
 
 #pragma region Spawning
