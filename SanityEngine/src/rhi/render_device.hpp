@@ -10,6 +10,8 @@
 
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
+#include <ftl/fibtex.h>
+
 
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
@@ -51,7 +53,7 @@ namespace rhi {
         ComPtr<ID3D12Device1> device1;
         ComPtr<ID3D12Device5> device5;
 
-        RenderDevice(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
+        RenderDevice(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in, ftl::TaskScheduler& task_scheduler);
 
         RenderDevice(const RenderDevice& other) = delete;
         RenderDevice& operator=(const RenderDevice& other) = delete;
@@ -93,7 +95,7 @@ namespace rhi {
             const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
         [[nodiscard]] Rx::Ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
-                                                                                          ComPtr<ID3D12RootSignature> root_signature) const;
+                                                                                          const ComPtr<ID3D12RootSignature>& root_signature) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
@@ -101,15 +103,15 @@ namespace rhi {
 
         void destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> pipeline_state);
 
-        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Size thread_idx);
 
-        void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
+        void submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
-        void begin_frame(uint64_t frame_count);
+        void begin_frame(uint64_t frame_count, Size thread_idx);
 
-        void end_frame();
+        void end_frame(Size thread_idx);
 
         [[nodiscard]] Uint32 get_cur_gpu_frame_idx() const;
 
@@ -165,12 +167,14 @@ namespace rhi {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        Rx::Vector<Rx::Map<Uint32, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
+        ftl::Fibtex direct_command_allocators_fibtex;
+        Rx::Vector<Rx::Map<Size, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
+        ftl::Fibtex command_lists_by_frame_fibtex;
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_by_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
@@ -307,7 +311,7 @@ namespace rhi {
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                                  ID3D12RootSignature& root_signature);
 
-        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(const Uint32& id);
+        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(Size id);
 
         void flush_batched_command_lists();
 
@@ -320,9 +324,9 @@ namespace rhi {
 
         void destroy_resources_for_frame(Uint32 frame_idx);
 
-        void transition_swapchain_image_to_render_target();
+        void transition_swapchain_image_to_render_target(Size thread_idx);
 
-        void transition_swapchain_image_to_presentable();
+        void transition_swapchain_image_to_presentable(Size thread_idx);
 
         void wait_for_frame(uint64_t frame_index);
 

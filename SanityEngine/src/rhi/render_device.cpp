@@ -2,6 +2,7 @@
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <algorithm>
+
 #include <D3D12MemAlloc.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -25,13 +26,16 @@ namespace rhi {
 
     RenderDevice::RenderDevice(HWND window_handle,
                                const glm::uvec2& window_size,
-                               const Settings& settings_in) // NOLINT(cppcoreguidelines-pro-type-member-init)
+                               const Settings& settings_in,
+                               ftl::TaskScheduler& task_scheduler) // NOLINT(cppcoreguidelines-pro-type-member-init)
         : settings{settings_in},
           command_lists_by_frame{settings.num_in_flight_gpu_frames},
           buffer_deletion_list{settings.num_in_flight_gpu_frames},
           image_deletion_list{settings.num_in_flight_gpu_frames},
           staging_buffers_to_free{settings.num_in_flight_gpu_frames},
-          scratch_buffers_to_free{settings.num_in_flight_gpu_frames} {
+          scratch_buffers_to_free{settings.num_in_flight_gpu_frames},
+          direct_command_allocators_fibtex{&task_scheduler},
+          command_lists_by_frame_fibtex{&task_scheduler} {
 #ifndef NDEBUG
         // Only enable the debug layer if we're not running in PIX
         const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
@@ -342,7 +346,7 @@ namespace rhi {
     }
 
     Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
-                                                                              const ComPtr<ID3D12RootSignature> root_signature) const {
+                                                                              const ComPtr<ID3D12RootSignature>& root_signature) const {
         auto compute_pipeline = Rx::make_ptr<ComputePipelineState>(RX_SYSTEM_ALLOCATOR);
 
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
@@ -412,9 +416,8 @@ namespace rhi {
         // Nothing to do, destructors will take care of it
     }
 
-    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list() {
-        const auto thread_id = 0_u32;
-        auto* command_allocator = get_direct_command_allocator_for_thread(thread_id);
+    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list(const Size thread_idx) {
+        auto* command_allocator = get_direct_command_allocator_for_thread(thread_idx);
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
@@ -433,9 +436,10 @@ namespace rhi {
         return commands;
     }
 
-    void RenderDevice::submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands) {
+    void RenderDevice::submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         commands->Close();
 
+        Rx::Concurrency::ScopeLock l{command_lists_by_frame_fibtex};
         command_lists_by_frame[cur_gpu_frame_idx].push_back(commands);
     }
 
@@ -445,7 +449,7 @@ namespace rhi {
         return *material_bind_group_builder[frame_idx];
     }
 
-    void RenderDevice::begin_frame(const uint64_t frame_count) {
+    void RenderDevice::begin_frame(const uint64_t frame_count, const Size thread_idx) {
         MTR_SCOPE("RenderDevice", "begin_frame");
 
         wait_for_frame(cur_gpu_frame_idx);
@@ -462,15 +466,15 @@ namespace rhi {
             destroy_resources_for_frame(cur_gpu_frame_idx);
         }
 
-        transition_swapchain_image_to_render_target();
+        transition_swapchain_image_to_render_target(thread_idx);
 
         in_init_phase = false;
     }
 
-    void RenderDevice::end_frame() {
+    void RenderDevice::end_frame(const Size thread_idx) {
         MTR_SCOPE("RenderDevice", "end_frame");
         // Transition the swapchain image into the correct format and request presentation
-        transition_swapchain_image_to_presentable();
+        transition_swapchain_image_to_presentable(thread_idx);
 
         flush_batched_command_lists();
 
@@ -1273,7 +1277,9 @@ namespace rhi {
         return pipeline;
     }
 
-    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const Uint32& id) {
+    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const Size id) {
+        Rx::Concurrency::ScopeLock l{direct_command_allocators_fibtex};
+
         auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
         if(const auto* itr = command_allocators_for_frame.find(id)) {
             return itr->Get();
@@ -1289,11 +1295,10 @@ namespace rhi {
                 return allocator.Get();
             }
         }
-
-        return nullptr;
     }
 
     void RenderDevice::flush_batched_command_lists() {
+        Rx::Concurrency::ScopeLock l{command_lists_by_frame_fibtex};
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
@@ -1351,8 +1356,8 @@ namespace rhi {
         images.clear();
     }
 
-    void RenderDevice::transition_swapchain_image_to_render_target() {
-        auto swapchain_cmds = create_command_list();
+    void RenderDevice::transition_swapchain_image_to_render_target(const Size thread_idx) {
+        auto swapchain_cmds = create_command_list(thread_idx);
         set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Render Target");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
@@ -1364,8 +1369,8 @@ namespace rhi {
         submit_command_list(swapchain_cmds);
     }
 
-    void RenderDevice::transition_swapchain_image_to_presentable() {
-        auto swapchain_cmds = create_command_list();
+    void RenderDevice::transition_swapchain_image_to_presentable(const Size thread_idx) {
+        auto swapchain_cmds = create_command_list(thread_idx);
         set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Presentable");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();

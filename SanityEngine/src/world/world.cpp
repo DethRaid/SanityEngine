@@ -8,6 +8,7 @@
 
 #include "core/components.hpp"
 #include "core/types.hpp"
+#include "generation/dual_contouring.hpp"
 #include "rhi/render_device.hpp"
 
 RX_LOG("World", logger);
@@ -60,6 +61,8 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
 void World::tick(const Float32 delta_time) {
     MTR_SCOPE("World", "tick");
+
+    upload_new_chunk_meshes();
 
     const auto& player_transform = registry->get<TransformComponent>(player);
     load_chunks_around_player(player_transform);
@@ -127,7 +130,7 @@ void World::place_water_sources(const WorldParameters& params,
 
     constexpr Float32 water_source_spawn_rate = 0.0001f;
 
-    const auto num_water_sources = total_pixels_in_maps * water_source_spawn_rate;
+    const auto num_water_sources = static_cast<Float32>(total_pixels_in_maps) * water_source_spawn_rate;
 
     Rx::Vector<glm::uvec2> water_source_locations{static_cast<Uint32>(num_water_sources)};
 
@@ -262,6 +265,39 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
     }
 }
 
+void World::upload_new_chunk_meshes() {
+    MTR_SCOPE("World", "upload_chunk_meshes");
+
+    Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+
+    if(!mesh_data_ready_for_upload.is_empty()) {
+        auto& device = renderer->get_render_device();
+        auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());;
+
+        auto& meshes = renderer->get_static_mesh_store();
+
+        meshes.begin_adding_meshes(commands);
+
+        mesh_data_ready_for_upload.each_pair(
+            [&](const Vec2i& chunk_location, const Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>& mesh_data) {
+                const auto mesh_handle = meshes.add_mesh(mesh_data.first, mesh_data.second, commands);
+
+                const auto chunk_entity = registry->create();
+                registry->assign<renderer::ChunkMeshComponent>(chunk_entity, mesh_handle);
+
+                auto& chunk = *available_chunks.find(chunk_location);
+                chunk.entity = chunk_entity;
+                chunk.status = Chunk::Status::MeshGenerated;
+            });
+
+        meshes.end_adding_meshes(commands);
+
+        device.submit_command_list(commands);
+
+        mesh_data_ready_for_upload.clear();
+    }
+}
+
 void World::load_chunks_around_player(const TransformComponent& player_transform) {
     ensure_chunk_at_position_is_loaded(player_transform.location);
 }
@@ -317,6 +353,58 @@ void World::dispatch_needed_mesh_gen_tasks() {
             task_scheduler->AddTask({generate_mesh_for_chunk_task, mesh_args});
         }
     });
+}
+
+Rx::Vector<Uint32> triangulate(const DualContouringMesh& mesh) {
+    // The dual contoured mesh has quads, we want triangles
+    // We triangulate the mesh by identifying the diagonal which connects the vertices with the most similar normals. Those two get
+    // connected by an edge
+    auto indices = Rx::Vector<Uint32>{};
+    indices.reserve(mesh.faces.size() * 6);
+
+    auto compute_normal_for_vertex = [](const Vec3f& v0, const Vec3f& v1, const Vec3f& v2) {
+        const auto binormal = v1 - v0;
+        const auto tangent = v2 - v0;
+        return cross(binormal, tangent);
+    };
+
+    mesh.faces.each_fwd([&](const Quad& quad) {
+        const auto& v1 = mesh.vertex_positions[quad.v1];
+        const auto& v2 = mesh.vertex_positions[quad.v2];
+        const auto& v3 = mesh.vertex_positions[quad.v3];
+        const auto& v4 = mesh.vertex_positions[quad.v4];
+
+        // Desperately hope that the mesh has a sane winding direction
+        const auto n1 = compute_normal_for_vertex(v1, v4, v2);
+        const auto n2 = compute_normal_for_vertex(v2, v1, v3);
+        const auto n3 = compute_normal_for_vertex(v3, v2, v4);
+        const auto n4 = compute_normal_for_vertex(v4, v3, v1);
+
+        const auto odd_val = dot(n1, n3);
+        const auto even_val = dot(n2, n4);
+
+        if(odd_val < even_val) {
+            // The edge between the odd vertices has less curvature
+            indices.push_back(quad.v1);
+            indices.push_back(quad.v2);
+            indices.push_back(quad.v3);
+
+            indices.push_back(quad.v1);
+            indices.push_back(quad.v3);
+            indices.push_back(quad.v4);
+        } else {
+            // The edge between the even vertices has less curvature
+            indices.push_back(quad.v2);
+            indices.push_back(quad.v3);
+            indices.push_back(quad.v4);
+
+            indices.push_back(quad.v2);
+            indices.push_back(quad.v4);
+            indices.push_back(quad.v1);
+        }
+    });
+
+    return indices;
 }
 
 void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
@@ -442,6 +530,19 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     }
 
     // Dual-contouring
+    const auto mesh = dual_contour<Chunk::WIDTH + 2, Chunk::HEIGHT, Chunk::DEPTH + 2>(working_data);
+
+    const auto indices = triangulate(mesh);
+
+    auto vertices = Rx::Vector<StandardVertex>{};
+    vertices.reserve(mesh.vertex_positions.size());
+
+    for(Size i = 0; i < mesh.vertex_positions.size(); i++) {
+        vertices.emplace_back(mesh.vertex_positions[i], mesh.normals[i]);
+    }
+
+    Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+    mesh_data_ready_for_upload.insert(chunk_location, {Rx::Utility::move(vertices), Rx::Utility::move(indices)});
 }
 
 void World::tick_script_components(Float32 delta_time) {
@@ -492,7 +593,7 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void*
     }
 }
 
-void World::dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* taskScheduler, void* arg) {
+void World::dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* /* scheduler */, void* arg) {
     auto* args = static_cast<DispatchChunkMeshGenerationTasksArgs*>(arg);
     auto* world = args->world_in;
     // Loop infinitely, checking for chunks that need a new mesh

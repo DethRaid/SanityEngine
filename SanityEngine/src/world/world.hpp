@@ -230,6 +230,8 @@ private:
 
     Rx::Vector<Rx::Ptr<GenerateChunkMeshArgs>> generate_chunk_mesh_args_pool;
 
+    Rx::Map<Vec2i, Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>> mesh_data_ready_for_upload;
+
     /*!
      * \brief Gets the index of the next available chunk generation task arguments
      *
@@ -240,6 +242,8 @@ private:
     [[nodiscard]] Size get_next_free_chunk_gen_task_idx();
 
     void ensure_chunk_at_position_is_loaded(const glm::vec3& location);
+
+    void upload_new_chunk_meshes();
 
     /*!
      * \brief Loads the terrain tiles around the player

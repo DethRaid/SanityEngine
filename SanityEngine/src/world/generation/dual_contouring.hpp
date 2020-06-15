@@ -25,7 +25,10 @@ struct Quad {
  * This mesh should be triangulated before being sent to the GPU
  */
 struct DualContouringMesh {
-    Rx::Vector<Vec3f> vertices;
+    Rx::Vector<Vec3f> vertex_positions;
+
+    Rx::Vector<Vec3f> normals;
+
     Rx::Vector<Quad> faces;
 };
 
@@ -125,7 +128,13 @@ namespace _detail {
             }
         }
 
-        return DualContouringMesh{Rx::Utility::move(vertices), Rx::Utility::move(faces)};
+        Rx::Vector<Vec3f> normals;
+        normals.reserve(vertices.size());
+
+        vertices.each_fwd(
+            [&](const Vec3f& vertex_location) { normals.push_back(normal_at_location<Width, Height>(distance_field, vertex_location)); });
+
+        return DualContouringMesh{Rx::Utility::move(vertices), Rx::Utility::move(normals), Rx::Utility::move(faces)};
     }
 
     template <Uint32 Width, Uint32 Height, Uint32 Depth>
@@ -178,7 +187,7 @@ namespace _detail {
         // For each sign change location v[i], we find the normal n[i].
         // The error term we are trying to minimize is sum(dot(x - v[i], n[i]) ^ 2)
 
-        // #In other words, minimize || A* x - b || ^2 where A and b are a matrix and vector
+        // In other words, minimize || A* x - b || ^2 where A and b are a matrix and vector
         // derived from v and n
 
         auto normals = Rx::Vector<Vec3f>{};

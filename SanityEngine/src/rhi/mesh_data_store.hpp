@@ -6,13 +6,14 @@
 #include <rx/core/vector.h>
 
 #include "resources.hpp"
+#include <core/types.hpp>
 
 struct StandardVertex {
-    glm::vec3 position;
-    glm::vec3 normal;
+    Vec3f position;
+    Vec3f normal;
     Uint32 color{0xFFFFFFFF};
     Uint32 material_idx{0};
-    glm::vec2 texcoord;
+    Vec2f texcoord{};
 };
 
 namespace rhi {
