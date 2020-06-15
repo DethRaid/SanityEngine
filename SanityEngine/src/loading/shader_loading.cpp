@@ -2,7 +2,6 @@
 
 #include <cstdio>
 
-#include <minitrace.h>
 #include <rx/core/log.h>
 #include <rx/core/string.h>
 

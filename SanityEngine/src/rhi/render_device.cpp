@@ -8,7 +8,7 @@
 #include <GLFW/glfw3native.h>
 #include <d3dcompiler.h>
 #include <dxgi1_3.h>
-#include <minitrace.h>
+#include <TracyD3D12.hpp>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 
@@ -738,6 +738,8 @@ namespace rhi {
 
         set_object_name(direct_command_queue.Get(), "Direct Queue");
 
+        tracy_context = TracyD3D12Context(device.Get(), direct_command_queue.Get());
+
         // TODO: Add an async compute queue, when the time comes
 
         if(!is_uma) {
@@ -1293,6 +1295,7 @@ namespace rhi {
 
             } else {
                 command_allocators_for_frame.insert(id, allocator);
+
                 return allocator.Get();
             }
         }

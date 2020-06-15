@@ -38,6 +38,8 @@ namespace renderer {
     }
 
     void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "DenoiserPass");
+
         {
             const auto
                 render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],

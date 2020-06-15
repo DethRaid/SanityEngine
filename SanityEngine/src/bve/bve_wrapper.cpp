@@ -5,7 +5,6 @@
 #include <entt/entity/registry.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <minitrace.h>
 #include <stb_image.h>
 
 #include "adapters/tracy.hpp"

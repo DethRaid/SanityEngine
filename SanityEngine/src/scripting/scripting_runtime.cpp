@@ -4,7 +4,6 @@
 
 #include <Tracy.hpp>
 #include <entt/entity/registry.hpp>
-#include <minitrace.h>
 #include <rx/core/log.h>
 
 #include "core/components.hpp"

@@ -1,8 +1,7 @@
 #include "world.hpp"
 
-#include <ftl/task_scheduler.h>
-#include <minitrace.h>
 #include <Tracy.hpp>
+#include <ftl/task_scheduler.h>
 #include <rx/core/log.h>
 #include <rx/core/prng/mt19937.h>
 #include <rx/math/vec2.h>
@@ -79,7 +78,10 @@ WrenHandle* World::_get_wren_handle() const { return handle; }
 World::TerrainData World::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
     ZoneScopedN("generate_terrain_heightmap");
     auto& device = renderer.get_render_device();
-    auto commands = device.create_command_list();
+    const auto commands = device.create_command_list(
+        Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()->GetCurrentThreadIndex());
+
+    TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "GenerateTerrain");
 
     auto data = TerrainData{};
 
@@ -93,6 +95,8 @@ World::TerrainData World::generate_terrain(FastNoiseSIMD& noise_generator, const
 
     // Let water flow around
     compute_water_flow(renderer, commands, data);
+
+    device.submit_command_list(commands);
 
     return data;
 }
@@ -148,14 +152,14 @@ void World::place_water_sources(const WorldParameters& params,
 
     data.ground_water_handle = renderer.create_image(rhi::ImageCreateInfo{.name = "Terrain Water Map",
                                                                           .usage = rhi::ImageUsage::UnorderedAccess,
-                                                                          .format = rhi::ImageFormat::R32F,
+                                                                          .format = rhi::ImageFormat::Rg16F,
                                                                           .width = params.width,
                                                                           .height = params.height},
                                                      water_depth_map.data(),
                                                      commands);
 }
 
-void World::compute_water_flow(renderer::Renderer& renderer, ComPtr<ID3D12GraphicsCommandList4> commands, TerrainData data) {
+void World::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data) {
     const auto& heightmap_image = renderer.get_image(data.heightmap_handle);
     const auto& watermap_image = renderer.get_image(data.ground_water_handle);
 
@@ -274,6 +278,7 @@ void World::upload_new_chunk_meshes() {
     if(!mesh_data_ready_for_upload.is_empty()) {
         auto& device = renderer->get_render_device();
         auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "UploadChunkMeshes");
 
         auto& meshes = renderer->get_static_mesh_store();
 

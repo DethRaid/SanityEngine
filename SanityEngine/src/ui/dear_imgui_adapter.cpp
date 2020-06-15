@@ -5,7 +5,6 @@
 #include <GLFW/glfw3native.h>
 #include <Tracy.hpp>
 #include <imgui/imgui.h>
-#include <minitrace.h>
 
 #include "renderer/renderer.hpp"
 #include "rhi/render_device.hpp"

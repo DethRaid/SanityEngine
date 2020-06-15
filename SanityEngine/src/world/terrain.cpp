@@ -4,7 +4,6 @@
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <ftl/task.h>
-#include <minitrace.h>
 #include <rx/core/array.h>
 #include <rx/core/log.h>
 
@@ -153,7 +152,9 @@ void Terrain::generate_tile(const glm::ivec2& tilecoord) {
     }
 
     auto& device = renderer->get_render_device();
-    const auto commands = device.create_command_list();
+    const auto commands = device.create_command_list(0);
+    TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
+
     auto& meshes = renderer->get_static_mesh_store();
 
     meshes.begin_adding_meshes(commands);

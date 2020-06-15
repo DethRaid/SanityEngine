@@ -5,7 +5,7 @@
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
-#include <minitrace.h>
+
 #include <rx/core/log.h>
 
 #include "core/align.hpp"
@@ -187,7 +187,7 @@ namespace renderer {
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
 
-        auto command_list = device->create_command_list();
+        auto command_list = device->create_command_list(0);
         command_list->SetName(L"Main Render Command List");
 
         if(raytracing_scene_dirty) {
@@ -380,7 +380,9 @@ namespace renderer {
     void Renderer::create_builtin_images() {
         load_noise_texture("data/textures/LDR_RGBA_0.png");
 
-        const auto commands = device->create_command_list();
+        const auto commands = device->create_command_list(0);
+
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "CreateBuiltinImages");
 
         {
             const auto pink_texture_create_info = rhi::ImageCreateInfo{.name = "Pink",
@@ -465,6 +467,8 @@ namespace renderer {
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "RebuildRaytracingScene");
+
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
         if(raytracing_scene.buffer) {
@@ -569,6 +573,8 @@ namespace renderer {
     void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
         ZoneScopedN("render_3d_scene");
 
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "Render3DScene");
+
         update_lights(registry, frame_idx);
 
         memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
@@ -631,6 +637,8 @@ namespace renderer {
     void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const Uint32 frame_idx) const {
         ZoneScopedN("render_ui");
 
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "RenderUI");
+        
         {
             const auto* backbuffer_framebuffer = device->get_backbuffer_framebuffer();
 

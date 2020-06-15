@@ -208,34 +208,6 @@ void SanityEngine::register_horus_api() const {
     _scripting_entity_scripting_api_register_with_scripting_runtime(*scripting_runtime);
 }
 
-void SanityEngine::create_debug_plane() {
-    const Rx::Vector<StandardVertex> vertices = Rx::Array{
-        StandardVertex{/* .position = */ {-5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-        StandardVertex{/* .position = */ {5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-        StandardVertex{/* .position = */ {5, -1, 5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-        StandardVertex{/* .position = */ {-5, -1, -5}, /* .normal = */ {0, 1, 0}, /* .color = */ 0xFF727272, /* .texcoord = */ {}},
-    };
-
-    const Rx::Vector<Uint32> indices = Rx::Array{0, 1, 2, 0, 3, 1};
-
-    auto& device = renderer->get_render_device();
-    auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());
-
-    auto& mesh_store = renderer->get_static_mesh_store();
-
-    mesh_store.begin_adding_meshes(commands);
-    auto plane_renderable = mesh_store.add_mesh(vertices, indices, commands);
-    mesh_store.end_adding_meshes(commands);
-
-    device.submit_command_list(std::move(commands));
-
-    const auto plane_entity = registry.create();
-
-    registry.assign<renderer::StandardRenderableComponent>(plane_entity, std::move(plane_renderable));
-
-    logger->info("Created plane");
-}
-
 void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = registry.create();
 

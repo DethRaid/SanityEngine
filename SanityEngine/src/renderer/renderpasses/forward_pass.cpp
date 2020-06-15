@@ -2,7 +2,6 @@
 
 #include <Tracy.hpp>
 #include <entt/entity/registry.hpp>
-#include <minitrace.h>
 #include <rx/core/log.h>
 
 #include "loading/shader_loading.hpp"
@@ -54,6 +53,8 @@ namespace renderer {
     }
 
     void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "ForwardPass");
+
         begin_render_pass(commands);
 
         const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);

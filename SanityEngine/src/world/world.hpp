@@ -158,7 +158,9 @@ private:
                                     TerrainData& data,
                                     unsigned total_pixels_in_maps);
 
-    static void compute_water_flow(renderer::Renderer& renderer, ComPtr<ID3D12GraphicsCommandList4> commands, TerrainData data);
+    static void compute_water_flow(renderer::Renderer& renderer,
+                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                   TerrainData& data);
 
     /*!
      * \brief Runs the Sanity Engine's climate model on the provided world data

@@ -2,7 +2,6 @@
 
 #include <utility>
 
-#include <minitrace.h>
 #include <rx/core/log.h>
 
 #include "d3dx12.hpp"

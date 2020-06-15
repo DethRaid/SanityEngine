@@ -10,6 +10,7 @@
 
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
+#include <TracyD3D12.hpp>
 #include <ftl/fibtex.h>
 
 
@@ -48,6 +49,7 @@ namespace rhi {
     class RenderDevice {
     public:
         inline static Uint32 material_buffer_root_parameter_index = 2;
+        inline static tracy::D3D12QueueCtx* tracy_context;
 
         ComPtr<ID3D12Device> device;
         ComPtr<ID3D12Device1> device1;

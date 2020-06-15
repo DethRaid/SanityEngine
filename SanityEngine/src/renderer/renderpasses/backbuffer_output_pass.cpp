@@ -1,5 +1,6 @@
 #include "backbuffer_output_pass.hpp"
 
+#include <TracyD3D12.hpp>
 #include <rx/core/log.h>
 
 #include "loading/shader_loading.hpp"
@@ -38,6 +39,8 @@ namespace renderer {
     }
 
     void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "BackbufferOutputPass");
+
         auto& device = renderer->get_render_device();
         const auto* framebuffer = device.get_backbuffer_framebuffer();
 
