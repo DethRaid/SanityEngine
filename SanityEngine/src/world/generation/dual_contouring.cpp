@@ -206,7 +206,7 @@ namespace _detail {
     }
 
     float qef_solve(mat3x3_tri ATA, Vec3f ATb, Vec4f pointaccum, Vec3f* x) {
-        Vec3f masspoint = { pointaccum.x / pointaccum.w, pointaccum.y / pointaccum.w, pointaccum.z / pointaccum.w};
+        Vec3f masspoint = {pointaccum.x / pointaccum.w, pointaccum.y / pointaccum.w, pointaccum.z / pointaccum.w};
 
         Vec3f A_mp = {0.f, 0.f, 0.f};
         svd_vmul_sym(&A_mp, ATA, masspoint);
@@ -246,3 +246,11 @@ namespace _detail {
         }
     }
 } // namespace _detail
+
+Quad Quad::swap(const bool swap) {
+    if(swap) {
+        return Quad{.v1 = v4, .v2 = v3, .v3 = v2, .v4 = v1};
+    } else {
+        return Quad{v1, v2, v3, v4};
+    }
+}

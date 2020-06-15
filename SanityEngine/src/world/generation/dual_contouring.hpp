@@ -15,6 +15,8 @@ struct Quad {
     Uint32 v2;
     Uint32 v3;
     Uint32 v4;
+
+    Quad swap(bool swap);
 };
 
 /*!
@@ -22,7 +24,11 @@ struct Quad {
  *
  * This mesh should be triangulated before being sent to the GPU
  */
-struct DualContouringMesh {};
+struct DualContouringMesh {
+    Rx::Vector<Vec3f> vertices;
+    Rx::Vector<Quad> faces;
+};
+
 /*!
  * \brief Computes the dual-contoured mesh that best fits the provided distance field
  *
@@ -60,15 +66,66 @@ namespace _detail {
         Rx::Vector<Vec3f> vertices;
         Rx::Map<Vec3u, Size> indices;
 
-        for(Uint32 x = 0; x < Width; x++) {
+        for(Uint32 z = 0; z < Depth; z++) {
             for(Uint32 y = 0; y < Height; y++) {
-                for(Uint32 z = 0; z < Depth; z++) {
+                for(Uint32 x = 0; x < Width; x++) {
                     const auto vert = dual_contour_find_best_vertex(distance_field, x, y, z);
+                    if(!vert) {
+                        continue;
+                    }
+
+                    vertices.push_back(*vert);
+                    indices.insert(Vec3u{x, y, z}, vertices.size() - 1);
                 }
             }
         }
 
-        return {};
+        auto faces = Rx::Vector<Quad>{};
+        faces.reserve(distance_field.size());
+
+        for(Uint32 z = 0; z < Depth; z++) {
+            for(Uint32 y = 0; y < Height; y++) {
+                for(Uint32 x = 0; x < Width; x++) {
+                    if(x > 0 && y > 0) {
+                        const auto solid1 = distance_field[idx_from_xyz<Width, Height>(x, y, z)] > 0;
+                        const auto solid2 = distance_field[idx_from_xyz<Width, Height>(x, y, z + 1)] > 0;
+                        if(solid1 != solid2) {
+                            faces.push_back(Quad{indices[idx_from_xyz<Width, Height, Depth>(x - 1, y - 1, z)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y - 1, z)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 1, y - 0, z)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y - 0, z)]}
+                                                .swap(solid2));
+                        }
+                    }
+
+                    if(x > 0 && z > 0) {
+                        const auto solid1 = distance_field[idx_from_xyz<Width, Height>(x, y, z)] > 0;
+                        const auto solid2 = distance_field[idx_from_xyz<Width, Height>(x, y + 1, z)] > 0;
+                        if(solid1 != solid2) {
+                            faces.push_back(Quad{indices[idx_from_xyz<Width, Height, Depth>(x - 1, y, z - 1)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y, z - 1)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 0, y, z + 0)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x - 1, y, z + 0)]}
+                                                .swap(solid1));
+                        }
+                    }
+
+                    if(y > 0 && z > 0) {
+                        const auto solid1 = distance_field[idx_from_xyz<Width, Height>(x, y, z)] > 0;
+                        const auto solid2 = distance_field[idx_from_xyz<Width, Height>(x + 1, y, z)] > 0;
+                        if(solid1 != solid2) {
+                            faces.push_back(Quad{indices[idx_from_xyz<Width, Height, Depth>(x, y - 1, z - 1)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x, y - 0, z - 1)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x, y - 0, z - 0)],
+                                                 indices[idx_from_xyz<Width, Height, Depth>(x, y - 1, z - 0)]}
+                                                .swap(solid2));
+                        }
+                    }
+                }
+            }
+        }
+
+        return DualContouringMesh{Rx::Utility::move(vertices), Rx::Utility::move(faces)};
     }
 
     template <Uint32 Width, Uint32 Height, Uint32 Depth>
@@ -93,7 +150,7 @@ namespace _detail {
         for(Uint32 dy = 0; dy < 2; dy++) {
             for(Uint32 dx = 0; dx < 2; dx++) {
                 if((v[0][dy][dx] > 0) != (v[1][dy][dx] > 0)) {
-                    changes.emplace_back(x + dx, y + dy, z + adapt(v[0][dy][dx], v[1][dy][gx]));
+                    changes.emplace_back(x + dx, y + dy, z + adapt(v[0][dy][dx], v[1][dy][dx]));
                 }
             }
         }
@@ -126,7 +183,7 @@ namespace _detail {
 
         auto normals = Rx::Vector<Vec3f>{};
         normals.reserve(changes.size());
-        changes.each_fwd([&](const Vec3f& v) { normals.push_back(normal_at_location(distance_field, v)); });
+        changes.each_fwd([&](const Vec3f& location) { normals.push_back(normal_at_location(distance_field, location)); });
 
         return solve_qef(x, y, z, changes, normals);
     }
@@ -155,7 +212,6 @@ namespace _detail {
         return idx_from_xyz<Width, Height>(xyz.x, xyz.y, xyz.z);
     }
 } // namespace _detail
-
 
 template <Uint32 Width, Uint32 Height, Uint32 Depth>
 [[nodiscard]] DualContouringMesh dual_contour(const Rx::Array<Int32[Width * Height * Depth]>& distance_field) {

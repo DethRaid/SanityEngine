@@ -258,7 +258,7 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
         // has started loading - the task that loads the chunk will update it's data as needed
         available_chunks.insert(chunk_location, Chunk{.location = {chunk_location.x, chunk_location.y}});
 
-        task_scheduler->AddTask(ftl::Task{.Function = generate_blocks_for_chunk, .ArgData = args});
+        task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});
     }
 }
 
