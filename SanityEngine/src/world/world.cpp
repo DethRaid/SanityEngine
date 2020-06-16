@@ -168,17 +168,6 @@ void World::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12
     const auto& heightmap_image = renderer.get_image(data.heightmap_handle);
     const auto& watermap_image = renderer.get_image(data.ground_water_handle);
 
-    {
-        const Rx::Vector<D3D12_RESOURCE_BARRIER>
-            barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(heightmap_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                 CD3DX12_RESOURCE_BARRIER::Transition(watermap_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
-
-        commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-    }
 }
 
 void World::generate_climate_data(TerrainData& terrain_data, const WorldParameters& params, renderer::Renderer& renderer) {
@@ -225,7 +214,9 @@ World::World(const glm::uvec2& size_in,
       terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, *noise_generator, registry_in},
       task_scheduler{Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()},
       chunk_generation_fibtex{ftl::Fibtex{task_scheduler}},
-      chunk_modified_event{task_scheduler} {}
+      chunk_modified_event{task_scheduler} {
+    
+}
 
 void World::register_component(horus::Component& component) {
     ZoneScoped;

@@ -141,6 +141,15 @@ namespace renderer {
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
+        if(create_info.usage == rhi::ImageUsage::UnorderedAccess) {
+            // Transition the image to COPY_DEST
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                                 D3D12_RESOURCE_STATE_COPY_DEST)};
+
+            commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+        }
+
         const auto num_bytes_in_texture = create_info.width * create_info.height * rhi::size_in_bytes(create_info.format);
 
         const auto& staging_buffer = device->get_staging_buffer(num_bytes_in_texture);
@@ -154,6 +163,15 @@ namespace renderer {
         const auto result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0 || FAILED(result)) {
             logger->error("Could not upload texture data");
+        } else {
+            if(create_info.usage == rhi::ImageUsage::UnorderedAccess) {
+                // Transition the image back to UNORDERED_ACCESS
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                                                                                     D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
+
+                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            }
         }
 
         return handle;
