@@ -3,9 +3,10 @@
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <rx/core/set.h>
+#include <rx/core/map.h>
 #include <rx/core/string.h>
 
+#include "core/types.hpp"
 #include "serialization/serialization.hpp"
 
 // The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
@@ -46,10 +47,21 @@ inline glm::vec3 TransformComponent::get_up_vector() const {
     return global_up * rotation;
 }
 
-struct [[component]] TagComponent {
-    Rx::Set<Rx::String> tags;
+/*!
+ * \brief Component type for any entity within SanityEngine
+ *
+ * Entities have a system for sending and receiving events. Other components may subscribe to that system and react to events
+ */
+struct [[component]] SanityEngineEntity {
+    Rx::Map<Rx::String, Int32> tags;
+
+    void add_tag(const Rx::String& tag);
+
+    void add_stacks_of_tag(const Rx::String& tag, Int32 num_stacks);
+
+    void remove_tag(const Rx::String& tag, bool remove_all_stacks = false);
 };
 
 JSON5_CLASS(TransformComponent, location, rotation, scale)
 
-JSON5_CLASS(TagComponent, tags)
+JSON5_CLASS(SanityEngineEntity, tags)

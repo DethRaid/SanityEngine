@@ -13,22 +13,26 @@ namespace horus {
         : handle{handle_in}, entity{entity_in}, registry{registry_in} {}
 
     void Entity::add_tag(const Rx::String& tag) const {
-        auto& tags = registry.get_or_assign<TagComponent>(entity);
-        tags.tags.insert(tag);
+        auto& tags = registry.get_or_assign<SanityEngineEntity>(entity);
+        if(auto* num_stacks = tags.tags.find(tag)) {
+            (*num_stacks)++;
+        } else {
+            tags.tags.insert(tag, 1);
+        }
     }
 
     bool Entity::has_tag(const Rx::String& tag) const {
-        if(registry.has<TagComponent>(entity)) {
-            const auto& tags = registry.get<TagComponent>(entity);
+        if(registry.has<SanityEngineEntity>(entity)) {
+            const auto& tags = registry.get<SanityEngineEntity>(entity);
             return tags.tags.find(tag) != nullptr;
         }
 
         return false;
     }
 
-    Rx::Set<Rx::String> Entity::get_tags() const {
-        if(registry.has<TagComponent>(entity)) {
-            const auto& tag_component = registry.get<TagComponent>(entity);
+    Rx::Map<Rx::String, Int32> Entity::get_tags() const {
+        if(registry.has<SanityEngineEntity>(entity)) {
+            const auto& tag_component = registry.get<SanityEngineEntity>(entity);
             return tag_component.tags;
 
         } else {
@@ -92,7 +96,7 @@ void _entity_get_tags(WrenVM* vm) {
     wrenSetSlotNewList(vm, 0);
 
     Uint32 i{0};
-    tags.each([&](const Rx::String& tag) {
+    tags.each_key([&](const Rx::String& tag) {
         wrenSetSlotString(vm, 1, tag.data());
         wrenInsertInList(vm, 0, i, 1);
 

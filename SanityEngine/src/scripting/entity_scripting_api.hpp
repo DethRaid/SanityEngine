@@ -4,9 +4,12 @@
 
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
+#include <rx/core/map.h>
 #include <rx/core/set.h>
 #include <rx/core/string.h>
 #include <wren/wren.hpp>
+
+#include "core/types.hpp"
 
 namespace Rx {
     struct String;
@@ -53,7 +56,7 @@ namespace horus {
 
         [[horus::method]] [[nodiscard]] bool has_tag(const Rx::String& tag) const;
 
-        [[horus::method]] [[nodiscard]] Rx::Set<Rx::String> get_tags() const;
+        [[horus::method]] [[nodiscard]] Rx::Map<Rx::String, Int32> get_tags() const;
 
         [[horus::method]] [[nodiscard]] World* get_world() const;
 

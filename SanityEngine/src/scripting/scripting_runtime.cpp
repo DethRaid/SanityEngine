@@ -431,14 +431,14 @@ namespace horus {
         const auto* entity_id_data = wrenGetSlotForeign(vm, 0);
         const auto entity_id = *static_cast<const entt::entity*>(entity_id_data);
 
-        const auto& tag_component = runtime->registry->get<TagComponent>(entity_id);
+        const auto& tag_component = runtime->registry->get<SanityEngineEntity>(entity_id);
 
         wrenEnsureSlots(vm, 2);
 
         wrenSetSlotNewList(vm, 0);
 
         int list_idx = 0;
-        tag_component.tags.each([&](const Rx::String& tag) {
+        tag_component.tags.each_key([&](const Rx::String& tag) {
             wrenSetSlotString(vm, 1, tag.data());
 
             wrenInsertInList(vm, 0, list_idx, 1);
