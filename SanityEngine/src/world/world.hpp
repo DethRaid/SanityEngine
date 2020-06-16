@@ -62,8 +62,6 @@ class World;
 struct GenerateChunkBlocksArgs {
     World* world_in;
 
-    Size task_idx_in;
-
     Vec2i location_in;
 
     Terrain* terrain_in;
@@ -76,8 +74,6 @@ struct DispatchChunkMeshGenerationTasksArgs {
 };
 
 struct GenerateChunkMeshArgs {
-    Size task_idx_in;
-
     World* world_in;
 
     Vec2i location_in;
@@ -166,9 +162,7 @@ private:
                                     TerrainData& data,
                                     unsigned total_pixels_in_maps);
 
-    static void compute_water_flow(renderer::Renderer& renderer,
-                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                   TerrainData& data);
+    static void compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
 
     /*!
      * \brief Runs the Sanity Engine's climate model on the provided world data
@@ -187,11 +181,11 @@ private:
 
     renderer::Renderer* renderer;
 
+    ftl::TaskScheduler* task_scheduler;
+
     Terrain terrain;
 
     WrenHandle* handle;
-
-    ftl::TaskScheduler* task_scheduler;
 
     void register_component(horus::Component& component);
 
@@ -200,7 +194,7 @@ private:
     [[nodiscard]] bool does_chunk_have_block_data(const Vec2i& chunk_location) const;
 
 #pragma region Chunk generation
-    static void generate_blocks_for_chunk(ftl::TaskScheduler* scheduler , void* arg);
+    static void generate_blocks_for_chunk(ftl::TaskScheduler* scheduler, void* arg);
 
     static void dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* scheduler, void* arg);
 
@@ -220,28 +214,7 @@ private:
      */
     Rx::Vector<Size> available_generate_chunk_blocks_task_args;
 
-    /*!
-     * \brief Pool of argument structs for generate chunk tasks
-     *
-     * The arguments in this pool may or may not be in use. If the index of an argument is in `finished_chunk_generate_task_indices`, the
-     * args at that index are available for use by a new chunk generation task
-     */
-    Rx::Vector<Rx::Ptr<GenerateChunkBlocksArgs>> generate_chunk_blocks_args_pool;
-
-    Rx::Vector<Size> available_generate_chunk_mesh_task_args;
-
-    Rx::Vector<Rx::Ptr<GenerateChunkMeshArgs>> generate_chunk_mesh_args_pool;
-
     Rx::Map<Vec2i, Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>> mesh_data_ready_for_upload;
-
-    /*!
-     * \brief Gets the index of the next available chunk generation task arguments
-     *
-     * If this index is equal to `args_pool.size()`, there's no available args structs and you should make a new one
-     *
-     * \note This method _must_ be externally synchronized
-     */
-    [[nodiscard]] Size get_next_free_chunk_gen_task_idx();
 
     void ensure_chunk_at_position_is_loaded(const glm::vec3& location);
 

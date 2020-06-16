@@ -13,7 +13,6 @@
 #include <TracyD3D12.hpp>
 #include <ftl/fibtex.h>
 
-
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
 #include "rhi/d3dx12.hpp"
@@ -73,7 +72,7 @@ namespace renderer {
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
         [[nodiscard]] Rx::Ptr<Framebuffer> create_framebuffer(const Rx::Vector<const Image*>& render_targets,
-                                                                      const Image* depth_target = nullptr) const;
+                                                              const Image* depth_target = nullptr) const;
 
         Framebuffer* get_backbuffer_framebuffer();
 
@@ -99,7 +98,7 @@ namespace renderer {
             const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
         [[nodiscard]] Rx::Ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
-                                                                                          const ComPtr<ID3D12RootSignature>& root_signature) const;
+                                                                                  const ComPtr<ID3D12RootSignature>& root_signature) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
@@ -313,7 +312,7 @@ namespace renderer {
         [[nodiscard]] Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const Rx::Vector<uint8_t>& shader) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
-                                                                                 ID3D12RootSignature& root_signature);
+                                                                         ID3D12RootSignature& root_signature);
 
         [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(Size id);
 
@@ -351,4 +350,4 @@ namespace renderer {
     void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {
         resource.resource->Release();
     }
-} // namespace rhi
+} // namespace renderer

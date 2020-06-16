@@ -1,6 +1,7 @@
 #include "world.hpp"
 
 #include <Tracy.hpp>
+#include <ftl/atomic_counter.h>
 #include <ftl/task_scheduler.h>
 #include <rx/core/log.h>
 #include <rx/core/prng/mt19937.h>
@@ -60,6 +61,27 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
                                registry,
                                renderer);
 }
+
+World::World(const glm::uvec2& size_in,
+             const Uint32 min_terrain_height,
+             const Uint32 max_terrain_height,
+             Rx::Ptr<FastNoiseSIMD> noise_generator_in,
+             entt::entity player_in,
+             entt::registry& registry_in,
+             renderer::Renderer& renderer_in)
+    : size{size_in},
+      noise_generator{std::move(noise_generator_in)},
+      player{player_in},
+      registry{&registry_in},
+      renderer{&renderer_in},
+      task_scheduler{Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()},
+      terrain{{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height},
+              renderer_in,
+              *noise_generator,
+              registry_in,
+              *task_scheduler},
+      chunk_generation_fibtex{task_scheduler},
+      chunk_modified_event{task_scheduler} {}
 
 void World::tick(const Float32 delta_time) {
     ZoneScoped;
@@ -125,10 +147,10 @@ void World::generate_heightmap(FastNoiseSIMD& noise_generator,
     data.heightmap.each_fwd([&](Float32& height) { height = height * height_range + min_terrain_height; });
 
     data.heightmap_handle = renderer.create_image(renderer::ImageCreateInfo{.name = "Terrain Heightmap",
-                                                                       .usage = renderer::ImageUsage::UnorderedAccess,
-                                                                       .format = renderer::ImageFormat::R32F,
-                                                                       .width = params.width,
-                                                                       .height = params.height},
+                                                                            .usage = renderer::ImageUsage::UnorderedAccess,
+                                                                            .format = renderer::ImageFormat::R32F,
+                                                                            .width = params.width,
+                                                                            .height = params.height},
                                                   data.heightmap.data(),
                                                   commands);
 }
@@ -158,10 +180,10 @@ void World::place_water_sources(const WorldParameters& params,
     });
 
     data.ground_water_handle = renderer.create_image(renderer::ImageCreateInfo{.name = "Terrain Water Map",
-                                                                          .usage = renderer::ImageUsage::UnorderedAccess,
-                                                                          .format = renderer::ImageFormat::Rg16F,
-                                                                          .width = params.width,
-                                                                          .height = params.height},
+                                                                               .usage = renderer::ImageUsage::UnorderedAccess,
+                                                                               .format = renderer::ImageFormat::Rg16F,
+                                                                               .width = params.width,
+                                                                               .height = params.height},
                                                      water_depth_map.data(),
                                                      commands);
 }
@@ -200,38 +222,10 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
      */
 }
 
-World::World(const glm::uvec2& size_in,
-             const Uint32 min_terrain_height,
-             const Uint32 max_terrain_height,
-             Rx::Ptr<FastNoiseSIMD> noise_generator_in,
-             entt::entity player_in,
-             entt::registry& registry_in,
-             renderer::Renderer& renderer_in)
-    : size{size_in},
-      noise_generator{std::move(noise_generator_in)},
-      player{player_in},
-      registry{&registry_in},
-      renderer{&renderer_in},
-      terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, *noise_generator, registry_in},
-      task_scheduler{Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()},
-      chunk_generation_fibtex{ftl::Fibtex{task_scheduler}},
-      chunk_modified_event{task_scheduler} {}
-
 void World::register_component(horus::Component& component) {
     ZoneScoped;
 
     component.begin_play(*this);
-}
-
-Size World::get_next_free_chunk_gen_task_idx() {
-    if(available_generate_chunk_blocks_task_args.is_empty()) {
-        return generate_chunk_blocks_args_pool.size();
-    }
-
-    const auto index = available_generate_chunk_blocks_task_args.last();
-    available_generate_chunk_blocks_task_args.pop_back();
-
-    return index;
 }
 
 void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
@@ -241,7 +235,7 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
     const auto chunk_location = Vec2i{chunk_x, chunk_y};
 
     {
-        Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+        ftl::ScopeLock l{chunk_generation_fibtex, true};
 
         if(available_chunks.find(chunk_location) != nullptr) {
             // Chunk is loaded, all is good in the world
@@ -250,16 +244,11 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
 
         // Chunk is not loaded, let's load it
         {
-            const auto task_idx = get_next_free_chunk_gen_task_idx();
-            if(task_idx == generate_chunk_blocks_args_pool.size()) {
-                generate_chunk_blocks_args_pool.push_back(
-                    Rx::make_ptr<GenerateChunkBlocksArgs>(RX_SYSTEM_ALLOCATOR, this, task_idx, chunk_location, &terrain));
-            }
-
-            auto* args = generate_chunk_blocks_args_pool[task_idx].get();
-            args->task_idx_in = task_idx;
-            args->location_in = chunk_location;
-            args->terrain_in = &terrain;
+            auto* args = new GenerateChunkBlocksArgs{
+                .world_in = this,
+                .location_in = chunk_location,
+                .terrain_in = &terrain,
+            };
 
             // Add an empty chunk. Since chunks start out marked as uninitialized, we can insert a chunk into this map to mark that the
             // chunk has started loading - the task that loads the chunk will update it's data as needed
@@ -277,7 +266,7 @@ void World::upload_new_chunk_meshes() {
     // Send help
     // ZoneScoped;
 
-    Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+    chunk_generation_fibtex.lock(true);
 
     if(!mesh_data_ready_for_upload.is_empty()) {
         auto& device = renderer->get_render_device();
@@ -306,9 +295,17 @@ void World::upload_new_chunk_meshes() {
 
         mesh_data_ready_for_upload.clear();
     }
+
+    chunk_generation_fibtex.unlock();
 }
 
 void World::load_chunks_around_player(const TransformComponent& player_transform) {
+    // Loading the chunks around the player may ONLY happen when there's no outstanding terrain tilegen tasks
+    // We KNOW that this method will be called from a task, and that the task will have been dispatched AFTER all the terrain tilegen tasks
+    // were dispatched. Therefore, there's won't be situations where a tilegen tasks finished after this task begins
+    auto& counter = terrain.get_num_active_tilegen_tasks();
+    task_scheduler->WaitForCounter(&counter, 0, true);
+
     ensure_chunk_at_position_is_loaded(player_transform.location);
 
     // TODO: Configurable chunk distance
@@ -359,24 +356,10 @@ void World::dispatch_needed_mesh_gen_tasks() {
 
             // All of the chunks in the 3x3 region centered on this chunk are fully loaded
 
-            Size idx;
-            if(available_generate_chunk_mesh_task_args.is_empty()) {
-                // No available args - make a new one!
-                idx = generate_chunk_mesh_args_pool.size();
-                generate_chunk_mesh_args_pool.emplace_back(RX_SYSTEM_ALLOCATOR);
-
-            } else {
-                // Get index of an available args
-                idx = available_generate_chunk_mesh_task_args.last();
-                available_generate_chunk_mesh_task_args.pop_back();
-            }
-
-            auto* mesh_args = generate_chunk_mesh_args_pool[idx].get();
-
-            mesh_args->task_idx_in = idx;
-            mesh_args->world_in = this;
-            mesh_args->location_in = chunk.location;
-
+            auto* mesh_args = new GenerateChunkMeshArgs{
+                .world_in = this,
+                .location_in = chunk.location,
+            };
             task_scheduler->AddTask({generate_mesh_for_chunk_task, mesh_args});
         }
     });
@@ -442,7 +425,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
 
     // Copy block data from the relevant chunks
     {
-        Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+        ftl::ScopeLock l{chunk_generation_fibtex};
 
         {
             const auto& center_chunk = *available_chunks.find(chunk_location);
@@ -613,14 +596,16 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void*
 
     {
         Rx::Concurrency::ScopeLock l{world->chunk_generation_fibtex};
+
         auto* chunk = world->available_chunks.find(args->location_in);
+
         chunk->block_data.resize(block_data.size());
         memcpy(chunk->block_data.data(), block_data.data(), block_data.size() * sizeof(BlockId));
         chunk->status = Chunk::Status::BlockDataGenerated;
         world->chunk_modified_event.Store(1);
-
-        world->available_generate_chunk_blocks_task_args.push_back(args->task_idx_in);
     }
+
+    delete args;
 }
 
 void World::dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* /* scheduler */, void* arg) {
@@ -642,5 +627,6 @@ void World::generate_mesh_for_chunk_task(ftl::TaskScheduler* /* scheduler */, vo
     world->generate_mesh_for_chunk(args->location_in);
 
     Rx::Concurrency::ScopeLock l{world->chunk_generation_fibtex};
-    world->available_generate_chunk_mesh_task_args.push_back(args->task_idx_in);
+
+    delete args;
 }

@@ -206,4 +206,18 @@ private:
 	unsigned m_spinIterations;
 };
 
+class ScopeLock {
+public:
+    ScopeLock(ftl::Fibtex& fibtex, bool pinToThread = false): fibtex{fibtex} {
+        fibtex.lock(pinToThread);
+    };
+
+	~ScopeLock() {
+	    fibtex.unlock();
+	};
+
+private:
+	ftl::Fibtex& fibtex;
+};
+
 } // namespace ftl

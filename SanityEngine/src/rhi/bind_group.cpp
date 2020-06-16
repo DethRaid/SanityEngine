@@ -285,4 +285,4 @@ namespace renderer {
                                        std::move(used_images),
                                        std::move(used_buffers));
     } // namespace rhi
-} // namespace rhi
+} // namespace renderer

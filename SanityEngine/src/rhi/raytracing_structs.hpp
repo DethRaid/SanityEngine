@@ -30,7 +30,7 @@ namespace renderer {
         /*!
          * \brief Buffer that holds the object's bottom-level acceleration structure
          */
-        renderer::RaytracableGeometryHandle geometry_handle{0};
+        RaytracableGeometryHandle geometry_handle{0};
 
         /*!
          * \brief Material to render this RaytracingObject with
@@ -44,4 +44,4 @@ namespace renderer {
     struct RaytracingScene {
         Rx::Ptr<Buffer> buffer;
     };
-} // namespace rhi
+} // namespace renderer

@@ -1,12 +1,12 @@
 #pragma once
 
+#include <core/types.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <rx/core/ptr.h>
 #include <rx/core/vector.h>
 
 #include "resources.hpp"
-#include <core/types.hpp>
 
 struct StandardVertex {
     Vec3f position;
@@ -110,4 +110,4 @@ namespace renderer {
          */
         Uint32 next_index_offset{0};
     };
-} // namespace rhi
+} // namespace renderer

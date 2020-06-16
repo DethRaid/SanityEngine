@@ -1547,4 +1547,4 @@ namespace renderer {
 
         return {};
     }
-} // namespace rhi
+} // namespace renderer
