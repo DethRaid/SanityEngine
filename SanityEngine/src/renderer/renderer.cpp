@@ -476,6 +476,8 @@ namespace renderer {
     }
 
     void Renderer::update_lights(entt::registry& registry, const Uint32 frame_idx) {
+        ZoneScoped;
+
         registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
@@ -500,13 +502,16 @@ namespace renderer {
     }
 
     void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
-        ZoneScopedN("render_3d_scene");
+        ZoneScoped;
 
         TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "Render3DScene");
 
         update_lights(registry, frame_idx);
 
-        memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
+        {
+            ZoneScopedN("update_per_frame_data");
+            memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
+        }
 
         forward_pass->execute(commands, registry, frame_idx);
 

@@ -53,6 +53,7 @@ namespace renderer {
     }
 
     void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+        ZoneScoped;
         TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "ForwardPass");
 
         begin_render_pass(commands);

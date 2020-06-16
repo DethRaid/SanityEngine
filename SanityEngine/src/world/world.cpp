@@ -64,10 +64,11 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 void World::tick(const Float32 delta_time) {
     ZoneScoped;
 
-    upload_new_chunk_meshes();
-
     const auto& player_transform = registry->get<TransformComponent>(player);
+    terrain.load_terrain_around_player(player_transform);
     load_chunks_around_player(player_transform);
+
+    upload_new_chunk_meshes();
 
     tick_script_components(delta_time);
 }
@@ -552,7 +553,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
 }
 
 void World::tick_script_components(Float32 delta_time) {
-    ZoneScoped;
+    // ZoneScoped;
 
     // registry->view<horus::Component>().each([&](horus::Component& script_component) {
     //     if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) {

@@ -158,27 +158,30 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     auto& device = renderer->get_render_device();
     const auto commands = device.create_command_list(0);
-    TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
+    const auto [ray_geo, tile_mesh] = [&]() -> Rx::Pair<renderer::RaytracableGeometryHandle, rhi::Mesh> {
+        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
 
-    auto& meshes = renderer->get_static_mesh_store();
+        auto& meshes = renderer->get_static_mesh_store();
 
-    meshes.begin_adding_meshes(commands);
+        meshes.begin_adding_meshes(commands);
 
-    const auto tile_mesh = meshes.add_mesh(tile_vertices, tile_indices, commands);
-    const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
+        const auto tile_mesh_ld = meshes.add_mesh(tile_vertices, tile_indices, commands);
+        const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
 
-    {
-        const Rx::Vector<D3D12_RESOURCE_BARRIER>
-            barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                 CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-    }
+        {
+            const Rx::Vector<D3D12_RESOURCE_BARRIER>
+                barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+                                     CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
+                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
 
-    const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh}, commands);
+        return {renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh_ld}, commands),
+                tile_mesh_ld};
+    }();
 
     device.submit_command_list(commands);
 
@@ -191,6 +194,7 @@ Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i&
     const auto height_range = max_terrain_height - min_terrain_height;
 
     Rx::Vector<Rx::Vector<Float32>> heightmap;
+    heightmap.reserve(size.x);
 
     auto raw_noise = Rx::Vector<Float32>{size.y * size.x};
 
@@ -198,6 +202,13 @@ Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i&
 
     for(Uint32 y = 0; y < size.y; y++) {
         for(Uint32 x = 0; x < size.x; x++) {
+            if(heightmap.size() <= y) {
+                heightmap.emplace_back();
+                heightmap[y].reserve(size.x);
+            }
+            if(heightmap[y].size() <= x) {
+                heightmap[y].emplace_back();
+            }
             heightmap[y][x] = raw_noise[y * size.x + x] * height_range + min_terrain_height;
         }
     }

@@ -39,6 +39,7 @@ namespace renderer {
     }
 
     void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+        ZoneScoped;
         TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "BackbufferOutputPass");
 
         auto& device = renderer->get_render_device();
