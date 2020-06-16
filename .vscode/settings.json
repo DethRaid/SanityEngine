@@ -4,7 +4,11 @@
         "dxil",
         "gameplay",
         "hlsl",
+        "object",
+        "procedurally",
+        "procedurally spawnable object",
         "repulsor",
-        "repulsors"
+        "repulsors",
+        "spawnable"
     ]
 }
