@@ -10,7 +10,7 @@
 #include "framebuffer.hpp"
 #include "render_device.hpp"
 
-namespace rhi {
+namespace renderer {
 
     std::wstring to_wide_string(const Rx::String& string) {
         const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, nullptr, 0);

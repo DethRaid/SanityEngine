@@ -55,7 +55,7 @@ static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const in
 
 RX_LOG("Bve", logger);
 
-BveWrapper::BveWrapper(rhi::RenderDevice& device) {
+BveWrapper::BveWrapper(renderer::RenderDevice& device) {
     bve_init();
 
     create_texture_filter_pipeline(device);
@@ -100,7 +100,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
         commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
         commands->SetPipelineState(bve_texture_pipeline->pso.Get());
 
-        Rx::Vector<rhi::Mesh> train_meshes;
+        Rx::Vector<renderer::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
 
         mesh_data.begin_adding_meshes(commands);
@@ -149,9 +149,9 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
                             texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
                         }
 
-                        auto create_info = rhi::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
-                                                                .usage = rhi::ImageUsage::SampledImage,
-                                                                .format = rhi::ImageFormat::Rgba8,
+                        auto create_info = renderer::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
+                                                                .usage = renderer::ImageUsage::SampledImage,
+                                                                .format = renderer::ImageFormat::Rgba8,
                                                                 .width = static_cast<Uint32>(width),
                                                                 .height = static_cast<Uint32>(height),
                                                                 .depth = 1};
@@ -228,7 +228,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
         device.submit_command_list(std::move(commands));
 
-        renderer.add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_mesh}});
+        renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
 
         logger->info("Loaded file %s", filename);
 
@@ -236,16 +236,16 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
     }
 }
 
-Rx::Ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(rhi::RenderDevice& device) {
+Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(renderer::RenderDevice& device) {
     auto [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
     const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
-    const Rx::Map<Rx::String, rhi::DescriptorTableDescriptorDescription>
+    const Rx::Map<Rx::String, renderer::DescriptorTableDescriptorDescription>
         descriptors = Rx::Array{Rx::Pair{"input_texture",
-                                         rhi::DescriptorTableDescriptorDescription{.type = rhi::DescriptorType::ShaderResource,
+                                         renderer::DescriptorTableDescriptorDescription{.type = renderer::DescriptorType::ShaderResource,
                                                                                    .handle = cpu_handle}},
                                 Rx::Pair{"output_texture",
-                                         rhi::DescriptorTableDescriptorDescription{.type = rhi::DescriptorType::UnorderedAccess,
+                                         renderer::DescriptorTableDescriptorDescription{.type = renderer::DescriptorType::UnorderedAccess,
                                                                                    .handle = cpu_handle.Offset(descriptor_size)}}};
 
     const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> tables = Rx::Array{Rx::Pair{0, gpu_handle}};
@@ -253,7 +253,7 @@ Rx::Ptr<rhi::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_b
     return device.create_bind_group_builder({}, descriptors, tables);
 }
 
-void BveWrapper::create_texture_filter_pipeline(rhi::RenderDevice& device) {
+void BveWrapper::create_texture_filter_pipeline(renderer::RenderDevice& device) {
     ZoneScopedN("create_bve_texture_alpha_pipeline");
 
     Rx::Vector<CD3DX12_ROOT_PARAMETER> root_params{1};

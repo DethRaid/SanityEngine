@@ -11,7 +11,7 @@ namespace renderer {
      * \brief Renders a static mesh with some material
      */
     struct StandardRenderableComponent {
-        rhi::Mesh mesh;
+        renderer::Mesh mesh;
 
         StandardMaterialHandle material{};
     };
@@ -22,7 +22,7 @@ namespace renderer {
      * This will probably change a lot as time goes on, but for now this should work
      */
     struct ChunkMeshComponent {
-        rhi::Mesh mesh;
+        renderer::Mesh mesh;
     };
 
     /*!

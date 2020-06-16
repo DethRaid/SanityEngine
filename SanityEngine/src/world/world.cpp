@@ -66,6 +66,7 @@ void World::tick(const Float32 delta_time) {
 
     const auto& player_transform = registry->get<TransformComponent>(player);
     terrain.load_terrain_around_player(player_transform);
+
     load_chunks_around_player(player_transform);
 
     upload_new_chunk_meshes();
@@ -123,9 +124,9 @@ void World::generate_heightmap(FastNoiseSIMD& noise_generator,
 
     data.heightmap.each_fwd([&](Float32& height) { height = height * height_range + min_terrain_height; });
 
-    data.heightmap_handle = renderer.create_image(rhi::ImageCreateInfo{.name = "Terrain Heightmap",
-                                                                       .usage = rhi::ImageUsage::UnorderedAccess,
-                                                                       .format = rhi::ImageFormat::R32F,
+    data.heightmap_handle = renderer.create_image(renderer::ImageCreateInfo{.name = "Terrain Heightmap",
+                                                                       .usage = renderer::ImageUsage::UnorderedAccess,
+                                                                       .format = renderer::ImageFormat::R32F,
                                                                        .width = params.width,
                                                                        .height = params.height},
                                                   data.heightmap.data(),
@@ -156,9 +157,9 @@ void World::place_water_sources(const WorldParameters& params,
         water_depth_map[location.y * params.width + location.x] = 1;
     });
 
-    data.ground_water_handle = renderer.create_image(rhi::ImageCreateInfo{.name = "Terrain Water Map",
-                                                                          .usage = rhi::ImageUsage::UnorderedAccess,
-                                                                          .format = rhi::ImageFormat::Rg16F,
+    data.ground_water_handle = renderer.create_image(renderer::ImageCreateInfo{.name = "Terrain Water Map",
+                                                                          .usage = renderer::ImageUsage::UnorderedAccess,
+                                                                          .format = renderer::ImageFormat::Rg16F,
                                                                           .width = params.width,
                                                                           .height = params.height},
                                                      water_depth_map.data(),
@@ -309,6 +310,23 @@ void World::upload_new_chunk_meshes() {
 
 void World::load_chunks_around_player(const TransformComponent& player_transform) {
     ensure_chunk_at_position_is_loaded(player_transform.location);
+
+    // TODO: Configurable chunk distance
+    for(Int32 distance_from_player = 1; distance_from_player < 4; distance_from_player++) {
+        for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
+            for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
+                // Only generate chunks at the edge of our current square
+                if((chunk_y != -distance_from_player) && (chunk_y != distance_from_player) && (chunk_x != -distance_from_player) &&
+                   (chunk_x != distance_from_player)) {
+                    continue;
+                }
+
+                ensure_chunk_at_position_is_loaded(player_transform.location + glm::vec3{static_cast<Float32>(chunk_x * Chunk::WIDTH),
+                                                                                         0,
+                                                                                         static_cast<Float32>(chunk_y * Chunk::DEPTH)});
+            }
+        }
+    }
 }
 
 void World::dispatch_needed_mesh_gen_tasks() {

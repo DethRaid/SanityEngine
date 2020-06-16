@@ -19,12 +19,12 @@ namespace renderer {
         auto& device = renderer_in.get_render_device();
 
         {
-            const auto standard_pipeline_create_info = rhi::RenderPipelineStateCreateInfo{
+            const auto standard_pipeline_create_info = renderer::RenderPipelineStateCreateInfo{
                 .name = "Standard material pipeline",
                 .vertex_shader = load_shader("standard.vertex"),
                 .pixel_shader = load_shader("standard.pixel"),
-                .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba32F},
-                .depth_stencil_format = rhi::ImageFormat::Depth32,
+                .render_target_formats = Rx::Array{renderer::ImageFormat::Rgba32F},
+                .depth_stencil_format = renderer::ImageFormat::Depth32,
             };
 
             standard_pipeline = device.create_render_pipeline_state(standard_pipeline_create_info);
@@ -33,13 +33,13 @@ namespace renderer {
         }
 
         {
-            const auto atmospheric_sky_create_info = rhi::RenderPipelineStateCreateInfo{
+            const auto atmospheric_sky_create_info = renderer::RenderPipelineStateCreateInfo{
                 .name = "Atmospheric Sky",
                 .vertex_shader = load_shader("fullscreen.vertex"),
                 .pixel_shader = load_shader("atmospheric_sky.pixel"),
-                .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = rhi::CompareOp::LessOrEqual},
-                .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba32F},
-                .depth_stencil_format = rhi::ImageFormat::Depth32,
+                .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = renderer::CompareOp::LessOrEqual},
+                .render_target_formats = Rx::Array{renderer::ImageFormat::Rgba32F},
+                .depth_stencil_format = renderer::ImageFormat::Depth32,
             };
 
             atmospheric_sky_pipeline = device.create_render_pipeline_state(atmospheric_sky_create_info);
@@ -70,10 +70,10 @@ namespace renderer {
     void ForwardPass::create_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_device();
 
-        const auto color_target_create_info = rhi::ImageCreateInfo{
+        const auto color_target_create_info = renderer::ImageCreateInfo{
             .name = SCENE_COLOR_RENDER_TARGET,
-            .usage = rhi::ImageUsage::RenderTarget,
-            .format = rhi::ImageFormat::Rgba32F,
+            .usage = renderer::ImageUsage::RenderTarget,
+            .format = renderer::ImageFormat::Rgba32F,
             .width = render_resolution.x,
             .height = render_resolution.y,
             .enable_resource_sharing = true,
@@ -81,10 +81,10 @@ namespace renderer {
 
         color_target_handle = renderer->create_image(color_target_create_info);
 
-        const auto depth_target_create_info = rhi::ImageCreateInfo{
+        const auto depth_target_create_info = renderer::ImageCreateInfo{
             .name = SCENE_DEPTH_TARGET,
-            .usage = rhi::ImageUsage::DepthStencil,
-            .format = rhi::ImageFormat::Depth32,
+            .usage = renderer::ImageUsage::DepthStencil,
+            .format = renderer::ImageFormat::Depth32,
             .width = render_resolution.x,
             .height = render_resolution.y,
         };
@@ -141,7 +141,7 @@ namespace renderer {
 
     void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
                                             entt::registry& registry,
-                                            const rhi::BindGroup& material_bind_group,
+                                            const renderer::BindGroup& material_bind_group,
                                             const Uint32 frame_idx) {
         ZoneScoped;
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
@@ -158,7 +158,7 @@ namespace renderer {
 
         auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
 
-        commands->SetGraphicsRootShaderResourceView(rhi::RenderDevice::material_buffer_root_parameter_index,
+        commands->SetGraphicsRootShaderResourceView(renderer::RenderDevice::material_buffer_root_parameter_index,
                                                     material_buffer.resource->GetGPUVirtualAddress());
 
         {

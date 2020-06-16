@@ -59,9 +59,9 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
         return;
     }
 
-    const auto create_info = rhi::ImageCreateInfo{.name = load_data->texture_name_in,
-                                                  .usage = rhi::ImageUsage::SampledImage,
-                                                  .format = rhi::ImageFormat::Rgba8,
+    const auto create_info = renderer::ImageCreateInfo{.name = load_data->texture_name_in,
+                                                  .usage = renderer::ImageUsage::SampledImage,
+                                                  .format = renderer::ImageFormat::Rgba8,
                                                   .width = width,
                                                   .height = height};
 

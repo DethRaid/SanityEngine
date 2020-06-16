@@ -6,7 +6,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace rhi {
+namespace renderer {
     class DescriptorAllocator {
     public:
         DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);

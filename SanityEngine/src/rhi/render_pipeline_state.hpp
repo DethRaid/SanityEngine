@@ -11,7 +11,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace rhi {
+namespace renderer {
     enum class PrimitiveType { Points, Lines, Triangles };
 
     enum class BlendFactor {

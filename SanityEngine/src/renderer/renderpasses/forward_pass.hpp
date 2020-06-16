@@ -8,7 +8,7 @@
 #include "rhi/framebuffer.hpp"
 #include "rhi/render_pipeline_state.hpp"
 
-namespace rhi {
+namespace renderer {
     struct BindGroup;
     class RenderDevice;
 } // namespace rhi
@@ -33,12 +33,12 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        Rx::Ptr<rhi::RenderPipelineState> standard_pipeline;
-        Rx::Ptr<rhi::RenderPipelineState> atmospheric_sky_pipeline;
+        Rx::Ptr<renderer::RenderPipelineState> standard_pipeline;
+        Rx::Ptr<renderer::RenderPipelineState> atmospheric_sky_pipeline;
 
         TextureHandle color_target_handle;
         TextureHandle depth_target_handle;
-        Rx::Ptr<rhi::Framebuffer> scene_framebuffer;
+        Rx::Ptr<renderer::Framebuffer> scene_framebuffer;
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 
@@ -46,7 +46,7 @@ namespace renderer {
 
         void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
                                    entt::registry& registry,
-                                   const rhi::BindGroup& material_bind_group,
+                                   const renderer::BindGroup& material_bind_group,
                                    Uint32 frame_idx);
 
         void draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const;

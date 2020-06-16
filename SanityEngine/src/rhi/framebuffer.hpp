@@ -6,7 +6,7 @@
 
 #include "resources.hpp"
 
-namespace rhi {
+namespace renderer {
     struct Framebuffer {
         Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
         Rx::Optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;

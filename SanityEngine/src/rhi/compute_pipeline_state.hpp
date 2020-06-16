@@ -5,7 +5,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace rhi {
+namespace renderer {
     /*!
      * \brief The state of a compute pipeline
      */

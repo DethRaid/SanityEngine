@@ -5,7 +5,7 @@
 #include "renderer/handles.hpp"
 #include "resources.hpp"
 
-namespace rhi {
+namespace renderer {
     constexpr Uint32 OPAQUE_OBJECT_BIT = 0x01;
     constexpr Uint32 TRANSPARENT_OBJECT_BIT = 0x02;
     constexpr Uint32 LIGHT_SOURCE_BIT = 0x10;

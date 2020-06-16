@@ -9,7 +9,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace rhi {
+namespace renderer {
     struct RaytracingScene;
     struct Buffer;
     struct Image;

@@ -31,7 +31,7 @@ namespace D3D12MA {
     class Allocator;
 }
 
-namespace rhi {
+namespace renderer {
     enum class BespokePipelineType;
     struct RenderPipelineStateCreateInfo;
 

@@ -22,15 +22,15 @@ using BveMeshHandle = std::unique_ptr<bve::BVE_Loaded_Static_Mesh, std::function
 
 class BveWrapper {
 public:
-    explicit BveWrapper(rhi::RenderDevice& device);
+    explicit BveWrapper(renderer::RenderDevice& device);
 
     [[nodiscard]] bool add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer);
-    Rx::Ptr<rhi::BindGroupBuilder> create_texture_processor_bind_group_builder(rhi::RenderDevice& device);
+    Rx::Ptr<renderer::BindGroupBuilder> create_texture_processor_bind_group_builder(renderer::RenderDevice& device);
 
 private:
-    Rx::Ptr<rhi::ComputePipelineState> bve_texture_pipeline;
+    Rx::Ptr<renderer::ComputePipelineState> bve_texture_pipeline;
 
-    void create_texture_filter_pipeline(rhi::RenderDevice& device);
+    void create_texture_filter_pipeline(renderer::RenderDevice& device);
 
     [[nodiscard]] bve::BVE_User_Error_Data get_printable_error(const bve::BVE_Mesh_Error& error);
 

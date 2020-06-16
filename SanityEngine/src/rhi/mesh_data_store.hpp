@@ -16,7 +16,7 @@ struct StandardVertex {
     Vec2f texcoord{};
 };
 
-namespace rhi {
+namespace renderer {
     class ResourceCommandList;
     class RenderDevice;
 

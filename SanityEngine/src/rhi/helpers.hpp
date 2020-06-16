@@ -12,7 +12,7 @@
 
 interface ID3D12Object;
 
-namespace rhi {
+namespace renderer {
     struct RenderTargetBeginningAccess;
     struct RenderTargetEndingAccess;
 

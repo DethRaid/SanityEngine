@@ -8,7 +8,7 @@
 #include "helpers.hpp"
 #include "raytracing_structs.hpp"
 
-namespace rhi {
+namespace renderer {
     RX_LOG("BindGroupBuilder", logger);
 
     RootParameter::RootParameter() = default;
@@ -137,7 +137,6 @@ namespace rhi {
 
             if(const Buffer** bound_buffer = bound_buffers.find(name)) {
                 root_parameters[idx].descriptor.address = (*bound_buffer)->resource->GetGPUVirtualAddress();
-                logger->verbose("Binding buffer %s to root descriptor %s", (*bound_buffer)->name, name);
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {

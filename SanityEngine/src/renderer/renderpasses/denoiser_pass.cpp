@@ -24,12 +24,12 @@ namespace renderer {
         : renderer{&renderer_in} {
         auto& device = renderer->get_render_device();
 
-        const auto pipeline_create_info = rhi::RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
+        const auto pipeline_create_info = renderer::RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
                                                                              .vertex_shader = load_shader("fullscreen.vertex"),
                                                                              .pixel_shader = load_shader("raytracing_accumulation.pixel"),
                                                                              .depth_stencil_state = {.enable_depth_test = false,
                                                                                                      .enable_depth_write = false},
-                                                                             .render_target_formats = Rx::Array{rhi::ImageFormat::Rgba32F}};
+                                                                             .render_target_formats = Rx::Array{renderer::ImageFormat::Rgba32F}};
 
         accumulation_pipeline = device.create_render_pipeline_state(pipeline_create_info);
 
@@ -56,7 +56,7 @@ namespace renderer {
         commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
-        commands->SetGraphicsRootShaderResourceView(rhi::RenderDevice::material_buffer_root_parameter_index,
+        commands->SetGraphicsRootShaderResourceView(renderer::RenderDevice::material_buffer_root_parameter_index,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
@@ -111,10 +111,10 @@ namespace renderer {
         auto& device = renderer->get_render_device();
 
         {
-            const auto color_target_create_info = rhi::ImageCreateInfo{
+            const auto color_target_create_info = renderer::ImageCreateInfo{
                 .name = DENOISED_SCENE_RENDER_TARGET,
-                .usage = rhi::ImageUsage::RenderTarget,
-                .format = rhi::ImageFormat::Rgba32F,
+                .usage = renderer::ImageUsage::RenderTarget,
+                .format = renderer::ImageFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
@@ -126,10 +126,10 @@ namespace renderer {
         }
 
         {
-            const auto accumulation_target_create_info = rhi::ImageCreateInfo{
+            const auto accumulation_target_create_info = renderer::ImageCreateInfo{
                 .name = ACCUMULATION_RENDER_TARGET,
-                .usage = rhi::ImageUsage::SampledImage,
-                .format = rhi::ImageFormat::Rgba32F,
+                .usage = renderer::ImageUsage::SampledImage,
+                .format = renderer::ImageFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
@@ -150,8 +150,8 @@ namespace renderer {
             .scene_depth_texture = scene_depth_target_handle,
         };
 
-        denoiser_material_buffer = device.create_buffer(rhi::BufferCreateInfo{.name = "Denoiser material buffer",
-                                                                              .usage = rhi::BufferUsage::StagingBuffer,
+        denoiser_material_buffer = device.create_buffer(renderer::BufferCreateInfo{.name = "Denoiser material buffer",
+                                                                              .usage = renderer::BufferUsage::StagingBuffer,
                                                                               .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
 
         memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));

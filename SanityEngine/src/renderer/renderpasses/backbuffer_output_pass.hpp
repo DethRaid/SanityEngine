@@ -20,8 +20,8 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        Rx::Ptr<rhi::RenderPipelineState> backbuffer_output_pipeline;
+        Rx::Ptr<renderer::RenderPipelineState> backbuffer_output_pipeline;
 
-        Rx::Ptr<rhi::Buffer> backbuffer_output_material_buffer;
+        Rx::Ptr<renderer::Buffer> backbuffer_output_material_buffer;
     };
 } // namespace renderer

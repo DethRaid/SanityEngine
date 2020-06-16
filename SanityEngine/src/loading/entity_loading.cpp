@@ -36,8 +36,8 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
 
     Rx::Map<Uint32, renderer::StandardMaterialHandle> materials;
 
-    Rx::Vector<rhi::Mesh> meshes;
-    Rx::Vector<rhi::RaytracingObject> raytracing_objects;
+    Rx::Vector<renderer::Mesh> meshes;
+    Rx::Vector<renderer::RaytracingObject> raytracing_objects;
 
     auto& mesh_data = renderer.get_static_mesh_store();
 
@@ -117,8 +117,8 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
                     material.albedo = renderer.get_pink_texture();
 
                 } else {
-                    const auto create_info = rhi::ImageCreateInfo{.name = ass_texture_path.C_Str(),
-                                                                  .usage = rhi::ImageUsage::SampledImage,
+                    const auto create_info = renderer::ImageCreateInfo{.name = ass_texture_path.C_Str(),
+                                                                  .usage = renderer::ImageUsage::SampledImage,
                                                                   .width = width,
                                                                   .height = height};
 
@@ -166,7 +166,7 @@ bool load_static_mesh(const Rx::String& filename, entt::registry& registry, rend
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    renderer.add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {0}}});
+    renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {0}}});
 
     device.submit_command_list(std::move(commands));
 

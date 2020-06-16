@@ -2,7 +2,7 @@
 
 #include "d3dx12.hpp"
 
-namespace rhi {
+namespace renderer {
     DescriptorAllocator::DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
         : heap{Rx::Utility::move(heap_in)}, descriptor_size{descriptor_size_in} {}
 

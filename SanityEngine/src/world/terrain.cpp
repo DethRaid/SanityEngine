@@ -35,7 +35,7 @@ Terrain::Terrain(const Uint32 max_latitude_in,
 }
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
-    ZoneScopedN("load_terrain_around_player");
+    ZoneScoped;
     const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(
         {player_transform.location.x, player_transform.location.y, player_transform.location.z});
 
@@ -47,6 +47,23 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     // Also TODO: Generate terrain tiles in in separate threads as part of the tasking system
     if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
         generate_tile(coords_of_tile_containing_player);
+    }
+
+    // TODO: Configurable chunk distance
+    for(Int32 distance_from_player = 1; distance_from_player < 4; distance_from_player++) {
+        for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
+            for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
+                // Only generate chunks at the edge of our current square
+                if((chunk_y != -distance_from_player) && (chunk_y != distance_from_player) && (chunk_x != -distance_from_player) &&
+                   (chunk_x != distance_from_player)) {
+                    continue;
+                }
+
+                if(loaded_terrain_tiles.find(coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}) == nullptr) {
+                    generate_tile(coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y});
+                }
+            }
+        }
     }
 }
 
@@ -123,6 +140,7 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     loaded_terrain_tiles.insert(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
 
+    
     Rx::Vector<StandardVertex> tile_vertices;
     tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
 
@@ -158,7 +176,7 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     auto& device = renderer->get_render_device();
     const auto commands = device.create_command_list(0);
-    const auto [ray_geo, tile_mesh] = [&]() -> Rx::Pair<renderer::RaytracableGeometryHandle, rhi::Mesh> {
+    const auto [ray_geo, tile_mesh] = [&]() -> Rx::Pair<renderer::RaytracableGeometryHandle, renderer::Mesh> {
         TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
 
         auto& meshes = renderer->get_static_mesh_store();
@@ -185,9 +203,10 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     device.submit_command_list(commands);
 
-    renderer->add_raytracing_objects_to_scene(Rx::Array{rhi::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
+    renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
 
     registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
+    
 }
 
 Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size) const {

@@ -22,7 +22,7 @@
 #include "settings.hpp"
 #include "windows/windows_helpers.hpp"
 
-namespace rhi {
+namespace renderer {
     RX_LOG("RenderDevice", logger);
 
     RenderDevice::RenderDevice(HWND window_handle,

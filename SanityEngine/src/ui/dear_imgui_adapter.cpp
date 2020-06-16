@@ -237,9 +237,9 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-    const auto create_info = rhi::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
-                                                  .usage = rhi::ImageUsage::SampledImage,
-                                                  .format = rhi::ImageFormat::Rgba8,
+    const auto create_info = renderer::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
+                                                  .usage = renderer::ImageUsage::SampledImage,
+                                                  .format = renderer::ImageFormat::Rgba8,
                                                   .width = static_cast<Uint32>(width),
                                                   .height = static_cast<Uint32>(height)};
 

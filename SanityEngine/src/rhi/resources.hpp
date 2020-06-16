@@ -13,7 +13,7 @@ namespace D3D12MA {
     class Allocation;
 }
 
-namespace rhi {
+namespace renderer {
     struct Buffer {
         Rx::String name;
 

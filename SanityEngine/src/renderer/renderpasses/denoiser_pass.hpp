@@ -30,7 +30,7 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        Rx::Ptr<rhi::RenderPipelineState> accumulation_pipeline;
+        Rx::Ptr<renderer::RenderPipelineState> accumulation_pipeline;
 
         /*!
          * \brief Handle to the texture that holds the accumulated scene
@@ -45,9 +45,9 @@ namespace renderer {
         /*!
          * \brief Framebuffer for the final denoised image
          */
-        Rx::Ptr<rhi::Framebuffer> denoised_framebuffer;
+        Rx::Ptr<renderer::Framebuffer> denoised_framebuffer;
 
-        Rx::Ptr<rhi::Buffer> denoiser_material_buffer;
+        Rx::Ptr<renderer::Buffer> denoiser_material_buffer;
 
         void create_images_and_framebuffer(const glm::uvec2& render_resolution);
 

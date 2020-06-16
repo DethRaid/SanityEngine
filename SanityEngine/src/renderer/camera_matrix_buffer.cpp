@@ -46,10 +46,10 @@ namespace renderer {
         inverse_projection_matrix = glm::inverse(projection_matrix);
     }
 
-    CameraMatrixBuffer::CameraMatrixBuffer(rhi::RenderDevice& device_in, const Uint32 num_in_flight_frames) : device{&device_in} {
+    CameraMatrixBuffer::CameraMatrixBuffer(renderer::RenderDevice& device_in, const Uint32 num_in_flight_frames) : device{&device_in} {
         device_data.reserve(num_in_flight_frames);
 
-        auto create_info = rhi::BufferCreateInfo{.usage = rhi::BufferUsage::ConstantBuffer,
+        auto create_info = renderer::BufferCreateInfo{.usage = renderer::BufferUsage::ConstantBuffer,
                                                  .size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS};
 
         for(Uint32 i = 0; i < num_in_flight_frames; i++) {
@@ -60,8 +60,8 @@ namespace renderer {
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](rhi::Buffer* buffer) {
-            device->schedule_buffer_destruction(Rx::Ptr<rhi::Buffer>{Rx::Memory::SystemAllocator::instance(), buffer});
+        device_data.each_fwd([&](renderer::Buffer* buffer) {
+            device->schedule_buffer_destruction(Rx::Ptr<renderer::Buffer>{Rx::Memory::SystemAllocator::instance(), buffer});
         });
     }
 
@@ -83,7 +83,7 @@ namespace renderer {
         host_data[camera_idx] = matrices;
     }
 
-    rhi::Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
+    renderer::Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
         RX_ASSERT(frame_idx < device_data.size(),
                   "Not enough device buffers! There are %u device buffers for camera matrices, but buffer %u was requested",
                   device_data.size(),

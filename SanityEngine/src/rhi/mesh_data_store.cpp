@@ -6,7 +6,7 @@
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 
-namespace rhi {
+namespace renderer {
     RX_LOG("MeshDataStore", logger);
 
     MeshDataStore::MeshDataStore(RenderDevice& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)
@@ -49,7 +49,6 @@ namespace rhi {
         ZoneScoped;
         TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "add_mesh");
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
-        logger->verbose("Current vertex offset: %u Current index offset: %u", next_vertex_offset, next_index_offset);
 
         const auto vertex_data_size = static_cast<Uint32>(vertices.size() * sizeof(StandardVertex));
         const auto index_data_size = static_cast<Uint32>(indices.size() * sizeof(Uint32));
@@ -65,10 +64,8 @@ namespace rhi {
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
-        logger->verbose("Copying %u bytes of vertex data into the vertex buffer, offset of %u", vertex_data_size, next_free_vertex_byte);
         upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
 
-        logger->verbose("Copying %u bytes of index data into the index buffer, offset of %u", index_data_size, index_buffer_byte_offset);
         upload_data_with_staging_buffer(commands,
                                         *device,
                                         index_resource,
@@ -84,8 +81,6 @@ namespace rhi {
 
         next_vertex_offset += static_cast<Uint32>(vertices.size());
         next_index_offset += static_cast<Uint32>(indices.size());
-
-        logger->verbose("New vertex offset: %u New index offset: %u", next_vertex_offset, next_index_offset);
 
         return {.first_vertex = vertex_offset,
                 .num_vertices = static_cast<Uint32>(vertices.size()),

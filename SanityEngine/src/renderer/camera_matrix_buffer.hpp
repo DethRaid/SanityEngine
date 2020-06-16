@@ -11,7 +11,7 @@
 #include "renderer/render_components.hpp"
 #include "rhi/resources.hpp"
 
-namespace rhi {
+namespace renderer {
     class RenderDevice;
 }
 
@@ -39,7 +39,7 @@ namespace renderer {
      */
     class CameraMatrixBuffer {
     public:
-        CameraMatrixBuffer(rhi::RenderDevice& device_in, Uint32 num_in_flight_frames);
+        CameraMatrixBuffer(renderer::RenderDevice& device_in, Uint32 num_in_flight_frames);
 
         CameraMatrixBuffer(const CameraMatrixBuffer& other) = delete;
         CameraMatrixBuffer& operator=(const CameraMatrixBuffer& other) = delete;
@@ -55,17 +55,17 @@ namespace renderer {
 
         void set_camera_matrices(Uint32 camera_idx, const CameraMatrices& matrices);
 
-        [[nodiscard]] rhi::Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
+        [[nodiscard]] renderer::Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
 
         [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
 
         void upload_data(Uint32 frame_idx) const;
 
     private:
-        rhi::RenderDevice* device;
+        renderer::RenderDevice* device;
 
         std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data{};
 
-        Rx::Vector<rhi::Buffer*> device_data;
+        Rx::Vector<renderer::Buffer*> device_data;
     };
 } // namespace renderer
