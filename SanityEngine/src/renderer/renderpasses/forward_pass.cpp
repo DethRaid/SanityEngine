@@ -102,6 +102,7 @@ namespace renderer {
     TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
 
     void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
+        ZoneScoped;
         const auto render_target_accesses = Rx::Array{
             // Scene color
             D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
@@ -142,6 +143,7 @@ namespace renderer {
                                             entt::registry& registry,
                                             const rhi::BindGroup& material_bind_group,
                                             const Uint32 frame_idx) {
+        ZoneScoped;
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -169,14 +171,15 @@ namespace renderer {
         }
     }
 
-    void ForwardPass::draw_atmosphere(ID3D12GraphicsCommandList4* command_list, entt::registry& registry) const {
+    void ForwardPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
+        ZoneScoped;
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
-            command_list->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
-            command_list->DrawInstanced(3, 1, 0, 0);
+            commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
+            commands->DrawInstanced(3, 1, 0, 0);
         }
     }
 

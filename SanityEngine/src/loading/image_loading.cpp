@@ -48,8 +48,8 @@ bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx:
 FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
 
-    const auto message = Rx::String::format("Load image %s", load_data->texture_name_in);
-    ZoneScopedN(message.data());
+    // const auto message = Rx::String::format("Load image %s", load_data->texture_name_in);
+    // ZoneScopedN(message.data());
 
     Uint32 width, height;
     Rx::Vector<uint8_t> pixels;
@@ -69,7 +69,7 @@ FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     const auto commands = device.create_command_list(taskScheduler->GetCurrentThreadIndex());
 
     {
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), message.data());
+        // TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), message.data());
         load_data->handle_out = load_data->renderer_in->create_image(create_info, pixels.data(), commands);
     }
 

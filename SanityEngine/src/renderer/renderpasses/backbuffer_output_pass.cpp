@@ -1,5 +1,6 @@
 #include "backbuffer_output_pass.hpp"
 
+#include <Tracy.hpp>
 #include <TracyD3D12.hpp>
 #include <rx/core/log.h>
 

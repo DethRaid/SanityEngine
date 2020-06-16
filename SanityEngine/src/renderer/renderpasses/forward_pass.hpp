@@ -49,6 +49,6 @@ namespace renderer {
                                    const rhi::BindGroup& material_bind_group,
                                    Uint32 frame_idx);
 
-        void draw_atmosphere(ID3D12GraphicsCommandList4* command_list, entt::registry& registry) const;
+        void draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const;
     };
 } // namespace renderer

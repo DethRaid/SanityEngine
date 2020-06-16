@@ -1,5 +1,6 @@
 #include "denoiser_pass.hpp"
 
+#include <Tracy.hpp>
 #include <rx/core/log.h>
 
 #include "loading/shader_loading.hpp"

@@ -1340,11 +1340,13 @@ namespace rhi {
     }
 
     void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
+        ZoneScoped;
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
         staging_buffers += staging_buffers_for_frame;
     }
 
     void RenderDevice::reset_command_allocators_for_frame(const Uint32 frame_idx) {
+        ZoneScoped;
         const auto& direct_allocators_for_frame = direct_command_allocators[frame_idx];
         direct_allocators_for_frame.each_pair(
             [](const Uint32& /* thread_id */, const ComPtr<ID3D12CommandAllocator>& allocator) { allocator->Reset(); });
@@ -1354,6 +1356,7 @@ namespace rhi {
     }
 
     void RenderDevice::destroy_resources_for_frame(const Uint32 frame_idx) {
+        ZoneScoped;
         auto& buffers = buffer_deletion_list[frame_idx];
         buffers.each_fwd([&](const Rx::Ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
 
@@ -1365,14 +1368,19 @@ namespace rhi {
     }
 
     void RenderDevice::transition_swapchain_image_to_render_target(const Size thread_idx) {
+        ZoneScoped;
         auto swapchain_cmds = create_command_list(thread_idx);
         set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Render Target");
 
-        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
-        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
-                                                                                                   D3D12_RESOURCE_STATE_COMMON,
-                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET);
-        swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
+        {
+            const auto msg = Rx::String::format("Transition Swapchain to Render Target %d", thread_idx);
+            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), msg.data());
+            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+                                                                                                       D3D12_RESOURCE_STATE_COMMON,
+                                                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET);
+            swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
+        }
 
         submit_command_list(swapchain_cmds);
     }
@@ -1391,6 +1399,8 @@ namespace rhi {
     }
 
     void RenderDevice::wait_for_frame(const uint64_t frame_index) {
+        const auto msg = Rx::String::format("wait_for_frame(%d)", frame_index);
+        ZoneScopedN(msg.data());
         const auto desired_fence_value = frame_fence_values[frame_index];
         const auto initial_fence_value = frame_fences->GetCompletedValue();
 

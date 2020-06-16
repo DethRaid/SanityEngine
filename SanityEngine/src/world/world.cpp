@@ -270,7 +270,11 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
 }
 
 void World::upload_new_chunk_meshes() {
-    ZoneScoped;
+    // Tracy gave an error about this ending twice. I think that fibers might be shuffling these tasks between threads? Meaning they may end
+    // on the wrong thread, or they may run on the right thread after something wrong runs on our thread...
+    //
+    // Send help
+    // ZoneScoped;
 
     Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
 
@@ -413,7 +417,7 @@ Rx::Vector<Uint32> triangulate(const DualContouringMesh& mesh) {
 }
 
 void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
-    ZoneScoped;
+    // ZoneScoped;
 
     // Scan the available chunk data, extracting surface information for the current chunk
     Rx::Vector<Int32> working_data{(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)};

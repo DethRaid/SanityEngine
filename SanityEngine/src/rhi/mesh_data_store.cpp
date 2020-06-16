@@ -1,9 +1,10 @@
 #include "mesh_data_store.hpp"
 
+#include <Tracy.hpp>
 #include <rx/core/log.h>
 
-#include "helpers.hpp"
-#include "render_device.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_device.hpp"
 
 namespace rhi {
     RX_LOG("MeshDataStore", logger);
@@ -45,6 +46,8 @@ namespace rhi {
     Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
                                  const Rx::Vector<Uint32>& indices,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+        ZoneScoped;
+        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "add_mesh");
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
         logger->verbose("Current vertex offset: %u Current index offset: %u", next_vertex_offset, next_index_offset);
 
