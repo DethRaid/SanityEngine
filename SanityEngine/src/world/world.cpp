@@ -167,7 +167,6 @@ void World::place_water_sources(const WorldParameters& params,
 void World::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data) {
     const auto& heightmap_image = renderer.get_image(data.heightmap_handle);
     const auto& watermap_image = renderer.get_image(data.ground_water_handle);
-
 }
 
 void World::generate_climate_data(TerrainData& terrain_data, const WorldParameters& params, renderer::Renderer& renderer) {
@@ -214,9 +213,7 @@ World::World(const glm::uvec2& size_in,
       terrain{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height, renderer_in, *noise_generator, registry_in},
       task_scheduler{Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()},
       chunk_generation_fibtex{ftl::Fibtex{task_scheduler}},
-      chunk_modified_event{task_scheduler} {
-    
-}
+      chunk_modified_event{task_scheduler} {}
 
 void World::register_component(horus::Component& component) {
     ZoneScoped;
@@ -265,8 +262,8 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
             // Add an empty chunk. Since chunks start out marked as uninitialized, we can insert a chunk into this map to mark that the
             // chunk has started loading - the task that loads the chunk will update it's data as needed
             available_chunks.insert(chunk_location, Chunk{.location = {chunk_location.x, chunk_location.y}});
-            /*
-                        task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});*/
+
+            task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});
         }
     }
 }
@@ -418,7 +415,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     ZoneScoped;
 
     // Scan the available chunk data, extracting surface information for the current chunk
-    Rx::Array<Int32[(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)]> working_data;
+    Rx::Vector<Int32> working_data{(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)};
 
     // Copy block data from the relevant chunks
     {
@@ -568,7 +565,7 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void*
     auto* args = static_cast<GenerateChunkBlocksArgs*>(arg);
     auto* world = args->world_in;
 
-    Rx::Array<BlockId[Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH]> block_data;
+    Rx::Vector<BlockId> block_data{Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH};
 
     // Fill in block data
     // TODO: Look at the water map to place water blocks

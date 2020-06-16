@@ -200,11 +200,11 @@ private:
     [[nodiscard]] bool does_chunk_have_block_data(const Vec2i& chunk_location) const;
 
 #pragma region Chunk generation
-    static FTL_TASK_ENTRY_POINT(generate_blocks_for_chunk);
+    static void generate_blocks_for_chunk(ftl::TaskScheduler* scheduler , void* arg);
 
-    static FTL_TASK_ENTRY_POINT(dispatch_chunk_mesh_generation_tasks);
+    static void dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* scheduler, void* arg);
 
-    static FTL_TASK_ENTRY_POINT(generate_mesh_for_chunk_task);
+    static void generate_mesh_for_chunk_task(ftl::TaskScheduler* scheduler, void* arg);
 
     ftl::Fibtex chunk_generation_fibtex;
 

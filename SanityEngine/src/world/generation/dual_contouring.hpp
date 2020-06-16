@@ -68,7 +68,7 @@ namespace _detail {
     [[nodiscard]] Size idx_from_xyz(const Vec3f& xyz);
 
     template <Uint32 Width, Uint32 Height, Uint32 Depth>
-    [[nodiscard]] DualContouringMesh dual_contour(const Rx::Array<Int32[Width * Height * Depth]>& distance_field) {
+    [[nodiscard]] DualContouringMesh dual_contour(const Rx::Vector<Int32>& distance_field) {
         Rx::Vector<Vec3f> vertices;
         Rx::Map<Vec3u, Uint32> indices;
 
@@ -142,7 +142,7 @@ namespace _detail {
     }
 
     template <Uint32 Width, Uint32 Height, Uint32 Depth>
-    Rx::Optional<Vec3f> dual_contour_find_best_vertex(const Rx::Array<Int32[Width * Height * Depth]>& distance_field,
+    Rx::Optional<Vec3f> dual_contour_find_best_vertex(const Rx::Vector<Int32>& distance_field,
                                                       const Uint32 x,
                                                       const Uint32 y,
                                                       const Uint32 z) {
@@ -209,7 +209,7 @@ namespace _detail {
     }
 
     template <Uint32 Width, Uint32 Height, Uint32 Depth>
-    Vec3f normal_at_location(const Rx::Array<Int32[Width * Height * Depth]>& distance_field, const Vec3f& location) {
+    Vec3f normal_at_location(const Rx::Vector<Int32>& distance_field, const Vec3f& location) {
         auto plus_x_idx = idx_from_xyz<Width, Height>(location + Vec3f{1, 0, 0});
         auto minus_x_idx = idx_from_xyz<Width, Height>(location + Vec3f{-1, 0, 0});
         auto plus_y_idx = idx_from_xyz<Width, Height>(location + Vec3f{0, 1, 0});
@@ -239,6 +239,6 @@ namespace _detail {
 } // namespace _detail
 
 template <Uint32 Width, Uint32 Height, Uint32 Depth>
-[[nodiscard]] DualContouringMesh dual_contour(const Rx::Array<Int32[Width * Height * Depth]>& distance_field) {
+[[nodiscard]] DualContouringMesh dual_contour(const Rx::Vector<Int32>& distance_field) {
     return _detail::dual_contour<Width, Height, Depth>(distance_field);
 }

@@ -51,7 +51,6 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 
 SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(Rx::Memory::SystemAllocator::instance())} {
-    // mtr_init("SanityEngine.json");
 
     ZoneScoped;
 
