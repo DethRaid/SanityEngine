@@ -274,8 +274,8 @@ void World::ensure_chunk_at_position_is_loaded(const glm::vec3& location) {
             // Add an empty chunk. Since chunks start out marked as uninitialized, we can insert a chunk into this map to mark that the
             // chunk has started loading - the task that loads the chunk will update it's data as needed
             available_chunks.insert(chunk_location, Chunk{.location = {chunk_location.x, chunk_location.y}});
-
-            task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});
+            /*
+                        task_scheduler->AddTask(ftl::Task{generate_blocks_for_chunk, args});*/
         }
     }
 }
@@ -603,7 +603,8 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void*
     {
         Rx::Concurrency::ScopeLock l{world->chunk_generation_fibtex};
         auto* chunk = world->available_chunks.find(args->location_in);
-        chunk->block_data = block_data;
+        chunk->block_data.resize(block_data.size());
+        memcpy(chunk->block_data.data(), block_data.data(), block_data.size() * sizeof(BlockId));
         chunk->status = Chunk::Status::BlockDataGenerated;
         world->chunk_modified_event.Store(1);
 

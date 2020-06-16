@@ -1,7 +1,7 @@
 #pragma once
 
 #include <entt/entity/fwd.hpp>
-#include <rx/core/array.h>
+#include <rx/core/vector.h>
 
 #include "block_registry.hpp"
 #include "core/types.hpp"
@@ -36,7 +36,7 @@ struct Chunk {
      * This array takes up about a MB of space, meaning you need one MB of RAM for each chunk. This is probably fine - if it ends up not
      * being fine, I'll worry about it then
      */
-    Rx::Array<BlockId[WIDTH * HEIGHT * DEPTH]> block_data;
+    Rx::Vector<BlockId> block_data;
 
     entt::entity entity;
 };
