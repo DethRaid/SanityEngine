@@ -69,8 +69,6 @@ struct GenerateChunkBlocksArgs {
 
 struct DispatchChunkMeshGenerationTasksArgs {
     World* world_in;
-
-    Vec2i chunk_location_in;
 };
 
 struct GenerateChunkMeshArgs {
@@ -196,9 +194,9 @@ private:
 #pragma region Chunk generation
     static void generate_blocks_for_chunk(ftl::TaskScheduler* scheduler, void* arg);
 
-    static void dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* scheduler, void* arg);
-
     static void generate_mesh_for_chunk_task(ftl::TaskScheduler* scheduler, void* arg);
+
+    static void dispatch_mesh_gen_tasks(ftl::TaskScheduler* scheduler, void* arg);
 
     ftl::Fibtex chunk_generation_fibtex;
 

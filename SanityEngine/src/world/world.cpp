@@ -13,6 +13,7 @@
 #include "rhi/render_device.hpp"
 
 RX_LOG("World", logger);
+RX_LOG("ChunkMeshGenTaskDispatcher", logger_dispatch);
 
 void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& scripting_runtime) {
     const auto entity = registry.create();
@@ -81,17 +82,20 @@ World::World(const glm::uvec2& size_in,
               registry_in,
               *task_scheduler},
       chunk_generation_fibtex{task_scheduler},
-      chunk_modified_event{task_scheduler} {}
+      chunk_modified_event{task_scheduler} {
+    auto* args = new DispatchChunkMeshGenerationTasksArgs{.world_in = this};
+    //task_scheduler->AddTask({dispatch_chunk_mesh_generation_tasks, args});
+}
 
 void World::tick(const Float32 delta_time) {
     ZoneScoped;
+
+    upload_new_chunk_meshes();
 
     const auto& player_transform = registry->get<TransformComponent>(player);
     terrain.load_terrain_around_player(player_transform);
 
     load_chunks_around_player(player_transform);
-
-    upload_new_chunk_meshes();
 
     tick_script_components(delta_time);
 }
@@ -286,7 +290,7 @@ void World::upload_new_chunk_meshes() {
 
                 auto& chunk = *available_chunks.find(chunk_location);
                 chunk.entity = chunk_entity;
-                chunk.status = Chunk::Status::MeshGenerated;
+                chunk.status = Chunk::Status::MeshGenComplete;
             });
 
         meshes.end_adding_meshes(commands);
@@ -332,29 +336,84 @@ void World::dispatch_needed_mesh_gen_tasks() {
 
     Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
     available_chunks.each_value([&](Chunk& chunk) {
-        if(chunk.status == Chunk::Status::BlockDataGenerated) {
-            // This chunk needs a mesh! Do any of the chunks near this chunk need a mesh?
-            bool missing_neighboring_chunks = false;
+        if(chunk.status == Chunk::Status::BlockGenComplete) {
+            // This chunk needs a mesh! Do all of the chunks near this chunk have block data?
 
+            // Southwest
             if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x - Chunk::WIDTH, chunk.location.y - Chunk::DEPTH})) {
-                if(neighbor_chunk->status == Chunk::Status::Uninitialized) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
                 }
+            } else {
+                return RX_ITERATION_CONTINUE;
             }
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x - Chunk::WIDTH, chunk.location.y});
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x - Chunk::WIDTH, chunk.location.y + Chunk::DEPTH});
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x, chunk.location.y - Chunk::DEPTH});
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x, chunk.location.y + Chunk::DEPTH});
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x + Chunk::WIDTH, chunk.location.y - Chunk::DEPTH});
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x + Chunk::WIDTH, chunk.location.y});
-            missing_neighboring_chunks |= !available_chunks.find({chunk.location.x + Chunk::WIDTH, chunk.location.y + Chunk::DEPTH});
 
-            if(missing_neighboring_chunks) {
-                // At least one of the chunks in the 3x3 region centered on the current chunk doesn't have block data yet. We can't generate
-                // a mesh for the current chunk just yet :(
+            // West
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x - Chunk::WIDTH, chunk.location.y})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
+                return RX_ITERATION_CONTINUE;
+            }
+
+            // Northwest
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x - Chunk::WIDTH, chunk.location.y + Chunk::DEPTH})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
+                return RX_ITERATION_CONTINUE;
+            }
+
+            // South
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x, chunk.location.y - Chunk::DEPTH})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
+                return RX_ITERATION_CONTINUE;
+            }
+
+            // North
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x, chunk.location.y + Chunk::DEPTH})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
+                return RX_ITERATION_CONTINUE;
+            }
+
+            // Southeast
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x + Chunk::WIDTH, chunk.location.y - Chunk::DEPTH})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
+                return RX_ITERATION_CONTINUE;
+            }
+
+            // East
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x + Chunk::WIDTH, chunk.location.y})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
+                return RX_ITERATION_CONTINUE;
+            }
+
+            // Northeast
+            if(const auto* neighbor_chunk = available_chunks.find({chunk.location.x + Chunk::WIDTH, chunk.location.y + Chunk::DEPTH})) {
+                if(neighbor_chunk->status == Chunk::Status::BlockGenInProgress) {
+                    return RX_ITERATION_CONTINUE;
+                }
+            } else {
                 return RX_ITERATION_CONTINUE;
             }
 
             // All of the chunks in the 3x3 region centered on this chunk are fully loaded
+            logger_dispatch->verbose("Dispatching mesh gen task for chunk (%d, %d)", chunk.location.x, chunk.location.y);
+            chunk.status = Chunk::Status::MeshGenInProgress;
 
             auto* mesh_args = new GenerateChunkMeshArgs{
                 .world_in = this,
@@ -423,7 +482,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     // Scan the available chunk data, extracting surface information for the current chunk
     Rx::Vector<Int32> working_data{(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)};
 
-    // Copy block data from the relevant chunks
+    // Copy block data from the relevant chunks so we don't lock up the available chunks while constructing this mesh
     {
         ftl::ScopeLock l{chunk_generation_fibtex};
 
@@ -442,7 +501,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& bottom_left_chunk = *available_chunks.find({chunk_location.x - 1, chunk_location.y - 1});
+            const auto& bottom_left_chunk = *available_chunks.find({chunk_location.x - Chunk::WIDTH, chunk_location.y - Chunk::DEPTH});
             const auto z = 0;
             const auto x = 0;
             for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
@@ -454,7 +513,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& middle_left_chunk = *available_chunks.find({chunk_location.x - 1, chunk_location.y});
+            const auto& middle_left_chunk = *available_chunks.find({chunk_location.x - Chunk::WIDTH, chunk_location.y});
             const auto x = 0;
             for(Uint32 z = 1; z <= Chunk::DEPTH; z++) {
                 for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
@@ -467,7 +526,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& top_left_chunk = *available_chunks.find({chunk_location.x - 1, chunk_location.y + 1});
+            const auto& top_left_chunk = *available_chunks.find({chunk_location.x - Chunk::WIDTH, chunk_location.y + Chunk::DEPTH});
             const auto z = Chunk::DEPTH + 1;
             const auto x = 0;
             for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
@@ -504,7 +563,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
             }
         }
         {
-            const auto& bottom_right_chunk = *available_chunks.find({chunk_location.x + 1, chunk_location.y - 1});
+            const auto& bottom_right_chunk = *available_chunks.find({chunk_location.x + Chunk::WIDTH, chunk_location.y - Chunk::DEPTH});
             const auto z = 0;
             const auto x = Chunk::WIDTH + 1;
             for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
@@ -516,7 +575,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& middle_right_chunk = *available_chunks.find({chunk_location.x + 1, chunk_location.y});
+            const auto& middle_right_chunk = *available_chunks.find({chunk_location.x + Chunk::WIDTH, chunk_location.y});
             const auto x = Chunk::WIDTH + 1;
             for(Uint32 z = 1; z <= Chunk::DEPTH; z++) {
                 for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
@@ -529,7 +588,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& top_right_chunk = *available_chunks.find({chunk_location.x + 1, chunk_location.y + 1});
+            const auto& top_right_chunk = *available_chunks.find({chunk_location.x + Chunk::WIDTH, chunk_location.y + Chunk::DEPTH});
             const auto z = Chunk::DEPTH + 1;
             const auto x = Chunk::WIDTH + 1;
             for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
@@ -567,9 +626,11 @@ void World::tick_script_components(Float32 delta_time) {
     // });
 }
 
-void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void* arg) {
+void World::generate_blocks_for_chunk(ftl::TaskScheduler* scheduler, void* arg) {
     auto* args = static_cast<GenerateChunkBlocksArgs*>(arg);
     auto* world = args->world_in;
+
+    logger->info("Generating chunk at location (%d, %d)", args->location_in.x, args->location_in.y);
 
     Rx::Vector<BlockId> block_data{Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH};
 
@@ -595,38 +656,35 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* /* scheduler */, void*
     }
 
     {
-        Rx::Concurrency::ScopeLock l{world->chunk_generation_fibtex};
+        ftl::ScopeLock l{world->chunk_generation_fibtex};
 
         auto* chunk = world->available_chunks.find(args->location_in);
 
         chunk->block_data.resize(block_data.size());
         memcpy(chunk->block_data.data(), block_data.data(), block_data.size() * sizeof(BlockId));
-        chunk->status = Chunk::Status::BlockDataGenerated;
-        world->chunk_modified_event.Store(1);
+        chunk->status = Chunk::Status::BlockGenComplete;
+        logger->info("Marked chunk (%d, %d) as BlockDataGenerated", args->location_in.x, args->location_in.y);
     }
+
+    world->chunk_modified_event.Store(1);
+
+    scheduler->AddTask({dispatch_mesh_gen_tasks, world});
 
     delete args;
 }
 
-void World::dispatch_chunk_mesh_generation_tasks(ftl::TaskScheduler* /* scheduler */, void* arg) {
-    auto* args = static_cast<DispatchChunkMeshGenerationTasksArgs*>(arg);
-    auto* world = args->world_in;
-    // Loop infinitely, checking for chunks that need a new mesh
-    while(true) {
-        world->dispatch_needed_mesh_gen_tasks();
-    }
-}
-
 void World::generate_mesh_for_chunk_task(ftl::TaskScheduler* /* scheduler */, void* arg) {
-    // This task doesn't synchronize access to the loaded chunks. If it did, only one mesh could be built at a time. Instead, we hope and
-    // pray that the block data doesn't change in the middle of trying to read it
-
     auto* args = static_cast<GenerateChunkMeshArgs*>(arg);
     auto* world = args->world_in;
 
     world->generate_mesh_for_chunk(args->location_in);
 
-    Rx::Concurrency::ScopeLock l{world->chunk_generation_fibtex};
+    logger_dispatch->verbose("Mesh generated for chunk (%d, %d)", args->location_in.x, args->location_in.y);
 
     delete args;
+}
+
+void World::dispatch_mesh_gen_tasks(ftl::TaskScheduler* /* scheduler */, void* arg) {
+    auto* world = static_cast<World*>(arg);
+    world->dispatch_needed_mesh_gen_tasks();
 }

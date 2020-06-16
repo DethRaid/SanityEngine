@@ -13,20 +13,16 @@ struct Chunk {
     static constexpr Int32 DEPTH{32};
 
     enum class Status {
-        /*!
-         * \brief The chunk is not at all initialized
-         */
-        Uninitialized,
+        BlockGenInProgress,
 
-        /*!
-         * \brief This chunks' `block_data` member is complete. You may read from it all day long
-         */
-        BlockDataGenerated,
+        BlockGenComplete,
 
-        MeshGenerated,
+        MeshGenInProgress,
+
+        MeshGenComplete,
     };
 
-    Status status{Status::Uninitialized};
+    Status status{Status::BlockGenInProgress};
 
     Vec2i location;
 
@@ -39,4 +35,6 @@ struct Chunk {
     Rx::Vector<BlockId> block_data;
 
     entt::entity entity;
+
+    void tick(Float32 delta_time);
 };
