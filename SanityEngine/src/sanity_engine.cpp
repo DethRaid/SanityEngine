@@ -9,6 +9,7 @@
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 #include <stb_image.h>
+#include <winrt/Windows.Foundation.h>
 
 #include "adapters/tracy.hpp"
 #include "globals.hpp"
@@ -53,6 +54,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(Rx::Memory::SystemAllocator::instance())} {
 
     ZoneScoped;
+
+    winrt::init_apartment();
 
     logger->info("HELLO HUMAN");
 
