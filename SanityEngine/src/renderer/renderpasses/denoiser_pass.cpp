@@ -24,12 +24,12 @@ namespace renderer {
         : renderer{&renderer_in} {
         auto& device = renderer->get_render_device();
 
-        const auto pipeline_create_info = renderer::RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
-                                                                             .vertex_shader = load_shader("fullscreen.vertex"),
-                                                                             .pixel_shader = load_shader("raytracing_accumulation.pixel"),
-                                                                             .depth_stencil_state = {.enable_depth_test = false,
-                                                                                                     .enable_depth_write = false},
-                                                                             .render_target_formats = Rx::Array{renderer::ImageFormat::Rgba32F}};
+        const auto pipeline_create_info = RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
+                                                                        .vertex_shader = load_shader("fullscreen.vertex"),
+                                                                        .pixel_shader = load_shader("raytracing_accumulation.pixel"),
+                                                                        .depth_stencil_state = {.enable_depth_test = false,
+                                                                                                .enable_depth_write = false},
+                                                                        .render_target_formats = Rx::Array{ImageFormat::Rgba32F}};
 
         accumulation_pipeline = device.create_render_pipeline_state(pipeline_create_info);
 
@@ -38,7 +38,10 @@ namespace renderer {
         create_material(forward_pass);
     }
 
-    void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+    void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands,
+                               entt::registry& /* registry */,
+                               Uint32 /* frame_idx */,
+                               const World& /* world */) {
         ZoneScoped;
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass");
 
@@ -56,7 +59,7 @@ namespace renderer {
         commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
-        commands->SetGraphicsRootShaderResourceView(renderer::RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
+        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
@@ -111,10 +114,10 @@ namespace renderer {
         auto& device = renderer->get_render_device();
 
         {
-            const auto color_target_create_info = renderer::ImageCreateInfo{
+            const auto color_target_create_info = ImageCreateInfo{
                 .name = DENOISED_SCENE_RENDER_TARGET,
-                .usage = renderer::ImageUsage::RenderTarget,
-                .format = renderer::ImageFormat::Rgba32F,
+                .usage = ImageUsage::RenderTarget,
+                .format = ImageFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
@@ -126,10 +129,10 @@ namespace renderer {
         }
 
         {
-            const auto accumulation_target_create_info = renderer::ImageCreateInfo{
+            const auto accumulation_target_create_info = ImageCreateInfo{
                 .name = ACCUMULATION_RENDER_TARGET,
-                .usage = renderer::ImageUsage::SampledImage,
-                .format = renderer::ImageFormat::Rgba32F,
+                .usage = ImageUsage::SampledImage,
+                .format = ImageFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
@@ -150,9 +153,9 @@ namespace renderer {
             .scene_depth_texture = scene_depth_target_handle,
         };
 
-        denoiser_material_buffer = device.create_buffer(renderer::BufferCreateInfo{.name = "Denoiser material buffer",
-                                                                              .usage = renderer::BufferUsage::StagingBuffer,
-                                                                              .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
+        denoiser_material_buffer = device.create_buffer(BufferCreateInfo{.name = "Denoiser material buffer",
+                                                                         .usage = BufferUsage::StagingBuffer,
+                                                                         .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
 
         memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
     }

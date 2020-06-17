@@ -8,8 +8,6 @@
 #include "rhi/framebuffer.hpp"
 #include "rhi/render_pipeline_state.hpp"
 
-class World;
-
 namespace renderer {
     struct BindGroup;
     class RenderDevice;
@@ -20,12 +18,12 @@ namespace renderer {
 
     class ForwardPass final : public virtual RenderPass {
     public:
-        explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const World& world_in);
+        explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 
         ~ForwardPass() override;
 
 #pragma region RenderPass
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 #pragma endregion
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;
@@ -34,7 +32,6 @@ namespace renderer {
 
     private:
         Renderer* renderer;
-        const World* world;
 
         Rx::Ptr<RenderPipelineState> standard_pipeline;
         Rx::Ptr<RenderPipelineState> opaque_chunk_geometry_pipeline;
@@ -54,7 +51,7 @@ namespace renderer {
                                    const BindGroup& material_bind_group,
                                    Uint32 frame_idx);
 
-        void draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx);
+        void draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world);
 
         void draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const;
     };

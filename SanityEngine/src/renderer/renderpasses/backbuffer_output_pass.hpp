@@ -15,7 +15,7 @@ namespace renderer {
 
         ~BackbufferOutputPass() override = default;
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 
     private:
         Renderer* renderer;

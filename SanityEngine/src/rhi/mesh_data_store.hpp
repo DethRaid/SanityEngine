@@ -12,7 +12,6 @@ struct StandardVertex {
     Vec3f position;
     Vec3f normal;
     Uint32 color{0xFFFFFFFF};
-    Uint32 material_idx{0};
     Vec2f texcoord{};
 };
 

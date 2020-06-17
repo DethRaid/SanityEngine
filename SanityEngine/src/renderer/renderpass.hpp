@@ -4,6 +4,8 @@
 #include <entt/entity/fwd.hpp>
 #include <rx/core/types.h>
 
+class World;
+
 namespace renderer {
     /*!
      * \brief Simple abstraction for a render pass
@@ -12,6 +14,6 @@ namespace renderer {
     public:
         virtual ~RenderPass() = default;
 
-        virtual void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
+        virtual void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) = 0;
     };
 } // namespace renderer

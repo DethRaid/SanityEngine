@@ -23,14 +23,14 @@ namespace renderer {
          */
         explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass);
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 
         [[nodiscard]] TextureHandle get_output_image() const;
 
     private:
         Renderer* renderer;
 
-        Rx::Ptr<renderer::RenderPipelineState> accumulation_pipeline;
+        Rx::Ptr<RenderPipelineState> accumulation_pipeline;
 
         /*!
          * \brief Handle to the texture that holds the accumulated scene
@@ -45,9 +45,9 @@ namespace renderer {
         /*!
          * \brief Framebuffer for the final denoised image
          */
-        Rx::Ptr<renderer::Framebuffer> denoised_framebuffer;
+        Rx::Ptr<Framebuffer> denoised_framebuffer;
 
-        Rx::Ptr<renderer::Buffer> denoiser_material_buffer;
+        Rx::Ptr<Buffer> denoiser_material_buffer;
 
         void create_images_and_framebuffer(const glm::uvec2& render_resolution);
 

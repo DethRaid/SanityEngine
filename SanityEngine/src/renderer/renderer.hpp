@@ -51,7 +51,7 @@ namespace renderer {
 
         void begin_frame(uint64_t frame_count, Size thread_idx);
 
-        void render_all(entt::registry& registry);
+        void render_all(entt::registry& registry, const World& world);
 
         void end_frame(Size thread_idx) const;
 
@@ -261,7 +261,7 @@ namespace renderer {
 
         void update_lights(entt::registry& registry, Uint32 frame_idx);
 
-        void render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, Uint32 frame_idx);
+        void render_world(entt::registry& registry, ID3D12GraphicsCommandList4* commands, Uint32 frame_idx, const World& world);
 #pragma endregion
 
 #pragma region UI

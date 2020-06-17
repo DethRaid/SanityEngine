@@ -73,6 +73,10 @@ struct GenerateChunkMeshArgs {
     Vec2i location_in;
 };
 
+struct ChunkMaterial {
+    renderer::TextureHandle grass_texture{0};
+};
+
 class World {
 public:
     static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
@@ -181,6 +185,11 @@ private:
 
     Rx::Ptr<renderer::Buffer> chunk_matrix_buffer;
     Uint32 first_free_slot_in_buffer{0};
+
+    /*!
+     * \brief Buffer of all the parameters to the chunk materials
+     */
+    Rx::Ptr<renderer::Buffer> chunk_material_buffer;
 
     ftl::TaskScheduler* task_scheduler;
 

@@ -16,8 +16,7 @@ namespace renderer {
 
     RX_LOG("ForwardPass", logger);
 
-    ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const World& world_in)
-        : renderer{&renderer_in}, world{&world_in} {
+    ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         ZoneScoped;
         auto& device = renderer_in.get_render_device();
 
@@ -60,7 +59,7 @@ namespace renderer {
         device.destroy_framebuffer(Rx::Utility::move(scene_framebuffer));
     }
 
-    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
         ZoneScoped;
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "ForwardPass");
 
@@ -70,7 +69,7 @@ namespace renderer {
 
         draw_objects_in_scene(commands, registry, *bind_group, frame_idx);
 
-        draw_chunks(commands, registry, frame_idx);
+        draw_chunks(commands, registry, frame_idx, world);
 
         draw_atmosphere(commands, registry);
 
@@ -182,13 +181,18 @@ namespace renderer {
         }
     }
 
-    void ForwardPass::draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 /* frame_idx */) {
+    void ForwardPass::draw_chunks(ID3D12GraphicsCommandList4* commands,
+                                  entt::registry& registry,
+                                  const Uint32 /* frame_idx */,
+                                  const World& world) {
         if(opaque_chunk_geometry_pipeline) {
             commands->SetPipelineState(opaque_chunk_geometry_pipeline->pso.Get());
         }
 
         // TODO: Bind the opaque chunk geometry material
-        const auto& chunk_matrix_buffer = world->get_chunk_matrix_buffer();
+        const auto& chunk_matrix_buffer = world.get_chunk_matrix_buffer();
+        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
+                                                    chunk_matrix_buffer.resource->GetGPUVirtualAddress());
 
         registry.view<ChunkMeshComponent>().each([&](const ChunkMeshComponent& chunk_mesh) {
             commands->SetGraphicsRoot32BitConstant(0, chunk_mesh.model_matrix.index, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);

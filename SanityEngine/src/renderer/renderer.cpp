@@ -91,7 +91,7 @@ namespace renderer {
         per_frame_data.time_since_start = static_cast<Float32>(time_since_start);
     }
 
-    void Renderer::render_all(entt::registry& registry) {
+    void Renderer::render_all(entt::registry& registry, const World& world) {
         ZoneScoped;
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
@@ -109,7 +109,7 @@ namespace renderer {
         upload_material_data(frame_idx);
 
         // render_3d_scene binds all the render targets it needs
-        render_3d_scene(registry, command_list.Get(), frame_idx);
+        render_world(registry, command_list.Get(), frame_idx, world);
 
         // At the end of render_3d_scene, the backbuffer framebuffer is bound. render_ui thus simply renders directly onto the backbuffer
         render_ui(command_list, frame_idx);
@@ -501,7 +501,10 @@ namespace renderer {
         return material_bind_group_builder.build();
     }
 
-    void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
+    void Renderer::render_world(entt::registry& registry,
+                                   ID3D12GraphicsCommandList4* commands,
+                                   const Uint32 frame_idx,
+                                   const World& world) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "Render3DScene");
@@ -513,11 +516,11 @@ namespace renderer {
             memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
         }
 
-        forward_pass->execute(commands, registry, frame_idx);
+        forward_pass->execute(commands, registry, frame_idx, world);
 
-        denoiser_pass->execute(commands, registry, frame_idx);
+        denoiser_pass->execute(commands, registry, frame_idx, world);
 
-        backbuffer_output_pass->execute(commands, registry, frame_idx);
+        backbuffer_output_pass->execute(commands, registry, frame_idx, world);
     }
 
     void Renderer::create_ui_pipeline() {

@@ -310,7 +310,7 @@ void World::upload_new_chunk_meshes() {
                     chunk.entity = chunk_entity;
                     chunk.status = Chunk::Status::MeshGenComplete;
 
-                    logger->verbose("Created entity %u for chunk at (%d, %d)", chunk_entity, chunk_location.x, chunk_location.y);
+                    logger->info("Created entity %u for chunk at (%d, %d)", chunk_entity, chunk_location.x, chunk_location.y);
                 });
 
             meshes.end_adding_meshes(commands);

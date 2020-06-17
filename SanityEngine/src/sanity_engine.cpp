@@ -156,7 +156,7 @@ void SanityEngine::run() {
             // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
         }
 
-        renderer->render_all(registry);
+        renderer->render_all(registry, *world);
 
         renderer->end_frame(thread_idx);
 
