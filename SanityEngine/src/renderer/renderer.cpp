@@ -5,6 +5,7 @@
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
+#include <rx/core/abort.h>
 #include <rx/core/log.h>
 
 #include "core/align.hpp"
@@ -19,7 +20,6 @@
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
-#include "rx/core/abort.h"
 #include "sanity_engine.hpp"
 
 namespace renderer {
@@ -31,10 +31,10 @@ namespace renderer {
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
         : start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
-          device{make_render_device(renderer::RenderBackend::D3D12, window, settings_in)},
+          device{make_render_device(RenderBackend::D3D12, window, settings_in)},
           camera_matrix_buffers{
               Rx::make_ptr<CameraMatrixBuffer>(Rx::Memory::SystemAllocator::instance(), *device, settings_in.num_in_flight_gpu_frames)} {
-        ZoneScopedN("Renderer");
+        ZoneScoped;
 
         // logger->set_level(spdlog::level::debug);
 
@@ -92,7 +92,7 @@ namespace renderer {
     }
 
     void Renderer::render_all(entt::registry& registry) {
-        ZoneScopedN("render_scene");
+        ZoneScoped;
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
 
@@ -119,12 +119,12 @@ namespace renderer {
 
     void Renderer::end_frame(const Size thread_idx) const { device->end_frame(thread_idx); }
 
-    void Renderer::add_raytracing_objects_to_scene(const Rx::Vector<renderer::RaytracingObject>& new_objects) {
+    void Renderer::add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects) {
         raytracing_objects += new_objects;
         raytracing_scene_dirty = true;
     }
 
-    TextureHandle Renderer::create_image(const renderer::ImageCreateInfo& create_info) {
+    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info) {
         const auto idx = static_cast<Uint32>(all_images.size());
 
         all_images.push_back(device->create_image(create_info));
@@ -135,13 +135,13 @@ namespace renderer {
         return {idx};
     }
 
-    TextureHandle Renderer::create_image(const renderer::ImageCreateInfo& create_info,
+    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
                                          const void* image_data,
                                          const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
-        if(create_info.usage == renderer::ImageUsage::UnorderedAccess) {
+        if(create_info.usage == ImageUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
             const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
                                                                                  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
@@ -150,7 +150,7 @@ namespace renderer {
             commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
-        const auto num_bytes_in_texture = create_info.width * create_info.height * renderer::size_in_bytes(create_info.format);
+        const auto num_bytes_in_texture = create_info.width * create_info.height * size_in_bytes(create_info.format);
 
         const auto& staging_buffer = device->get_staging_buffer(num_bytes_in_texture);
 
@@ -164,7 +164,7 @@ namespace renderer {
         if(result == 0 || FAILED(result)) {
             logger->error("Could not upload texture data");
         } else {
-            if(create_info.usage == renderer::ImageUsage::UnorderedAccess) {
+            if(create_info.usage == ImageUsage::UnorderedAccess) {
                 // Transition the image back to UNORDERED_ACCESS
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
                                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
@@ -186,7 +186,7 @@ namespace renderer {
         }
     }
 
-    renderer::Image& Renderer::get_image(const Rx::String& image_name) const {
+    Image& Renderer::get_image(const Rx::String& image_name) const {
         if(const auto* idx = image_name_to_index.find(image_name)) {
             return *all_images[*idx];
 
@@ -196,7 +196,7 @@ namespace renderer {
         }
     }
 
-    renderer::Image& Renderer::get_image(const TextureHandle handle) const { return *all_images[handle.index]; }
+    Image& Renderer::get_image(const TextureHandle handle) const { return *all_images[handle.index]; }
 
     void Renderer::schedule_texture_destruction(const TextureHandle& image_handle) {
         auto image = std::move(all_images[image_handle.index]);
@@ -217,15 +217,13 @@ namespace renderer {
         return handle;
     }
 
-    renderer::Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const {
-        return *material_device_buffers[frame_idx];
-    }
+    Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const { return *material_device_buffers[frame_idx]; }
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
 
-    renderer::RenderDevice& Renderer::get_render_device() const { return *device; }
+    RenderDevice& Renderer::get_render_device() const { return *device; }
 
-    renderer::MeshDataStore& Renderer::get_static_mesh_store() const { return *static_mesh_storage; }
+    MeshDataStore& Renderer::get_static_mesh_store() const { return *static_mesh_storage; }
 
     void Renderer::begin_device_capture() const { device->begin_capture(); }
 
@@ -239,9 +237,9 @@ namespace renderer {
 
     TextureHandle Renderer::get_default_specular_color_emission_texture() const { return specular_emission_texture_handle; }
 
-    RaytracableGeometryHandle Renderer::create_raytracing_geometry(const renderer::Buffer& vertex_buffer,
-                                                                   const renderer::Buffer& index_buffer,
-                                                                   const Rx::Vector<renderer::Mesh>& meshes,
+    RaytracableGeometryHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
+                                                                   const Buffer& index_buffer,
+                                                                   const Rx::Vector<Mesh>& meshes,
                                                                    const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
 
@@ -252,31 +250,31 @@ namespace renderer {
     }
 
     void Renderer::create_static_mesh_storage() {
-        const auto vertex_create_info = renderer::BufferCreateInfo{
+        const auto vertex_create_info = BufferCreateInfo{
             .name = "Static Mesh Vertex Buffer",
-            .usage = renderer::BufferUsage::VertexBuffer,
+            .usage = BufferUsage::VertexBuffer,
             .size = STATIC_MESH_VERTEX_BUFFER_SIZE,
         };
 
         auto vertex_buffer = device->create_buffer(vertex_create_info);
 
-        const auto index_buffer_create_info = renderer::BufferCreateInfo{.name = "Static Mesh Index Buffer",
-                                                                    .usage = renderer::BufferUsage::IndexBuffer,
-                                                                    .size = STATIC_MESH_INDEX_BUFFER_SIZE};
+        const auto index_buffer_create_info = BufferCreateInfo{.name = "Static Mesh Index Buffer",
+                                                               .usage = BufferUsage::IndexBuffer,
+                                                               .size = STATIC_MESH_INDEX_BUFFER_SIZE};
 
         auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<renderer::MeshDataStore>(Rx::Memory::SystemAllocator::instance(),
-                                                               *device,
-                                                               std::move(vertex_buffer),
-                                                               std::move(index_buffer));
+        static_mesh_storage = Rx::make_ptr<MeshDataStore>(Rx::Memory::SystemAllocator::instance(),
+                                                          *device,
+                                                          std::move(vertex_buffer),
+                                                          std::move(index_buffer));
     }
 
     void Renderer::create_per_frame_data_buffers() {
         per_frame_data_buffers.reserve(settings.num_in_flight_gpu_frames);
 
-        auto create_info = renderer::BufferCreateInfo{
-            .usage = renderer::BufferUsage::ConstantBuffer,
+        auto create_info = BufferCreateInfo{
+            .usage = BufferUsage::ConstantBuffer,
             .size = sizeof(PerFrameData),
         };
 
@@ -287,7 +285,7 @@ namespace renderer {
     }
 
     void Renderer::create_material_data_buffers() {
-        auto create_info = renderer::BufferCreateInfo{.usage = renderer::BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
+        auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(settings.num_in_flight_gpu_frames);
         for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = Rx::String::format("Material Data Buffer %d", 1);
@@ -296,7 +294,7 @@ namespace renderer {
     }
 
     void Renderer::create_light_buffers() {
-        auto create_info = renderer::BufferCreateInfo{.usage = renderer::BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
+        auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
         for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
             create_info.name = Rx::String::format("Light Buffer %d", i);
@@ -310,14 +308,14 @@ namespace renderer {
         const auto commands = device->create_command_list(0);
 
         {
-            TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "CreateBuiltinImages");
+            TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "CreateBuiltinImages");
 
             {
-                const auto pink_texture_create_info = renderer::ImageCreateInfo{.name = "Pink",
-                                                                           .usage = renderer::ImageUsage::SampledImage,
-                                                                           .format = renderer::ImageFormat::Rgba8,
-                                                                           .width = 8,
-                                                                           .height = 8};
+                const auto pink_texture_create_info = ImageCreateInfo{.name = "Pink",
+                                                                      .usage = ImageUsage::SampledImage,
+                                                                      .format = ImageFormat::Rgba8,
+                                                                      .width = 8,
+                                                                      .height = 8};
 
                 auto pink_texture_pixel = Rx::Vector<Uint32>{};
                 pink_texture_pixel.reserve(64);
@@ -329,11 +327,11 @@ namespace renderer {
             }
 
             {
-                const auto normal_roughness_texture_create_info = renderer::ImageCreateInfo{.name = "Default Normal/Roughness",
-                                                                                       .usage = renderer::ImageUsage::SampledImage,
-                                                                                       .format = renderer::ImageFormat::Rgba8,
-                                                                                       .width = 8,
-                                                                                       .height = 8};
+                const auto normal_roughness_texture_create_info = ImageCreateInfo{.name = "Default Normal/Roughness",
+                                                                                  .usage = ImageUsage::SampledImage,
+                                                                                  .format = ImageFormat::Rgba8,
+                                                                                  .width = 8,
+                                                                                  .height = 8};
 
                 auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
                 normal_roughness_texture_pixel.reserve(64);
@@ -347,11 +345,11 @@ namespace renderer {
             }
 
             {
-                const auto specular_emission_texture_create_info = renderer::ImageCreateInfo{.name = "Default Specular Color/Emission",
-                                                                                        .usage = renderer::ImageUsage::SampledImage,
-                                                                                        .format = renderer::ImageFormat::Rgba8,
-                                                                                        .width = 8,
-                                                                                        .height = 8};
+                const auto specular_emission_texture_create_info = ImageCreateInfo{.name = "Default Specular Color/Emission",
+                                                                                   .usage = ImageUsage::SampledImage,
+                                                                                   .format = ImageFormat::Rgba8,
+                                                                                   .width = 8,
+                                                                                   .height = 8};
 
                 auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
                 specular_emission_texture_pixel.reserve(64);
@@ -368,17 +366,17 @@ namespace renderer {
         device->submit_command_list(commands);
     }
 
-    Rx::Vector<const renderer::Image*> Renderer::get_texture_array() const {
-        Rx::Vector<const renderer::Image*> images;
+    Rx::Vector<const Image*> Renderer::get_texture_array() const {
+        Rx::Vector<const Image*> images;
         images.reserve(all_images.size());
 
-        all_images.each_fwd([&](const Rx::Ptr<renderer::Image>& image) { images.push_back(image.get()); });
+        all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.get()); });
 
         return images;
     }
 
     void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
-        ZoneScopedN("update_cameras");
+        ZoneScoped;
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
 
@@ -396,7 +394,7 @@ namespace renderer {
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "RebuildRaytracingScene");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "RebuildRaytracingScene");
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
@@ -411,7 +409,7 @@ namespace renderer {
 
             const auto instance_buffer_size = static_cast<Uint32>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
             auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
-            auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.ptr);
+            auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.mapped_ptr);
 
             for(Uint32 i = 0; i < raytracing_objects.size(); i++) {
                 const auto& object = raytracing_objects[i];
@@ -430,7 +428,7 @@ namespace renderer {
 
                 const auto& ray_geo = raytracing_geometries[object.geometry_handle.index];
 
-                const auto& buffer = static_cast<const renderer::Buffer&>(*ray_geo.blas_buffer);
+                const auto& buffer = static_cast<const Buffer&>(*ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
             }
 
@@ -452,9 +450,9 @@ namespace renderer {
 
             auto scratch_buffer = device->get_scratch_buffer(static_cast<Uint32>(prebuild_info.ScratchDataSizeInBytes));
 
-            const auto as_buffer_create_info = renderer::BufferCreateInfo{.name = "Raytracing Scene",
-                                                                     .usage = renderer::BufferUsage::RaytracingAccelerationStructure,
-                                                                     .size = static_cast<Uint32>(prebuild_info.ResultDataMaxSizeInBytes)};
+            const auto as_buffer_create_info = BufferCreateInfo{.name = "Raytracing Scene",
+                                                                .usage = BufferUsage::RaytracingAccelerationStructure,
+                                                                .size = static_cast<Uint32>(prebuild_info.ResultDataMaxSizeInBytes)};
             auto as_buffer = device->create_buffer(as_buffer_create_info);
 
             const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
@@ -484,7 +482,7 @@ namespace renderer {
         std::memcpy(dst, lights.data(), lights.size() * sizeof(Light));
     }
 
-    Rx::Ptr<renderer::BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
+    Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
 
         auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
@@ -506,7 +504,7 @@ namespace renderer {
     void Renderer::render_3d_scene(entt::registry& registry, ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
         ZoneScoped;
 
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "Render3DScene");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "Render3DScene");
 
         update_lights(registry, frame_idx);
 
@@ -523,27 +521,27 @@ namespace renderer {
     }
 
     void Renderer::create_ui_pipeline() {
-        const auto create_info = renderer::RenderPipelineStateCreateInfo{
+        const auto create_info = RenderPipelineStateCreateInfo{
             .name = "UI Pipeline",
             .vertex_shader = load_shader("ui.vertex"),
             .pixel_shader = load_shader("ui.pixel"),
 
-            .input_assembler_layout = renderer::InputAssemblerLayout::DearImGui,
+            .input_assembler_layout = InputAssemblerLayout::DearImGui,
 
-            .blend_state = renderer::BlendState{.render_target_blends = {renderer::RenderTargetBlendState{.enabled = true}}},
+            .blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true}}},
 
             .rasterizer_state =
-                renderer::RasterizerState{
-                    .cull_mode = renderer::CullMode::None,
+                RasterizerState{
+                    .cull_mode = CullMode::None,
                 },
 
             .depth_stencil_state =
-                renderer::DepthStencilState{
+                DepthStencilState{
                     .enable_depth_test = false,
                     .enable_depth_write = false,
                 },
 
-            .render_target_formats = Rx::Array{renderer::ImageFormat::Rgba8},
+            .render_target_formats = Rx::Array{ImageFormat::Rgba8},
         };
 
         ui_pipeline = device->create_render_pipeline_state(create_info);
@@ -551,16 +549,16 @@ namespace renderer {
 
     void Renderer::create_ui_mesh_buffers() {
         constexpr Uint32 num_ui_vertices = 1 << 20;
-        const auto vert_buffer_create_info = renderer::BufferCreateInfo{
+        const auto vert_buffer_create_info = BufferCreateInfo{
             .name = "Dear ImGUI Vertex Buffer",
-            .usage = renderer::BufferUsage::VertexBuffer,
+            .usage = BufferUsage::VertexBuffer,
             .size = num_ui_vertices * sizeof(ImDrawVert),
         };
 
         constexpr Uint32 num_ui_indices = 1 << 20;
-        const auto index_buffer_create_info = renderer::BufferCreateInfo{
+        const auto index_buffer_create_info = BufferCreateInfo{
             .name = "Dear ImGUI Index Buffer",
-            .usage = renderer::BufferUsage::StagingBuffer,
+            .usage = BufferUsage::StagingBuffer,
             .size = num_ui_indices * sizeof(ImDrawIdx),
         };
 
@@ -571,9 +569,9 @@ namespace renderer {
     }
 
     void Renderer::render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, const Uint32 frame_idx) const {
-        ZoneScopedN("render_ui");
+        ZoneScoped;
 
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "RenderUI");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "RenderUI");
 
         {
             const auto* backbuffer_framebuffer = device->get_backbuffer_framebuffer();
@@ -611,75 +609,70 @@ namespace renderer {
         Uint32 vertex_offset{0};
         Uint32 index_offset{0};
 
-        for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
-            const auto* cmd_list = draw_data->CmdLists[i];
-            const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
-            const auto* imgui_indices = cmd_list->IdxBuffer.Data;
+        {
+            ZoneScopedN("Issue UI drawcalls");
+            for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
+                const auto* cmd_list = draw_data->CmdLists[i];
+                const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
+                const auto* imgui_indices = cmd_list->IdxBuffer.Data;
 
-            const auto vertex_buffer_size = static_cast<Uint32>(cmd_list->VtxBuffer.size_in_bytes());
-            const auto index_buffer_size = static_cast<Uint32>(cmd_list->IdxBuffer.size_in_bytes());
+                const auto vertex_buffer_size = static_cast<Uint32>(cmd_list->VtxBuffer.size_in_bytes());
+                const auto index_buffer_size = static_cast<Uint32>(cmd_list->IdxBuffer.size_in_bytes());
 
-            const auto vert_buffer_create_info = renderer::BufferCreateInfo{
-                .name = "Dear ImGUI Vertex Buffer",
-                .usage = renderer::BufferUsage::StagingBuffer,
-                .size = vertex_buffer_size,
-            };
-            auto vertex_buffer = device->create_buffer(vert_buffer_create_info);
-            memcpy(vertex_buffer->mapped_ptr, imgui_vertices, vertex_buffer_size);
+                auto vertex_buffer = device->get_staging_buffer(vertex_buffer_size);
+                memcpy(vertex_buffer.mapped_ptr, imgui_vertices, vertex_buffer_size);
 
-            const auto index_buffer_create_info = renderer::BufferCreateInfo{
-                .name = "Dear ImGUI Index Buffer",
-                .usage = renderer::BufferUsage::StagingBuffer,
-                .size = index_buffer_size,
-            };
-            auto index_buffer = device->create_buffer(index_buffer_create_info);
-            memcpy(index_buffer->mapped_ptr, imgui_indices, index_buffer_size);
+                auto index_buffer = device->get_staging_buffer(index_buffer_size);
+                memcpy(index_buffer.mapped_ptr, imgui_indices, index_buffer_size);
 
-            {
-                const auto vb_view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = vertex_buffer->resource->GetGPUVirtualAddress(),
-                                                              .SizeInBytes = vertex_buffer->size,
-                                                              .StrideInBytes = sizeof(ImDrawVert)};
-                commands->IASetVertexBuffers(0, 1, &vb_view);
+                {
+                    const auto vb_view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = vertex_buffer.resource->GetGPUVirtualAddress(),
+                                                                  .SizeInBytes = vertex_buffer.size,
+                                                                  .StrideInBytes = sizeof(ImDrawVert)};
+                    commands->IASetVertexBuffers(0, 1, &vb_view);
 
-                const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer->resource->GetGPUVirtualAddress(),
-                                                             .SizeInBytes = index_buffer->size,
-                                                             .Format = DXGI_FORMAT_R32_UINT};
-                commands->IASetIndexBuffer(&ib_view);
+                    const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer.resource->GetGPUVirtualAddress(),
+                                                                 .SizeInBytes = index_buffer.size,
+                                                                 .Format = DXGI_FORMAT_R32_UINT};
+                    commands->IASetIndexBuffer(&ib_view);
 
-                commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            }
+                    commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                }
 
-            for(const auto& cmd : cmd_list->CmdBuffer) {
-                if(cmd.UserCallback) {
-                    cmd.UserCallback(cmd_list, &cmd);
+                for(const auto& cmd : cmd_list->CmdBuffer) {
+                    if(cmd.UserCallback) {
+                        cmd.UserCallback(cmd_list, &cmd);
 
-                } else {
-                    const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
-                    const auto texture_idx = static_cast<Uint32>(imgui_material_idx);
-                    commands->SetGraphicsRoot32BitConstant(0, texture_idx, 1);
+                    } else {
+                        const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
+                        const auto texture_idx = static_cast<Uint32>(imgui_material_idx);
+                        commands->SetGraphicsRoot32BitConstant(0, texture_idx, 1);
 
-                    {
-                        const auto& clip_rect = cmd.ClipRect;
-                        const auto pos = draw_data->DisplayPos;
-                        const auto top_left_x = clip_rect.x - pos.x;
-                        const auto top_left_y = clip_rect.y - pos.y;
-                        const auto width = clip_rect.z - pos.x;
-                        const auto height = clip_rect.w - pos.y;
-                        const auto rect = D3D12_RECT{.left = static_cast<LONG>(top_left_x),
-                                                     .top = static_cast<LONG>(top_left_y),
-                                                     .right = static_cast<LONG>(top_left_x + width),
-                                                     .bottom = static_cast<LONG>(top_left_y + height)};
-                        commands->RSSetScissorRects(1, &rect);
+                        {
+                            const auto& clip_rect = cmd.ClipRect;
+                            const auto pos = draw_data->DisplayPos;
+                            const auto top_left_x = clip_rect.x - pos.x;
+                            const auto top_left_y = clip_rect.y - pos.y;
+                            const auto width = clip_rect.z - pos.x;
+                            const auto height = clip_rect.w - pos.y;
+                            const auto rect = D3D12_RECT{.left = static_cast<LONG>(top_left_x),
+                                                         .top = static_cast<LONG>(top_left_y),
+                                                         .right = static_cast<LONG>(top_left_x + width),
+                                                         .bottom = static_cast<LONG>(top_left_y + height)};
+                            commands->RSSetScissorRects(1, &rect);
+                        }
+
+                        commands->DrawIndexedInstanced(cmd.ElemCount, 1, cmd.IdxOffset, 0, 0);
                     }
+                }
 
-                    commands->DrawIndexedInstanced(cmd.ElemCount, 1, cmd.IdxOffset, 0, 0);
+                {
+                    ZoneScopedN("Free vertex and index buffers");
+                    device->return_staging_buffer(std::move(vertex_buffer));
+                    device->return_staging_buffer(std::move(index_buffer));
                 }
             }
-
-            device->schedule_buffer_destruction(std::move(vertex_buffer));
-            device->schedule_buffer_destruction(std::move(index_buffer));
         }
-
         commands->EndRenderPass();
     }
 } // namespace renderer

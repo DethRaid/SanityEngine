@@ -240,7 +240,7 @@ namespace horus {
     }
 
     Rx::Ptr<ScriptingRuntime> ScriptingRuntime::create(entt::registry& registry_in) {
-        ZoneScopedN("create");
+        ZoneScoped;
 
         auto config = WrenConfiguration{};
         wrenInitConfiguration(&config);

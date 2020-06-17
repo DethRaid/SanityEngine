@@ -8,9 +8,9 @@
 
 struct Chunk {
     // TODO: Is it worthwhile to try and make these cvars?
-    static constexpr Int32 WIDTH{32};
+    static constexpr Int32 WIDTH{16};
     static constexpr Int32 HEIGHT{256};
-    static constexpr Int32 DEPTH{32};
+    static constexpr Int32 DEPTH{16};
 
     enum class Status {
         BlockGenInProgress,
@@ -36,5 +36,8 @@ struct Chunk {
 
     entt::entity entity;
 
+    /*!
+     * \brief Ticks this chunk, updating simulated objects inside of it
+     */
     void tick(Float32 delta_time);
 };

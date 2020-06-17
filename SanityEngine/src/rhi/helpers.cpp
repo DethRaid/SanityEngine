@@ -440,7 +440,7 @@ namespace renderer {
                                          const Uint32 size,
                                          const Uint32 dst_offset) {
         auto staging_buffer = device.get_staging_buffer(size);
-        memcpy(staging_buffer.ptr, src, size);
+        memcpy(staging_buffer.mapped_ptr, src, size);
 
         commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.Get(), 0, size);
 

@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include <Tracy.hpp>
 #include <rx/core/log.h>
 
 #include "d3dx12.hpp"
@@ -88,6 +89,8 @@ namespace renderer {
           descriptor_table_handles{std::move(descriptor_table_handles_in)} {}
 
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
+        ZoneScoped;
+
         const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
         bound_buffers.insert(name, &d3d12_buffer);
 
@@ -99,18 +102,23 @@ namespace renderer {
     }
 
     BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<const Image*>& images) {
+        ZoneScoped;
+
         bound_image_arrays.insert(name, images);
 
         return *this;
     }
 
     BindGroupBuilder& BindGroupBuilder::set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene) {
+        ZoneScoped;
+
         bound_raytracing_scenes.insert(name, scene.buffer.get());
 
         return *this;
     }
 
     Rx::Ptr<BindGroup> BindGroupBuilder::build() {
+        ZoneScoped;
         // D3D12 has a maximum root signature size of 64 descriptor tables
         Rx::Vector<RootParameter> root_parameters{64};
 

@@ -30,6 +30,8 @@ namespace _detail {
     }
 
     void givens_coeffs_sym(float a_pp, float a_pq, float a_qq, float* c, float* s) {
+        ZoneScoped;
+ 
         if(a_pq == 0.f) {
             *c = 1.f;
             *s = 0.f;
@@ -50,6 +52,8 @@ namespace _detail {
     }
 
     void svd_rotateq_xy(float* x, float* y, float* a, float c, float s) {
+        ZoneScoped;
+
         float cc = c * c;
         float ss = s * s;
         float mx = 2.0 * c * s * (*a);
@@ -60,6 +64,8 @@ namespace _detail {
     }
 
     void svd_rotate(mat3x3 vtav, mat3x3 v, int a, int b) {
+        ZoneScoped;
+        
         if(vtav[a][b] == 0.0)
             return;
 
@@ -103,6 +109,8 @@ namespace _detail {
     }
 
     void svd_solve_sym(mat3x3_tri a, Vec3f* sigma, mat3x3 v) {
+        ZoneScoped;
+
         // assuming that A is symmetric: can optimize all operations for
         // the upper right triagonal
         mat3x3 vtav;
@@ -130,6 +138,8 @@ namespace _detail {
     float svd_invdet(float x, float tol) { return (fabs(x) < tol || fabs(1.0 / x) < tol) ? 0.0 : (1.0 / x); }
 
     void svd_pseudoinverse(mat3x3 o, Vec3f sigma, mat3x3 v) {
+        ZoneScoped;
+
         float d0 = svd_invdet(sigma.x, PSUEDO_INVERSE_THRESHOLD);
         float d1 = svd_invdet(sigma.y, PSUEDO_INVERSE_THRESHOLD);
         float d2 = svd_invdet(sigma.z, PSUEDO_INVERSE_THRESHOLD);
@@ -146,6 +156,8 @@ namespace _detail {
     }
 
     void svd_solve_ATA_ATb(mat3x3_tri ATA, Vec3f ATb, Vec3f* x) {
+        ZoneScoped;
+
         mat3x3 V;
         V[0][0] = 1.f;
         V[0][1] = 0.f;
@@ -167,6 +179,8 @@ namespace _detail {
     }
 
     void svd_vmul_sym(Vec3f* result, mat3x3_tri A, Vec3f v) {
+        ZoneScoped;
+
         Vec3f A_row_x = {A[0], A[1], A[2]};
 
         (*result).x = dot(A_row_x, v);
@@ -178,6 +192,8 @@ namespace _detail {
     ////////////////////////////////////////////////////////////////////////////////
 
     void qef_add(Vec3f n, Vec3f p, mat3x3_tri ATA, Vec3f* ATb, Vec4f* pointaccum) {
+        ZoneScoped;
+
         ATA[0] += n.x * n.x;
         ATA[1] += n.x * n.y;
         ATA[2] += n.x * n.z;
@@ -197,6 +213,8 @@ namespace _detail {
     }
 
     float qef_calc_error(mat3x3_tri A, Vec3f x, Vec3f b) {
+        ZoneScoped;
+
         Vec3f tmp;
 
         svd_vmul_sym(&tmp, A, x);
@@ -206,6 +224,8 @@ namespace _detail {
     }
 
     float qef_solve(mat3x3_tri ATA, Vec3f ATb, Vec4f pointaccum, Vec3f* x) {
+        ZoneScoped;
+
         Vec3f masspoint = {pointaccum.x / pointaccum.w, pointaccum.y / pointaccum.w, pointaccum.z / pointaccum.w};
 
         Vec3f A_mp = {0.f, 0.f, 0.f};
@@ -221,6 +241,8 @@ namespace _detail {
     }
 
     Vec3f qef_solve_from_points(const Vec3f* positions, const Vec3f* normals, const size_t count, float* error) {
+        ZoneScoped;
+
         Vec4f pointaccum = {0.f, 0.f, 0.f, 0.f};
         Vec3f ATb = {0.f, 0.f, 0.f};
         mat3x3_tri ATA = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
@@ -234,12 +256,14 @@ namespace _detail {
         return solved_position;
     }
 
-    Vec3f solve_qef(Uint32 x, Uint32 y, Uint32 z, const Rx::Vector<Vec3f>& vertices, const Rx::Vector<Vec3f>& normals) {
+    Vec3f solve_qef(const Uint32 x, const Uint32 y, const Uint32 z, const Rx::Vector<Vec3f>& vertices, const Rx::Vector<Vec3f>& normals) {
+        ZoneScoped;
+
         constexpr float ERROR_THRESHOLD = 0.5f;
         float error;
         const auto solution = qef_solve_from_points(vertices.data(), normals.data(), vertices.size(), &error);
         if(error > ERROR_THRESHOLD) {
-            return {static_cast<Float32>(x), static_cast<Float32>(y), static_cast<Float32>(x)};
+            return {static_cast<Float32>(x), static_cast<Float32>(y), static_cast<Float32>(z)};
 
         } else {
             return solution;

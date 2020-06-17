@@ -55,31 +55,31 @@ namespace renderer {
 
         void end_frame(Size thread_idx) const;
 
-        void add_raytracing_objects_to_scene(const Rx::Vector<renderer::RaytracingObject>& new_objects);
+        void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
-        [[yesdiscard]] TextureHandle create_image(const renderer::ImageCreateInfo& create_info);
+        [[yesdiscard]] TextureHandle create_image(const ImageCreateInfo& create_info);
 
-        [[nodiscard]] TextureHandle create_image(const renderer::ImageCreateInfo& create_info,
+        [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,
                                                  const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
-        [[nodiscard]] renderer::Image& get_image(const Rx::String& image_name) const;
+        [[nodiscard]] Image& get_image(const Rx::String& image_name) const;
 
-        [[nodiscard]] renderer::Image& get_image(TextureHandle handle) const;
+        [[nodiscard]] Image& get_image(TextureHandle handle) const;
 
         void schedule_texture_destruction(const TextureHandle& image_handle);
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
-        [[nodiscard]] renderer::Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
+        [[nodiscard]] Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
 
         void deallocate_standard_material(StandardMaterialHandle handle);
 
-        [[nodiscard]] renderer::RenderDevice& get_render_device() const;
+        [[nodiscard]] RenderDevice& get_render_device() const;
 
-        [[nodiscard]] renderer::MeshDataStore& get_static_mesh_store() const;
+        [[nodiscard]] MeshDataStore& get_static_mesh_store() const;
 
         void begin_device_capture() const;
 
@@ -93,12 +93,12 @@ namespace renderer {
 
         [[nodiscard]] TextureHandle get_default_specular_color_emission_texture() const;
 
-        [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const renderer::Buffer& vertex_buffer,
-                                                                           const renderer::Buffer& index_buffer,
-                                                                           const Rx::Vector<renderer::Mesh>& meshes,
+        [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const Buffer& vertex_buffer,
+                                                                           const Buffer& index_buffer,
+                                                                           const Rx::Vector<Mesh>& meshes,
                                                                            const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        [[nodiscard]] Rx::Ptr<renderer::BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
+        [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 
     private:
 #pragma region Cube
@@ -197,26 +197,26 @@ namespace renderer {
 
         glm::uvec2 output_framebuffer_size;
 
-        Rx::Ptr<renderer::RenderDevice> device;
+        Rx::Ptr<RenderDevice> device;
 
-        Rx::Ptr<renderer::MeshDataStore> static_mesh_storage;
+        Rx::Ptr<MeshDataStore> static_mesh_storage;
 
         PerFrameData per_frame_data;
-        Rx::Vector<Rx::Ptr<renderer::Buffer>> per_frame_data_buffers;
+        Rx::Vector<Rx::Ptr<Buffer>> per_frame_data_buffers;
 
         Rx::Ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
         Rx::Vector<StandardMaterial> standard_materials;
         Rx::Vector<StandardMaterialHandle> free_material_handles;
-        Rx::Vector<Rx::Ptr<renderer::Buffer>> material_device_buffers;
+        Rx::Vector<Rx::Ptr<Buffer>> material_device_buffers;
 
         Rx::Map<Rx::String, Uint32> image_name_to_index;
-        Rx::Vector<Rx::Ptr<renderer::Image>> all_images;
+        Rx::Vector<Rx::Ptr<Image>> all_images;
 
         std::array<Light, MAX_NUM_LIGHTS> lights;
-        Rx::Vector<Rx::Ptr<renderer::Buffer>> light_device_buffers;
+        Rx::Vector<Rx::Ptr<Buffer>> light_device_buffers;
 
-        std::queue<renderer::Mesh> pending_raytracing_upload_meshes;
+        std::queue<Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
 
         TextureHandle noise_texture_handle;
@@ -238,18 +238,18 @@ namespace renderer {
         void load_noise_texture(const Rx::String& filepath);
 #pragma endregion
 
-        [[nodiscard]] Rx::Vector<const renderer::Image*> get_texture_array() const;
+        [[nodiscard]] Rx::Vector<const Image*> get_texture_array() const;
 
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region 3D Scene
-        Rx::Vector<renderer::RaytracableGeometry> raytracing_geometries;
+        Rx::Vector<RaytracableGeometry> raytracing_geometries;
 
-        Rx::Vector<renderer::RaytracingObject> raytracing_objects;
+        Rx::Vector<RaytracingObject> raytracing_objects;
 
-        renderer::RaytracingScene raytracing_scene;
+        RaytracingScene raytracing_scene;
 
         Rx::Ptr<ForwardPass> forward_pass;
 
@@ -265,10 +265,10 @@ namespace renderer {
 #pragma endregion
 
 #pragma region UI
-        Rx::Ptr<renderer::RenderPipelineState> ui_pipeline;
+        Rx::Ptr<RenderPipelineState> ui_pipeline;
 
-        Rx::Vector<Rx::Ptr<renderer::Buffer>> ui_vertex_buffers;
-        Rx::Vector<Rx::Ptr<renderer::Buffer>> ui_index_buffers;
+        Rx::Vector<Rx::Ptr<Buffer>> ui_vertex_buffers;
+        Rx::Vector<Rx::Ptr<Buffer>> ui_index_buffers;
 
         void create_ui_pipeline();
 

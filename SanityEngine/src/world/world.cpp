@@ -81,10 +81,9 @@ World::World(const glm::uvec2& size_in,
               *noise_generator,
               registry_in,
               *task_scheduler},
-      chunk_generation_fibtex{task_scheduler},
-      chunk_modified_event{task_scheduler} {
+      chunk_generation_fibtex{task_scheduler} {
     auto* args = new DispatchChunkMeshGenerationTasksArgs{.world_in = this};
-    //task_scheduler->AddTask({dispatch_chunk_mesh_generation_tasks, args});
+    // task_scheduler->AddTask({dispatch_chunk_mesh_generation_tasks, args});
 }
 
 void World::tick(const Float32 delta_time) {
@@ -115,7 +114,7 @@ World::TerrainData World::generate_terrain(FastNoiseSIMD& noise_generator, const
     auto data = TerrainData{};
 
     {
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "GenerateTerrain");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "GenerateTerrain");
 
         // Generate heightmap
         const auto total_pixels_in_maps = params.width * params.height;
@@ -270,30 +269,42 @@ void World::upload_new_chunk_meshes() {
     // Send help
     // ZoneScoped;
 
-    chunk_generation_fibtex.lock(true);
+    {
+        ZoneScopedN("Wait for chunk generation fixtex");
+        chunk_generation_fibtex.lock(true);
+    }
+
+    ZoneScoped;
+
+    if(!mesh_data_ready_for_upload.is_empty()) {
+        logger->verbose("There's %u chunk meshes ready for upload", mesh_data_ready_for_upload.size());
+    }
 
     if(!mesh_data_ready_for_upload.is_empty()) {
         auto& device = renderer->get_render_device();
         auto commands = device.create_command_list(task_scheduler->GetCurrentThreadIndex());
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), "UploadChunkMeshes");
 
-        auto& meshes = renderer->get_static_mesh_store();
+        {
+            TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "UploadChunkMeshes");
 
-        meshes.begin_adding_meshes(commands);
+            auto& meshes = renderer->get_static_mesh_store();
 
-        mesh_data_ready_for_upload.each_pair(
-            [&](const Vec2i& chunk_location, const Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>& mesh_data) {
-                const auto mesh_handle = meshes.add_mesh(mesh_data.first, mesh_data.second, commands);
+            meshes.begin_adding_meshes(commands);
 
-                const auto chunk_entity = registry->create();
-                registry->assign<renderer::ChunkMeshComponent>(chunk_entity, mesh_handle);
+            mesh_data_ready_for_upload.each_pair(
+                [&](const Vec2i& chunk_location, const Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>& mesh_data) {
+                    const auto mesh_handle = meshes.add_mesh(mesh_data.first, mesh_data.second, commands);
 
-                auto& chunk = *available_chunks.find(chunk_location);
-                chunk.entity = chunk_entity;
-                chunk.status = Chunk::Status::MeshGenComplete;
-            });
+                    const auto chunk_entity = registry->create();
+                    registry->assign<renderer::ChunkMeshComponent>(chunk_entity, mesh_handle);
 
-        meshes.end_adding_meshes(commands);
+                    auto& chunk = *available_chunks.find(chunk_location);
+                    chunk.entity = chunk_entity;
+                    chunk.status = Chunk::Status::MeshGenComplete;
+                });
+
+            meshes.end_adding_meshes(commands);
+        }
 
         device.submit_command_list(commands);
 
@@ -304,6 +315,8 @@ void World::upload_new_chunk_meshes() {
 }
 
 void World::load_chunks_around_player(const TransformComponent& player_transform) {
+    ZoneScoped;
+
     // Loading the chunks around the player may ONLY happen when there's no outstanding terrain tilegen tasks
     // We KNOW that this method will be called from a task, and that the task will have been dispatched AFTER all the terrain tilegen tasks
     // were dispatched. Therefore, there's won't be situations where a tilegen tasks finished after this task begins
@@ -332,9 +345,8 @@ void World::load_chunks_around_player(const TransformComponent& player_transform
 
 void World::dispatch_needed_mesh_gen_tasks() {
     // Check if any of the loaded chunks a) need a mesh and b) are surrounded by chunks with block data
-    chunk_modified_event.CompareExchange(1, 0);
-
     Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+    ZoneScoped;
     available_chunks.each_value([&](Chunk& chunk) {
         if(chunk.status == Chunk::Status::BlockGenComplete) {
             // This chunk needs a mesh! Do all of the chunks near this chunk have block data?
@@ -478,6 +490,7 @@ Rx::Vector<Uint32> triangulate(const DualContouringMesh& mesh) {
 
 void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     // ZoneScoped;
+    logger->info("Beginning mesh generation");
 
     // Scan the available chunk data, extracting surface information for the current chunk
     Rx::Vector<Int32> working_data{(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)};
@@ -538,7 +551,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& bottom_middle_chunk = *available_chunks.find({chunk_location.x, chunk_location.y - 1});
+            const auto& bottom_middle_chunk = *available_chunks.find({chunk_location.x, chunk_location.y - Chunk::DEPTH});
             const auto z = 0;
             for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
                 for(Uint32 x = 1; x <= Chunk::WIDTH; x++) {
@@ -551,7 +564,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         }
 
         {
-            const auto& top_middle_chunk = *available_chunks.find({chunk_location.x, chunk_location.y + 1});
+            const auto& top_middle_chunk = *available_chunks.find({chunk_location.x, chunk_location.y + Chunk::DEPTH});
             const auto z = Chunk::DEPTH + 1;
             for(Uint32 y = 0; y < Chunk::HEIGHT; y++) {
                 for(Uint32 x = 1; x <= Chunk::WIDTH; x++) {
@@ -601,7 +614,9 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     }
 
     // Dual-contouring
+    logger->info("Beginning dual contouring for chunk (%d, %d)", chunk_location.x, chunk_location.y);
     const auto mesh = dual_contour<Chunk::WIDTH + 2, Chunk::HEIGHT, Chunk::DEPTH + 2>(working_data);
+    logger->info("Finished dual contouring for chunk (%d, %d)", chunk_location.x, chunk_location.y);
 
     const auto indices = triangulate(mesh);
 
@@ -612,12 +627,14 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         vertices.emplace_back(mesh.vertex_positions[i], mesh.normals[i]);
     }
 
+    logger->info("Finished mesh generation for chunk (%d, %d)", chunk_location.x, chunk_location.y);
+
     Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
     mesh_data_ready_for_upload.insert(chunk_location, {Rx::Utility::move(vertices), Rx::Utility::move(indices)});
 }
 
 void World::tick_script_components(Float32 delta_time) {
-    // ZoneScoped;
+    ZoneScoped;
 
     // registry->view<horus::Component>().each([&](horus::Component& script_component) {
     //     if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) {
@@ -665,8 +682,6 @@ void World::generate_blocks_for_chunk(ftl::TaskScheduler* scheduler, void* arg) 
         chunk->status = Chunk::Status::BlockGenComplete;
         logger->info("Marked chunk (%d, %d) as BlockDataGenerated", args->location_in.x, args->location_in.y);
     }
-
-    world->chunk_modified_event.Store(1);
 
     scheduler->AddTask({dispatch_mesh_gen_tasks, world});
 

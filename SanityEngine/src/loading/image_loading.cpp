@@ -48,8 +48,7 @@ bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx:
 FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
     auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
 
-    // const auto message = Rx::String::format("Load image %s", load_data->texture_name_in);
-    // ZoneScopedN(message.data());
+    // ZoneScoped();
 
     Uint32 width, height;
     Rx::Vector<uint8_t> pixels;

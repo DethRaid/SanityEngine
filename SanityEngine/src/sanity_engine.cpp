@@ -141,7 +141,7 @@ void SanityEngine::run() {
 
         imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
 
-        auto thread_idx = task_scheduler->GetCurrentThreadIndex();
+        const auto thread_idx = task_scheduler->GetCurrentThreadIndex();
 
         // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
         // generation, etc
@@ -162,7 +162,7 @@ void SanityEngine::run() {
 
         FrameMark;
 #ifdef TRACY_ENABLE
-        TracyD3D12NewFrame(rhi::RenderDevice::tracy_context);
+        TracyD3D12NewFrame(renderer::RenderDevice::tracy_context);
 #endif
 
         const auto frame_end_time = std::chrono::steady_clock::now();
@@ -175,7 +175,7 @@ void SanityEngine::run() {
 
         frame_count++;
 
-        TracyD3D12Collect(rhi::RenderDevice::tracy_context);
+        TracyD3D12Collect(renderer::RenderDevice::tracy_context);
     }
 }
 

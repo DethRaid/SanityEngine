@@ -125,9 +125,9 @@ namespace renderer {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] StagingBuffer get_staging_buffer(Uint32 num_bytes);
+        [[nodiscard]] Buffer get_staging_buffer(Uint32 num_bytes);
 
-        void return_staging_buffer(StagingBuffer&& buffer);
+        void return_staging_buffer(Buffer&& buffer);
 
         [[nodiscard]] Buffer get_scratch_buffer(Uint32 num_bytes);
 
@@ -207,13 +207,13 @@ namespace renderer {
         Rx::Vector<D3D12_INPUT_ELEMENT_DESC> dear_imgui_graphics_pipeline_input_layout;
 
         uint64_t staging_buffer_idx{0};
-        Rx::Vector<StagingBuffer> staging_buffers;
+        Rx::Vector<Buffer> staging_buffers;
 
         /*!
          * \brief Array of array of staging buffers to free on a frame. index 0 gets freed on the next frame 0, index 1 gets freed on the
          * next frame 1, etc
          */
-        Rx::Vector<Rx::Vector<StagingBuffer>> staging_buffers_to_free;
+        Rx::Vector<Rx::Vector<Buffer>> staging_buffers_to_free;
 
         Uint32 scratch_buffer_counter{0};
         Rx::Vector<Buffer> scratch_buffers;
@@ -335,7 +335,7 @@ namespace renderer {
 
         void wait_gpu_idle(uint64_t frame_index);
 
-        [[nodiscard]] StagingBuffer create_staging_buffer(Uint32 num_bytes);
+        [[nodiscard]] Buffer create_staging_buffer(Uint32 num_bytes);
 
         [[nodiscard]] Buffer create_scratch_buffer(Uint32 num_bytes);
 

@@ -40,7 +40,7 @@ namespace renderer {
 
     void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "DenoiserPass");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass");
 
         {
             const auto

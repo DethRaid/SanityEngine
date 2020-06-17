@@ -200,8 +200,6 @@ private:
 
     ftl::Fibtex chunk_generation_fibtex;
 
-    ftl::AtomicCounter chunk_modified_event;
-
     /*!
      * \brief Map from chunk location to chunk for all the chunks that are fully available for use in-game
      */

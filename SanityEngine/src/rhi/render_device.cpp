@@ -80,7 +80,7 @@ namespace renderer {
 
         wait_gpu_idle(0);
 
-        staging_buffers.each_fwd([&](const StagingBuffer& buffer) { buffer.allocation->Release(); });
+        staging_buffers.each_fwd([&](const Buffer& buffer) { buffer.allocation->Release(); });
 
         TracyD3D12Destroy(tracy_context);
 
@@ -88,7 +88,12 @@ namespace renderer {
     }
 
     Rx::Ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
+        ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
+
+        if(create_info.usage == BufferUsage::StagingBuffer) {
+            // Try to get a staging buffer from the pool
+        }
 
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
         bool should_map = false;
@@ -514,33 +519,27 @@ namespace renderer {
 
     bool RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
-    StagingBuffer RenderDevice::get_staging_buffer(const Uint32 num_bytes) {
-        size_t best_fit_idx = staging_buffers.size();
+    Buffer RenderDevice::get_staging_buffer(const Uint32 num_bytes) {
+        ZoneScoped;
+
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
-                if(best_fit_idx >= staging_buffers.size() || staging_buffers[i].size < staging_buffers[best_fit_idx].size) {
-                    // The current buffer is more suitable than the previous best buffer
-                    best_fit_idx = i;
-                }
+                // Return the first suitable buffer we find
+                auto buffer = std::move(staging_buffers[i]);
+                staging_buffers.erase(i, i + 1);
+
+                logger->verbose("Using existing staging buffer idx %u (out of %u)", i, staging_buffers.size());
+
+                return buffer;
             }
         }
 
-        if(best_fit_idx < staging_buffers.size()) {
-            // We found a valid staging buffer!
-            auto buffer = std::move(staging_buffers[best_fit_idx]);
-            staging_buffers.erase(best_fit_idx, best_fit_idx);
-
-            return buffer;
-
-        } else {
-            // No suitable buffer is available, let's make a new one
-            return create_staging_buffer(num_bytes);
-        }
+        // No suitable buffer is available, let's make a new one
+        logger->verbose("Creating new staging buffer with size %u", num_bytes);
+        return create_staging_buffer(num_bytes);
     }
 
-    void RenderDevice::return_staging_buffer(StagingBuffer&& buffer) {
-        staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer));
-    }
+    void RenderDevice::return_staging_buffer(Buffer&& buffer) { staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer)); }
 
     Buffer RenderDevice::get_scratch_buffer(const Uint32 num_bytes) {
         size_t best_fit_idx = scratch_buffers.size();
@@ -764,7 +763,8 @@ namespace renderer {
     }
 
     void RenderDevice::create_swapchain(HWND window_handle, const glm::uvec2& window_size, const UINT num_images) {
-        ZoneScopedN("create_swapchain");
+        ZoneScoped;
+
         DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
         swapchain_desc.Width = static_cast<UINT>(window_size.x);
         swapchain_desc.Height = static_cast<UINT>(window_size.y);
@@ -832,7 +832,7 @@ namespace renderer {
     }
 
     void RenderDevice::create_descriptor_heaps() {
-        ZoneScopedN("create_descriptor_heaps");
+        ZoneScoped;
 
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -908,7 +908,7 @@ namespace renderer {
     }
 
     void RenderDevice::create_standard_root_signature() {
-        ZoneScopedN("create_standard_root_signature");
+        ZoneScoped;
 
         Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{9};
 
@@ -983,7 +983,7 @@ namespace renderer {
     }
 
     ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
-        ZoneScopedN("compile_root_signature");
+        ZoneScoped;
 
         const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_0,
                                                                         .Desc_1_0 = root_signature_desc};
@@ -1343,6 +1343,7 @@ namespace renderer {
         ZoneScoped;
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
         staging_buffers += staging_buffers_for_frame;
+        staging_buffers_for_frame.clear();
     }
 
     void RenderDevice::reset_command_allocators_for_frame(const Uint32 frame_idx) {
@@ -1373,8 +1374,7 @@ namespace renderer {
         set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Render Target");
 
         {
-            const auto msg = Rx::String::format("Transition Swapchain to Render Target %d", thread_idx);
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), msg.data());
+            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "Transition Swapchain to Render Target state");
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                        D3D12_RESOURCE_STATE_COMMON,
@@ -1399,8 +1399,7 @@ namespace renderer {
     }
 
     void RenderDevice::wait_for_frame(const uint64_t frame_index) {
-        const auto msg = Rx::String::format("wait_for_frame(%d)", frame_index);
-        ZoneScopedN(msg.data());
+        ZoneScoped;
         const auto desired_fence_value = frame_fence_values[frame_index];
         const auto initial_fence_value = frame_fences->GetCompletedValue();
 
@@ -1430,7 +1429,7 @@ namespace renderer {
         wait_for_frame(frame_index);
     }
 
-    StagingBuffer RenderDevice::create_staging_buffer(const Uint32 num_bytes) {
+    Buffer RenderDevice::create_staging_buffer(const Uint32 num_bytes) {
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
 
         const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
@@ -1438,26 +1437,26 @@ namespace renderer {
         D3D12MA::ALLOCATION_DESC alloc_desc{};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
-        auto buffer = StagingBuffer{};
-        const auto result = device_allocator->CreateResource(&alloc_desc,
-                                                             &desc,
-                                                             initial_state,
-                                                             nullptr,
-                                                             &buffer.allocation,
-                                                             IID_PPV_ARGS(&buffer.resource));
+        auto buffer = Buffer{};
+        auto result = device_allocator
+                          ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
         if(FAILED(result)) {
-            logger->error("Could not create staging buffer: %s", to_string(result));
-            return {};
+            const auto msg = Rx::String::format("Could not create staging buffer: %s (%u)", to_string(result), result);
+            Rx::abort(msg.data());
         }
 
         buffer.size = num_bytes;
         D3D12_RANGE range{0, num_bytes};
-        buffer.resource->Map(0, &range, &buffer.ptr);
+        result = buffer.resource->Map(0, &range, &buffer.mapped_ptr);
+        if(FAILED(result)) {
+            const auto msg = Rx::String::format("Could not map staging buffer: %s (%u)", to_string(result), result);
+            Rx::abort(msg.data());
+        }
 
         set_object_name(buffer.resource.Get(), Rx::String::format("Staging Buffer %d", staging_buffer_idx));
         staging_buffer_idx++;
 
-        return std::move(buffer);
+        return buffer;
     }
 
     Buffer RenderDevice::create_scratch_buffer(const Uint32 num_bytes) {

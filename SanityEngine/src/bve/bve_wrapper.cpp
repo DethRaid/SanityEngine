@@ -62,8 +62,7 @@ BveWrapper::BveWrapper(renderer::RenderDevice& device) {
 }
 
 bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
-    const auto train_msg = Rx::String::format("Load train %s", filename);
-    ZoneScopedN(train_msg.data());
+    ZoneScoped;
 
     const auto train = load_mesh_from_file(filename);
     if(!train) {
@@ -254,7 +253,7 @@ Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_gr
 }
 
 void BveWrapper::create_texture_filter_pipeline(renderer::RenderDevice& device) {
-    ZoneScopedN("create_bve_texture_alpha_pipeline");
+    ZoneScoped;
 
     Rx::Vector<CD3DX12_ROOT_PARAMETER> root_params{1};
 

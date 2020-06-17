@@ -26,10 +26,6 @@ namespace renderer {
         void* mapped_ptr{nullptr};
     };
 
-    struct StagingBuffer : Buffer {
-        void* ptr{nullptr};
-    };
-
     /*!
      * \brief All the possible ways that one can use a buffer
      */

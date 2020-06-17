@@ -19,17 +19,17 @@ namespace renderer {
     BackbufferOutputPass::BackbufferOutputPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
         auto& device = renderer->get_render_device();
 
-        const auto create_info = renderer::RenderPipelineStateCreateInfo{
+        const auto create_info = RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
             .vertex_shader = load_shader("fullscreen.vertex"),
             .pixel_shader = load_shader("backbuffer_output.pixel"),
-            .render_target_formats = Rx::Array{renderer::ImageFormat::Rgba8},
+            .render_target_formats = Rx::Array{ImageFormat::Rgba8},
         };
 
         backbuffer_output_pipeline = device.create_render_pipeline_state(create_info);
 
-        backbuffer_output_material_buffer = device.create_buffer(renderer::BufferCreateInfo{.name = "Backbuffer output material buffer",
-                                                                                       .usage = renderer::BufferUsage::StagingBuffer,
+        backbuffer_output_material_buffer = device.create_buffer(BufferCreateInfo{.name = "Backbuffer output material buffer",
+                                                                                       .usage = BufferUsage::StagingBuffer,
                                                                                        .size = sizeof(BackbufferOutputMaterial)});
 
         const auto material = BackbufferOutputMaterial{.scene_output_image = denoiser_pass.get_output_image()};
@@ -41,7 +41,7 @@ namespace renderer {
 
     void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
-        TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands, "BackbufferOutputPass");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "BackbufferOutputPass");
 
         auto& device = renderer->get_render_device();
         const auto* framebuffer = device.get_backbuffer_framebuffer();
@@ -69,7 +69,7 @@ namespace renderer {
         scissor_rect.bottom = static_cast<LONG>(framebuffer->height);
         commands->RSSetScissorRects(1, &scissor_rect);
 
-        commands->SetGraphicsRootShaderResourceView(renderer::RenderDevice::material_buffer_root_parameter_index,
+        commands->SetGraphicsRootShaderResourceView(RenderDevice::material_buffer_root_parameter_index,
                                                     backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());

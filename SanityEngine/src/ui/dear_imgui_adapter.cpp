@@ -70,7 +70,7 @@ void char_callback(GLFWwindow* window, const unsigned int c) {
 }
 
 DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& renderer) : window{window_in} {
-    ZoneScopedN("DearImguiAdapter");
+    ZoneScoped;
     ImGui::CreateContext();
 
     auto& io = ImGui::GetIO();
@@ -105,7 +105,7 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
 DearImguiAdapter::~DearImguiAdapter() { ImGui::DestroyContext(); }
 
 void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
-    ZoneScopedN("draw_ui");
+    ZoneScoped;
 
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(
