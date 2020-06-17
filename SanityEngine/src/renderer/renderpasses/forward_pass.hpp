@@ -8,6 +8,8 @@
 #include "rhi/framebuffer.hpp"
 #include "rhi/render_pipeline_state.hpp"
 
+class World;
+
 namespace renderer {
     struct BindGroup;
     class RenderDevice;
@@ -18,7 +20,7 @@ namespace renderer {
 
     class ForwardPass final : public virtual RenderPass {
     public:
-        explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
+        explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const World& world_in);
 
         ~ForwardPass() override;
 
@@ -32,6 +34,7 @@ namespace renderer {
 
     private:
         Renderer* renderer;
+        const World* world;
 
         Rx::Ptr<RenderPipelineState> standard_pipeline;
         Rx::Ptr<RenderPipelineState> opaque_chunk_geometry_pipeline;

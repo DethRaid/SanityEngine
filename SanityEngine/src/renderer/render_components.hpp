@@ -22,6 +22,7 @@ namespace renderer {
      */
     struct ChunkMeshComponent {
         Mesh mesh;
+        ModelMatrixHandle model_matrix{0};
     };
 
     /*!

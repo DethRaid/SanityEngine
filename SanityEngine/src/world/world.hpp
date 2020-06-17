@@ -67,10 +67,6 @@ struct GenerateChunkBlocksArgs {
     Terrain* terrain_in;
 };
 
-struct DispatchChunkMeshGenerationTasksArgs {
-    World* world_in;
-};
-
 struct GenerateChunkMeshArgs {
     World* world_in;
 
@@ -79,6 +75,8 @@ struct GenerateChunkMeshArgs {
 
 class World {
 public:
+    static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
+
     /*!
      * \brief Created a world with the provided parameters
      */
@@ -98,6 +96,8 @@ public:
     void tick(Float32 delta_time);
 
     [[nodiscard]] Terrain& get_terrain();
+
+    [[nodiscard]] renderer::Buffer& get_chunk_matrix_buffer() const;
 
 #pragma region Scripting
     // ReSharper disable once CppInconsistentNaming
@@ -179,6 +179,9 @@ private:
 
     renderer::Renderer* renderer;
 
+    Rx::Ptr<renderer::Buffer> chunk_matrix_buffer;
+    Uint32 first_free_slot_in_buffer{0};
+
     ftl::TaskScheduler* task_scheduler;
 
     Terrain terrain;
@@ -229,6 +232,8 @@ private:
     void dispatch_needed_mesh_gen_tasks();
 
     void generate_mesh_for_chunk(const Vec2i& chunk_location);
+
+    [[nodiscard]] renderer::ModelMatrixHandle new_chunk_matrix(const Vec2i& chunk_location);
 #pragma endregion
 };
 

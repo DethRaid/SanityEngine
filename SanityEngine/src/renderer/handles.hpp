@@ -18,4 +18,8 @@ namespace renderer {
     struct RaytracableGeometryHandle {
         Uint32 index{0};
     };
+
+    struct ModelMatrixHandle {
+        Uint32 index{0};
+    };
 } // namespace renderer

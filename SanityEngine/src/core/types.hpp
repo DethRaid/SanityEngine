@@ -4,6 +4,7 @@
 #include <rx/math/vec2.h>
 #include <rx/math/vec3.h>
 #include <rx/math/vec4.h>
+#include <rx/math/mat4x4.h>
 
 using Int32 = Sint32;
 using Int64 = Sint64;
@@ -19,3 +20,5 @@ using Vec3u = Rx::Math::Vec3<Uint32>;
 using Rx::Math::Vec4i;
 using Rx::Math::Vec4f;
 using Vec4u = Rx::Math::Vec4<Uint32>;
+
+using Rx::Math::Mat4x4f;

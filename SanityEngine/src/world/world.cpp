@@ -82,8 +82,11 @@ World::World(const glm::uvec2& size_in,
               registry_in,
               *task_scheduler},
       chunk_generation_fibtex{task_scheduler} {
-    auto* args = new DispatchChunkMeshGenerationTasksArgs{.world_in = this};
-    // task_scheduler->AddTask({dispatch_chunk_mesh_generation_tasks, args});
+    auto& device = renderer->get_render_device();
+
+    chunk_matrix_buffer = device.create_buffer(renderer::BufferCreateInfo{.name = "Camera Material Buffer",
+                                                                          .usage = renderer::BufferUsage::StagingBuffer,
+                                                                          .size = MAX_NUM_CHUNKS * sizeof(Mat4x4f)});
 }
 
 void World::tick(const Float32 delta_time) {
@@ -100,6 +103,8 @@ void World::tick(const Float32 delta_time) {
 }
 
 Terrain& World::get_terrain() { return terrain; }
+
+renderer::Buffer& World::get_chunk_matrix_buffer() const { return *chunk_matrix_buffer; }
 
 // ReSharper disable once CppInconsistentNaming
 WrenHandle* World::_get_wren_handle() const { return handle; }
@@ -294,10 +299,12 @@ void World::upload_new_chunk_meshes() {
             mesh_data_ready_for_upload.each_pair(
                 [&](const Vec2i& chunk_location, const Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>& mesh_data) {
                     logger->verbose("Uploading mesh for chunk at (%d, %d)", chunk_location.x, chunk_location.y);
-                    const auto mesh_handle = meshes.add_mesh(mesh_data.first, mesh_data.second, commands);
-
                     const auto chunk_entity = registry->create();
-                    registry->assign<renderer::ChunkMeshComponent>(chunk_entity, mesh_handle);
+
+                    const auto mesh_handle = meshes.add_mesh(mesh_data.first, mesh_data.second, commands);
+                    const auto matrix_handle = new_chunk_matrix(chunk_location);
+
+                    registry->assign<renderer::ChunkMeshComponent>(chunk_entity, mesh_handle, matrix_handle);
 
                     auto& chunk = *available_chunks.find(chunk_location);
                     chunk.entity = chunk_entity;
@@ -627,6 +634,19 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
 
     ftl::ScopeLock l{chunk_generation_fibtex};
     mesh_data_ready_for_upload.insert(chunk_location, {Rx::Utility::move(vertices), Rx::Utility::move(indices)});
+}
+
+renderer::ModelMatrixHandle World::new_chunk_matrix(const Vec2i& chunk_location) {
+    const auto handle = renderer::ModelMatrixHandle{first_free_slot_in_buffer};
+    first_free_slot_in_buffer++;
+
+    const auto matrix = Mat4x4f::translate({static_cast<Float32>(chunk_location.x), 0.0f, static_cast<Float32>(chunk_location.y)});
+
+    auto* matrix_buffer = static_cast<Mat4x4f*>(chunk_matrix_buffer->mapped_ptr);
+
+    memcpy(matrix_buffer + handle.index, &matrix, sizeof(Mat4x4f));
+
+    return handle;
 }
 
 void World::tick_script_components(Float32 delta_time) {

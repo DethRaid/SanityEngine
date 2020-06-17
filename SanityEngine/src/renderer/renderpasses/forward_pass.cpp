@@ -8,6 +8,7 @@
 #include "renderer/render_components.hpp"
 #include "renderer/renderer.hpp"
 #include "rhi/render_device.hpp"
+#include "world/world.hpp"
 
 namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
@@ -15,41 +16,48 @@ namespace renderer {
 
     RX_LOG("ForwardPass", logger);
 
-    ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
+    ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const World& world_in)
+        : renderer{&renderer_in}, world{&world_in} {
+        ZoneScoped;
         auto& device = renderer_in.get_render_device();
 
-        {
-            const auto standard_pipeline_create_info = RenderPipelineStateCreateInfo{
-                .name = "Standard material pipeline",
-                .vertex_shader = load_shader("standard.vertex"),
-                .pixel_shader = load_shader("standard.pixel"),
-                .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
-                .depth_stencil_format = ImageFormat::Depth32,
-            };
+        standard_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
+            .name = "Standard material pipeline",
+            .vertex_shader = load_shader("standard.vertex"),
+            .pixel_shader = load_shader("standard.pixel"),
+            .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
+            .depth_stencil_format = ImageFormat::Depth32,
+        });
+        logger->verbose("Created standard pipeline");
 
-            standard_pipeline = device.create_render_pipeline_state(standard_pipeline_create_info);
+        opaque_chunk_geometry_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
+            .name = "Opaque chunk geometry pipeline",
+            .vertex_shader = load_shader("chunk.vertex"),
+            .pixel_shader = load_shader("opaque_chunk.pixel"),
+            .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
+            .depth_stencil_format = ImageFormat::Depth32,
+        });
+        logger->verbose("Created opaque chunk geometry pipeline");
 
-            logger->verbose("Created standard pipeline");
-        }
-
-        {
-            const auto atmospheric_sky_create_info = RenderPipelineStateCreateInfo{
-                .name = "Atmospheric Sky",
-                .vertex_shader = load_shader("fullscreen.vertex"),
-                .pixel_shader = load_shader("atmospheric_sky.pixel"),
-                .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false, .depth_func = CompareOp::LessOrEqual},
-                .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
-                .depth_stencil_format = ImageFormat::Depth32,
-            };
-
-            atmospheric_sky_pipeline = device.create_render_pipeline_state(atmospheric_sky_create_info);
-        }
+        atmospheric_sky_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
+            .name = "Standard material pipeline",
+            .vertex_shader = load_shader("standard.vertex"),
+            .pixel_shader = load_shader("standard.pixel"),
+            .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
+            .depth_stencil_format = ImageFormat::Depth32,
+        });
+        logger->verbose("Created atmospheric pipeline");
 
         create_framebuffer(render_resolution);
     }
 
     ForwardPass::~ForwardPass() {
+        ZoneScoped;
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
+
+        auto& device = renderer->get_render_device();
+
+        device.destroy_framebuffer(Rx::Utility::move(scene_framebuffer));
     }
 
     void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
@@ -104,7 +112,6 @@ namespace renderer {
     TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
 
     void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
-        ZoneScoped;
         const auto render_target_accesses = Rx::Array{
             // Scene color
             D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
@@ -113,15 +120,17 @@ namespace renderer {
                                                                                               .Color = {0, 0, 0, 0}}}},
                                                  .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}}};
 
-        const auto
-            depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
-                                                                .DepthBeginningAccess =
-                                                                    {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                              .DepthStencil = {.Depth = 1.0}}}},
-                                                                .StencilBeginningAccess = {D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
-                                                                .DepthEndingAccess = {D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE},
-                                                                .StencilEndingAccess = {D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
+        const auto depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
+                                                                       .DepthBeginningAccess =
+                                                                           {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                            .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                                     .DepthStencil = {.Depth = 1.0}}}},
+                                                                       .StencilBeginningAccess =
+                                                                           {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                                                                       .DepthEndingAccess =
+                                                                           {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE},
+                                                                       .StencilEndingAccess = {
+                                                                           .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
 
         commands->BeginRenderPass(static_cast<UINT>(render_target_accesses.size()),
                                   render_target_accesses.data(),
@@ -145,7 +154,6 @@ namespace renderer {
                                             entt::registry& registry,
                                             const BindGroup& material_bind_group,
                                             const Uint32 frame_idx) {
-        ZoneScoped;
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -164,7 +172,6 @@ namespace renderer {
                                                     material_buffer.resource->GetGPUVirtualAddress());
 
         {
-            ZoneScopedN("Render static meshes");
             const auto& renderable_view = registry.view<StandardRenderableComponent>();
             renderable_view.each([&](const StandardRenderableComponent& mesh_renderable) {
                 commands->SetGraphicsRoot32BitConstant(0,
@@ -175,20 +182,21 @@ namespace renderer {
         }
     }
 
-    void ForwardPass::draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void ForwardPass::draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 /* frame_idx */) {
         if(opaque_chunk_geometry_pipeline) {
             commands->SetPipelineState(opaque_chunk_geometry_pipeline->pso.Get());
         }
 
         // TODO: Bind the opaque chunk geometry material
+        const auto& chunk_matrix_buffer = world->get_chunk_matrix_buffer();
 
         registry.view<ChunkMeshComponent>().each([&](const ChunkMeshComponent& chunk_mesh) {
+            commands->SetGraphicsRoot32BitConstant(0, chunk_mesh.model_matrix.index, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
             commands->DrawIndexedInstanced(chunk_mesh.mesh.num_indices, 1, chunk_mesh.mesh.first_index, 0, 0);
         });
     }
 
     void ForwardPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
-        ZoneScoped;
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");

@@ -1294,6 +1294,12 @@
     <FxCompile Include="data\shaders\worldgen\compute_water_flow.hlsl">
       <Filter>Shaders\worldgen</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\chunk.vertex.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\opaque_chunk.pixel.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\inc\atmospheric_scattering.hlsl">
