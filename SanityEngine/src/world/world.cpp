@@ -293,6 +293,7 @@ void World::upload_new_chunk_meshes() {
 
             mesh_data_ready_for_upload.each_pair(
                 [&](const Vec2i& chunk_location, const Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>>& mesh_data) {
+                    logger->verbose("Uploading mesh for chunk at (%d, %d)", chunk_location.x, chunk_location.y);
                     const auto mesh_handle = meshes.add_mesh(mesh_data.first, mesh_data.second, commands);
 
                     const auto chunk_entity = registry->create();
@@ -301,6 +302,8 @@ void World::upload_new_chunk_meshes() {
                     auto& chunk = *available_chunks.find(chunk_location);
                     chunk.entity = chunk_entity;
                     chunk.status = Chunk::Status::MeshGenComplete;
+
+                    logger->verbose("Created entity %u for chunk at (%d, %d)", chunk_entity, chunk_location.x, chunk_location.y);
                 });
 
             meshes.end_adding_meshes(commands);
@@ -489,9 +492,6 @@ Rx::Vector<Uint32> triangulate(const DualContouringMesh& mesh) {
 }
 
 void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
-    // ZoneScoped;
-    logger->info("Beginning mesh generation");
-
     // Scan the available chunk data, extracting surface information for the current chunk
     Rx::Vector<Int32> working_data{(Chunk::WIDTH + 2) * Chunk::HEIGHT * (Chunk::DEPTH + 2)};
 
@@ -614,9 +614,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
     }
 
     // Dual-contouring
-    logger->info("Beginning dual contouring for chunk (%d, %d)", chunk_location.x, chunk_location.y);
     const auto mesh = dual_contour<Chunk::WIDTH + 2, Chunk::HEIGHT, Chunk::DEPTH + 2>(working_data);
-    logger->info("Finished dual contouring for chunk (%d, %d)", chunk_location.x, chunk_location.y);
 
     const auto indices = triangulate(mesh);
 
@@ -627,9 +625,7 @@ void World::generate_mesh_for_chunk(const Vec2i& chunk_location) {
         vertices.emplace_back(mesh.vertex_positions[i], mesh.normals[i]);
     }
 
-    logger->info("Finished mesh generation for chunk (%d, %d)", chunk_location.x, chunk_location.y);
-
-    Rx::Concurrency::ScopeLock l{chunk_generation_fibtex};
+    ftl::ScopeLock l{chunk_generation_fibtex};
     mesh_data_ready_for_upload.insert(chunk_location, {Rx::Utility::move(vertices), Rx::Utility::move(indices)});
 }
 

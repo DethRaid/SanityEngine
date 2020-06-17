@@ -69,7 +69,7 @@ namespace renderer {
         scissor_rect.bottom = static_cast<LONG>(framebuffer->height);
         commands->RSSetScissorRects(1, &scissor_rect);
 
-        commands->SetGraphicsRootShaderResourceView(RenderDevice::material_buffer_root_parameter_index,
+        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());

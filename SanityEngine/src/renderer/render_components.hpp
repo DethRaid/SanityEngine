@@ -1,17 +1,16 @@
 #pragma once
 
-#include <cstdint>
-
-#include "rhi/mesh_data_store.hpp"
+#include "core/types.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/lights.hpp"
+#include "rhi/mesh_data_store.hpp"
 
 namespace renderer {
     /*!
      * \brief Renders a static mesh with some material
      */
     struct StandardRenderableComponent {
-        renderer::Mesh mesh;
+        Mesh mesh;
 
         StandardMaterialHandle material{};
     };
@@ -22,7 +21,7 @@ namespace renderer {
      * This will probably change a lot as time goes on, but for now this should work
      */
     struct ChunkMeshComponent {
-        renderer::Mesh mesh;
+        Mesh mesh;
     };
 
     /*!

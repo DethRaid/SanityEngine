@@ -33,12 +33,14 @@ namespace renderer {
     private:
         Renderer* renderer;
 
-        Rx::Ptr<renderer::RenderPipelineState> standard_pipeline;
-        Rx::Ptr<renderer::RenderPipelineState> atmospheric_sky_pipeline;
+        Rx::Ptr<RenderPipelineState> standard_pipeline;
+        Rx::Ptr<RenderPipelineState> opaque_chunk_geometry_pipeline;
+        Rx::Ptr<RenderPipelineState> chunk_water_pipeline;
+        Rx::Ptr<RenderPipelineState> atmospheric_sky_pipeline;
 
         TextureHandle color_target_handle;
         TextureHandle depth_target_handle;
-        Rx::Ptr<renderer::Framebuffer> scene_framebuffer;
+        Rx::Ptr<Framebuffer> scene_framebuffer;
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 
@@ -46,8 +48,10 @@ namespace renderer {
 
         void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
                                    entt::registry& registry,
-                                   const renderer::BindGroup& material_bind_group,
+                                   const BindGroup& material_bind_group,
                                    Uint32 frame_idx);
+
+        void draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx);
 
         void draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const;
     };

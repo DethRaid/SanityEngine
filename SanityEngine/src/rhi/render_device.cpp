@@ -528,14 +528,11 @@ namespace renderer {
                 auto buffer = std::move(staging_buffers[i]);
                 staging_buffers.erase(i, i + 1);
 
-                logger->verbose("Using existing staging buffer idx %u (out of %u)", i, staging_buffers.size());
-
                 return buffer;
             }
         }
 
         // No suitable buffer is available, let's make a new one
-        logger->verbose("Creating new staging buffer with size %u", num_bytes);
         return create_staging_buffer(num_bytes);
     }
 

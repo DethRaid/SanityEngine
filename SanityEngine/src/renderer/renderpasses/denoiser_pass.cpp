@@ -56,7 +56,7 @@ namespace renderer {
         commands->SetPipelineState(accumulation_pipeline->pso.Get());
 
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
-        commands->SetGraphicsRootShaderResourceView(renderer::RenderDevice::material_buffer_root_parameter_index,
+        commands->SetGraphicsRootShaderResourceView(renderer::RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
