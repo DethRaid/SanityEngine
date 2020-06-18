@@ -546,6 +546,9 @@
     <ClCompile Include="extern\tracy\TracyClient.cpp">
       <Filter>Tracy</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\generation\simple_chunk_meshing.cpp">
+      <Filter>Source Files\world\generation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -1252,6 +1255,9 @@
     </ClInclude>
     <ClInclude Include="src\adapters\tracy.hpp">
       <Filter>Header Files\adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\generation\simple_chunk_meshing.hpp">
+      <Filter>Header Files\world\generation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

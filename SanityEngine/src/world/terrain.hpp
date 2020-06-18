@@ -11,6 +11,8 @@
 #include "noise/FastNoiseSIMD/FastNoiseSIMD.h"
 #include "renderer/renderer.hpp"
 
+struct WorldParameters;
+
 struct TerrainSize {
     Uint32 max_latitude_in;
     Uint32 max_longitude_in;
@@ -45,6 +47,46 @@ struct TerrainTileComponent {
     Terrain* terrain;
 };
 
+struct TerrainData {
+    Uint32 width;
+    Uint32 height;
+
+    Rx::Vector<Float32> heightmap;
+
+    /*!
+     * \brief Handle to a texture that has the raw height values for the terrain
+     */
+    renderer::TextureHandle heightmap_handle;
+
+    /*!
+     * \brief Handle to a texture that stores information about water on the surface
+     *
+     * The depth of the water is in the red channel of this texture. This is the depth above the terrain - 0 means no water, something
+     * else means some water
+     *
+     * We don't need to store any directions - lakes don't flow, the ocean currents are well-defined, rivers get their flow direction
+     * from the slope of the terrain beneath them
+     */
+    renderer::TextureHandle ground_water_handle;
+
+    /*!
+     * \brief Handle to a texture that stores wind information
+     *
+     * The RGB of this channel is the direction of the wind, the length of that vector is the wind strength in kmph
+     */
+    renderer::TextureHandle wind_map_handle;
+
+    /*!
+     * \brief Handle to a texture that stores the absolute humidity on each part of the world
+     */
+    renderer::TextureHandle humidity_map_handle;
+
+    /*!
+     * \brief Handle to a texture that stores the soil moisture percentage
+     */
+    renderer::TextureHandle soil_moisture_handle;
+};
+
 /*!
  * \brief Best terrain class in the entire multiverse
  *
@@ -54,9 +96,13 @@ struct TerrainTileComponent {
 class Terrain {
 public:
     // TODO: Make this configurable
-    constexpr static int32_t TILE_SIZE = 64;
+    static constexpr int32_t TILE_SIZE = 64;
 
-    static [[nodiscard]] Vec2i get_coords_of_tile_containing_position(const Vec3f& position);
+    [[nodiscard]] static TerrainData generate_terrain(FastNoiseSIMD& noise_generator,
+                                                      const WorldParameters& params,
+                                                      renderer::Renderer& renderer);
+
+    [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Vec3f& position);
 
     explicit Terrain(const TerrainSize& size,
                      renderer::Renderer& renderer_in,
@@ -84,6 +130,7 @@ private:
 
     ftl::AtomicCounter num_active_tilegen_tasks;
 
+    ftl::Fibtex loaded_terrain_tiles_fibtex;
     Rx::Map<Vec2i, TerrainTile> loaded_terrain_tiles;
 
     renderer::StandardMaterialHandle terrain_material{1};
@@ -95,6 +142,21 @@ private:
     Uint32 min_terrain_height;
 
     Uint32 max_terrain_height;
+
+    static void generate_heightmap(FastNoiseSIMD& noise_generator,
+                                   const WorldParameters& params,
+                                   renderer::Renderer& renderer,
+                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                   TerrainData& data,
+                                   unsigned total_pixels_in_maps);
+
+    static void place_water_sources(const WorldParameters& params,
+                                    renderer::Renderer& renderer,
+                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                    TerrainData& data,
+                                    unsigned total_pixels_in_maps);
+
+    static void compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
 
     static void generate_tile_task(ftl::TaskScheduler* task_scheduler, void* arg);
 
