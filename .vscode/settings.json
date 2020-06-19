@@ -13,5 +13,6 @@
         "repulsor",
         "repulsors",
         "spawnable"
-    ]
+    ],
+    "cmake.configureOnOpen": false
 }
