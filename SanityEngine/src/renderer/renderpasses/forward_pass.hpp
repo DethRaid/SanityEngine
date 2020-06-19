@@ -11,9 +11,6 @@
 namespace renderer {
     struct BindGroup;
     class RenderDevice;
-} // namespace rhi
-
-namespace renderer {
     class Renderer;
 
     class ForwardPass final : public virtual RenderPass {

@@ -10,9 +10,40 @@ namespace renderer {
      * \brief Renders a static mesh with some material
      */
     struct StandardRenderableComponent {
+        /*!
+         * \brief What type of object we're dealing with
+         */
+        enum class Type {
+            /*!
+             * \brief This object is in the foreground, and it's opaque. These objects should be drawn first
+             */
+            ForegroundOpaque = 100,
+
+            /*!
+             * \brief This object is in the background of the scene. These objects should be drawn after all opaque foreground objects
+             */
+            Background = 200,
+
+            /*!
+             * \brief This object is in the foreground, and it is transparent
+             */
+            ForegroundTransparent = 300,
+        };
+
+        /*!
+         * \brief Mesh to render
+         */
         Mesh mesh;
 
+        /*!
+         * \brief Material to use  when rendering that mesh
+         */
         StandardMaterialHandle material{};
+
+        /*!
+         * \brief If true this object is ren
+         */
+        bool is_background{false};
     };
 
     /*!

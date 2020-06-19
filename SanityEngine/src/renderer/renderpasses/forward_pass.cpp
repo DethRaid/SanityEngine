@@ -69,8 +69,6 @@ namespace renderer {
 
         draw_objects_in_scene(commands, registry, *bind_group, frame_idx);
 
-        world.get_terrain().render(commands);
-
         draw_atmosphere(commands, registry);
 
         commands->EndRenderPass();
@@ -180,6 +178,8 @@ namespace renderer {
             const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
             renderable_view.each([&](const TransformComponent& transform, const StandardRenderableComponent& renderable) {
                 // TODO: Frustum culling, view distance calculations, etc
+
+                // TODO: Figure out the priority queues to put things in
 
                 commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 

@@ -64,7 +64,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
 
     {
-        ZoneScopedN("glfwInit", SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
+        ZoneScopedN("glfwInit");
         if(!glfwInit()) {
             Rx::abort("Could not initialize GLFW");
         }
@@ -126,8 +126,6 @@ SanityEngine::~SanityEngine() {
     glfwDestroyWindow(window);
 
     glfwTerminate();
-
-    // mtr_shutdown();
 }
 
 void SanityEngine::run() {
@@ -136,7 +134,7 @@ void SanityEngine::run() {
     Float32 last_frame_duration = 0;
 
     while(!glfwWindowShouldClose(window)) {
-        ZoneScopedN("tick", SUBSYSTEMS_TO_PROFILE & SubsystemEngine);
+        ZoneScopedN("tick");
         const auto frame_start_time = std::chrono::steady_clock::now();
         glfwPollEvents();
 
