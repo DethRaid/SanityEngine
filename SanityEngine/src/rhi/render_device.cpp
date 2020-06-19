@@ -429,17 +429,17 @@ namespace renderer {
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
-        const auto result = device->CreateCommandList(0,
-                                                      D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                                      command_allocator,
-                                                      nullptr,
-                                                      IID_PPV_ARGS(&cmds));
+        auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
         if(FAILED(result)) {
-            logger->error("Could not create command list");
-            return {};
+            const auto msg = Rx::String::format("Could not create command list: %s", to_string(result));
+            Rx::abort(msg.data());
         }
 
-        cmds->QueryInterface(commands.GetAddressOf());
+        result = cmds->QueryInterface(commands.GetAddressOf());
+        if(FAILED(result)) {
+            const auto msg = Rx::String::format("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
+            Rx::abort(msg.data());
+        }
 
         return commands;
     }
@@ -447,7 +447,7 @@ namespace renderer {
     void RenderDevice::submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         commands->Close();
 
-        Rx::Concurrency::ScopeLock l{command_lists_by_frame_fibtex};
+        ftl::ScopeLock l{command_lists_by_frame_fibtex, true};
         command_lists_by_frame[cur_gpu_frame_idx].push_back(commands);
     }
 
@@ -536,7 +536,9 @@ namespace renderer {
         return create_staging_buffer(num_bytes);
     }
 
-    void RenderDevice::return_staging_buffer(Buffer&& buffer) { staging_buffers_to_free[cur_gpu_frame_idx].push_back(std::move(buffer)); }
+    void RenderDevice::return_staging_buffer(Buffer buffer) {
+        staging_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
+    }
 
     Buffer RenderDevice::get_scratch_buffer(const Uint32 num_bytes) {
         size_t best_fit_idx = scratch_buffers.size();
@@ -561,7 +563,9 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::return_scratch_buffer(Buffer buffer) { scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer)); }
+    void RenderDevice::return_scratch_buffer(Buffer buffer) {
+        scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
+    }
 
     UINT RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
@@ -1307,7 +1311,7 @@ namespace renderer {
     }
 
     void RenderDevice::flush_batched_command_lists() {
-        Rx::Concurrency::ScopeLock l{command_lists_by_frame_fibtex};
+        ftl::ScopeLock l{command_lists_by_frame_fibtex, true};
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {

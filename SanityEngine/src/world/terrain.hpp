@@ -39,6 +39,14 @@ struct TerrainTile {
     entt::entity entity;
 };
 
+struct TerrainTileMesh {
+Vec2i coord;
+
+    entt::entity entity;
+
+Rx::Vector<
+};
+
 class Terrain;
 
 struct TerrainTileComponent {
@@ -132,6 +140,9 @@ private:
 
     ftl::Fibtex loaded_terrain_tiles_fibtex;
     Rx::Map<Vec2i, TerrainTile> loaded_terrain_tiles;
+
+    ftl::Fibtex terrain_mesh_upload_fibtex;
+    Rx::Vector<> tile_meshes_to_upload;
 
     renderer::StandardMaterialHandle terrain_material{1};
 

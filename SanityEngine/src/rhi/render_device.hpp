@@ -133,7 +133,7 @@ namespace renderer {
 
         [[nodiscard]] Buffer get_staging_buffer(Uint32 num_bytes);
 
-        void return_staging_buffer(Buffer&& buffer);
+        void return_staging_buffer(Buffer buffer);
 
         [[nodiscard]] Buffer get_scratch_buffer(Uint32 num_bytes);
 

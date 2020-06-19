@@ -309,13 +309,21 @@ void Terrain::generate_tile(const Vec2i& tilecoord, const Size thread_idx) {
         }
     }
 
+    {
+        
+    }
+
     auto& device = renderer->get_render_device();
     const auto commands = device.create_command_list(thread_idx);
+    logger->info("Created command list %x", commands.Get());
 
     renderer::RaytracableGeometryHandle ray_geo;
     renderer::Mesh tile_mesh;
 
     {
+        logger->info("Using command list %x", commands.Get());
+        Rx::Log::flush();
+        // Apparently the command list here is closed? I suspect something about threading is being weird, but I can't prove it right now
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
 
         auto& meshes = renderer->get_static_mesh_store();

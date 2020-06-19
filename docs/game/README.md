@@ -16,6 +16,12 @@ The game must take advantage of a wide number of attributes of differentiation
 
 Presenting the player with situations that force them to do different things will make the gameplay feel more diverse. Think about the actions that the player will take to perform the actions in your game. If they're using the same sequence of actions then your game will not feel very diverse, no matter how many different situations there are
 
+There should be multiple ways to complete most objectives, and those ways should involve the player using multiple skills. One way might require mining and woodcutting skills, one might be mining and combat, etc. These paths should cater to each of the player archetypes, and should provide different ways for each archetype to complete an objective.
+
+"Unexpected yet discernable"
+
+A normal playthrough of the game won't visit a lot of content
+
 ## Drama
 
 When the guy at https://youtu.be/d8QAVGeEj-U?list=TLPQMTgwNjIwMjD4tHdCtlwTyg&t=3490 starts talking
@@ -48,5 +54,3 @@ Reference times the player did something
 - "You did this to me"
 - "Now on the news - the player did something!"
 - "Thanks for helping me!"
-
-
