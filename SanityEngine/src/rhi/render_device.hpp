@@ -137,7 +137,7 @@ namespace renderer {
 
         [[nodiscard]] Buffer get_scratch_buffer(Uint32 num_bytes);
 
-        void return_scratch_buffer(Buffer&& buffer);
+        void return_scratch_buffer(Buffer buffer);
 
         [[nodiscard]] ID3D12Device* get_d3d12_device() const;
 

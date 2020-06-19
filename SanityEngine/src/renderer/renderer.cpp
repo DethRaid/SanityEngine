@@ -36,12 +36,11 @@ namespace renderer {
                     INT_MAX,
                     100000);
 
-    Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
+    Renderer::Renderer(GLFWwindow* window, const Settings& settings_in, ftl::TaskScheduler& task_scheduler)
         : start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
           device{make_render_device(RenderBackend::D3D12, window, settings_in)},
-          camera_matrix_buffers{
-              Rx::make_ptr<CameraMatrixBuffer>(Rx::Memory::SystemAllocator::instance(), *device, settings_in.num_in_flight_gpu_frames)} {
+          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device, settings_in.num_in_flight_gpu_frames)} {
         ZoneScoped;
 
         // logger->set_level(spdlog::level::debug);
@@ -55,7 +54,7 @@ namespace renderer {
 
         create_static_mesh_storage();
 
-        create_per_frame_buffers();
+        create_per_frame_buffers(task_scheduler);
 
         create_material_data_buffers();
 
@@ -67,9 +66,9 @@ namespace renderer {
 
         create_builtin_images();
 
-        forward_pass = Rx::make_ptr<ForwardPass>(Rx::Memory::SystemAllocator::instance(), *this, output_framebuffer_size);
-        denoiser_pass = Rx::make_ptr<DenoiserPass>(Rx::Memory::SystemAllocator::instance(), *this, output_framebuffer_size, *forward_pass);
-        backbuffer_output_pass = Rx::make_ptr<BackbufferOutputPass>(Rx::Memory::SystemAllocator::instance(), *this, *denoiser_pass);
+        forward_pass = Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size);
+        denoiser_pass = Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, *forward_pass);
+        backbuffer_output_pass = Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, *denoiser_pass);
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
@@ -98,7 +97,7 @@ namespace renderer {
 
         per_frame_data.time_since_start = static_cast<Float32>(time_since_start);
 
-        next_unused_model_matrix_per_frame[frame_count].Store(0);
+        next_unused_model_matrix_per_frame[frame_count]->Store(0);
     }
 
     void Renderer::render_all(entt::registry& registry, const World& world) {
@@ -274,13 +273,10 @@ namespace renderer {
 
         auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<MeshDataStore>(Rx::Memory::SystemAllocator::instance(),
-                                                          *device,
-                                                          std::move(vertex_buffer),
-                                                          std::move(index_buffer));
+        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, std::move(vertex_buffer), std::move(index_buffer));
     }
 
-    void Renderer::create_per_frame_buffers() {
+    void Renderer::create_per_frame_buffers(ftl::TaskScheduler& task_scheduler) {
         per_frame_data_buffers.reserve(settings.num_in_flight_gpu_frames);
         model_matrix_buffers.reserve(settings.num_in_flight_gpu_frames);
 
@@ -299,6 +295,8 @@ namespace renderer {
 
             model_matrix_buffer_create_info.name = Rx::String::format("Model matrix buffer %d", i);
             model_matrix_buffers.push_back(device->create_buffer(model_matrix_buffer_create_info));
+
+            next_unused_model_matrix_per_frame.emplace_back(Rx::make_ptr<ftl::AtomicCounter>(RX_SYSTEM_ALLOCATOR, &task_scheduler));
         }
     }
 
@@ -522,7 +520,7 @@ namespace renderer {
     Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *model_matrix_buffers[frame_idx]; }
 
     Uint32 Renderer::add_model_matrix_to_frame(const TransformComponent& transform, const Uint32 frame_idx) {
-        const auto index = next_unused_model_matrix_per_frame[frame_idx].Load();
+        const auto index = next_unused_model_matrix_per_frame[frame_idx]->Load();
 
         const auto matrix = transform.to_matrix();
 

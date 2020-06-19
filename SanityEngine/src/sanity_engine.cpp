@@ -51,9 +51,7 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 }
 
 SanityEngine::SanityEngine(const Settings& settings_in)
-    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(Rx::Memory::SystemAllocator::instance())} {
-
-    ZoneScoped;
+    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
 
     winrt::init_apartment();
 
@@ -64,62 +62,64 @@ SanityEngine::SanityEngine(const Settings& settings_in)
     task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
 
     {
-        ZoneScopedN("glfwInit");
-        if(!glfwInit()) {
-            Rx::abort("Could not initialize GLFW");
+        ZoneScoped;
+
+        {
+            ZoneScopedN("glfwInit");
+            if(!glfwInit()) {
+                Rx::abort("Could not initialize GLFW");
+            }
         }
-    }
 
-    glfwSetErrorCallback(error_callback);
+        glfwSetErrorCallback(error_callback);
 
-    {
-        ZoneScopedN("glfwCreateWindow");
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(1000, 480, "Sanity Engine", nullptr, nullptr);
-        if(window == nullptr) {
-            Rx::abort("Could not create GLFW window");
+        {
+            ZoneScopedN("glfwCreateWindow");
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+            window = glfwCreateWindow(1000, 480, "Sanity Engine", nullptr, nullptr);
+            if(window == nullptr) {
+                Rx::abort("Could not create GLFW window");
+            }
         }
+
+        logger->info("Created window");
+
+        glfwSetWindowUserPointer(window, input_manager.get());
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        glfwSetKeyCallback(window, key_func);
+
+        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings, *task_scheduler);
+        logger->info("Initialized renderer");
+
+        // initialize_scripting_runtime();
+
+        bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
+
+        create_first_person_player();
+
+        create_planetary_atmosphere();
+
+        make_frametime_display();
+
+        imgui_adapter = Rx::make_ptr<DearImguiAdapter>(RX_SYSTEM_ALLOCATOR, window, *renderer);
+
+        world = World::create({.seed = 666,
+                               .height = 128,
+                               .width = 128,
+                               .max_ocean_depth = 8,
+                               .min_terrain_depth_under_ocean = 8,
+                               .max_height_above_sea_level = 16},
+                              player,
+                              registry,
+                              *renderer);
+
+        player_controller->set_current_terrain(world->get_terrain());
+
+        world->tick(0);
+
+        load_3d_object("data/models/davifactory.obj");
     }
-
-    logger->info("Created window");
-
-    glfwSetWindowUserPointer(window, input_manager.get());
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    glfwSetKeyCallback(window, key_func);
-
-    renderer = Rx::make_ptr<renderer::Renderer>(Rx::Memory::SystemAllocator::instance(), window, settings);
-    logger->info("Initialized renderer");
-
-    // initialize_scripting_runtime();
-
-    bve = Rx::make_ptr<BveWrapper>(Rx::Memory::SystemAllocator::instance(), renderer->get_render_device());
-
-    create_first_person_player();
-
-    create_planetary_atmosphere();
-
-    make_frametime_display();
-
-    imgui_adapter = Rx::make_ptr<DearImguiAdapter>(Rx::Memory::SystemAllocator::instance(), window, *renderer);
-
-    world = World::create({.seed = 666,
-                           .height = 128,
-                           .width = 128,
-                           .max_ocean_depth = 8,
-                           .min_terrain_depth_under_ocean = 8,
-                           .max_height_above_sea_level = 16},
-                          player,
-                          registry,
-                          *renderer);
-
-    player_controller->set_current_terrain(world->get_terrain());
-
-    world->tick(0);
-
-    load_3d_object("data/models/davifactory.obj");
-
-    // create_simple_boi(registry, *scripting_runtime);
 }
 
 SanityEngine::~SanityEngine() {
@@ -226,8 +226,7 @@ void SanityEngine::create_planetary_atmosphere() {
 
 void SanityEngine::make_frametime_display() {
     const auto frametime_display = registry.create();
-    registry.assign<ui::UiComponent>(frametime_display,
-                                     Rx::make_ptr<ui::FramerateDisplay>(Rx::Memory::SystemAllocator::instance(), framerate_tracker));
+    registry.assign<ui::UiComponent>(frametime_display, Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
 }
 
 void SanityEngine::create_first_person_player() {
@@ -239,7 +238,7 @@ void SanityEngine::create_first_person_player() {
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     registry.assign<renderer::CameraComponent>(player);
 
-    player_controller = Rx::make_ptr<FirstPersonController>(Rx::Memory::SystemAllocator::instance(), window, player, registry);
+    player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
     logger->info("Created flycam");
 }
@@ -253,6 +252,6 @@ void SanityEngine::load_bve_train(const Rx::String& filename) {
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {
     const auto msg = Rx::String::format("load_3d_object(%s)", filename);
-    ZoneScopedN(msg.data(), SUBSYSTEMS_TO_PROFILE & SubsystemStreaming);
+    ZoneScopedN(msg.data());
     load_static_mesh(filename, registry, *renderer);
 }

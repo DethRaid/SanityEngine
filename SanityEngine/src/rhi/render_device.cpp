@@ -433,7 +433,7 @@ namespace renderer {
                                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
                                                       command_allocator,
                                                       nullptr,
-                                                      IID_PPV_ARGS(cmds.GetAddressOf()));
+                                                      IID_PPV_ARGS(&cmds));
         if(FAILED(result)) {
             logger->error("Could not create command list");
             return {};
@@ -561,7 +561,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::return_scratch_buffer(Buffer&& buffer) { scratch_buffers_to_free[cur_gpu_frame_idx].push_back(buffer); }
+    void RenderDevice::return_scratch_buffer(Buffer buffer) { scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer)); }
 
     UINT RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
@@ -1033,6 +1033,7 @@ namespace renderer {
         root_descriptors.insert("indices", RootDescriptorDescription{5_u32, DescriptorType::ShaderResource});
         root_descriptors.insert("vertices", RootDescriptorDescription{6_u32, DescriptorType::ShaderResource});
         root_descriptors.insert("per_frame_data", RootDescriptorDescription{7_u32, DescriptorType::ShaderResource});
+        root_descriptors.insert("model_matrices", RootDescriptorDescription{8_u32, DescriptorType::ShaderResource});
 
         material_bind_group_builder.reserve(settings.num_in_flight_gpu_frames);
 

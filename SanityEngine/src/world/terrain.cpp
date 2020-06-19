@@ -210,10 +210,10 @@ void Terrain::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D
     const auto& watermap_image = renderer.get_image(data.ground_water_handle);
 }
 
-void Terrain::generate_tile_task(ftl::TaskScheduler* /* task_scheduler */, void* arg) {
+void Terrain::generate_tile_task(ftl::TaskScheduler* task_scheduler, void* arg) {
     auto* args = static_cast<GenerateTileTaskArgs*>(arg);
 
-    args->terrain->generate_tile(args->tilecoord);
+    args->terrain->generate_tile(args->tilecoord, task_scheduler->GetCurrentThreadIndex());
 
     delete args;
 }
@@ -259,7 +259,7 @@ void Terrain::load_terrain_textures_and_create_material() {
     terrain_material = renderer->allocate_standard_material(material);
 }
 
-void Terrain::generate_tile(const Vec2i& tilecoord) {
+void Terrain::generate_tile(const Vec2i& tilecoord, const Size thread_idx) {
     ZoneScoped;
 
     const auto top_left = tilecoord * static_cast<Int32>(TILE_SIZE);
@@ -310,8 +310,12 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
     }
 
     auto& device = renderer->get_render_device();
-    const auto commands = device.create_command_list(0);
-    const auto [ray_geo, tile_mesh] = [&]() -> Rx::Pair<renderer::RaytracableGeometryHandle, renderer::Mesh> {
+    const auto commands = device.create_command_list(thread_idx);
+
+    renderer::RaytracableGeometryHandle ray_geo;
+    renderer::Mesh tile_mesh;
+
+    {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
 
         auto& meshes = renderer->get_static_mesh_store();
@@ -321,20 +325,18 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
         const auto tile_mesh_ld = meshes.add_mesh(tile_vertices, tile_indices, commands);
         const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
 
-        {
-            const Rx::Vector<D3D12_RESOURCE_BARRIER>
-                barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                     CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
-                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
+        const Rx::Vector<D3D12_RESOURCE_BARRIER>
+            barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+                                 CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
-        return {renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh_ld}, commands),
-                tile_mesh_ld};
-    }();
+        ray_geo = renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh_ld}, commands);
+        tile_mesh = tile_mesh_ld;
+    }
 
     device.submit_command_list(commands);
 
@@ -353,9 +355,8 @@ Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i&
     auto raw_noise = Rx::Vector<Float32>{size.y * size.x};
 
     {
-        noise_generator_fibtex.lock(true);
+        ftl::ScopeLock l{noise_generator_fibtex, true};
         noise_generator->FillNoiseSet(raw_noise.data(), top_left.x, top_left.y, 1, size.x, size.y, 1);
-        noise_generator_fibtex.unlock();
     }
 
     for(Uint32 y = 0; y < size.y; y++) {

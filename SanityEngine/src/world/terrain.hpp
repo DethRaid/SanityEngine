@@ -162,7 +162,7 @@ private:
 
     void load_terrain_textures_and_create_material();
 
-    void generate_tile(const Vec2i& tilecoord);
+    void generate_tile(const Vec2i& tilecoord, Size thread_idx);
 
     /*!
      * \brief Generates a terrain heightmap of a specific size

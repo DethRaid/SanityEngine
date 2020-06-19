@@ -48,7 +48,7 @@ namespace renderer {
      */
     class Renderer {
     public:
-        explicit Renderer(GLFWwindow* window, const Settings& settings_in);
+        explicit Renderer(GLFWwindow* window, const Settings& settings_in, ftl::TaskScheduler& task_scheduler);
 
         void begin_frame(uint64_t frame_count, Size thread_idx);
 
@@ -231,7 +231,7 @@ namespace renderer {
 #pragma region Initialization
         void create_static_mesh_storage();
 
-        void create_per_frame_buffers();
+        void create_per_frame_buffers(ftl::TaskScheduler& task_scheduler);
 
         void create_material_data_buffers();
 
@@ -255,7 +255,7 @@ namespace renderer {
 
         Rx::Vector<Rx::Ptr<Buffer>> model_matrix_buffers;
 
-        Rx::Vector<ftl::AtomicCounter> next_unused_model_matrix_per_frame;
+        Rx::Vector<Rx::Ptr<ftl::AtomicCounter>> next_unused_model_matrix_per_frame;
 
         RaytracingScene raytracing_scene;
 
