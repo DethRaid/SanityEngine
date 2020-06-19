@@ -69,7 +69,7 @@ namespace renderer {
 
         draw_objects_in_scene(commands, registry, *bind_group, frame_idx);
 
-        draw_chunks(commands, registry, frame_idx, world);
+        world.get_terrain().render(commands);
 
         draw_atmosphere(commands, registry);
 
@@ -158,9 +158,15 @@ namespace renderer {
 
         // Hardcode camera 0 as the player camera
         // TODO: Decide if this is fine
-        commands->SetGraphicsRoot32BitConstant(0, 0, 0);
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
 
         material_bind_group.bind_to_graphics_signature(commands);
+
+        {
+            auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
+            commands->SetGraphicsRootShaderResourceView(RenderDevice::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
+                                                        model_matrix_buffer.resource->GetGPUVirtualAddress());
+        }
 
         const auto& mesh_storage = renderer->get_static_mesh_store();
         mesh_storage.bind_to_command_list(commands);
@@ -171,33 +177,19 @@ namespace renderer {
                                                     material_buffer.resource->GetGPUVirtualAddress());
 
         {
-            const auto& renderable_view = registry.view<StandardRenderableComponent>();
-            renderable_view.each([&](const StandardRenderableComponent& mesh_renderable) {
-                commands->SetGraphicsRoot32BitConstant(0,
-                                                       mesh_renderable.material.index,
-                                                       RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-                commands->DrawIndexedInstanced(mesh_renderable.mesh.num_indices, 1, mesh_renderable.mesh.first_index, 0, 0);
+            const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
+            renderable_view.each([&](const TransformComponent& transform, const StandardRenderableComponent& renderable) {
+                // TODO: Frustum culling, view distance calculations, etc
+
+                commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+
+                const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform, frame_idx);
+
+                commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderDevice::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
+
+                commands->DrawIndexedInstanced(renderable.mesh.num_indices, 1, renderable.mesh.first_index, 0, 0);
             });
         }
-    }
-
-    void ForwardPass::draw_chunks(ID3D12GraphicsCommandList4* commands,
-                                  entt::registry& registry,
-                                  const Uint32 /* frame_idx */,
-                                  const World& world) {
-        if(opaque_chunk_geometry_pipeline) {
-            commands->SetPipelineState(opaque_chunk_geometry_pipeline->pso.Get());
-        }
-
-        // TODO: Bind the opaque chunk geometry material
-        const auto& chunk_matrix_buffer = world.get_chunk_matrix_buffer();
-        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    chunk_matrix_buffer.resource->GetGPUVirtualAddress());
-
-        registry.view<ChunkMeshComponent>().each([&](const ChunkMeshComponent& chunk_mesh) {
-            commands->SetGraphicsRoot32BitConstant(0, chunk_mesh.model_matrix.index, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-            commands->DrawIndexedInstanced(chunk_mesh.mesh.num_indices, 1, chunk_mesh.mesh.first_index, 0, 0);
-        });
     }
 
     void ForwardPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {

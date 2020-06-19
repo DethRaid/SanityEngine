@@ -10,7 +10,6 @@
 #include "core/components.hpp"
 #include "core/types.hpp"
 #include "generation/dual_contouring.hpp"
-#include "generation/simple_chunk_meshing.hpp"
 #include "rhi/render_device.hpp"
 
 RX_LOG("World", logger);
@@ -37,7 +36,7 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
     logger->info("Creating world with seed %d", params.seed);
 
-    auto noise_generator = Rx::Ptr<FastNoiseSIMD>{Rx::Memory::SystemAllocator::instance(), FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
+    auto noise_generator = Rx::Ptr<FastNoiseSIMD>{RX_SYSTEM_ALLOCATOR, FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
 
     // Settings gotten from messing around in the demo application. High chance these should be tuned in-game
     noise_generator->SetNoiseType(FastNoiseSIMD::PerlinFractal);
@@ -54,7 +53,7 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
     generate_climate_data(terrain_data, params, renderer);
 
-    return Rx::make_ptr<World>(Rx::Memory::SystemAllocator::instance(),
+    return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
                                glm::uvec2{params.width, params.height},
                                min_terrain_height,
                                max_terrain_height,
@@ -77,23 +76,23 @@ World::World(const glm::uvec2& size_in,
       registry{&registry_in},
       renderer{&renderer_in},
       task_scheduler{Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()},
-      terrain{{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height},
-              renderer_in,
-              *noise_generator,
-              registry_in,
-              *task_scheduler} {
-}
+      terrain{Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
+                                    TerrainSize{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height},
+                                    renderer_in,
+                                    *noise_generator,
+                                    registry_in,
+                                    *task_scheduler)} {}
 
 void World::tick(const Float32 delta_time) {
     ZoneScoped;
 
     const auto& player_transform = registry->get<TransformComponent>(player);
-    terrain.load_terrain_around_player(player_transform);
+    terrain->load_terrain_around_player(player_transform);
 
     tick_script_components(delta_time);
 }
 
-Terrain& World::get_terrain() { return terrain; }
+Terrain& World::get_terrain() const { return *terrain; }
 
 // ReSharper disable once CppInconsistentNaming
 WrenHandle* World::_get_wren_handle() const { return handle; }

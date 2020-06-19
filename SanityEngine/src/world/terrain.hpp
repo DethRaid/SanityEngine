@@ -96,7 +96,7 @@ struct TerrainData {
 class Terrain {
 public:
     // TODO: Make this configurable
-    static constexpr int32_t TILE_SIZE = 64;
+    static constexpr Uint32 TILE_SIZE = 64;
 
     [[nodiscard]] static TerrainData generate_terrain(FastNoiseSIMD& noise_generator,
                                                       const WorldParameters& params,
@@ -135,9 +135,9 @@ private:
 
     renderer::StandardMaterialHandle terrain_material{1};
 
-    Uint32 max_latitude;
+    Uint32 max_latitude{};
 
-    Uint32 max_longitude;
+    Uint32 max_longitude{};
 
     Uint32 min_terrain_height;
 

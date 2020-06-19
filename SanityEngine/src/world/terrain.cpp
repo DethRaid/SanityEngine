@@ -78,11 +78,14 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
                     continue;
                 }
 
-                if(loaded_terrain_tiles.find(coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}) == nullptr) {
-                    if(num_active_tilegen_tasks.Load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
-                        auto* args = new GenerateTileTaskArgs{.terrain = this,
-                                                              .tilecoord = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}};
-                        task_scheduler->AddTask({generate_tile_task, args}, &num_active_tilegen_tasks);
+                {
+                    ftl::ScopeLock l{loaded_terrain_tiles_fibtex, true};
+                    if(loaded_terrain_tiles.find(coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}) == nullptr) {
+                        if(num_active_tilegen_tasks.Load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
+                            auto* args = new GenerateTileTaskArgs{.terrain = this,
+                                                                  .tilecoord = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}};
+                            task_scheduler->AddTask({generate_tile_task, args}, &num_active_tilegen_tasks);
+                        }
                     }
                 }
             }
@@ -93,7 +96,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
 Float32 Terrain::get_terrain_height(const Vec2f& location) const {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
-    const auto tile_start_location = tilecoords * TILE_SIZE;
+    const auto tile_start_location = tilecoords * static_cast<Int32>(TILE_SIZE);
     const auto location_within_tile = Vec2u{static_cast<Uint32>(abs(round(location.x - tile_start_location.x))),
                                             static_cast<Uint32>(abs(round(location.y - tile_start_location.y)))};
 
@@ -107,7 +110,7 @@ Float32 Terrain::get_terrain_height(const Vec2f& location) const {
 }
 
 Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3f& position) {
-    return Vec2i{static_cast<Int32>(round(position.x)), static_cast<Int32>(round(position.z))} / TILE_SIZE;
+    return Vec2i{static_cast<Int32>(round(position.x)), static_cast<Int32>(round(position.z))} / static_cast<Int32>(TILE_SIZE);
 }
 
 TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
@@ -145,7 +148,12 @@ void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                  TerrainData& data,
                                  const unsigned total_pixels_in_maps) {
-    auto* height_noise = noise_generator.GetNoiseSet(-params.width / 2, -params.height / 2, 0, params.width, params.height, 1);
+    auto* height_noise = noise_generator.GetNoiseSet(-static_cast<Int32>(params.width) / 2,
+                                                     -static_cast<Int32>(params.height) / 2,
+                                                     0,
+                                                     params.width,
+                                                     params.height,
+                                                     1);
 
     memcpy(data.heightmap.data(), height_noise, total_pixels_in_maps * sizeof(Float32));
 
@@ -204,90 +212,8 @@ void Terrain::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D
 
 void Terrain::generate_tile_task(ftl::TaskScheduler* /* task_scheduler */, void* arg) {
     auto* args = static_cast<GenerateTileTaskArgs*>(arg);
-    const auto& tilecoord = args->tilecoord;
 
-    args->terrain->generate_tile(tilecoord);
-
-    const auto top_left = tilecoord * TILE_SIZE;
-    const auto size = Vec2u{TILE_SIZE, TILE_SIZE};
-
-    logger->info("Generating tile (%d, %d) with size (%d, %d)", tilecoord.x, tilecoord.y, size.x, size.y);
-
-    Terrain* terrain = args->terrain;
-    const auto tile_heightmap = terrain->generate_terrain_heightmap(top_left, size);
-
-    const auto tile_entity = terrain->registry->create();
-
-    {
-        ftl::ScopeLock l{terrain->loaded_terrain_tiles_fibtex};
-        terrain->loaded_terrain_tiles.insert(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
-    }
-
-    Rx::Vector<StandardVertex> tile_vertices;
-    tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
-
-    Rx::Vector<Uint32> tile_indices;
-    tile_indices.reserve(tile_vertices.size() * 6);
-
-    for(Uint32 y = 0; y < tile_heightmap.size(); y++) {
-        const auto& tile_heightmap_row = tile_heightmap[y];
-        for(Uint32 x = 0; x < tile_heightmap_row.size(); x++) {
-            const auto height = tile_heightmap_row[x];
-
-            const auto normal = terrain->get_normal_at_location(Vec2f{static_cast<Float32>(x), static_cast<Float32>(y)});
-
-            tile_vertices.push_back(StandardVertex{.position = {static_cast<Float32>(x), height, static_cast<Float32>(y)},
-                                                   .normal = normal,
-                                                   .color = 0xFFFFFFFF,
-                                                   .texcoord = {static_cast<Float32>(x), static_cast<Float32>(y)}});
-
-            if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
-                const auto width = static_cast<Uint32>(tile_heightmap_row.size());
-                const auto face_start_idx = static_cast<Uint32>(y * width + x);
-
-                tile_indices.push_back(face_start_idx);
-                tile_indices.push_back(face_start_idx + 1);
-                tile_indices.push_back(face_start_idx + width);
-
-                tile_indices.push_back(face_start_idx + width);
-                tile_indices.push_back(face_start_idx + 1);
-                tile_indices.push_back(face_start_idx + width + 1);
-            }
-        }
-    }
-
-    auto& device = terrain->renderer->get_render_device();
-    const auto commands = device.create_command_list(0);
-    const auto [ray_geo, tile_mesh] = [&]() -> Rx::Pair<renderer::RaytracableGeometryHandle, renderer::Mesh> {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
-
-        auto& meshes = terrain->renderer->get_static_mesh_store();
-
-        meshes.begin_adding_meshes(commands);
-
-        const auto tile_mesh_ld = meshes.add_mesh(tile_vertices, tile_indices, commands);
-        const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
-
-        {
-            const Rx::Vector<D3D12_RESOURCE_BARRIER>
-                barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                     CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
-                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-
-        return {terrain->renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh_ld}, commands),
-                tile_mesh_ld};
-    }();
-
-    device.submit_command_list(commands);
-
-    terrain->renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
-
-    terrain->registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain->terrain_material);
+    args->terrain->generate_tile(args->tilecoord);
 
     delete args;
 }
@@ -336,16 +262,20 @@ void Terrain::load_terrain_textures_and_create_material() {
 void Terrain::generate_tile(const Vec2i& tilecoord) {
     ZoneScoped;
 
-    // Intentionally a copy - We copy the data we need locally so we don't have to have the terrain tiles locked for long
-    Rx::Vector<Rx::Vector<Float32>> tile_heightmap;
+    const auto top_left = tilecoord * static_cast<Int32>(TILE_SIZE);
+    const auto size = Vec2u{TILE_SIZE, TILE_SIZE};
+
+    logger->info("Generating tile (%d, %d) with size (%d, %d)", tilecoord.x, tilecoord.y, size.x, size.y);
+
+    const auto tile_heightmap = generate_terrain_heightmap(top_left, size);
+
+    const auto tile_entity = registry->create();
+
     {
-        // Pin the lock to this thread. This is a requirements of any call stack within a Tracy scope
         ftl::ScopeLock l{loaded_terrain_tiles_fibtex, true};
-        if(const auto* found_tile = loaded_terrain_tiles.find(tilecoord)) {
-            tile_heightmap = found_tile->heightmap;
-        } else {
-        }
+        loaded_terrain_tiles.insert(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
     }
+
     Rx::Vector<StandardVertex> tile_vertices;
     tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
 
@@ -411,6 +341,7 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
     renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
 
     registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
+    registry->assign<TransformComponent>(tile_entity, glm::vec3{top_left.x, 0.0f, top_left.y});
 }
 
 Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size) {

@@ -76,7 +76,7 @@ public:
 
     void tick(Float32 delta_time);
 
-    [[nodiscard]] Terrain& get_terrain();
+    [[nodiscard]] Terrain& get_terrain() const;
 
 #pragma region Scripting
     // ReSharper disable once CppInconsistentNaming
@@ -103,7 +103,7 @@ private:
 
     ftl::TaskScheduler* task_scheduler;
 
-    Terrain terrain;
+    Rx::Ptr<Terrain> terrain;
 
     WrenHandle* handle;
 

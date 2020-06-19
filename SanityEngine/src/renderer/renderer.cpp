@@ -5,6 +5,7 @@
 #include <entt/entity/registry.hpp>
 #include <ftl/atomic_counter.h>
 #include <imgui/imgui.h>
+#include <rx/console/variable.h>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 
@@ -28,6 +29,13 @@ namespace renderer {
 
     RX_LOG("Renderer", logger);
 
+    RX_CONSOLE_IVAR(r_max_drawcalls_per_frame,
+                    "render.MaxDrawcallsPerFrame",
+                    "Maximum number of drawcalls that may be issued in a given frame",
+                    1,
+                    INT_MAX,
+                    100000);
+
     Renderer::Renderer(GLFWwindow* window, const Settings& settings_in)
         : start_time{std::chrono::high_resolution_clock::now()},
           settings{settings_in},
@@ -47,7 +55,7 @@ namespace renderer {
 
         create_static_mesh_storage();
 
-        create_per_frame_data_buffers();
+        create_per_frame_buffers();
 
         create_material_data_buffers();
 
@@ -89,6 +97,8 @@ namespace renderer {
         const auto time_since_start = static_cast<double>(ns_since_start) / 1000000000.0;
 
         per_frame_data.time_since_start = static_cast<Float32>(time_since_start);
+
+        next_unused_model_matrix_per_frame[frame_count].Store(0);
     }
 
     void Renderer::render_all(entt::registry& registry, const World& world) {
@@ -270,17 +280,25 @@ namespace renderer {
                                                           std::move(index_buffer));
     }
 
-    void Renderer::create_per_frame_data_buffers() {
+    void Renderer::create_per_frame_buffers() {
         per_frame_data_buffers.reserve(settings.num_in_flight_gpu_frames);
+        model_matrix_buffers.reserve(settings.num_in_flight_gpu_frames);
 
-        auto create_info = BufferCreateInfo{
+        auto per_frame_data_buffer_create_info = BufferCreateInfo{
             .usage = BufferUsage::ConstantBuffer,
             .size = sizeof(PerFrameData),
         };
 
+        auto model_matrix_buffer_create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer,
+                                                                .size = static_cast<Uint32>(sizeof(glm::mat4) *
+                                                                                            r_max_drawcalls_per_frame->get())};
+
         for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
-            create_info.name = Rx::String::format("Per frame data buffer %d", i);
-            per_frame_data_buffers.push_back(device->create_buffer(create_info));
+            per_frame_data_buffer_create_info.name = Rx::String::format("Per frame data buffer %d", i);
+            per_frame_data_buffers.push_back(device->create_buffer(per_frame_data_buffer_create_info));
+
+            model_matrix_buffer_create_info.name = Rx::String::format("Model matrix buffer %d", i);
+            model_matrix_buffers.push_back(device->create_buffer(model_matrix_buffer_create_info));
         }
     }
 
@@ -501,10 +519,23 @@ namespace renderer {
         return material_bind_group_builder.build();
     }
 
+    Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *model_matrix_buffers[frame_idx]; }
+
+    Uint32 Renderer::add_model_matrix_to_frame(const TransformComponent& transform, const Uint32 frame_idx) {
+        const auto index = next_unused_model_matrix_per_frame[frame_idx].Load();
+
+        const auto matrix = transform.to_matrix();
+
+        auto* dst = static_cast<glm::mat4*>(model_matrix_buffers[frame_idx]->mapped_ptr);
+        memcpy(dst + index, &matrix, sizeof(glm::mat4));
+
+        return index;
+    }
+
     void Renderer::render_world(entt::registry& registry,
-                                   ID3D12GraphicsCommandList4* commands,
-                                   const Uint32 frame_idx,
-                                   const World& world) {
+                                ID3D12GraphicsCommandList4* commands,
+                                const Uint32 frame_idx,
+                                const World& world) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "Render3DScene");

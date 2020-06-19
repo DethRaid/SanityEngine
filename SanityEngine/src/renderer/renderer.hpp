@@ -4,6 +4,7 @@
 #include <queue>
 
 #include <entt/fwd.hpp>
+#include <ftl/fibtex.h>
 #include <rx/core/ptr.h>
 #include <rx/core/vector.h>
 
@@ -25,7 +26,7 @@
 namespace renderer {
     class RenderCommandList;
     class RenderDevice;
-} // namespace rhi
+} // namespace renderer
 
 struct GLFWwindow;
 
@@ -99,6 +100,9 @@ namespace renderer {
                                                                            const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
+
+        [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
+        Uint32 add_model_matrix_to_frame(const TransformComponent& transform, const Uint32 frame_idx);
 
     private:
 #pragma region Cube
@@ -227,7 +231,7 @@ namespace renderer {
 #pragma region Initialization
         void create_static_mesh_storage();
 
-        void create_per_frame_data_buffers();
+        void create_per_frame_buffers();
 
         void create_material_data_buffers();
 
@@ -248,6 +252,10 @@ namespace renderer {
         Rx::Vector<RaytracableGeometry> raytracing_geometries;
 
         Rx::Vector<RaytracingObject> raytracing_objects;
+
+        Rx::Vector<Rx::Ptr<Buffer>> model_matrix_buffers;
+
+        Rx::Vector<ftl::AtomicCounter> next_unused_model_matrix_per_frame;
 
         RaytracingScene raytracing_scene;
 

@@ -16,16 +16,6 @@ namespace renderer {
     };
 
     /*!
-     * \brief Component for a mesh in a chunk
-     *
-     * This will probably change a lot as time goes on, but for now this should work
-     */
-    struct ChunkMeshComponent {
-        Mesh mesh;
-        ModelMatrixHandle model_matrix{0};
-    };
-
-    /*!
      * \brief Renders a postprocessing pass
      */
     struct PostProcessingPassComponent {

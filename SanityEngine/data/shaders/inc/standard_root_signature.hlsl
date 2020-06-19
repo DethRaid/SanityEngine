@@ -14,7 +14,7 @@ struct Camera {
 
 struct Light {
     uint type;
-    float3 color;    
+    float3 color;
     float3 direction;
     float angular_size;
 };
@@ -48,6 +48,11 @@ struct StandardPushConstants {
      * \brief Index of the material data for the current draw
      */
     uint material_index;
+
+    /*!
+     * \brief Index of our model matrix within the currently bound buffer
+     */
+    uint model_matrix_index;
 } constants;
 
 /*!
@@ -79,6 +84,11 @@ ByteAddressBuffer vertices : register(t5);
  * \brief Data which is constant for the entire frame
  */
 StructuredBuffer<PerFrameData> per_frame_data : register(t6);
+
+/*!
+ * \brief Buffer of all the model matrices that are relevant for the current thing being rendered
+ */
+StructuredBuffer<float4x4> model_matrices : register(t7);
 
 /*!
  * \brief Array of all the textures that are available for a shader to sample from

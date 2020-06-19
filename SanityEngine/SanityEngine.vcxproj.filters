@@ -1300,14 +1300,14 @@
     <FxCompile Include="data\shaders\worldgen\compute_water_flow.hlsl">
       <Filter>Shaders\worldgen</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\chunk.vertex.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="data\shaders\opaque_chunk.pixel.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="data\shaders\inc\lighting.hlsl">
       <Filter>Shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\terrain.vertex.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\terrain.pixel.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

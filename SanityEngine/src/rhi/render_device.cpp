@@ -907,16 +907,16 @@ namespace renderer {
     void RenderDevice::create_standard_root_signature() {
         ZoneScoped;
 
-        Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{9};
+        Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{10};
 
         // Root constants for material index and camera index
-        root_parameters[0].InitAsConstants(2, 0);
+        root_parameters[0].InitAsConstants(3, 0);
 
         // Camera data buffer
         root_parameters[1].InitAsShaderResourceView(0);
 
         // Material data buffer
-        root_parameters[2].InitAsShaderResourceView(1);
+        root_parameters[2].InitAsShaderResourceView(MATERIAL_BUFFER_ROOT_PARAMETER_INDEX);
 
         // Lights buffer
         root_parameters[3].InitAsShaderResourceView(2);
@@ -933,6 +933,9 @@ namespace renderer {
         // Per-frame data
         root_parameters[7].InitAsShaderResourceView(6);
 
+        // Model matrix buffer
+        root_parameters[8].InitAsShaderResourceView(MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX);
+
         // Textures array
         Rx::Vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
         descriptor_table_ranges.push_back(D3D12_DESCRIPTOR_RANGE{
@@ -943,7 +946,7 @@ namespace renderer {
             .OffsetInDescriptorsFromTableStart = 0,
         });
 
-        root_parameters[8].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
+        root_parameters[9].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
 
         Rx::Vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
