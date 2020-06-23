@@ -295,7 +295,7 @@ namespace renderer {
     }
 
     Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs) {
-        std::stringstream ss;
+        Rx::String breadcrumb_output_string;
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
 
@@ -308,25 +308,25 @@ namespace renderer {
                                                 from_wide_string(cur_node->pCommandQueueDebugNameW) :
                                                 "Unknown command queue";
 
-            ss << "Command list " << command_list_name.data() << " executing on command queue " << command_queue_name.data() << " ";
-
-            if(cur_node->pLastBreadcrumbValue != nullptr) {
-                ss << "has completed " << *cur_node->pLastBreadcrumbValue << " render operations";
-
-                if(cur_node->BreadcrumbCount > 0) {
-                    ss << ":";
-                }
-            }
+            const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
+            const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
+            breadcrumb_output_string += Rx::String::
+                format("Command list %s, executing on command queue %s, has completed %d render operations\nLast render operation: %s",
+                       command_list_name,
+                       command_queue_name,
+                       last_breadcrumb_idx + 1,
+                       breadcrumb_to_string(breadcrumb));
 
             if(cur_node->BreadcrumbCount > 0) {
                 for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
-                    ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]).data();
+                    breadcrumb_output_string += Rx::String::format("\n\t%s", breadcrumb_to_string(cur_node->pCommandHistory[i]));
 
                     if(cur_node->BreadcrumbContextsCount > 0) {
                         for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
                             const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
                             if(cur_breadcrumb_context.BreadcrumbIndex == i) {
-                                ss << "\n\t\t" << from_wide_string(cur_breadcrumb_context.pContextString).data();
+                                breadcrumb_output_string += Rx::String::format("\n\t\t%s",
+                                                                               from_wide_string(cur_breadcrumb_context.pContextString));
                                 break;
                             }
                         }
@@ -334,12 +334,12 @@ namespace renderer {
                 }
             }
 
-            ss << "\n";
+            breadcrumb_output_string += "\n";
 
             cur_node = cur_node->pNext;
         }
 
-        return ss.str().c_str();
+        return breadcrumb_output_string;
     }
 
     void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE1* head, std::stringstream& ss) {
