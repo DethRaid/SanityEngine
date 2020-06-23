@@ -1415,7 +1415,7 @@ namespace renderer {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "Transition Swapchain to Render Target state");
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
-                                                                                                       D3D12_RESOURCE_STATE_COMMON,
+                                                                                                       D3D12_RESOURCE_STATE_PRESENT,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
         }

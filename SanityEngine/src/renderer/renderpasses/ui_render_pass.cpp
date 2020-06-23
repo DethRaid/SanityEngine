@@ -42,15 +42,21 @@ namespace renderer {
     }
 
     void UiPass::render(ID3D12GraphicsCommandList4* commands,
-                              entt::registry& /* registry */,
-                              Uint32 /* frame_idx */,
-                              const World& /* world */) {
+                        entt::registry& /* registry */,
+                        Uint32 /* frame_idx */,
+                        const World& /* world */) {
         ZoneScoped;
+
+        ImDrawData* draw_data = ImGui::GetDrawData();
+        if(draw_data == nullptr) {
+            // Nothing to draw? Don't draw it
+            return;
+        }
 
         auto& device = renderer->get_render_device();
 
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "UiRenderPass::execute");
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "UiRenderPass::execute");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Execute UI render pass");
         {
             const auto* backbuffer_framebuffer = device.get_backbuffer_framebuffer();
 
@@ -65,12 +71,6 @@ namespace renderer {
         }
 
         // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in
-
-        ImDrawData* draw_data = ImGui::GetDrawData();
-        if(draw_data == nullptr) {
-            commands->EndRenderPass();
-            return;
-        }
 
         commands->SetPipelineState(ui_pipeline->pso.Get());
 

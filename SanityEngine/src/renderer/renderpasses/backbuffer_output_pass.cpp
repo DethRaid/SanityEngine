@@ -44,8 +44,8 @@ namespace renderer {
                                        Uint32 /* frame_idx */,
                                        const World& /* world */) {
         ZoneScoped;
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "BackbufferOutputPass");
-        PIXScopedEvent(commands, denoiser_pass_color, "BackbufferOutputPass::execute");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "BackbufferOutputPassExecute");
+        PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");
 
         auto& device = renderer->get_render_device();
         const auto* framebuffer = device.get_backbuffer_framebuffer();

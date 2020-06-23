@@ -50,7 +50,6 @@ namespace renderer {
      */
     class Renderer {
     public:
-        void create_render_passes();
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
         void begin_frame(uint64_t frame_count);
@@ -245,6 +244,8 @@ namespace renderer {
         void create_builtin_images();
 
         void load_noise_texture(const Rx::String& filepath);
+
+        void create_render_passes();
 #pragma endregion
 
         [[nodiscard]] Rx::Vector<const Image*> get_texture_array() const;

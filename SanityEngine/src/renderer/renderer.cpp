@@ -40,16 +40,6 @@ namespace renderer {
                     INT_MAX,
                     100000);
 
-    void Renderer::create_render_passes() {
-        render_passes.reserve(4);
-        render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
-        render_passes.push_back(
-            Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
-        render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
-    }
-
     Renderer::Renderer(GLFWwindow* window, // NOLINT(cppcoreguidelines-pro-type-member-init)
                        const Settings& settings_in)
         : start_time{std::chrono::high_resolution_clock::now()},
@@ -78,19 +68,6 @@ namespace renderer {
         create_render_passes();
     }
 
-    void Renderer::load_noise_texture(const Rx::String& filepath) {
-        ZoneScoped;
-
-        const auto handle = load_image_to_gpu(filepath, *this);
-
-        if(!handle) {
-            logger->error("Could not load noise texture %s", filepath);
-            return;
-        }
-
-        noise_texture_handle = *handle;
-    }
-
     void Renderer::begin_frame(const uint64_t frame_count) {
         device->begin_frame(frame_count);
 
@@ -101,7 +78,8 @@ namespace renderer {
 
         per_frame_data.time_since_start = static_cast<Float32>(time_since_start);
 
-        next_unused_model_matrix_per_frame[frame_count]->store(0);
+        const auto frame_idx = device->get_cur_gpu_frame_idx();
+        next_unused_model_matrix_per_frame[frame_idx]->store(0);
     }
 
     void Renderer::render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
@@ -424,6 +402,29 @@ namespace renderer {
         }
 
         device->submit_command_list(commands);
+    }
+
+    void Renderer::load_noise_texture(const Rx::String& filepath) {
+        ZoneScoped;
+
+        const auto handle = load_image_to_gpu(filepath, *this);
+
+        if(!handle) {
+            logger->error("Could not load noise texture %s", filepath);
+            return;
+        }
+
+        noise_texture_handle = *handle;
+    }
+
+    void Renderer::create_render_passes() {
+        render_passes.reserve(4);
+        render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        render_passes.push_back(
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
+        render_passes.push_back(
+            Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
+        render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
     }
 
     Rx::Vector<const Image*> Renderer::get_texture_array() const {

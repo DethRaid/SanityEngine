@@ -48,7 +48,7 @@ namespace renderer {
         ZoneScoped;
 
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass::render");
-        PIXScopedEvent(commands, 0, "DenoiserPass::render");
+        PIXScopedEvent(commands, 0, "Render denoiser pass");
 
         {
             const auto
