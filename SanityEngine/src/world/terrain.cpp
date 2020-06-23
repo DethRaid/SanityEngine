@@ -83,12 +83,13 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
                 }
 
                 {
+                    const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
+
                     std::lock_guard l{loaded_terrain_tiles_mutex};
-                    if(loaded_terrain_tiles.find(coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}) == nullptr) {
+                    if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
                         if(num_active_tilegen_tasks.load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
                             num_active_tilegen_tasks.fetch_add(1);
-                            ThreadPool::RunAsync(
-                                [=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
+                            ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(new_tile_coords); });
                         }
                     }
                 }
