@@ -63,14 +63,14 @@ namespace renderer {
 
         commands->SetPipelineState(denoising_pipeline->pso.Get());
 
-        commands->SetGraphicsRoot32BitConstant(0, 0, 1);
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
         {
             const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                      D3D12_RESOURCE_STATE_COMMON,
                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commands->ResourceBarrier(1, &barrier);
         }
