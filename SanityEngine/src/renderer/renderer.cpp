@@ -40,6 +40,14 @@ namespace renderer {
                     INT_MAX,
                     100000);
 
+    void Renderer::create_render_passes() {
+        render_passes.reserve(4);
+        render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, *render_passes[0]));
+        render_passes.push_back(Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, *render_passes[1]));
+        render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
+    }
+
     Renderer::Renderer(GLFWwindow* window, // NOLINT(cppcoreguidelines-pro-type-member-init)
                        const Settings& settings_in)
         : start_time{std::chrono::high_resolution_clock::now()},
@@ -67,10 +75,7 @@ namespace renderer {
 
         create_builtin_images();
 
-        forward_pass = Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size);
-        denoiser_pass = Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, *forward_pass);
-        backbuffer_output_pass = Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, *denoiser_pass);
-        ui_pass = Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this);
+        create_render_passes();
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
@@ -99,7 +104,7 @@ namespace renderer {
         next_unused_model_matrix_per_frame[frame_count]->store(0);
     }
 
-    void Renderer::render_all(UnlockingResourceAccessor<entt::registry>& registry, const World& world) {
+    void Renderer::render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
         ZoneScoped;
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
@@ -107,20 +112,35 @@ namespace renderer {
         auto command_list = device->create_command_list();
         command_list->SetName(L"Main Render Command List");
 
-        if(raytracing_scene_dirty) {
-            rebuild_raytracing_scene(command_list);
-            raytracing_scene_dirty = false;
+        {
+            TracyD3D12Zone(RenderDevice::tracy_context, commands, "Renderer::render_all");
+            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
+            if(raytracing_scene_dirty) {
+                rebuild_raytracing_scene(command_list);
+                raytracing_scene_dirty = false;
+            }
+
+            update_cameras(*registry, frame_idx);
+
+            upload_material_data(frame_idx);
+
+            update_lights(*registry, frame_idx);
+
+            {
+                ZoneScopedN("update_per_frame_data");
+                memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
+            }
+
+            {
+                ZoneScopedN("Renderer::render_passes");
+
+                TracyD3D12Zone(RenderDevice::tracy_context, commands, "Renderer::render_passes");
+                PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+
+                render_passes.each_fwd(
+                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.Get(), *registry, frame_idx, world); });
+            }
         }
-
-        update_cameras(*registry, frame_idx);
-
-        upload_material_data(frame_idx);
-
-        // render_3d_scene binds all the render targets it needs
-        render_world(*registry, command_list.Get(), frame_idx, world);
-
-        // At the end of render_3d_scene, the backbuffer framebuffer is bound. The UI pass simply renders to the already-bound backbuffer
-        ui_pass->render(command_list.Get(), *registry, frame_idx, world);
 
         device->submit_command_list(std::move(command_list));
     }
@@ -558,28 +578,5 @@ namespace renderer {
         memcpy(dst + index, &matrix, sizeof(glm::mat4));
 
         return index;
-    }
-
-    void Renderer::render_world(entt::registry& registry,
-                                ID3D12GraphicsCommandList4* commands,
-                                const Uint32 frame_idx,
-                                const World& world) {
-        ZoneScoped;
-
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "Renderer::render_world");
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::render_world");
-
-        update_lights(registry, frame_idx);
-
-        {
-            ZoneScopedN("update_per_frame_data");
-            memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
-        }
-
-        forward_pass->render(commands, registry, frame_idx, world);
-
-        denoiser_pass->render(commands, registry, frame_idx, world);
-
-        backbuffer_output_pass->render(commands, registry, frame_idx, world);
     }
 } // namespace renderer

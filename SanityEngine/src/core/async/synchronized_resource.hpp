@@ -9,25 +9,25 @@ concept Mutex = requires(T a) {
 };
 
 template <typename ResourceType, Mutex MutexType = Rx::Concurrency::Mutex>
-class UnlockingResourceAccessor {
+class SynchronizedResourceAccessor {
     template <typename MutexResourceType, Mutex MutexType>
     friend class SynchronizedResource;
 
 public:
-    UnlockingResourceAccessor(const UnlockingResourceAccessor& other) = delete;
-    UnlockingResourceAccessor& operator=(const UnlockingResourceAccessor& other) = delete;
+    SynchronizedResourceAccessor(const SynchronizedResourceAccessor& other) = delete;
+    SynchronizedResourceAccessor& operator=(const SynchronizedResourceAccessor& other) = delete;
 
-    UnlockingResourceAccessor(UnlockingResourceAccessor&& old) noexcept = default;
-    UnlockingResourceAccessor& operator=(UnlockingResourceAccessor&& old) noexcept = default;
+    SynchronizedResourceAccessor(SynchronizedResourceAccessor&& old) noexcept = default;
+    SynchronizedResourceAccessor& operator=(SynchronizedResourceAccessor&& old) noexcept = default;
 
     ResourceType* operator->();
 
     ResourceType& operator*();
 
-    ~UnlockingResourceAccessor();
+    ~SynchronizedResourceAccessor();
 
 private:
-    UnlockingResourceAccessor(MutexType& mutex_in, ResourceType& resource_in);
+    SynchronizedResourceAccessor(MutexType& mutex_in, ResourceType& resource_in);
 
     MutexType* mutex;
 
@@ -43,7 +43,7 @@ public:
 
     explicit SynchronizedResource(ResourceType&& resource_in) : resource{Rx::Utility::forward(resource_in)} {}
 
-    UnlockingResourceAccessor<ResourceType, MutexType> lock() { return {mutex, resource}; }
+    SynchronizedResourceAccessor<ResourceType, MutexType> lock() { return {mutex, resource}; }
 
 private:
     MutexType mutex;
@@ -52,22 +52,22 @@ private:
 };
 
 template <typename ResourceType, Mutex MutexType>
-ResourceType* UnlockingResourceAccessor<ResourceType, MutexType>::operator->() {
+ResourceType* SynchronizedResourceAccessor<ResourceType, MutexType>::operator->() {
     return resource;
 }
 
 template <typename ResourceType, Mutex MutexType>
-ResourceType& UnlockingResourceAccessor<ResourceType, MutexType>::operator*() {
+ResourceType& SynchronizedResourceAccessor<ResourceType, MutexType>::operator*() {
     return *resource;
 }
 
 template <typename ResourceType, Mutex MutexType>
-UnlockingResourceAccessor<ResourceType, MutexType>::~UnlockingResourceAccessor() {
+SynchronizedResourceAccessor<ResourceType, MutexType>::~SynchronizedResourceAccessor() {
     mutex->unlock();
 }
 
 template <typename ResourceType, Mutex MutexType>
-UnlockingResourceAccessor<ResourceType, MutexType>::UnlockingResourceAccessor(MutexType& mutex_in, ResourceType& resource_in)
+SynchronizedResourceAccessor<ResourceType, MutexType>::SynchronizedResourceAccessor(MutexType& mutex_in, ResourceType& resource_in)
     : mutex{&mutex_in}, resource{&resource_in} {
     mutex->lock();
 }

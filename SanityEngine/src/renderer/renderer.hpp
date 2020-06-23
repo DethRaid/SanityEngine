@@ -50,11 +50,12 @@ namespace renderer {
      */
     class Renderer {
     public:
+        void create_render_passes();
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
         void begin_frame(uint64_t frame_count);
 
-        void render_all(UnlockingResourceAccessor<entt::registry>& registry, const World& world);
+        void render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
 
         void end_frame() const;
 
@@ -230,6 +231,8 @@ namespace renderer {
         TextureHandle normal_roughness_texture_handle;
         TextureHandle specular_emission_texture_handle;
 
+        Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
+
 #pragma region Initialization
         void create_static_mesh_storage();
 
@@ -261,21 +264,10 @@ namespace renderer {
 
         RaytracingScene raytracing_scene;
 
-        Rx::Ptr<ForwardPass> forward_pass;
-
-        Rx::Ptr<DenoiserPass> denoiser_pass;
-
-        Rx::Ptr<BackbufferOutputPass> backbuffer_output_pass;
-
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void update_lights(entt::registry& registry, Uint32 frame_idx);
 
-        void render_world(entt::registry& registry, ID3D12GraphicsCommandList4* commands, Uint32 frame_idx, const World& world);
-#pragma endregion
-
-#pragma region UI
-        Rx::Ptr<UiPass> ui_pass;
 #pragma endregion
     };
 } // namespace renderer
