@@ -10,12 +10,15 @@
 
 RX_LOG("FirstPersonController", logger);
 
-FirstPersonController::FirstPersonController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
+FirstPersonController::FirstPersonController(GLFWwindow* window_in,
+                                             const entt::entity controlled_entity_in,
+                                             SynchronizedResource<entt::registry>& registry_in)
     : window{window_in}, controlled_entity{controlled_entity_in}, registry{&registry_in} {
+    auto locked_registry = registry->lock();
     // Quick validation
-    RX_ASSERT(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
+    RX_ASSERT(locked_registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
-    previous_location = registry->get<TransformComponent>(controlled_entity).location;
+    previous_location = locked_registry->get<TransformComponent>(controlled_entity).location;
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
@@ -25,7 +28,8 @@ void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain =
 void FirstPersonController::update_player_transform(const float delta_time) {
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
-    auto& player_transform = registry->get<TransformComponent>(controlled_entity);
+    auto locked_registry = registry->lock();
+    auto& player_transform = locked_registry->get<TransformComponent>(controlled_entity);
 
     previous_location = player_transform.location;
 

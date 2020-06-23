@@ -11,12 +11,6 @@ namespace renderer {
     class Renderer;
 }
 
-struct LoadImageToGpuArgs {
-    Rx::String texture_name_in;
-    Rx::Optional<renderer::TextureHandle> handle_out;
-    renderer::Renderer* renderer_in;
-};
-
 /*!
  * \brief Loads an image from disk
  *
@@ -24,4 +18,4 @@ struct LoadImageToGpuArgs {
  */
 bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<uint8_t>& pixels);
 
-FTL_TASK_ENTRY_POINT(load_image_to_gpu);
+Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& texture_name, renderer::Renderer& renderer);

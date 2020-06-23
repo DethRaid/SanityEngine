@@ -4,6 +4,7 @@
 
 #include <d3d12.h>
 #include <dxgi.h>
+#include <pix3.h>
 
 #include "mesh_data_store.hpp"
 #include "raytracing_structs.hpp"
@@ -51,15 +52,15 @@ namespace renderer {
 
     Rx::String allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type);
 
-    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs);
+    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs);
 
-    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output);
+    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
 
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                                           RenderDevice& device,
-                                                           const Buffer& vertex_buffer,
-                                                           const Buffer& index_buffer,
-                                                           const Rx::Vector<Mesh>& meshes);
+                                                                RenderDevice& device,
+                                                                const Buffer& vertex_buffer,
+                                                                const Buffer& index_buffer,
+                                                                const Rx::Vector<Mesh>& meshes);
 
     void upload_data_with_staging_buffer(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                          RenderDevice& device,
@@ -67,4 +68,4 @@ namespace renderer {
                                          const void* src,
                                          Uint32 size,
                                          Uint32 dst_offset = 0);
-} // namespace rhi
+} // namespace renderer

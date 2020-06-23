@@ -294,7 +294,7 @@ namespace renderer {
         return d3d12_access;
     }
 
-    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT& breadcrumbs) {
+    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs) {
         std::stringstream ss;
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
@@ -308,7 +308,7 @@ namespace renderer {
                                                 from_wide_string(cur_node->pCommandQueueDebugNameW) :
                                                 "Unknown command queue";
 
-            ss << "Command list [" << command_list_name.data() << "] executing on command queue [" << command_queue_name.data() << "] ";
+            ss << "Command list " << command_list_name.data() << " executing on command queue " << command_queue_name.data() << " ";
 
             if(cur_node->pLastBreadcrumbValue != nullptr) {
                 ss << "has completed " << *cur_node->pLastBreadcrumbValue << " render operations";
@@ -321,6 +321,16 @@ namespace renderer {
             if(cur_node->BreadcrumbCount > 0) {
                 for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
                     ss << "\n\t" << breadcrumb_to_string(cur_node->pCommandHistory[i]).data();
+
+                    if(cur_node->BreadcrumbContextsCount > 0) {
+                        for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
+                            const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
+                            if(cur_breadcrumb_context.BreadcrumbIndex == i) {
+                                ss << "\n\t\t" << from_wide_string(cur_breadcrumb_context.pContextString).data();
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -332,7 +342,7 @@ namespace renderer {
         return ss.str().c_str();
     }
 
-    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE* head, std::stringstream& ss) {
+    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE1* head, std::stringstream& ss) {
         const auto* allocation = head;
         while(allocation != nullptr) {
             ss << "\n\t";
@@ -351,7 +361,7 @@ namespace renderer {
         }
     }
 
-    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT& page_fault_output) {
+    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output) {
         std::stringstream ss;
 
         ss << "Page fault at GPU virtual address " << page_fault_output.PageFaultVA;
@@ -670,4 +680,4 @@ namespace renderer {
                 return "Unknown object type";
         }
     }
-} // namespace rhi
+} // namespace renderer

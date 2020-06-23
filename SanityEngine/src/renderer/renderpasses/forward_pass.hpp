@@ -20,7 +20,7 @@ namespace renderer {
         ~ForwardPass() override;
 
 #pragma region RenderPass
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
+        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 #pragma endregion
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;
@@ -38,6 +38,8 @@ namespace renderer {
         TextureHandle color_target_handle;
         TextureHandle depth_target_handle;
         Rx::Ptr<Framebuffer> scene_framebuffer;
+
+        Uint64 forward_pass_color{PIX_COLOR(224, 96, 54)};
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 

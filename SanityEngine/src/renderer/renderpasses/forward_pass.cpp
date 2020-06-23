@@ -1,6 +1,7 @@
 #include "forward_pass.hpp"
 
 #include <Tracy.hpp>
+#include <TracyD3D12.hpp>
 #include <entt/entity/registry.hpp>
 #include <rx/core/log.h>
 
@@ -59,9 +60,11 @@ namespace renderer {
         device.destroy_framebuffer(Rx::Utility::move(scene_framebuffer));
     }
 
-    void ForwardPass::execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
+    void ForwardPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
         ZoneScoped;
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "ForwardPass");
+
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "ForwardPass::execute");
+        PIXScopedEvent(commands, forward_pass_color, "ForwardPass::execute");
 
         begin_render_pass(commands);
 
@@ -151,6 +154,8 @@ namespace renderer {
                                             entt::registry& registry,
                                             const BindGroup& material_bind_group,
                                             const Uint32 frame_idx) {
+        PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_object_in_scene");
+
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -198,6 +203,7 @@ namespace renderer {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
+            PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_atmosphere");
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
             commands->DrawInstanced(3, 1, 0, 0);
         }

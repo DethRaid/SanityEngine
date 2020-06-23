@@ -30,7 +30,7 @@ void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& script
 
 Rx::Ptr<World> World::create(const WorldParameters& params,
                              const entt::entity player,
-                             entt::registry& registry,
+                             SynchronizedResource<entt::registry>& registry,
                              renderer::Renderer& renderer) {
     ZoneScoped;
 
@@ -68,26 +68,27 @@ World::World(const glm::uvec2& size_in,
              const Uint32 max_terrain_height,
              Rx::Ptr<FastNoiseSIMD> noise_generator_in,
              entt::entity player_in,
-             entt::registry& registry_in,
+             SynchronizedResource<entt::registry>& registry_in,
              renderer::Renderer& renderer_in)
     : size{size_in},
       noise_generator{std::move(noise_generator_in)},
       player{player_in},
       registry{&registry_in},
       renderer{&renderer_in},
-      task_scheduler{Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()},
       terrain{Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
                                     TerrainSize{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height},
                                     renderer_in,
                                     *noise_generator,
-                                    registry_in,
-                                    *task_scheduler)} {}
+                                    registry_in)} {}
 
 void World::tick(const Float32 delta_time) {
     ZoneScoped;
 
-    const auto& player_transform = registry->get<TransformComponent>(player);
-    terrain->load_terrain_around_player(player_transform);
+    {
+        auto locked_registry = registry->lock();
+        const auto& player_transform = locked_registry->get<TransformComponent>(player);
+        terrain->load_terrain_around_player(player_transform);
+    }
 
     tick_script_components(delta_time);
 }

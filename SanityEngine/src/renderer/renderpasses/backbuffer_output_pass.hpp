@@ -15,13 +15,15 @@ namespace renderer {
 
         ~BackbufferOutputPass() override = default;
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
+        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 
     private:
         Renderer* renderer;
 
-        Rx::Ptr<renderer::RenderPipelineState> backbuffer_output_pipeline;
+        Uint64 denoiser_pass_color{PIX_COLOR(91, 133, 170)};
 
-        Rx::Ptr<renderer::Buffer> backbuffer_output_material_buffer;
+        Rx::Ptr<RenderPipelineState> backbuffer_output_pipeline;
+
+        Rx::Ptr<Buffer> backbuffer_output_material_buffer;
     };
 } // namespace renderer

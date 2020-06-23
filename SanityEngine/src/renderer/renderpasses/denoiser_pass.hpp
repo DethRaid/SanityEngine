@@ -23,14 +23,15 @@ namespace renderer {
          */
         explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass);
 
-        void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
+        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 
         [[nodiscard]] TextureHandle get_output_image() const;
 
     private:
+        Uint64 denoiser_pass_color{PIX_COLOR(91, 133, 170)};
         Renderer* renderer;
 
-        Rx::Ptr<RenderPipelineState> accumulation_pipeline;
+        Rx::Ptr<RenderPipelineState> denoising_pipeline;
 
         /*!
          * \brief Handle to the texture that holds the accumulated scene

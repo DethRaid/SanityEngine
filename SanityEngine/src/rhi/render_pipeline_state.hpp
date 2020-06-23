@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <pix3.h>
 #include <rx/core/array.h>
 #include <rx/core/optional.h>
 #include <rx/core/string.h>
@@ -164,4 +165,4 @@ namespace renderer {
          */
         BackbufferOutput,
     };
-} // namespace rhi
+} // namespace renderer

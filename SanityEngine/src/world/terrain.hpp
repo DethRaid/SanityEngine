@@ -1,9 +1,6 @@
 #pragma once
 
-#include <ftl/atomic_counter.h>
-#include <ftl/fibtex.h>
-#include <ftl/task.h>
-#include <glm/gtx/hash.hpp>
+#include <rx/core/concurrency/mutex.h>
 #include <rx/core/map.h>
 #include <rx/core/vector.h>
 
@@ -39,12 +36,17 @@ struct TerrainTile {
     entt::entity entity;
 };
 
-struct TerrainTileMesh {
-Vec2i coord;
+struct TerrainTileMeshCreateInfo {
+    /*!
+     * \brief Worldspace location of the tile
+     */
+    Vec2i coord_worldspace;
 
     entt::entity entity;
 
-Rx::Vector<
+    Rx::Vector<StandardVertex> vertices;
+
+    Rx::Vector<Uint32> indices;
 };
 
 class Terrain;
@@ -115,8 +117,9 @@ public:
     explicit Terrain(const TerrainSize& size,
                      renderer::Renderer& renderer_in,
                      FastNoiseSIMD& noise_generator_in,
-                     entt::registry& registry_in,
-                     ftl::TaskScheduler& task_scheduler_in);
+                     SynchronizedResource<entt::registry>& registry_in);
+
+    void tick(float delta_time);
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
@@ -124,25 +127,22 @@ public:
 
     [[nodiscard]] Vec3f get_normal_at_location(const Vec2f& location) const;
 
-    [[nodiscard]] ftl::AtomicCounter& get_num_active_tilegen_tasks();
+    [[nodiscard]] Rx::Concurrency::Atomic<Uint32>& get_num_active_tilegen_tasks();
 
 private:
     renderer::Renderer* renderer;
 
-    ftl::TaskScheduler* task_scheduler;
-
-    ftl::Fibtex noise_generator_fibtex;
+    Rx::Concurrency::Mutex noise_generator_mutex;
     FastNoiseSIMD* noise_generator;
 
-    entt::registry* registry;
+    SynchronizedResource<entt::registry>* registry;
 
-    ftl::AtomicCounter num_active_tilegen_tasks;
+    Rx::Concurrency::Atomic<Uint32> num_active_tilegen_tasks;
 
-    ftl::Fibtex loaded_terrain_tiles_fibtex;
+    Rx::Concurrency::Mutex loaded_terrain_tiles_mutex;
     Rx::Map<Vec2i, TerrainTile> loaded_terrain_tiles;
 
-    ftl::Fibtex terrain_mesh_upload_fibtex;
-    Rx::Vector<> tile_meshes_to_upload;
+    SynchronizedResource<Rx::Vector<TerrainTileMeshCreateInfo>> tile_mesh_create_infos;
 
     renderer::StandardMaterialHandle terrain_material{1};
 
@@ -169,11 +169,9 @@ private:
 
     static void compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
 
-    static void generate_tile_task(ftl::TaskScheduler* task_scheduler, void* arg);
-
     void load_terrain_textures_and_create_material();
 
-    void generate_tile(const Vec2i& tilecoord, Size thread_idx);
+    void generate_tile(const Vec2i& tilecoord);
 
     /*!
      * \brief Generates a terrain heightmap of a specific size
@@ -182,4 +180,6 @@ private:
      * \param size Size in world units of this terrain heightmap
      */
     [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size);
+
+    void upload_new_tile_meshes();
 };

@@ -561,6 +561,9 @@
     <ClCompile Include="extern\rex\include\rx\console\variable.cpp">
       <Filter>Rex\console</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp">
+      <Filter>Source Files\renderer\renderpass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -1279,6 +1282,9 @@
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\console\variable.h">
       <Filter>Rex\console</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
+      <Filter>Header Files\renderer\renderpass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

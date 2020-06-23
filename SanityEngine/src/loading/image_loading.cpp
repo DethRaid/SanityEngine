@@ -45,32 +45,28 @@ bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx:
     return true;
 }
 
-FTL_TASK_ENTRY_POINT(load_image_to_gpu) {
-    auto* load_data = static_cast<LoadImageToGpuArgs*>(arg);
-
-    // ZoneScoped();
+Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& texture_name, renderer::Renderer& renderer) {
+    ZoneScoped;
 
     Uint32 width, height;
     Rx::Vector<uint8_t> pixels;
-    const auto success = load_image(load_data->texture_name_in, width, height, pixels);
+    const auto success = load_image(texture_name, width, height, pixels);
     if(!success) {
-        load_data->handle_out = Rx::nullopt;
-        return;
+        return Rx::nullopt;
     }
 
-    const auto create_info = renderer::ImageCreateInfo{.name = load_data->texture_name_in,
-                                                  .usage = renderer::ImageUsage::SampledImage,
-                                                  .format = renderer::ImageFormat::Rgba8,
-                                                  .width = width,
-                                                  .height = height};
+    const auto create_info = renderer::ImageCreateInfo{.name = texture_name,
+                                                       .usage = renderer::ImageUsage::SampledImage,
+                                                       .format = renderer::ImageFormat::Rgba8,
+                                                       .width = width,
+                                                       .height = height};
 
-    auto& device = load_data->renderer_in->get_render_device();
-    const auto commands = device.create_command_list(taskScheduler->GetCurrentThreadIndex());
+    auto& device = renderer.get_render_device();
+    const auto commands = device.create_command_list();
 
-    {
-        // TracyD3D12Zone(rhi::RenderDevice::tracy_context, commands.Get(), message.data());
-        load_data->handle_out = load_data->renderer_in->create_image(create_info, pixels.data(), commands);
-    }
+    const auto handle_out = renderer.create_image(create_info, pixels.data(), commands);
 
     device.submit_command_list(commands);
+
+    return handle_out;
 }

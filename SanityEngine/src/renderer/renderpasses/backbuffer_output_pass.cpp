@@ -39,12 +39,13 @@ namespace renderer {
         logger->verbose("Initialized backbuffer output pass");
     }
 
-    void BackbufferOutputPass::execute(ID3D12GraphicsCommandList4* commands,
+    void BackbufferOutputPass::render(ID3D12GraphicsCommandList4* commands,
                                        entt::registry& /* registry */,
                                        Uint32 /* frame_idx */,
                                        const World& /* world */) {
         ZoneScoped;
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "BackbufferOutputPass");
+        PIXScopedEvent(commands, denoiser_pass_color, "BackbufferOutputPass::execute");
 
         auto& device = renderer->get_render_device();
         const auto* framebuffer = device.get_backbuffer_framebuffer();

@@ -10,6 +10,7 @@
 #include <wren/wren.hpp>
 
 #include "core/types.hpp"
+#include "core/async/synchronized_resource.hpp"
 
 namespace Rx {
     struct String;
@@ -50,7 +51,9 @@ namespace horus {
 
     class [[horus::class(module = sanity_engine)]] Entity {
     public:
-        [[horus::constructor]] explicit Entity(WrenHandle * handle_in, entt::entity entity_in, entt::registry & registry_in);
+        [[horus::constructor]] explicit Entity(WrenHandle * handle_in,
+                                               entt::entity entity_in,
+                                               SynchronizedResource<entt::registry>& registry_in);
 
         [[horus::method]] void add_tag(const Rx::String& tag) const;
 
@@ -77,7 +80,7 @@ namespace horus {
 
         entt::entity entity;
 
-        entt::registry& registry;
+        SynchronizedResource<entt::registry>* registry;
     };
 
     template <NativeComponent ComponentType>

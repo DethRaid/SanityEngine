@@ -63,7 +63,7 @@ public:
      */
     static Rx::Ptr<World> create(const WorldParameters& params,
                                  entt::entity player,
-                                 entt::registry& registry,
+                                 SynchronizedResource<entt::registry>& registry,
                                  renderer::Renderer& renderer);
 
     explicit World(const glm::uvec2& size_in,
@@ -71,7 +71,7 @@ public:
                    Uint32 max_terrain_height,
                    Rx::Ptr<FastNoiseSIMD> noise_generator_in,
                    entt::entity player_in,
-                   entt::registry& registry_in,
+                   SynchronizedResource<entt::registry>& registry_in,
                    renderer::Renderer& renderer_in);
 
     void tick(Float32 delta_time);
@@ -95,13 +95,11 @@ private:
 
     entt::entity player;
 
-    entt::registry* registry;
+    SynchronizedResource<entt::registry>* registry;
 
     entt::observer observer{};
 
     renderer::Renderer* renderer;
-
-    ftl::TaskScheduler* task_scheduler;
 
     Rx::Ptr<Terrain> terrain;
 

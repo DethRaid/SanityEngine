@@ -1,17 +1,15 @@
 #pragma once
 
-#include <memory>
-
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi1_4.h>
 #include <glm/glm.hpp>
+#include <rx/console/variable.h>
+#include <rx/core/concurrency/mutex.h>
 #include <wrl/client.h>
 
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
-#include <TracyD3D12.hpp>
-#include <ftl/fibtex.h>
 
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
@@ -30,13 +28,14 @@ namespace D3D12MA {
     class Allocator;
 }
 
-namespace renderer {
-    enum class BespokePipelineType;
-    struct RenderPipelineStateCreateInfo;
+#ifdef TRACY_ENABLE
+namespace tracy {
+    class D3D12QueueCtx;
+}
+#endif
 
-    enum class RenderBackend {
-        D3D12,
-    };
+namespace renderer {
+    struct RenderPipelineStateCreateInfo;
 
     /*
      * \brief A device which can be used to render
@@ -62,7 +61,7 @@ namespace renderer {
         ComPtr<ID3D12Device1> device1;
         ComPtr<ID3D12Device5> device5;
 
-        RenderDevice(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in, ftl::TaskScheduler& task_scheduler);
+        RenderDevice(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
 
         RenderDevice(const RenderDevice& other) = delete;
         RenderDevice& operator=(const RenderDevice& other) = delete;
@@ -72,7 +71,6 @@ namespace renderer {
 
         ~RenderDevice();
 
-#pragma region RenderDevice
         [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
 
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
@@ -112,22 +110,23 @@ namespace renderer {
 
         void destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> pipeline_state);
 
-        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Size thread_idx);
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
 
         void submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
-        void begin_frame(uint64_t frame_count, Size thread_idx);
+        void begin_frame(uint64_t frame_count);
 
-        void end_frame(Size thread_idx);
+        void end_frame();
 
         [[nodiscard]] Uint32 get_cur_gpu_frame_idx() const;
 
         void begin_capture() const;
 
         void end_capture() const;
-#pragma endregion
+
+        [[nodiscard]] Uint32 get_max_num_gpu_frames() const;
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
@@ -162,8 +161,8 @@ namespace renderer {
          */
         bool in_init_phase{true};
 
-        ComPtr<ID3D12Debug> debug_controller;
-        ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
+        ComPtr<ID3D12Debug1> debug_controller;
+        ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred_settings;
         ComPtr<IDXGraphicsAnalysis> graphics_analysis;
 
         ComPtr<IDXGIFactory4> factory;
@@ -176,14 +175,14 @@ namespace renderer {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        ftl::Fibtex direct_command_allocators_fibtex;
-        Rx::Vector<Rx::Map<Size, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
+        Rx::Concurrency::Mutex direct_command_allocators_mutex;
+        Rx::Vector<Rx::Map<Uint32, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
-        ftl::Fibtex command_lists_by_frame_fibtex;
+        Rx::Concurrency::Mutex command_lists_by_frame_mutex;
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_by_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
@@ -293,7 +292,7 @@ namespace renderer {
 
         void create_queues();
 
-        void create_swapchain(HWND window_handle, const glm::uvec2& window_size, UINT num_images);
+        void create_swapchain(HWND window_handle, const glm::uvec2& window_size);
 
         void create_gpu_frame_synchronization_objects();
 
@@ -320,7 +319,7 @@ namespace renderer {
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                          ID3D12RootSignature& root_signature);
 
-        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(Size id);
+        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(Uint32 id);
 
         void flush_batched_command_lists();
 
@@ -333,9 +332,9 @@ namespace renderer {
 
         void destroy_resources_for_frame(Uint32 frame_idx);
 
-        void transition_swapchain_image_to_render_target(Size thread_idx);
+        void transition_swapchain_image_to_render_target();
 
-        void transition_swapchain_image_to_presentable(Size thread_idx);
+        void transition_swapchain_image_to_presentable();
 
         void wait_for_frame(uint64_t frame_index);
 
@@ -347,10 +346,10 @@ namespace renderer {
 
         [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
-        void retrieve_dred_report() const;
+        void log_dred_report() const;
     };
 
-    [[nodiscard]] Rx::Ptr<RenderDevice> make_render_device(RenderBackend backend, GLFWwindow* window, const Settings& settings);
+    [[nodiscard]] Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings);
 
     template <GpuResource ResourceType>
     void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {

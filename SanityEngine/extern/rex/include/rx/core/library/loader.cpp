@@ -5,8 +5,6 @@
 #if defined(RX_PLATFORM_POSIX)
 #include <dlfcn.h> // dlopen, dlclose, dlsym
 #elif defined(RX_PLATFORM_WINDOWS)
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h> // LoadLibraryW, FreeLibrary, GetProcAddress
 #endif
 

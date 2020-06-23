@@ -3,7 +3,6 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "core/components.hpp"
-#include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 
 namespace renderer {
@@ -15,11 +14,11 @@ namespace renderer {
     }
 
     void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {
-        view_matrix = glm::mat4_cast(transform.rotation);
+        view_matrix = mat4_cast(transform.rotation);
 
-        view_matrix = glm::translate(view_matrix, -transform.location);
+        view_matrix = translate(view_matrix, -transform.location);
 
-        inverse_view_matrix = glm::inverse(view_matrix);
+        inverse_view_matrix = inverse(view_matrix);
     }
 
     void CameraMatrices::calculate_projection_matrix(const CameraComponent& camera) {
@@ -43,16 +42,16 @@ namespace renderer {
             projection_matrix = glm::ortho(-half_width, half_width, -half_height, half_height, 0.0, 1000.0);
         }
 
-        inverse_projection_matrix = glm::inverse(projection_matrix);
+        inverse_projection_matrix = inverse(projection_matrix);
     }
 
-    CameraMatrixBuffer::CameraMatrixBuffer(renderer::RenderDevice& device_in, const Uint32 num_in_flight_frames) : device{&device_in} {
-        device_data.reserve(num_in_flight_frames);
+    CameraMatrixBuffer::CameraMatrixBuffer(RenderDevice& device_in) : device{&device_in} {
+        const auto num_gpu_frames = device->get_max_num_gpu_frames();
+        device_data.reserve(num_gpu_frames);
 
-        auto create_info = renderer::BufferCreateInfo{.usage = renderer::BufferUsage::ConstantBuffer,
-                                                 .size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS};
+        auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = sizeof(CameraMatrices) * MAX_NUM_CAMERAS};
 
-        for(Uint32 i = 0; i < num_in_flight_frames; i++) {
+        for(Uint32 i = 0; i < num_gpu_frames; i++) {
             create_info.name = Rx::String::format("Camera Matrix Buffer {}", i);
             auto buffer = device->create_buffer(create_info);
             device_data.push_back(buffer.release());
@@ -60,8 +59,8 @@ namespace renderer {
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](renderer::Buffer* buffer) {
-            device->schedule_buffer_destruction(Rx::Ptr<renderer::Buffer>{Rx::Memory::SystemAllocator::instance(), buffer});
+        device_data.each_fwd([&](Buffer* buffer) {
+            device->schedule_buffer_destruction(Rx::Ptr<Buffer>{Rx::Memory::SystemAllocator::instance(), buffer});
         });
     }
 
@@ -83,7 +82,7 @@ namespace renderer {
         host_data[camera_idx] = matrices;
     }
 
-    renderer::Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
+    Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
         RX_ASSERT(frame_idx < device_data.size(),
                   "Not enough device buffers! There are %u device buffers for camera matrices, but buffer %u was requested",
                   device_data.size(),

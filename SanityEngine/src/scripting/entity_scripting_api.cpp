@@ -9,11 +9,12 @@
 #include "world/world.hpp"
 
 namespace horus {
-    Entity::Entity(WrenHandle* handle_in, const entt::entity entity_in, entt::registry& registry_in)
-        : handle{handle_in}, entity{entity_in}, registry{registry_in} {}
+    Entity::Entity(WrenHandle* handle_in, const entt::entity entity_in, SynchronizedResource<entt::registry>& registry_in)
+        : handle{handle_in}, entity{entity_in}, registry{&registry_in} {}
 
     void Entity::add_tag(const Rx::String& tag) const {
-        auto& tags = registry.get_or_assign<SanityEngineEntity>(entity);
+        auto locked_registry = registry->lock();
+        auto& tags = locked_registry->get_or_assign<SanityEngineEntity>(entity);
         if(auto* num_stacks = tags.tags.find(tag)) {
             (*num_stacks)++;
         } else {
@@ -22,8 +23,9 @@ namespace horus {
     }
 
     bool Entity::has_tag(const Rx::String& tag) const {
-        if(registry.has<SanityEngineEntity>(entity)) {
-            const auto& tags = registry.get<SanityEngineEntity>(entity);
+        auto locked_registry = registry->lock();
+        if(locked_registry->has<SanityEngineEntity>(entity)) {
+            const auto& tags = locked_registry->get<SanityEngineEntity>(entity);
             return tags.tags.find(tag) != nullptr;
         }
 
@@ -31,8 +33,9 @@ namespace horus {
     }
 
     Rx::Map<Rx::String, Int32> Entity::get_tags() const {
-        if(registry.has<SanityEngineEntity>(entity)) {
-            const auto& tag_component = registry.get<SanityEngineEntity>(entity);
+        auto locked_registry = registry->lock();
+        if(locked_registry->has<SanityEngineEntity>(entity)) {
+            const auto& tag_component = locked_registry->get<SanityEngineEntity>(entity);
             return tag_component.tags;
 
         } else {
@@ -75,7 +78,7 @@ namespace horus {
     Entity Component::get_entity() const {
         auto& registry = g_engine->get_registry();
 
-        auto* handle = registry.get<WrenHandle*>(entity);
+        auto* handle = registry.lock()->get<WrenHandle*>(entity);
 
         return Entity{handle, entity, registry};
     }

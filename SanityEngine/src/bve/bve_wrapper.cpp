@@ -6,6 +6,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <stb_image.h>
+#include <TracyD3D12.hpp>
+
 
 #include "adapters/tracy.hpp"
 #include "loading/shader_loading.hpp"
@@ -61,7 +63,9 @@ BveWrapper::BveWrapper(renderer::RenderDevice& device) {
     create_texture_filter_pipeline(device);
 }
 
-bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer) {
+bool BveWrapper::add_train_to_scene(const Rx::String& filename,
+                                    SynchronizedResource<entt::registry>& registry,
+                                    renderer::Renderer& renderer) {
     ZoneScoped;
 
     const auto train = load_mesh_from_file(filename);
@@ -93,141 +97,148 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename, entt::registry& 
 
         auto& mesh_data = renderer.get_static_mesh_store();
 
-        auto commands = device.create_command_list(0);
-        mesh_data.bind_to_command_list(commands);
+        auto commands = device.create_command_list();
+        {
+            TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
+            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
 
-        commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
-        commands->SetPipelineState(bve_texture_pipeline->pso.Get());
+            mesh_data.bind_to_command_list(commands);
 
-        Rx::Vector<renderer::Mesh> train_meshes;
-        train_meshes.reserve(train->meshes.count);
+            commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
+            commands->SetPipelineState(bve_texture_pipeline->pso.Get());
 
-        mesh_data.begin_adding_meshes(commands);
+            Rx::Vector<renderer::Mesh> train_meshes;
+            train_meshes.reserve(train->meshes.count);
 
-        for(Uint32 i = 0; i < train->meshes.count; i++) {
-            const auto& bve_mesh = train->meshes.ptr[i];
+            mesh_data.begin_adding_meshes(commands);
 
-            const auto [vertices, indices] = process_vertices(bve_mesh);
+            for(Uint32 i = 0; i < train->meshes.count; i++) {
+                const auto& bve_mesh = train->meshes.ptr[i];
 
-            const auto entity = registry.create();
+                const auto [vertices, indices] = process_vertices(bve_mesh);
 
-            auto& mesh_component = registry.assign<renderer::StandardRenderableComponent>(entity);
+                auto locked_registry = registry.lock();
+                const auto entity = locked_registry->create();
 
-            mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
-            train_meshes.push_back(mesh_component.mesh);
+                auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
 
-            if(bve_mesh.texture.texture_id.exists) {
-                const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+                mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
+                train_meshes.push_back(mesh_component.mesh);
 
-                const auto texture_msg = Rx::String::format("Load texture %s", texture_name);
-                ZoneScopedN(texture_msg.data());
+                if(bve_mesh.texture.texture_id.exists) {
+                    const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
 
-                const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
-                if(texture_handle_maybe) {
-                    logger->verbose("Texture %s has existing handle %d", texture_name, texture_handle_maybe->index);
+                    const auto texture_msg = Rx::String::format("Load texture %s", texture_name);
+                    ZoneScopedN(texture_msg.data());
 
-                    const auto material = renderer::StandardMaterial{
-                        .albedo = *texture_handle_maybe,
-                        .normal_roughness = renderer.get_default_normal_roughness_texture(),
-                        .specular_color_emission = renderer.get_default_specular_color_emission_texture(),
-                        .noise = renderer.get_noise_texture(),
-                    };
-
-                    mesh_component.material = renderer.allocate_standard_material(material);
-
-                } else {
-                    const auto texture_path = train_path.replace_filename(texture_name).string();
-
-                    int width, height, num_channels;
-                    const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 0);
-                    if(texture_data == nullptr) {
-                        logger->error("Could not load texture %s", texture_name);
-
-                    } else {
-                        if(num_channels == 3) {
-                            texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
-                        }
-
-                        auto create_info = renderer::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
-                                                                .usage = renderer::ImageUsage::SampledImage,
-                                                                .format = renderer::ImageFormat::Rgba8,
-                                                                .width = static_cast<Uint32>(width),
-                                                                .height = static_cast<Uint32>(height),
-                                                                .depth = 1};
-                        const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
-                        const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
-
-                        // Create a second image as the real image
-                        create_info.name = texture_name;
-                        const auto texture_handle = renderer.create_image(create_info);
-                        const auto& texture = renderer.get_image(texture_handle);
-
-                        auto bind_group_builder = create_texture_processor_bind_group_builder(device);
-
-                        bind_group_builder->set_image("input_texture", scratch_texture);
-                        bind_group_builder->set_image("output_texture", texture);
-
-                        auto bind_group = bind_group_builder->build();
-                        bind_group->bind_to_compute_signature(commands);
-
-                        const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
-                        const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
-
-                        commands->Dispatch(workgroup_width, workgroup_height, 1);
-
-                        renderer.schedule_texture_destruction(scratch_texture_handle);
-
-                        logger->verbose("Newly loaded image %s has handle %d", texture_name, texture_handle.index);
+                    const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
+                    if(texture_handle_maybe) {
+                        logger->verbose("Texture %s has existing handle %d", texture_name, texture_handle_maybe->index);
 
                         const auto material = renderer::StandardMaterial{
-                            .albedo = texture_handle,
+                            .albedo = *texture_handle_maybe,
+                            .normal_roughness = renderer.get_default_normal_roughness_texture(),
+                            .specular_color_emission = renderer.get_default_specular_color_emission_texture(),
                             .noise = renderer.get_noise_texture(),
                         };
 
                         mesh_component.material = renderer.allocate_standard_material(material);
 
-                        delete[] texture_data;
-                    }
-                }
+                    } else {
+                        const auto texture_path = train_path.replace_filename(texture_name).string();
 
-                bve_delete_string(const_cast<char*>(texture_name));
+                        int width, height, num_channels;
+                        const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 0);
+                        if(texture_data == nullptr) {
+                            logger->error("Could not load texture %s", texture_name);
+
+                        } else {
+                            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
+
+                            if(num_channels == 3) {
+                                texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
+                            }
+
+                            auto create_info = renderer::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
+                                                                         .usage = renderer::ImageUsage::SampledImage,
+                                                                         .format = renderer::ImageFormat::Rgba8,
+                                                                         .width = static_cast<Uint32>(width),
+                                                                         .height = static_cast<Uint32>(height),
+                                                                         .depth = 1};
+                            const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
+                            const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
+
+                            // Create a second image as the real image
+                            create_info.name = texture_name;
+                            const auto texture_handle = renderer.create_image(create_info);
+                            const auto& texture = renderer.get_image(texture_handle);
+
+                            auto bind_group_builder = create_texture_processor_bind_group_builder(device);
+
+                            bind_group_builder->set_image("input_texture", scratch_texture);
+                            bind_group_builder->set_image("output_texture", texture);
+
+                            auto bind_group = bind_group_builder->build();
+                            bind_group->bind_to_compute_signature(commands);
+
+                            const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
+                            const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
+
+                            commands->Dispatch(workgroup_width, workgroup_height, 1);
+
+                            renderer.schedule_texture_destruction(scratch_texture_handle);
+
+                            logger->verbose("Newly loaded image %s has handle %d", texture_name, texture_handle.index);
+
+                            const auto material = renderer::StandardMaterial{
+                                .albedo = texture_handle,
+                                .noise = renderer.get_noise_texture(),
+                            };
+
+                            mesh_component.material = renderer.allocate_standard_material(material);
+
+                            delete[] texture_data;
+                        }
+                    }
+
+                    bve_delete_string(const_cast<char*>(texture_name));
+                }
+            }
+
+            mesh_data.end_adding_meshes(commands);
+
+            const auto& index_buffer = mesh_data.get_index_buffer();
+            const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
+
+            {
+                Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+                barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+            }
+
+            const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
+            renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
+
+            {
+                Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+                barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                   D3D12_RESOURCE_STATE_INDEX_BUFFER);
+                barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
             }
         }
 
-        mesh_data.end_adding_meshes(commands);
-
-        const auto& index_buffer = mesh_data.get_index_buffer();
-        const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
-
-        {
-            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
-                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER,
-                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-
-        const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
-
-        {
-            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
-                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER);
-            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-
         device.submit_command_list(std::move(commands));
-
-        renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
 
         logger->info("Loaded file %s", filename);
 
@@ -242,10 +253,10 @@ Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_gr
     const Rx::Map<Rx::String, renderer::DescriptorTableDescriptorDescription>
         descriptors = Rx::Array{Rx::Pair{"input_texture",
                                          renderer::DescriptorTableDescriptorDescription{.type = renderer::DescriptorType::ShaderResource,
-                                                                                   .handle = cpu_handle}},
+                                                                                        .handle = cpu_handle}},
                                 Rx::Pair{"output_texture",
                                          renderer::DescriptorTableDescriptorDescription{.type = renderer::DescriptorType::UnorderedAccess,
-                                                                                   .handle = cpu_handle.Offset(descriptor_size)}}};
+                                                                                        .handle = cpu_handle.Offset(descriptor_size)}}};
 
     const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> tables = Rx::Array{Rx::Pair{0, gpu_handle}};
 
@@ -275,6 +286,8 @@ void BveWrapper::create_texture_filter_pipeline(renderer::RenderDevice& device) 
 BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error) { return BVE_Mesh_Error_to_data(&error); }
 
 BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
+    ZoneScoped;
+
     auto* mesh = bve_load_mesh_from_file(filename.data());
 
     if(mesh == nullptr) {
@@ -285,6 +298,8 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
 }
 
 std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
+    ZoneScoped;
+
     RX_ASSERT(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");
 
     const auto& bve_vertices = mesh.vertices;

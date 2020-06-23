@@ -4,7 +4,6 @@
 
 #include <glm/glm.hpp>
 #include <rx/core/vector.h>
-#include <stdint.h>
 
 #include "core/components.hpp"
 #include "core/constants.hpp"
@@ -39,7 +38,7 @@ namespace renderer {
      */
     class CameraMatrixBuffer {
     public:
-        CameraMatrixBuffer(renderer::RenderDevice& device_in, Uint32 num_in_flight_frames);
+        explicit CameraMatrixBuffer(RenderDevice& device_in);
 
         CameraMatrixBuffer(const CameraMatrixBuffer& other) = delete;
         CameraMatrixBuffer& operator=(const CameraMatrixBuffer& other) = delete;
@@ -55,17 +54,17 @@ namespace renderer {
 
         void set_camera_matrices(Uint32 camera_idx, const CameraMatrices& matrices);
 
-        [[nodiscard]] renderer::Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
+        [[nodiscard]] Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
 
         [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
 
         void upload_data(Uint32 frame_idx) const;
 
     private:
-        renderer::RenderDevice* device;
+        RenderDevice* device;
 
         std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data{};
 
-        Rx::Vector<renderer::Buffer*> device_data;
+        Rx::Vector<Buffer*> device_data;
     };
 } // namespace renderer

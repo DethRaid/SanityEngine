@@ -1,6 +1,7 @@
 #include "denoiser_pass.hpp"
 
 #include <Tracy.hpp>
+#include <TracyD3D12.hpp>
 #include <rx/core/log.h>
 
 #include "loading/shader_loading.hpp"
@@ -22,28 +23,32 @@ namespace renderer {
 
     DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass)
         : renderer{&renderer_in} {
+        ZoneScoped;
+
         auto& device = renderer->get_render_device();
 
-        const auto pipeline_create_info = RenderPipelineStateCreateInfo{.name = "Accumulation Pipeline",
+        const auto pipeline_create_info = RenderPipelineStateCreateInfo{.name = "Denoising Pipeline",
                                                                         .vertex_shader = load_shader("fullscreen.vertex"),
                                                                         .pixel_shader = load_shader("raytracing_accumulation.pixel"),
                                                                         .depth_stencil_state = {.enable_depth_test = false,
                                                                                                 .enable_depth_write = false},
                                                                         .render_target_formats = Rx::Array{ImageFormat::Rgba32F}};
 
-        accumulation_pipeline = device.create_render_pipeline_state(pipeline_create_info);
+        denoising_pipeline = device.create_render_pipeline_state(pipeline_create_info);
 
         create_images_and_framebuffer(render_resolution);
 
         create_material(forward_pass);
     }
 
-    void DenoiserPass::execute(ID3D12GraphicsCommandList4* commands,
+    void DenoiserPass::render(ID3D12GraphicsCommandList4* commands,
                                entt::registry& /* registry */,
                                Uint32 /* frame_idx */,
                                const World& /* world */) {
         ZoneScoped;
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass");
+
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass::render");
+        PIXScopedEvent(commands, 0, "DenoiserPass::render");
 
         {
             const auto
@@ -56,7 +61,7 @@ namespace renderer {
             commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
         }
 
-        commands->SetPipelineState(accumulation_pipeline->pso.Get());
+        commands->SetPipelineState(denoising_pipeline->pso.Get());
 
         commands->SetGraphicsRoot32BitConstant(0, 0, 1);
         commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,

@@ -1,6 +1,7 @@
 #include "mesh_data_store.hpp"
 
 #include <Tracy.hpp>
+#include <TracyD3D12.hpp>
 #include <rx/core/log.h>
 
 #include "rhi/helpers.hpp"
@@ -47,7 +48,10 @@ namespace renderer {
                                  const Rx::Vector<Uint32>& indices,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "add_mesh");
+
+        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "MeshDataStore::add_mesh");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "MeshDataStore::add_mesh");
+
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
 
         const auto vertex_data_size = static_cast<Uint32>(vertices.size() * sizeof(StandardVertex));

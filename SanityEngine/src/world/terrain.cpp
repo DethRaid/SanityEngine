@@ -1,19 +1,26 @@
 #include "terrain.hpp"
 
 #include <Tracy.hpp>
+#include <TracyD3D12.hpp>
 #include <entt/entity/registry.hpp>
-#include <ftl/atomic_counter.h>
-#include <ftl/task.h>
+#include <pix3.h>
 #include <rx/console/variable.h>
 #include <rx/core/array.h>
 #include <rx/core/log.h>
 #include <rx/core/prng/mt19937.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.System.Threading.h>
 
 #include "loading/image_loading.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 #include "sanity_engine.hpp"
+
+using namespace winrt;
+using winrt::Windows::Foundation::AsyncStatus;
+using winrt::Windows::Foundation::IAsyncAction;
+using winrt::Windows::System::Threading::ThreadPool;
 
 RX_LOG("Terrain", logger);
 
@@ -31,15 +38,10 @@ struct GenerateTileTaskArgs {
 Terrain::Terrain(const TerrainSize& size,
                  renderer::Renderer& renderer_in,
                  FastNoiseSIMD& noise_generator_in,
-                 entt::registry& registry_in,
-                 ftl::TaskScheduler& task_scheduler_in)
+                 SynchronizedResource<entt::registry>& registry_in)
     : renderer{&renderer_in},
-      task_scheduler{&task_scheduler_in},
-      noise_generator_fibtex{task_scheduler},
       noise_generator{&noise_generator_in},
       registry{&registry_in},
-      num_active_tilegen_tasks{task_scheduler},
-      loaded_terrain_tiles_fibtex{task_scheduler},
       max_latitude{size.max_latitude_in},
       max_longitude{size.max_longitude_in},
       min_terrain_height{size.min_terrain_height_in},
@@ -48,6 +50,8 @@ Terrain::Terrain(const TerrainSize& size,
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
 }
+
+void Terrain::tick(float delta_time) { upload_new_tile_meshes(); }
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
     ZoneScoped;
@@ -60,11 +64,11 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
 
     // TODO: Define some maximum number of tiles that may be loaded/generated in a given frame
     {
-        ftl::ScopeLock l{loaded_terrain_tiles_fibtex, true};
+        std::lock_guard l{loaded_terrain_tiles_mutex};
 
         if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
-            auto* args = new GenerateTileTaskArgs{.terrain = this, .tilecoord = coords_of_tile_containing_player};
-            task_scheduler->AddTask({generate_tile_task, args}, &num_active_tilegen_tasks);
+            num_active_tilegen_tasks.fetch_add(1);
+            ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
         }
     }
 
@@ -79,12 +83,12 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
                 }
 
                 {
-                    ftl::ScopeLock l{loaded_terrain_tiles_fibtex, true};
+                    std::lock_guard l{loaded_terrain_tiles_mutex};
                     if(loaded_terrain_tiles.find(coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}) == nullptr) {
-                        if(num_active_tilegen_tasks.Load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
-                            auto* args = new GenerateTileTaskArgs{.terrain = this,
-                                                                  .tilecoord = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y}};
-                            task_scheduler->AddTask({generate_tile_task, args}, &num_active_tilegen_tasks);
+                        if(num_active_tilegen_tasks.load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
+                            num_active_tilegen_tasks.fetch_add(1);
+                            ThreadPool::RunAsync(
+                                [=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
                         }
                     }
                 }
@@ -117,8 +121,7 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
     ZoneScoped;
 
     auto& device = renderer.get_render_device();
-    const auto commands = device.create_command_list(
-        Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>()->GetCurrentThreadIndex());
+    const auto commands = device.create_command_list();
 
     auto data = TerrainData{};
 
@@ -210,56 +213,51 @@ void Terrain::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D
     const auto& watermap_image = renderer.get_image(data.ground_water_handle);
 }
 
-void Terrain::generate_tile_task(ftl::TaskScheduler* task_scheduler, void* arg) {
-    auto* args = static_cast<GenerateTileTaskArgs*>(arg);
-
-    args->terrain->generate_tile(args->tilecoord, task_scheduler->GetCurrentThreadIndex());
-
-    delete args;
-}
-
 void Terrain::load_terrain_textures_and_create_material() {
-    auto* sanity_engine_global = Rx::Globals::find("SanityEngine");
-    auto* task_scheduler = sanity_engine_global->find("TaskScheduler")->cast<ftl::TaskScheduler>();
-
-    ftl::AtomicCounter counter{task_scheduler};
-
-    Rx::Ptr<LoadImageToGpuArgs> albedo_image_data = Rx::make_ptr<LoadImageToGpuArgs>(Rx::Memory::SystemAllocator::instance());
-    albedo_image_data->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
-    albedo_image_data->renderer_in = renderer;
-
-    task_scheduler->AddTask({load_image_to_gpu, albedo_image_data.get()}, &counter);
-
-    Rx::Ptr<LoadImageToGpuArgs> normal_roughness_image_data = Rx::make_ptr<LoadImageToGpuArgs>(Rx::Memory::SystemAllocator::instance());
-    normal_roughness_image_data
-        ->texture_name_in = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
-    normal_roughness_image_data->renderer_in = renderer;
-
-    task_scheduler->AddTask({load_image_to_gpu, normal_roughness_image_data.get()}, &counter);
+    ZoneScoped;
 
     auto material = renderer::StandardMaterial{};
     material.noise = renderer->get_noise_texture();
 
-    task_scheduler->WaitForCounter(&counter, 0, true);
+    Rx::Optional<renderer::TextureHandle> albedo_image_handle{Rx::nullopt};
+    Rx::Optional<renderer::TextureHandle> normal_roughness_image_handle{Rx::nullopt};
+    auto albedo_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
+        const char* albedo_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+        albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
+    });
+    albedo_task.Completed([&](IAsyncAction const& /* async_info */, AsyncStatus const& async_status) {
+        if(albedo_image_handle) {
+            material.albedo = *albedo_image_handle;
+        } else {
+            const char* albedo_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+            logger->error("Could not load terrain albedo texture %s", albedo_texture_name);
+            material.albedo = renderer->get_pink_texture();
+        }
+    });
 
-    if(albedo_image_data->handle_out) {
-        material.albedo = *albedo_image_data->handle_out;
-    } else {
-        logger->error("Could not load terrain albedo texture %s", albedo_image_data->texture_name_in);
-        material.albedo = renderer->get_pink_texture();
-    }
+    auto normal_roughness_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
+        const char*
+            normal_roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
+        normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);
+    });
+    normal_roughness_task.Completed([&](IAsyncAction const& /*async_info*/, AsyncStatus const& async_status) {
+        if(normal_roughness_image_handle) {
+            material.normal_roughness = *normal_roughness_image_handle;
+        } else {
+            const char* normal_roughness_texture_name =
+                "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
+            logger->error("Could not load terrain normal roughness texture %s", normal_roughness_texture_name);
+            material.normal_roughness = renderer->get_default_normal_roughness_texture();
+        }
+    });
 
-    if(normal_roughness_image_data->handle_out) {
-        material.normal_roughness = *normal_roughness_image_data->handle_out;
-    } else {
-        logger->error("Could not load terrain normal roughness texture %s", normal_roughness_image_data->texture_name_in);
-        material.normal_roughness = renderer->get_default_normal_roughness_texture();
-    }
+    // albedo_task.get();
+    // normal_roughness_task.get();
 
     terrain_material = renderer->allocate_standard_material(material);
 }
 
-void Terrain::generate_tile(const Vec2i& tilecoord, const Size thread_idx) {
+void Terrain::generate_tile(const Vec2i& tilecoord) {
     ZoneScoped;
 
     const auto top_left = tilecoord * static_cast<Int32>(TILE_SIZE);
@@ -269,10 +267,10 @@ void Terrain::generate_tile(const Vec2i& tilecoord, const Size thread_idx) {
 
     const auto tile_heightmap = generate_terrain_heightmap(top_left, size);
 
-    const auto tile_entity = registry->create();
+    const auto tile_entity = registry->lock()->create();
 
     {
-        ftl::ScopeLock l{loaded_terrain_tiles_fibtex, true};
+        Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
         loaded_terrain_tiles.insert(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
     }
 
@@ -310,48 +308,11 @@ void Terrain::generate_tile(const Vec2i& tilecoord, const Size thread_idx) {
     }
 
     {
-        
+        auto locked_tile_mesh_queue = tile_mesh_create_infos.lock();
+        locked_tile_mesh_queue->emplace_back(top_left, tile_entity, Rx::Utility::move(tile_vertices), Rx::Utility::move(tile_indices));
     }
 
-    auto& device = renderer->get_render_device();
-    const auto commands = device.create_command_list(thread_idx);
-    logger->info("Created command list %x", commands.Get());
-
-    renderer::RaytracableGeometryHandle ray_geo;
-    renderer::Mesh tile_mesh;
-
-    {
-        logger->info("Using command list %x", commands.Get());
-        Rx::Log::flush();
-        // Apparently the command list here is closed? I suspect something about threading is being weird, but I can't prove it right now
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "UploadTerrainTileMeshes");
-
-        auto& meshes = renderer->get_static_mesh_store();
-
-        meshes.begin_adding_meshes(commands);
-
-        const auto tile_mesh_ld = meshes.add_mesh(tile_vertices, tile_indices, commands);
-        const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
-
-        const Rx::Vector<D3D12_RESOURCE_BARRIER>
-            barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                 CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-
-        ray_geo = renderer->create_raytracing_geometry(vertex_buffer, meshes.get_index_buffer(), Rx::Array{tile_mesh_ld}, commands);
-        tile_mesh = tile_mesh_ld;
-    }
-
-    device.submit_command_list(commands);
-
-    renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
-
-    registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
-    registry->assign<TransformComponent>(tile_entity, glm::vec3{top_left.x, 0.0f, top_left.y});
+    num_active_tilegen_tasks.fetch_sub(1);
 }
 
 Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size) {
@@ -363,7 +324,7 @@ Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i&
     auto raw_noise = Rx::Vector<Float32>{size.y * size.x};
 
     {
-        ftl::ScopeLock l{noise_generator_fibtex, true};
+        Rx::Concurrency::ScopeLock l{noise_generator_mutex};
         noise_generator->FillNoiseSet(raw_noise.data(), top_left.x, top_left.y, 1, size.x, size.y, 1);
     }
 
@@ -383,6 +344,69 @@ Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i&
     return heightmap;
 }
 
+void Terrain::upload_new_tile_meshes() {
+    ZoneScoped;
+    PIXScopedEvent(PIX_COLOR_DEFAULT, "Upload new terrain tile meshes");
+
+    auto locked_tile_mesh_queue = tile_mesh_create_infos.lock();
+    if(locked_tile_mesh_queue->is_empty()) {
+        return;
+    }
+
+    auto& device = renderer->get_render_device();
+
+    const auto commands = device.create_command_list();
+    {
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::upload_new_tile_meshes");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
+
+        commands->SetName(L"Upload terrain tile meshes");
+
+        locked_tile_mesh_queue->each_fwd([&](const TerrainTileMeshCreateInfo& create_info) {
+            PIXScopedEvent(commands.Get(),
+                           PIX_COLOR_DEFAULT,
+                           "Terrain::upload_new_tile_meshes(%d, %d)",
+                           create_info.coord_worldspace.x,
+                           create_info.coord_worldspace.y);
+            auto [tile_location, tile_entity, tile_vertices, tile_indices] = create_info;
+
+            auto& meshes = renderer->get_static_mesh_store();
+
+            meshes.begin_adding_meshes(commands);
+
+            const auto tile_mesh_ld = meshes.add_mesh(tile_vertices, tile_indices, commands);
+            const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
+
+            const Rx::Vector<D3D12_RESOURCE_BARRIER>
+                barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+                                     CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
+                                                                          D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+
+            const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer,
+                                                                      meshes.get_index_buffer(),
+                                                                      Rx::Array{tile_mesh_ld},
+                                                                      commands);
+            const auto tile_mesh = tile_mesh_ld;
+
+            renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
+
+            {
+                auto locked_registry = registry->lock();
+                locked_registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
+                locked_registry->assign<TransformComponent>(tile_entity, glm::vec3{tile_location.x, 0.0f, tile_location.y});
+            }
+        });
+
+        locked_tile_mesh_queue->clear();
+    }
+
+    device.submit_command_list(commands);
+}
+
 Vec3f Terrain::get_normal_at_location(const Vec2f& location) const {
     const auto height_middle_right = get_terrain_height(location + Vec2f{1, 0});
     const auto height_bottom_middle = get_terrain_height(location + Vec2f{0, -1});
@@ -395,4 +419,4 @@ Vec3f Terrain::get_normal_at_location(const Vec2f& location) const {
     return {normal.x, normal.z, -normal.y};
 }
 
-ftl::AtomicCounter& Terrain::get_num_active_tilegen_tasks() { return num_active_tilegen_tasks; }
+Rx::Concurrency::Atomic<Uint32>& Terrain::get_num_active_tilegen_tasks() { return num_active_tilegen_tasks; }

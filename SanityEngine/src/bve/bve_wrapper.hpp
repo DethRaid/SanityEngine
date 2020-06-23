@@ -8,6 +8,7 @@
 #include <rx/core/ptr.h>
 #include <rx/core/vector.h>
 
+#include "core/async/synchronized_resource.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
 #include "rhi/mesh_data_store.hpp"
@@ -24,7 +25,9 @@ class BveWrapper {
 public:
     explicit BveWrapper(renderer::RenderDevice& device);
 
-    [[nodiscard]] bool add_train_to_scene(const Rx::String& filename, entt::registry& registry, renderer::Renderer& renderer);
+    [[nodiscard]] bool add_train_to_scene(const Rx::String& filename,
+                                          SynchronizedResource<entt::registry>& registry,
+                                          renderer::Renderer& renderer);
     Rx::Ptr<renderer::BindGroupBuilder> create_texture_processor_bind_group_builder(renderer::RenderDevice& device);
 
 private:

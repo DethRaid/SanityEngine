@@ -239,7 +239,7 @@ namespace horus {
         return module_contents_output;
     }
 
-    Rx::Ptr<ScriptingRuntime> ScriptingRuntime::create(entt::registry& registry_in) {
+    Rx::Ptr<ScriptingRuntime> ScriptingRuntime::create(SynchronizedResource<entt::registry>& registry_in) {
         ZoneScoped;
 
         auto config = WrenConfiguration{};
@@ -261,7 +261,8 @@ namespace horus {
         return Rx::make_ptr<ScriptingRuntime>(RX_SYSTEM_ALLOCATOR, vm, registry_in);
     }
 
-    ScriptingRuntime::ScriptingRuntime(WrenVM* vm_in, entt::registry& registry_in) : vm{vm_in}, registry{&registry_in} {
+    ScriptingRuntime::ScriptingRuntime(WrenVM* vm_in, SynchronizedResource<entt::registry>& registry_in)
+        : vm{vm_in}, registry{&registry_in} {
         wrenSetUserData(vm, this);
     }
 
@@ -431,7 +432,8 @@ namespace horus {
         const auto* entity_id_data = wrenGetSlotForeign(vm, 0);
         const auto entity_id = *static_cast<const entt::entity*>(entity_id_data);
 
-        const auto& tag_component = runtime->registry->get<SanityEngineEntity>(entity_id);
+        auto locked_registry = runtime->registry->lock();
+        const auto& tag_component = locked_registry->get<SanityEngineEntity>(entity_id);
 
         wrenEnsureSlots(vm, 2);
 

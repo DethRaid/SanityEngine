@@ -3,10 +3,6 @@
 enum class QualityLevel { Low, Medium, High, Ultra };
 
 struct Settings {
-    /*!
-     * \brief Number of frames to submit tot he GPU before waiting for it to finish any of them
-     */
-    Uint32 num_in_flight_gpu_frames = 3;
 
     /*!
      * \brief Enables tracking GPU progress to debug GPU crashes

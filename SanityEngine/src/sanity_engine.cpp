@@ -6,6 +6,7 @@
 #include <glm/ext/quaternion_trigonometric.inl>
 
 #include <GLFW/glfw3.h>
+#include <TracyD3D12.hpp>
 #include <rx/core/abort.h>
 #include <rx/core/log.h>
 #include <stb_image.h>
@@ -21,8 +22,6 @@
 
 static Rx::GlobalGroup s_sanity_engine_globals{"SanityEngine"};
 
-static Rx::Global<ftl::TaskScheduler> task_scheduler{"SanityEngine", "TaskScheduler"};
-
 RX_LOG("SanityEngine", logger);
 
 struct AtmosphereMaterial {
@@ -30,8 +29,9 @@ struct AtmosphereMaterial {
 };
 
 int main() {
-    const Settings settings{};
-    // settings.enable_gpu_crash_reporting = true;
+    winrt::init_apartment();
+
+    const Settings settings{.enable_gpu_crash_reporting = true};
 
     g_engine = new SanityEngine{settings};
 
@@ -52,14 +52,7 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 
 SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
-
-    winrt::init_apartment();
-
     logger->info("HELLO HUMAN");
-
-    task_scheduler->Init();
-
-    task_scheduler->SetEmptyQueueBehavior(ftl::EmptyQueueBehavior::Sleep);
 
     {
         ZoneScoped;
@@ -89,7 +82,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
         glfwSetKeyCallback(window, key_func);
 
-        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings, *task_scheduler);
+        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings);
         logger->info("Initialized renderer");
 
         // initialize_scripting_runtime();
@@ -140,13 +133,14 @@ void SanityEngine::run() {
 
         player_controller->update_player_transform(last_frame_duration);
 
-        imgui_adapter->draw_ui(registry.view<ui::UiComponent>());
-
-        const auto thread_idx = task_scheduler->GetCurrentThreadIndex();
+        {
+            auto locked_registry = registry.lock();
+            imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
+        }
 
         // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
         // generation, etc
-        renderer->begin_frame(frame_count, thread_idx);
+        renderer->begin_frame(frame_count);
 
         // There might not be a world if the player is still in the main menu
         if(world) {
@@ -157,9 +151,9 @@ void SanityEngine::run() {
             // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
         }
 
-        renderer->render_all(registry, *world);
+        renderer->render_all(registry.lock(), *world);
 
-        renderer->end_frame(thread_idx);
+        renderer->end_frame();
 
         FrameMark;
 #ifdef TRACY_ENABLE
@@ -182,7 +176,7 @@ void SanityEngine::run() {
 
 entt::entity SanityEngine::get_player() const { return player; }
 
-entt::registry& SanityEngine::get_registry() { return registry; }
+SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
 World* SanityEngine::get_world() const { return world.get(); }
 
@@ -210,33 +204,36 @@ void SanityEngine::register_horus_api() const {
 }
 
 void SanityEngine::create_planetary_atmosphere() {
-    const auto atmosphere = registry.create();
+    auto locked_registry = registry.lock();
+    const auto atmosphere = locked_registry->create();
 
     // No need to set parameters, the default light component represents the Earth's sun
-    registry.assign<renderer::LightComponent>(atmosphere);
-    registry.assign<renderer::AtmosphericSkyComponent>(atmosphere);
-    registry.assign<TransformComponent>(atmosphere); // Light rotations come from a Transform
+    locked_registry->assign<renderer::LightComponent>(atmosphere);
+    locked_registry->assign<renderer::AtmosphericSkyComponent>(atmosphere);
+    locked_registry->assign<TransformComponent>(atmosphere); // Light rotations come from a Transform
 
     // Camera for the directional light's shadow
     // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
-    auto& shadow_camera = registry.assign<renderer::CameraComponent>(atmosphere);
+    auto& shadow_camera = locked_registry->assign<renderer::CameraComponent>(atmosphere);
     shadow_camera.aspect_ratio = 1;
     shadow_camera.fov = 0;
 }
 
 void SanityEngine::make_frametime_display() {
-    const auto frametime_display = registry.create();
-    registry.assign<ui::UiComponent>(frametime_display, Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+    auto locked_registry = registry.lock();
+    const auto frametime_display = locked_registry->create();
+    locked_registry->assign<ui::UiComponent>(frametime_display, Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
 }
 
 void SanityEngine::create_first_person_player() {
-    player = registry.create();
+    auto locked_registry = registry.lock();
+    player = locked_registry->create();
 
-    auto& transform = registry.assign<TransformComponent>(player);
+    auto& transform = locked_registry->assign<TransformComponent>(player);
     transform.location.z = 5;
     transform.location.y = 2;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-    registry.assign<renderer::CameraComponent>(player);
+    locked_registry->assign<renderer::CameraComponent>(player);
 
     player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 

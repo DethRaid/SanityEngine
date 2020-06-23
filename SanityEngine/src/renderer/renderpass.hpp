@@ -2,6 +2,7 @@
 
 #include <d3d12.h>
 #include <entt/entity/fwd.hpp>
+#include <pix3.h>
 #include <rx/core/types.h>
 
 class World;
@@ -14,6 +15,6 @@ namespace renderer {
     public:
         virtual ~RenderPass() = default;
 
-        virtual void execute(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) = 0;
+        virtual void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) = 0;
     };
 } // namespace renderer

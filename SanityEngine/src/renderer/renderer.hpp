@@ -4,10 +4,11 @@
 #include <queue>
 
 #include <entt/fwd.hpp>
-#include <ftl/fibtex.h>
+#include <rx/core/concurrency/mutex.h>
 #include <rx/core/ptr.h>
 #include <rx/core/vector.h>
 
+#include "core/async/synchronized_resource.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/render_components.hpp"
@@ -15,6 +16,7 @@
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "renderer/renderpasses/forward_pass.hpp"
 #include "renderer/standard_material.hpp"
+#include "renderpasses/ui_render_pass.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
 #include "rhi/framebuffer.hpp"
@@ -48,13 +50,13 @@ namespace renderer {
      */
     class Renderer {
     public:
-        explicit Renderer(GLFWwindow* window, const Settings& settings_in, ftl::TaskScheduler& task_scheduler);
+        explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
-        void begin_frame(uint64_t frame_count, Size thread_idx);
+        void begin_frame(uint64_t frame_count);
 
-        void render_all(entt::registry& registry, const World& world);
+        void render_all(UnlockingResourceAccessor<entt::registry>& registry, const World& world);
 
-        void end_frame(Size thread_idx) const;
+        void end_frame() const;
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
@@ -231,7 +233,7 @@ namespace renderer {
 #pragma region Initialization
         void create_static_mesh_storage();
 
-        void create_per_frame_buffers(ftl::TaskScheduler& task_scheduler);
+        void create_per_frame_buffers();
 
         void create_material_data_buffers();
 
@@ -255,7 +257,7 @@ namespace renderer {
 
         Rx::Vector<Rx::Ptr<Buffer>> model_matrix_buffers;
 
-        Rx::Vector<Rx::Ptr<ftl::AtomicCounter>> next_unused_model_matrix_per_frame;
+        Rx::Vector<Rx::Ptr<Rx::Concurrency::Atomic<Uint32>>> next_unused_model_matrix_per_frame;
 
         RaytracingScene raytracing_scene;
 
@@ -273,16 +275,7 @@ namespace renderer {
 #pragma endregion
 
 #pragma region UI
-        Rx::Ptr<RenderPipelineState> ui_pipeline;
-
-        Rx::Vector<Rx::Ptr<Buffer>> ui_vertex_buffers;
-        Rx::Vector<Rx::Ptr<Buffer>> ui_index_buffers;
-
-        void create_ui_pipeline();
-
-        void create_ui_mesh_buffers();
-
-        void render_ui(const ComPtr<ID3D12GraphicsCommandList4>& commands, Uint32 frame_idx) const;
+        Rx::Ptr<UiPass> ui_pass;
 #pragma endregion
     };
 } // namespace renderer

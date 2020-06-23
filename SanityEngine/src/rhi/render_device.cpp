@@ -25,18 +25,24 @@
 namespace renderer {
     RX_LOG("RenderDevice", logger);
 
-    RenderDevice::RenderDevice(HWND window_handle,
+    RX_CONSOLE_BVAR(
+        cvar_enable_gpu_based_validation,
+        "r.EnableGpuBasedValidation",
+        "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
+        true);
+
+    RX_CONSOLE_IVAR(
+        cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 0, 8, 3);
+
+    RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
-                               const Settings& settings_in,
-                               ftl::TaskScheduler& task_scheduler) // NOLINT(cppcoreguidelines-pro-type-member-init)
+                               const Settings& settings_in)
         : settings{settings_in},
-          command_lists_by_frame{settings.num_in_flight_gpu_frames},
-          buffer_deletion_list{settings.num_in_flight_gpu_frames},
-          image_deletion_list{settings.num_in_flight_gpu_frames},
-          staging_buffers_to_free{settings.num_in_flight_gpu_frames},
-          scratch_buffers_to_free{settings.num_in_flight_gpu_frames},
-          direct_command_allocators_fibtex{&task_scheduler},
-          command_lists_by_frame_fibtex{&task_scheduler} {
+          command_lists_by_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          image_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          scratch_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())} {
 #ifndef NDEBUG
         // Only enable the debug layer if we're not running in PIX
         const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
@@ -51,7 +57,7 @@ namespace renderer {
 
         create_queues();
 
-        create_swapchain(window_handle, window_size, settings.num_in_flight_gpu_frames);
+        create_swapchain(window_handle, window_size);
 
         create_gpu_frame_synchronization_objects();
 
@@ -73,7 +79,8 @@ namespace renderer {
     }
 
     RenderDevice::~RenderDevice() {
-        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
+        for(Uint32 i = 0; i < num_gpu_frames; i++) {
             wait_for_frame(i);
             direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
         }
@@ -108,7 +115,7 @@ namespace renderer {
                 should_map = true;
                 break;
 
-            case BufferUsage::IndirectCommands:
+            case BufferUsage::IndirectCommands: // NOLINT(bugprone-branch-clone)
                 [[fallthrough]];
             case BufferUsage::UnorderedAccess:
                 [[fallthrough]];
@@ -382,7 +389,7 @@ namespace renderer {
             case D3D_SIT_CBUFFER:
                 return DescriptorType::ConstantBuffer;
 
-            case D3D_SIT_TBUFFER:
+            case D3D_SIT_TBUFFER: // NOLINT(bugprone-branch-clone)
                 [[fallthrough]];
             case D3D_SIT_TEXTURE:
                 [[fallthrough]];
@@ -394,7 +401,7 @@ namespace renderer {
             case D3D_SIT_UAV_RWSTRUCTURED:
                 return DescriptorType::UnorderedAccess;
 
-            case D3D_SIT_SAMPLER:
+            case D3D_SIT_SAMPLER: // NOLINT(bugprone-branch-clone)
                 [[fallthrough]];
             case D3D_SIT_BYTEADDRESS:
                 [[fallthrough]];
@@ -424,12 +431,21 @@ namespace renderer {
         // Nothing to do, destructors will take care of it
     }
 
-    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list(const Size thread_idx) {
+    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list() {
+        const auto thread_idx = GetCurrentThreadId();
         auto* command_allocator = get_direct_command_allocator_for_thread(thread_idx);
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
         auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
+        if(result == DXGI_ERROR_DEVICE_REMOVED) {
+            if(settings.enable_gpu_crash_reporting) {
+                log_dred_report();
+            }
+
+            const auto removed_reason = device->GetDeviceRemovedReason();
+            logger->error("Device was removed because: %s", to_string(removed_reason));
+        }
         if(FAILED(result)) {
             const auto msg = Rx::String::format("Could not create command list: %s", to_string(result));
             Rx::abort(msg.data());
@@ -447,7 +463,7 @@ namespace renderer {
     void RenderDevice::submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         commands->Close();
 
-        ftl::ScopeLock l{command_lists_by_frame_fibtex, true};
+        Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_by_frame[cur_gpu_frame_idx].push_back(commands);
     }
 
@@ -457,7 +473,7 @@ namespace renderer {
         return *material_bind_group_builder[frame_idx];
     }
 
-    void RenderDevice::begin_frame(const uint64_t frame_count, const Size thread_idx) {
+    void RenderDevice::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
 
         wait_for_frame(cur_gpu_frame_idx);
@@ -474,15 +490,15 @@ namespace renderer {
             destroy_resources_for_frame(cur_gpu_frame_idx);
         }
 
-        transition_swapchain_image_to_render_target(thread_idx);
+        transition_swapchain_image_to_render_target();
 
         in_init_phase = false;
     }
 
-    void RenderDevice::end_frame(const Size thread_idx) {
+    void RenderDevice::end_frame() {
         ZoneScoped;
         // Transition the swapchain image into the correct format and request presentation
-        transition_swapchain_image_to_presentable(thread_idx);
+        transition_swapchain_image_to_presentable();
 
         flush_batched_command_lists();
 
@@ -495,12 +511,12 @@ namespace renderer {
                 logger->error("Device lost on present :(");
 
                 if(settings.enable_gpu_crash_reporting) {
-                    retrieve_dred_report();
+                    log_dred_report();
                 }
             }
         }
 
-        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % settings.num_in_flight_gpu_frames;
+        cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % cvar_max_in_flight_gpu_frames->get();
     }
 
     Uint32 RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
@@ -516,6 +532,8 @@ namespace renderer {
             graphics_analysis->EndCapture();
         }
     }
+
+    Uint32 RenderDevice::get_max_num_gpu_frames() const { return static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get()); }
 
     bool RenderDevice::has_separate_device_memory() const { return !is_uma; }
 
@@ -576,8 +594,12 @@ namespace renderer {
         if(SUCCEEDED(result)) {
             debug_controller->EnableDebugLayer();
 
+            if(cvar_enable_gpu_based_validation->get()) {
+                debug_controller->SetEnableGPUBasedValidation(1);
+            }
+
         } else {
-            logger->error("Could not enable the D3D12 validation layer: {}", to_string(result).data());
+            logger->error("Could not enable the D3D12 validation layer: %s", to_string(result).data());
         }
 
         if(settings.enable_gpu_crash_reporting) {
@@ -588,12 +610,7 @@ namespace renderer {
             } else {
                 dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
                 dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-
-                ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred1_settings;
-                dred_settings->QueryInterface(dred1_settings.GetAddressOf());
-                if(dred1_settings) {
-                    dred1_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-                }
+                dred_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
             }
         }
     }
@@ -763,20 +780,21 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::create_swapchain(HWND window_handle, const glm::uvec2& window_size, const UINT num_images) {
+    void RenderDevice::create_swapchain(HWND window_handle, const glm::uvec2& window_size) {
         ZoneScoped;
 
-        DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
-        swapchain_desc.Width = static_cast<UINT>(window_size.x);
-        swapchain_desc.Height = static_cast<UINT>(window_size.y);
-        swapchain_desc.Format = swapchain_format;
+        const auto swapchain_desc = DXGI_SWAP_CHAIN_DESC1{
+            .Width = static_cast<UINT>(window_size.x),
+            .Height = static_cast<UINT>(window_size.y),
+            .Format = swapchain_format,
+            .SampleDesc = {1, 0},
 
-        swapchain_desc.SampleDesc = {1, 0};
-        swapchain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapchain_desc.BufferCount = num_images;
+            .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+            .BufferCount = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get()),
 
-        swapchain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapchain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+            .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
+            .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING,
+        };
 
         ComPtr<IDXGISwapChain1> swapchain1;
         auto hr = factory->CreateSwapChainForHwnd(direct_command_queue.Get(),
@@ -797,7 +815,7 @@ namespace renderer {
     }
 
     void RenderDevice::create_gpu_frame_synchronization_objects() {
-        frame_fence_values.resize(settings.num_in_flight_gpu_frames);
+        frame_fence_values.resize(cvar_max_in_flight_gpu_frames->get());
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
         set_object_name(frame_fences.Get(), "Frame Synchronization Fence");
@@ -808,15 +826,17 @@ namespace renderer {
     void RenderDevice::create_command_allocators() {
         ZoneScoped;
 
-        direct_command_allocators.resize(settings.num_in_flight_gpu_frames);
-        compute_command_allocators.resize(settings.num_in_flight_gpu_frames);
-        copy_command_allocators.resize(settings.num_in_flight_gpu_frames);
+        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
 
-        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        direct_command_allocators.resize(num_gpu_frames);
+        compute_command_allocators.resize(num_gpu_frames);
+        copy_command_allocators.resize(num_gpu_frames);
+
+        for(Uint32 i = 0; i < num_gpu_frames; i++) {
             auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                          IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                const auto msg = Rx::String::format("Could not create compute command allocator for frame %s", i);
+                const auto msg = Rx::String::format("Could not create compute command allocator for frame %d", i);
                 Rx::abort(msg.data());
             }
 
@@ -837,7 +857,7 @@ namespace renderer {
 
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                                   MAX_NUM_TEXTURES * 2 * settings.num_in_flight_gpu_frames);
+                                                                   MAX_NUM_TEXTURES * 2 * cvar_max_in_flight_gpu_frames->get());
 
         cbv_srv_uav_heap = new_cbv_srv_uav_heap;
         cbv_srv_uav_size = new_cbv_srv_uav_size;
@@ -1029,6 +1049,8 @@ namespace renderer {
     }
 
     void RenderDevice::create_material_resource_binders() {
+        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
+
         Rx::Map<Rx::String, RootDescriptorDescription> root_descriptors;
         root_descriptors.insert("cameras", RootDescriptorDescription{1_u32, DescriptorType::ShaderResource});
         root_descriptors.insert("material_buffer", RootDescriptorDescription{2_u32, DescriptorType::ShaderResource});
@@ -1039,7 +1061,7 @@ namespace renderer {
         root_descriptors.insert("per_frame_data", RootDescriptorDescription{7_u32, DescriptorType::ShaderResource});
         root_descriptors.insert("model_matrices", RootDescriptorDescription{8_u32, DescriptorType::ShaderResource});
 
-        material_bind_group_builder.reserve(settings.num_in_flight_gpu_frames);
+        material_bind_group_builder.reserve(num_gpu_frames);
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
@@ -1048,7 +1070,7 @@ namespace renderer {
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
 
-        for(Uint32 i = 0; i < settings.num_in_flight_gpu_frames; i++) {
+        for(Uint32 i = 0; i < num_gpu_frames; i++) {
             Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_tables;
             // Textures array _always_ is at the start of the descriptor heap
             descriptor_tables.insert("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
@@ -1289,8 +1311,8 @@ namespace renderer {
         return pipeline;
     }
 
-    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const Size id) {
-        Rx::Concurrency::ScopeLock l{direct_command_allocators_fibtex};
+    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const Uint32 id) {
+        Rx::Concurrency::ScopeLock l{direct_command_allocators_mutex};
 
         auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
         if(const auto* itr = command_allocators_for_frame.find(id)) {
@@ -1299,8 +1321,17 @@ namespace renderer {
         } else {
             ComPtr<ID3D12CommandAllocator> allocator;
             const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+            if(result == DXGI_ERROR_DEVICE_REMOVED) {
+                if(settings.enable_gpu_crash_reporting) {
+                    log_dred_report();
+                }
+
+                const auto removed_reason = device->GetDeviceRemovedReason();
+                logger->error("Device was removed because: %s", to_string(removed_reason));
+            }
             if(FAILED(result)) {
-                Rx::abort("Could not create compute command allocator");
+                const auto msg = Rx::String::format("Could not create direct command allocator: %s", to_string(result));
+                Rx::abort(msg.data());
 
             } else {
                 command_allocators_for_frame.insert(id, allocator);
@@ -1311,10 +1342,12 @@ namespace renderer {
     }
 
     void RenderDevice::flush_batched_command_lists() {
-        ftl::ScopeLock l{command_lists_by_frame_fibtex, true};
+        Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
+            logger->info("Submitting command list %x to the GPU", commands.Get());
+
             auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
 
             // First implementation - run everything on the same queue, because it's easy
@@ -1333,7 +1366,7 @@ namespace renderer {
 
                 WaitForSingleObject(event, INFINITE);
 
-                retrieve_dred_report();
+                log_dred_report();
 
                 command_list_done_fences.push_back(command_list_done_fence);
 
@@ -1341,7 +1374,7 @@ namespace renderer {
             }
         });
 
-        lists.clear();
+        command_lists_by_frame[cur_gpu_frame_idx] = {};
     }
 
     void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
@@ -1373,10 +1406,10 @@ namespace renderer {
         images.clear();
     }
 
-    void RenderDevice::transition_swapchain_image_to_render_target(const Size thread_idx) {
+    void RenderDevice::transition_swapchain_image_to_render_target() {
         ZoneScoped;
-        auto swapchain_cmds = create_command_list(thread_idx);
-        set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Render Target");
+        auto swapchain_cmds = create_command_list();
+        swapchain_cmds->SetName(L"Transition Swapchain to Render Target");
 
         {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "Transition Swapchain to Render Target state");
@@ -1390,8 +1423,8 @@ namespace renderer {
         submit_command_list(swapchain_cmds);
     }
 
-    void RenderDevice::transition_swapchain_image_to_presentable(const Size thread_idx) {
-        auto swapchain_cmds = create_command_list(thread_idx);
+    void RenderDevice::transition_swapchain_image_to_presentable() {
+        auto swapchain_cmds = create_command_list();
         set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Presentable");
 
         auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
@@ -1445,6 +1478,14 @@ namespace renderer {
         auto buffer = Buffer{};
         auto result = device_allocator
                           ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
+        if(result == DXGI_ERROR_DEVICE_REMOVED) {
+            if(settings.enable_gpu_crash_reporting) {
+                log_dred_report();
+            }
+
+            const auto removed_reason = device->GetDeviceRemovedReason();
+            logger->error("Device was removed because: %s", to_string(removed_reason));
+        }
         if(FAILED(result)) {
             const auto msg = Rx::String::format("Could not create staging buffer: %s (%u)", to_string(result), result);
             Rx::abort(msg.data());
@@ -1508,22 +1549,22 @@ namespace renderer {
         return fence;
     }
 
-    void RenderDevice::retrieve_dred_report() const {
-        ComPtr<ID3D12DeviceRemovedExtendedData> dred;
+    void RenderDevice::log_dred_report() const {
+        ComPtr<ID3D12DeviceRemovedExtendedData1> dred;
         auto result = device->QueryInterface(IID_PPV_ARGS(&dred));
         if(FAILED(result)) {
             logger->error("Could not retrieve DRED report");
             return;
         }
 
-        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT breadcrumbs;
-        result = dred->GetAutoBreadcrumbsOutput(&breadcrumbs);
+        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1 breadcrumbs;
+        result = dred->GetAutoBreadcrumbsOutput1(&breadcrumbs);
         if(FAILED(result)) {
             return;
         }
 
-        D3D12_DRED_PAGE_FAULT_OUTPUT page_faults;
-        result = dred->GetPageFaultAllocationOutput(&page_faults);
+        D3D12_DRED_PAGE_FAULT_OUTPUT1 page_faults;
+        result = dred->GetPageFaultAllocationOutput1(&page_faults);
         if(FAILED(result)) {
             return;
         }
@@ -1532,23 +1573,14 @@ namespace renderer {
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
-    Rx::Ptr<RenderDevice> make_render_device(const RenderBackend backend, GLFWwindow* window, const Settings& settings) {
-        switch(backend) {
-            case RenderBackend::D3D12: {
-                auto hwnd = glfwGetWin32Window(window);
+    Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings) {
+        auto hwnd = glfwGetWin32Window(window);
 
-                glm::ivec2 framebuffer_size{};
-                glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
+        glm::ivec2 framebuffer_size{};
+        glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
 
-                logger->info("Creating D3D12 backend");
+        logger->info("Creating D3D12 backend");
 
-                auto* task_scheduler = Rx::Globals::find("SanityEngine")->find("TaskScheduler")->cast<ftl::TaskScheduler>();
-                return Rx::make_ptr<RenderDevice>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings, *task_scheduler);
-            }
-        }
-
-        logger->error("Unrecognized render backend type");
-
-        return {};
+        return Rx::make_ptr<RenderDevice>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
     }
 } // namespace renderer

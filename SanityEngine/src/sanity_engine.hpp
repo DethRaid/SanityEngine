@@ -1,9 +1,7 @@
 ﻿#pragma once
-#include <memory>
 
 #include <assimp/Importer.hpp>
 #include <entt/entity/registry.hpp>
-#include <ftl/task_scheduler.h>
 #include <rx/core/ptr.h>
 
 #include "../first_person_controller.hpp"
@@ -38,7 +36,7 @@ public:
 
     [[nodiscard]] entt::entity get_player() const;
 
-    [[nodiscard]] entt::registry& get_registry();
+    [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
 
     [[nodiscard]] World* get_world() const;
 
@@ -61,7 +59,7 @@ private:
 
     Rx::Ptr<World> world;
 
-    entt::registry registry;
+    SynchronizedResource<entt::registry> registry;
 
     /*!
      * \brief Entity which represents the player

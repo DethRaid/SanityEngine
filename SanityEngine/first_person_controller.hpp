@@ -4,13 +4,15 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include "core/async/synchronized_resource.hpp"
+
 class Terrain;
 
 struct GLFWwindow;
 
 class FirstPersonController {
 public:
-    explicit FirstPersonController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
+    explicit FirstPersonController(GLFWwindow* window_in, entt::entity controlled_entity_in, SynchronizedResource<entt::registry>& registry_in);
 
     void update_player_transform(float delta_time);
 
@@ -36,7 +38,7 @@ private:
     /*!
      * \brief Registry where all the player's components are stored
      */
-    entt::registry* registry;
+    SynchronizedResource<entt::registry>* registry;
 
     glm::dvec2 last_mouse_pos;
 

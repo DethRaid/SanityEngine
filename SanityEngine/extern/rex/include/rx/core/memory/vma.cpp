@@ -4,8 +4,6 @@
 #if defined(RX_PLATFORM_POSIX)
 #include <sys/mman.h> // mmap, munmap, mprotect, posix_madvise, MAP_{FAILED,HUGETLB}, PROT_{NONE,READ,WRITE}, POSIX_MADV_{WILLNEED,DONTNEED}
 #elif defined(RX_PLATFORM_WINDOWS)
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h> // VirtualAlloc, VirtualFree, MEM_{RELEASE,COMMIT,UNCOMMIT}, PAGE_{READWRITE,READONLY}
 #else
 #error "missing VMA implementation"

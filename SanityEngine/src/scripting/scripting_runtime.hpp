@@ -8,6 +8,7 @@
 #include <wren/wren.hpp>
 
 #include "entity_scripting_api.hpp"
+#include "core/async/synchronized_resource.hpp"
 
 class World;
 
@@ -36,9 +37,9 @@ namespace horus {
 
     class ScriptingRuntime {
     public:
-        static Rx::Ptr<ScriptingRuntime> create(entt::registry& registry_in);
+        static Rx::Ptr<ScriptingRuntime> create(SynchronizedResource<entt::registry>& registry_in);
 
-        explicit ScriptingRuntime(WrenVM* vm_in, entt::registry& registry_in);
+        explicit ScriptingRuntime(WrenVM* vm_in, SynchronizedResource<entt::registry>& registry_in);
 
         ScriptingRuntime(const ScriptingRuntime& other) = delete;
         ScriptingRuntime& operator=(const ScriptingRuntime& other) = delete;
@@ -101,7 +102,7 @@ namespace horus {
 
         WrenVM* vm{nullptr};
 
-        entt::registry* registry;
+        SynchronizedResource<entt::registry>* registry;
 
         Rx::Set<std::filesystem::path> module_paths{};
 

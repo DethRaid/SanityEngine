@@ -138,6 +138,7 @@
     <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
     <ClCompile Include="src\rhi\bind_group.cpp" />
     <ClCompile Include="src\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\rhi\helpers.cpp" />
@@ -368,6 +369,7 @@
     <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\lights.hpp" />
     <ClInclude Include="src\renderer\renderer.hpp" />
@@ -835,7 +837,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TRACY_ENABLE;NUM_WAITING_FIBER_SLOTS=512;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NUM_WAITING_FIBER_SLOTS=512;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableModules>true</EnableModules>
@@ -969,5 +971,12 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets'))" />
+  </Target>
 </Project>
