@@ -91,7 +91,7 @@ namespace renderer {
         command_list->SetName(L"Main Render Command List");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, commands, "Renderer::render_all");
+            TracyD3D12Zone(RenderDevice::tracy_context, command_list, "Renderer::render_all");
             PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
                 rebuild_raytracing_scene(command_list);
@@ -112,7 +112,7 @@ namespace renderer {
             {
                 ZoneScopedN("Renderer::render_passes");
 
-                TracyD3D12Zone(RenderDevice::tracy_context, commands, "Renderer::render_passes");
+                TracyD3D12Zone(RenderDevice::tracy_context, command_list, "Renderer::render_passes");
                 PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
                 render_passes.each_fwd(
@@ -149,6 +149,12 @@ namespace renderer {
     TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
                                          const void* image_data,
                                          const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+        ZoneScoped;
+
+        const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, scope_name.data());
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, scope_name.data());
+
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 

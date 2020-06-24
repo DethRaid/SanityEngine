@@ -158,6 +158,8 @@ namespace renderer {
             .scene_depth_texture = scene_depth_target_handle,
         };
 
+        logger->verbose("Scene output texture idx: %u, Scene depth texture: %u", scene_color_target_handle.index, scene_depth_target_handle.index);
+
         denoiser_material_buffer = device.create_buffer(BufferCreateInfo{.name = "Denoiser material buffer",
                                                                          .usage = BufferUsage::StagingBuffer,
                                                                          .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});

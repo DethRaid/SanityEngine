@@ -1,5 +1,7 @@
 #include "render_device.hpp"
 
+#include <rx/core/string.h>
+
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <algorithm>
 
@@ -1346,7 +1348,16 @@ namespace renderer {
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
-            logger->info("Submitting command list %x to the GPU", commands.Get());
+            /*
+             * Uint16* const data = new Uint16[1024];
+             * UINT real_size;
+             * const auto result = commands->GetPrivateData(WKPDID_D3DDebugObjectNameW, &real_size, data);
+             * if(SUCCEEDED(result)) {
+             *     const Rx::WideString wide_stringyboi{data, real_size};
+             *     const auto stringyboi = wide_stringyboi.to_utf8();
+             *     logger->info("Submitting command list %s to the GPU", stringyboi);
+             * }
+             */
 
             auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
 
