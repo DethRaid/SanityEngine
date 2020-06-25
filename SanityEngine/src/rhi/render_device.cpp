@@ -36,6 +36,16 @@ namespace renderer {
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 0, 8, 3);
 
+    RX_CONSOLE_BVAR(cvar_break_on_validation_error,
+                    "r.BreakOnValidationError",
+                    "Whether to issue a breakpoint when the validation layer encounters an error",
+                    false);
+
+    RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
+                    "r.VerifyEveryCommandListSubmission",
+                    "If enabled, SanityEngine will wait for every command list to check for device removed errors",
+                    true);
+
     RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
                                const Settings& settings_in)
@@ -441,9 +451,7 @@ namespace renderer {
         ComPtr<ID3D12CommandList> cmds;
         auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
-            if(settings.enable_gpu_crash_reporting) {
-                log_dred_report();
-            }
+            log_dred_report();
 
             const auto removed_reason = device->GetDeviceRemovedReason();
             logger->error("Device was removed because: %s", to_string(removed_reason));
@@ -512,9 +520,7 @@ namespace renderer {
             if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
                 logger->error("Device lost on present :(");
 
-                if(settings.enable_gpu_crash_reporting) {
-                    log_dred_report();
-                }
+                log_dred_report();
             }
         }
 
@@ -604,16 +610,14 @@ namespace renderer {
             logger->error("Could not enable the D3D12 validation layer: %s", to_string(result).data());
         }
 
-        if(settings.enable_gpu_crash_reporting) {
-            result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
-            if(FAILED(result)) {
-                logger->error("Could not enable DRED");
+        result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
+        if(FAILED(result)) {
+            logger->error("Could not enable DRED");
 
-            } else {
-                dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-                dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-                dred_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            }
+        } else {
+            dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            dred_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
         }
     }
 
@@ -718,13 +722,12 @@ namespace renderer {
                 }
 
 #ifndef NDEBUG
-                if(!settings.enable_gpu_crash_reporting) {
-                    res = device->QueryInterface(info_queue.GetAddressOf());
-                    if(SUCCEEDED(res)) {
-                        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-                        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-                    }
+                res = device->QueryInterface(info_queue.GetAddressOf());
+                if(SUCCEEDED(res) && cvar_break_on_validation_error->get()) {
+                    info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+                    info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
                 }
+
 #endif
 
                 return false;
@@ -1324,13 +1327,12 @@ namespace renderer {
             ComPtr<ID3D12CommandAllocator> allocator;
             const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
             if(result == DXGI_ERROR_DEVICE_REMOVED) {
-                if(settings.enable_gpu_crash_reporting) {
-                    log_dred_report();
-                }
+                log_dred_report();
 
                 const auto removed_reason = device->GetDeviceRemovedReason();
                 logger->error("Device was removed because: %s", to_string(removed_reason));
             }
+
             if(FAILED(result)) {
                 const auto msg = Rx::String::format("Could not create direct command allocator: %s", to_string(result));
                 Rx::abort(msg.data());
@@ -1348,17 +1350,6 @@ namespace renderer {
         // Submit all the command lists we batched up
         auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
-            /*
-             * Uint16* const data = new Uint16[1024];
-             * UINT real_size;
-             * const auto result = commands->GetPrivateData(WKPDID_D3DDebugObjectNameW, &real_size, data);
-             * if(SUCCEEDED(result)) {
-             *     const Rx::WideString wide_stringyboi{data, real_size};
-             *     const auto stringyboi = wide_stringyboi.to_utf8();
-             *     logger->info("Submitting command list %s to the GPU", stringyboi);
-             * }
-             */
-
             auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
 
             // First implementation - run everything on the same queue, because it's easy
@@ -1367,12 +1358,12 @@ namespace renderer {
             // TODO: Actually figure out how to use multiple queues
             direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
 
-            if(settings.enable_gpu_crash_reporting) {
+            if(cvar_verify_every_command_list_submission->get()) {
                 auto command_list_done_fence = get_next_command_list_done_fence();
 
                 direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
 
-                const auto event = CreateEvent(nullptr, false, false, nullptr);
+                const HANDLE event = CreateEvent(nullptr, false, false, nullptr);
                 command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
 
                 WaitForSingleObject(event, INFINITE);
@@ -1490,9 +1481,7 @@ namespace renderer {
         auto result = device_allocator
                           ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
-            if(settings.enable_gpu_crash_reporting) {
-                log_dred_report();
-            }
+            log_dred_report();
 
             const auto removed_reason = device->GetDeviceRemovedReason();
             logger->error("Device was removed because: %s", to_string(removed_reason));

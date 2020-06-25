@@ -77,7 +77,7 @@ namespace renderer {
                                                     backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
-        commands->DrawInstanced(3, 1, 0, 0);
+        // commands->DrawInstanced(3, 1, 0, 0);
 
         commands->EndRenderPass();
     }

@@ -1286,6 +1286,9 @@
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
       <Filter>Header Files\renderer\renderpass</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\ansi_colors.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">

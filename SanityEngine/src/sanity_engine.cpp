@@ -31,7 +31,7 @@ struct AtmosphereMaterial {
 int main() {
     winrt::init_apartment();
 
-    const Settings settings{.enable_gpu_crash_reporting = true};
+    const Settings settings{};
 
     g_engine = new SanityEngine{settings};
 

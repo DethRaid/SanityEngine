@@ -3,14 +3,6 @@
 enum class QualityLevel { Low, Medium, High, Ultra };
 
 struct Settings {
-
-    /*!
-     * \brief Enables tracking GPU progress to debug GPU crashes
-     *
-     * This has a significant performance cost, so it should only be enabled when you know you need it
-     */
-    bool enable_gpu_crash_reporting{false};
-
     /*!
      * \brief Scale of the internal render resolution relative to the screen resolution
      */
