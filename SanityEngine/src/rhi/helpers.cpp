@@ -5,6 +5,7 @@
 #include <d3d12.h>
 
 #include "core/align.hpp"
+#include "core/ansi_colors.hpp"
 #include "core/defer.hpp"
 #include "d3dx12.hpp"
 #include "framebuffer.hpp"
@@ -311,30 +312,45 @@ namespace renderer {
             const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
             const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
             breadcrumb_output_string += Rx::String::
-                format("Command list %s, executing on command queue %s, has completed %d render operations\nLast render operation: %s",
+                format("Command list %s, executing on command queue %s, has completed %d render operations\nLast render operation: %s%s%s",
                        command_list_name,
                        command_queue_name,
                        last_breadcrumb_idx + 1,
-                       breadcrumb_to_string(breadcrumb));
+                       colors::CONTEXT_LABEL,
+                       breadcrumb_to_string(breadcrumb),
+                       colors::DEFAULT_CONSOLE_COLOR);
 
             if(cur_node->BreadcrumbCount > 0) {
                 for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
-                    breadcrumb_output_string += Rx::String::format("\n\t%s", breadcrumb_to_string(cur_node->pCommandHistory[i]));
+                    const char* color = colors::DEFAULT_CONSOLE_COLOR;
+                    if(i < last_breadcrumb_idx) {
+                        color = colors::COMPLETED_BREADCRUMB;
+
+                    } else if(i == last_breadcrumb_idx && last_breadcrumb_idx < cur_node->BreadcrumbCount) {
+                        color = colors::INCOMPLETE_BREADCRUMB;
+
+                    } else if(i > last_breadcrumb_idx) {
+                        color = colors::DEFAULT_CONSOLE_COLOR;
+                    }
+
+                    breadcrumb_output_string += Rx::String::format("\n\t%s%s", color, breadcrumb_to_string(cur_node->pCommandHistory[i]));
 
                     if(cur_node->BreadcrumbContextsCount > 0) {
                         for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
                             const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
                             if(cur_breadcrumb_context.BreadcrumbIndex == i) {
-                                breadcrumb_output_string += Rx::String::format("\n\t\t%s",
+                                breadcrumb_output_string += Rx::String::format("\n\t\t%s%s",
+                                                                               colors::CONTEXT_LABEL,
                                                                                from_wide_string(cur_breadcrumb_context.pContextString));
                                 break;
                             }
                         }
                     }
+                    breadcrumb_output_string += "\033[m";
                 }
             }
 
-            breadcrumb_output_string += "\n";
+            breadcrumb_output_string += "\n\033[40m";
 
             cur_node = cur_node->pNext;
         }
