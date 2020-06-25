@@ -1,8 +1,10 @@
 #pragma once
 
 #include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
 #include <rx/core/ptr.h>
 
+#include "core/types.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
 #include "rhi/framebuffer.hpp"
@@ -37,9 +39,14 @@ namespace renderer {
 
         TextureHandle color_target_handle;
         TextureHandle depth_target_handle;
-        Rx::Ptr<Framebuffer> scene_framebuffer;
 
         Uint64 forward_pass_color{PIX_COLOR(224, 96, 54)};
+
+        D3D12_RENDER_PASS_RENDER_TARGET_DESC color_target_access;
+
+        D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_target_access;
+
+        glm::uvec2 render_target_size;
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 

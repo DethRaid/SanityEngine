@@ -19,6 +19,7 @@
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_pipeline_state.hpp"
 #include "settings.hpp"
+#include "core/types.hpp"
 
 struct GLFWwindow;
 
@@ -75,18 +76,19 @@ namespace renderer {
 
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
-        [[nodiscard]] Rx::Ptr<Framebuffer> create_framebuffer(const Rx::Vector<const Image*>& render_targets,
-                                                              const Image* depth_target = nullptr) const;
+        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE create_rtv_handle(const Image& image) const;
 
-        Framebuffer* get_backbuffer_framebuffer();
+        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE create_dsv_handle(const Image& image) const;
+
+        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_backbuffer_rtv_handle();
+
+        [[nodiscard]] Vec2u get_backbuffer_size() const;
 
         [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
 
         void schedule_buffer_destruction(Rx::Ptr<Buffer> buffer);
 
         void schedule_image_destruction(Rx::Ptr<Image> image);
-
-        void destroy_framebuffer(Rx::Ptr<Framebuffer> framebuffer) const;
 
         /*!
          * \brief Creates a bind group builder with the provided descriptors
@@ -187,7 +189,7 @@ namespace renderer {
 
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
-        Rx::Vector<Framebuffer> swapchain_framebuffers;
+        Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> swapchain_rtv_handles;
 
         HANDLE frame_event;
         ComPtr<ID3D12Fence> frame_fences;

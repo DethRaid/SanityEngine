@@ -1,4 +1,4 @@
-#include "helpers.hpp"
+﻿#include "helpers.hpp"
 
 #include <sstream>
 
@@ -316,20 +316,21 @@ namespace renderer {
                        command_list_name,
                        command_queue_name,
                        last_breadcrumb_idx + 1,
-                       colors::CONTEXT_LABEL,
+                       colors::COMPLETED_BREADCRUMB,
                        breadcrumb_to_string(breadcrumb),
                        colors::DEFAULT_CONSOLE_COLOR);
 
             if(cur_node->BreadcrumbCount > 0) {
+                const auto current_breadcrumb_idx = last_breadcrumb_idx + 1;
                 for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
                     const char* color = colors::DEFAULT_CONSOLE_COLOR;
-                    if(i < last_breadcrumb_idx) {
+                    if(i < current_breadcrumb_idx) {
                         color = colors::COMPLETED_BREADCRUMB;
 
-                    } else if(i == last_breadcrumb_idx && last_breadcrumb_idx < cur_node->BreadcrumbCount) {
+                    } else if(i == current_breadcrumb_idx) {
                         color = colors::INCOMPLETE_BREADCRUMB;
 
-                    } else if(i > last_breadcrumb_idx) {
+                    } else {
                         color = colors::DEFAULT_CONSOLE_COLOR;
                     }
 

@@ -98,6 +98,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
         auto& mesh_data = renderer.get_static_mesh_store();
 
         auto commands = device.create_command_list();
+        commands->SetName(L"BveWrapper::add_train_to_scene");
         {
             TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");

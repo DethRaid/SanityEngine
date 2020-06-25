@@ -8,17 +8,6 @@
 #include "resources.hpp"
 
 namespace renderer {
-    struct Framebuffer {
-        Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
-        Rx::Optional<D3D12_CPU_DESCRIPTOR_HANDLE> dsv_handle;
-
-        Rx::Vector<const Image*> render_targets;
-        const Image* depth_target;
-
-        Float32 width;
-        Float32 height;
-    };
-
     enum class RenderTargetBeginningAccessType {
         /*!
          * \brief Load the data that was previously rendered to this render target

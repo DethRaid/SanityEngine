@@ -44,9 +44,9 @@ namespace renderer {
         TextureHandle denoised_color_target_handle;
 
         /*!
-         * \brief Framebuffer for the final denoised image
+         * \brief RTV for the final denoised image
          */
-        Rx::Ptr<Framebuffer> denoised_framebuffer;
+        D3D12_CPU_DESCRIPTOR_HANDLE denoised_rtv_handle;
 
         Rx::Ptr<Buffer> denoiser_material_buffer;
 

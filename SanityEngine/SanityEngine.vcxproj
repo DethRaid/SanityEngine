@@ -352,6 +352,7 @@
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
+    <ClInclude Include="src\core\pix_colors.hpp" />
     <ClInclude Include="src\core\types.hpp" />
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\globals.hpp" />

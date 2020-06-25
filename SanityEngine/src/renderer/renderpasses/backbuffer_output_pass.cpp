@@ -48,10 +48,10 @@ namespace renderer {
         PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");
 
         auto& device = renderer->get_render_device();
-        const auto* framebuffer = device.get_backbuffer_framebuffer();
+        const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
 
         const auto
-            render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = framebuffer->rtv_handles[0],
+            render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,
                                                                         .BeginningAccess =
                                                                             {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                                              .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -61,23 +61,25 @@ namespace renderer {
 
         commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
 
+        const auto size = device.get_backbuffer_size();
+
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
-        viewport.Width = framebuffer->width;
-        viewport.Height = framebuffer->height;
+        viewport.Width = size.x;
+        viewport.Height = size.y;
         commands->RSSetViewports(1, &viewport);
 
         D3D12_RECT scissor_rect{};
-        scissor_rect.right = static_cast<LONG>(framebuffer->width);
-        scissor_rect.bottom = static_cast<LONG>(framebuffer->height);
+        scissor_rect.right = static_cast<LONG>(size.x);
+        scissor_rect.bottom = static_cast<LONG>(size.y);
         commands->RSSetScissorRects(1, &scissor_rect);
 
         commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
-        // commands->DrawInstanced(3, 1, 0, 0);
+        commands->DrawInstanced(3, 1, 0, 0);
 
         commands->EndRenderPass();
     }

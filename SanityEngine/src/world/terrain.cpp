@@ -123,11 +123,13 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
 
     auto& device = renderer.get_render_device();
     const auto commands = device.create_command_list();
+    commands->SetName(L"Terrain::generate_terrain");
 
     auto data = TerrainData{};
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "GenerateTerrain");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::generate_terrain");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
 
         // Generate heightmap
         const auto total_pixels_in_maps = params.width * params.height;
@@ -357,6 +359,7 @@ void Terrain::upload_new_tile_meshes() {
     auto& device = renderer->get_render_device();
 
     const auto commands = device.create_command_list();
+    commands->SetName(L"Terrain::upload_new_tile_meshes");
     {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::upload_new_tile_meshes");
         PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");

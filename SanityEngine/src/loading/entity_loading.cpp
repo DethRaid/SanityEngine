@@ -36,6 +36,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
 
     auto& device = renderer.get_render_device();
     auto commands = device.create_command_list();
+    commands->SetName(L"Renderer::create_raytracing_geometry");
 
     {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Renderer::create_raytracing_geometry");

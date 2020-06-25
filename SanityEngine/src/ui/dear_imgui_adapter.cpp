@@ -4,6 +4,7 @@
 
 #include <GLFW/glfw3native.h>
 #include <Tracy.hpp>
+#include <TracyD3D12.hpp>
 #include <imgui/imgui.h>
 
 #include "renderer/renderer.hpp"
@@ -231,19 +232,25 @@ void DearImguiAdapter::initialize_style() {
 
 void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     const auto commands = renderer.get_render_device().create_command_list();
+    commands->SetName(L"DearImguiAdapter::create_font_texture");
 
     auto& io = ImGui::GetIO();
     unsigned char* pixels;
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-    const auto create_info = renderer::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
-                                                  .usage = renderer::ImageUsage::SampledImage,
-                                                  .format = renderer::ImageFormat::Rgba8,
-                                                  .width = static_cast<Uint32>(width),
-                                                  .height = static_cast<Uint32>(height)};
+    {
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "DearImguiAdapter::create_font_texture");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
-    font_atlas = renderer.create_image(create_info, pixels, commands);
+        const auto create_info = renderer::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
+                                                           .usage = renderer::ImageUsage::SampledImage,
+                                                           .format = renderer::ImageFormat::Rgba8,
+                                                           .width = static_cast<Uint32>(width),
+                                                           .height = static_cast<Uint32>(height)};
+
+        font_atlas = renderer.create_image(create_info, pixels, commands);
+    }
 
     renderer.get_render_device().submit_command_list(commands);
 

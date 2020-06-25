@@ -349,9 +349,10 @@ namespace renderer {
         load_noise_texture("data/textures/LDR_RGBA_0.png");
 
         const auto commands = device->create_command_list();
+        commands->SetName(L"Renderer::create_builtin_images");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "CreateBuiltinImages");
+            TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "Renderer::create_builtin_images");
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {

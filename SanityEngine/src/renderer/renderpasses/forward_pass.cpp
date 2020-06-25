@@ -56,8 +56,6 @@ namespace renderer {
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
 
         auto& device = renderer->get_render_device();
-
-        device.destroy_framebuffer(Rx::Utility::move(scene_framebuffer));
     }
 
     void ForwardPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
@@ -104,23 +102,14 @@ namespace renderer {
         const auto& color_target = renderer->get_image(color_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
-        scene_framebuffer = device.create_framebuffer(Rx::Array{&color_target}, &depth_target);
-    }
-
-    TextureHandle ForwardPass::get_color_target_handle() const { return color_target_handle; }
-
-    TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
-
-    void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
-        const auto render_target_accesses = Rx::Array{
-            // Scene color
-            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = scene_framebuffer->rtv_handles[0],
+        color_target_access = 
+            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = device.create_rtv_handle(color_target),
                                                  .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                                      .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
                                                                                               .Color = {0, 0, 0, 0}}}},
-                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}}};
+                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-        const auto depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = *scene_framebuffer->dsv_handle,
+        depth_target_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = device.create_dsv_handle(depth_target),
                                                                        .DepthBeginningAccess =
                                                                            {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                                             .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
@@ -132,21 +121,31 @@ namespace renderer {
                                                                        .StencilEndingAccess = {
                                                                            .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
 
-        commands->BeginRenderPass(static_cast<UINT>(render_target_accesses.size()),
-                                  render_target_accesses.data(),
-                                  &depth_access,
+        render_target_size = render_resolution;
+    }
+
+    TextureHandle ForwardPass::get_color_target_handle() const { return color_target_handle; }
+
+    TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
+
+    void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
+        
+
+        commands->BeginRenderPass(1,
+                                  &color_target_access,
+                                  &depth_target_access,
                                   D3D12_RENDER_PASS_FLAG_NONE);
 
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
-        viewport.Width = scene_framebuffer->width;
-        viewport.Height = scene_framebuffer->height;
+        viewport.Width = render_target_size.x;
+        viewport.Height = render_target_size.y;
         commands->RSSetViewports(1, &viewport);
 
         D3D12_RECT scissor_rect{};
-        scissor_rect.right = static_cast<LONG>(scene_framebuffer->width);
-        scissor_rect.bottom = static_cast<LONG>(scene_framebuffer->height);
+        scissor_rect.right = static_cast<LONG>(render_target_size.x);
+        scissor_rect.bottom = static_cast<LONG>(render_target_size.y);
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 

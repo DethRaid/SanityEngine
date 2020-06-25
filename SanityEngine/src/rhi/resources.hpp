@@ -76,6 +76,10 @@ namespace renderer {
         ImageFormat format;
     };
 
+    struct RenderTarget : Image {
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv;
+    };
+
     struct ImageCreateInfo {
         Rx::String name;
 

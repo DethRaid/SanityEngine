@@ -55,13 +55,13 @@ namespace renderer {
 
         auto& device = renderer->get_render_device();
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "UiRenderPass::execute");
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Execute UI render pass");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "UiRenderPass::render");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "UiRenderPass::render");
         {
-            const auto* backbuffer_framebuffer = device.get_backbuffer_framebuffer();
+            const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
 
             const auto
-                backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_framebuffer->rtv_handles[0],
+                backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,
                                                                          .BeginningAccess =
                                                                              {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE},
                                                                          .EndingAccess = {

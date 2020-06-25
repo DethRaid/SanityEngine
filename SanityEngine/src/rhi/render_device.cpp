@@ -237,94 +237,43 @@ namespace renderer {
         return image;
     }
 
-    Rx::Ptr<Framebuffer> RenderDevice::create_framebuffer(const Rx::Vector<const Image*>& render_targets, const Image* depth_target) const {
-        auto framebuffer = Rx::make_ptr<Framebuffer>(RX_SYSTEM_ALLOCATOR);
+    D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::create_rtv_handle(const Image& image) const {
+        const auto handle = rtv_allocator->get_next_free_descriptor();
 
-        framebuffer->render_targets = render_targets;
-        framebuffer->depth_target = depth_target;
+        device->CreateRenderTargetView(image.resource.Get(), nullptr, handle);
 
-        Float32 width = 0;
-        Float32 height = 0;
-
-        framebuffer->rtv_handles.reserve(render_targets.size());
-        Uint32 i{0};
-        render_targets.each_fwd([&](const Image* image) {
-            if(width != 0 && width != image->width) {
-                logger->error(
-                    "Render target %u has width %u, which is different from the width %u of the previous render target. All render targets must have the same width",
-                    i,
-                    image->width,
-                    width);
-            }
-
-            width = static_cast<Float32>(image->width);
-
-            if(height != 0 && height != image->height) {
-                logger->error(
-                    "Render target %u has height %u, which is different from the height %u of the previous render target. All render targets must have the same height",
-                    i,
-                    image->height,
-                    height);
-            }
-
-            height = static_cast<Float32>(image->height);
-
-            const auto handle = rtv_allocator->get_next_free_descriptor();
-
-            device->CreateRenderTargetView(image->resource.Get(), nullptr, handle);
-
-            framebuffer->rtv_handles.push_back(handle);
-
-            i++;
-        });
-
-        if(depth_target != nullptr) {
-            if(width != 0 && width != depth_target->width) {
-                logger->error(
-                    "Depth target %u has width %u, which is different from the width %u of the render targets. The depth target must have the same width as the render targets",
-                    i,
-                    depth_target->width,
-                    width);
-            }
-
-            width = static_cast<Float32>(depth_target->width);
-
-            if(height != 0 && height != depth_target->height) {
-                logger->error(
-                    "Depth target %u has height %u, which is different from the height %u of the render targets. The depth target must have the same height as the render targets",
-                    i,
-                    depth_target->height,
-                    height);
-            }
-
-            height = static_cast<Float32>(depth_target->height);
-
-            D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
-            desc.Format = to_dxgi_format(depth_target->format);
-            desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-            desc.Texture2D.MipSlice = 0;
-
-            const auto handle = dsv_allocator->get_next_free_descriptor();
-
-            device->CreateDepthStencilView(depth_target->resource.Get(), &desc, handle);
-
-            framebuffer->dsv_handle = handle;
-        }
-
-        framebuffer->width = width;
-        framebuffer->height = height;
-
-        return framebuffer;
+        return handle;
     }
 
-    Framebuffer* RenderDevice::get_backbuffer_framebuffer() {
+    D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::create_dsv_handle(const Image& image) const {
+        const auto desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
+            .Format = to_dxgi_format(image.format),
+            .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+            .Texture2D = {.MipSlice = 0},
+        };
+
+        const auto handle = dsv_allocator->get_next_free_descriptor();
+
+        device->CreateDepthStencilView(image.resource.Get(), &desc, handle);
+
+        return handle;
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::get_backbuffer_rtv_handle() {
         const auto cur_swapchain_index = swapchain->GetCurrentBackBufferIndex();
 
-        RX_ASSERT(cur_swapchain_index < swapchain_framebuffers.size(),
-                  "Not enough swapchain framebuffers for current swapchain index %d",
+        RX_ASSERT(cur_swapchain_index < swapchain_rtv_handles.size(),
+                  "Not enough swapchain RTVs for current swapchain index %d",
                   cur_swapchain_index);
 
-        return &swapchain_framebuffers[cur_swapchain_index];
+        return swapchain_rtv_handles[cur_swapchain_index];
+    }
+
+    Vec2u RenderDevice::get_backbuffer_size() const {
+        Vec2u vec;
+        swapchain->GetSourceSize(&vec.x, &vec.y);
+
+        return vec;
     }
 
     void* RenderDevice::map_buffer(const Buffer& buffer) const {
@@ -345,14 +294,6 @@ namespace renderer {
 
     void RenderDevice::schedule_image_destruction(Rx::Ptr<Image> image) {
         image_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Image*>(image.release()));
-    }
-
-    void RenderDevice::destroy_framebuffer(const Rx::Ptr<Framebuffer> framebuffer) const {
-        framebuffer->rtv_handles.each_fwd([&](const D3D12_CPU_DESCRIPTOR_HANDLE handle) { rtv_allocator->return_descriptor(handle); });
-
-        if(framebuffer->dsv_handle) {
-            dsv_allocator->return_descriptor(*framebuffer->dsv_handle);
-        }
     }
 
     Rx::Ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
@@ -466,6 +407,8 @@ namespace renderer {
             const auto msg = Rx::String::format("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
             Rx::abort(msg.data());
         }
+
+        commands->SetName(L"Unnamed Sanity Engine command list");
 
         return commands;
     }
@@ -878,7 +821,7 @@ namespace renderer {
         DXGI_SWAP_CHAIN_DESC1 desc;
         swapchain->GetDesc1(&desc);
         swapchain_images.resize(desc.BufferCount);
-        swapchain_framebuffers.reserve(desc.BufferCount);
+        swapchain_rtv_handles.reserve(desc.BufferCount);
 
         for(Uint32 i = 0; i < desc.BufferCount; i++) {
             swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_images[i]));
@@ -887,12 +830,7 @@ namespace renderer {
 
             device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle);
 
-            Framebuffer framebuffer;
-            framebuffer.rtv_handles.push_back(rtv_handle);
-            framebuffer.width = static_cast<Float32>(desc.Width);
-            framebuffer.height = static_cast<Float32>(desc.Height);
-
-            swapchain_framebuffers.push_back(std::move(framebuffer));
+            swapchain_rtv_handles.push_back(rtv_handle);
 
             set_object_name(swapchain_images[i].Get(), Rx::String::format("Swapchain image %d", i));
         }
@@ -1411,10 +1349,12 @@ namespace renderer {
     void RenderDevice::transition_swapchain_image_to_render_target() {
         ZoneScoped;
         auto swapchain_cmds = create_command_list();
-        swapchain_cmds->SetName(L"Transition Swapchain to Render Target");
+        swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "Transition Swapchain to Render Target state");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
+            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
+
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT,
@@ -1427,13 +1367,18 @@ namespace renderer {
 
     void RenderDevice::transition_swapchain_image_to_presentable() {
         auto swapchain_cmds = create_command_list();
-        set_object_name(swapchain_cmds.Get(), "Transition Swapchain to Presentable");
+        swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
-        auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
-        D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
-                                                                                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                                   D3D12_RESOURCE_STATE_PRESENT);
-        swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
+        {
+            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_presentable");
+            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
+
+            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+                                                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                                       D3D12_RESOURCE_STATE_PRESENT);
+            swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
+        }
 
         submit_command_list(swapchain_cmds);
     }
@@ -1499,7 +1444,8 @@ namespace renderer {
             Rx::abort(msg.data());
         }
 
-        set_object_name(buffer.resource.Get(), Rx::String::format("Staging Buffer %d", staging_buffer_idx));
+        const auto msg = Rx::String::format("Staging Buffer %d", staging_buffer_idx);
+        set_object_name(buffer.resource.Get(), msg);
         staging_buffer_idx++;
 
         return buffer;

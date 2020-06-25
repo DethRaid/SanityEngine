@@ -42,17 +42,25 @@ namespace renderer {
     }
 
     void DenoiserPass::render(ID3D12GraphicsCommandList4* commands,
-                               entt::registry& /* registry */,
-                               Uint32 /* frame_idx */,
-                               const World& /* world */) {
+                              entt::registry& /* registry */,
+                              Uint32 /* frame_idx */,
+                              const World& /* world */) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass::render");
-        PIXScopedEvent(commands, 0, "Render denoiser pass");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DenoiserPass::render");
+
+        const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+                                                                      D3D12_RESOURCE_STATE_COMMON,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commands->ResourceBarrier(1, &barrier);
+        }
 
         {
             const auto
-                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_framebuffer->rtv_handles[0],
+                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_rtv_handle,
                                                                             .BeginningAccess =
                                                                                 {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
                                                                             .EndingAccess = {
@@ -66,14 +74,6 @@ namespace renderer {
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
-
-        const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
-        {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COMMON,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commands->ResourceBarrier(1, &barrier);
-        }
 
         commands->DrawInstanced(3, 1, 0, 0);
 
@@ -130,7 +130,7 @@ namespace renderer {
             denoised_color_target_handle = renderer->create_image(color_target_create_info);
 
             const auto& denoised_color_target = renderer->get_image(denoised_color_target_handle);
-            denoised_framebuffer = device.create_framebuffer(Rx::Array{&denoised_color_target});
+            denoised_rtv_handle = device.create_rtv_handle(denoised_color_target);
         }
 
         {
@@ -158,7 +158,9 @@ namespace renderer {
             .scene_depth_texture = scene_depth_target_handle,
         };
 
-        logger->verbose("Scene output texture idx: %u, Scene depth texture: %u", scene_color_target_handle.index, scene_depth_target_handle.index);
+        logger->verbose("Scene output texture idx: %u, Scene depth texture: %u",
+                        scene_color_target_handle.index,
+                        scene_depth_target_handle.index);
 
         denoiser_material_buffer = device.create_buffer(BufferCreateInfo{.name = "Denoiser material buffer",
                                                                          .usage = BufferUsage::StagingBuffer,
