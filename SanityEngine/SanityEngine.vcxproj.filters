@@ -647,9 +647,6 @@
     <ClInclude Include="src\rhi\descriptor_allocator.hpp">
       <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\rhi\d3dx12.hpp">
-      <Filter>Header Files\renderer\rhi</Filter>
-    </ClInclude>
     <ClInclude Include="src\rhi\helpers.hpp">
       <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>

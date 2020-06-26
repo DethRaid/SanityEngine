@@ -3,15 +3,11 @@
 #include <cstdint>
 #include <concepts>
 
-#include <d3d12.h>
+#include <d3d11.h>
 #include <rx/core/string.h>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
-
-namespace D3D12MA {
-    class Allocation;
-}
 
 namespace renderer {
     struct Buffer {
@@ -19,11 +15,9 @@ namespace renderer {
 
         Uint32 size{};
 
-        ComPtr<ID3D12Resource> resource;
+        ComPtr<ID3D11Buffer> resource;
 
-        D3D12MA::Allocation* allocation;
-
-        void* mapped_ptr{nullptr};
+        D3D11_MAPPED_SUBRESOURCE mapped_data;
     };
 
     /*!
@@ -36,7 +30,6 @@ namespace renderer {
         ConstantBuffer,
         IndirectCommands,
         UnorderedAccess,
-        RaytracingAccelerationStructure,
 
         /*!
          * \brief Vertex buffer that gets written to every frame
@@ -69,15 +62,13 @@ namespace renderer {
         Uint32 height{1};
         Uint32 depth{1};
 
-        ComPtr<ID3D12Resource> resource;
-
-        D3D12MA::Allocation* allocation;
+        ComPtr<ID3D11Texture2D> resource;
 
         ImageFormat format;
     };
 
     struct RenderTarget : Image {
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv;
+        ComPtr<ID3D11RenderTargetView> rtv;
     };
 
     struct ImageCreateInfo {
@@ -97,10 +88,4 @@ namespace renderer {
     };
 
     [[nodiscard]] Uint32 size_in_bytes(ImageFormat format);
-
-    template <typename T>
-    concept GpuResource = requires(T a) {
-        { a.allocation }
-        ->std::convertible_to<D3D12MA::Allocation*>;
-    };
 } // namespace rhi

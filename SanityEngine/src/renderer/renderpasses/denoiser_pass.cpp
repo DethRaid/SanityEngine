@@ -1,12 +1,11 @@
 #include "denoiser_pass.hpp"
 
 #include <Tracy.hpp>
-#include <TracyD3D12.hpp>
+#include <TracyD3D11.hpp>
 #include <rx/core/log.h>
 
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
-#include "rhi/d3dx12.hpp"
 #include "rhi/render_device.hpp"
 
 namespace renderer {

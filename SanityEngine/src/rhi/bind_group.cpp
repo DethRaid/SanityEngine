@@ -91,8 +91,8 @@ namespace renderer {
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
         ZoneScoped;
 
-        const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
-        bound_buffers.insert(name, &d3d12_buffer);
+        const auto& d3d11_buffer = static_cast<const Buffer&>(buffer);
+        bound_buffers.insert(name, &d3d11_buffer);
 
         return *this;
     }

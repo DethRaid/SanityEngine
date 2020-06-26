@@ -378,7 +378,6 @@
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\rhi\bind_group.hpp" />
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp" />
-    <ClInclude Include="src\rhi\d3dx12.hpp" />
     <ClInclude Include="src\rhi\descriptor_allocator.hpp" />
     <ClInclude Include="src\rhi\framebuffer.hpp" />
     <ClInclude Include="src\rhi\helpers.hpp" />
@@ -849,7 +848,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;wren.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;wren.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d11.lib;d3dx11.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
