@@ -64,7 +64,7 @@ namespace renderer {
 
         ComPtr<ID3D11Texture2D> resource;
 
-        ImageFormat format;
+        DXGI_FORMAT format;
     };
 
     struct RenderTarget : Image {

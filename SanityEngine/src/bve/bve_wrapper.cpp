@@ -6,6 +6,7 @@
 #include <entt/entity/registry.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <rx/core/log.h>
 #include <stb_image.h>
 
 #include "adapters/tracy.hpp"
@@ -14,7 +15,7 @@
 #include "renderer/standard_material.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
-#include "rx/core/log.h"
+#include "rhi/resources.hpp"
 
 using namespace bve;
 
@@ -96,17 +97,15 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
         auto& mesh_data = renderer.get_static_mesh_store();
 
         auto locked_context = device.get_device_context();
-        auto& context = *locked_context->Get();
+        auto* context = locked_context->Get();
         {
 
             mesh_data.bind_to_context(context);
 
-            context.CSSetShader(bve_texture_pipeline.Get(), nullptr, 0);
+            context->CSSetShader(bve_texture_pipeline.Get(), nullptr, 0);
 
             Rx::Vector<renderer::Mesh> train_meshes;
             train_meshes.reserve(train->meshes.count);
-
-            mesh_data.begin_adding_meshes(context);
 
             for(Uint32 i = 0; i < train->meshes.count; i++) {
                 const auto& bve_mesh = train->meshes.ptr[i];
@@ -162,6 +161,13 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                             const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, context);
                             const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
 
+                            const auto scratch_srv_desc = D3D11_SHADER_RESOURCE_VIEW_DESC{.Format = scratch_texture.format,
+                                                                                          .ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D,
+                                                                                          .Texture2D = {.MostDetailedMip = 0,
+                                                                                                        .MipLevels = 0xFFFFFFFF}};
+                            ComPtr<ID3D11ShaderResourceView> scratch_srv;
+                            device.device->CreateShaderResourceView(scratch_texture.resource.Get(), &scratch_srv_desc, &scratch_srv);
+
                             // Create a second image as the real image
                             create_info.name = texture_name;
                             const auto texture_handle = renderer.create_image(create_info);
@@ -175,10 +181,13 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                             auto bind_group = bind_group_builder->build();
                             bind_group->bind_to_compute_signature(context);
 
+                            context->CSSetShaderResources(0, 1, scratch_srv.GetAddressOf());
+                            context->CSSetUnorderedAccessViews(0, 1, 0, nullptr);
+
                             const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
                             const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
 
-                            context.Dispatch(workgroup_width, workgroup_height, 1);
+                            context->Dispatch(workgroup_width, workgroup_height, 1);
 
                             renderer.schedule_texture_destruction(scratch_texture_handle);
 
@@ -198,8 +207,6 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                     bve_delete_string(const_cast<char*>(texture_name));
                 }
             }
-
-            mesh_data.end_adding_meshes(context);
         }
 
         logger->info("Loaded file %s", filename);
@@ -213,10 +220,7 @@ void BveWrapper::create_texture_filter_pipeline(ID3D11Device* device) {
 
     const auto compute_shader = load_shader("make_transparent_texture.compute");
 
-    const auto result = device->CreateComputeShader(compute_shader.data(),
-                                                                       compute_shader.size(),
-                                                                       nullptr,
-                                                                       &bve_texture_pipeline);
+    const auto result = device->CreateComputeShader(compute_shader.data(), compute_shader.size(), nullptr, &bve_texture_pipeline);
     if(FAILED(result)) {
         logger->error("Could not create BVE texture processing compute shader");
     }
