@@ -2,6 +2,7 @@
 
 #include <Tracy.hpp>
 #include <TracyD3D12.hpp>
+#include <d3d11_1.h>
 #include <rx/core/log.h>
 
 #include "rhi/helpers.hpp"
@@ -20,37 +21,16 @@ namespace renderer {
         vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, texcoord), sizeof(StandardVertex)});
     }
 
-    MeshDataStore::~MeshDataStore() {
-        device->schedule_buffer_destruction(std::move(vertex_buffer));
-        device->schedule_buffer_destruction(std::move(index_buffer));
-    }
-
     const Rx::Vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    void MeshDataStore::begin_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
-                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST);
-        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
-                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST);
-
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-    }
-
     Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
                                  const Rx::Vector<Uint32>& indices,
-                                 const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+                                 ID3D11DeviceContext* context) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "MeshDataStore::add_mesh");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "MeshDataStore::add_mesh");
+        SCOPED_EVENT(context, "MeshDataStore::add_mesh");
 
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
 
@@ -68,14 +48,9 @@ namespace renderer {
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
-        upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
+        upload_data_with_staging_buffer(context, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
 
-        upload_data_with_staging_buffer(commands,
-                                        *device,
-                                        index_resource,
-                                        offset_indices.data(),
-                                        index_data_size,
-                                        index_buffer_byte_offset);
+        upload_data_with_staging_buffer(context, *device, index_resource, offset_indices.data(), index_data_size, index_buffer_byte_offset);
 
         const auto vertex_offset = static_cast<Uint32>(next_free_vertex_byte / sizeof(StandardVertex));
 
@@ -92,49 +67,32 @@ namespace renderer {
                 .num_indices = static_cast<Uint32>(indices.size())};
     }
 
-    void MeshDataStore::end_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST,
-                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST,
-                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER);
-
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-    }
-
-    void MeshDataStore::bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+    void MeshDataStore::bind_to_context(ID3D11DeviceContext* context) const {
         const auto& vertex_bindings = get_vertex_bindings();
 
         // If we have more than 16 vertex attributes, we probably have bigger problems
-        Rx::Array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views{};
+        Rx::Array<ID3D11Buffer* [16]> vertex_buffers {};
+        Rx::Array<UINT[16]> vertex_strides;
+        Rx::Array<UINT[16]> vertex_offsets;
         for(Uint32 i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
             const auto* buffer = static_cast<const Buffer*>(binding.buffer);
 
-            D3D12_VERTEX_BUFFER_VIEW view{};
-            view.BufferLocation = buffer->resource->GetGPUVirtualAddress() + binding.offset;
-            view.SizeInBytes = buffer->size - binding.offset;
-            view.StrideInBytes = binding.vertex_size;
-
-            vertex_buffer_views[i] = view;
+            vertex_buffers[i] = binding.buffer->resource.Get();
+            vertex_strides[i] = binding.vertex_size;
+            vertex_offsets[i] = binding.offset;
         }
 
-        commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
+        context->IASetVertexBuffers(0,
+                                    static_cast<UINT>(vertex_bindings.size()),
+                                    vertex_buffers.data(),
+                                    vertex_strides.data(),
+                                    vertex_offsets.data());
 
         const auto& index_buffer = get_index_buffer();
 
-        D3D12_INDEX_BUFFER_VIEW index_view{};
-        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
-        index_view.SizeInBytes = index_buffer.size;
-        index_view.Format = DXGI_FORMAT_R32_UINT;
+        context->IASetIndexBuffer(index_buffer.resource.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-        commands->IASetIndexBuffer(&index_view);
-
-        commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 } // namespace renderer

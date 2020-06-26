@@ -57,16 +57,9 @@ namespace renderer {
         MeshDataStore(MeshDataStore&& old) noexcept = default;
         MeshDataStore& operator=(MeshDataStore&& old) noexcept = delete;
 
-        ~MeshDataStore();
-
         [[nodiscard]] const Rx::Vector<VertexBufferBinding>& get_vertex_bindings() const;
 
         [[nodiscard]] const Buffer& get_index_buffer() const;
-
-        /*!
-         * \brief Prepares the vertex and index buffers to receive new mesh data
-         */
-        void begin_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
 
         /*!
          * \brief Adds new mesh data to the vertex and index buffers. Must be called after `begin_mesh_data_upload` and before
@@ -74,14 +67,9 @@ namespace renderer {
          */
         [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices,
                                     const Rx::Vector<Uint32>& indices,
-                                    const ComPtr<ID3D12GraphicsCommandList4>& commands);
+                                    ID3D11DeviceContext* context);
 
-        /*!
-         * Prepares the vertex and index buffers to be rendered with
-         */
-        void end_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
-
-        void bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const;
+        void bind_to_context(ID3D11DeviceContext* context) const;
 
     private:
         RenderDevice* device;

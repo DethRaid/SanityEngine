@@ -3,6 +3,7 @@
 #include <string>
 
 #include <d3d11.h>
+#include <d3d11_1.h>
 #include <dxgi.h>
 #include <pix3.h>
 
@@ -46,14 +47,6 @@ namespace renderer {
 
     D3D12_RENDER_PASS_ENDING_ACCESS to_d3d11_ending_access(const RenderTargetEndingAccess& access);
 
-    Rx::String breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
-
-    Rx::String allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type);
-
-    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs);
-
-    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
-
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                                 RenderDevice& device,
                                                                 const Buffer& vertex_buffer,
@@ -66,4 +59,18 @@ namespace renderer {
                                          const void* src,
                                          Uint32 size,
                                          Uint32 dst_offset = 0);
+
+    class ScopedD3DAnnotation {
+    public:
+        ScopedD3DAnnotation(ID3DUserDefinedAnnotation* annotation_in, const Rx::String& name);
+
+        ScopedD3DAnnotation(ID3D11DeviceContext* context, const Rx::String& name);
+
+        ~ScopedD3DAnnotation();
+
+    private:
+        ID3DUserDefinedAnnotation* annotation;
+    };
+
+#define SCOPED_EVENT(annotation, name) ScopedD3DAnnotation a{annotation, name};
 } // namespace renderer

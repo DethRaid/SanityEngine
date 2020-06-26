@@ -12,13 +12,9 @@
 
 namespace renderer {
 
-    Rx::WideString to_wide_string(const Rx::String& string) {
-        return string.to_utf16();
-    }
+    Rx::WideString to_wide_string(const Rx::String& string) { return string.to_utf16(); }
 
-    Rx::String from_wide_string(const Rx::WideString& wide_string) {
-        return wide_string.to_utf8();
-    }
+    Rx::String from_wide_string(const Rx::WideString& wide_string) { return wide_string.to_utf8(); }
 
     void set_object_name(ID3D11DeviceChild* object, const Rx::String& name) {
         const auto wide_name = name.to_utf16();
@@ -281,107 +277,6 @@ namespace renderer {
         return d3d11_access;
     }
 
-    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs) {
-        Rx::String breadcrumb_output_string;
-
-        const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
-
-        while(cur_node != nullptr) {
-            const auto command_list_name = cur_node->pCommandListDebugNameW != nullptr ?
-                                               from_wide_string(cur_node->pCommandListDebugNameW) :
-                                               "Unknown command list";
-
-            const auto command_queue_name = cur_node->pCommandQueueDebugNameW != nullptr ?
-                                                from_wide_string(cur_node->pCommandQueueDebugNameW) :
-                                                "Unknown command queue";
-
-            const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
-            const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
-            breadcrumb_output_string += Rx::String::
-                format("Command list %s, executing on command queue %s, has completed %d render operations\nLast render operation: %s%s%s",
-                       command_list_name,
-                       command_queue_name,
-                       last_breadcrumb_idx + 1,
-                       colors::COMPLETED_BREADCRUMB,
-                       breadcrumb_to_string(breadcrumb),
-                       colors::DEFAULT_CONSOLE_COLOR);
-
-            if(cur_node->BreadcrumbCount > 0) {
-                const auto current_breadcrumb_idx = last_breadcrumb_idx + 1;
-                for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
-                    const char* color = colors::DEFAULT_CONSOLE_COLOR;
-                    if(i < current_breadcrumb_idx) {
-                        color = colors::COMPLETED_BREADCRUMB;
-
-                    } else if(i == current_breadcrumb_idx) {
-                        color = colors::INCOMPLETE_BREADCRUMB;
-
-                    } else {
-                        color = colors::DEFAULT_CONSOLE_COLOR;
-                    }
-
-                    breadcrumb_output_string += Rx::String::format("\n\t%s%s", color, breadcrumb_to_string(cur_node->pCommandHistory[i]));
-
-                    if(cur_node->BreadcrumbContextsCount > 0) {
-                        for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
-                            const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
-                            if(cur_breadcrumb_context.BreadcrumbIndex == i) {
-                                breadcrumb_output_string += Rx::String::format("\n\t\t%s%s",
-                                                                               colors::CONTEXT_LABEL,
-                                                                               from_wide_string(cur_breadcrumb_context.pContextString));
-                                break;
-                            }
-                        }
-                    }
-                    breadcrumb_output_string += "\033[m";
-                }
-            }
-
-            breadcrumb_output_string += "\n\033[40m";
-
-            cur_node = cur_node->pNext;
-        }
-
-        return breadcrumb_output_string;
-    }
-
-    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE1* head, std::stringstream& ss) {
-        const auto* allocation = head;
-        while(allocation != nullptr) {
-            ss << "\n\t";
-            if(allocation->ObjectNameA != nullptr) {
-                ss << allocation->ObjectNameA;
-
-            } else if(allocation->ObjectNameW != nullptr) {
-                ss << from_wide_string(allocation->ObjectNameW).data();
-
-            } else {
-                ss << "Unnamed allocation";
-            }
-            ss << " (" << allocation_type_to_string(allocation->AllocationType).data() << ")";
-
-            allocation = allocation->pNext;
-        }
-    }
-
-    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output) {
-        std::stringstream ss;
-
-        ss << "Page fault at GPU virtual address " << page_fault_output.PageFaultVA;
-
-        if(page_fault_output.pHeadExistingAllocationNode != nullptr) {
-            ss << "\nActive allocations:";
-            print_allocation_chain(page_fault_output.pHeadExistingAllocationNode, ss);
-        }
-
-        if(page_fault_output.pHeadRecentFreedAllocationNode != nullptr) {
-            ss << "\nRecently freed allocations:";
-            print_allocation_chain(page_fault_output.pHeadRecentFreedAllocationNode, ss);
-        }
-
-        return ss.str().c_str();
-    }
-
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                                                 RenderDevice& device,
                                                                 const Buffer& vertex_buffer,
@@ -460,227 +355,20 @@ namespace renderer {
         device.return_staging_buffer(std::move(staging_buffer));
     }
 
-    Rx::String breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
-        switch(op) {
-            case D3D12_AUTO_BREADCRUMB_OP_SETMARKER:
-                return "Set marker";
-
-            case D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT:
-                return "Begin event";
-
-            case D3D12_AUTO_BREADCRUMB_OP_ENDEVENT:
-                return "End event";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DRAWINSTANCED:
-                return "Draw instanced";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DRAWINDEXEDINSTANCED:
-                return "Draw indexed instanced";
-
-            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEINDIRECT:
-                return "Execute indirect";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DISPATCH:
-                return "Dispatch";
-
-            case D3D12_AUTO_BREADCRUMB_OP_COPYBUFFERREGION:
-                return "Copy buffer region";
-
-            case D3D12_AUTO_BREADCRUMB_OP_COPYTEXTUREREGION:
-                return "Copy texture region";
-
-            case D3D12_AUTO_BREADCRUMB_OP_COPYRESOURCE:
-                return "Copy resource";
-
-            case D3D12_AUTO_BREADCRUMB_OP_COPYTILES:
-                return "Copy tiles";
-
-            case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCE:
-                return "Resolve subresource";
-
-            case D3D12_AUTO_BREADCRUMB_OP_CLEARRENDERTARGETVIEW:
-                return "Clear render target view";
-
-            case D3D12_AUTO_BREADCRUMB_OP_CLEARUNORDEREDACCESSVIEW:
-                return "Clear unordered access view";
-
-            case D3D12_AUTO_BREADCRUMB_OP_CLEARDEPTHSTENCILVIEW:
-                return "Clear depth stencil view";
-
-            case D3D12_AUTO_BREADCRUMB_OP_RESOURCEBARRIER:
-                return "Resource barrier";
-
-            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEBUNDLE:
-                return "Execute bundle";
-
-            case D3D12_AUTO_BREADCRUMB_OP_PRESENT:
-                return "Present";
-
-            case D3D12_AUTO_BREADCRUMB_OP_RESOLVEQUERYDATA:
-                return "Resolve query data";
-
-            case D3D12_AUTO_BREADCRUMB_OP_BEGINSUBMISSION:
-                return "Begin submission";
-
-            case D3D12_AUTO_BREADCRUMB_OP_ENDSUBMISSION:
-                return "End submission";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME:
-                return "Decode frame";
-
-            case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES:
-                return "Process frames";
-
-            case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT:
-                return "Atomic copy buffer uint";
-
-            case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT64:
-                return "Atomic copy buffer uint64";
-
-            case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCEREGION:
-                return "Resolve subresource region";
-
-            case D3D12_AUTO_BREADCRUMB_OP_WRITEBUFFERIMMEDIATE:
-                return "Write buffer immediate";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME1:
-                return "Decode frame 1";
-
-            case D3D12_AUTO_BREADCRUMB_OP_SETPROTECTEDRESOURCESESSION:
-                return "Set protected resource session";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME2:
-                return "Decode frame 2";
-
-            case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES1:
-                return "Process frames 1";
-
-            case D3D12_AUTO_BREADCRUMB_OP_BUILDRAYTRACINGACCELERATIONSTRUCTURE:
-                return "Build raytracing acceleration structure";
-
-            case D3D12_AUTO_BREADCRUMB_OP_EMITRAYTRACINGACCELERATIONSTRUCTUREPOSTBUILDINFO:
-                return "Emit raytracing acceleration structure post build info";
-
-            case D3D12_AUTO_BREADCRUMB_OP_COPYRAYTRACINGACCELERATIONSTRUCTURE:
-                return "Copy raytracing acceleration structure";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DISPATCHRAYS:
-                return "Dispatch rays";
-
-            case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEMETACOMMAND:
-                return "Initialize meta command";
-
-            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEMETACOMMAND:
-                return "Execute meta command";
-
-            case D3D12_AUTO_BREADCRUMB_OP_ESTIMATEMOTION:
-                return "Estimate motion";
-
-            case D3D12_AUTO_BREADCRUMB_OP_RESOLVEMOTIONVECTORHEAP:
-                return "Resolve motion vector heap";
-
-            case D3D12_AUTO_BREADCRUMB_OP_SETPIPELINESTATE1:
-                return "Set pipeline state 1";
-
-            case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEEXTENSIONCOMMAND:
-                return "Initialize extension command";
-
-            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEEXTENSIONCOMMAND:
-                return "Execute extension command";
-
-            case D3D12_AUTO_BREADCRUMB_OP_DISPATCHMESH:
-                return "Dispatch mesh";
-
-            default:
-                return "Unknown breadcrumb";
-        }
+    ScopedD3DAnnotation::ScopedD3DAnnotation(ID3DUserDefinedAnnotation* annotation_in, const Rx::String& name) : annotation{annotation_in} {
+        const auto wide_name = name.to_utf16();
+        annotation->BeginEvent(reinterpret_cast<LPCWSTR>(wide_name.data()));
     }
 
-    Rx::String allocation_type_to_string(const D3D12_DRED_ALLOCATION_TYPE type) {
-        switch(type) {
-            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_QUEUE:
-                return "Command queue";
+    ScopedD3DAnnotation::ScopedD3DAnnotation(ID3D11DeviceContext* context, const Rx::String& name) {
+        context->QueryInterface(&annotation);
 
-            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_ALLOCATOR:
-                return "Command allocator";
-
-            case D3D12_DRED_ALLOCATION_TYPE_PIPELINE_STATE:
-                return "Pipeline state";
-
-            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_LIST:
-                return "Command list";
-
-            case D3D12_DRED_ALLOCATION_TYPE_FENCE:
-                return "Fence";
-
-            case D3D12_DRED_ALLOCATION_TYPE_DESCRIPTOR_HEAP:
-                return "Descriptor heap";
-
-            case D3D12_DRED_ALLOCATION_TYPE_HEAP:
-                return "Heap";
-
-            case D3D12_DRED_ALLOCATION_TYPE_QUERY_HEAP:
-                return "Query heap";
-
-            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_SIGNATURE:
-                return "Command signature";
-
-            case D3D12_DRED_ALLOCATION_TYPE_PIPELINE_LIBRARY:
-                return "Pipeline library";
-
-            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_DECODER:
-                return "Video decoder";
-
-            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_PROCESSOR:
-                return "Video processor";
-
-            case D3D12_DRED_ALLOCATION_TYPE_RESOURCE:
-                return "Resource";
-
-            case D3D12_DRED_ALLOCATION_TYPE_PASS:
-                return "Pass";
-
-            case D3D12_DRED_ALLOCATION_TYPE_CRYPTOSESSION:
-                return "Crypto session";
-
-            case D3D12_DRED_ALLOCATION_TYPE_CRYPTOSESSIONPOLICY:
-                return "Crypto session policy";
-
-            case D3D12_DRED_ALLOCATION_TYPE_PROTECTEDRESOURCESESSION:
-                return "Protected resource session";
-
-            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_DECODER_HEAP:
-                return "Video decoder heap";
-
-            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_POOL:
-                return "Command pool";
-
-            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_RECORDER:
-                return "Command recorder";
-
-            case D3D12_DRED_ALLOCATION_TYPE_STATE_OBJECT:
-                return "State object";
-
-            case D3D12_DRED_ALLOCATION_TYPE_METACOMMAND:
-                return "Meta command";
-
-            case D3D12_DRED_ALLOCATION_TYPE_SCHEDULINGGROUP:
-                return "Scheduling group";
-
-            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_MOTION_ESTIMATOR:
-                return "Video motion estimator";
-
-            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_MOTION_VECTOR_HEAP:
-                return "Motion vector heap";
-
-            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_EXTENSION_COMMAND:
-                return "Video extension command";
-
-            case D3D12_DRED_ALLOCATION_TYPE_INVALID:
-                return "Invalid";
-
-            default:
-                return "Unknown object type";
-        }
+        const auto wide_name = name.to_utf16();
+        annotation->BeginEvent(reinterpret_cast<LPCWSTR>(wide_name.data()));
     }
+
+    ScopedD3DAnnotation::~ScopedD3DAnnotation() {
+        annotation->EndEvent();
+    }
+
 } // namespace renderer

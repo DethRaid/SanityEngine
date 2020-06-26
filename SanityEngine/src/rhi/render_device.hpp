@@ -11,28 +11,15 @@
 #include <DXProgrammableCapture.h>
 
 #include "rhi/bind_group.hpp"
-#include "rhi/compute_pipeline_state.hpp"
-
-#include "rhi/descriptor_allocator.hpp"
 #include "rhi/framebuffer.hpp"
 #include "rhi/raytracing_structs.hpp"
-#include "rhi/render_pipeline_state.hpp"
 #include "settings.hpp"
 #include "core/types.hpp"
+#include "core/async/synchronized_resource.hpp"
 
 struct GLFWwindow;
 
 using Microsoft::WRL::ComPtr;
-
-namespace D3D12MA {
-    class Allocator;
-}
-
-#ifdef TRACY_ENABLE
-namespace tracy {
-    class D3D12QueueCtx;
-}
-#endif
 
 namespace renderer {
     struct RenderPipelineStateCreateInfo;
@@ -53,12 +40,8 @@ namespace renderer {
         static constexpr Uint32 MATERIAL_BUFFER_ROOT_PARAMETER_INDEX = 1;
         static constexpr Uint32 MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX = 7;
 
-#ifdef TRACY_ENABLE
-        inline static tracy::D3D11QueueCtx* tracy_context;
-#endif
-
         ComPtr<ID3D11Device> device;
-        ComPtr<ID3D11DeviceContext> device_context;
+        SynchronizedResource<ComPtr<ID3D11DeviceContext>> device_context;
 
         RenderDevice(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
 
@@ -70,7 +53,7 @@ namespace renderer {
 
         ~RenderDevice();
 
-        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info);
 
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
@@ -82,9 +65,9 @@ namespace renderer {
 
         [[nodiscard]] Vec2u get_backbuffer_size() const;
 
-        [[nodiscard]] bool map_buffer(Buffer& buffer) const;
+        [[nodiscard]] bool map_buffer(Buffer& buffer);
 
-        [[nodiscard]] ComPtr<ID3D11DeviceContext> get_device_context() const;
+        [[nodiscard]] SynchronizedResourceAccessor<ComPtr<ID3D11DeviceContext>> get_device_context();
 
         void begin_frame();
 

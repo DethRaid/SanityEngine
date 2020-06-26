@@ -171,7 +171,7 @@ namespace renderer {
         }
 
         const auto& mesh_storage = renderer->get_static_mesh_store();
-        mesh_storage.bind_to_command_list(commands);
+        mesh_storage.bind_to_context(commands);
 
         auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
 

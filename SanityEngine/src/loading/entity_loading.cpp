@@ -49,7 +49,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
 
         auto& mesh_data = renderer.get_static_mesh_store();
 
-        mesh_data.bind_to_command_list(commands);
+        mesh_data.bind_to_context(commands);
 
         // Initial revision: import the first child node and hope it's fine
         const auto* node = scene->mRootNode->mChildren[0];

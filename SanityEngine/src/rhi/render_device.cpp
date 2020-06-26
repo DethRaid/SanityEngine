@@ -5,7 +5,6 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <algorithm>
 
-#include <D3D12MemAlloc.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <d3dcompiler.h>
@@ -48,9 +47,12 @@ namespace renderer {
         logger->info("Initialized D3D12 render device");
     }
 
-    RenderDevice::~RenderDevice() { device_context->Flush(); }
+    RenderDevice::~RenderDevice() {
+        auto locked_context = device_context.lock();
+        (*locked_context)->Flush();
+    }
 
-    Rx::Ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
+    Rx::Ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) {
         ZoneScoped;
         auto desc = D3D11_BUFFER_DESC{
             .ByteWidth = create_info.size,
@@ -110,7 +112,8 @@ namespace renderer {
         set_object_name(buffer->resource.Get(), create_info.name);
 
         if(should_map) {
-            device_context->Map(buffer->resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer->mapped_data);
+            auto locked_context = device_context.lock();
+            (*locked_context)->Map(buffer->resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer->mapped_data);
         }
 
         buffer->size = create_info.size;
@@ -216,8 +219,9 @@ namespace renderer {
         return {desc.BufferDesc.Width, desc.BufferDesc.Height};
     }
 
-    bool RenderDevice::map_buffer(Buffer& buffer) const {
-        const auto result = device_context->Map(buffer.resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer.mapped_data);
+    bool RenderDevice::map_buffer(Buffer& buffer) {
+        auto locked_context = device_context.lock();
+        const auto result = (*locked_context)->Map(buffer.resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer.mapped_data);
         if(FAILED(result)) {
             logger->error("Could not map buffer: %s", to_string(result));
             return false;
@@ -265,7 +269,7 @@ namespace renderer {
         }
     }
 
-    ComPtr<ID3D11DeviceContext> RenderDevice::get_device_context() const { return device_context; }
+    SynchronizedResourceAccessor<ComPtr<ID3D11DeviceContext>> RenderDevice::get_device_context() { return device_context.lock(); }
 
     void RenderDevice::begin_frame() {
         ZoneScoped;
@@ -367,19 +371,27 @@ namespace renderer {
             .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING,
         };
 
+        auto locked_context = device_context.lock();
+
+        const auto feature_level = D3D_FEATURE_LEVEL_11_1;
+
         ComPtr<IDXGISwapChain> basic_swapchain;
         auto hr = D3D11CreateDeviceAndSwapChain(nullptr,
                                                 D3D_DRIVER_TYPE_HARDWARE,
                                                 nullptr,
+#ifndef NDEBUG
+                                                D3D11_CREATE_DEVICE_DEBUG,
+#else
                                                 0,
-                                                nullptr,
-                                                0,
+#endif
+                                                &feature_level,
+                                                1,
                                                 D3D11_SDK_VERSION,
                                                 &swapchain_desc,
                                                 &basic_swapchain,
                                                 &device,
                                                 nullptr,
-                                                &device_context);
+                                                &(*locked_context));
         if(FAILED(hr)) {
             const auto msg = Rx::String::format("Could not create device and swapchain: %s", to_string(hr));
             Rx::abort(msg.data());
@@ -406,10 +418,14 @@ namespace renderer {
             Rx::abort(msg.data());
         }
 
-        result = device_context->Map(buffer.resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer.mapped_data);
-        if(FAILED(result)) {
-            const auto msg = Rx::String::format("Could not map staging buffer: %s (%u)", to_string(result), result);
-            Rx::abort(msg.data());
+        {
+            auto locked_context = device_context.lock();
+
+            result = (*locked_context)->Map(buffer.resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer.mapped_data);
+            if(FAILED(result)) {
+                const auto msg = Rx::String::format("Could not map staging buffer: %s (%u)", to_string(result), result);
+                Rx::abort(msg.data());
+            }
         }
 
         const auto msg = Rx::String::format("Staging Buffer %d", staging_buffer_idx);
