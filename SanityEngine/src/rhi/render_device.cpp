@@ -14,22 +14,12 @@
 #include <rx/core/log.h>
 
 #include "adapters/tracy.hpp"
-#include "core/constants.hpp"
 #include "core/errors.hpp"
-#include "rhi/compute_pipeline_state.hpp"
 #include "rhi/helpers.hpp"
-#include "rhi/render_pipeline_state.hpp"
 #include "settings.hpp"
-#include "windows/windows_helpers.hpp"
 
 namespace renderer {
     RX_LOG("RenderDevice", logger);
-
-    RX_CONSOLE_BVAR(
-        cvar_enable_gpu_based_validation,
-        "r.EnableGpuBasedValidation",
-        "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        false);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 0, 8, 3);
@@ -39,17 +29,10 @@ namespace renderer {
                     "Whether to issue a breakpoint when the validation layer encounters an error",
                     false);
 
-    RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
-                    "r.VerifyEveryCommandListSubmission",
-                    "If enabled, SanityEngine will wait for every command list to check for device removed errors",
-                    true);
-
     RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
                                const Settings& settings_in)
-        : settings{settings_in},
-          staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
-          scratch_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())} {
+        : settings{settings_in} {
 #ifndef NDEBUG
         // Only enable the debug layer if we're not running in PIX
         const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
@@ -284,38 +267,20 @@ namespace renderer {
 
     ComPtr<ID3D11DeviceContext> RenderDevice::get_device_context() const { return device_context; }
 
-    void RenderDevice::begin_frame(const uint64_t frame_count) {
+    void RenderDevice::begin_frame() {
         ZoneScoped;
 
-        wait_for_frame(cur_gpu_frame_idx);
-        frame_fence_values[cur_gpu_frame_idx] = frame_count;
-
         cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
-
-        // Don't reset per frame resources on the first frame. This allows the engine to submit work while initializing
-        if(!in_init_phase) {
-            return_staging_buffers_for_frame(cur_gpu_frame_idx);
-
-            reset_command_allocators_for_frame(cur_gpu_frame_idx);
-
-            destroy_resources_for_frame(cur_gpu_frame_idx);
-        }
-
-        transition_swapchain_image_to_render_target();
 
         in_init_phase = false;
     }
 
-    void RenderDevice::end_frame() {
+    void RenderDevice::end_frame() const {
         ZoneScoped;
 
         const auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
         if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
             logger->error("Device lost on present :(");
-
-            log_dred_report();
-        } else {
-            cur_swapchain_idx = swapchain->GetCurrentBackBufferIndex();
         }
     }
 
@@ -352,29 +317,19 @@ namespace renderer {
         return create_staging_buffer(num_bytes);
     }
 
+    void RenderDevice::return_staging_buffer(Buffer&& buffer) { staging_buffers.push_back(Rx::Utility::move(buffer)); }
+
     ID3D11Device* RenderDevice::get_d3d11_device() const { return device.Get(); }
 
     void RenderDevice::enable_debugging() {
-        auto result = D3D11GetDebugInterface(IID_PPV_ARGS(&debug_controller));
+        const auto result = device->QueryInterface(IID_PPV_ARGS(&info_queue));
         if(SUCCEEDED(result)) {
-            debug_controller->EnableDebugLayer();
-
-            if(cvar_enable_gpu_based_validation->get()) {
-                debug_controller->SetEnableGPUBasedValidation(1);
+            if(cvar_break_on_validation_error->get()) {
+                info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, 1);
+                info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, 1);
             }
-
         } else {
-            logger->error("Could not enable the D3D12 validation layer: %s", to_string(result).data());
-        }
-
-        result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
-        if(FAILED(result)) {
-            logger->error("Could not enable DRED");
-
-        } else {
-            dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            dred_settings->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            logger->error("Could not get the D3D11 info queue");
         }
     }
 
@@ -412,79 +367,46 @@ namespace renderer {
             .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING,
         };
 
-        const auto hr = D3D11CreateDeviceAndSwapChain(nullptr,
-                                                      D3D_DRIVER_TYPE_HARDWARE,
-                                                      nullptr,
-                                                      0,
-                                                      nullptr,
-                                                      0,
-                                                      D3D11_SDK_VERSION,
-                                                      &swapchain_desc,
-                                                      &swapchain,
-                                                      &device,
-                                                      nullptr,
-                                                      &device_context);
+        ComPtr<IDXGISwapChain> basic_swapchain;
+        auto hr = D3D11CreateDeviceAndSwapChain(nullptr,
+                                                D3D_DRIVER_TYPE_HARDWARE,
+                                                nullptr,
+                                                0,
+                                                nullptr,
+                                                0,
+                                                D3D11_SDK_VERSION,
+                                                &swapchain_desc,
+                                                &basic_swapchain,
+                                                &device,
+                                                nullptr,
+                                                &device_context);
+        if(FAILED(hr)) {
+            const auto msg = Rx::String::format("Could not create device and swapchain: %s", to_string(hr));
+            Rx::abort(msg.data());
+        }
 
+        hr = basic_swapchain->QueryInterface(swapchain.ReleaseAndGetAddressOf());
         if(FAILED(hr)) {
             const auto msg = Rx::String::format("Could not create device and swapchain: %s", to_string(hr));
             Rx::abort(msg.data());
         }
     }
 
-    void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
-        ZoneScoped;
-        auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
-        staging_buffers += staging_buffers_for_frame;
-        staging_buffers_for_frame.clear();
-    }
-
-    void RenderDevice::reset_command_allocators_for_frame(const Uint32 frame_idx) {
-        ZoneScoped;
-        const auto& direct_allocators_for_frame = direct_command_allocators[frame_idx];
-        direct_allocators_for_frame.each_pair(
-            [](const Uint32& /* thread_id */, const ComPtr<ID3D12CommandAllocator>& allocator) { allocator->Reset(); });
-
-        copy_command_allocators[frame_idx]->Reset();
-        compute_command_allocators[frame_idx]->Reset();
-    }
-
-    void RenderDevice::destroy_resources_for_frame(const Uint32 frame_idx) {
-        ZoneScoped;
-        auto& buffers = buffer_deletion_list[frame_idx];
-        buffers.each_fwd([&](const Rx::Ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
-
-        buffers.clear();
-
-        auto& images = image_deletion_list[cur_gpu_frame_idx];
-        images.each_fwd([&](const Rx::Ptr<Image>& image) { destroy_resource_immediate(*image); });
-        images.clear();
-    }
-
     Buffer RenderDevice::create_staging_buffer(const Uint32 num_bytes) {
-        const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
-
-        const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
-
-        D3D12MA::ALLOCATION_DESC alloc_desc{};
-        alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+        auto desc = D3D11_BUFFER_DESC{
+            .ByteWidth = num_bytes,
+            .Usage = D3D11_USAGE_STAGING,
+            .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        };
 
         auto buffer = Buffer{};
-        auto result = device_allocator
-                          ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
-        if(result == DXGI_ERROR_DEVICE_REMOVED) {
-            log_dred_report();
-
-            const auto removed_reason = device->GetDeviceRemovedReason();
-            logger->error("Device was removed because: %s", to_string(removed_reason));
-        }
+        auto result = device->CreateBuffer(&desc, nullptr, &buffer.resource);
         if(FAILED(result)) {
             const auto msg = Rx::String::format("Could not create staging buffer: %s (%u)", to_string(result), result);
             Rx::abort(msg.data());
         }
 
-        buffer.size = num_bytes;
-        D3D12_RANGE range{0, num_bytes};
-        result = buffer.resource->Map(0, &range, &buffer.mapped_ptr);
+        result = device_context->Map(buffer.resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer.mapped_data);
         if(FAILED(result)) {
             const auto msg = Rx::String::format("Could not map staging buffer: %s (%u)", to_string(result), result);
             Rx::abort(msg.data());
@@ -495,55 +417,6 @@ namespace renderer {
         staging_buffer_idx++;
 
         return buffer;
-    }
-
-    Buffer RenderDevice::create_scratch_buffer(const Uint32 num_bytes) {
-        constexpr auto alignment = std::max(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
-                                            D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
-        auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, alignment);
-
-        const auto alloc_desc = D3D12MA::ALLOCATION_DESC{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
-
-        auto scratch_buffer = Buffer{};
-        const auto result = device_allocator->CreateResource(&alloc_desc,
-                                                             &desc,
-                                                             D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                             nullptr,
-                                                             &scratch_buffer.allocation,
-                                                             IID_PPV_ARGS(&scratch_buffer.resource));
-        if(FAILED(result)) {
-            logger->error("Could not create scratch buffer: %s", to_string(result));
-        }
-
-        scratch_buffer.size = num_bytes;
-        set_object_name(scratch_buffer.resource.Get(), Rx::String::format("Scratch buffer %d", scratch_buffer_counter));
-        scratch_buffer_counter++;
-
-        return scratch_buffer;
-    }
-
-    void RenderDevice::log_dred_report() const {
-        ComPtr<ID3D12DeviceRemovedExtendedData1> dred;
-        auto result = device->QueryInterface(IID_PPV_ARGS(&dred));
-        if(FAILED(result)) {
-            logger->error("Could not retrieve DRED report");
-            return;
-        }
-
-        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1 breadcrumbs;
-        result = dred->GetAutoBreadcrumbsOutput1(&breadcrumbs);
-        if(FAILED(result)) {
-            return;
-        }
-
-        D3D12_DRED_PAGE_FAULT_OUTPUT1 page_faults;
-        result = dred->GetPageFaultAllocationOutput1(&page_faults);
-        if(FAILED(result)) {
-            return;
-        }
-
-        logger->error("Command history:\n%s", breadcrumb_output_to_string(breadcrumbs));
-        logger->error(page_fault_output_to_string(page_faults).data());
     }
 
     Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings) {
