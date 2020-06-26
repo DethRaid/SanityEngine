@@ -129,7 +129,7 @@ namespace renderer {
             denoised_color_target_handle = renderer->create_image(color_target_create_info);
 
             const auto& denoised_color_target = renderer->get_image(denoised_color_target_handle);
-            denoised_rtv_handle = device.create_rtv_handle(denoised_color_target);
+            denoised_rtv_handle = device.create_rtv(denoised_color_target);
         }
 
         {

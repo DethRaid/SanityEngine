@@ -58,7 +58,7 @@ namespace renderer {
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "UiRenderPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "UiRenderPass::render");
         {
-            const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
+            const auto backbuffer_rtv_handle = device.get_backbuffer_rtv();
 
             const auto
                 backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,

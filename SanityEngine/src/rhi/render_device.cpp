@@ -83,9 +83,38 @@ namespace renderer {
 
         bool should_map = false;
 
-        if(create_info.usage == BufferUsage::StagingBuffer || create_info.usage == BufferUsage::ConstantBuffer) {
-            desc.Usage = D3D11_USAGE_DYNAMIC;
-            should_map = true;
+        switch(create_info.usage) {
+            case BufferUsage::StagingBuffer:
+                desc.BindFlags = 0;
+                desc.Usage = D3D11_USAGE_DYNAMIC;
+                desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+                should_map = true;
+                break;
+
+            case BufferUsage::IndexBuffer:
+                desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+                break;
+
+            case BufferUsage::VertexBuffer:
+                desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+                break;
+
+            case BufferUsage::ConstantBuffer:
+                desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+                desc.Usage = D3D11_USAGE_DYNAMIC;
+                desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+                should_map = true;
+                break;
+
+            case BufferUsage::IndirectCommands:
+                [[fallthrough]];
+            case BufferUsage::UnorderedAccess:
+                desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+                break;
+
+            case BufferUsage::UiVertices:
+                desc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_INDEX_BUFFER;
+                break;
         }
 
         auto buffer = Rx::make_ptr<Buffer>(RX_SYSTEM_ALLOCATOR);
@@ -105,57 +134,42 @@ namespace renderer {
         buffer->name = create_info.name;
 
         return buffer;
-    } 
+    }
 
     Rx::Ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
         auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
         }
-        auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
-                                                 static_cast<Uint32>(round(create_info.width)),
-                                                 static_cast<Uint32>(round(create_info.height)));
-
-        D3D12MA::ALLOCATION_DESC alloc_desc{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
-
-        if(create_info.enable_resource_sharing) {
-            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
-        }
+        auto desc = D3D11_TEXTURE2D_DESC{
+            .Width = static_cast<Uint32>(round(create_info.width)),
+            .Height = static_cast<Uint32>(round(create_info.height)),
+            .Format = format,
+            .Usage = D3D11_USAGE_DEFAULT,
+        };
 
         auto image = Rx::make_ptr<Image>(RX_SYSTEM_ALLOCATOR);
         image->format = create_info.format;
 
-        D3D12_RESOURCE_STATES initial_state{};
         switch(create_info.usage) {
             case ImageUsage::RenderTarget:
-                initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
-                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-                alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Render targets are always committed resources
+                desc.BindFlags = D3D11_BIND_RENDER_TARGET;
                 break;
 
             case ImageUsage::SampledImage:
-                initial_state = D3D12_RESOURCE_STATE_COMMON;
-                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+                desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
                 break;
 
             case ImageUsage::DepthStencil:
-                initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-                alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Depth/Stencil targets are always committed resources
+                desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
                 break;
 
             case ImageUsage::UnorderedAccess:
-                initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+                desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
                 break;
         }
 
-        const auto result = device_allocator->CreateResource(&alloc_desc,
-                                                             &desc,
-                                                             initial_state,
-                                                             nullptr,
-                                                             &image->allocation,
-                                                             IID_PPV_ARGS(&image->resource));
+        const auto result = device->CreateTexture2D(&desc, nullptr, &image->resource);
         if(FAILED(result)) {
             logger->error("Could not create image %s", create_info.name);
             return {};
@@ -170,7 +184,7 @@ namespace renderer {
         return image;
     }
 
-    ComPtr<ID3D11RenderTargetView> RenderDevice::create_rtv_handle(const Image& image) const {
+    ComPtr<ID3D11RenderTargetView> RenderDevice::create_rtv(const Image& image) const {
         ComPtr<ID3D11RenderTargetView> rtv;
 
         const auto result = device->CreateRenderTargetView(image.resource.Get(), nullptr, &rtv);
@@ -182,7 +196,7 @@ namespace renderer {
         return rtv;
     }
 
-    ComPtr<ID3D11DepthStencilView> RenderDevice::create_dsv_handle(const Image& image) const {
+    ComPtr<ID3D11DepthStencilView> RenderDevice::create_dsv(const Image& image) const {
         ComPtr<ID3D11DepthStencilView> dsv;
 
         const auto result = device->CreateDepthStencilView(image.resource.Get(), nullptr, &dsv);
@@ -194,7 +208,7 @@ namespace renderer {
         return dsv;
     }
 
-    ComPtr<ID3D11RenderTargetView> RenderDevice::get_backbuffer_rtv_handle() const {
+    ComPtr<ID3D11RenderTargetView> RenderDevice::get_backbuffer_rtv() const {
         ComPtr<ID3D11Texture2D> backbuffer;
         auto result = swapchain->GetBuffer(0, IID_PPV_ARGS(&backbuffer));
         if(FAILED(result)) {
@@ -219,16 +233,14 @@ namespace renderer {
         return {desc.BufferDesc.Width, desc.BufferDesc.Height};
     }
 
-    void* RenderDevice::map_buffer(const Buffer& buffer) const {
-        void* ptr;
-        D3D12_RANGE range{0, buffer.size};
-        const auto result = buffer.resource->Map(0, &range, &ptr);
+    bool RenderDevice::map_buffer(Buffer& buffer) const {
+        const auto result = device_context->Map(buffer.resource.Get(), 0, D3D11_MAP_WRITE, 0, &buffer.mapped_data);
         if(FAILED(result)) {
-            logger->error("Could not map buffer");
-            return nullptr;
+            logger->error("Could not map buffer: %s", to_string(result));
+            return false;
         }
 
-        return ptr;
+        return true;
     }
 
     DescriptorType to_descriptor_type(const D3D_SHADER_INPUT_TYPE type) {
@@ -338,37 +350,6 @@ namespace renderer {
 
         // No suitable buffer is available, let's make a new one
         return create_staging_buffer(num_bytes);
-    }
-
-    void RenderDevice::return_staging_buffer(Buffer buffer) {
-        staging_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
-    }
-
-    Buffer RenderDevice::get_scratch_buffer(const Uint32 num_bytes) {
-        size_t best_fit_idx = scratch_buffers.size();
-        for(size_t i = 0; i < scratch_buffers.size(); i++) {
-            if(scratch_buffers[i].size >= num_bytes) {
-                if(best_fit_idx >= scratch_buffers.size() || scratch_buffers[i].size < scratch_buffers[best_fit_idx].size) {
-                    // The current buffer is a better fit than the previous best fit buffer
-                    best_fit_idx = i;
-                }
-            }
-        }
-
-        if(best_fit_idx < scratch_buffers.size()) {
-            // We already have a suitable scratch buffer!
-            auto buffer = std::move(scratch_buffers[best_fit_idx]);
-            scratch_buffers.erase(best_fit_idx, best_fit_idx);
-
-            return buffer;
-
-        } else {
-            return create_scratch_buffer(num_bytes);
-        }
-    }
-
-    void RenderDevice::return_scratch_buffer(Buffer buffer) {
-        scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
 
     ID3D11Device* RenderDevice::get_d3d11_device() const { return device.Get(); }

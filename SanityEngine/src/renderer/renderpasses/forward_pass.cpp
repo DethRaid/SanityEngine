@@ -103,13 +103,13 @@ namespace renderer {
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
         color_target_access = 
-            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = device.create_rtv_handle(color_target),
+            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = device.create_rtv(color_target),
                                                  .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                                      .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
                                                                                               .Color = {0, 0, 0, 0}}}},
                                                  .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-        depth_target_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = device.create_dsv_handle(depth_target),
+        depth_target_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = device.create_dsv(depth_target),
                                                                        .DepthBeginningAccess =
                                                                            {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                                             .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,

@@ -74,45 +74,21 @@ namespace renderer {
 
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
-        [[nodiscard]] ComPtr<ID3D11RenderTargetView> create_rtv_handle(const Image& image) const;
+        [[nodiscard]] ComPtr<ID3D11RenderTargetView> create_rtv(const Image& image) const;
 
-        [[nodiscard]] ComPtr<ID3D11DepthStencilView> create_dsv_handle(const Image& image) const;
+        [[nodiscard]] ComPtr<ID3D11DepthStencilView> create_dsv(const Image& image) const;
 
-        [[nodiscard]] ComPtr<ID3D11RenderTargetView> get_backbuffer_rtv_handle() const;
+        [[nodiscard]] ComPtr<ID3D11RenderTargetView> get_backbuffer_rtv() const;
 
         [[nodiscard]] Vec2u get_backbuffer_size() const;
 
-        [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
-
-        void schedule_buffer_destruction(Rx::Ptr<Buffer> buffer);
-
-        void schedule_image_destruction(Rx::Ptr<Image> image);
-
-        /*!
-         * \brief Creates a bind group builder with the provided descriptors
-         *
-         * \param root_descriptors Mapping from root descriptor name to information about how to bind to that root descriptor
-         * \param descriptor_table_descriptors Mapping from the name of a descriptors in a descriptor table to information about how to bind
-         * to that descriptors
-         * \param descriptor_table_handles Mapping from root parameters index to GPU handle to the descriptor table to bind to that index
-         */
-        [[nodiscard]] Rx::Ptr<BindGroupBuilder> create_bind_group_builder(
-            const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
-            const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
-            const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
-
-        [[nodiscard]] Rx::Ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
-                                                                                  const ComPtr<ID3D12RootSignature>& root_signature) const;
-
-        [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
+        [[nodiscard]] bool map_buffer(Buffer& buffer) const;
 
         [[nodiscard]] ComPtr<ID3D11DeviceContext> get_device_context() const;
 
         void begin_frame(uint64_t frame_count);
 
         void end_frame();
-
-        [[nodiscard]] Uint32 get_cur_gpu_frame_idx() const;
 
         void begin_capture() const;
 
@@ -124,15 +100,7 @@ namespace renderer {
 
         [[nodiscard]] Buffer get_staging_buffer(Uint32 num_bytes);
 
-        void return_staging_buffer(Buffer buffer);
-
-        [[nodiscard]] Buffer get_scratch_buffer(Uint32 num_bytes);
-
-        void return_scratch_buffer(Buffer buffer);
-
         [[nodiscard]] ID3D11Device* get_d3d11_device() const;
-
-        [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
 
     private:
         Settings settings;
