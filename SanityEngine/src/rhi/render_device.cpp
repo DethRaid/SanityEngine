@@ -936,7 +936,7 @@ namespace renderer {
         root_parameters[1].InitAsShaderResourceView(0);
 
         // Material data buffer
-        root_parameters[2].InitAsShaderResourceView(MATERIAL_BUFFER_ROOT_PARAMETER_INDEX);
+        root_parameters[MATERIAL_BUFFER_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(1);
 
         // Lights buffer
         root_parameters[3].InitAsShaderResourceView(2);
