@@ -18,7 +18,7 @@ A 3D video game engine made to increase my sanity
 ## Runtime requirements
 
 - Windows 10 2004/20H1
-- Graphics driver with support for DX12 Ultimate. At the time of writing, only Nvidia beta driver 450.82 support DX12U
+- Graphics driver with support for DirectX 12 Ultimate. At the time of writing, only Nvidia driver 451.48 support DX12U
 - Graphics hardware with support for DXR 1.1. At the time of writing, only Nvidia's Turing GPUs support DXR 1.1
 
 ## Acknowledgement

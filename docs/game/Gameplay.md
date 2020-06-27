@@ -1,6 +1,6 @@
 Gameplay of this game will be dependent on where the player is
 
-The gameplay will be highly dependent in the environment. The 
+The gameplay will be highly dependent in the environment. Different biomes will offer different gameplay opportunities. In a forest, for example, the player will be able to climb trees and jump between them.
 
 # Notes:
 
