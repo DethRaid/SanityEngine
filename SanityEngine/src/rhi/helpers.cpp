@@ -311,23 +311,22 @@ namespace renderer {
 
             const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
             const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
-            breadcrumb_output_string += Rx::String::
-                format("Command list %s, executing on command queue %s, has completed %d render operations\nLast render operation: %s%s%s",
-                       command_list_name,
-                       command_queue_name,
-                       last_breadcrumb_idx + 1,
-                       colors::COMPLETED_BREADCRUMB,
-                       breadcrumb_to_string(breadcrumb),
-                       colors::DEFAULT_CONSOLE_COLOR);
+            breadcrumb_output_string += Rx::String::format(
+                "Command list %s, executing on command queue %s, has worked on %d render operations\nMost recent render operation: %s%s%s",
+                command_list_name,
+                command_queue_name,
+                last_breadcrumb_idx + 1,
+                colors::INCOMPLETE_BREADCRUMB,
+                breadcrumb_to_string(breadcrumb),
+                colors::DEFAULT_CONSOLE_COLOR);
 
             if(cur_node->BreadcrumbCount > 0) {
-                const auto current_breadcrumb_idx = last_breadcrumb_idx + 1;
                 for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
                     const char* color = colors::DEFAULT_CONSOLE_COLOR;
-                    if(i < current_breadcrumb_idx) {
+                    if(i < last_breadcrumb_idx) {
                         color = colors::COMPLETED_BREADCRUMB;
 
-                    } else if(i == current_breadcrumb_idx) {
+                    } else if(i == last_breadcrumb_idx) {
                         color = colors::INCOMPLETE_BREADCRUMB;
 
                     } else {

@@ -44,7 +44,7 @@ namespace renderer {
     RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
                     "r.VerifyEveryCommandListSubmission",
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
-                    true);
+                    false);
 
     RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
@@ -427,8 +427,6 @@ namespace renderer {
             const auto msg = Rx::String::format("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
             Rx::abort(msg.data());
         }
-
-        
 
         commands->SetName(L"Unnamed Sanity Engine command list");
         command_lists_outside_render_device.fetch_add(1);
@@ -1376,6 +1374,10 @@ namespace renderer {
                 logger->error("Could not reset command allocator for thread %d: %s", thread_id, to_string(result));
                 if(result == DXGI_ERROR_DEVICE_REMOVED) {
                     log_dred_report();
+                    const auto msg = Rx::String::format("Device removed when resetting allocators for frame %u: %s",
+                                                        frame_idx,
+                                                        to_string(result));
+                    Rx::abort(msg.data());
                 }
             }
         });
