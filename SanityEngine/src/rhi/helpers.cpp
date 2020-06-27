@@ -419,7 +419,7 @@ namespace renderer {
                                                                                                                ->GetGPUVirtualAddress(),
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
 
-            geom_descs.push_back(std::move(geom_desc));
+            geom_descs.push_back(Rx::Utility::move(geom_desc));
         });
 
         const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
@@ -450,14 +450,14 @@ namespace renderer {
             .Inputs = build_as_inputs,
             .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
 
-        DEFER(a, [&]() { device.return_scratch_buffer(std::move(scratch_buffer)); });
+        DEFER(a, [&]() { device.return_scratch_buffer(Rx::Utility::move(scratch_buffer)); });
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
         const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
 
-        return {std::move(result_buffer)};
+        return {Rx::Utility::move(result_buffer)};
     }
 
     void upload_data_with_staging_buffer(const ComPtr<ID3D12GraphicsCommandList4>& commands,
@@ -471,7 +471,7 @@ namespace renderer {
 
         commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.Get(), 0, size);
 
-        device.return_staging_buffer(std::move(staging_buffer));
+        device.return_staging_buffer(Rx::Utility::move(staging_buffer));
     }
 
     Rx::String breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {

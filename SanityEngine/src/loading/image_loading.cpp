@@ -65,21 +65,21 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
                                                        .height = height};
 
     auto& device = renderer.get_render_device();
-    const auto commands = device.create_command_list();
+    auto commands = device.create_command_list();
 
     const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
-    renderer::set_object_name(commands.Get(), msg);
+    renderer::set_object_name(commands.cmds.Get(), msg);
 
     renderer::TextureHandle handle_out;
 
     {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), msg.data());
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
+        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, msg.data());
 
-        handle_out = renderer.create_image(create_info, pixels.data(), commands);
+        handle_out = renderer.create_image(create_info, pixels.data(), commands.cmds);
     }
 
-    device.submit_command_list(commands);
+    device.submit_command_list(Rx::Utility::move(commands));
 
     return handle_out;
 }

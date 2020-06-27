@@ -39,8 +39,8 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
     commands->SetName(L"Renderer::create_raytracing_geometry");
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Renderer::create_raytracing_geometry");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "Renderer::create_raytracing_geometry");
+        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
         Rx::Map<Uint32, renderer::StandardMaterialHandle> materials;
 
@@ -49,7 +49,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
 
         auto& mesh_data = renderer.get_static_mesh_store();
 
-        mesh_data.bind_to_command_list(commands);
+        mesh_data.bind_to_command_list(commands.cmds);
 
         // Initial revision: import the first child node and hope it's fine
         const auto* node = scene->mRootNode->mChildren[0];
@@ -82,11 +82,11 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
             indices.push_back(face.mIndices[2]);
         }
 
-        mesh_data.begin_adding_meshes(commands);
+        mesh_data.begin_adding_meshes(commands.cmds);
 
-        const auto mesh = mesh_data.add_mesh(vertices, indices, commands);
+        const auto mesh = mesh_data.add_mesh(vertices, indices, commands.cmds);
 
-        mesh_data.end_adding_meshes(commands);
+        mesh_data.end_adding_meshes(commands.cmds);
 
         auto locked_registry = registry.lock();
         const auto mesh_entity = locked_registry->create();
@@ -131,7 +131,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
                                                                            .width = width,
                                                                            .height = height};
 
-                        const auto image_handle = renderer.create_image(create_info, pixels.data(), commands);
+                        const auto image_handle = renderer.create_image(create_info, pixels.data(), commands.cmds);
                         material.albedo = image_handle;
                     }
                 }
@@ -161,7 +161,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        const auto ray_geo_handle = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, meshes, commands);
+        const auto ray_geo_handle = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, meshes, commands.cmds);
 
         {
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
@@ -178,7 +178,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
         renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo_handle, .material = {0}}});
     }
 
-    device.submit_command_list(std::move(commands));
+    device.submit_command_list(Rx::Utility::move(commands));
 
     return true;
 }

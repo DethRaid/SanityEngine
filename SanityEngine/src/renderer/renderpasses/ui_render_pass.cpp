@@ -144,8 +144,8 @@ namespace renderer {
 
                 {
                     ZoneScopedN("Free vertex and index buffers");
-                    device.return_staging_buffer(std::move(vertex_buffer));
-                    device.return_staging_buffer(std::move(index_buffer));
+                    device.return_staging_buffer(Rx::Utility::move(vertex_buffer));
+                    device.return_staging_buffer(Rx::Utility::move(index_buffer));
                 }
             }
         }

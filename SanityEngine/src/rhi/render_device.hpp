@@ -11,6 +11,8 @@
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
 
+#include "core/types.hpp"
+#include "renderer/rhi/command_list.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/compute_pipeline_state.hpp"
 #include "rhi/d3dx12.hpp"
@@ -19,7 +21,6 @@
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_pipeline_state.hpp"
 #include "settings.hpp"
-#include "core/types.hpp"
 
 struct GLFWwindow;
 
@@ -36,6 +37,7 @@ namespace tracy {
 #endif
 
 namespace renderer {
+    struct CommandList;
     struct RenderPipelineStateCreateInfo;
 
     /*
@@ -112,9 +114,9 @@ namespace renderer {
 
         void destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> pipeline_state);
 
-        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list();
+        [[nodiscard]] CommandList create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
-        void submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands);
+        void submit_command_list(CommandList&& commands);
 
         BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
@@ -177,6 +179,8 @@ namespace renderer {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
+        Rx::Concurrency::Atomic<Size> command_lists_outside_render_device{0};
+
         Rx::Concurrency::Mutex direct_command_allocators_mutex;
         Rx::Vector<Rx::Map<Uint32, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
 
@@ -185,7 +189,8 @@ namespace renderer {
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
         Rx::Concurrency::Mutex command_lists_by_frame_mutex;
-        Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_by_frame;
+        Rx::Vector<Rx::Vector<CommandList>> command_lists_to_submit_on_end_frame;
+        Rx::Vector<Rx::Vector<CommandList>> command_lists_to_free_on_frame_begin;
 
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
@@ -321,7 +326,7 @@ namespace renderer {
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                          ID3D12RootSignature& root_signature);
 
-        [[nodiscard]] ID3D12CommandAllocator* get_direct_command_allocator_for_thread(Uint32 id);
+        [[nodiscard]] ComPtr<ID3D12CommandAllocator> get_direct_command_allocator_for_thread(Uint32 frame_idx, Uint32 id);
 
         void flush_batched_command_lists();
 

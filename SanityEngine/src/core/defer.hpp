@@ -5,7 +5,7 @@
 template <typename FunctionType>
 class Defer {
 public:
-    explicit Defer(FunctionType&& function_in) : function{std::move(function_in)} {};
+    explicit Defer(FunctionType&& function_in) : function{Rx::Utility::move(function_in)} {};
 
     Defer(const Defer& other) = delete;
     Defer& operator=(const Defer& other) = delete;
@@ -19,4 +19,4 @@ private:
     FunctionType function;
 };
 
-#define DEFER(varname, function) const auto varname = Defer{std::move(function)};
+#define DEFER(varname, function) const auto varname = Defer{Rx::Utility::move(function)};

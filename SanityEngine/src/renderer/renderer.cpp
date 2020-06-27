@@ -87,14 +87,14 @@ namespace renderer {
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
 
-        auto command_list = device->create_command_list();
+        auto command_list = device->create_command_list(frame_idx);
         command_list->SetName(L"Main Render Command List");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, command_list, "Renderer::render_all");
-            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
+            TracyD3D12Zone(RenderDevice::tracy_context, command_list.cmds, "Renderer::render_all");
+            PIXScopedEvent(command_list.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
-                rebuild_raytracing_scene(command_list);
+                rebuild_raytracing_scene(command_list.cmds);
                 raytracing_scene_dirty = false;
             }
 
@@ -112,15 +112,15 @@ namespace renderer {
             {
                 ZoneScopedN("Renderer::render_passes");
 
-                TracyD3D12Zone(RenderDevice::tracy_context, command_list, "Renderer::render_passes");
-                PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+                TracyD3D12Zone(RenderDevice::tracy_context, command_list.cmds, "Renderer::render_passes");
+                PIXScopedEvent(command_list.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
                 render_passes.each_fwd(
-                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.Get(), *registry, frame_idx, world); });
+                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.cmds.Get(), *registry, frame_idx, world); });
             }
         }
 
-        device->submit_command_list(std::move(command_list));
+        device->submit_command_list(Rx::Utility::move(command_list));
     }
 
     void Renderer::end_frame() const { device->end_frame(); }
@@ -218,8 +218,8 @@ namespace renderer {
     Image& Renderer::get_image(const TextureHandle handle) const { return *all_images[handle.index]; }
 
     void Renderer::schedule_texture_destruction(const TextureHandle& image_handle) {
-        auto image = std::move(all_images[image_handle.index]);
-        device->schedule_image_destruction(std::move(image));
+        auto image = Rx::Utility::move(all_images[image_handle.index]);
+        device->schedule_image_destruction(Rx::Utility::move(image));
     }
 
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
@@ -266,7 +266,7 @@ namespace renderer {
         auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
 
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
-        raytracing_geometries.push_back(std::move(new_ray_geo));
+        raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
 
         return {handle_idx};
     }
@@ -286,7 +286,7 @@ namespace renderer {
 
         auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, std::move(vertex_buffer), std::move(index_buffer));
+        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, Rx::Utility::move(vertex_buffer), Rx::Utility::move(index_buffer));
     }
 
     void Renderer::create_per_frame_buffers() {
@@ -348,12 +348,12 @@ namespace renderer {
 
         load_noise_texture("data/textures/LDR_RGBA_0.png");
 
-        const auto commands = device->create_command_list();
+        auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "Renderer::create_builtin_images");
-            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
+            TracyD3D12Zone(RenderDevice::tracy_context, commands.cmds.Get(), "Renderer::create_builtin_images");
+            PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {
                 const auto pink_texture_create_info = ImageCreateInfo{.name = "Pink",
@@ -368,7 +368,7 @@ namespace renderer {
                     pink_texture_pixel.push_back(0xFFFF00FF);
                 }
 
-                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
+                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands.cmds);
             }
 
             {
@@ -386,7 +386,7 @@ namespace renderer {
 
                 normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
                                                                normal_roughness_texture_pixel.data(),
-                                                               commands);
+                                                               commands.cmds);
             }
 
             {
@@ -404,11 +404,11 @@ namespace renderer {
 
                 specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
                                                                 specular_emission_texture_pixel.data(),
-                                                                commands);
+                                                                commands.cmds);
             }
         }
 
-        device->submit_command_list(commands);
+        device->submit_command_list(Rx::Utility::move(commands));
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
@@ -427,11 +427,9 @@ namespace renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
-        render_passes.push_back(
-            Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
-        render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
+        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
+        render_passes.push_back(Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
+        // render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
     }
 
     Rx::Vector<const Image*> Renderer::get_texture_array() const {
@@ -473,7 +471,7 @@ namespace renderer {
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
         if(raytracing_scene.buffer) {
-            device->schedule_buffer_destruction(std::move(raytracing_scene.buffer));
+            device->schedule_buffer_destruction(Rx::Utility::move(raytracing_scene.buffer));
         }
 
         if(!raytracing_objects.is_empty()) {
@@ -535,15 +533,15 @@ namespace renderer {
                 .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress(),
             };
 
-            DEFER(a, [&]() { device->return_staging_buffer(std::move(instance_buffer)); });
-            DEFER(b, [&]() { device->return_scratch_buffer(std::move(scratch_buffer)); });
+            DEFER(a, [&]() { device->return_staging_buffer(Rx::Utility::move(instance_buffer)); });
+            DEFER(b, [&]() { device->return_scratch_buffer(Rx::Utility::move(scratch_buffer)); });
 
             commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
             const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
-            raytracing_scene = {std::move(as_buffer)};
+            raytracing_scene = {Rx::Utility::move(as_buffer)};
         }
     }
 

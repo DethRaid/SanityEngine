@@ -100,10 +100,10 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
         auto commands = device.create_command_list();
         commands->SetName(L"BveWrapper::add_train_to_scene");
         {
-            TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
-            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
+            TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "BveWrapper::add_train_to_scene");
+            PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
 
-            mesh_data.bind_to_command_list(commands);
+            mesh_data.bind_to_command_list(commands.cmds);
 
             commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
             commands->SetPipelineState(bve_texture_pipeline->pso.Get());
@@ -111,7 +111,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
             Rx::Vector<renderer::Mesh> train_meshes;
             train_meshes.reserve(train->meshes.count);
 
-            mesh_data.begin_adding_meshes(commands);
+            mesh_data.begin_adding_meshes(commands.cmds);
 
             for(Uint32 i = 0; i < train->meshes.count; i++) {
                 const auto& bve_mesh = train->meshes.ptr[i];
@@ -123,7 +123,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
 
                 auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
 
-                mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
+                mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands.cmds);
                 train_meshes.push_back(mesh_component.mesh);
 
                 if(bve_mesh.texture.texture_id.exists) {
@@ -154,7 +154,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                             logger->error("Could not load texture %s", texture_name);
 
                         } else {
-                            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
+                            PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
 
                             if(num_channels == 3) {
                                 texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
@@ -166,7 +166,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                                                                          .width = static_cast<Uint32>(width),
                                                                          .height = static_cast<Uint32>(height),
                                                                          .depth = 1};
-                            const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
+                            const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands.cmds);
                             const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
 
                             // Create a second image as the real image
@@ -180,7 +180,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                             bind_group_builder->set_image("output_texture", texture);
 
                             auto bind_group = bind_group_builder->build();
-                            bind_group->bind_to_compute_signature(commands);
+                            bind_group->bind_to_compute_signature(commands.cmds);
 
                             const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
                             const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
@@ -206,7 +206,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                 }
             }
 
-            mesh_data.end_adding_meshes(commands);
+            mesh_data.end_adding_meshes(commands.cmds);
 
             const auto& index_buffer = mesh_data.get_index_buffer();
             const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
@@ -223,7 +223,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                 commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
             }
 
-            const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
+            const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands.cmds);
             renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
 
             {
@@ -239,7 +239,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
             }
         }
 
-        device.submit_command_list(std::move(commands));
+        device.submit_command_list(Rx::Utility::move(commands));
 
         logger->info("Loaded file %s", filename);
 

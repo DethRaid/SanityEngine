@@ -19,9 +19,9 @@ namespace renderer {
                          Rx::Vector<BoundResource<Image>> used_images_in,
                          Rx::Vector<BoundResource<Buffer>> used_buffers_in)
         : heap{&heap_in},
-          root_parameters{std::move(root_parameters_in)},
-          used_images{std::move(used_images_in)},
-          used_buffers{std::move(used_buffers_in)} {}
+          root_parameters{Rx::Utility::move(root_parameters_in)},
+          used_images{Rx::Utility::move(used_images_in)},
+          used_buffers{Rx::Utility::move(used_buffers_in)} {}
 
     void BindGroup::bind_to_graphics_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const {
         cmds->SetDescriptorHeaps(1, &heap);
@@ -84,9 +84,9 @@ namespace renderer {
         : device{&device_in},
           heap{&heap_in},
           descriptor_size{descriptor_size_in},
-          root_descriptor_descriptions{std::move(root_descriptor_descriptions_in)},
-          descriptor_table_descriptor_mappings{std::move(descriptor_table_descriptor_mappings_in)},
-          descriptor_table_handles{std::move(descriptor_table_handles_in)} {}
+          root_descriptor_descriptions{Rx::Utility::move(root_descriptor_descriptions_in)},
+          descriptor_table_descriptor_mappings{Rx::Utility::move(descriptor_table_descriptor_mappings_in)},
+          descriptor_table_handles{Rx::Utility::move(descriptor_table_handles_in)} {}
 
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
         ZoneScoped;
@@ -289,8 +289,8 @@ namespace renderer {
 
         return Rx::make_ptr<BindGroup>(Rx::Memory::SystemAllocator::instance(),
                                        *heap,
-                                       std::move(root_parameters),
-                                       std::move(used_images),
-                                       std::move(used_buffers));
+                                       Rx::Utility::move(root_parameters),
+                                       Rx::Utility::move(used_images),
+                                       Rx::Utility::move(used_buffers));
     } // namespace rhi
 } // namespace renderer

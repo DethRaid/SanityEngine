@@ -1292,6 +1292,9 @@
     <ClInclude Include="src\core\pix_colors.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\rhi\command_list.hpp">
+      <Filter>Header Files\renderer\rhi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">

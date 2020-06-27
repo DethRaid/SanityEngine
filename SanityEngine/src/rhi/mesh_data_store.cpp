@@ -11,7 +11,7 @@ namespace renderer {
     RX_LOG("MeshDataStore", logger);
 
     MeshDataStore::MeshDataStore(RenderDevice& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)
-        : device{&device_in}, vertex_buffer{std::move(vertex_buffer_in)}, index_buffer{std::move(index_buffer_in)} {
+        : device{&device_in}, vertex_buffer{Rx::Utility::move(vertex_buffer_in)}, index_buffer{Rx::Utility::move(index_buffer_in)} {
 
         vertex_bindings.reserve(4);
         vertex_bindings.push_back(VertexBufferBinding{vertex_buffer.get(), offsetof(StandardVertex, position), sizeof(StandardVertex)});
@@ -21,8 +21,8 @@ namespace renderer {
     }
 
     MeshDataStore::~MeshDataStore() {
-        device->schedule_buffer_destruction(std::move(vertex_buffer));
-        device->schedule_buffer_destruction(std::move(index_buffer));
+        device->schedule_buffer_destruction(Rx::Utility::move(vertex_buffer));
+        device->schedule_buffer_destruction(Rx::Utility::move(index_buffer));
     }
 
     const Rx::Vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }

@@ -267,7 +267,7 @@ namespace horus {
     }
 
     ScriptingRuntime::ScriptingRuntime(ScriptingRuntime&& old) noexcept
-        : vm{old.vm}, registry{old.registry}, module_paths{std::move(old.module_paths)} {
+        : vm{old.vm}, registry{old.registry}, module_paths{Rx::Utility::move(old.module_paths)} {
         old.vm = nullptr;
 
         wrenSetUserData(vm, this);
@@ -276,7 +276,7 @@ namespace horus {
     ScriptingRuntime& ScriptingRuntime::operator=(ScriptingRuntime&& old) noexcept {
         vm = old.vm;
         registry = old.registry;
-        module_paths = std::move(old.module_paths);
+        module_paths = Rx::Utility::move(old.module_paths);
 
         old.vm = nullptr;
 

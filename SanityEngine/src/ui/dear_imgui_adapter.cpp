@@ -231,7 +231,10 @@ void DearImguiAdapter::initialize_style() {
 }
 
 void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
-    const auto commands = renderer.get_render_device().create_command_list();
+    ZoneScoped;
+
+    auto& device = renderer.get_render_device();
+    auto commands = device.create_command_list();
     commands->SetName(L"DearImguiAdapter::create_font_texture");
 
     auto& io = ImGui::GetIO();
@@ -240,8 +243,8 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "DearImguiAdapter::create_font_texture");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "DearImguiAdapter::create_font_texture");
+        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
         const auto create_info = renderer::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
                                                            .usage = renderer::ImageUsage::SampledImage,
@@ -249,10 +252,10 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
                                                            .width = static_cast<Uint32>(width),
                                                            .height = static_cast<Uint32>(height)};
 
-        font_atlas = renderer.create_image(create_info, pixels, commands);
+        font_atlas = renderer.create_image(create_info, pixels, commands.cmds);
     }
 
-    renderer.get_render_device().submit_command_list(commands);
+    device.submit_command_list(Rx::Utility::move(commands));
 
     const uint64_t imgui_tex_id = font_atlas.index;
 
@@ -260,6 +263,8 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
 }
 
 void DearImguiAdapter::update_mouse_pos_and_buttons() const {
+    ZoneScoped;
+
     // Update buttons
     ImGuiIO& io = ImGui::GetIO();
     for(int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) {
@@ -286,6 +291,8 @@ void DearImguiAdapter::update_mouse_pos_and_buttons() const {
 }
 
 void DearImguiAdapter::update_mouse_cursor() const {
+    ZoneScoped;
+
     ImGuiIO& io = ImGui::GetIO();
     if((io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) || glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
         return;

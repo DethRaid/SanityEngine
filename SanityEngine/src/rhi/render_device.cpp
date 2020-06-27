@@ -39,18 +39,19 @@ namespace renderer {
     RX_CONSOLE_BVAR(cvar_break_on_validation_error,
                     "r.BreakOnValidationError",
                     "Whether to issue a breakpoint when the validation layer encounters an error",
-                    false);
+                    true);
 
     RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
                     "r.VerifyEveryCommandListSubmission",
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
-                    true);
+                    false);
 
     RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
                                const Settings& settings_in)
         : settings{settings_in},
-          command_lists_by_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          command_lists_to_free_on_frame_begin{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           image_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -384,13 +385,19 @@ namespace renderer {
         // Nothing to do, destructors will take care of it
     }
 
-    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list() {
+    CommandList RenderDevice::create_command_list(Rx::Optional<Uint32> frame_idx) {
+        if(!frame_idx) {
+            frame_idx = cur_gpu_frame_idx;
+        }
         const auto thread_idx = GetCurrentThreadId();
-        auto* command_allocator = get_direct_command_allocator_for_thread(thread_idx);
+
+        // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
+        ComPtr<ID3D12CommandAllocator> command_allocator;
+        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator));
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
-        auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
+        auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -409,15 +416,15 @@ namespace renderer {
         }
 
         commands->SetName(L"Unnamed Sanity Engine command list");
-
-        return commands;
+        command_lists_outside_render_device.fetch_add(1);
+        return {commands, command_allocator, *frame_idx};
     }
 
-    void RenderDevice::submit_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+    void RenderDevice::submit_command_list(CommandList&& commands) {
         commands->Close();
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
-        command_lists_by_frame[cur_gpu_frame_idx].push_back(commands);
+        command_lists_to_submit_on_end_frame[commands.gpu_frame_idx].push_back(commands);
     }
 
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
@@ -443,6 +450,11 @@ namespace renderer {
             destroy_resources_for_frame(cur_gpu_frame_idx);
         }
 
+        {
+            Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
+            command_lists_to_free_on_frame_begin[cur_gpu_frame_idx] = {};
+        }
+
         transition_swapchain_image_to_render_target();
 
         in_init_phase = false;
@@ -459,11 +471,14 @@ namespace renderer {
 
         {
             ZoneScopedN("present");
-            const auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
+            auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
             if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
-                logger->error("Device lost on present :(");
-
                 log_dred_report();
+
+                result = device->GetDeviceRemovedReason();
+
+                const auto msg = Rx::String::format("Device lost on present: %s", to_string(result));
+                Rx::abort(msg.data());
             }
         }
 
@@ -494,7 +509,7 @@ namespace renderer {
         for(size_t i = 0; i < staging_buffers.size(); i++) {
             if(staging_buffers[i].size >= num_bytes) {
                 // Return the first suitable buffer we find
-                auto buffer = std::move(staging_buffers[i]);
+                auto buffer = Rx::Utility::move(staging_buffers[i]);
                 staging_buffers.erase(i, i + 1);
 
                 return buffer;
@@ -522,7 +537,7 @@ namespace renderer {
 
         if(best_fit_idx < scratch_buffers.size()) {
             // We already have a suitable scratch buffer!
-            auto buffer = std::move(scratch_buffers[best_fit_idx]);
+            auto buffer = Rx::Utility::move(scratch_buffers[best_fit_idx]);
             scratch_buffers.erase(best_fit_idx, best_fit_idx);
 
             return buffer;
@@ -1254,12 +1269,12 @@ namespace renderer {
         return pipeline;
     }
 
-    ID3D12CommandAllocator* RenderDevice::get_direct_command_allocator_for_thread(const Uint32 id) {
+    ComPtr<ID3D12CommandAllocator> RenderDevice::get_direct_command_allocator_for_thread(const Uint32 frame_idx, const Uint32 id) {
         Rx::Concurrency::ScopeLock l{direct_command_allocators_mutex};
 
-        auto& command_allocators_for_frame = direct_command_allocators[cur_gpu_frame_idx];
+        auto& command_allocators_for_frame = direct_command_allocators[frame_idx];
         if(const auto* itr = command_allocators_for_frame.find(id)) {
-            return itr->Get();
+            return *itr;
 
         } else {
             ComPtr<ID3D12CommandAllocator> allocator;
@@ -1286,9 +1301,9 @@ namespace renderer {
     void RenderDevice::flush_batched_command_lists() {
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         // Submit all the command lists we batched up
-        auto& lists = command_lists_by_frame[cur_gpu_frame_idx];
-        lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
-            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
+        auto& lists = command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
+        lists.each_fwd([&](const CommandList& commands) {
+            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.cmds.Get());
 
             // First implementation - run everything on the same queue, because it's easy
             // Eventually I'll come up with a fancy way to use multiple queues
@@ -1314,7 +1329,11 @@ namespace renderer {
             }
         });
 
-        command_lists_by_frame[cur_gpu_frame_idx] = {};
+        command_lists_to_free_on_frame_begin[cur_gpu_frame_idx] = Rx::Utility::move(
+            command_lists_to_submit_on_end_frame[cur_gpu_frame_idx]);
+        command_lists_to_submit_on_end_frame[cur_gpu_frame_idx] = {};
+
+        command_lists_outside_render_device.fetch_sub(lists.size());
     }
 
     void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
@@ -1326,9 +1345,17 @@ namespace renderer {
 
     void RenderDevice::reset_command_allocators_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
+
         const auto& direct_allocators_for_frame = direct_command_allocators[frame_idx];
-        direct_allocators_for_frame.each_pair(
-            [](const Uint32& /* thread_id */, const ComPtr<ID3D12CommandAllocator>& allocator) { allocator->Reset(); });
+        direct_allocators_for_frame.each_pair([&](const Uint32& thread_id, const ComPtr<ID3D12CommandAllocator>& allocator) {
+            const auto result = allocator->Reset();
+            if(FAILED(result)) {
+                logger->error("Could not reset command allocator for thread %d: %s", thread_id, to_string(result));
+                if(result == DXGI_ERROR_DEVICE_REMOVED) {
+                    log_dred_report();
+                }
+            }
+        });
 
         copy_command_allocators[frame_idx]->Reset();
         compute_command_allocators[frame_idx]->Reset();
@@ -1348,12 +1375,12 @@ namespace renderer {
 
     void RenderDevice::transition_swapchain_image_to_render_target() {
         ZoneScoped;
-        auto swapchain_cmds = create_command_list();
+        auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_render_target");
 
         {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
+            PIXScopedEvent(swapchain_cmds.cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
 
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
@@ -1362,16 +1389,16 @@ namespace renderer {
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
         }
 
-        submit_command_list(swapchain_cmds);
+        submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
 
     void RenderDevice::transition_swapchain_image_to_presentable() {
-        auto swapchain_cmds = create_command_list();
+        auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
         {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_presentable");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
+            PIXScopedEvent(swapchain_cmds.cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
 
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
@@ -1380,7 +1407,7 @@ namespace renderer {
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
         }
 
-        submit_command_list(swapchain_cmds);
+        submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
 
     void RenderDevice::wait_for_frame(const uint64_t frame_index) {

@@ -375,6 +375,7 @@
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\lights.hpp" />
     <ClInclude Include="src\renderer\renderer.hpp" />
+    <ClInclude Include="src\renderer\rhi\command_list.hpp" />
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\rhi\bind_group.hpp" />
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp" />
