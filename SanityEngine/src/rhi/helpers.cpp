@@ -311,14 +311,18 @@ namespace renderer {
 
             const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
             const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
-            breadcrumb_output_string += Rx::String::format(
-                "Command list %s, executing on command queue %s, has worked on %d render operations\nMost recent render operation: %s%s%s",
-                command_list_name,
-                command_queue_name,
-                last_breadcrumb_idx + 1,
-                colors::INCOMPLETE_BREADCRUMB,
-                breadcrumb_to_string(breadcrumb),
-                colors::DEFAULT_CONSOLE_COLOR);
+            breadcrumb_output_string += Rx::String::
+                format("Command list %s, executing on command queue %s, has completed on %d render operations",
+                       command_list_name,
+                       command_queue_name,
+                       last_breadcrumb_idx);
+
+            if(breadcrumb != D3D12_AUTO_BREADCRUMB_OP_SETMARKER) {
+                breadcrumb_output_string += Rx::String::format("\nMost recent operation: %s%s%s",
+                                                               colors::INCOMPLETE_BREADCRUMB,
+                                                               breadcrumb_to_string(breadcrumb),
+                                                               colors::DEFAULT_CONSOLE_COLOR);
+            }
 
             if(cur_node->BreadcrumbCount > 0) {
                 for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
