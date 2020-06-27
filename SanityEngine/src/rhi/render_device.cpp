@@ -46,6 +46,8 @@ namespace renderer {
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
                     false);
 
+    RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
+
     RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
                                const Settings& settings_in)
@@ -634,6 +636,21 @@ namespace renderer {
             }
         }
 
+        {
+            if(cvar_use_warp_driver->get()) {
+                ComPtr<IDXGIAdapter> cur_adapter;
+                const auto result = factory->EnumWarpAdapter(IID_PPV_ARGS(&cur_adapter));
+
+                if(FAILED(result)) {
+                    logger->warning("Could not get the WARP adapter: %s", to_string(result));
+
+                } else {
+                    adapters.clear();
+                    adapters.push_back(cur_adapter);
+                }
+            }
+        }
+
         // TODO: Score adapters based on things like supported feature level and available vram
 
         adapters.each_fwd([&](const ComPtr<IDXGIAdapter>& cur_adapter) {
@@ -674,7 +691,7 @@ namespace renderer {
                 } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_5) {
                     // Only supports old-ass shaders
 
-                    logger->warning("Ignoring adapter %s - Doesn't support the shader model Sanity Engine uses",
+                    logger->warning("Ignoring adapter %s - Doesn't support shader model 6.5",
                                     from_wide_string(desc.Description));
                     return true;
                 }
