@@ -114,6 +114,14 @@ namespace renderer {
 
         void destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> pipeline_state);
 
+        /*!
+         * \brief Creates a new command list
+         *
+         * You may pass in the index of the GPU frame to submit this command list to. If you do not, the index of the GPU frame currently
+         * being recorded is used
+         *
+         * This method is internally synchronized. You can (in theory) call it safely from a multithreaded environment
+         */
         [[nodiscard]] CommandList create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
         void submit_command_list(CommandList&& commands);
@@ -179,6 +187,7 @@ namespace renderer {
 
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
+        Rx::Concurrency::Mutex create_command_list_mutex;
         Rx::Concurrency::Atomic<Size> command_lists_outside_render_device{0};
 
         Rx::Concurrency::Mutex direct_command_allocators_mutex;

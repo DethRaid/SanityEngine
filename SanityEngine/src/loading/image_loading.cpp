@@ -1,11 +1,10 @@
 #include "image_loading.hpp"
 
 #include <Tracy.hpp>
+#include <TracyD3D12.hpp>
 #include <ftl/task.h>
 #include <rx/core/log.h>
 #include <stb_image.h>
-#include <TracyD3D12.hpp>
-
 
 #include "renderer/renderer.hpp"
 #include "rhi/helpers.hpp"
@@ -68,13 +67,23 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
     auto commands = device.create_command_list();
 
     const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
-    renderer::set_object_name(commands.cmds.Get(), msg);
+    renderer::set_object_name(commands.cmds, msg);
 
     renderer::TextureHandle handle_out;
 
     {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), msg.data());
         PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, msg.data());
+
+        // I get this error from PIXScopedEvent
+        //
+        // D3D12 ERROR: ID3D12GraphicsCommandList::*: This API cannot be called on a closed command list. [ EXECUTION ERROR #547:
+        // COMMAND_LIST_CLOSED]
+        //
+        // This means... the device is giving me a closed command list?
+        //
+        // I'm creating a new command allocator for each command list, and I'm creating a new command list every time I call
+        // RenderDevice::create_command_list. Does my command list come pre-closed? Do I have to begin my command list or something?
 
         handle_out = renderer.create_image(create_info, pixels.data(), commands.cmds);
     }

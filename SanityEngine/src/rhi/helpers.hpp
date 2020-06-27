@@ -28,6 +28,11 @@ namespace renderer {
 
     void set_object_name(ID3D12Object* object, const Rx::String& name);
 
+    template <typename ObjectType>
+    void set_object_name(ComPtr<ObjectType> object, const Rx::String& name) {
+        set_object_name(object.Get(), name);
+    }
+
     DXGI_FORMAT to_dxgi_format(ImageFormat format);
 
     D3D12_BLEND to_d3d12_blend(BlendFactor factor);

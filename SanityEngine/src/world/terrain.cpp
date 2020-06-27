@@ -81,10 +81,10 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     //                (chunk_x != distance_from_player)) {
     //                 continue;
     //             }
-    // 
+    //
     //             {
     //                 const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
-    // 
+    //
     //                 std::lock_guard l{loaded_terrain_tiles_mutex};
     //                 if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
     //                     if(num_active_tilegen_tasks.load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
@@ -217,45 +217,37 @@ void Terrain::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D
 }
 
 void Terrain::load_terrain_textures_and_create_material() {
+    const char* albedo_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
+    const char*
+        normal_roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
+
     ZoneScoped;
 
     auto material = renderer::StandardMaterial{};
     material.noise = renderer->get_noise_texture();
 
-    Rx::Optional<renderer::TextureHandle> albedo_image_handle{Rx::nullopt};
-    Rx::Optional<renderer::TextureHandle> normal_roughness_image_handle{Rx::nullopt};
-    auto albedo_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
-        const char* albedo_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
-        albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
-    });
-    albedo_task.Completed([&](IAsyncAction const& /* async_info */, AsyncStatus const& async_status) {
+    const auto albedo_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
+        const auto albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
         if(albedo_image_handle) {
             material.albedo = *albedo_image_handle;
         } else {
-            const char* albedo_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
             logger->error("Could not load terrain albedo texture %s", albedo_texture_name);
             material.albedo = renderer->get_pink_texture();
         }
     });
 
-    auto normal_roughness_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
-        const char*
-            normal_roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
-        normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);
-    });
-    normal_roughness_task.Completed([&](IAsyncAction const& /*async_info*/, AsyncStatus const& async_status) {
+    const auto normal_roughness_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
+        const auto normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);
         if(normal_roughness_image_handle) {
             material.normal_roughness = *normal_roughness_image_handle;
         } else {
-            const char* normal_roughness_texture_name =
-                "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
             logger->error("Could not load terrain normal roughness texture %s", normal_roughness_texture_name);
             material.normal_roughness = renderer->get_default_normal_roughness_texture();
         }
     });
 
-    // albedo_task.get();
-    // normal_roughness_task.get();
+    albedo_task.get();
+    normal_roughness_task.get();
 
     terrain_material = renderer->allocate_standard_material(material);
 }

@@ -39,12 +39,12 @@ namespace renderer {
     RX_CONSOLE_BVAR(cvar_break_on_validation_error,
                     "r.BreakOnValidationError",
                     "Whether to issue a breakpoint when the validation layer encounters an error",
-                    true);
+                    false);
 
     RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
                     "r.VerifyEveryCommandListSubmission",
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
-                    false);
+                    true);
 
     RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
@@ -386,6 +386,8 @@ namespace renderer {
     }
 
     CommandList RenderDevice::create_command_list(Rx::Optional<Uint32> frame_idx) {
+        Rx::Concurrency::ScopeLock l{create_command_list_mutex};
+
         if(!frame_idx) {
             frame_idx = cur_gpu_frame_idx;
         }
@@ -393,11 +395,22 @@ namespace renderer {
 
         // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
         ComPtr<ID3D12CommandAllocator> command_allocator;
-        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator));
+        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator));
+        if(result == DXGI_ERROR_DEVICE_REMOVED) {
+            log_dred_report();
+
+            const auto removed_reason = device->GetDeviceRemovedReason();
+            const auto msg = Rx::String::format("Device removed: %s", to_string(removed_reason));
+            logger->error(msg.data());
+        }
+        if(FAILED(result)) {
+            const auto msg = Rx::String::format("Could not create command list: %s", to_string(result));
+            Rx::abort(msg.data());
+        }
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
         ComPtr<ID3D12CommandList> cmds;
-        auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
+        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -415,13 +428,23 @@ namespace renderer {
             Rx::abort(msg.data());
         }
 
+        
+
         commands->SetName(L"Unnamed Sanity Engine command list");
         command_lists_outside_render_device.fetch_add(1);
         return {commands, command_allocator, *frame_idx};
     }
 
     void RenderDevice::submit_command_list(CommandList&& commands) {
-        commands->Close();
+        const auto result = commands->Close();
+        if(FAILED(result)) {
+#ifndef NDEBUG
+            const auto msg = Rx::String::format("Could not close command list: %s", to_string(result));
+            Rx::abort(msg.data());
+#else
+            logger->error("Could not close command list: %s", to_string(result));
+#endif
+        }
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_to_submit_on_end_frame[commands.gpu_frame_idx].push_back(commands);

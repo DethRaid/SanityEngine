@@ -58,27 +58,27 @@ namespace renderer {
             commands->ResourceBarrier(1, &barrier);
         }
         
-        // {
-        //     const auto
-        //         render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_rtv_handle,
-        //                                                                     .BeginningAccess =
-        //                                                                         {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
-        //                                                                     .EndingAccess = {
-        //                                                                         .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
-        // 
-        //     commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
-        // }
-        // 
-        // commands->SetPipelineState(denoising_pipeline->pso.Get());
-        // 
-        // commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-        // commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-        //                                             denoiser_material_buffer->resource->GetGPUVirtualAddress());
-        // 
-        // commands->DrawInstanced(3, 1, 0, 0);
-        // 
-        // commands->EndRenderPass();
-        // 
+        {
+            const auto
+                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_rtv_handle,
+                                                                            .BeginningAccess =
+                                                                                {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                                                                            .EndingAccess = {
+                                                                                .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+        
+            commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+        }
+        
+        commands->SetPipelineState(denoising_pipeline->pso.Get());
+        
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
+                                                    denoiser_material_buffer->resource->GetGPUVirtualAddress());
+        
+        commands->DrawInstanced(3, 1, 0, 0);
+        
+        commands->EndRenderPass();
+        
         const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
         
         {
