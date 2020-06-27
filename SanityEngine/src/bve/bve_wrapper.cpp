@@ -2,20 +2,21 @@
 
 #include <filesystem>
 
-#include <TracyD3D12.hpp>
 #include <entt/entity/registry.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <rx/core/log.h>
 #include <stb_image.h>
+#include <TracyD3D12.hpp>
+
 
 #include "adapters/tracy.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
+#include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
-#include "rhi/resources.hpp"
+#include "rx/core/log.h"
 
 using namespace bve;
 
@@ -56,7 +57,7 @@ static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const in
 
 RX_LOG("Bve", logger);
 
-BveWrapper::BveWrapper(ID3D11Device* device) {
+BveWrapper::BveWrapper(renderer::RenderDevice& device) {
     bve_init();
 
     create_texture_filter_pipeline(device);
@@ -96,16 +97,21 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
 
         auto& mesh_data = renderer.get_static_mesh_store();
 
-        auto locked_context = device.get_device_context();
-        auto* context = locked_context->Get();
+        auto commands = device.create_command_list();
+        commands->SetName(L"BveWrapper::add_train_to_scene");
         {
+            TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
+            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
 
-            mesh_data.bind_to_context(context);
+            mesh_data.bind_to_command_list(commands);
 
-            context->CSSetShader(bve_texture_pipeline.Get(), nullptr, 0);
+            commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
+            commands->SetPipelineState(bve_texture_pipeline->pso.Get());
 
             Rx::Vector<renderer::Mesh> train_meshes;
             train_meshes.reserve(train->meshes.count);
+
+            mesh_data.begin_adding_meshes(commands);
 
             for(Uint32 i = 0; i < train->meshes.count; i++) {
                 const auto& bve_mesh = train->meshes.ptr[i];
@@ -117,7 +123,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
 
                 auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
 
-                mesh_component.mesh = mesh_data.add_mesh(vertices, indices, context);
+                mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
                 train_meshes.push_back(mesh_component.mesh);
 
                 if(bve_mesh.texture.texture_id.exists) {
@@ -148,6 +154,8 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                             logger->error("Could not load texture %s", texture_name);
 
                         } else {
+                            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
+
                             if(num_channels == 3) {
                                 texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
                             }
@@ -158,15 +166,8 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                                                                          .width = static_cast<Uint32>(width),
                                                                          .height = static_cast<Uint32>(height),
                                                                          .depth = 1};
-                            const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, context);
+                            const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
                             const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
-
-                            const auto scratch_srv_desc = D3D11_SHADER_RESOURCE_VIEW_DESC{.Format = scratch_texture.format,
-                                                                                          .ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D,
-                                                                                          .Texture2D = {.MostDetailedMip = 0,
-                                                                                                        .MipLevels = 0xFFFFFFFF}};
-                            ComPtr<ID3D11ShaderResourceView> scratch_srv;
-                            device.device->CreateShaderResourceView(scratch_texture.resource.Get(), &scratch_srv_desc, &scratch_srv);
 
                             // Create a second image as the real image
                             create_info.name = texture_name;
@@ -179,15 +180,12 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                             bind_group_builder->set_image("output_texture", texture);
 
                             auto bind_group = bind_group_builder->build();
-                            bind_group->bind_to_compute_signature(context);
-
-                            context->CSSetShaderResources(0, 1, scratch_srv.GetAddressOf());
-                            context->CSSetUnorderedAccessViews(0, 1, 0, nullptr);
+                            bind_group->bind_to_compute_signature(commands);
 
                             const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
                             const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
 
-                            context->Dispatch(workgroup_width, workgroup_height, 1);
+                            commands->Dispatch(workgroup_width, workgroup_height, 1);
 
                             renderer.schedule_texture_destruction(scratch_texture_handle);
 
@@ -207,7 +205,41 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                     bve_delete_string(const_cast<char*>(texture_name));
                 }
             }
+
+            mesh_data.end_adding_meshes(commands);
+
+            const auto& index_buffer = mesh_data.get_index_buffer();
+            const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
+
+            {
+                Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+                barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+            }
+
+            const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
+            renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
+
+            {
+                Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+                barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                   D3D12_RESOURCE_STATE_INDEX_BUFFER);
+                barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+            }
         }
+
+        device.submit_command_list(std::move(commands));
 
         logger->info("Loaded file %s", filename);
 
@@ -215,15 +247,41 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
     }
 }
 
-void BveWrapper::create_texture_filter_pipeline(ID3D11Device* device) {
+Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(renderer::RenderDevice& device) {
+    auto [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
+    const auto descriptor_size = device.get_shader_resource_descriptor_size();
+
+    const Rx::Map<Rx::String, renderer::DescriptorTableDescriptorDescription>
+        descriptors = Rx::Array{Rx::Pair{"input_texture",
+                                         renderer::DescriptorTableDescriptorDescription{.type = renderer::DescriptorType::ShaderResource,
+                                                                                        .handle = cpu_handle}},
+                                Rx::Pair{"output_texture",
+                                         renderer::DescriptorTableDescriptorDescription{.type = renderer::DescriptorType::UnorderedAccess,
+                                                                                        .handle = cpu_handle.Offset(descriptor_size)}}};
+
+    const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> tables = Rx::Array{Rx::Pair{0, gpu_handle}};
+
+    return device.create_bind_group_builder({}, descriptors, tables);
+}
+
+void BveWrapper::create_texture_filter_pipeline(renderer::RenderDevice& device) {
     ZoneScoped;
 
-    const auto compute_shader = load_shader("make_transparent_texture.compute");
+    Rx::Vector<CD3DX12_ROOT_PARAMETER> root_params{1};
 
-    const auto result = device->CreateComputeShader(compute_shader.data(), compute_shader.size(), nullptr, &bve_texture_pipeline);
-    if(FAILED(result)) {
-        logger->error("Could not create BVE texture processing compute shader");
-    }
+    Rx::Vector<CD3DX12_DESCRIPTOR_RANGE> ranges{2};
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+    root_params[0].InitAsDescriptorTable(static_cast<UINT>(ranges.size()), ranges.data());
+
+    const auto sig_desc = D3D12_ROOT_SIGNATURE_DESC{.NumParameters = static_cast<UINT>(root_params.size()),
+                                                    .pParameters = root_params.data()};
+
+    const auto root_sig = device.compile_root_signature(sig_desc);
+
+    const auto compute_shader = load_shader("make_transparent_texture.compute");
+    bve_texture_pipeline = device.create_compute_pipeline_state(compute_shader, root_sig);
 }
 
 BVE_User_Error_Data BveWrapper::get_printable_error(const BVE_Mesh_Error& error) { return BVE_Mesh_Error_to_data(&error); }
@@ -240,7 +298,7 @@ BveMeshHandle BveWrapper::load_mesh_from_file(const Rx::String& filename) {
     return BveMeshHandle{mesh, bve_delete_loaded_static_mesh};
 }
 
-Rx::Pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
+std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_vertices(const BVE_Mesh& mesh) const {
     ZoneScoped;
 
     RX_ASSERT(mesh.indices.count % 3 == 0, "Index count must be a multiple of three");

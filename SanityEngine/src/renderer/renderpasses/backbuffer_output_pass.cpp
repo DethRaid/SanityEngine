@@ -48,7 +48,7 @@ namespace renderer {
         PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");
 
         auto& device = renderer->get_render_device();
-        const auto backbuffer_rtv_handle = device.get_backbuffer_rtv();
+        const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
 
         const auto
             render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,

@@ -378,6 +378,7 @@
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\rhi\bind_group.hpp" />
     <ClInclude Include="src\rhi\compute_pipeline_state.hpp" />
+    <ClInclude Include="src\rhi\d3dx12.hpp" />
     <ClInclude Include="src\rhi\descriptor_allocator.hpp" />
     <ClInclude Include="src\rhi\framebuffer.hpp" />
     <ClInclude Include="src\rhi\helpers.hpp" />
@@ -557,10 +558,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="data\shaders\make_transparent_texture.compute.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
@@ -848,7 +849,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;wren.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d11.lib;d3dx11.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;wren.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -862,10 +863,10 @@
       <Message>Compiling shaders</Message>
     </CustomBuildStep>
     <FxCompile>
-      <ShaderModel>5.1</ShaderModel>
+      <ShaderModel>6.4</ShaderModel>
     </FxCompile>
     <FxCompile>
-      <EnableUnboundedDescriptorTables>false</EnableUnboundedDescriptorTables>
+      <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
     </FxCompile>
     <PreBuildEvent>
       <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>

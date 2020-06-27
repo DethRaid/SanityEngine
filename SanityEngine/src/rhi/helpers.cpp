@@ -2,24 +2,42 @@
 
 #include <sstream>
 
-#include <d3d11.h>
+#include <d3d12.h>
 
 #include "core/align.hpp"
 #include "core/ansi_colors.hpp"
 #include "core/defer.hpp"
+#include "d3dx12.hpp"
 #include "framebuffer.hpp"
 #include "render_device.hpp"
 
 namespace renderer {
 
-    Rx::WideString to_wide_string(const Rx::String& string) { return string.to_utf16(); }
+    std::wstring to_wide_string(const Rx::String& string) {
+        const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, nullptr, 0);
+        wchar_t* wide_char_string = new wchar_t[wide_string_length];
+        MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, wide_char_string, wide_string_length);
 
-    Rx::String from_wide_string(const Rx::WideString& wide_string) { return wide_string.to_utf8(); }
+        std::wstring wide_string{wide_char_string};
 
-    void set_object_name(ID3D11DeviceChild* object, const Rx::String& name) {
-        const auto wide_name = name.to_utf16();
+        delete[] wide_char_string;
 
-        object->SetPrivateData(WKPDID_D3DDebugObjectNameW, static_cast<UINT>(wide_name.size() * sizeof(Uint16)), wide_name.data());
+        return wide_string;
+    }
+
+    Rx::String from_wide_string(const std::wstring& wide_string) {
+        const int string_length = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        Rx::String string;
+        string.resize(string_length);
+        WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, string.data(), static_cast<int>(string.size()), nullptr, nullptr);
+
+        return string;
+    }
+
+    void set_object_name(ID3D12Object* object, const Rx::String& name) {
+        const auto wide_name = to_wide_string(name);
+
+        object->SetName(reinterpret_cast<LPCWSTR>(wide_name.c_str()));
     }
 
     DXGI_FORMAT to_dxgi_format(const ImageFormat format) {
@@ -46,7 +64,7 @@ namespace renderer {
         }
     }
 
-    D3D12_BLEND to_d3d11_blend(const BlendFactor factor) {
+    D3D12_BLEND to_d3d12_blend(const BlendFactor factor) {
         switch(factor) {
             case BlendFactor::Zero:
                 return D3D12_BLEND_ZERO;
@@ -103,7 +121,7 @@ namespace renderer {
         return D3D12_BLEND_ZERO;
     }
 
-    D3D12_BLEND_OP to_d3d11_blend_op(const BlendOp op) {
+    D3D12_BLEND_OP to_d3d12_blend_op(const BlendOp op) {
         switch(op) {
             case BlendOp::Add:
                 return D3D12_BLEND_OP_ADD;
@@ -124,7 +142,7 @@ namespace renderer {
         return D3D12_BLEND_OP_ADD;
     }
 
-    D3D12_FILL_MODE to_d3d11_fill_mode(const FillMode mode) {
+    D3D12_FILL_MODE to_d3d12_fill_mode(const FillMode mode) {
         switch(mode) {
             case FillMode::Wireframe:
                 return D3D12_FILL_MODE_WIREFRAME;
@@ -136,7 +154,7 @@ namespace renderer {
         }
     }
 
-    D3D12_CULL_MODE to_d3d11_cull_mode(const CullMode mode) {
+    D3D12_CULL_MODE to_d3d12_cull_mode(const CullMode mode) {
         switch(mode) {
             case CullMode::None:
                 return D3D12_CULL_MODE_NONE;
@@ -151,7 +169,7 @@ namespace renderer {
         }
     }
 
-    D3D12_COMPARISON_FUNC to_d3d11_comparison_func(const CompareOp op) {
+    D3D12_COMPARISON_FUNC to_d3d12_comparison_func(const CompareOp op) {
         switch(op) {
             case CompareOp::Never:
                 return D3D12_COMPARISON_FUNC_NEVER;
@@ -181,7 +199,7 @@ namespace renderer {
         }
     }
 
-    D3D12_STENCIL_OP to_d3d11_stencil_op(const StencilOp op) {
+    D3D12_STENCIL_OP to_d3d12_stencil_op(const StencilOp op) {
         switch(op) {
             case StencilOp::Keep:
                 return D3D12_STENCIL_OP_KEEP;
@@ -211,7 +229,7 @@ namespace renderer {
         return D3D12_STENCIL_OP_KEEP;
     }
 
-    D3D12_PRIMITIVE_TOPOLOGY_TYPE to_d3d11_primitive_topology_type(const PrimitiveType topology) {
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE to_d3d12_primitive_topology_type(const PrimitiveType topology) {
         switch(topology) {
             case PrimitiveType::Points:
                 return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
@@ -226,55 +244,156 @@ namespace renderer {
         }
     }
 
-    D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d11_beginning_access(const RenderTargetBeginningAccess& access, const bool is_color) {
-        D3D12_RENDER_PASS_BEGINNING_ACCESS d3d11_access = {};
+    D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d12_beginning_access(const RenderTargetBeginningAccess& access, const bool is_color) {
+        D3D12_RENDER_PASS_BEGINNING_ACCESS d3d12_access = {};
 
         switch(access.type) {
             case RenderTargetBeginningAccessType::Preserve:
-                d3d11_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE;
+                d3d12_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE;
                 break;
 
             case RenderTargetBeginningAccessType::Clear:
-                d3d11_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR;
-                d3d11_access.Clear.ClearValue.Format = to_dxgi_format(access.format);
+                d3d12_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR;
+                d3d12_access.Clear.ClearValue.Format = to_dxgi_format(access.format);
                 if(is_color) {
-                    d3d11_access.Clear.ClearValue.Color[0] = access.clear_color.x;
-                    d3d11_access.Clear.ClearValue.Color[1] = access.clear_color.y;
-                    d3d11_access.Clear.ClearValue.Color[2] = access.clear_color.z;
-                    d3d11_access.Clear.ClearValue.Color[3] = access.clear_color.w;
+                    d3d12_access.Clear.ClearValue.Color[0] = access.clear_color.x;
+                    d3d12_access.Clear.ClearValue.Color[1] = access.clear_color.y;
+                    d3d12_access.Clear.ClearValue.Color[2] = access.clear_color.z;
+                    d3d12_access.Clear.ClearValue.Color[3] = access.clear_color.w;
                 } else {
-                    d3d11_access.Clear.ClearValue.DepthStencil.Depth = access.clear_color.x;
-                    d3d11_access.Clear.ClearValue.DepthStencil.Stencil = 0;
+                    d3d12_access.Clear.ClearValue.DepthStencil.Depth = access.clear_color.x;
+                    d3d12_access.Clear.ClearValue.DepthStencil.Stencil = 0;
                 }
                 break;
 
             case RenderTargetBeginningAccessType::Discard:
-                d3d11_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD;
+                d3d12_access.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD;
                 break;
         }
 
-        return d3d11_access;
+        return d3d12_access;
     }
 
-    D3D12_RENDER_PASS_ENDING_ACCESS to_d3d11_ending_access(const RenderTargetEndingAccess& access) {
-        D3D12_RENDER_PASS_ENDING_ACCESS d3d11_access{};
+    D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access) {
+        D3D12_RENDER_PASS_ENDING_ACCESS d3d12_access{};
 
         switch(access.type) {
             case RenderTargetEndingAccessType::Preserve:
-                d3d11_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE;
+                d3d12_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE;
                 break;
 
             case RenderTargetEndingAccessType::Resolve:
-                d3d11_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_RESOLVE;
+                d3d12_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_RESOLVE;
                 // TODO: Deal with this later
                 break;
 
             case RenderTargetEndingAccessType::Discard:
-                d3d11_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD;
+                d3d12_access.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD;
                 break;
         }
 
-        return d3d11_access;
+        return d3d12_access;
+    }
+
+    Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs) {
+        Rx::String breadcrumb_output_string;
+
+        const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
+
+        while(cur_node != nullptr) {
+            const auto command_list_name = cur_node->pCommandListDebugNameW != nullptr ?
+                                               from_wide_string(cur_node->pCommandListDebugNameW) :
+                                               "Unknown command list";
+
+            const auto command_queue_name = cur_node->pCommandQueueDebugNameW != nullptr ?
+                                                from_wide_string(cur_node->pCommandQueueDebugNameW) :
+                                                "Unknown command queue";
+
+            const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
+            const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
+            breadcrumb_output_string += Rx::String::
+                format("Command list %s, executing on command queue %s, has completed %d render operations\nLast render operation: %s%s%s",
+                       command_list_name,
+                       command_queue_name,
+                       last_breadcrumb_idx + 1,
+                       colors::COMPLETED_BREADCRUMB,
+                       breadcrumb_to_string(breadcrumb),
+                       colors::DEFAULT_CONSOLE_COLOR);
+
+            if(cur_node->BreadcrumbCount > 0) {
+                const auto current_breadcrumb_idx = last_breadcrumb_idx + 1;
+                for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
+                    const char* color = colors::DEFAULT_CONSOLE_COLOR;
+                    if(i < current_breadcrumb_idx) {
+                        color = colors::COMPLETED_BREADCRUMB;
+
+                    } else if(i == current_breadcrumb_idx) {
+                        color = colors::INCOMPLETE_BREADCRUMB;
+
+                    } else {
+                        color = colors::DEFAULT_CONSOLE_COLOR;
+                    }
+
+                    breadcrumb_output_string += Rx::String::format("\n\t%s%s", color, breadcrumb_to_string(cur_node->pCommandHistory[i]));
+
+                    if(cur_node->BreadcrumbContextsCount > 0) {
+                        for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
+                            const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
+                            if(cur_breadcrumb_context.BreadcrumbIndex == i) {
+                                breadcrumb_output_string += Rx::String::format("\n\t\t%s%s",
+                                                                               colors::CONTEXT_LABEL,
+                                                                               from_wide_string(cur_breadcrumb_context.pContextString));
+                                break;
+                            }
+                        }
+                    }
+                    breadcrumb_output_string += "\033[m";
+                }
+            }
+
+            breadcrumb_output_string += "\n\033[40m";
+
+            cur_node = cur_node->pNext;
+        }
+
+        return breadcrumb_output_string;
+    }
+
+    void print_allocation_chain(const D3D12_DRED_ALLOCATION_NODE1* head, std::stringstream& ss) {
+        const auto* allocation = head;
+        while(allocation != nullptr) {
+            ss << "\n\t";
+            if(allocation->ObjectNameA != nullptr) {
+                ss << allocation->ObjectNameA;
+
+            } else if(allocation->ObjectNameW != nullptr) {
+                ss << from_wide_string(allocation->ObjectNameW).data();
+
+            } else {
+                ss << "Unnamed allocation";
+            }
+            ss << " (" << allocation_type_to_string(allocation->AllocationType).data() << ")";
+
+            allocation = allocation->pNext;
+        }
+    }
+
+    Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output) {
+        std::stringstream ss;
+
+        ss << "Page fault at GPU virtual address " << page_fault_output.PageFaultVA;
+
+        if(page_fault_output.pHeadExistingAllocationNode != nullptr) {
+            ss << "\nActive allocations:";
+            print_allocation_chain(page_fault_output.pHeadExistingAllocationNode, ss);
+        }
+
+        if(page_fault_output.pHeadRecentFreedAllocationNode != nullptr) {
+            ss << "\nRecently freed allocations:";
+            print_allocation_chain(page_fault_output.pHeadRecentFreedAllocationNode, ss);
+        }
+
+        return ss.str().c_str();
     }
 
     RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
@@ -355,20 +474,227 @@ namespace renderer {
         device.return_staging_buffer(std::move(staging_buffer));
     }
 
-    ScopedD3DAnnotation::ScopedD3DAnnotation(ID3DUserDefinedAnnotation* annotation_in, const Rx::String& name) : annotation{annotation_in} {
-        const auto wide_name = name.to_utf16();
-        annotation->BeginEvent(reinterpret_cast<LPCWSTR>(wide_name.data()));
+    Rx::String breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
+        switch(op) {
+            case D3D12_AUTO_BREADCRUMB_OP_SETMARKER:
+                return "Set marker";
+
+            case D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT:
+                return "Begin event";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ENDEVENT:
+                return "End event";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DRAWINSTANCED:
+                return "Draw instanced";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DRAWINDEXEDINSTANCED:
+                return "Draw indexed instanced";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEINDIRECT:
+                return "Execute indirect";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DISPATCH:
+                return "Dispatch";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYBUFFERREGION:
+                return "Copy buffer region";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYTEXTUREREGION:
+                return "Copy texture region";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYRESOURCE:
+                return "Copy resource";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYTILES:
+                return "Copy tiles";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCE:
+                return "Resolve subresource";
+
+            case D3D12_AUTO_BREADCRUMB_OP_CLEARRENDERTARGETVIEW:
+                return "Clear render target view";
+
+            case D3D12_AUTO_BREADCRUMB_OP_CLEARUNORDEREDACCESSVIEW:
+                return "Clear unordered access view";
+
+            case D3D12_AUTO_BREADCRUMB_OP_CLEARDEPTHSTENCILVIEW:
+                return "Clear depth stencil view";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOURCEBARRIER:
+                return "Resource barrier";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEBUNDLE:
+                return "Execute bundle";
+
+            case D3D12_AUTO_BREADCRUMB_OP_PRESENT:
+                return "Present";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVEQUERYDATA:
+                return "Resolve query data";
+
+            case D3D12_AUTO_BREADCRUMB_OP_BEGINSUBMISSION:
+                return "Begin submission";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ENDSUBMISSION:
+                return "End submission";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME:
+                return "Decode frame";
+
+            case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES:
+                return "Process frames";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT:
+                return "Atomic copy buffer uint";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT64:
+                return "Atomic copy buffer uint64";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCEREGION:
+                return "Resolve subresource region";
+
+            case D3D12_AUTO_BREADCRUMB_OP_WRITEBUFFERIMMEDIATE:
+                return "Write buffer immediate";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME1:
+                return "Decode frame 1";
+
+            case D3D12_AUTO_BREADCRUMB_OP_SETPROTECTEDRESOURCESESSION:
+                return "Set protected resource session";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME2:
+                return "Decode frame 2";
+
+            case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES1:
+                return "Process frames 1";
+
+            case D3D12_AUTO_BREADCRUMB_OP_BUILDRAYTRACINGACCELERATIONSTRUCTURE:
+                return "Build raytracing acceleration structure";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EMITRAYTRACINGACCELERATIONSTRUCTUREPOSTBUILDINFO:
+                return "Emit raytracing acceleration structure post build info";
+
+            case D3D12_AUTO_BREADCRUMB_OP_COPYRAYTRACINGACCELERATIONSTRUCTURE:
+                return "Copy raytracing acceleration structure";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DISPATCHRAYS:
+                return "Dispatch rays";
+
+            case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEMETACOMMAND:
+                return "Initialize meta command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEMETACOMMAND:
+                return "Execute meta command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_ESTIMATEMOTION:
+                return "Estimate motion";
+
+            case D3D12_AUTO_BREADCRUMB_OP_RESOLVEMOTIONVECTORHEAP:
+                return "Resolve motion vector heap";
+
+            case D3D12_AUTO_BREADCRUMB_OP_SETPIPELINESTATE1:
+                return "Set pipeline state 1";
+
+            case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEEXTENSIONCOMMAND:
+                return "Initialize extension command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_EXECUTEEXTENSIONCOMMAND:
+                return "Execute extension command";
+
+            case D3D12_AUTO_BREADCRUMB_OP_DISPATCHMESH:
+                return "Dispatch mesh";
+
+            default:
+                return "Unknown breadcrumb";
+        }
     }
 
-    ScopedD3DAnnotation::ScopedD3DAnnotation(ID3D11DeviceContext* context, const Rx::String& name) {
-        context->QueryInterface(&annotation);
+    Rx::String allocation_type_to_string(const D3D12_DRED_ALLOCATION_TYPE type) {
+        switch(type) {
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_QUEUE:
+                return "Command queue";
 
-        const auto wide_name = name.to_utf16();
-        annotation->BeginEvent(reinterpret_cast<LPCWSTR>(wide_name.data()));
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_ALLOCATOR:
+                return "Command allocator";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PIPELINE_STATE:
+                return "Pipeline state";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_LIST:
+                return "Command list";
+
+            case D3D12_DRED_ALLOCATION_TYPE_FENCE:
+                return "Fence";
+
+            case D3D12_DRED_ALLOCATION_TYPE_DESCRIPTOR_HEAP:
+                return "Descriptor heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_HEAP:
+                return "Heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_QUERY_HEAP:
+                return "Query heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_SIGNATURE:
+                return "Command signature";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PIPELINE_LIBRARY:
+                return "Pipeline library";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_DECODER:
+                return "Video decoder";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_PROCESSOR:
+                return "Video processor";
+
+            case D3D12_DRED_ALLOCATION_TYPE_RESOURCE:
+                return "Resource";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PASS:
+                return "Pass";
+
+            case D3D12_DRED_ALLOCATION_TYPE_CRYPTOSESSION:
+                return "Crypto session";
+
+            case D3D12_DRED_ALLOCATION_TYPE_CRYPTOSESSIONPOLICY:
+                return "Crypto session policy";
+
+            case D3D12_DRED_ALLOCATION_TYPE_PROTECTEDRESOURCESESSION:
+                return "Protected resource session";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_DECODER_HEAP:
+                return "Video decoder heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_POOL:
+                return "Command pool";
+
+            case D3D12_DRED_ALLOCATION_TYPE_COMMAND_RECORDER:
+                return "Command recorder";
+
+            case D3D12_DRED_ALLOCATION_TYPE_STATE_OBJECT:
+                return "State object";
+
+            case D3D12_DRED_ALLOCATION_TYPE_METACOMMAND:
+                return "Meta command";
+
+            case D3D12_DRED_ALLOCATION_TYPE_SCHEDULINGGROUP:
+                return "Scheduling group";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_MOTION_ESTIMATOR:
+                return "Video motion estimator";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_MOTION_VECTOR_HEAP:
+                return "Motion vector heap";
+
+            case D3D12_DRED_ALLOCATION_TYPE_VIDEO_EXTENSION_COMMAND:
+                return "Video extension command";
+
+            case D3D12_DRED_ALLOCATION_TYPE_INVALID:
+                return "Invalid";
+
+            default:
+                return "Unknown object type";
+        }
     }
-
-    ScopedD3DAnnotation::~ScopedD3DAnnotation() {
-        annotation->EndEvent();
-    }
-
 } // namespace renderer
