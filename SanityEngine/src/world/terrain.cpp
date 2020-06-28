@@ -63,55 +63,60 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     // V1: load the tiles in the player's frustum, plus a few on either side so it's nice and fast for the player to spin around
 
     // TODO: Define some maximum number of tiles that may be loaded/generated in a given frame
-    {
-        std::lock_guard l{loaded_terrain_tiles_mutex};
 
-        if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
-            num_active_tilegen_tasks.fetch_add(1);
-            ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
+    {
+        ZoneScopedN("Lock loaded_terrain_tiles_mutex");
+        loaded_terrain_tiles_mutex.lock();
+    }
+
+    if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
+        loaded_terrain_tiles.insert(coords_of_tile_containing_player, {});
+        num_active_tilegen_tasks.fetch_add(1);
+        ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
+    }
+
+    const auto max_tile_distance = t_max_tile_distance->get();
+    for(Int32 distance_from_player = 1; distance_from_player < max_tile_distance; distance_from_player++) {
+        for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
+            for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
+                // Only generate chunks at the edge of our current square
+                if((chunk_y != -distance_from_player) && (chunk_y != distance_from_player) && (chunk_x != -distance_from_player) &&
+                   (chunk_x != distance_from_player)) {
+                    continue;
+                }
+
+                const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
+
+                if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
+                    if(num_active_tilegen_tasks.load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
+                        loaded_terrain_tiles.insert(new_tile_coords, {});
+                        num_active_tilegen_tasks.fetch_add(1);
+                        ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(new_tile_coords); });
+                    }
+                }
+            }
         }
     }
 
-    // const auto max_tile_distance = t_max_tile_distance->get();
-    // for(Int32 distance_from_player = 1; distance_from_player < max_tile_distance; distance_from_player++) {
-    //     for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
-    //         for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
-    //             // Only generate chunks at the edge of our current square
-    //             if((chunk_y != -distance_from_player) && (chunk_y != distance_from_player) && (chunk_x != -distance_from_player) &&
-    //                (chunk_x != distance_from_player)) {
-    //                 continue;
-    //             }
-    //
-    //             {
-    //                 const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
-    //
-    //                 std::lock_guard l{loaded_terrain_tiles_mutex};
-    //                 if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
-    //                     if(num_active_tilegen_tasks.load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
-    //                         num_active_tilegen_tasks.fetch_add(1);
-    //                         ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(new_tile_coords); });
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    loaded_terrain_tiles_mutex.unlock();
 }
 
-Float32 Terrain::get_terrain_height(const Vec2f& location) const {
+Float32 Terrain::get_terrain_height(const Vec2f& location) {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
     const auto tile_start_location = tilecoords * static_cast<Int32>(TILE_SIZE);
     const auto location_within_tile = Vec2u{static_cast<Uint32>(abs(round(location.x - tile_start_location.x))),
                                             static_cast<Uint32>(abs(round(location.y - tile_start_location.y)))};
 
+    Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
     if(const auto* tile = loaded_terrain_tiles.find(tilecoords)) {
-        return tile->heightmap[location_within_tile.y][location_within_tile.x];
-
-    } else {
-        // Tile isn't loaded yet. Figure out how to handle this. Right now I don't want to deal with it, so I won't
-        return 0;
+        if(tile->loading_phase != TerrainTile::LoadingPhase::GeneratingHeightmap) {
+            return tile->heightmap[location_within_tile.y][location_within_tile.x];
+        }
     }
+
+    // Tile isn't loaded yet. Figure out how to handle this. Right now I don't want to deal with it, so I won't
+    return 0;
 }
 
 Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3f& position) {
@@ -266,7 +271,8 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     {
         Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
-        loaded_terrain_tiles.insert(tilecoord, TerrainTile{tile_heightmap, tilecoord, tile_entity});
+        loaded_terrain_tiles.insert(tilecoord,
+                                    TerrainTile{TerrainTile::LoadingPhase::GeneratingMesh, tile_heightmap, tilecoord, tile_entity});
     }
 
     Rx::Vector<StandardVertex> tile_vertices;
@@ -395,6 +401,11 @@ void Terrain::upload_new_tile_meshes() {
                 locked_registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
                 locked_registry->assign<TransformComponent>(tile_entity, glm::vec3{tile_location.x, 0.0f, tile_location.y});
             }
+
+            {
+                Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
+                loaded_terrain_tiles.find(tile_location)->loading_phase = TerrainTile::LoadingPhase::Complete;
+            }
         });
 
         locked_tile_mesh_queue->clear();
@@ -403,7 +414,7 @@ void Terrain::upload_new_tile_meshes() {
     device.submit_command_list(Rx::Utility::move(commands));
 }
 
-Vec3f Terrain::get_normal_at_location(const Vec2f& location) const {
+Vec3f Terrain::get_normal_at_location(const Vec2f& location) {
     const auto height_middle_right = get_terrain_height(location + Vec2f{1, 0});
     const auto height_bottom_middle = get_terrain_height(location + Vec2f{0, -1});
     const auto height_top_middle = get_terrain_height(location + Vec2f{0, 1});

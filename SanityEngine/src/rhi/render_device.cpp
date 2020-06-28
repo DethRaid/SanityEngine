@@ -954,7 +954,7 @@ namespace renderer {
         root_parameters[7].InitAsShaderResourceView(6);
 
         // Model matrix buffer
-        root_parameters[8].InitAsShaderResourceView(MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX);
+        root_parameters[MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(7);
 
         // Textures array
         Rx::Vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
@@ -1421,7 +1421,7 @@ namespace renderer {
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
             PIXScopedEvent(swapchain_cmds.cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
 
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
@@ -1439,7 +1439,7 @@ namespace renderer {
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_presentable");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.cmds.Get(), "RenderDevice::transition_swapchain_image_to_presentable");
             PIXScopedEvent(swapchain_cmds.cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
 
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();

@@ -72,7 +72,7 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
     renderer::TextureHandle handle_out;
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), msg.data());
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), msg.data());
         PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, msg.data());
 
         // I get this error from PIXScopedEvent

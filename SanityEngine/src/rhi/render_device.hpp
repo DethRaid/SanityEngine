@@ -54,10 +54,10 @@ namespace renderer {
         static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 2;
 
         static constexpr Uint32 MATERIAL_BUFFER_ROOT_PARAMETER_INDEX = 2;
-        static constexpr Uint32 MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX = 7;
+        static constexpr Uint32 MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX = 8;
 
 #ifdef TRACY_ENABLE
-        inline static tracy::D3D12QueueCtx* tracy_context;
+        inline static tracy::D3D12QueueCtx* tracy_context{nullptr};
 #endif
 
         ComPtr<ID3D12Device> device;

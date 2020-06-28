@@ -19,25 +19,25 @@ namespace rex {
     void SetThreadName(void* /*_context*/, const char* _name) { tracy::SetThreadName(_name); }
 
     void BeginSample(void* /*_context*/, const Rx::Profiler::Sample* _sample) {
-        const auto& source_info = _sample->source_location();
-
-        // Enframe tracy::SourceLocationData in the Sample.
-        auto enframe = _sample->enframe<tracy::SourceLocationData>();
-        enframe->name = _sample->tag();
-        enframe->function = source_info.function();
-        enframe->file = source_info.file();
-        enframe->line = source_info.line();
-
-        TracyLfqPrepare(tracy::QueueType::ZoneBegin);
-        tracy::MemWrite(&item->zoneBegin.time, tracy::Profiler::GetTime());
-        tracy::MemWrite(&item->zoneBegin.srcloc, (uint64_t) enframe);
-        TracyLfqCommit;
+        // const auto& source_info = _sample->source_location();
+        // 
+        // // Enframe tracy::SourceLocationData in the Sample.
+        // auto enframe = _sample->enframe<tracy::SourceLocationData>();
+        // enframe->name = _sample->tag();
+        // enframe->function = source_info.function();
+        // enframe->file = source_info.file();
+        // enframe->line = source_info.line();
+        // 
+        // TracyLfqPrepare(tracy::QueueType::ZoneBegin);
+        // tracy::MemWrite(&item->zoneBegin.time, tracy::Profiler::GetTime());
+        // tracy::MemWrite(&item->zoneBegin.srcloc, (uint64_t) enframe);
+        // TracyLfqCommit;
     }
 
     void EndSample(void* /*_context*/, const Rx::Profiler::Sample* /*_sample*/) {
-        TracyLfqPrepare(tracy::QueueType::ZoneEnd);
-        tracy::MemWrite(&item->zoneEnd.time, tracy::Profiler::GetTime());
-        TracyLfqCommit;
+        // TracyLfqPrepare(tracy::QueueType::ZoneEnd);
+        // tracy::MemWrite(&item->zoneEnd.time, tracy::Profiler::GetTime());
+        // TracyLfqCommit;
     }
 #endif
 

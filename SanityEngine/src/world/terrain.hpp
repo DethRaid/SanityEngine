@@ -29,6 +29,14 @@ namespace renderer {
 }
 
 struct TerrainTile {
+    enum class LoadingPhase {
+        GeneratingHeightmap,
+        GeneratingMesh,
+        Complete
+    };
+
+    LoadingPhase loading_phase{LoadingPhase::GeneratingHeightmap};
+
     Rx::Vector<Rx::Vector<Float32>> heightmap;
 
     Vec2i coord;
@@ -123,9 +131,9 @@ public:
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] Float32 get_terrain_height(const Vec2f& location) const;
+    [[nodiscard]] Float32 get_terrain_height(const Vec2f& location);
 
-    [[nodiscard]] Vec3f get_normal_at_location(const Vec2f& location) const;
+    [[nodiscard]] Vec3f get_normal_at_location(const Vec2f& location);
 
     [[nodiscard]] Rx::Concurrency::Atomic<Uint32>& get_num_active_tilegen_tasks();
 
