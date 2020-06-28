@@ -12,6 +12,10 @@
 #include "rx/core/concurrency/condition_variable.h"
 #include "rx/core/concurrency/thread.h"
 
+#ifndef RX_LOG_QUEUE_LENGTH
+#define RX_LOG_QUEUE_LENGTH 1000
+#endif
+
 namespace Rx {
 
 namespace {
@@ -200,7 +204,7 @@ bool Logger::enqueue(Log* _owner, Log::Level _level, String&& message_) {
     this_queue.messages.push_back(&m_messages.last()->link);
 
     // Wakeup logging thread when we have a few messages.
-    if (m_streams.size() && m_messages.size() >= 1000) {
+    if (m_streams.size() && m_messages.size() >= RX_LOG_QUEUE_LENGTH) {
       m_wakeup_cond.signal();
     }
 
