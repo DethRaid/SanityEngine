@@ -30,10 +30,10 @@
 // Use |__assume| intrinsic on MSVC. It should offer similar performance
 // opportunities.
 #define RX_HINT_ASSUME_ALIGNED(_pointer, _alignment) \
-  __assume(reinterpret_cast<rx_uintptr>(_pointer) % (_alignment) == 0)
+  __assume(reinterpret_cast<UintPtr>(_pointer) % (_alignment) == 0)
 #else
 #define RX_HINT_ASSUME_ALIGNED(_pointer, _alignment) \
-  RX_ASSERT(reinterpret_cast<rx_uintptr>(_pointer) % (_alignment) == 0,
+  RX_ASSERT(reinterpret_cast<UintPtr>(_pointer) % (_alignment) == 0,
     "not aligned by %zu", (_alignment))
 #endif
 

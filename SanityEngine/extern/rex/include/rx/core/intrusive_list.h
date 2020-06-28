@@ -1,8 +1,8 @@
 #ifndef RX_CORE_INTRUSIVE_LIST_H
 #define RX_CORE_INTRUSIVE_LIST_H
 #include "rx/core/types.h"
-#include "rx/core/concepts/no_copy.h"
-#include "rx/core/hints/empty_bases.h"
+#include "rx/core/markers.h"
+
 #include "rx/core/utility/exchange.h"
 
 namespace Rx {
@@ -20,9 +20,9 @@ namespace Rx {
 //
 // 32-bit: 8 bytes
 // 64-bit: 16 bytes
-struct RX_HINT_EMPTY_BASES IntrusiveList
-  : Concepts::NoCopy
-{
+struct IntrusiveList {
+  RX_MARK_NO_COPY(IntrusiveList);
+
   struct Node;
 
   constexpr IntrusiveList();
@@ -40,9 +40,9 @@ struct RX_HINT_EMPTY_BASES IntrusiveList
 
   // 32-bit: 8 bytes
   // 64-bit: 16 bytes
-  struct RX_HINT_EMPTY_BASES Node
-    : Concepts::NoCopy
-  {
+  struct Node {
+    RX_MARK_NO_COPY(Node);
+
     constexpr Node();
     Node(Node&& node_);
     Node& operator=(Node&& node_);
@@ -63,9 +63,9 @@ struct RX_HINT_EMPTY_BASES IntrusiveList
   // 32-bit: 8 bytes
   // 64-bit: 16 bytes
   template<typename T>
-  struct RX_HINT_EMPTY_BASES Enumerate
-    : Concepts::NoCopy
-  {
+  struct Enumerate {
+    RX_MARK_NO_COPY(Enumerate);
+
     constexpr Enumerate(Node* _root, Node T::*_link);
     Enumerate(Enumerate&& enumerate_);
     Enumerate& operator=(Enumerate&& enumerate_);

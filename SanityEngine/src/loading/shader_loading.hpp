@@ -2,8 +2,10 @@
 
 #include <rx/core/vector.h>
 
+#include "core/types.hpp"
+
 namespace Rx {
     struct String;
 }
 
-Rx::Vector<uint8_t> load_shader(const Rx::String& shader_filename);
+Rx::Vector<Uint8> load_shader(const Rx::String& shader_filename);

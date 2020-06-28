@@ -20,7 +20,7 @@ struct Log {
   using WriteEvent = Event<void(Level, String)>;
   using FlushEvent = Event<void()>;
 
-  Log(const char* _name, const SourceLocation& _source_location);
+  constexpr Log(const char* _name, const SourceLocation& _source_location);
 
   [[nodiscard]] static bool subscribe(Stream* _stream);
   [[nodiscard]] static bool unsubscribe(Stream* _stream);
@@ -100,7 +100,7 @@ private:
   FlushEvent m_flush_event;
 };
 
-inline Log::Log(const char* _name, const SourceLocation& _source_location)
+inline constexpr Log::Log(const char* _name, const SourceLocation& _source_location)
   : m_name{_name}
   , m_source_location{_source_location}
 {

@@ -4,13 +4,11 @@
 #include "rx/core/vector.h"
 #include "rx/core/ptr.h"
 
-#include "rx/core/hints/empty_bases.h"
-
 namespace Rx {
 
-struct RX_HINT_EMPTY_BASES DynamicPool
-  : Concepts::NoCopy
-{
+struct DynamicPool {
+  RX_MARK_NO_COPY(DynamicPool);
+
   constexpr DynamicPool(Memory::Allocator& _allocator, Size _object_size, Size _objects_per_pool);
   constexpr DynamicPool(Size _object_size, Size _per_pool);
   DynamicPool(DynamicPool&& pool_);

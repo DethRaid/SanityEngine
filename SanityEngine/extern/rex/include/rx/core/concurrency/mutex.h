@@ -1,6 +1,6 @@
 #ifndef RX_CORE_CONCURRENCY_MUTEX_H
 #define RX_CORE_CONCURRENCY_MUTEX_H
-#include "rx/core/types.h" // rx_byte
+#include "rx/core/types.h" // Byte
 
 namespace Rx::Concurrency {
 

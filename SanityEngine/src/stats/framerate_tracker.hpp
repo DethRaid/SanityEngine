@@ -2,7 +2,7 @@
 
 #include <list>
 
-#include <rx/core/types.h>
+#include "core/types.hpp"
 
 enum class FramerateDisplayMode { FrameTime, FramesPerSecond, Both };
 

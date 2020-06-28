@@ -1,8 +1,8 @@
 #ifndef RX_CORE_INTRUSIVE_XOR_LIST_H
 #define RX_CORE_INTRUSIVE_XOR_LIST_H
 #include "rx/core/types.h"
-#include "rx/core/concepts/no_copy.h"
-#include "rx/core/hints/empty_bases.h"
+#include "rx/core/markers.h"
+
 #include "rx/core/utility/exchange.h"
 
 namespace Rx {
@@ -25,9 +25,9 @@ namespace Rx {
 //
 // 32-bit: 8 bytes
 // 64-bit: 16 bytes
-struct RX_HINT_EMPTY_BASES intrusive_xor_list
-  : Concepts::NoCopy
-{
+struct intrusive_xor_list {
+  RX_MARK_NO_COPY(intrusive_xor_list);
+
   struct Node;
 
   constexpr intrusive_xor_list();
@@ -38,9 +38,9 @@ struct RX_HINT_EMPTY_BASES intrusive_xor_list
 
   // 32-bit: 4 bytes
   // 64-bit: 8 bytes
-  struct RX_HINT_EMPTY_BASES Node
-    : Concepts::NoCopy
-  {
+  struct Node {
+    RX_MARK_NO_COPY(Node);
+
     constexpr Node();
     Node(Node&& node_);
     Node& operator=(Node&& node_);
@@ -63,9 +63,9 @@ private:
 
   // 32-bit: 12 bytes
   // 64-bit: 24 bytes
-  struct RX_HINT_EMPTY_BASES Iterator
-    : Concepts::NoCopy
-  {
+  struct Iterator {
+    RX_MARK_NO_COPY(Iterator);
+
     constexpr Iterator(Node* _node);
     Iterator(Iterator&& iterator_);
     Iterator& operator=(Iterator&& iterator_);

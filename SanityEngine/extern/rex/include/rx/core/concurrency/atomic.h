@@ -2,6 +2,7 @@
 #define RX_CORE_CONCURRENCY_ATOMIC_H
 #include "rx/core/config.h" // RX_COMPILER_*
 #include "rx/core/types.h"
+#include "rx/core/markers.h"
 
 #include "rx/core/traits/is_integral.h"
 #include "rx/core/traits/is_same.h"
@@ -40,12 +41,10 @@ namespace detail {
 
   template<typename T, bool = traits::is_integral<T> && !traits::is_same<T, bool>>
   struct Atomic {
+    RX_MARK_NO_COPY(Atomic);
+
     Atomic() = default;
     constexpr Atomic(T _value) : m_value{_value} {}
-
-    Atomic(const Atomic&) = delete;
-    Atomic& operator=(const Atomic&) = delete;
-    Atomic& operator=(const Atomic&) volatile = delete;
 
     void store(T _value, MemoryOrder _order = MemoryOrder::k_seq_cst) volatile {
       atomic_store(&m_value, _value, _order);
@@ -127,6 +126,7 @@ namespace detail {
   template<typename T>
   struct Atomic<T, true> : Atomic<T, false> {
     using Base = Atomic<T, false>;
+
     Atomic() = default;
     constexpr Atomic(T _value) : Base{_value} {}
 
@@ -249,6 +249,7 @@ namespace detail {
 template<typename T>
 struct Atomic : detail::Atomic<T> {
   using Base = detail::Atomic<T>;
+
   Atomic() = default;
   constexpr Atomic(T _value) : Base{_value} {}
 
@@ -346,12 +347,10 @@ struct Atomic<T*> : detail::Atomic<T*> {
 };
 
 struct AtomicFlag {
+  RX_MARK_NO_COPY(AtomicFlag);
+
   AtomicFlag() = default;
   constexpr AtomicFlag(bool _value) : m_value{_value} {}
-
-  AtomicFlag(const AtomicFlag&) = delete;
-  AtomicFlag& operator=(const AtomicFlag&) = delete;
-  AtomicFlag& operator=(const AtomicFlag&) volatile = delete;
 
   bool test_and_set(MemoryOrder _order = MemoryOrder::k_seq_cst) volatile {
     return detail::atomic_exchange(&m_value, true, _order);

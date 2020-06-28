@@ -23,7 +23,6 @@ namespace Rx::Memory {
 struct SingleShotAllocator
   final : Allocator
 {
-  SingleShotAllocator() = delete;
   SingleShotAllocator(Byte* _data, Size _size);
 
   virtual Byte* allocate(Size _size);

@@ -53,7 +53,7 @@ private:
   Header m_header;
   Buffer m_buffer;
   String m_message;
-  Memory::UninitializedStorage<StringTable> m_strings;
+  Uninitialized<StringTable> m_strings;
 };
 
 inline Decoder::Decoder(Stream* _stream)

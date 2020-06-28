@@ -2,16 +2,15 @@
 #define RX_CORE_MEMORY_VMA_H
 #include "rx/core/types.h"
 #include "rx/core/assert.h"
+#include "rx/core/markers.h"
 
 #include "rx/core/utility/exchange.h"
 
-#include "rx/core/concepts/no_copy.h"
-
 namespace Rx::Memory {
 
-struct VMA
-  : Concepts::NoCopy
-{
+struct VMA {
+  RX_MARK_NO_COPY(VMA);
+
   constexpr VMA();
   constexpr VMA(Byte* _base, Size _page_size, Size _page_count);
   VMA(VMA&& vma_);

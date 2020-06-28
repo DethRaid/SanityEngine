@@ -3,7 +3,7 @@
 #include "rx/console/variable.h"
 #include "rx/console/parser.h"
 
-#include "rx/core/hints/empty_bases.h"
+#include "rx/core/markers.h"
 
 #include "rx/core/utility/exchange.h"
 
@@ -15,12 +15,12 @@ namespace Rx::Console {
 //  i -> int
 //  f -> float
 //  v -> vector, followed by 2, 3, 4 for # of components, followed by i or f.
-struct RX_HINT_EMPTY_BASES Command
-  : Concepts::NoCopy
-{
-  struct RX_HINT_EMPTY_BASES Argument
-    : Concepts::NoCopy
-  {
+struct Command {
+  RX_MARK_NO_COPY(Command);
+
+  struct Argument {
+    RX_MARK_NO_COPY(Argument);
+
     explicit Argument(){}
     explicit Argument(bool _value);
     explicit Argument(const String& _value);

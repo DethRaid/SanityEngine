@@ -6,6 +6,7 @@
 #include <entt/entity/registry.hpp>
 #include <rx/core/log.h>
 
+#include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "rhi/helpers.hpp"
 #include "world/world.hpp"

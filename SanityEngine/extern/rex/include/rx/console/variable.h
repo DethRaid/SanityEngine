@@ -730,10 +730,10 @@ inline bool VariableType_is_ranged(VariableType _type) {
   RX_CONSOLE_TUVAR(::Rx::String, _label, _name, (_description), (_initial))
 
 #define RX_CONSOLE_IVAR(_label, _name, _description, _min, _max, _initial) \
-  RX_CONSOLE_TRVAR(Sint32, _label, _name, (_description), (_min), (_max), (_initial))
+  RX_CONSOLE_TRVAR(::Rx::Sint32, _label, _name, (_description), (_min), (_max), (_initial))
 
 #define RX_CONSOLE_FVAR(_label, _name, _description, _min, _max, _initial) \
-  RX_CONSOLE_TRVAR(Float32, _label, _name, (_description), (_min), (_max), (_initial))
+  RX_CONSOLE_TRVAR(::Rx::Float32, _label, _name, (_description), (_min), (_max), (_initial))
 
 #define RX_CONSOLE_V2IVAR(_label, _name, _description, _min, _max, _initial) \
   RX_CONSOLE_TRVAR(::Rx::Math::Vec2i, _label, _name, (_description), (_min), (_max), (_initial))

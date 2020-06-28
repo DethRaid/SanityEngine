@@ -3,6 +3,8 @@
 #include "rx/core/config.h"
 #include "rx/core/traits/conditional.h"
 
+namespace Rx {
+
 using Size = decltype(sizeof 0);
 using Byte = unsigned char;
 using Sint8 = signed char;
@@ -40,5 +42,7 @@ constexpr Uint32 operator"" _u32(unsigned long long _value) {
 constexpr Uint64 operator"" _u64(unsigned long long _value) {
   return static_cast<Uint64>(_value);
 }
+
+} // namespace Rx
 
 #endif // RX_FOUNDATION_TYPES_H

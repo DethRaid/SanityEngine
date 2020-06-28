@@ -16,7 +16,6 @@ namespace Rx::Memory {
 struct StatsAllocator
   final : Allocator
 {
-  constexpr StatsAllocator() = delete;
   constexpr StatsAllocator(Allocator& _allocator);
 
   virtual Byte* allocate(Size _size);

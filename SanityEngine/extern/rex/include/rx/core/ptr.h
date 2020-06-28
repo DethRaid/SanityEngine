@@ -1,11 +1,13 @@
 #ifndef RX_CORE_PTR_H
 #define RX_CORE_PTR_H
-#include "rx/core/memory/system_allocator.h"
-#include "rx/core/hints/empty_bases.h"
-#include "rx/core/utility/exchange.h"
+#include "rx/core/markers.h"
 #include "rx/core/assert.h"
 #include "rx/core/hash.h"
 #include "rx/core/ref.h"
+
+#include "rx/core/memory/allocator.h"
+
+#include "rx/core/utility/exchange.h"
 
 namespace Rx {
 
@@ -25,9 +27,9 @@ namespace Rx {
 // 32-bit: 8 bytes
 // 64-bit: 16 bytes
 template<typename T>
-struct RX_HINT_EMPTY_BASES Ptr
-  : Concepts::NoCopy
-{
+struct Ptr {
+  RX_MARK_NO_COPY(Ptr);
+
   constexpr Ptr();
   constexpr Ptr(Memory::Allocator& _allocator);
   constexpr Ptr(Memory::Allocator& _allocator, NullPointer);

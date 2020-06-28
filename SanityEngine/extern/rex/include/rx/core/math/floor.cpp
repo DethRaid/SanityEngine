@@ -6,13 +6,13 @@
 
 #include "rx/core/config.h"
 
+namespace Rx::Math {
+
 #if RX_FLOAT_EVAL_METHOD == 0 || RX_FLOAT_EVAL_METHOD == 1
 static constexpr const Float64Eval k_to_int{1 / DBL_EPSILON};
 #else
 static constexpr const rx_f64_eval k_to_int{1 / LDBL_EPSILON};
 #endif
-
-namespace Rx::Math {
 
 Float64 floor(Float64 _x) {
   Shape u{_x};
@@ -76,4 +76,3 @@ Float32 floor(Float32 _x) {
 }
 
 } // namespace rx::math
-

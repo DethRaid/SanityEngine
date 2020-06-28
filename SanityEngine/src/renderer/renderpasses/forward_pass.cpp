@@ -5,6 +5,7 @@
 #include <entt/entity/registry.hpp>
 #include <rx/core/log.h>
 
+#include "core/types.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderer.hpp"
@@ -102,24 +103,24 @@ namespace renderer {
         const auto& color_target = renderer->get_image(color_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
-        color_target_access = 
-            D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = device.create_rtv_handle(color_target),
-                                                 .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                     .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                              .Color = {0, 0, 0, 0}}}},
-                                                 .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+        color_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = device.create_rtv_handle(color_target),
+                                                                   .BeginningAccess =
+                                                                       {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                        .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                                 .Color = {0, 0, 0, 0}}}},
+                                                                   .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
         depth_target_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = device.create_dsv_handle(depth_target),
-                                                                       .DepthBeginningAccess =
-                                                                           {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                            .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                                     .DepthStencil = {.Depth = 1.0}}}},
-                                                                       .StencilBeginningAccess =
-                                                                           {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
-                                                                       .DepthEndingAccess =
-                                                                           {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE},
-                                                                       .StencilEndingAccess = {
-                                                                           .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
+                                                                   .DepthBeginningAccess =
+                                                                       {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                        .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                                 .DepthStencil = {.Depth = 1.0}}}},
+                                                                   .StencilBeginningAccess =
+                                                                       {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                                                                   .DepthEndingAccess =
+                                                                       {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE},
+                                                                   .StencilEndingAccess = {
+                                                                       .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
 
         render_target_size = render_resolution;
     }
@@ -129,12 +130,8 @@ namespace renderer {
     TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
 
     void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
-        
 
-        commands->BeginRenderPass(1,
-                                  &color_target_access,
-                                  &depth_target_access,
-                                  D3D12_RENDER_PASS_FLAG_NONE);
+        commands->BeginRenderPass(1, &color_target_access, &depth_target_access, D3D12_RENDER_PASS_FLAG_NONE);
 
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
@@ -209,4 +206,3 @@ namespace renderer {
     }
 
 } // namespace renderer
-

@@ -28,7 +28,7 @@ void delay(Uint64 _milliseconds) {
     was_error = nanosleep(&tv, &elapsed);
   } while (was_error && (errno == EINTR));
 #elif defined(RX_PLATFORM_WINDOWS)
-  Sleep(static_cast<DWORD>(_milliseconds));
+  Sleep(_milliseconds);
 #endif
 }
 

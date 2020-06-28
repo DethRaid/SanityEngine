@@ -7,6 +7,8 @@
 #include <rx/core/prng/mt19937.h>
 #include <rx/math/vec2.h>
 
+
+#include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "core/types.hpp"
 #include "generation/dual_contouring.hpp"

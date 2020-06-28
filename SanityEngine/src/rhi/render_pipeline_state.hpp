@@ -1,7 +1,6 @@
 #pragma once
 
 #include <d3d12.h>
-#include <pix3.h>
 #include <rx/core/array.h>
 #include <rx/core/optional.h>
 #include <rx/core/string.h>
@@ -115,8 +114,8 @@ namespace renderer {
         CompareOp depth_func{CompareOp::Less};
 
         bool enable_stencil_test{false};
-        uint8_t stencil_read_mask{0xFF};
-        uint8_t stencil_write_mask{0xFF};
+        Uint8 stencil_read_mask{0xFF};
+        Uint8 stencil_write_mask{0xFF};
         StencilState front_face{};
         StencilState back_face{};
     };
@@ -129,9 +128,9 @@ namespace renderer {
     struct RenderPipelineStateCreateInfo {
         Rx::String name;
 
-        Rx::Vector<uint8_t> vertex_shader{};
+        Rx::Vector<Uint8> vertex_shader{};
 
-        Rx::Optional<Rx::Vector<uint8_t>> pixel_shader{Rx::nullopt};
+        Rx::Optional<Rx::Vector<Uint8>> pixel_shader{Rx::nullopt};
 
         InputAssemblerLayout input_assembler_layout{InputAssemblerLayout::StandardVertex};
 

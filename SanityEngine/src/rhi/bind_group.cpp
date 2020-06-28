@@ -1,13 +1,11 @@
 #include "bind_group.hpp"
 
-#include <utility>
-
 #include <Tracy.hpp>
 #include <rx/core/log.h>
 
-#include "d3dx12.hpp"
-#include "helpers.hpp"
-#include "raytracing_structs.hpp"
+#include "rhi/d3dx12.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/raytracing_structs.hpp"
 
 namespace renderer {
     RX_LOG("BindGroupBuilder", logger);

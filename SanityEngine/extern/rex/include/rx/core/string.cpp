@@ -13,22 +13,6 @@
 
 namespace Rx {
 
-static bool format_va(String& contents_, const char* _format, va_list _va) {
-  // calculate length to format
-  va_list ap;
-  va_copy(ap, _va);
-  const int length{vsnprintf(nullptr, 0, _format, ap)};
-  va_end(ap);
-
-  // format into string
-  if (contents_.resize(length)) {
-    vsnprintf(contents_.data(), contents_.size() + 1, _format, _va);
-    return true;
-  }
-
-  return false;
-}
-
 Size utf8_to_utf16(const char* _utf8_contents, Size _length,
   Uint16* utf16_contents_)
 {
@@ -127,12 +111,20 @@ Size utf16_to_utf8(const Uint16* _utf16_contents, Size _length,
 String String::formatter(Memory::Allocator& _allocator,
                          const char* _format, ...)
 {
+  String result{_allocator};
+
   va_list va;
   va_start(va, _format);
-  String contents{_allocator};
-  format_va(contents, _format, va);
+  const Size need_length = format_buffer_va_list(nullptr, 0, _format, va);
   va_end(va);
-  return contents;
+
+  RX_ASSERT(result.resize(need_length), "out of memory");
+
+  va_start(va, _format);
+  format_buffer_va_list(result.data(), result.size() + 1, _format, va);
+  va_end(va);
+
+  return result;
 }
 
 String::String(Memory::Allocator& _allocator, const char* _contents)

@@ -3,15 +3,13 @@
 #include "rx/core/vector.h"
 #include "rx/core/optional.h"
 
-#include "rx/core/hints/empty_bases.h"
-
 namespace Rx {
 
 struct String;
 
-struct RX_HINT_EMPTY_BASES Stream
-   : Concepts::NoCopy
-{
+struct Stream {
+  RX_MARK_NO_COPY(Stream);
+
   // Stream flags.
   enum : Uint32 {
     k_read  = 1 << 0,

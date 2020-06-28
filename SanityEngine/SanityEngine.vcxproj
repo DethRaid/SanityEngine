@@ -44,7 +44,6 @@
     </ClCompile>
     <ClCompile Include="extern\imgui\src\imgui_draw.cpp" />
     <ClCompile Include="extern\imgui\src\imgui_widgets.cpp" />
-    <ClCompile Include="extern\rex\include\lib\json.c" />
     <ClCompile Include="extern\rex\include\rx\console\command.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\interface.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\parser.cpp" />
@@ -63,11 +62,11 @@
     <ClCompile Include="extern\rex\include\rx\core\filesystem\directory.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\filesystem\file.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\filesystem\path_resolver.cpp" />
+    <ClCompile Include="extern\rex\include\rx\core\format.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\global.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\hash\fnv1a.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\intrusive_list.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\intrusive_xor_list.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\json.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\library\loader.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\log.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\math\abs.cpp" />
@@ -153,8 +152,6 @@
     <ClCompile Include="src\ui\fps_display.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
-    <ClCompile Include="src\world\block_registry.cpp" />
-    <ClCompile Include="src\world\chunk.cpp" />
     <ClCompile Include="src\world\generation\dual_contouring.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
     <ClCompile Include="src\world\world.cpp" />
@@ -166,7 +163,6 @@
     <ClInclude Include="extern\imgui\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="extern\imgui\include\imgui\imstb_textedit.h" />
     <ClInclude Include="extern\imgui\include\imgui\imstb_truetype.h" />
-    <ClInclude Include="extern\rex\include\lib\json.h" />
     <ClInclude Include="extern\rex\include\rx\console\command.h" />
     <ClInclude Include="extern\rex\include\rx\console\interface.h" />
     <ClInclude Include="extern\rex\include\rx\console\parser.h" />
@@ -218,10 +214,10 @@
     <ClInclude Include="extern\rex\include\rx\core\hints\unreachable.h" />
     <ClInclude Include="extern\rex\include\rx\core\intrusive_list.h" />
     <ClInclude Include="extern\rex\include\rx\core\intrusive_xor_list.h" />
-    <ClInclude Include="extern\rex\include\rx\core\json.h" />
     <ClInclude Include="extern\rex\include\rx\core\library\loader.h" />
     <ClInclude Include="extern\rex\include\rx\core\log.h" />
     <ClInclude Include="extern\rex\include\rx\core\map.h" />
+    <ClInclude Include="extern\rex\include\rx\core\markers.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\abs.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\ceil.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\cos.h" />
@@ -253,6 +249,7 @@
     <ClInclude Include="extern\rex\include\rx\core\profiler.h" />
     <ClInclude Include="extern\rex\include\rx\core\ptr.h" />
     <ClInclude Include="extern\rex\include\rx\core\ref.h" />
+    <ClInclude Include="extern\rex\include\rx\core\result.h" />
     <ClInclude Include="extern\rex\include\rx\core\serialize\buffer.h" />
     <ClInclude Include="extern\rex\include\rx\core\serialize\decoder.h" />
     <ClInclude Include="extern\rex\include\rx\core\serialize\encoder.h" />
@@ -309,6 +306,7 @@
     <ClInclude Include="extern\rex\include\rx\core\traits\type_identity.h" />
     <ClInclude Include="extern\rex\include\rx\core\traits\underlying_type.h" />
     <ClInclude Include="extern\rex\include\rx\core\types.h" />
+    <ClInclude Include="extern\rex\include\rx\core\uninitialized.h" />
     <ClInclude Include="extern\rex\include\rx\core\utility\bit.h" />
     <ClInclude Include="extern\rex\include\rx\core\utility\construct.h" />
     <ClInclude Include="extern\rex\include\rx\core\utility\declval.h" />
@@ -365,6 +363,7 @@
     <ClInclude Include="src\player\components.hpp" />
     <ClInclude Include="src\player\flycam_controller.hpp" />
     <ClInclude Include="src\renderer\camera_matrix_buffer.hpp" />
+    <ClInclude Include="src\renderer\debugging\pix.hpp" />
     <ClInclude Include="src\renderer\material.hpp" />
     <ClInclude Include="src\renderer\mesh.hpp" />
     <ClInclude Include="src\renderer\renderpass.hpp" />
@@ -398,8 +397,6 @@
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
-    <ClInclude Include="src\world\block_registry.hpp" />
-    <ClInclude Include="src\world\chunk.hpp" />
     <ClInclude Include="src\world\generation\dual_contouring.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
     <ClInclude Include="src\world\world.hpp" />

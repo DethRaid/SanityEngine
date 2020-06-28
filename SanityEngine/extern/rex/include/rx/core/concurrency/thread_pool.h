@@ -8,14 +8,12 @@
 #include "rx/core/concurrency/mutex.h"
 #include "rx/core/concurrency/condition_variable.h"
 
-#include "rx/core/hints/empty_bases.h"
-
 namespace Rx::Concurrency {
 
-struct RX_HINT_EMPTY_BASES ThreadPool
-  : Concepts::NoCopy
-  , Concepts::NoMove
-{
+struct ThreadPool {
+  RX_MARK_NO_COPY(ThreadPool);
+  RX_MARK_NO_MOVE(ThreadPool);
+
   ThreadPool(Memory::Allocator& _allocator, Size _threads, Size _static_pool_size);
   ThreadPool(Size _threads, Size _job_pool_size);
   ~ThreadPool();

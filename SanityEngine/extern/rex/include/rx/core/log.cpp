@@ -200,7 +200,7 @@ bool Logger::enqueue(Log* _owner, Log::Level _level, String&& message_) {
     this_queue.messages.push_back(&m_messages.last()->link);
 
     // Wakeup logging thread when we have a few messages.
-    if (m_streams.size() && m_messages.size() >= 10) {
+    if (m_streams.size() && m_messages.size() >= 1000) {
       m_wakeup_cond.signal();
     }
 
@@ -239,11 +239,6 @@ void Logger::flush_unlocked() {
 
 void Logger::write(Ptr<Message>& message_) {
   auto this_queue = message_->owner;
-
-  // if(message_->level == Log::Level::k_verbose) {
-  //   this_queue->messages.erase(&message_->link);
-  //   return;
-  // }
 
   const auto name = this_queue->owner->name();
   const auto level = string_for_level(message_->level);

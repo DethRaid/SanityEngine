@@ -1,6 +1,5 @@
 #ifndef RX_CORE_VECTOR_H
 #define RX_CORE_VECTOR_H
-
 #include "rx/core/array.h"
 #include "rx/core/ref.h"
 
@@ -57,9 +56,6 @@ struct Vector {
   Vector& operator=(const Vector& _other);
   Vector& operator=(Vector&& other_);
 
-  Vector& operator+=(const Vector& _other);
-  Vector& operator+=(Vector&& other_);
-
   T& operator[](Size _index);
   const T& operator[](Size _index) const;
 
@@ -90,6 +86,8 @@ struct Vector {
   // append new |T| construct with |args|
   template<typename... Ts>
   bool emplace_back(Ts&&... _args);
+
+  bool append(const Vector<T>& vector_to_append);
 
   Size size() const;
   Size capacity() const;
@@ -289,25 +287,6 @@ inline Vector<T>& Vector<T>::operator=(Vector&& other_) {
 }
 
 template<typename T>
-inline Vector<T>& Vector<T>::operator+=(const Vector& _other) {
-  reserve(size() + _other.size());
-  _other.each_fwd([this](const T& _value) {
-    push_back(_value);
-  });
-  return *this;
-}
-
-template<typename T>
-inline Vector<T>& Vector<T>::operator+=(Vector&& other_) {
-  reserve(size() + other_.size());
-  other_.each_fwd([this](T& value_) {
-    push_back(Utility::move(value_));
-  });
-  other_.clear();
-  return *this;
-}
-
-template<typename T>
 inline T& Vector<T>::operator[](Size _index) {
   RX_ASSERT(m_data && in_range(_index), "out of bounds (%zu >= %zu)", _index, m_size);
   return m_data[_index];
@@ -483,6 +462,18 @@ inline bool Vector<T>::emplace_back(Ts&&... _args) {
   Utility::construct<T>(m_data + m_size, Utility::forward<Ts>(_args)...);
 
   m_size++;
+  return true;
+}
+
+template <typename T>
+bool Vector<T>::append(const Vector<T>& vector_to_append) {
+  if(!reserve(m_size + vector_to_append.size())) {
+    return false;
+  }
+
+  // Don't need to check the return value of `push_back` because we already ensured the underlying storage was large enough
+  vector_to_append.each_fwd([&](const T& elem) { push_back(elem); });
+
   return true;
 }
 

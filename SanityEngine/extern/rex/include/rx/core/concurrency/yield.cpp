@@ -2,6 +2,8 @@
 #include "rx/core/config.h" // RX_PLATFORM_WINDOWS, RX_PLATFORM_LINUX
 
 #if defined(RX_PLATFORM_WINDOWS)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h> // SwitchToThread
 #elif defined(RX_PLATFORM_POSIX)
 #include <sched.h> // sched_yield

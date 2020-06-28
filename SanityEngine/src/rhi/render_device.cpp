@@ -22,6 +22,7 @@
 #include "rhi/helpers.hpp"
 #include "rhi/render_pipeline_state.hpp"
 #include "settings.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "windows/windows_helpers.hpp"
 
 namespace renderer {
@@ -316,7 +317,7 @@ namespace renderer {
                                               descriptor_table_handles);
     }
 
-    Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<uint8_t>& compute_shader,
+    Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
                                                                               const ComPtr<ID3D12RootSignature>& root_signature) const {
         auto compute_pipeline = Rx::make_ptr<ComputePipelineState>(RX_SYSTEM_ALLOCATOR);
 
@@ -1162,9 +1163,9 @@ namespace renderer {
                                      .InstanceDataStepRate = 0});
     }
 
-    Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<uint8_t>& shader) const {
+    Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
         ComPtr<ID3D12ShaderReflection> reflection;
-        auto result = D3DReflect(shader.data(), shader.size() * sizeof(uint8_t), IID_PPV_ARGS(&reflection));
+        auto result = D3DReflect(shader.data(), shader.size() * sizeof(Uint8), IID_PPV_ARGS(&reflection));
         if(FAILED(result)) {
             logger->error("Could not retrieve shader reflection information: %s", to_string(result));
         }
@@ -1377,7 +1378,7 @@ namespace renderer {
     void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
-        staging_buffers += staging_buffers_for_frame;
+        staging_buffers.append(staging_buffers_for_frame);
         staging_buffers_for_frame.clear();
     }
 

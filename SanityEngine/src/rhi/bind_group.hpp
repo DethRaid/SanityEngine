@@ -7,6 +7,8 @@
 #include <rx/core/vector.h>
 #include <wrl/client.h>
 
+#include "core/types.hpp"
+
 using Microsoft::WRL::ComPtr;
 
 namespace renderer {
@@ -159,4 +161,4 @@ namespace renderer {
         Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;
         Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_handles;
     };
-} // namespace rhi
+} // namespace renderer

@@ -2,8 +2,7 @@
 #define RX_CORE_OPTIONAL_H
 #include "rx/core/assert.h" // RX_ASSERT
 #include "rx/core/utility/move.h"
-
-#include "rx/core/memory/uninitialized_storage.h" // uninitialized_storage
+#include "rx/core/uninitialized.h"
 
 namespace Rx {
 
@@ -35,7 +34,7 @@ struct Optional {
   const T* operator->() const;
 
 private:
-  Memory::UninitializedStorage<T> m_data;
+  Uninitialized<T> m_data;
   bool m_init;
 };
 

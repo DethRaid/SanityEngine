@@ -3,6 +3,8 @@
 #include <rx/core/stream.h>
 #include <rx/core/string.h>
 
+#include "core/types.hpp"
+
 namespace rex {
     class StdoutStream final : public Rx::Stream {
     public:

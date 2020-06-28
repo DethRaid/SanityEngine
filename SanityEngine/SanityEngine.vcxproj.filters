@@ -205,6 +205,9 @@
     <Filter Include="Rex\console">
       <UniqueIdentifier>{c40b3639-4445-45d7-a0cd-484e77699a28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\renderer\debugging">
+      <UniqueIdentifier>{5bae8e19-9b56-49b4-b15e-53974bfeff57}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -357,9 +360,6 @@
     <ClCompile Include="extern\rex\include\rx\core\intrusive_xor_list.cpp">
       <Filter>Rex\core</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\json.cpp">
-      <Filter>Rex\core</Filter>
-    </ClCompile>
     <ClCompile Include="extern\rex\include\rx\core\log.cpp">
       <Filter>Rex\core</Filter>
     </ClCompile>
@@ -498,17 +498,8 @@
     <ClCompile Include="extern\rex\include\rx\core\concurrency\yield.cpp">
       <Filter>Rex\core\concurrency</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\lib\json.c">
-      <Filter>Rex</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp">
       <Filter>Source Files\renderer\renderpass</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\block_registry.cpp">
-      <Filter>Source Files\world</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\chunk.cpp">
-      <Filter>Source Files\world</Filter>
     </ClCompile>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
       <Filter>Source Files\adapters\rex</Filter>
@@ -563,6 +554,9 @@
     </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp">
       <Filter>Source Files\renderer\renderpass</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\core\format.cpp">
+      <Filter>Rex\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -795,9 +789,6 @@
       <Filter>Rex\core</Filter>
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\intrusive_xor_list.h">
-      <Filter>Rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\json.h">
       <Filter>Rex\core</Filter>
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\log.h">
@@ -1187,9 +1178,6 @@
     <ClInclude Include="extern\rex\include\rx\core\concepts\no_move.h">
       <Filter>Rex\core\concepts</Filter>
     </ClInclude>
-    <ClInclude Include="extern\rex\include\lib\json.h">
-      <Filter>Rex</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1201,12 +1189,6 @@
     </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
       <Filter>Header Files\renderer\renderpass</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\block_registry.hpp">
-      <Filter>Header Files\world</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\chunk.hpp">
-      <Filter>Header Files\world</Filter>
     </ClInclude>
     <ClInclude Include="src\core\types.hpp">
       <Filter>Header Files</Filter>
@@ -1294,6 +1276,18 @@
     </ClInclude>
     <ClInclude Include="src\renderer\rhi\command_list.hpp">
       <Filter>Header Files\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\debugging\pix.hpp">
+      <Filter>Header Files\renderer\debugging</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\markers.h">
+      <Filter>Rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\result.h">
+      <Filter>Rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\uninitialized.h">
+      <Filter>Rex\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

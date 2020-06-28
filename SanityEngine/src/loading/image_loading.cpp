@@ -13,7 +13,7 @@
 
 RX_LOG("ImageLoading", logger);
 
-bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<uint8_t>& pixels) {
+bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
     int raw_width, raw_height, num_components;
 
     const auto* texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
@@ -51,7 +51,7 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
     ZoneScoped;
 
     Uint32 width, height;
-    Rx::Vector<uint8_t> pixels;
+    Rx::Vector<Uint8> pixels;
     const auto success = load_image(texture_name, width, height, pixels);
     if(!success) {
         return Rx::nullopt;

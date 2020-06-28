@@ -2,7 +2,7 @@
 #define RX_CORE_GLOBAL_H
 #include "rx/core/tagged_ptr.h"
 #include "rx/core/intrusive_xor_list.h"
-#include "rx/core/memory/uninitialized_storage.h"
+#include "rx/core/uninitialized.h"
 
 namespace Rx {
 
@@ -11,7 +11,7 @@ namespace Rx {
 struct alignas(Memory::Allocator::k_alignment) GlobalNode {
   template<typename T, typename... Ts>
   GlobalNode(const char* _group, const char* _name,
-             Memory::UninitializedStorage<T>& _storage, Ts&&... _arguments);
+             Uninitialized<T>& _storage, Ts&&... _arguments);
 
   void init();
   void fini();
@@ -183,7 +183,7 @@ struct Global {
 
 private:
   GlobalNode m_node;
-  Memory::UninitializedStorage<T> m_global_store;
+  Uninitialized<T> m_global_store;
 };
 
 // 32-bit: 20 bytes
@@ -244,7 +244,7 @@ private:
 // GlobalNode
 template<typename T, typename... Ts>
 inline GlobalNode::GlobalNode(const char* _group, const char* _name,
-                              Memory::UninitializedStorage<T>& _global_store, Ts&&... _arguments)
+                              Uninitialized<T>& _global_store, Ts&&... _arguments)
   : m_group{_group ? _group : "system"}
   , m_name{_name}
   , m_storage_dispatch{storage_dispatch<T, Ts...>}

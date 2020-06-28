@@ -1,6 +1,6 @@
 #ifndef RX_MATH_VEC4_H
 #define RX_MATH_VEC4_H
-#include "rx/core/types.h" // rx_size
+#include "rx/core/types.h" // Size
 #include "rx/core/format.h" // format
 #include "rx/core/hash.h" // hash, hash_combine
 #include "rx/core/assert.h" // RX_ASSERT

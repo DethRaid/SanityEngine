@@ -8,16 +8,14 @@
 #include "rx/core/assert.h"
 #include "rx/core/string.h"
 
-#include "rx/core/hints/empty_bases.h"
-
 #include "rx/core/utility/construct.h"
 #include "rx/core/utility/destruct.h"
 
 namespace Rx::Console {
 
-struct RX_HINT_EMPTY_BASES Token
-  : Concepts::NoCopy
-{
+struct Token {
+  RX_MARK_NO_COPY(Token);
+
   enum class Type {
     k_atom,
     k_string,
@@ -197,10 +195,10 @@ inline const Math::Vec2i& Token::as_vec2i() const & {
   return m_as_vec2i;
 }
 
-struct RX_HINT_EMPTY_BASES Parser
-  : Concepts::NoCopy
-  , Concepts::NoMove
-{
+struct Parser {
+  RX_MARK_NO_COPY(Parser);
+  RX_MARK_NO_MOVE(Parser);
+
   struct Diagnostic {
     Diagnostic(Memory::Allocator& _allocator);
     String message;

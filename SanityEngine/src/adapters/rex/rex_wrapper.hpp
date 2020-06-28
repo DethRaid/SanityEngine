@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rx/core/memory/system_allocator.h>
+
 namespace rex {
     class Wrapper {
     public:
@@ -17,3 +19,5 @@ namespace rex {
         inline static bool initialized{false};
     };
 } // namespace rex
+
+#define RX_SYSTEM_ALLOCATOR Rx::Memory::SystemAllocator::instance()

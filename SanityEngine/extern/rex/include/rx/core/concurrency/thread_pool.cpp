@@ -12,10 +12,10 @@ RX_LOG("ThreadPool", logger);
 
 Global<ThreadPool> ThreadPool::s_instance{"system", "thread_pool", 4_z, 4096_z};
 
-struct RX_HINT_EMPTY_BASES Work
-  : Concepts::NoCopy
-  , Concepts::NoMove
-{
+struct Work {
+  RX_MARK_NO_COPY(Work);
+  RX_MARK_NO_MOVE(Work);
+
   Work(Function<void(int)>&& callback_)
     : callback{Utility::move(callback_)}
   {

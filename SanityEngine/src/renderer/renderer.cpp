@@ -126,7 +126,7 @@ namespace renderer {
     void Renderer::end_frame() const { device->end_frame(); }
 
     void Renderer::add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects) {
-        raytracing_objects += new_objects;
+        raytracing_objects.append(new_objects);
         raytracing_scene_dirty = true;
     }
 

@@ -5,9 +5,9 @@
 
 namespace Rx::library {
 
-struct RX_HINT_EMPTY_BASES Loader
-  : Concepts::NoCopy
-{
+struct Loader {
+  RX_MARK_NO_COPY(Loader);
+
   Loader(const String& _file_name);
   Loader(Memory::Allocator& _allocator, const String& _file_name);
   Loader(Loader&& _loader);

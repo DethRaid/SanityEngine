@@ -5,6 +5,8 @@
 #include <dirent.h> // DIR, struct dirent, opendir, readdir, rewinddir, closedir
 #include <sys/stat.h> // mkdir, mode_t
 #elif defined(RX_PLATFORM_WINDOWS)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h> // WIN32_FIND_DATAW, HANDLE, LPCWSTR, INVALID_HANDLE_VALUE, FILE_ATTRIBUTE_DIRECTORY, FindFirstFileW, FindNextFileW, FindClose
 #else
 #error "missing directory implementation"
@@ -15,7 +17,7 @@
 namespace Rx::Filesystem {
 
 #if defined(RX_PLATFORM_WINDOWS)
-struct FindContext {
+struct find_context {
   Vector<Uint16> path_data;
   WIN32_FIND_DATAW find_data;
   HANDLE handle;
@@ -32,7 +34,7 @@ Directory::Directory(Memory::Allocator& _allocator, String&& path_)
   // The only thing we can cache between reuses of a directory object is the
   // path conversion and the initial find handle on Windows. Subsequent reuses
   // will need to reopen the directory.
-  FindContext* Context = allocator().create<FindContext>();
+  find_context* Context = allocator().create<find_context>();
   RX_ASSERT(Context, "out of memory");
 
   // Convert |m_path| to UTF-16 for Windows.
@@ -54,7 +56,7 @@ Directory::Directory(Memory::Allocator& _allocator, String&& path_)
     Context->path_data = Utility::move(path_data);
     m_impl = reinterpret_cast<void*>(Context);
   } else {
-    allocator().destroy<FindContext>(Context);
+    allocator().destroy<find_context>(Context);
     m_impl = nullptr;
   }
 #endif
@@ -67,7 +69,7 @@ Directory::~Directory() {
   }
 #elif defined(RX_PLATFORM_WINDOWS)
   if (m_impl) {
-    allocator().destroy<FindContext>(m_impl);
+    allocator().destroy<find_context>(m_impl);
   }
 #endif
 }
@@ -111,7 +113,7 @@ void Directory::each(Function<void(Item&&)>&& _function) {
 
   rewinddir(dir);
 #elif defined(RX_PLATFORM_WINDOWS)
-  auto* Context = reinterpret_cast<FindContext*>(m_impl);
+  auto* Context = reinterpret_cast<find_context*>(m_impl);
 
   // The handle has been closed, this can only happen when reusing the directory
   // object, i.e multiple calls to |each|.
@@ -123,7 +125,7 @@ void Directory::each(Function<void(Item&&)>&& _function) {
       Context->handle = handle;
     } else {
       // Destroy the Context and clear |m_impl| out so operator bool reflects this.
-      allocator().destroy<FindContext>(Context);
+      allocator().destroy<find_context>(Context);
       m_impl = nullptr;
       return;
     }

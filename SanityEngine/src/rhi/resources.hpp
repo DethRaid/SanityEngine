@@ -1,11 +1,12 @@
 #pragma once
 
-#include <cstdint>
 #include <concepts>
 
 #include <d3d12.h>
 #include <rx/core/string.h>
 #include <wrl/client.h>
+
+#include "core/types.hpp"
 
 using Microsoft::WRL::ComPtr;
 

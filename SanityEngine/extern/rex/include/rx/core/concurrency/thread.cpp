@@ -9,6 +9,8 @@
 #include <pthread.h> // pthread_t
 #include <signal.h> // sigset_t, setfillset
 #elif defined(RX_PLATFORM_WINDOWS)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h> // HANDLE
 #include <process.h> // _beginthreadex
 #else

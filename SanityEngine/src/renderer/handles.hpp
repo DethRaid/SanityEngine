@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rx/core/types.h>
+#include "core/types.hpp"
 
 namespace renderer {
     struct TextureHandle {

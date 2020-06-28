@@ -1,13 +1,12 @@
 #include "rx/core/concurrency/mutex.h"
-
-#include <Tracy.hpp>
-
 #include "rx/core/config.h" // RX_PLATFORM_{POSIX,WINDOWS}
 #include "rx/core/assert.h"
 
 #if defined(RX_PLATFORM_POSIX)
 #include <pthread.h> // pthread_mutex_t, pthread_mutex_{init,destroy,lock,unlock}
 #elif defined(RX_PLATFORM_WINDOWS)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h> // CRITICAL_SECTION, {Initialize,Delete,Enter,Leave}CriticalSection
 #else
 #error "missing Mutex implementation"
@@ -40,7 +39,6 @@ Mutex::~Mutex() {
 }
 
 void Mutex::lock() {
-    ZoneScoped;
 #if defined(RX_PLATFORM_POSIX)
   auto handle = reinterpret_cast<pthread_mutex_t*>(m_mutex);
   if (pthread_mutex_lock(handle) != 0) {

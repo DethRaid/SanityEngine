@@ -118,7 +118,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
                     const auto texture_path = path.replace_filename(ass_texture_path.C_Str());
 
                     Uint32 width, height;
-                    Rx::Vector<uint8_t> pixels;
+                    Rx::Vector<Uint8> pixels;
                     const auto was_image_loaded = load_image(texture_path.string().c_str(), width, height, pixels);
                     if(!was_image_loaded) {
                         logger->warning("Could not load texture %s", texture_path.string().c_str());

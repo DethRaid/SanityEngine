@@ -4,13 +4,13 @@
 #include "rx/core/math/shape.h"
 #include "rx/core/math/force_eval.h"
 
+namespace Rx::Math {
+
 #if FLT_EVAL_METHOD == 0 || FLT_EVAL_METHOD == 1
 static constexpr const Float64Eval k_to_int{1 / DBL_EPSILON};
 #else
 static constexpr const rx_f64_eval k_to_int{1 / LDBL_EPSILON};
 #endif
-
-namespace Rx::Math {
 
 Float64 ceil(Float64 _x) {
   Shape u{_x};

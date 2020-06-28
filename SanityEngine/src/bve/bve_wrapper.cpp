@@ -23,7 +23,7 @@ using namespace bve;
 constexpr Uint32 THREAD_GROUP_WIDTH = 8;
 constexpr Uint32 THREAD_GROUP_HEIGHT = 8;
 
-static Uint32 to_Uint32(const BVE_Vector4<uint8_t>& bve_color) {
+static Uint32 to_Uint32(const BVE_Vector4<Uint8>& bve_color) {
     Uint32 color{0};
     color |= bve_color.x;
     color |= bve_color.y << 8;

@@ -3,15 +3,11 @@
 #include "rx/core/string.h"
 #include "rx/core/function.h"
 
-#include "rx/core/concepts/no_copy.h"
-
-#include "rx/core/hints/empty_bases.h"
-
 namespace Rx::Filesystem {
 
-struct RX_HINT_EMPTY_BASES Directory
-  : Concepts::NoCopy
-{
+struct Directory {
+  RX_MARK_NO_COPY(Directory);
+
   Directory(Memory::Allocator& _allocator, const char* _path);
   Directory(Memory::Allocator& _allocator, const String& _path);
   Directory(Memory::Allocator& _allocator, String&& path_);

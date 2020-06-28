@@ -3,7 +3,8 @@
 #include <GLFW/glfw3.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
-#include <rx/core/types.h>
+
+#include "core/types.hpp"
 
 /*!
  * \brief Simple controller for a simple flycam

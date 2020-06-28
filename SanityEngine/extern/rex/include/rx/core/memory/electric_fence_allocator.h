@@ -31,7 +31,7 @@ struct ElectricFenceAllocator
 private:
   VMA* allocate_vma(Size _size);
 
-  Concurrency::SpinLock m_lock;
+  Concurrency::Mutex m_lock;
   Map<Byte*, VMA> m_mappings; // protected by |m_lock|.
 
   static Global<ElectricFenceAllocator> s_instance;

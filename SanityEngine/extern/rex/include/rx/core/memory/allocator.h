@@ -1,15 +1,15 @@
 #ifndef RX_CORE_MEMORY_ALLOCATOR_H
 #define RX_CORE_MEMORY_ALLOCATOR_H
-#include "rx/core/utility/construct.h" // utility::construct
-#include "rx/core/utility/destruct.h" // utility::destruct
+#include "rx/core/utility/construct.h"
+#include "rx/core/utility/destruct.h"
 
-#include "rx/core/concepts/interface.h" // concepts::Interface
+#include "rx/core/markers.h"
 
 namespace Rx::Memory {
 
-struct Allocator
-  : Concepts::Interface
-{
+struct Allocator {
+  RX_MARK_INTERFACE(Allocator);
+
   // all allocators must align their data and round their sizes to this alignment
   // value as well, failure to do so will lead to unaligned reads and writes to
   // several engine interfaces that depend on this behavior and possible crashes
@@ -19,8 +19,8 @@ struct Allocator
   // rounding of pointers and sizes can be done with round_to_alignment
   static constexpr const Size k_alignment = 16;
 
-  constexpr Allocator() = default;
-  ~Allocator() = default;
+  // constexpr Allocator() = default;
+  // ~Allocator() = default;
 
   // allocate memory of size |_size|
   virtual Byte* allocate(Size _size) = 0;

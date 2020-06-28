@@ -3,15 +3,14 @@
 #include "rx/core/function.h"
 #include "rx/core/ptr.h"
 
-#include "rx/core/hints/empty_bases.h"
-
 namespace Rx::Concurrency {
 
 // NOTE: Thread names must have static-storage which lives as long as the thread.
-// NOTR: Cannot deliver signals to threads.
-struct RX_HINT_EMPTY_BASES Thread
-  : Concepts::NoCopy
-{
+// NOTE: Cannot deliver signals to threads.
+struct Thread {
+  RX_MARK_NO_COPY(Thread);
+  RX_MARK_NO_MOVE_ASSIGN(Thread);
+
   template<typename F>
   Thread(Memory::Allocator& _allocator, const char* _name, F&& _function);
 
@@ -20,8 +19,6 @@ struct RX_HINT_EMPTY_BASES Thread
 
   Thread(Thread&& thread_);
   ~Thread();
-
-  Thread& operator=(Thread&& thread_) = delete;
 
   void join();
 

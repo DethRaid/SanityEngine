@@ -4,13 +4,12 @@
 #include "rx/core/assert.h"
 
 #include "rx/core/hints/unlikely.h"
-#include "rx/core/hints/empty_bases.h"
 
 namespace Rx {
 
-struct RX_HINT_EMPTY_BASES StaticPool
-  : Concepts::NoCopy
-{
+struct StaticPool {
+  RX_MARK_NO_COPY(StaticPool);
+
   StaticPool(Memory::Allocator& _allocator, Size _object_size, Size _object_count);
   StaticPool(Size _object_size, Size _object_count);
   StaticPool(StaticPool&& pool_);
