@@ -22,7 +22,7 @@ using winrt::Windows::Foundation::AsyncStatus;
 using winrt::Windows::Foundation::IAsyncAction;
 using winrt::Windows::System::Threading::ThreadPool;
 
-RX_LOG("Terrain", logger);
+RX_LOG("\033[32mTerrain\033[0m", logger);
 
 RX_CONSOLE_IVAR(
     cvar_max_terrain_tile_distance, "t.MaxTileDistance", "Maximum distance at which Sanity Engine will load terrain tiles", 1, INT_MAX, 16);
@@ -56,7 +56,11 @@ Terrain::Terrain(const TerrainSize& size,
     load_terrain_textures_and_create_material();
 }
 
-void Terrain::tick(float delta_time) { upload_new_tile_meshes(); }
+void Terrain::tick(float delta_time) {
+    ZoneScoped;
+
+    upload_new_tile_meshes();
+}
 
 void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
     ZoneScoped;
@@ -273,10 +277,14 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     {
         Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
-        loaded_terrain_tiles
-            .insert(tilecoord,
-                    TerrainTile{TerrainTile::LoadingPhase::GeneratingMesh, tile_heightmap, tilecoord, tile_entity});
+        auto* tile = loaded_terrain_tiles.find(tilecoord);
+        tile->loading_phase = TerrainTile::LoadingPhase::GeneratingMesh;
+        tile->heightmap = tile_heightmap;
+        tile->coord = tilecoord;
+        tile->entity = tile_entity;
     }
+
+    logger->verbose("Finished generating heightmap for tile (%d, %d)", tilecoord.x, tilecoord.y);
 
     Rx::Vector<StandardVertex> tile_vertices;
     tile_vertices.reserve(tile_heightmap.size() * tile_heightmap[0].size());
@@ -315,6 +323,8 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
         auto locked_tile_mesh_queue = tile_mesh_create_infos.lock();
         locked_tile_mesh_queue->emplace_back(top_left, tile_entity, Rx::Utility::move(tile_vertices), Rx::Utility::move(tile_indices));
     }
+
+    logger->verbose("Finished generating mesh for tile (%d, %d)", tilecoord.x, tilecoord.y);
 
     num_active_tilegen_tasks.fetch_sub(1);
 }
@@ -365,14 +375,13 @@ void Terrain::upload_new_tile_meshes() {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "Terrain::upload_new_tile_meshes");
         PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
 
-        commands->SetName(L"Upload terrain tile meshes");
-
         locked_tile_mesh_queue->each_fwd([&](const TerrainTileMeshCreateInfo& create_info) {
             PIXScopedEvent(commands.cmds.Get(),
                            PIX_COLOR_DEFAULT,
                            "Terrain::upload_new_tile_meshes(%d, %d)",
                            create_info.coord_worldspace.x,
                            create_info.coord_worldspace.y);
+
             auto [tile_location, tile_entity, tile_vertices, tile_indices] = create_info;
 
             auto& meshes = renderer->get_static_mesh_store();

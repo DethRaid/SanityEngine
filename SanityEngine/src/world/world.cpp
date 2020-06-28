@@ -17,19 +17,6 @@
 RX_LOG("World", logger);
 RX_LOG("ChunkMeshGenTaskDispatcher", logger_dispatch);
 
-void create_simple_boi(entt::registry& registry, horus::ScriptingRuntime& scripting_runtime) {
-    const auto entity = registry.create();
-
-    auto* handle = scripting_runtime.create_entity();
-
-    registry.assign<WrenHandle*>(entity, handle);
-
-    auto component = scripting_runtime.create_component(entity, "sanity_engine", "TestComponent");
-    if(component) {
-        registry.assign<horus::Component>(entity, *component);
-    }
-}
-
 Rx::Ptr<World> World::create(const WorldParameters& params,
                              const entt::entity player,
                              SynchronizedResource<entt::registry>& registry,
@@ -92,6 +79,8 @@ void World::tick(const Float32 delta_time) {
         terrain->load_terrain_around_player(player_transform);
     }
 
+    terrain->tick(delta_time);
+
     tick_script_components(delta_time);
 }
 
@@ -101,6 +90,8 @@ Terrain& World::get_terrain() const { return *terrain; }
 WrenHandle* World::_get_wren_handle() const { return handle; }
 
 void World::generate_climate_data(TerrainData& terrain_data, const WorldParameters& params, renderer::Renderer& renderer) {
+    ZoneScoped;
+
     /*
      * Runs a basic climate simulation on the the heightmap
      *
