@@ -1,4 +1,7 @@
 #include "rx/core/concurrency/mutex.h"
+
+#include <Tracy.hpp>
+
 #include "rx/core/config.h" // RX_PLATFORM_{POSIX,WINDOWS}
 #include "rx/core/assert.h"
 
@@ -37,6 +40,7 @@ Mutex::~Mutex() {
 }
 
 void Mutex::lock() {
+    ZoneScoped;
 #if defined(RX_PLATFORM_POSIX)
   auto handle = reinterpret_cast<pthread_mutex_t*>(m_mutex);
   if (pthread_mutex_lock(handle) != 0) {

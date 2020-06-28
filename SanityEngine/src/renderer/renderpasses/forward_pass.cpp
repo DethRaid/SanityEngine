@@ -41,8 +41,8 @@ namespace renderer {
 
         atmospheric_sky_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
             .name = "Standard material pipeline",
-            .vertex_shader = load_shader("standard.vertex"),
-            .pixel_shader = load_shader("standard.pixel"),
+            .vertex_shader = load_shader("fullscreen.vertex"),
+            .pixel_shader = load_shader("atmospheric_sky.pixel"),
             .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
             .depth_stencil_format = ImageFormat::Depth32,
         });
@@ -209,3 +209,4 @@ namespace renderer {
     }
 
 } // namespace renderer
+

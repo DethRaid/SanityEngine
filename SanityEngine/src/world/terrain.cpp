@@ -25,9 +25,14 @@ using winrt::Windows::System::Threading::ThreadPool;
 RX_LOG("Terrain", logger);
 
 RX_CONSOLE_IVAR(
-    t_max_tile_distance, "terrain.MaxTileDistance", "Maximum distance at which Sanity Engine will load terrain tiles", 1, INT_MAX, 16);
-RX_CONSOLE_IVAR(
-    t_max_generating_tiles, "t.MaxGeneratingTiles", "Maximum number of tiles that may be concurrently generated", 1, INT_MAX, 128);
+    cvar_max_terrain_tile_distance, "t.MaxTileDistance", "Maximum distance at which Sanity Engine will load terrain tiles", 1, INT_MAX, 16);
+
+RX_CONSOLE_IVAR(cvar_max_generating_terrain_tiles,
+                "t.MaxGeneratingTiles",
+                "Maximum number of tiles that may be concurrently generated",
+                1,
+                INT_MAX,
+                128);
 
 struct GenerateTileTaskArgs {
     Terrain* terrain{nullptr};
@@ -64,10 +69,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
 
     // TODO: Define some maximum number of tiles that may be loaded/generated in a given frame
 
-    {
-        ZoneScopedN("Lock loaded_terrain_tiles_mutex");
-        loaded_terrain_tiles_mutex.lock();
-    }
+    Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
 
     if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
         loaded_terrain_tiles.insert(coords_of_tile_containing_player, {});
@@ -75,7 +77,8 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
         ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
     }
 
-    const auto max_tile_distance = t_max_tile_distance->get();
+#if 0
+    const auto max_tile_distance = cvar_max_terrain_tile_distance->get();
     for(Int32 distance_from_player = 1; distance_from_player < max_tile_distance; distance_from_player++) {
         for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
             for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
@@ -88,7 +91,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
                 const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
 
                 if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
-                    if(num_active_tilegen_tasks.load() < static_cast<Uint32>(t_max_generating_tiles->get())) {
+                    if(num_active_tilegen_tasks.load() < static_cast<Uint32>(cvar_max_generating_terrain_tiles->get())) {
                         loaded_terrain_tiles.insert(new_tile_coords, {});
                         num_active_tilegen_tasks.fetch_add(1);
                         ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(new_tile_coords); });
@@ -97,8 +100,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
             }
         }
     }
-
-    loaded_terrain_tiles_mutex.unlock();
+#endif
 }
 
 Float32 Terrain::get_terrain_height(const Vec2f& location) {
@@ -265,14 +267,15 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     logger->info("Generating tile (%d, %d) with size (%d, %d)", tilecoord.x, tilecoord.y, size.x, size.y);
 
-    const auto tile_heightmap = generate_terrain_heightmap(top_left, size);
+    auto tile_heightmap = generate_terrain_heightmap(top_left, size);
 
     const auto tile_entity = registry->lock()->create();
 
     {
         Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
-        loaded_terrain_tiles.insert(tilecoord,
-                                    TerrainTile{TerrainTile::LoadingPhase::GeneratingMesh, tile_heightmap, tilecoord, tile_entity});
+        loaded_terrain_tiles
+            .insert(tilecoord,
+                    TerrainTile{TerrainTile::LoadingPhase::GeneratingMesh, tile_heightmap, tilecoord, tile_entity});
     }
 
     Rx::Vector<StandardVertex> tile_vertices;

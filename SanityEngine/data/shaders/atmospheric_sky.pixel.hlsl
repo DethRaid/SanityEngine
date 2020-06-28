@@ -19,7 +19,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
     float sun_strength = length(sun.color);
 
     float3 color = atmosphere(6471e3,
-                              normalize(-view_vector_worldspace.xyz),
+                              normalize(view_vector_worldspace.xyz),
                               float3(0, 6371e3, 0),
                               -sun.direction,                   // direction of the sun
                               sun_strength,                     // intensity of the sun
@@ -32,7 +32,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
                               0.758                             // Mie preferred scattering direction
     );
 
-    float mu = dot(normalize(-view_vector_worldspace.xyz), -sun.direction);
+    float mu = dot(normalize(view_vector_worldspace.xyz), -sun.direction);
     float mumu = mu * mu;
     float g = 0.9995;
     float gg = g * g;
