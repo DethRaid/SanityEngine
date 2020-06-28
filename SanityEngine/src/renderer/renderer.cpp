@@ -210,8 +210,7 @@ namespace renderer {
             return *all_images[*idx];
 
         } else {
-            const auto message = Rx::String::format("Image '%s' does not exist", image_name);
-            Rx::abort(message.data());
+            Rx::abort("Image '%s' does not exist", image_name);
         }
     }
 

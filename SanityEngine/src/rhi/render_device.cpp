@@ -407,8 +407,7 @@ namespace renderer {
             logger->error(msg.data());
         }
         if(FAILED(result)) {
-            const auto msg = Rx::String::format("Could not create command list: %s", to_string(result));
-            Rx::abort(msg.data());
+            Rx::abort("Could not create command list: %s", to_string(result));
         }
 
         ComPtr<ID3D12GraphicsCommandList4> commands;
@@ -421,14 +420,12 @@ namespace renderer {
             logger->error("Device was removed because: %s", to_string(removed_reason));
         }
         if(FAILED(result)) {
-            const auto msg = Rx::String::format("Could not create command list: %s", to_string(result));
-            Rx::abort(msg.data());
+            Rx::abort("Could not create command list: %s", to_string(result));
         }
 
         result = cmds->QueryInterface(commands.GetAddressOf());
         if(FAILED(result)) {
-            const auto msg = Rx::String::format("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
-            Rx::abort(msg.data());
+            Rx::abort("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
         }
 
         commands->SetName(L"Unnamed Sanity Engine command list");
@@ -440,8 +437,7 @@ namespace renderer {
         const auto result = commands->Close();
         if(FAILED(result)) {
 #ifndef NDEBUG
-            const auto msg = Rx::String::format("Could not close command list: %s", to_string(result));
-            Rx::abort(msg.data());
+            Rx::abort("Could not close command list: %s", to_string(result));
 #else
             logger->error("Could not close command list: %s", to_string(result));
 #endif
@@ -501,8 +497,7 @@ namespace renderer {
 
                 result = device->GetDeviceRemovedReason();
 
-                const auto msg = Rx::String::format("Device lost on present: %s", to_string(result));
-                Rx::abort(msg.data());
+                Rx::abort("Device lost on present: %s", to_string(result));
             }
         }
 
@@ -806,8 +801,7 @@ namespace renderer {
                                                   nullptr,
                                                   swapchain1.GetAddressOf());
         if(FAILED(hr)) {
-            const auto msg = Rx::String::format("Could not create swapchain: %s", to_string(hr));
-            Rx::abort(msg.data());
+            Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
 
         hr = swapchain1->QueryInterface(swapchain.GetAddressOf());
@@ -838,16 +832,14 @@ namespace renderer {
             auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
                                                          IID_PPV_ARGS(compute_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                const auto msg = Rx::String::format("Could not create compute command allocator for frame %d", i);
-                Rx::abort(msg.data());
+                Rx::abort("Could not create compute command allocator for frame %d", i);
             }
 
             set_object_name(compute_command_allocators[i].Get(), Rx::String::format("Compute Command Allocator %d", i));
 
             result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(copy_command_allocators[i].GetAddressOf()));
             if(FAILED(result)) {
-                const auto msg = Rx::String::format("Could not create copy command allocator for frame %d", i);
-                Rx::abort(msg.data());
+                Rx::abort("Could not create copy command allocator for frame %d", i);
             }
 
             set_object_name(copy_command_allocators[i].Get(), Rx::String::format("Copy Command Allocator %d", i));
@@ -1326,8 +1318,7 @@ namespace renderer {
             }
 
             if(FAILED(result)) {
-                const auto msg = Rx::String::format("Could not create direct command allocator: %s", to_string(result));
-                Rx::abort(msg.data());
+                Rx::abort("Could not create direct command allocator: %s", to_string(result));
 
             } else {
                 command_allocators_for_frame.insert(id, allocator);
@@ -1392,10 +1383,8 @@ namespace renderer {
                 logger->error("Could not reset command allocator for thread %d: %s", thread_id, to_string(result));
                 if(result == DXGI_ERROR_DEVICE_REMOVED) {
                     log_dred_report();
-                    const auto msg = Rx::String::format("Device removed when resetting allocators for frame %u: %s",
-                                                        frame_idx,
-                                                        to_string(result));
-                    Rx::abort(msg.data());
+
+                    Rx::abort("Device removed when resetting allocators for frame %u: %s", frame_idx, to_string(result));
                 }
             }
         });
@@ -1502,16 +1491,14 @@ namespace renderer {
             logger->error("Device was removed because: %s", to_string(removed_reason));
         }
         if(FAILED(result)) {
-            const auto msg = Rx::String::format("Could not create staging buffer: %s (%u)", to_string(result), result);
-            Rx::abort(msg.data());
+            Rx::abort("Could not create staging buffer: %s (%u)", to_string(result), result);
         }
 
         buffer.size = num_bytes;
         D3D12_RANGE range{0, num_bytes};
         result = buffer.resource->Map(0, &range, &buffer.mapped_ptr);
         if(FAILED(result)) {
-            const auto msg = Rx::String::format("Could not map staging buffer: %s (%u)", to_string(result), result);
-            Rx::abort(msg.data());
+            Rx::abort("Could not map staging buffer: %s (%u)", to_string(result), result);
         }
 
         const auto msg = Rx::String::format("Staging Buffer %d", staging_buffer_idx);
