@@ -22,7 +22,7 @@ namespace renderer {
         ZoneScoped;
         auto& device = renderer_in.get_render_device();
 
-        standard_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
+        standard_pipeline = device.create_render_pipeline_state({
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
@@ -31,7 +31,7 @@ namespace renderer {
         });
         logger->verbose("Created standard pipeline");
 
-        opaque_chunk_geometry_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
+        opaque_chunk_geometry_pipeline = device.create_render_pipeline_state({
             .name = "Opaque chunk geometry pipeline",
             .vertex_shader = load_shader("chunk.vertex"),
             .pixel_shader = load_shader("opaque_chunk.pixel"),
@@ -40,10 +40,15 @@ namespace renderer {
         });
         logger->verbose("Created opaque chunk geometry pipeline");
 
-        atmospheric_sky_pipeline = device.create_render_pipeline_state(RenderPipelineStateCreateInfo{
+        atmospheric_sky_pipeline = device.create_render_pipeline_state({
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("fullscreen.vertex"),
             .pixel_shader = load_shader("atmospheric_sky.pixel"),
+            .depth_stencil_state =
+                {
+                    .enable_depth_write = false,
+                    .depth_func = CompareOp::Always,
+                },
             .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
             .depth_stencil_format = ImageFormat::Depth32,
         });
@@ -67,11 +72,14 @@ namespace renderer {
 
         begin_render_pass(commands);
 
-        const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
+        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
 
-        draw_objects_in_scene(commands, registry, *bind_group, frame_idx);
+        const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
+        bind_group->bind_to_graphics_signature(commands);
 
         draw_atmosphere(commands, registry);
+
+        draw_objects_in_scene(commands, registry, frame_idx);
 
         commands->EndRenderPass();
     }
@@ -103,24 +111,18 @@ namespace renderer {
         const auto& color_target = renderer->get_image(color_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
-        color_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = device.create_rtv_handle(color_target),
-                                                                   .BeginningAccess =
-                                                                       {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                        .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                                 .Color = {0, 0, 0, 0}}}},
-                                                                   .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+        color_target_access = {.cpuDescriptor = device.create_rtv_handle(color_target),
+                               .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                   .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT, .Color = {0, 0, 0, 0}}}},
+                               .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-        depth_target_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{.cpuDescriptor = device.create_dsv_handle(depth_target),
-                                                                   .DepthBeginningAccess =
-                                                                       {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                        .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
-                                                                                                 .DepthStencil = {.Depth = 1.0}}}},
-                                                                   .StencilBeginningAccess =
-                                                                       {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
-                                                                   .DepthEndingAccess =
-                                                                       {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE},
-                                                                   .StencilEndingAccess = {
-                                                                       .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
+        depth_target_access = {.cpuDescriptor = device.create_dsv_handle(depth_target),
+                               .DepthBeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                        .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
+                                                                                 .DepthStencil = {.Depth = 1.0}}}},
+                               .StencilBeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
+                               .DepthEndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE},
+                               .StencilEndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD}};
 
         render_target_size = render_resolution;
     }
@@ -130,7 +132,6 @@ namespace renderer {
     TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
 
     void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
-
         commands->BeginRenderPass(1, &color_target_access, &depth_target_access, D3D12_RENDER_PASS_FLAG_NONE);
 
         D3D12_VIEWPORT viewport{};
@@ -146,20 +147,14 @@ namespace renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
-                                            entt::registry& registry,
-                                            const BindGroup& material_bind_group,
-                                            const Uint32 frame_idx) {
+    void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_object_in_scene");
 
-        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
         // Hardcode camera 0 as the player camera
         // TODO: Decide if this is fine
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
-
-        material_bind_group.bind_to_graphics_signature(commands);
 
         {
             auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
@@ -200,9 +195,11 @@ namespace renderer {
 
         } else {
             PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_atmosphere");
+
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
             commands->DrawInstanced(3, 1, 0, 0);
         }
     }
 
 } // namespace renderer
+

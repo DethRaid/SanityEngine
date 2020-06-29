@@ -1,7 +1,8 @@
 #include "d3d12_private_data.hpp"
 
+#include <rx/core/log.h>
+
 #include "rhi/helpers.hpp"
-#include "rx/core/log.h"
 
 RX_LOG("\033[32mD3D12PrivateData\033[0m", logger);
 

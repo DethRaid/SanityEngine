@@ -27,7 +27,7 @@
 #include "windows/windows_helpers.hpp"
 
 namespace renderer {
-    RX_LOG("RenderDevice", logger);
+    RX_LOG("\033[32mRenderDevice\033[0m", logger);
 
     RX_CONSOLE_BVAR(
         cvar_enable_gpu_based_validation,

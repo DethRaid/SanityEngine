@@ -214,7 +214,11 @@ namespace renderer {
         }
     }
 
-    Image& Renderer::get_image(const TextureHandle handle) const { return *all_images[handle.index]; }
+    Image& Renderer::get_image(const TextureHandle handle) const {
+        ZoneScoped;
+
+        return *all_images[handle.index];
+    }
 
     void Renderer::schedule_texture_destruction(const TextureHandle& image_handle) {
         auto image = Rx::Utility::move(all_images[image_handle.index]);

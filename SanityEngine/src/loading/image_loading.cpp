@@ -2,10 +2,10 @@
 
 #include <Tracy.hpp>
 #include <TracyD3D12.hpp>
-#include <ftl/task.h>
 #include <rx/core/log.h>
 #include <stb_image.h>
 
+#include "adapters/rex/rex_wrapper.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "rhi/helpers.hpp"
@@ -15,35 +15,50 @@
 RX_LOG("ImageLoading", logger);
 
 bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
+    ZoneScoped;
+
     int raw_width, raw_height, num_components;
 
-    const auto* texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
-    if(texture_data == nullptr) {
-        const auto* failure_reason = stbi_failure_reason();
-        logger->error("Could not load image %s: %s", image_name, failure_reason);
-        return false;
+    stbi_uc* texture_data;
+    {
+        ZoneScopedN("load_image::stbi_load");
+        texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
+        if(texture_data == nullptr) {
+            const auto* failure_reason = stbi_failure_reason();
+            logger->error("Could not load image %s: %s", image_name, failure_reason);
+            return false;
+        }
     }
 
     width = static_cast<Uint32>(raw_width);
     height = static_cast<Uint32>(raw_height);
 
-    const auto num_pixels = width * height;
+    const auto num_pixels = static_cast<Size>(width * height);
     pixels.resize(num_pixels * 4);
-    for(Uint32 i = 0; i < num_pixels; i++) {
-        const auto read_idx = i * num_components;
-        const auto write_idx = i * 4;
 
-        pixels[write_idx] = texture_data[read_idx];
-        pixels[write_idx + 1] = texture_data[read_idx + 1];
-        pixels[write_idx + 2] = texture_data[read_idx + 2];
+    if(num_components == 4) {
+        memcpy(pixels.data(), texture_data, num_pixels * 4);
 
-        if(num_components == 4) {
-            pixels[write_idx + 3] = texture_data[read_idx + 3];
+    } else {
+        ZoneScopedN("load_image::alpha_padding");
+        for(Uint32 i = 0; i < num_pixels; i++) {
+            const auto read_idx = i * num_components;
+            const auto write_idx = i * 4;
 
-        } else {
-            pixels[write_idx + 3] = 0xFF;
+            pixels[write_idx] = texture_data[read_idx];
+            pixels[write_idx + 1] = texture_data[read_idx + 1];
+            pixels[write_idx + 2] = texture_data[read_idx + 2];
+
+            if(num_components == 4) {
+                pixels[write_idx + 3] = texture_data[read_idx + 3];
+
+            } else {
+                pixels[write_idx + 3] = 0xFF;
+            }
         }
     }
+
+    stbi_image_free(texture_data);
 
     return true;
 }
@@ -75,16 +90,6 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
     {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), msg.data());
         PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
-
-        // I get this error from PIXScopedEvent
-        //
-        // D3D12 ERROR: ID3D12GraphicsCommandList::*: This API cannot be called on a closed command list. [ EXECUTION ERROR #547:
-        // COMMAND_LIST_CLOSED]
-        //
-        // This means... the device is giving me a closed command list?
-        //
-        // I'm creating a new command allocator for each command list, and I'm creating a new command list every time I call
-        // RenderDevice::create_command_list. Does my command list come pre-closed? Do I have to begin my command list or something?
 
         handle_out = renderer.create_image(create_info, pixels.data(), commands);
     }
