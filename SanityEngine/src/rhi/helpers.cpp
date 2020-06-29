@@ -34,12 +34,6 @@ namespace renderer {
         return string;
     }
 
-    void set_object_name(ID3D12Object* object, const Rx::String& name) {
-        const auto wide_name = to_wide_string(name);
-
-        object->SetName(reinterpret_cast<LPCWSTR>(wide_name.c_str()));
-    }
-
     DXGI_FORMAT to_dxgi_format(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:
@@ -301,9 +295,17 @@ namespace renderer {
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
 
         while(cur_node != nullptr) {
-            const auto command_list_name = cur_node->pCommandListDebugNameW != nullptr ?
-                                               from_wide_string(cur_node->pCommandListDebugNameW) :
-                                               "Unknown command list";
+            const auto command_list_name = [&]() -> Rx::String {
+                if(cur_node->pCommandListDebugNameW != nullptr) {
+                    return from_wide_string(cur_node->pCommandListDebugNameW);
+
+                } else if(cur_node->pCommandListDebugNameA != nullptr) {
+                    return cur_node->pCommandListDebugNameA;
+
+                } else {
+                    return "Unknown command list";
+                }
+            }();
 
             const auto command_queue_name = cur_node->pCommandQueueDebugNameW != nullptr ?
                                                 from_wide_string(cur_node->pCommandQueueDebugNameW) :

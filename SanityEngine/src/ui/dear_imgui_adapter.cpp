@@ -243,8 +243,8 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "DearImguiAdapter::create_font_texture");
-        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "DearImguiAdapter::create_font_texture");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
         const auto create_info = renderer::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
                                                            .usage = renderer::ImageUsage::SampledImage,
@@ -252,7 +252,7 @@ void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
                                                            .width = static_cast<Uint32>(width),
                                                            .height = static_cast<Uint32>(height)};
 
-        font_atlas = renderer.create_image(create_info, pixels, commands.cmds);
+        font_atlas = renderer.create_image(create_info, pixels, commands);
     }
 
     device.submit_command_list(Rx::Utility::move(commands));

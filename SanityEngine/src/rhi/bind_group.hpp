@@ -134,6 +134,8 @@ namespace renderer {
 
         ~BindGroupBuilder() = default;
 
+        void clear_all_bindings();
+
         BindGroupBuilder& set_buffer(const Rx::String& name, const Buffer& buffer);
 
         BindGroupBuilder& set_image(const Rx::String& name, const Image& image);

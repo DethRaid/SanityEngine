@@ -27,14 +27,16 @@ namespace renderer {
         projection_matrix = {};
 
         if(camera.fov > 0) {
+            projection_matrix = glm::tweakedInfinitePerspective(camera.fov, camera.aspect_ratio, camera.near_clip_plane);
+
             // Use an infinite projection matrix
             // Math from http://www.terathon.com/gdc07_lengyel.pdf
-            const auto e = 1.0 / tan(camera.fov / 2.0);
-            projection_matrix[0][0] = static_cast<Float32>(e);
-            projection_matrix[1][1] = static_cast<Float32>(e / camera.aspect_ratio);
-            projection_matrix[2][2] = static_cast<Float32>(FLT_EPSILON - 1.0);
-            projection_matrix[2][3] = -1.0f;
-            projection_matrix[3][2] = static_cast<Float32>((FLT_EPSILON - 2) * camera.near_clip_plane);
+            // const auto e = 1.0 / tan(camera.fov / 2.0);
+            // projection_matrix[0][0] = static_cast<Float32>(e);
+            // projection_matrix[1][1] = static_cast<Float32>(e / camera.aspect_ratio);
+            // projection_matrix[2][2] = static_cast<Float32>(FLT_EPSILON - 1.0);
+            // projection_matrix[2][3] = -1.0f;
+            // projection_matrix[3][2] = static_cast<Float32>((FLT_EPSILON - 2) * camera.near_clip_plane);
 
         } else {
             const auto half_width = camera.orthographic_size / 2.0;

@@ -122,9 +122,9 @@ namespace renderer {
          *
          * This method is internally synchronized. You can (in theory) call it safely from a multithreaded environment
          */
-        [[nodiscard]] CommandList create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
-        void submit_command_list(CommandList&& commands);
+        void submit_command_list(ComPtr<ID3D12GraphicsCommandList4>&& commands);
 
         BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
@@ -191,15 +191,11 @@ namespace renderer {
         Rx::Concurrency::Atomic<Size> command_lists_outside_render_device{0};
 
         Rx::Concurrency::Mutex direct_command_allocators_mutex;
-        Rx::Vector<Rx::Map<Uint32, ComPtr<ID3D12CommandAllocator>>> direct_command_allocators;
-
-        Rx::Vector<ComPtr<ID3D12CommandAllocator>> compute_command_allocators;
-
-        Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
+        Rx::Vector<ComPtr<ID3D12CommandAllocator>> direct_command_allocators;
 
         Rx::Concurrency::Mutex command_lists_by_frame_mutex;
-        Rx::Vector<Rx::Vector<CommandList>> command_lists_to_submit_on_end_frame;
-        Rx::Vector<Rx::Vector<CommandList>> command_lists_to_free_on_frame_begin;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> command_allocators_to_reset_on_begin_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
@@ -334,8 +330,6 @@ namespace renderer {
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                          ID3D12RootSignature& root_signature);
-
-        [[nodiscard]] ComPtr<ID3D12CommandAllocator> get_direct_command_allocator_for_thread(Uint32 frame_idx, Uint32 id);
 
         void flush_batched_command_lists();
 

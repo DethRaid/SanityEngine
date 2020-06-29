@@ -76,35 +76,37 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
 
     if(loaded_terrain_tiles.find(coords_of_tile_containing_player) == nullptr) {
+        logger->verbose("Marking tile (%d, %d) as having started loading",
+                        coords_of_tile_containing_player.x,
+                        coords_of_tile_containing_player.y);
         loaded_terrain_tiles.insert(coords_of_tile_containing_player, {});
         num_active_tilegen_tasks.fetch_add(1);
         ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
     }
 
-#if 0
-    const auto max_tile_distance = cvar_max_terrain_tile_distance->get();
-    for(Int32 distance_from_player = 1; distance_from_player < max_tile_distance; distance_from_player++) {
-        for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
-            for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
-                // Only generate chunks at the edge of our current square
-                if((chunk_y != -distance_from_player) && (chunk_y != distance_from_player) && (chunk_x != -distance_from_player) &&
-                   (chunk_x != distance_from_player)) {
-                    continue;
-                }
-
-                const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
-
-                if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
-                    if(num_active_tilegen_tasks.load() < static_cast<Uint32>(cvar_max_generating_terrain_tiles->get())) {
-                        loaded_terrain_tiles.insert(new_tile_coords, {});
-                        num_active_tilegen_tasks.fetch_add(1);
-                        ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(new_tile_coords); });
-                    }
-                }
-            }
-        }
-    }
-#endif
+    // const auto max_tile_distance = cvar_max_terrain_tile_distance->get();
+    // for(Int32 distance_from_player = 1; distance_from_player < max_tile_distance; distance_from_player++) {
+    //     for(Int32 chunk_y = -distance_from_player; chunk_y <= distance_from_player; chunk_y++) {
+    //         for(Int32 chunk_x = -distance_from_player; chunk_x <= distance_from_player; chunk_x++) {
+    //             // Only generate chunks at the edge of our current square
+    //             if((chunk_y != -distance_from_player) && (chunk_y != distance_from_player) && (chunk_x != -distance_from_player) &&
+    //                (chunk_x != distance_from_player)) {
+    //                 continue;
+    //             }
+    //
+    //             const auto new_tile_coords = coords_of_tile_containing_player + Vec2i{chunk_x, chunk_y};
+    //
+    //             if(loaded_terrain_tiles.find(new_tile_coords) == nullptr) {
+    //                 if(num_active_tilegen_tasks.load() < static_cast<Uint32>(cvar_max_generating_terrain_tiles->get())) {
+    //                     logger->verbose("Marking tile (%d, %d) as having started loading", new_tile_coords.x, new_tile_coords.y);
+    //                     loaded_terrain_tiles.insert(new_tile_coords, {});
+    //                     num_active_tilegen_tasks.fetch_add(1);
+    //                     ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(new_tile_coords); });
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 Float32 Terrain::get_terrain_height(const Vec2f& location) {
@@ -139,19 +141,19 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
     auto data = TerrainData{};
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "Terrain::generate_terrain");
-        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::generate_terrain");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
 
         // Generate heightmap
         const auto total_pixels_in_maps = params.width * params.height;
         data.heightmap = Rx::Vector<Float32>{total_pixels_in_maps};
-        generate_heightmap(noise_generator, params, renderer, commands.cmds, data, total_pixels_in_maps);
+        generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
 
         // Place water sources
-        place_water_sources(params, renderer, commands.cmds, data, total_pixels_in_maps);
+        place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
 
         // Let water flow around
-        compute_water_flow(renderer, commands.cmds, data);
+        compute_water_flow(renderer, commands, data);
     }
 
     device.submit_command_list(Rx::Utility::move(commands));
@@ -321,7 +323,7 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
 
     {
         auto locked_tile_mesh_queue = tile_mesh_create_infos.lock();
-        locked_tile_mesh_queue->emplace_back(top_left, tile_entity, Rx::Utility::move(tile_vertices), Rx::Utility::move(tile_indices));
+        locked_tile_mesh_queue->emplace_back(tilecoord, tile_entity, Rx::Utility::move(tile_vertices), Rx::Utility::move(tile_indices));
     }
 
     logger->verbose("Finished generating mesh for tile (%d, %d)", tilecoord.x, tilecoord.y);
@@ -372,23 +374,21 @@ void Terrain::upload_new_tile_meshes() {
     auto commands = device.create_command_list();
     commands->SetName(L"Terrain::upload_new_tile_meshes");
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), "Terrain::upload_new_tile_meshes");
-        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::upload_new_tile_meshes");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
 
         locked_tile_mesh_queue->each_fwd([&](const TerrainTileMeshCreateInfo& create_info) {
-            PIXScopedEvent(commands.cmds.Get(),
+            PIXScopedEvent(commands.Get(),
                            PIX_COLOR_DEFAULT,
                            "Terrain::upload_new_tile_meshes(%d, %d)",
-                           create_info.coord_worldspace.x,
-                           create_info.coord_worldspace.y);
-
-            auto [tile_location, tile_entity, tile_vertices, tile_indices] = create_info;
+                           create_info.tilecoord.x,
+                           create_info.tilecoord.y);
 
             auto& meshes = renderer->get_static_mesh_store();
 
-            meshes.begin_adding_meshes(commands.cmds);
+            meshes.begin_adding_meshes(commands);
 
-            const auto tile_mesh_ld = meshes.add_mesh(tile_vertices, tile_indices, commands.cmds);
+            const auto tile_mesh_ld = meshes.add_mesh(create_info.vertices, create_info.indices, commands);
             const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
 
             const Rx::Vector<D3D12_RESOURCE_BARRIER>
@@ -403,20 +403,23 @@ void Terrain::upload_new_tile_meshes() {
             const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer,
                                                                       meshes.get_index_buffer(),
                                                                       Rx::Array{tile_mesh_ld},
-                                                                      commands.cmds);
+                                                                      commands);
             const auto tile_mesh = tile_mesh_ld;
 
             renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
 
             {
                 auto locked_registry = registry->lock();
-                locked_registry->assign<renderer::StandardRenderableComponent>(tile_entity, tile_mesh, terrain_material);
-                locked_registry->assign<TransformComponent>(tile_entity, glm::vec3{tile_location.x, 0.0f, tile_location.y});
+                locked_registry->assign<renderer::StandardRenderableComponent>(create_info.entity, tile_mesh, terrain_material);
+                locked_registry->assign<TransformComponent>(create_info.entity,
+                                                            glm::vec3{create_info.tilecoord.x, 0.0f, create_info.tilecoord.y});
             }
 
             {
+                logger->verbose("Marking tile (%d, %d) as completely loaded", create_info.tilecoord.x, create_info.tilecoord.y);
+                Rx::Log::flush();
                 Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
-                loaded_terrain_tiles.find(tile_location)->loading_phase = TerrainTile::LoadingPhase::Complete;
+                loaded_terrain_tiles.find(create_info.tilecoord)->loading_phase = TerrainTile::LoadingPhase::Complete;
             }
         });
 

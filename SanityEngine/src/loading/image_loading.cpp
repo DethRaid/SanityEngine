@@ -7,6 +7,7 @@
 #include <stb_image.h>
 
 #include "renderer/renderer.hpp"
+#include "renderer/rhi/d3d12_private_data.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 #include "rhi/resources.hpp"
@@ -67,13 +68,13 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
     auto commands = device.create_command_list();
 
     const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
-    renderer::set_object_name(commands.cmds, msg);
+    renderer::set_object_name(commands, msg);
 
     renderer::TextureHandle handle_out;
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.cmds.Get(), msg.data());
-        PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, msg.data());
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), msg.data());
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
 
         // I get this error from PIXScopedEvent
         //
@@ -85,7 +86,7 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
         // I'm creating a new command allocator for each command list, and I'm creating a new command list every time I call
         // RenderDevice::create_command_list. Does my command list come pre-closed? Do I have to begin my command list or something?
 
-        handle_out = renderer.create_image(create_info, pixels.data(), commands.cmds);
+        handle_out = renderer.create_image(create_info, pixels.data(), commands);
     }
 
     device.submit_command_list(Rx::Utility::move(commands));

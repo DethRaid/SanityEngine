@@ -91,10 +91,10 @@ namespace renderer {
         command_list->SetName(L"Main Render Command List");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, command_list.cmds.Get(), "Renderer::render_all");
-            PIXScopedEvent(command_list.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
+            TracyD3D12Zone(RenderDevice::tracy_context, command_list.Get(), "Renderer::render_all");
+            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
-                rebuild_raytracing_scene(command_list.cmds);
+                rebuild_raytracing_scene(command_list);
                 raytracing_scene_dirty = false;
             }
 
@@ -112,11 +112,11 @@ namespace renderer {
             {
                 ZoneScopedN("Renderer::render_passes");
 
-                TracyD3D12Zone(RenderDevice::tracy_context, command_list.cmds.Get(), "Renderer::render_passes");
-                PIXScopedEvent(command_list.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+                TracyD3D12Zone(RenderDevice::tracy_context, command_list.Get(), "Renderer::render_passes");
+                PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
                 render_passes.each_fwd(
-                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.cmds.Get(), *registry, frame_idx, world); });
+                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.Get(), *registry, frame_idx, world); });
             }
         }
 
@@ -351,8 +351,8 @@ namespace renderer {
         commands->SetName(L"Renderer::create_builtin_images");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, commands.cmds.Get(), "Renderer::create_builtin_images");
-            PIXScopedEvent(commands.cmds.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
+            TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "Renderer::create_builtin_images");
+            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {
                 const auto pink_texture_create_info = ImageCreateInfo{.name = "Pink",
@@ -367,7 +367,7 @@ namespace renderer {
                     pink_texture_pixel.push_back(0xFFFF00FF);
                 }
 
-                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands.cmds);
+                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
             }
 
             {
@@ -385,7 +385,7 @@ namespace renderer {
 
                 normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
                                                                normal_roughness_texture_pixel.data(),
-                                                               commands.cmds);
+                                                               commands);
             }
 
             {
@@ -403,7 +403,7 @@ namespace renderer {
 
                 specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
                                                                 specular_emission_texture_pixel.data(),
-                                                                commands.cmds);
+                                                                commands);
             }
         }
 
@@ -557,6 +557,8 @@ namespace renderer {
         ZoneScoped;
 
         auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
+        material_bind_group_builder.clear_all_bindings();
+
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
         material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
         material_bind_group_builder.set_buffer("per_frame_data", *per_frame_data_buffers[frame_idx]);

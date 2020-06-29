@@ -86,6 +86,12 @@ namespace renderer {
           descriptor_table_descriptor_mappings{Rx::Utility::move(descriptor_table_descriptor_mappings_in)},
           descriptor_table_handles{Rx::Utility::move(descriptor_table_handles_in)} {}
 
+    void BindGroupBuilder::clear_all_bindings() {
+        bound_buffers = {};
+        bound_image_arrays = {};
+        bound_raytracing_scenes = {};
+    }
+
     BindGroupBuilder& BindGroupBuilder::set_buffer(const Rx::String& name, const Buffer& buffer) {
         ZoneScoped;
 

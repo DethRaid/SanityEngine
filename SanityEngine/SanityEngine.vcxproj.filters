@@ -558,6 +558,9 @@
     <ClCompile Include="extern\rex\include\rx\core\format.cpp">
       <Filter>Rex\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\rhi\d3d12_private_data.cpp">
+      <Filter>Source Files\renderer\rhi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -1190,9 +1193,6 @@
     <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
       <Filter>Header Files\renderer\renderpass</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\types.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\async\synchronized_resource.hpp">
       <Filter>Header Files\core\async</Filter>
     </ClInclude>
@@ -1288,6 +1288,12 @@
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\uninitialized.h">
       <Filter>Rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\d3d12_private_data.hpp">
+      <Filter>Header Files\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\types.hpp">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

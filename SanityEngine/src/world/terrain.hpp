@@ -45,10 +45,7 @@ struct TerrainTile {
 };
 
 struct TerrainTileMeshCreateInfo {
-    /*!
-     * \brief Worldspace location of the tile
-     */
-    Vec2i coord_worldspace;
+    Vec2i tilecoord;
 
     entt::entity entity;
 
