@@ -82,7 +82,7 @@ Float64 Span::total_milliseconds() const {
   //
   // NOTE(dweiler): Would be dangerous to introduce something like
   // |ticks_per_milliseconds| as the |scale| would require tiny, nearly denormal
-  // rx_f64 to express the reciprocal of large |m_frequency|, so keeping things
+  // Float64 to express the reciprocal of large |m_frequency|, so keeping things
   // in units of seconds avoids catastropic precision loss for high precision
   // timers.
   const auto scale = 1.0 / ticks_per_second(m_frequency);

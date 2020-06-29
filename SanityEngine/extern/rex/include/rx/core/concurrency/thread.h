@@ -41,6 +41,7 @@ private:
       alignas(16) Byte m_thread[16];
     };
 
+    Memory::Allocator& m_allocator;
     Function<void(int)> m_function;
     const char* m_name;
     bool m_joined;
@@ -52,7 +53,8 @@ private:
 template<typename F>
 inline Thread::State::State(Memory::Allocator& _allocator, const char* _name, F&& _function)
   : m_nat{}
-  , m_function{_allocator, Utility::forward<F>(_function)}
+  , m_allocator{_allocator}
+  , m_function{m_allocator, Utility::forward<F>(_function)}
   , m_name{_name}
   , m_joined{false}
 {

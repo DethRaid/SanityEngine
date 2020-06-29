@@ -148,10 +148,10 @@ Optional<Vector<Byte>> read_text_stream(Memory::Allocator& _allocator, Stream* _
       if (n && *s != k_c) {
         // Need to typedef with an alias Type since we're breaking strict
         // aliasing, let the compiler know.
-        typedef Size RX_HINT_MAY_ALIAS word_type;
+        typedef Size RX_HINT_MAY_ALIAS WordType;
 
         // Scan word at a time, stopping at word containing first |k_c|.
-        auto w = reinterpret_cast<const word_type*>(s);
+        auto w = reinterpret_cast<const WordType*>(s);
         for (; n >= k_ss && !has_zero(*w ^ k_k); w++, n -= k_ss);
         s = reinterpret_cast<const Byte*>(w);
       }

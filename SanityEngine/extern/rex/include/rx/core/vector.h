@@ -69,6 +69,8 @@ struct Vector {
   // reserve |size| elements
   bool reserve(Size _size);
 
+  bool append(const Vector& _other);
+
   void clear();
 
   Size find(const T& _value) const;
@@ -86,8 +88,6 @@ struct Vector {
   // append new |T| construct with |args|
   template<typename... Ts>
   bool emplace_back(Ts&&... _args);
-
-  bool append(const Vector<T>& vector_to_append);
 
   Size size() const;
   Size capacity() const;
@@ -385,6 +385,33 @@ bool Vector<T>::reserve(Size _size) {
 }
 
 template<typename T>
+bool Vector<T>::append(const Vector& _other) {
+  const auto new_size = m_size + _other.m_size;
+
+  // Slight optimization for trivially copyable |T|.
+  if constexpr (traits::is_trivially_copyable<T>) {
+    if (!resize(new_size)) {
+      return false;
+    }
+    // Use fast copy.
+    detail::copy(m_data + m_size, _other.m_data, sizeof(T) * _other.m_size);
+  } else {
+    if (!reserve(new_size)) {
+      return false;
+    }
+
+    // Copy construct the objects.
+    for (Size i = 0; i < _other.m_size; i++) {
+      Utility::construct<T>(m_data + m_size + i, _other[i]);
+    }
+
+    m_size = new_size;
+  }
+
+  return true;
+}
+
+template<typename T>
 inline void Vector<T>::clear() {
   if (m_size) {
     if constexpr (!traits::is_trivially_destructible<T>) {
@@ -462,18 +489,6 @@ inline bool Vector<T>::emplace_back(Ts&&... _args) {
   Utility::construct<T>(m_data + m_size, Utility::forward<Ts>(_args)...);
 
   m_size++;
-  return true;
-}
-
-template <typename T>
-bool Vector<T>::append(const Vector<T>& vector_to_append) {
-  if(!reserve(m_size + vector_to_append.size())) {
-    return false;
-  }
-
-  // Don't need to check the return value of `push_back` because we already ensured the underlying storage was large enough
-  vector_to_append.each_fwd([&](const T& elem) { push_back(elem); });
-
   return true;
 }
 

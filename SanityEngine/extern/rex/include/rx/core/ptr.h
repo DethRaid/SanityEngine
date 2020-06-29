@@ -5,7 +5,7 @@
 #include "rx/core/hash.h"
 #include "rx/core/ref.h"
 
-#include "rx/core/memory/allocator.h"
+#include "rx/core/memory/system_allocator.h"
 
 #include "rx/core/utility/exchange.h"
 

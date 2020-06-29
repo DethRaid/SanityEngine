@@ -30,7 +30,7 @@ Float32 sindf(Float64 _x) {
 #if RX_FLOAT_EVAL_METHOD == 0 || RX_FLOAT_EVAL_METHOD == 1
 static constexpr const Float64 k_toint{1.5 / DBL_EPSILON};
 #else
-static constexpr const rx_f64 k_toint{1.5 / LDBL_EPSILON};
+static constexpr const Float64 k_toint{1.5 / LDBL_EPSILON};
 #endif
 static constexpr const Float64 k_invpio2{6.36619772367581382433e-01};
 static constexpr const Float64 k_pio2_1{1.57079631090164184570e+00};
