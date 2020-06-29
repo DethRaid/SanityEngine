@@ -68,6 +68,8 @@ namespace renderer {
         }
 #endif
 
+        guids::init();
+
         initialize_dxgi();
 
         select_adapter();
