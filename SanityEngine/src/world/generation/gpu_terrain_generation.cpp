@@ -18,22 +18,22 @@ namespace terraingen {
                     128,
                     16);
 
-    static ComPtr<ID3D12PipelineState> place_oceans_pso;
-    static ComPtr<ID3D12PipelineState> water_flow_pso;
+    static com_ptr<ID3D12PipelineState> place_oceans_pso;
+    static com_ptr<ID3D12PipelineState> water_flow_pso;
 
     void create_place_ocean_pso(renderer::RenderDevice& device) {
         ZoneScoped;
 
         const auto place_oceans_shader_source = load_shader("FillOcean.hlsl");
+        RX_ASSERT(!place_oceans_shader_source.is_empty(), "Could not load shader FillOcean.hlsl");
 
         const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
                                                                     .Constants =
                                                                         {
                                                                             .Num32BitValues = 1,
                                                                         }},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV,
-                                                                    .Descriptor = {.ShaderRegister = 1}}};
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV},
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV}};
 
         const auto root_signature = device.compile_root_signature(
             {.NumParameters = static_cast<UINT>(root_parameters.size()), .pParameters = root_parameters.data()});
@@ -45,9 +45,8 @@ namespace terraingen {
 
         const auto water_flow_source = load_shader("WaterFlow.hlsl");
 
-        const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV,
-                                                                    .Descriptor = {.ShaderRegister = 1}}};
+        const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV},
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV}};
 
         const auto root_signature = device.compile_root_signature(
             {.NumParameters = static_cast<UINT>(root_parameters.size()), .pParameters = root_parameters.data()});
@@ -61,14 +60,14 @@ namespace terraingen {
         create_water_flow_pos(device);
     }
 
-    void place_oceans(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+    void place_oceans(const com_ptr<ID3D12GraphicsCommandList4>& commands,
                       renderer::Renderer& renderer,
                       const Uint32 sea_level,
                       TerrainData& data) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "gpu_terrain_generation::place_oceans");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::place_oceans");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "gpu_terrain_generation::place_oceans");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::place_oceans");
 
         data.water_depth_handle = renderer.create_image({
             .name = "Terrain water depth map",
@@ -81,17 +80,17 @@ namespace terraingen {
         const auto heightmap = renderer.get_image(data.heightmap_handle);
         const auto water_height_map = renderer.get_image(data.water_depth_handle);
 
-        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_height_map.resource.Get());
+        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_height_map.resource.get());
 
         commands->ResourceBarrier(1, &water_depth_map_barrier);
 
-        const auto root_sig = renderer::get_com_interface<ID3D12RootSignature>(place_oceans_pso.Get());
-        commands->SetComputeRootSignature(root_sig.Get());
+        const auto root_sig = renderer::get_com_interface<ID3D12RootSignature>(place_oceans_pso.get());
+        commands->SetComputeRootSignature(root_sig.get());
         commands->SetComputeRoot32BitConstant(0, sea_level, 0);
         commands->SetComputeRootUnorderedAccessView(1, heightmap.resource->GetGPUVirtualAddress());
         commands->SetComputeRootUnorderedAccessView(2, water_height_map.resource->GetGPUVirtualAddress());
 
-        commands->SetPipelineState(place_oceans_pso.Get());
+        commands->SetPipelineState(place_oceans_pso.get());
 
         const auto desc = heightmap.resource->GetDesc();
         const auto thread_group_count_x = desc.Width / 8;
@@ -99,27 +98,27 @@ namespace terraingen {
         commands->Dispatch(thread_group_count_x, thread_group_count_y, 1);
     }
 
-    void compute_water_flow(const ComPtr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data) {
+    void compute_water_flow(const com_ptr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "gpu_terrain_generation::compute_water_flow");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::compute_water_flow");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "gpu_terrain_generation::compute_water_flow");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::compute_water_flow");
 
         const auto heightmap_image = renderer.get_image(data.heightmap_handle);
         const auto water_depth_image = renderer.get_image(data.water_depth_handle);
 
-        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(water_flow_pso.Get());
-        commands->SetComputeRootSignature(root_signature.Get());
+        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(water_flow_pso.get());
+        commands->SetComputeRootSignature(root_signature.get());
         commands->SetComputeRootUnorderedAccessView(0, heightmap_image.resource->GetGPUVirtualAddress());
         commands->SetComputeRootUnorderedAccessView(1, water_depth_image.resource->GetGPUVirtualAddress());
 
-        commands->SetPipelineState(water_flow_pso.Get());
+        commands->SetPipelineState(water_flow_pso.get());
 
         const auto desc = heightmap_image.resource->GetDesc();
         const auto thread_group_count_x = desc.Width / 8;
         const auto thread_group_count_y = desc.Height / 8;
 
-        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_depth_image.resource.Get());
+        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_depth_image.resource.get());
 
         for(Uint32 water_flow_iteration = 0; water_flow_iteration < static_cast<UINT>(cvar_num_water_iterations->get());
             water_flow_iteration++) {

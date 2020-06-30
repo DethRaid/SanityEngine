@@ -401,7 +401,7 @@ namespace renderer {
         return ss.str().c_str();
     }
 
-    RaytracableGeometry build_acceleration_structure_for_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+    RaytracableGeometry build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
                                                                 RenderDevice& device,
                                                                 const Buffer& vertex_buffer,
                                                                 const Buffer& index_buffer,
@@ -459,13 +459,13 @@ namespace renderer {
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.get());
         commands->ResourceBarrier(1, &barrier);
 
         return {Rx::Utility::move(result_buffer)};
     }
 
-    void upload_data_with_staging_buffer(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+    void upload_data_with_staging_buffer(ID3D12GraphicsCommandList4* commands,
                                          RenderDevice& device,
                                          ID3D12Resource* dst,
                                          const void* src,
@@ -474,7 +474,7 @@ namespace renderer {
         auto staging_buffer = device.get_staging_buffer(size);
         memcpy(staging_buffer.mapped_ptr, src, size);
 
-        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.Get(), 0, size);
+        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.get(), 0, size);
 
         device.return_staging_buffer(Rx::Utility::move(staging_buffer));
     }

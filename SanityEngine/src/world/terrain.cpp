@@ -143,14 +143,14 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
     auto data = TerrainData{.width = params.width, .height = params.height, .heightmap = Rx::Vector<Float32>{total_pixels_in_maps}};
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::generate_terrain");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::generate_terrain");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
 
         // Generate heightmap
         generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
         const auto heightmap_image = renderer.get_image(data.heightmap_handle);
 
-        const auto heightmap_barrier = CD3DX12_RESOURCE_BARRIER::UAV(heightmap_image.resource.Get());
+        const auto heightmap_barrier = CD3DX12_RESOURCE_BARRIER::UAV(heightmap_image.resource.get());
 
         commands->ResourceBarrier(1, &heightmap_barrier);
 
@@ -172,13 +172,13 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
 void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
                                  const WorldParameters& params,
                                  renderer::Renderer& renderer,
-                                 const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                 const com_ptr<ID3D12GraphicsCommandList4>& commands,
                                  TerrainData& data,
                                  const unsigned total_pixels_in_maps) {
     ZoneScoped;
 
-    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::generate_heightmap");
-    PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_heightmap");
+    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::generate_heightmap");
+    PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::generate_heightmap");
 
     auto* height_noise = noise_generator.GetNoiseSet(-static_cast<Int32>(params.width) / 2,
                                                      -static_cast<Int32>(params.height) / 2,
@@ -206,13 +206,13 @@ void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
 
 void Terrain::place_water_sources(const WorldParameters& params,
                                   renderer::Renderer& renderer,
-                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                  const com_ptr<ID3D12GraphicsCommandList4>& commands,
                                   TerrainData& data,
                                   const unsigned total_pixels_in_maps) {
     ZoneScoped;
 
-    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::place_water_sources");
-    PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::place_water_sources");
+    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::place_water_sources");
+    PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::place_water_sources");
 
     Rx::Vector<Float32> water_depth_map{total_pixels_in_maps};
 
@@ -242,7 +242,7 @@ void Terrain::place_water_sources(const WorldParameters& params,
                                                      commands);
 }
 
-void Terrain::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data) {
+void Terrain::compute_water_flow(renderer::Renderer& renderer, const com_ptr<ID3D12GraphicsCommandList4>& commands, TerrainData& data) {
     const auto& heightmap_image = renderer.get_image(data.heightmap_handle);
     const auto& watermap_image = renderer.get_image(data.water_depth_handle);
 }
@@ -392,11 +392,11 @@ void Terrain::upload_new_tile_meshes() {
     auto commands = device.create_command_list();
     commands->SetName(L"Terrain::upload_new_tile_meshes");
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::upload_new_tile_meshes");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
 
         locked_tile_mesh_queue->each_fwd([&](const TerrainTileMeshCreateInfo& create_info) {
-            PIXScopedEvent(commands.Get(),
+            PIXScopedEvent(commands.get(),
                            PIX_COLOR_DEFAULT,
                            "Terrain::upload_new_tile_meshes(%d, %d)",
                            create_info.tilecoord.x,
@@ -404,16 +404,16 @@ void Terrain::upload_new_tile_meshes() {
 
             auto& meshes = renderer->get_static_mesh_store();
 
-            meshes.begin_adding_meshes(commands);
+            meshes.begin_adding_meshes(commands.get());
 
-            const auto tile_mesh_ld = meshes.add_mesh(create_info.vertices, create_info.indices, commands);
+            const auto tile_mesh_ld = meshes.add_mesh(create_info.vertices, create_info.indices, commands.get());
             const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
 
             const Rx::Vector<D3D12_RESOURCE_BARRIER>
-                barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.get(),
                                                                           D3D12_RESOURCE_STATE_COPY_DEST,
                                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                     CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
+                                     CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.get(),
                                                                           D3D12_RESOURCE_STATE_COPY_DEST,
                                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
@@ -421,7 +421,7 @@ void Terrain::upload_new_tile_meshes() {
             const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer,
                                                                       meshes.get_index_buffer(),
                                                                       Rx::Array{tile_mesh_ld},
-                                                                      commands);
+                                                                      commands.get());
             const auto tile_mesh = tile_mesh_ld;
 
             renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});

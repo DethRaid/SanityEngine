@@ -4,11 +4,11 @@
 
 #include <d3d12.h>
 #include <rx/core/string.h>
-#include <wrl/client.h>
+#include <winrt/base.h>
 
 #include "core/types.hpp"
 
-using Microsoft::WRL::ComPtr;
+using winrt::com_ptr;
 
 namespace D3D12MA {
     class Allocation;
@@ -20,7 +20,7 @@ namespace renderer {
 
         Uint32 size{};
 
-        ComPtr<ID3D12Resource> resource;
+        com_ptr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
 
@@ -70,7 +70,7 @@ namespace renderer {
         Uint32 height{1};
         Uint32 depth{1};
 
-        ComPtr<ID3D12Resource> resource;
+        winrt::com_ptr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
 

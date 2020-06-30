@@ -4,11 +4,11 @@
 #include <rx/core/log.h>
 #include <rx/core/optional.h>
 #include <rx/core/string.h>
-#include <wrl/client.h>
+#include <winrt/base.h>
 
 #include "core/types.hpp"
 
-using Microsoft::WRL::ComPtr;
+using winrt::com_ptr;
 
 namespace renderer {
     namespace guids {
@@ -26,8 +26,8 @@ namespace renderer {
     [[nodiscard]] Rx::Optional<Uint32> get_gpu_frame_idx(ID3D12Object* object);
 
     template <typename ObjectType>
-    void set_object_name(ComPtr<ObjectType> object, const Rx::String& name) {
-        set_object_name(object.Get(), name);
+    void set_object_name(com_ptr<ObjectType> object, const Rx::String& name) {
+        set_object_name(object.get(), name);
     }
 
     template <typename InterfaceType>
@@ -36,7 +36,7 @@ namespace renderer {
     }
 
     template <typename InterfaceType>
-    ComPtr<InterfaceType> get_com_interface(ID3D12Object* object) {
+    com_ptr<InterfaceType> get_com_interface(ID3D12Object* object) {
         UINT data_size{sizeof(InterfaceType*)};
         InterfaceType* com_interface{nullptr};
         const auto result = object->GetPrivateData(__uuidof(InterfaceType), &data_size, &com_interface);
@@ -44,10 +44,11 @@ namespace renderer {
             private_data_logger->error("Could not retrieve COM interface from D3D12 object %s", get_object_name(object));
         }
 
-        const auto com_ptr = ComPtr<InterfaceType>(com_interface);
+        com_ptr<InterfaceType> com_pointer{};
+        com_pointer.attach(com_interface);
 
-        com_interface->Release();
+        // Don't need to release here - `com_ptr::attach` doesn't AddRef, so the ref count is good
 
-        return com_ptr;
+        return com_pointer;
     }
 } // namespace renderer

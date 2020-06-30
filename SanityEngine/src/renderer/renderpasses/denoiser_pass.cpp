@@ -50,7 +50,7 @@ namespace renderer {
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
         {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.get(),
                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commands->ResourceBarrier(1, &barrier);
@@ -67,7 +67,7 @@ namespace renderer {
             commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
         }
 
-        commands->SetPipelineState(denoising_pipeline->pso.Get());
+        commands->SetPipelineState(denoising_pipeline->pso.get());
 
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
@@ -80,21 +80,21 @@ namespace renderer {
         const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
 
         {
-            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.get(),
                                                                                  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                                  D3D12_RESOURCE_STATE_COPY_DEST),
-                                            CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                            CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.get(),
                                                                                  D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                                  D3D12_RESOURCE_STATE_COPY_SOURCE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         {
-            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
+            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.get(),
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
 
-            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
+            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.get(),
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
 
@@ -104,7 +104,7 @@ namespace renderer {
         }
 
         {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.get(),
                                                                       D3D12_RESOURCE_STATE_COPY_SOURCE,
                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET);
             commands->ResourceBarrier(1, &barrier);

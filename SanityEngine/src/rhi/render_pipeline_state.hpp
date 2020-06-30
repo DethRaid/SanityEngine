@@ -9,7 +9,7 @@
 
 #include "resources.hpp"
 
-using Microsoft::WRL::ComPtr;
+using winrt::com_ptr;
 
 namespace renderer {
     enum class PrimitiveType { Points, Lines, Triangles };
@@ -154,8 +154,8 @@ namespace renderer {
     };
 
     struct RenderPipelineState {
-        ComPtr<ID3D12PipelineState> pso;
-        ComPtr<ID3D12RootSignature> root_signature;
+        com_ptr<ID3D12PipelineState> pso;
+        com_ptr<ID3D12RootSignature> root_signature;
     };
 
     enum class BespokePipelineType {

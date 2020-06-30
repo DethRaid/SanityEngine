@@ -58,7 +58,7 @@ namespace renderer {
 
         [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,
-                                                 const ComPtr<ID3D12GraphicsCommandList4>& commands);
+                                                 const com_ptr<ID3D12GraphicsCommandList4>& commands);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
@@ -93,7 +93,7 @@ namespace renderer {
         [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const Buffer& vertex_buffer,
                                                                            const Buffer& index_buffer,
                                                                            const Rx::Vector<Mesh>& meshes,
-                                                                           const ComPtr<ID3D12GraphicsCommandList4>& commands);
+                                                                           ID3D12GraphicsCommandList4* commands);
 
         [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 
@@ -259,7 +259,7 @@ namespace renderer {
 
         RaytracingScene raytracing_scene;
 
-        void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
+        void rebuild_raytracing_scene(const com_ptr<ID3D12GraphicsCommandList4>& commands);
 
         void update_lights(entt::registry& registry, Uint32 frame_idx);
 

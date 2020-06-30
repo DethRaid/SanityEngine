@@ -97,19 +97,19 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
     auto commands = device.create_command_list();
     commands->SetName(L"BveWrapper::add_train_to_scene");
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "BveWrapper::add_train_to_scene");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
 
-        mesh_data.bind_to_command_list(commands);
+        mesh_data.bind_to_command_list(commands.get());
 
-        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(bve_texture_pipeline.Get());
-        commands->SetComputeRootSignature(root_signature.Get());
-        commands->SetPipelineState(bve_texture_pipeline.Get());
+        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(bve_texture_pipeline.get());
+        commands->SetComputeRootSignature(root_signature.get());
+        commands->SetPipelineState(bve_texture_pipeline.get());
 
         Rx::Vector<renderer::Mesh> train_meshes;
         train_meshes.reserve(train->meshes.count);
 
-        mesh_data.begin_adding_meshes(commands);
+        mesh_data.begin_adding_meshes(commands.get());
 
         for(Uint32 i = 0; i < train->meshes.count; i++) {
             const auto& bve_mesh = train->meshes.ptr[i];
@@ -121,7 +121,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
 
             auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
 
-            mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
+            mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands.get());
             train_meshes.push_back(mesh_component.mesh);
 
             if(bve_mesh.texture.texture_id.exists) {
@@ -152,7 +152,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                         logger->error("Could not load texture %s", texture_name);
 
                     } else {
-                        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
+                        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
 
                         if(num_channels == 3) {
                             texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
@@ -178,7 +178,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
                         bind_group_builder->set_image("output_texture", texture);
 
                         auto bind_group = bind_group_builder->build();
-                        bind_group->bind_to_compute_signature(commands);
+                        bind_group->bind_to_compute_signature(commands.get());
 
                         const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
                         const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
@@ -204,32 +204,32 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
             }
         }
 
-        mesh_data.end_adding_meshes(commands);
+        mesh_data.end_adding_meshes(commands.get());
 
         const auto& index_buffer = mesh_data.get_index_buffer();
         const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
 
         {
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_INDEX_BUFFER,
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
+        const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands.get());
         renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
 
         {
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                D3D12_RESOURCE_STATE_INDEX_BUFFER);
-            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 

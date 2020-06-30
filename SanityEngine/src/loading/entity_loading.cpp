@@ -39,8 +39,8 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
     commands->SetName(L"Renderer::create_raytracing_geometry");
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Renderer::create_raytracing_geometry");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Renderer::create_raytracing_geometry");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
         Rx::Map<Uint32, renderer::StandardMaterialHandle> materials;
 
@@ -48,7 +48,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
         Rx::Vector<renderer::RaytracingObject> raytracing_objects;
 
         auto& mesh_data = renderer.get_static_mesh_store();
-        mesh_data.bind_to_command_list(commands);
+        mesh_data.bind_to_command_list(commands.get());
 
         // Initial revision: import the first child node and hope it's fine
         const auto* node = scene->mRootNode->mChildren[0];
@@ -81,11 +81,11 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
             indices.push_back(face.mIndices[2]);
         }
 
-        mesh_data.begin_adding_meshes(commands);
+        mesh_data.begin_adding_meshes(commands.get());
 
-        const auto mesh = mesh_data.add_mesh(vertices, indices, commands);
+        const auto mesh = mesh_data.add_mesh(vertices, indices, commands.get());
 
-        mesh_data.end_adding_meshes(commands);
+        mesh_data.end_adding_meshes(commands.get());
 
         auto locked_registry = registry.lock();
         const auto mesh_entity = locked_registry->create();
@@ -150,24 +150,24 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
 
         {
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_INDEX_BUFFER,
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        const auto ray_geo_handle = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, meshes, commands);
+        const auto ray_geo_handle = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, meshes, commands.get());
 
         {
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                D3D12_RESOURCE_STATE_INDEX_BUFFER);
-            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.get(),
                                                                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 

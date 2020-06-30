@@ -2,14 +2,14 @@
 
 #include <d3d12.h>
 #include <rx/core/vector.h>
-#include <wrl/client.h>
+#include <winrt/base.h>
 
-using Microsoft::WRL::ComPtr;
+using winrt::com_ptr;
 
 namespace renderer {
     class DescriptorAllocator {
     public:
-        DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);
+        DescriptorAllocator(com_ptr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);
 
         DescriptorAllocator(const DescriptorAllocator& other) = delete;
         DescriptorAllocator& operator=(const DescriptorAllocator& other) = delete;
@@ -24,7 +24,7 @@ namespace renderer {
         void return_descriptor(D3D12_CPU_DESCRIPTOR_HANDLE handle);
 
     private:
-        ComPtr<ID3D12DescriptorHeap> heap;
+        com_ptr<ID3D12DescriptorHeap> heap;
 
         UINT descriptor_size;
 
@@ -32,4 +32,4 @@ namespace renderer {
 
         Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> available_handles;
     };
-} // namespace rhi
+} // namespace renderer

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
-#include <wrl/client.h>
+#include <winrt/base.h>
 
 #include "core/types.hpp"
 
@@ -12,7 +12,7 @@ namespace renderer {
     class Renderer;
 } // namespace renderer
 
-using Microsoft::WRL::ComPtr;
+using winrt::com_ptr;
 
 namespace terraingen {
     /*!
@@ -28,7 +28,7 @@ namespace terraingen {
      * \param sea_level Height of the sea, on average
      * \param data The TerrainData that will hold the ocean depth texture
      */
-    void place_oceans(const ComPtr<ID3D12GraphicsCommandList4>& commands,
+    void place_oceans(const com_ptr<ID3D12GraphicsCommandList4>& commands,
                       renderer::Renderer& renderer,
                       Uint32 sea_level,
                       TerrainData& data);
@@ -40,5 +40,5 @@ namespace terraingen {
      * \param renderer The renderer that holds the terrain images
      * \param data The terrain data to compute water flow on
      */
-    void compute_water_flow(const ComPtr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data);
+    void compute_water_flow(const com_ptr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data);
 } // namespace terraingen

@@ -1336,9 +1336,6 @@
     <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\worldgen\compute_water_flow.hlsl">
-      <Filter>Shaders\worldgen</Filter>
-    </FxCompile>
     <FxCompile Include="data\shaders\inc\lighting.hlsl">
       <Filter>Shaders\inc</Filter>
     </FxCompile>

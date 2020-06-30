@@ -100,7 +100,7 @@ namespace renderer {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             wait_for_frame(i);
-            direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
+            direct_command_queue->Wait(frame_fences.get(), frame_fence_values[i]);
         }
 
         wait_gpu_idle(0);
@@ -175,7 +175,7 @@ namespace renderer {
 
         buffer->name = create_info.name;
 
-        set_object_name(buffer->resource.Get(), create_info.name);
+        set_object_name(buffer->resource.get(), create_info.name);
 
         return Rx::Utility::move(buffer);
     }
@@ -238,7 +238,7 @@ namespace renderer {
         image->width = static_cast<Uint32>(desc.Width);
         image->height = desc.Height;
 
-        set_object_name(image->resource.Get(), create_info.name);
+        set_object_name(image->resource.get(), create_info.name);
 
         return image;
     }
@@ -246,7 +246,7 @@ namespace renderer {
     D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::create_rtv_handle(const Image& image) const {
         const auto handle = rtv_allocator->get_next_free_descriptor();
 
-        device->CreateRenderTargetView(image.resource.Get(), nullptr, handle);
+        device->CreateRenderTargetView(image.resource.get(), nullptr, handle);
 
         return handle;
     }
@@ -260,7 +260,7 @@ namespace renderer {
 
         const auto handle = dsv_allocator->get_next_free_descriptor();
 
-        device->CreateDepthStencilView(image.resource.Get(), &desc, handle);
+        device->CreateDepthStencilView(image.resource.get(), &desc, handle);
 
         return handle;
     }
@@ -311,18 +311,18 @@ namespace renderer {
                   "If you specify descriptor table descriptors, you must also specify descriptor table handles");
 
         return Rx::make_ptr<BindGroupBuilder>(RX_SYSTEM_ALLOCATOR,
-                                              *device.Get(),
-                                              *cbv_srv_uav_heap.Get(),
+                                              *device.get(),
+                                              *cbv_srv_uav_heap.get(),
                                               cbv_srv_uav_size,
                                               root_descriptors,
                                               descriptor_table_descriptors,
                                               descriptor_table_handles);
     }
 
-    ComPtr<ID3D12PipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
-                                                                            const ComPtr<ID3D12RootSignature>& root_signature) const {
+    com_ptr<ID3D12PipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
+                                                                             const com_ptr<ID3D12RootSignature>& root_signature) const {
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
-            .pRootSignature = root_signature.Get(),
+            .pRootSignature = root_signature.get(),
             .CS =
                 {
                     .pShaderBytecode = compute_shader.data(),
@@ -330,20 +330,20 @@ namespace renderer {
                 },
         };
 
-        ComPtr<ID3D12PipelineState> pso;
-        const auto result = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&pso));
+        com_ptr<ID3D12PipelineState> pso;
+        const auto result = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(pso.put()));
         if(FAILED(result)) {
             logger->error("Could not create compute pipeline: %s", to_string(result));
             return {};
         }
 
-        store_com_interface(pso.Get(), root_signature.Get());
+        store_com_interface(pso.get(), root_signature.get());
 
         return pso;
     }
 
     Rx::Ptr<RenderPipelineState> RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
-        return create_pipeline_state(create_info, *standard_root_signature.Get());
+        return create_pipeline_state(create_info, *standard_root_signature.get());
     }
 
     DescriptorType to_descriptor_type(const D3D_SHADER_INPUT_TYPE type) {
@@ -385,7 +385,7 @@ namespace renderer {
         }
     }
 
-    ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list(Rx::Optional<Uint32> frame_idx) {
+    com_ptr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list(Rx::Optional<Uint32> frame_idx) {
         Rx::Concurrency::ScopeLock l{create_command_list_mutex};
 
         if(!frame_idx) {
@@ -393,7 +393,7 @@ namespace renderer {
         }
 
         // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
-        ComPtr<ID3D12CommandAllocator> command_allocator;
+        com_ptr<ID3D12CommandAllocator> command_allocator;
         auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
@@ -406,9 +406,9 @@ namespace renderer {
             Rx::abort("Could not create command list: %s", to_string(result));
         }
 
-        ComPtr<ID3D12GraphicsCommandList4> commands;
-        ComPtr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
+        com_ptr<ID3D12GraphicsCommandList4> commands;
+        com_ptr<ID3D12CommandList> cmds;
+        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.get(), nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -419,19 +419,19 @@ namespace renderer {
             Rx::abort("Could not create command list: %s", to_string(result));
         }
 
-        result = cmds->QueryInterface(commands.GetAddressOf());
+        result = cmds.as(IID_PPV_ARGS(commands.put()));
         if(FAILED(result)) {
             Rx::abort("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
         }
 
         commands->SetName(L"Unnamed Sanity Engine command list");
-        store_com_interface(commands.Get(), command_allocator.Get());
-        set_gpu_frame_idx(commands.Get(), *frame_idx);
+        store_com_interface(commands.get(), command_allocator.get());
+        set_gpu_frame_idx(commands.get(), *frame_idx);
         command_lists_outside_render_device.fetch_add(1);
         return commands;
     }
 
-    void RenderDevice::submit_command_list(ComPtr<ID3D12GraphicsCommandList4>&& commands) {
+    void RenderDevice::submit_command_list(com_ptr<ID3D12GraphicsCommandList4>&& commands) {
         const auto result = commands->Close();
         if(FAILED(result)) {
 #ifndef NDEBUG
@@ -441,9 +441,9 @@ namespace renderer {
 #endif
         }
 
-        const auto frame_idx = get_gpu_frame_idx(commands.Get());
+        const auto frame_idx = get_gpu_frame_idx(commands.get());
         if(!frame_idx) {
-            Rx::abort("Submitted command list %s without an associated GPU frame index", get_object_name(commands.Get()));
+            Rx::abort("Submitted command list %s without an associated GPU frame index", get_object_name(commands.get()));
         }
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
@@ -485,7 +485,7 @@ namespace renderer {
 
         flush_batched_command_lists();
 
-        direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
+        direct_command_queue->Signal(frame_fences.get(), frame_fence_values[cur_gpu_frame_idx]);
 
         {
             ZoneScopedN("present");
@@ -537,7 +537,7 @@ namespace renderer {
         return create_staging_buffer(num_bytes);
     }
 
-    void RenderDevice::return_staging_buffer(Buffer buffer) {
+    void RenderDevice::return_staging_buffer(const Buffer& buffer) {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
 
@@ -564,13 +564,13 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::return_scratch_buffer(Buffer buffer) {
+    void RenderDevice::return_scratch_buffer(const Buffer& buffer) {
         scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
 
     UINT RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
-    ID3D12Device* RenderDevice::get_d3d12_device() const { return device.Get(); }
+    ID3D12Device* RenderDevice::get_d3d12_device() const { return device.get(); }
 
     void RenderDevice::enable_debugging() {
         auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
@@ -599,13 +599,13 @@ namespace renderer {
     void RenderDevice::initialize_dxgi() {
         ZoneScoped;
 
-        ComPtr<IDXGIFactory> basic_factory;
+        com_ptr<IDXGIFactory> basic_factory;
         auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
         if(FAILED(result)) {
             Rx::abort("Could not initialize DXGI");
         }
 
-        result = basic_factory->QueryInterface(factory.GetAddressOf());
+        result = basic_factory.as(IID_PPV_ARGS(factory.put()));
         if(FAILED(result)) {
             Rx::abort("DXGI is not at a new enough version, please update your graphics drivers");
         }
@@ -618,21 +618,22 @@ namespace renderer {
         // - Not integrated, if possible
 
         // TODO: Figure out how to get the number of adapters in advance
-        Rx::Vector<ComPtr<IDXGIAdapter>> adapters;
+        Rx::Vector<com_ptr<IDXGIAdapter>> adapters;
         adapters.reserve(5);
 
         {
             UINT adapter_idx = 0;
-            ComPtr<IDXGIAdapter> cur_adapter;
+            IDXGIAdapter* cur_adapter;
             while(factory->EnumAdapters(adapter_idx, &cur_adapter) != DXGI_ERROR_NOT_FOUND) {
-                adapters.push_back(cur_adapter);
+                adapters.push_back(com_ptr<IDXGIAdapter>{cur_adapter, {}});
                 adapter_idx++;
+
             }
         }
 
         {
             if(cvar_use_warp_driver->get()) {
-                ComPtr<IDXGIAdapter> cur_adapter;
+                com_ptr<IDXGIAdapter> cur_adapter;
                 const auto result = factory->EnumWarpAdapter(IID_PPV_ARGS(&cur_adapter));
 
                 if(FAILED(result)) {
@@ -647,7 +648,7 @@ namespace renderer {
 
         // TODO: Score adapters based on things like supported feature level and available vram
 
-        adapters.each_fwd([&](const ComPtr<IDXGIAdapter>& cur_adapter) {
+        adapters.each_fwd([&](const com_ptr<IDXGIAdapter>& cur_adapter) {
             DXGI_ADAPTER_DESC desc;
             cur_adapter->GetDesc(&desc);
 
@@ -656,8 +657,8 @@ namespace renderer {
                 return true;
             }
 
-            ComPtr<ID3D12Device> try_device;
-            auto res = D3D12CreateDevice(cur_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&try_device));
+            com_ptr<ID3D12Device> try_device;
+            auto res = D3D12CreateDevice(cur_adapter.get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&try_device));
             if(SUCCEEDED(res)) {
                 // check the features we care about
                 D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12_options;
@@ -693,8 +694,8 @@ namespace renderer {
 
                 device = try_device;
 
-                device->QueryInterface(device1.GetAddressOf());
-                device->QueryInterface(device5.GetAddressOf());
+                device.as(IID_PPV_ARGS(device1.put()));
+                device.as(IID_PPV_ARGS(device5.put()));
 
                 // Save information about the device
                 D3D12_FEATURE_DATA_ARCHITECTURE arch;
@@ -711,7 +712,7 @@ namespace renderer {
                 }
 
 #ifndef NDEBUG
-                res = device->QueryInterface(info_queue.GetAddressOf());
+                res = device.as(IID_PPV_ARGS(info_queue.put()));
                 if(SUCCEEDED(res) && cvar_break_on_validation_error->get()) {
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
@@ -732,7 +733,7 @@ namespace renderer {
             Rx::abort("Could not find a suitable D3D12 adapter");
         }
 
-        set_object_name(device.Get(), "D3D12 Device");
+        set_object_name(device.get(), "D3D12 Device");
     }
 
     void RenderDevice::create_queues() {
@@ -749,10 +750,10 @@ namespace renderer {
             Rx::abort("Could not create graphics command queue");
         }
 
-        set_object_name(direct_command_queue.Get(), "Direct Queue");
+        set_object_name(direct_command_queue.get(), "Direct Queue");
 
 #ifdef TRACY_ENABLE
-        tracy_context = TracyD3D12Context(device.Get(), direct_command_queue.Get());
+        tracy_context = TracyD3D12Context(device.get(), direct_command_queue.get());
 #endif
 
         // TODO: Add an async compute queue, when the time comes
@@ -769,7 +770,7 @@ namespace renderer {
                 logger->warning("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
             } else {
-                set_object_name(async_copy_queue.Get(), "DMA queue");
+                set_object_name(async_copy_queue.get(), "DMA queue");
             }
         }
     }
@@ -790,18 +791,18 @@ namespace renderer {
             .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING,
         };
 
-        ComPtr<IDXGISwapChain1> swapchain1;
-        auto hr = factory->CreateSwapChainForHwnd(direct_command_queue.Get(),
+        com_ptr<IDXGISwapChain1> swapchain1;
+        auto hr = factory->CreateSwapChainForHwnd(direct_command_queue.get(),
                                                   window_handle,
                                                   &swapchain_desc,
                                                   nullptr,
                                                   nullptr,
-                                                  swapchain1.GetAddressOf());
+                                                  swapchain1.put());
         if(FAILED(hr)) {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
 
-        hr = swapchain1->QueryInterface(swapchain.GetAddressOf());
+        hr = swapchain1.as(IID_PPV_ARGS(swapchain.put()));
         if(FAILED(hr)) {
             Rx::abort("Could not get new swapchain interface, please update your drivers");
         }
@@ -811,7 +812,7 @@ namespace renderer {
         frame_fence_values.resize(cvar_max_in_flight_gpu_frames->get());
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
-        set_object_name(frame_fences.Get(), "Frame Synchronization Fence");
+        set_object_name(frame_fences.get(), "Frame Synchronization Fence");
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
@@ -853,17 +854,17 @@ namespace renderer {
 
             const auto rtv_handle = rtv_allocator->get_next_free_descriptor();
 
-            device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle);
+            device->CreateRenderTargetView(swapchain_images[i].get(), nullptr, rtv_handle);
 
             swapchain_rtv_handles.push_back(rtv_handle);
 
-            set_object_name(swapchain_images[i].Get(), Rx::String::format("Swapchain image %d", i));
+            set_object_name(swapchain_images[i].get(), Rx::String::format("Swapchain image %d", i));
         }
     }
 
-    std::pair<ID3D12DescriptorHeap*, UINT> RenderDevice::create_descriptor_heap(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
-                                                                                const Uint32 num_descriptors) const {
-        ID3D12DescriptorHeap* heap;
+    std::pair<com_ptr<ID3D12DescriptorHeap>, UINT> RenderDevice::create_descriptor_heap(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+                                                                                        const Uint32 num_descriptors) const {
+        com_ptr<ID3D12DescriptorHeap> heap;
 
         D3D12_DESCRIPTOR_HEAP_DESC heap_desc{};
         heap_desc.Type = descriptor_type;
@@ -871,7 +872,7 @@ namespace renderer {
         heap_desc.Flags = (descriptor_type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE :
                                                                                        D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
-        const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&heap));
+        const auto result = device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(heap.put()));
         if(FAILED(result)) {
             logger->error("Could not create descriptor heap: %s", to_string(result));
 
@@ -887,8 +888,8 @@ namespace renderer {
         ZoneScoped;
 
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
-        allocator_desc.pDevice = device.Get();
-        allocator_desc.pAdapter = adapter.Get();
+        allocator_desc.pDevice = device.get();
+        allocator_desc.pAdapter = adapter.get();
 
         const auto result = D3D12MA::CreateAllocator(&allocator_desc, &device_allocator);
         if(FAILED(result)) {
@@ -971,25 +972,25 @@ namespace renderer {
             Rx::abort("Could not create standard root signature");
         }
 
-        set_object_name(standard_root_signature.Get(), "Standard Root Signature");
+        set_object_name(standard_root_signature.get(), "Standard Root Signature");
     }
 
-    ComPtr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
+    com_ptr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
         ZoneScoped;
 
         const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_0,
                                                                         .Desc_1_0 = root_signature_desc};
 
-        ComPtr<ID3DBlob> root_signature_blob;
-        ComPtr<ID3DBlob> error_blob;
-        auto result = D3D12SerializeVersionedRootSignature(&versioned_desc, &root_signature_blob, &error_blob);
+        com_ptr<ID3DBlob> root_signature_blob;
+        com_ptr<ID3DBlob> error_blob;
+        auto result = D3D12SerializeVersionedRootSignature(&versioned_desc, root_signature_blob.put(), error_blob.put());
         if(FAILED(result)) {
             const Rx::String msg{static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize()};
             logger->error("Could not create root signature: %s", msg);
             return {};
         }
 
-        ComPtr<ID3D12RootSignature> sig;
+        com_ptr<ID3D12RootSignature> sig;
         result = device->CreateRootSignature(0,
                                              root_signature_blob->GetBufferPointer(),
                                              root_signature_blob->GetBufferSize(),
@@ -1135,7 +1136,7 @@ namespace renderer {
     }
 
     Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
-        ComPtr<ID3D12ShaderReflection> reflection;
+        com_ptr<ID3D12ShaderReflection> reflection;
         auto result = D3DReflect(shader.data(), shader.size() * sizeof(Uint8), IID_PPV_ARGS(&reflection));
         if(FAILED(result)) {
             logger->error("Could not retrieve shader reflection information: %s", to_string(result));
@@ -1266,15 +1267,15 @@ namespace renderer {
         }
 
         auto pipeline = Rx::make_ptr<RenderPipelineState>(RX_SYSTEM_ALLOCATOR);
-        pipeline->root_signature = &root_signature;
+        pipeline->root_signature = com_ptr<ID3D12RootSignature>(&root_signature, {});
 
-        const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.GetAddressOf()));
+        const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.put()));
         if(FAILED(result)) {
             logger->error("Could not create render pipeline %s: %s", create_info.name, to_string(result));
             return {};
         }
 
-        set_object_name(pipeline->pso.Get(), create_info.name);
+        set_object_name(pipeline->pso.get(), create_info.name);
 
         return pipeline;
     }
@@ -1283,8 +1284,8 @@ namespace renderer {
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         // Submit all the command lists we batched up
         auto& lists = command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
-        lists.each_fwd([&](const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
+        lists.each_fwd([&](const com_ptr<ID3D12GraphicsCommandList4>& commands) {
+            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.get());
 
             // First implementation - run everything on the same queue, because it's easy
             // Eventually I'll come up with a fancy way to use multiple queues
@@ -1295,7 +1296,7 @@ namespace renderer {
             if(cvar_verify_every_command_list_submission->get()) {
                 auto command_list_done_fence = get_next_command_list_done_fence();
 
-                direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+                direct_command_queue->Signal(command_list_done_fence.get(), CPU_FENCE_SIGNALED);
 
                 // ReSharper disable once CppLocalVariableMayBeConst
                 HANDLE event = CreateEvent(nullptr, false, false, nullptr);
@@ -1310,7 +1311,7 @@ namespace renderer {
                 CloseHandle(event);
             }
 
-            auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands.Get());
+            auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands.get());
             command_allocators_to_reset_on_begin_frame[cur_gpu_frame_idx].emplace_back(command_allocator);
         });
 
@@ -1331,7 +1332,7 @@ namespace renderer {
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         Rx::Concurrency::ScopeLock l2{direct_command_allocators_mutex};
-        command_allocators_to_reset_on_begin_frame[frame_idx].each_fwd([&](const ComPtr<ID3D12CommandAllocator>& allocator) {
+        command_allocators_to_reset_on_begin_frame[frame_idx].each_fwd([&](const com_ptr<ID3D12CommandAllocator>& allocator) {
             allocator->Reset();
             direct_command_allocators.push_back(allocator);
         });
@@ -1357,10 +1358,10 @@ namespace renderer {
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.get(), "RenderDevice::transition_swapchain_image_to_render_target");
+            PIXScopedEvent(swapchain_cmds.get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
 
-            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -1375,10 +1376,10 @@ namespace renderer {
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_presentable");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.get(), "RenderDevice::transition_swapchain_image_to_presentable");
+            PIXScopedEvent(swapchain_cmds.get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
 
-            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
+            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT);
@@ -1415,7 +1416,7 @@ namespace renderer {
 
     void RenderDevice::wait_gpu_idle(const uint64_t frame_index) {
         frame_fence_values[frame_index] += 3;
-        direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[frame_index]);
+        direct_command_queue->Signal(frame_fences.get(), frame_fence_values[frame_index]);
         wait_for_frame(frame_index);
     }
 
@@ -1448,7 +1449,7 @@ namespace renderer {
         }
 
         const auto msg = Rx::String::format("Staging Buffer %d", staging_buffer_idx);
-        set_object_name(buffer.resource.Get(), msg);
+        set_object_name(buffer.resource.get(), msg);
         staging_buffer_idx++;
 
         return buffer;
@@ -1478,13 +1479,13 @@ namespace renderer {
         }
 
         scratch_buffer.size = num_bytes;
-        set_object_name(scratch_buffer.resource.Get(), Rx::String::format("Scratch buffer %d", scratch_buffer_counter));
+        set_object_name(scratch_buffer.resource.get(), Rx::String::format("Scratch buffer %d", scratch_buffer_counter));
         scratch_buffer_counter++;
 
         return scratch_buffer;
     }
 
-    ComPtr<ID3D12Fence> RenderDevice::get_next_command_list_done_fence() {
+    com_ptr<ID3D12Fence> RenderDevice::get_next_command_list_done_fence() {
         if(!command_list_done_fences.is_empty()) {
             auto fence = command_list_done_fences[command_list_done_fences.size() - 1];
             command_list_done_fences.pop_back();
@@ -1492,7 +1493,7 @@ namespace renderer {
             return fence;
         }
 
-        ComPtr<ID3D12Fence> fence;
+        com_ptr<ID3D12Fence> fence;
         const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
         if(FAILED(result)) {
             logger->error("Could not create fence: %s", to_string(result));
@@ -1504,8 +1505,8 @@ namespace renderer {
     }
 
     void RenderDevice::log_dred_report() const {
-        ComPtr<ID3D12DeviceRemovedExtendedData1> dred;
-        auto result = device->QueryInterface(IID_PPV_ARGS(&dred));
+        com_ptr<ID3D12DeviceRemovedExtendedData1> dred;
+        auto result = device.as(IID_PPV_ARGS(&dred));
         if(FAILED(result)) {
             logger->error("Could not retrieve DRED report");
             return;
@@ -1528,7 +1529,7 @@ namespace renderer {
     }
 
     Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings) {
-        auto hwnd = glfwGetWin32Window(window);
+        auto hwnd = glfwGetWin32Window(window); // NOLINT(readability-qualified-auto)
 
         glm::ivec2 framebuffer_size{};
         glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);

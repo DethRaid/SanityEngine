@@ -2,9 +2,9 @@ struct TerrainParameters {
     float sea_level;
 } constants;
 
-Texture2D<float> heightmap : register(u0);
+Texture2D<float> heightmap : register(t0);
 
-RWTexture2D<float> water_depth_map : register(u1);
+RWTexture2D<float> water_depth_map : register(u0);
 
 [numthreads(8, 8, 1)] void main(uint3 dispatch_thread_id
                                 : SV_DispatchThreadID) {

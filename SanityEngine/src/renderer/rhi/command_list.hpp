@@ -1,21 +1,20 @@
 #pragma once
 
 #include <d3d12.h>
-#include <rx/core/types.h>
-#include <wrl/client.h>
+#include <winrt/base.h>
 
-using Microsoft::WRL::ComPtr;
+#include "core/types.hpp"
+
+using winrt::com_ptr;
 
 namespace renderer {
     struct CommandList {
-        ComPtr<ID3D12GraphicsCommandList4> cmds;
-        ComPtr<ID3D12CommandAllocator> command_allocator;
+        com_ptr<ID3D12GraphicsCommandList4> cmds;
+        com_ptr<ID3D12CommandAllocator> command_allocator;
         Uint32 gpu_frame_idx;
 
         ID3D12GraphicsCommandList4* operator->() const;
     };
 
-    inline ID3D12GraphicsCommandList4* CommandList::operator->() const {
-        return cmds.Get();
-    }
+    inline ID3D12GraphicsCommandList4* CommandList::operator->() const { return cmds.get(); }
 } // namespace renderer

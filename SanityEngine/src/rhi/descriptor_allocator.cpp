@@ -3,7 +3,7 @@
 #include "d3dx12.hpp"
 
 namespace renderer {
-    DescriptorAllocator::DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
+    DescriptorAllocator::DescriptorAllocator(com_ptr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
         : heap{Rx::Utility::move(heap_in)}, descriptor_size{descriptor_size_in} {}
 
     DescriptorAllocator::DescriptorAllocator(DescriptorAllocator&& old) noexcept
@@ -37,4 +37,4 @@ namespace renderer {
     }
 
     void DescriptorAllocator::return_descriptor(const D3D12_CPU_DESCRIPTOR_HANDLE handle) { available_handles.push_back(handle); }
-} // namespace render
+} // namespace renderer

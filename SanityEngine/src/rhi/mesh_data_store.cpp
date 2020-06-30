@@ -29,9 +29,9 @@ namespace renderer {
 
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    void MeshDataStore::begin_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
+    void MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) const {
+        auto* vertex_resource = vertex_buffer->resource.get();
+        auto* index_resource = index_buffer->resource.get();
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -46,11 +46,11 @@ namespace renderer {
 
     Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
                                  const Rx::Vector<Uint32>& indices,
-                                 const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+                                 ID3D12GraphicsCommandList4* commands) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands.Get(), "MeshDataStore::add_mesh");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "MeshDataStore::add_mesh");
+        TracyD3D12Zone(RenderDevice::tracy_context, commands, "MeshDataStore::add_mesh");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "MeshDataStore::add_mesh");
 
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
 
@@ -63,8 +63,8 @@ namespace renderer {
 
         indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
+        auto* vertex_resource = vertex_buffer->resource.get();
+        auto* index_resource = index_buffer->resource.get();
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
@@ -92,9 +92,9 @@ namespace renderer {
                 .num_indices = static_cast<Uint32>(indices.size())};
     }
 
-    void MeshDataStore::end_adding_meshes(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
+    void MeshDataStore::end_adding_meshes(ID3D12GraphicsCommandList4* commands) const {
+        auto* vertex_resource = vertex_buffer->resource.get();
+        auto* index_resource = index_buffer->resource.get();
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -107,7 +107,7 @@ namespace renderer {
         commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    void MeshDataStore::bind_to_command_list(const ComPtr<ID3D12GraphicsCommandList4>& commands) const {
+    void MeshDataStore::bind_to_command_list(ID3D12GraphicsCommandList4* commands) const {
         const auto& vertex_bindings = get_vertex_bindings();
 
         // If we have more than 16 vertex attributes, we probably have bigger problems

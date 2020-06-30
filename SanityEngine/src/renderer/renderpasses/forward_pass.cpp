@@ -72,7 +72,7 @@ namespace renderer {
 
         begin_render_pass(commands);
 
-        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
+        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.get());
 
         const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
         bind_group->bind_to_graphics_signature(commands);
@@ -155,7 +155,7 @@ namespace renderer {
     void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_object_in_scene");
 
-        commands->SetPipelineState(standard_pipeline->pso.Get());
+        commands->SetPipelineState(standard_pipeline->pso.get());
 
         {
             auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
@@ -197,7 +197,7 @@ namespace renderer {
         } else {
             PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_atmosphere");
 
-            commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
+            commands->SetPipelineState(atmospheric_sky_pipeline->pso.get());
 
             commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

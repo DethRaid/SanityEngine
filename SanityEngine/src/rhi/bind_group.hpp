@@ -5,11 +5,11 @@
 #include <rx/core/ptr.h>
 #include <rx/core/string.h>
 #include <rx/core/vector.h>
-#include <wrl/client.h>
+#include <winrt/base.h>
 
 #include "core/types.hpp"
 
-using Microsoft::WRL::ComPtr;
+using winrt::com_ptr;
 
 namespace renderer {
     struct RaytracingScene;
@@ -72,12 +72,12 @@ namespace renderer {
         /*!
          * \brief Binds this bind group to the active graphics root signature
          */
-        void bind_to_graphics_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const;
+        void bind_to_graphics_signature(ID3D12GraphicsCommandList* cmds) const;
 
         /*!
          * \brief Binds this bind group to the active compute root signature
          */
-        void bind_to_compute_signature(ComPtr<ID3D12GraphicsCommandList> cmds) const;
+        void bind_to_compute_signature(ID3D12GraphicsCommandList* cmds) const;
 
         ID3D12DescriptorHeap* heap;
 

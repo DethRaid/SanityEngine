@@ -30,7 +30,7 @@ public:
     Rx::Ptr<renderer::BindGroupBuilder> create_texture_processor_bind_group_builder(renderer::RenderDevice& device);
 
 private:
-    ComPtr<ID3D12PipelineState> bve_texture_pipeline;
+    com_ptr<ID3D12PipelineState> bve_texture_pipeline;
 
     void create_texture_filter_pipeline(renderer::RenderDevice& device);
 
