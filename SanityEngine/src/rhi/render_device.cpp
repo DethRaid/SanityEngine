@@ -19,7 +19,6 @@
 #include "core/constants.hpp"
 #include "core/errors.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
-#include "rhi/compute_pipeline_state.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_pipeline_state.hpp"
@@ -384,14 +383,6 @@ namespace renderer {
                 logger->error("Unknown descriptor type, defaulting to UAV");
                 return DescriptorType::UnorderedAccess;
         }
-    }
-
-    void RenderDevice::destroy_compute_pipeline_state(Rx::Ptr<ComputePipelineState> /* pipeline_state */) {
-        // Nothing to explicitly do, the destructors will take care of us
-    }
-
-    void RenderDevice::destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> /* pipeline_state */) {
-        // Nothing to do, destructors will take care of it
     }
 
     ComPtr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list(Rx::Optional<Uint32> frame_idx) {

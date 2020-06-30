@@ -20,6 +20,8 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/render_components.hpp"
+#include "renderpasses/backbuffer_output_pass.hpp"
+#include "renderpasses/ui_render_pass.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
@@ -289,7 +291,10 @@ namespace renderer {
 
         auto index_buffer = device->create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, Rx::Utility::move(vertex_buffer), Rx::Utility::move(index_buffer));
+        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR,
+                                                          *device,
+                                                          Rx::Utility::move(vertex_buffer),
+                                                          Rx::Utility::move(index_buffer));
     }
 
     void Renderer::create_per_frame_buffers() {
@@ -430,8 +435,10 @@ namespace renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
-        render_passes.push_back(Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
+        render_passes.push_back(
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
+        render_passes.push_back(
+            Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
         render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
     }
 

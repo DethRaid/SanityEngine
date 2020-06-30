@@ -2,16 +2,14 @@
 
 #include <filesystem>
 
-#include <entt/entity/registry.hpp>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <stb_image.h>
 #include <TracyD3D12.hpp>
-
+#include <entt/entity/registry.hpp>
+#include <stb_image.h>
 
 #include "adapters/tracy.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
@@ -23,7 +21,7 @@ using namespace bve;
 constexpr Uint32 THREAD_GROUP_WIDTH = 8;
 constexpr Uint32 THREAD_GROUP_HEIGHT = 8;
 
-static Uint32 to_Uint32(const BVE_Vector4<Uint8>& bve_color) {
+static Uint32 to_uint32(const BVE_Vector4<Uint8>& bve_color) {
     Uint32 color{0};
     color |= bve_color.x;
     color |= bve_color.y << 8;
@@ -73,8 +71,8 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
         logger->error("BVE returned absolutely nothing for train '%s'", filename);
 
         return false;
-
-    } else if(train->errors.count > 0) {
+    }
+    if(train->errors.count > 0) {
         logger->error("Could not load train '%s'", filename);
 
         for(Uint32 i = 0; i < train->errors.count; i++) {
@@ -84,167 +82,166 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
         }
 
         return false;
+    }
+    if(train->meshes.count == 0) {
+        logger->error("No meshes loaded for train '%s'", filename);
+        return false;
+    }
 
-    } else {
-        if(train->meshes.count == 0) {
-            logger->error("No meshes loaded for train '%s'", filename);
-            return false;
-        }
+    auto train_path = std::filesystem::path{filename.data()};
 
-        auto train_path = std::filesystem::path{filename.data()};
+    auto& device = renderer.get_render_device();
 
-        auto& device = renderer.get_render_device();
+    auto& mesh_data = renderer.get_static_mesh_store();
 
-        auto& mesh_data = renderer.get_static_mesh_store();
+    auto commands = device.create_command_list();
+    commands->SetName(L"BveWrapper::add_train_to_scene");
+    {
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
 
-        auto commands = device.create_command_list();
-        commands->SetName(L"BveWrapper::add_train_to_scene");
-        {
-            TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "BveWrapper::add_train_to_scene");
-            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
+        mesh_data.bind_to_command_list(commands);
 
-            mesh_data.bind_to_command_list(commands);
+        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(bve_texture_pipeline.Get());
+        commands->SetComputeRootSignature(root_signature.Get());
+        commands->SetPipelineState(bve_texture_pipeline.Get());
 
-            commands->SetComputeRootSignature(bve_texture_pipeline->root_signature.Get());
-            commands->SetPipelineState(bve_texture_pipeline->pso.Get());
+        Rx::Vector<renderer::Mesh> train_meshes;
+        train_meshes.reserve(train->meshes.count);
 
-            Rx::Vector<renderer::Mesh> train_meshes;
-            train_meshes.reserve(train->meshes.count);
+        mesh_data.begin_adding_meshes(commands);
 
-            mesh_data.begin_adding_meshes(commands);
+        for(Uint32 i = 0; i < train->meshes.count; i++) {
+            const auto& bve_mesh = train->meshes.ptr[i];
 
-            for(Uint32 i = 0; i < train->meshes.count; i++) {
-                const auto& bve_mesh = train->meshes.ptr[i];
+            const auto [vertices, indices] = process_vertices(bve_mesh);
 
-                const auto [vertices, indices] = process_vertices(bve_mesh);
+            auto locked_registry = registry.lock();
+            const auto entity = locked_registry->create();
 
-                auto locked_registry = registry.lock();
-                const auto entity = locked_registry->create();
+            auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
 
-                auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
+            mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
+            train_meshes.push_back(mesh_component.mesh);
 
-                mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands);
-                train_meshes.push_back(mesh_component.mesh);
+            if(bve_mesh.texture.texture_id.exists) {
+                const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
 
-                if(bve_mesh.texture.texture_id.exists) {
-                    const auto* texture_name = BVE_Texture_Set_lookup(train->textures, bve_mesh.texture.texture_id.value);
+                const auto texture_msg = Rx::String::format("Load texture %s", texture_name);
+                ZoneScopedN(texture_msg.data());
 
-                    const auto texture_msg = Rx::String::format("Load texture %s", texture_name);
-                    ZoneScopedN(texture_msg.data());
+                const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
+                if(texture_handle_maybe) {
+                    logger->verbose("Texture %s has existing handle %d", texture_name, texture_handle_maybe->index);
 
-                    const auto texture_handle_maybe = renderer.get_image_handle(texture_name);
-                    if(texture_handle_maybe) {
-                        logger->verbose("Texture %s has existing handle %d", texture_name, texture_handle_maybe->index);
+                    const auto material = renderer::StandardMaterial{
+                        .albedo = *texture_handle_maybe,
+                        .normal_roughness = renderer.get_default_normal_roughness_texture(),
+                        .specular_color_emission = renderer.get_default_specular_color_emission_texture(),
+                        .noise = renderer.get_noise_texture(),
+                    };
+
+                    mesh_component.material = renderer.allocate_standard_material(material);
+
+                } else {
+                    const auto texture_path = train_path.replace_filename(texture_name).string();
+
+                    int width, height, num_channels;
+                    const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 0);
+                    if(texture_data == nullptr) {
+                        logger->error("Could not load texture %s", texture_name);
+
+                    } else {
+                        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
+
+                        if(num_channels == 3) {
+                            texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
+                        }
+
+                        auto create_info = renderer::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
+                                                                     .usage = renderer::ImageUsage::SampledImage,
+                                                                     .format = renderer::ImageFormat::Rgba8,
+                                                                     .width = static_cast<Uint32>(width),
+                                                                     .height = static_cast<Uint32>(height),
+                                                                     .depth = 1};
+                        const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
+                        const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
+
+                        // Create a second image as the real image
+                        create_info.name = texture_name;
+                        const auto texture_handle = renderer.create_image(create_info);
+                        const auto& texture = renderer.get_image(texture_handle);
+
+                        auto bind_group_builder = create_texture_processor_bind_group_builder(device);
+
+                        bind_group_builder->set_image("input_texture", scratch_texture);
+                        bind_group_builder->set_image("output_texture", texture);
+
+                        auto bind_group = bind_group_builder->build();
+                        bind_group->bind_to_compute_signature(commands);
+
+                        const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
+                        const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
+
+                        commands->Dispatch(workgroup_width, workgroup_height, 1);
+
+                        renderer.schedule_texture_destruction(scratch_texture_handle);
+
+                        logger->verbose("Newly loaded image %s has handle %d", texture_name, texture_handle.index);
 
                         const auto material = renderer::StandardMaterial{
-                            .albedo = *texture_handle_maybe,
-                            .normal_roughness = renderer.get_default_normal_roughness_texture(),
-                            .specular_color_emission = renderer.get_default_specular_color_emission_texture(),
+                            .albedo = texture_handle,
                             .noise = renderer.get_noise_texture(),
                         };
 
                         mesh_component.material = renderer.allocate_standard_material(material);
 
-                    } else {
-                        const auto texture_path = train_path.replace_filename(texture_name).string();
-
-                        int width, height, num_channels;
-                        const auto* texture_data = stbi_load(texture_path.c_str(), &width, &height, &num_channels, 0);
-                        if(texture_data == nullptr) {
-                            logger->error("Could not load texture %s", texture_name);
-
-                        } else {
-                            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Process stupid blue transparency");
-
-                            if(num_channels == 3) {
-                                texture_data = expand_rgb8_to_rgba8(texture_data, width, height);
-                            }
-
-                            auto create_info = renderer::ImageCreateInfo{.name = Rx::String::format("Scratch Texture %s", texture_name),
-                                                                         .usage = renderer::ImageUsage::SampledImage,
-                                                                         .format = renderer::ImageFormat::Rgba8,
-                                                                         .width = static_cast<Uint32>(width),
-                                                                         .height = static_cast<Uint32>(height),
-                                                                         .depth = 1};
-                            const auto scratch_texture_handle = renderer.create_image(create_info, texture_data, commands);
-                            const auto& scratch_texture = renderer.get_image(scratch_texture_handle);
-
-                            // Create a second image as the real image
-                            create_info.name = texture_name;
-                            const auto texture_handle = renderer.create_image(create_info);
-                            const auto& texture = renderer.get_image(texture_handle);
-
-                            auto bind_group_builder = create_texture_processor_bind_group_builder(device);
-
-                            bind_group_builder->set_image("input_texture", scratch_texture);
-                            bind_group_builder->set_image("output_texture", texture);
-
-                            auto bind_group = bind_group_builder->build();
-                            bind_group->bind_to_compute_signature(commands);
-
-                            const auto workgroup_width = (width / THREAD_GROUP_WIDTH) + 1;
-                            const auto workgroup_height = (height / THREAD_GROUP_HEIGHT) + 1;
-
-                            commands->Dispatch(workgroup_width, workgroup_height, 1);
-
-                            renderer.schedule_texture_destruction(scratch_texture_handle);
-
-                            logger->verbose("Newly loaded image %s has handle %d", texture_name, texture_handle.index);
-
-                            const auto material = renderer::StandardMaterial{
-                                .albedo = texture_handle,
-                                .noise = renderer.get_noise_texture(),
-                            };
-
-                            mesh_component.material = renderer.allocate_standard_material(material);
-
-                            delete[] texture_data;
-                        }
+                        delete[] texture_data;
                     }
-
-                    bve_delete_string(const_cast<char*>(texture_name));
                 }
-            }
 
-            mesh_data.end_adding_meshes(commands);
-
-            const auto& index_buffer = mesh_data.get_index_buffer();
-            const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
-
-            {
-                Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-                barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
-                                                                   D3D12_RESOURCE_STATE_INDEX_BUFFER,
-                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-                barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
-                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-            }
-
-            const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
-            renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
-
-            {
-                Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-                barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
-                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                                   D3D12_RESOURCE_STATE_INDEX_BUFFER);
-                barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-                                                                   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+                bve_delete_string(const_cast<char*>(texture_name));
             }
         }
 
-        device.submit_command_list(Rx::Utility::move(commands));
+        mesh_data.end_adding_meshes(commands);
 
-        logger->info("Loaded file %s", filename);
+        const auto& index_buffer = mesh_data.get_index_buffer();
+        const auto& vertex_buffer = *mesh_data.get_vertex_bindings()[0].buffer;
 
-        return true;
+        {
+            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+
+        const auto ray_mesh = renderer.create_raytracing_geometry(vertex_buffer, index_buffer, train_meshes, commands);
+        renderer.add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_mesh}});
+
+        {
+            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER);
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
     }
+
+    device.submit_command_list(Rx::Utility::move(commands));
+
+    logger->info("Loaded file %s", filename);
+
+    return true;
 }
 
 Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(renderer::RenderDevice& device) {
@@ -311,7 +308,7 @@ std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_ve
         const auto& bve_vertex = bve_vertices.ptr[i];
         vertices.push_back(StandardVertex{.position = to_rex_vec3(bve_vertex.position),
                                           .normal = {bve_vertex.normal.x, bve_vertex.normal.y, -bve_vertex.normal.z},
-                                          .color = to_Uint32(bve_vertex.color),
+                                          .color = to_uint32(bve_vertex.color),
                                           .texcoord = to_rex_vec2(bve_vertex.coord)});
     }
 

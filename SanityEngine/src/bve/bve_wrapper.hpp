@@ -10,7 +10,6 @@
 
 #include "core/async/synchronized_resource.hpp"
 #include "rhi/bind_group.hpp"
-#include "rhi/compute_pipeline_state.hpp"
 #include "rhi/mesh_data_store.hpp"
 
 namespace renderer {
@@ -31,7 +30,7 @@ public:
     Rx::Ptr<renderer::BindGroupBuilder> create_texture_processor_bind_group_builder(renderer::RenderDevice& device);
 
 private:
-    Rx::Ptr<renderer::ComputePipelineState> bve_texture_pipeline;
+    ComPtr<ID3D12PipelineState> bve_texture_pipeline;
 
     void create_texture_filter_pipeline(renderer::RenderDevice& device);
 

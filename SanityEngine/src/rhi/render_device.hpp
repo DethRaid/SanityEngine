@@ -12,9 +12,7 @@
 #include <DXProgrammableCapture.h>
 
 #include "core/types.hpp"
-#include "renderer/rhi/command_list.hpp"
 #include "rhi/bind_group.hpp"
-#include "rhi/compute_pipeline_state.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/descriptor_allocator.hpp"
 #include "rhi/framebuffer.hpp"
@@ -109,10 +107,6 @@ namespace renderer {
                                                                                   const ComPtr<ID3D12RootSignature>& root_signature) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
-
-        void destroy_compute_pipeline_state(Rx::Ptr<ComputePipelineState> pipeline_state);
-
-        void destroy_render_pipeline_state(Rx::Ptr<RenderPipelineState> pipeline_state);
 
         /*!
          * \brief Creates a new command list

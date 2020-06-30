@@ -596,9 +596,6 @@
     <ClInclude Include="src\rhi\bind_group.hpp">
       <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\rhi\compute_pipeline_state.hpp">
-      <Filter>Header Files\renderer\rhi</Filter>
-    </ClInclude>
     <ClInclude Include="src\rhi\framebuffer.hpp">
       <Filter>Header Files\renderer\rhi</Filter>
     </ClInclude>
