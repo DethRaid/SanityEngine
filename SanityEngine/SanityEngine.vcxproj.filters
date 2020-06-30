@@ -1351,6 +1351,9 @@
     <FxCompile Include="data\shaders\worldgen\FillOcean.compute.hlsl">
       <Filter>Shaders\worldgen</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\worldgen\TickWaterSimulation.compute.hlsl">
+      <Filter>Shaders\worldgen</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\inc\atmospheric_scattering.hlsl">

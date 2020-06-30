@@ -1297,7 +1297,8 @@ namespace renderer {
 
                 direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
 
-                const HANDLE event = CreateEvent(nullptr, false, false, nullptr);
+                // ReSharper disable once CppLocalVariableMayBeConst
+                HANDLE event = CreateEvent(nullptr, false, false, nullptr);
                 command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
 
                 WaitForSingleObject(event, INFINITE);

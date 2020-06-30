@@ -18,6 +18,7 @@
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
+#include "world/generation/gpu_terrain_generation.hpp"
 #include "world/world.hpp"
 
 static Rx::GlobalGroup s_sanity_engine_globals{"SanityEngine"};
@@ -96,6 +97,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         make_frametime_display();
 
         imgui_adapter = Rx::make_ptr<DearImguiAdapter>(RX_SYSTEM_ALLOCATOR, window, *renderer);
+
+        terraingen::create_pipelines(renderer->get_render_device());
 
         world = World::create({.seed = 666,
                                .height = 128,

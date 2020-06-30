@@ -2,7 +2,9 @@ struct TerrainParameters {
     float sea_level;
 } constants;
 
-RWTexture2D<float4> heightmap : register(u0);
+Texture2D<float> heightmap : register(u0);
+
+RWTexture2D<float> water_depth_map : register(u1);
 
 [numthreads(8, 8, 1)] void main(uint3 dispatch_thread_id
                                 : SV_DispatchThreadID) {
@@ -14,14 +16,11 @@ RWTexture2D<float4> heightmap : register(u0);
         return;
     }
 
-    float2 uv = location / texture_dimensions;
+    float2 uv = float2(location.x, location.y) / float2(texture_dimensions.x, texture_dimensions.y);
 
-    float4 heightmap_sample = heightmap[uv];
+    float heightmap_sample = heightmap[uv];
 
-    if(heightmap_sample.x < constants.sea_level) {
-        heightmap[uv] = float4(heightmap_sample.x, constants.sea_level - heightmap_sample.x, heightmap_sample.zw);
-
-    } else {
-        heightmap[uv] = float4(heightmap_sample.x, 0, heightmap_sample.zw);
+    if(heightmap_sample < constants.sea_level) {
+        water_depth_map[uv] = constants.sea_level - heightmap_sample;
     }
 }

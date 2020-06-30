@@ -11,6 +11,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.System.Threading.h>
 
+#include "generation/gpu_terrain_generation.hpp"
 #include "loading/image_loading.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/helpers.hpp"
@@ -138,22 +139,29 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
     auto commands = device.create_command_list();
     commands->SetName(L"Terrain::generate_terrain");
 
-    auto data = TerrainData{};
+    const auto total_pixels_in_maps = params.width * params.height;
+    auto data = TerrainData{.width = params.width, .height = params.height, .heightmap = Rx::Vector<Float32>{total_pixels_in_maps}};
 
     {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::generate_terrain");
         PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
 
         // Generate heightmap
-        const auto total_pixels_in_maps = params.width * params.height;
-        data.heightmap = Rx::Vector<Float32>{total_pixels_in_maps};
         generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
+        const auto heightmap_image = renderer.get_image(data.heightmap_handle);
+
+        const auto heightmap_barrier = CD3DX12_RESOURCE_BARRIER::UAV(heightmap_image.resource.Get());
+
+        commands->ResourceBarrier(1, &heightmap_barrier);
 
         // Place water sources
         place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
+        const auto water_depth_image = renderer.get_image(data.water_depth_handle);
+
+        terraingen::place_oceans(commands, renderer, params.min_terrain_depth_under_ocean + params.max_ocean_depth, data);
 
         // Let water flow around
-        compute_water_flow(renderer, commands, data);
+        terraingen::compute_water_flow(commands, renderer, data);
     }
 
     device.submit_command_list(Rx::Utility::move(commands));
@@ -167,6 +175,11 @@ void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
                                  const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                  TerrainData& data,
                                  const unsigned total_pixels_in_maps) {
+    ZoneScoped;
+
+    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::generate_heightmap");
+    PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_heightmap");
+
     auto* height_noise = noise_generator.GetNoiseSet(-static_cast<Int32>(params.width) / 2,
                                                      -static_cast<Int32>(params.height) / 2,
                                                      0,
@@ -182,11 +195,11 @@ void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
 
     data.heightmap.each_fwd([&](Float32& height) { height = height * height_range + min_terrain_height; });
 
-    data.heightmap_handle = renderer.create_image(renderer::ImageCreateInfo{.name = "Terrain Heightmap",
-                                                                            .usage = renderer::ImageUsage::UnorderedAccess,
-                                                                            .format = renderer::ImageFormat::R32F,
-                                                                            .width = params.width,
-                                                                            .height = params.height},
+    data.heightmap_handle = renderer.create_image({.name = "Terrain Heightmap",
+                                                   .usage = renderer::ImageUsage::UnorderedAccess,
+                                                   .format = renderer::ImageFormat::R32F,
+                                                   .width = params.width,
+                                                   .height = params.height},
                                                   data.heightmap.data(),
                                                   commands);
 }
@@ -196,6 +209,11 @@ void Terrain::place_water_sources(const WorldParameters& params,
                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                   TerrainData& data,
                                   const unsigned total_pixels_in_maps) {
+    ZoneScoped;
+
+    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.Get(), "Terrain::place_water_sources");
+    PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::place_water_sources");
+
     Rx::Vector<Float32> water_depth_map{total_pixels_in_maps};
 
     constexpr Float32 water_source_spawn_rate = 0.0001f;
@@ -215,18 +233,18 @@ void Terrain::place_water_sources(const WorldParameters& params,
         water_depth_map[location.y * params.width + location.x] = 1;
     });
 
-    data.ground_water_handle = renderer.create_image(renderer::ImageCreateInfo{.name = "Terrain Water Map",
-                                                                               .usage = renderer::ImageUsage::UnorderedAccess,
-                                                                               .format = renderer::ImageFormat::Rg16F,
-                                                                               .width = params.width,
-                                                                               .height = params.height},
+    data.water_depth_handle = renderer.create_image({.name = "Terrain Water Map",
+                                                      .usage = renderer::ImageUsage::UnorderedAccess,
+                                                      .format = renderer::ImageFormat::Rg16F,
+                                                      .width = params.width,
+                                                      .height = params.height},
                                                      water_depth_map.data(),
                                                      commands);
 }
 
 void Terrain::compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data) {
     const auto& heightmap_image = renderer.get_image(data.heightmap_handle);
-    const auto& watermap_image = renderer.get_image(data.ground_water_handle);
+    const auto& watermap_image = renderer.get_image(data.water_depth_handle);
 }
 
 void Terrain::load_terrain_textures_and_create_material() {

@@ -78,7 +78,7 @@ struct TerrainData {
      * We don't need to store any directions - lakes don't flow, the ocean currents are well-defined, rivers get their flow direction
      * from the slope of the terrain beneath them
      */
-    renderer::TextureHandle ground_water_handle;
+    renderer::TextureHandle water_depth_handle;
 
     /*!
      * \brief Handle to a texture that stores wind information
