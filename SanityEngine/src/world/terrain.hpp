@@ -24,10 +24,6 @@ struct TerrainSamplerParams {
     Float32 spread_reduction_rate{spread};
 };
 
-namespace renderer {
-    class HostTexture2D;
-}
-
 struct TerrainTile {
     enum class LoadingPhase {
         GeneratingHeightmap,

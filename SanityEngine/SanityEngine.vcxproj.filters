@@ -561,6 +561,9 @@
     <ClCompile Include="src\renderer\rhi\d3d12_private_data.cpp">
       <Filter>Source Files\renderer\rhi</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp">
+      <Filter>Source Files\world\generation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -1295,6 +1298,9 @@
     <ClInclude Include="src\core\types.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp">
+      <Filter>Header Files\world\generation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -1344,6 +1350,9 @@
     </FxCompile>
     <FxCompile Include="data\shaders\terrain.pixel.hlsl">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\worldgen\FillOcean.compute.hlsl">
+      <Filter>Shaders\worldgen</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

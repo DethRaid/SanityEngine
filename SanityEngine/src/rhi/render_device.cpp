@@ -41,7 +41,7 @@ namespace renderer {
     RX_CONSOLE_BVAR(cvar_break_on_validation_error,
                     "r.BreakOnValidationError",
                     "Whether to issue a breakpoint when the validation layer encounters an error",
-                    false);
+                    true);
 
     RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
                     "r.VerifyEveryCommandListSubmission",
@@ -320,10 +320,8 @@ namespace renderer {
                                               descriptor_table_handles);
     }
 
-    Rx::Ptr<ComputePipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
-                                                                              const ComPtr<ID3D12RootSignature>& root_signature) const {
-        auto compute_pipeline = Rx::make_ptr<ComputePipelineState>(RX_SYSTEM_ALLOCATOR);
-
+    ComPtr<ID3D12PipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
+                                                                            const ComPtr<ID3D12RootSignature>& root_signature) const {
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
             .pRootSignature = root_signature.Get(),
             .CS =
@@ -333,11 +331,16 @@ namespace renderer {
                 },
         };
 
-        device->CreateComputePipelineState(&desc, IID_PPV_ARGS(compute_pipeline->pso.GetAddressOf()));
+        ComPtr<ID3D12PipelineState> pso;
+        const auto result = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&pso));
+        if(FAILED(result)) {
+            logger->error("Could not create compute pipeline: %s", to_string(result));
+            return {};
+        }
 
-        compute_pipeline->root_signature = root_signature;
+        store_com_interface(pso.Get(), root_signature.Get());
 
-        return compute_pipeline;
+        return pso;
     }
 
     Rx::Ptr<RenderPipelineState> RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
@@ -431,7 +434,7 @@ namespace renderer {
         }
 
         commands->SetName(L"Unnamed Sanity Engine command list");
-        set_command_allocator(commands.Get(), command_allocator.Get());
+        store_com_interface(commands.Get(), command_allocator.Get());
         set_gpu_frame_idx(commands.Get(), *frame_idx);
         command_lists_outside_render_device.fetch_add(1);
         return commands;
@@ -1315,7 +1318,7 @@ namespace renderer {
                 CloseHandle(event);
             }
 
-            auto* command_allocator = get_command_allocator(commands.Get());
+            auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands.Get());
             command_allocators_to_reset_on_begin_frame[cur_gpu_frame_idx].emplace_back(command_allocator);
         });
 

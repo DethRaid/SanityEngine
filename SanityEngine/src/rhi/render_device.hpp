@@ -105,7 +105,7 @@ namespace renderer {
             const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
             const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
-        [[nodiscard]] Rx::Ptr<ComputePipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
+        [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
                                                                                   const ComPtr<ID3D12RootSignature>& root_signature) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);

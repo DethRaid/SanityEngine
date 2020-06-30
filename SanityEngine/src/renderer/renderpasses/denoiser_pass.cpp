@@ -27,14 +27,12 @@ namespace renderer {
 
         auto& device = renderer->get_render_device();
 
-        const auto pipeline_create_info = RenderPipelineStateCreateInfo{.name = "Denoising Pipeline",
-                                                                        .vertex_shader = load_shader("fullscreen.vertex"),
-                                                                        .pixel_shader = load_shader("raytracing_accumulation.pixel"),
-                                                                        .depth_stencil_state = {.enable_depth_test = false,
-                                                                                                .enable_depth_write = false},
-                                                                        .render_target_formats = Rx::Array{ImageFormat::Rgba32F}};
-
-        denoising_pipeline = device.create_render_pipeline_state(pipeline_create_info);
+        denoising_pipeline = device.create_render_pipeline_state(
+            {.name = "Denoising Pipeline",
+             .vertex_shader = load_shader("fullscreen.vertex"),
+             .pixel_shader = load_shader("raytracing_accumulation.pixel"),
+             .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
+             .render_target_formats = Rx::Array{ImageFormat::Rgba32F}});
 
         create_images_and_framebuffer(render_resolution);
 
@@ -57,7 +55,7 @@ namespace renderer {
                                                                       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commands->ResourceBarrier(1, &barrier);
         }
-        
+
         {
             const auto
                 render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_rtv_handle,
@@ -65,22 +63,22 @@ namespace renderer {
                                                                                 {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
                                                                             .EndingAccess = {
                                                                                 .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
-        
+
             commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
         }
-        
+
         commands->SetPipelineState(denoising_pipeline->pso.Get());
-        
+
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
-        
+
         commands->DrawInstanced(3, 1, 0, 0);
-        
+
         commands->EndRenderPass();
-        
+
         const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
-        
+
         {
             const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
                                                                                  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
@@ -90,21 +88,21 @@ namespace renderer {
                                                                                  D3D12_RESOURCE_STATE_COPY_SOURCE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
-        
+
         {
             const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
-        
+
             const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
-        
+
             const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
-        
+
             commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
         }
-        
+
         {
             const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
                                                                       D3D12_RESOURCE_STATE_COPY_SOURCE,
@@ -162,10 +160,11 @@ namespace renderer {
                         scene_color_target_handle.index,
                         scene_depth_target_handle.index);
 
-        denoiser_material_buffer = device.create_buffer(BufferCreateInfo{.name = "Denoiser material buffer",
-                                                                         .usage = BufferUsage::ConstantBuffer,
-                                                                         .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
+        denoiser_material_buffer = device.create_buffer({.name = "Denoiser material buffer",
+                                                         .usage = BufferUsage::ConstantBuffer,
+                                                         .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
 
         memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
     }
 } // namespace renderer
+

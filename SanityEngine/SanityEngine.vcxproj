@@ -154,6 +154,7 @@
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
     <ClCompile Include="src\world\generation\dual_contouring.cpp" />
+    <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
     <ClCompile Include="src\world\world.cpp" />
   </ItemGroup>
@@ -400,6 +401,7 @@
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
     <ClInclude Include="src\world\generation\dual_contouring.hpp" />
+    <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
@@ -496,6 +498,25 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="data\shaders\worldgen\FillOcean.compute.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <None Include="data\shaders\inc\atmospheric_scattering.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>

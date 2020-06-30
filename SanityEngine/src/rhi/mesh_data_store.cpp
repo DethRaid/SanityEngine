@@ -138,3 +138,4 @@ namespace renderer {
         commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 } // namespace renderer
+

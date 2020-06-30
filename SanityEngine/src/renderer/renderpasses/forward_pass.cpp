@@ -77,6 +77,11 @@ namespace renderer {
         const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
         bind_group->bind_to_graphics_signature(commands);
 
+        // Hardcode camera 0 as the player camera
+        // TODO: Decide if this is fine
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
+
+        // Draw atmosphere first because projection matrices are hard
         draw_atmosphere(commands, registry);
 
         draw_objects_in_scene(commands, registry, frame_idx);
@@ -152,10 +157,6 @@ namespace renderer {
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
-        // Hardcode camera 0 as the player camera
-        // TODO: Decide if this is fine
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
-
         {
             auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
             commands->SetGraphicsRootShaderResourceView(RenderDevice::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
@@ -197,9 +198,11 @@ namespace renderer {
             PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_atmosphere");
 
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
+
+            commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
             commands->DrawInstanced(3, 1, 0, 0);
         }
     }
 
 } // namespace renderer
-
