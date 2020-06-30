@@ -24,16 +24,16 @@ namespace terraingen {
     void create_place_ocean_pso(renderer::RenderDevice& device) {
         ZoneScoped;
 
-        const auto place_oceans_shader_source = load_shader("FillOcean.hlsl");
-        RX_ASSERT(!place_oceans_shader_source.is_empty(), "Could not load shader FillOcean.hlsl");
+        const auto place_oceans_shader_source = load_shader("FillOcean.compute");
+        RX_ASSERT(!place_oceans_shader_source.is_empty(), "Could not load shader FillOcean.compute");
 
         const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
                                                                     .Constants =
                                                                         {
                                                                             .Num32BitValues = 1,
                                                                         }},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV}};
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV, .Descriptor = {}},
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV, .Descriptor = {}}};
 
         const auto root_signature = device.compile_root_signature(
             {.NumParameters = static_cast<UINT>(root_parameters.size()), .pParameters = root_parameters.data()});
@@ -43,14 +43,15 @@ namespace terraingen {
     void create_water_flow_pos(const renderer::RenderDevice& device) {
         ZoneScoped;
 
-        const auto water_flow_source = load_shader("WaterFlow.hlsl");
+        const auto water_flow_shader_source = load_shader("WaterFlow.compute");
+        RX_ASSERT(!water_flow_shader_source.is_empty(), "Could not load shader WaterFlow.compute");
 
-        const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV}};
+        const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV, .Descriptor = {}},
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV, .Descriptor = {}}};
 
         const auto root_signature = device.compile_root_signature(
             {.NumParameters = static_cast<UINT>(root_parameters.size()), .pParameters = root_parameters.data()});
-        water_flow_pso = device.create_compute_pipeline_state(water_flow_source, root_signature);
+        water_flow_pso = device.create_compute_pipeline_state(water_flow_shader_source, root_signature);
     };
 
     void create_pipelines(renderer::RenderDevice& device) {

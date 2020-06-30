@@ -12,14 +12,14 @@ Rx::Vector<Uint8> load_shader(const Rx::String& shader_filename) {
 
     auto* shader_file = fopen(shader_filepath.data(), "rb");
     if(shader_file == nullptr) {
-        logger->error("Could not open shader file '{}'", shader_filepath);
+        logger->error("Could not open shader file '%s'", shader_filepath);
         return {};
     }
 
     fseek(shader_file, 0, SEEK_END);
     const auto file_size = ftell(shader_file);
 
-    auto shader = Rx::Vector<Uint8>(file_size);
+    auto shader = Rx::Vector<Uint8>{static_cast<Size>(file_size)};
 
     rewind(shader_file);
 
