@@ -13,6 +13,7 @@
 
 #include "generation/gpu_terrain_generation.hpp"
 #include "loading/image_loading.hpp"
+#include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
@@ -234,12 +235,12 @@ void Terrain::place_water_sources(const WorldParameters& params,
     });
 
     data.water_depth_handle = renderer.create_image({.name = "Terrain Water Map",
-                                                      .usage = renderer::ImageUsage::UnorderedAccess,
-                                                      .format = renderer::ImageFormat::Rg16F,
-                                                      .width = params.width,
-                                                      .height = params.height},
-                                                     water_depth_map.data(),
-                                                     commands);
+                                                     .usage = renderer::ImageUsage::UnorderedAccess,
+                                                     .format = renderer::ImageFormat::Rg16F,
+                                                     .width = params.width,
+                                                     .height = params.height},
+                                                    water_depth_map.data(),
+                                                    commands);
 }
 
 void Terrain::compute_water_flow(renderer::Renderer& renderer, const com_ptr<ID3D12GraphicsCommandList4>& commands, TerrainData& data) {
@@ -395,6 +396,8 @@ void Terrain::upload_new_tile_meshes() {
         TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
 
+        Rx::Vector<renderer::VisibleObjectCullingInformation> tile_culling_information{locked_tile_mesh_queue->size()};
+
         locked_tile_mesh_queue->each_fwd([&](const TerrainTileMeshCreateInfo& create_info) {
             PIXScopedEvent(commands.get(),
                            PIX_COLOR_DEFAULT,
@@ -439,9 +442,33 @@ void Terrain::upload_new_tile_meshes() {
                 Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
                 loaded_terrain_tiles.find(create_info.tilecoord)->loading_phase = TerrainTile::LoadingPhase::Complete;
             }
+
+            {
+                TracyD3D12Zone(renderer::RenderDevice::tracy_context,
+                               commands.get(),
+                               "Terrain::upload_new_tile_meshes::write_draw_command");
+                PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes::write_draw_command");
+
+                tile_culling_information.push_back(
+                    renderer::VisibleObjectCullingInformation{.aabb_x_min_max = {create_info.tilecoord.x,
+                                                                                 create_info.tilecoord.x + TILE_SIZE},
+                                                              .aabb_y_min_max = {},
+                                                              .aabb_z_min_max = {create_info.tilecoord.y,
+                                                                                 create_info.tilecoord.y + TILE_SIZE},
+                                                              .vertex_count = tile_mesh_ld.num_vertices,
+                                                              .start_vertex_location = tile_mesh_ld.first_vertex});
+
+                // TODO: Write information about this tile to a slot in a staging buffer
+            }
         });
 
         locked_tile_mesh_queue->clear();
+    }
+    {
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes::upload_visible_objects");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes::upload_visible_objects");
+
+        // TODO: Copy the staging buffer to the global scene cullable objects buffer
     }
 
     device.submit_command_list(Rx::Utility::move(commands));

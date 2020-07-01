@@ -93,6 +93,8 @@ namespace renderer {
 
         create_pipeline_input_layouts();
 
+        create_command_signatures();
+
         logger->info("Initialized D3D12 render device");
     }
 
@@ -627,7 +629,6 @@ namespace renderer {
             while(factory->EnumAdapters(adapter_idx, &cur_adapter) != DXGI_ERROR_NOT_FOUND) {
                 adapters.push_back(com_ptr<IDXGIAdapter>{cur_adapter, {}});
                 adapter_idx++;
-
             }
         }
 
@@ -669,7 +670,7 @@ namespace renderer {
                     // Thus - if we find an adapter without full descriptor indexing support, we ignore it
 
                     logger->warning("Ignoring adapter %s - Doesn't have the flexible resource binding that Sanity Engine needs",
-                                    from_wide_string(desc.Description));
+                                    Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8());
 
                     return true;
                 }
@@ -678,7 +679,7 @@ namespace renderer {
                 res = try_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model));
                 if(FAILED(res)) {
                     logger->warning("Ignoring adapter %s - Could not check the supported shader model: %s",
-                                    from_wide_string(desc.Description),
+                                    Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8(),
                                     to_string(res));
 
                     return true;
@@ -686,7 +687,8 @@ namespace renderer {
                 } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_5) {
                     // Only supports old-ass shaders
 
-                    logger->warning("Ignoring adapter %s - Doesn't support shader model 6.5", from_wide_string(desc.Description));
+                    logger->warning("Ignoring adapter %s - Doesn't support shader model 6.5",
+                                    Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8());
                     return true;
                 }
 
@@ -723,7 +725,8 @@ namespace renderer {
                 return false;
 
             } else {
-                logger->warning("Ignoring adapter %s - doesn't support D3D12", from_wide_string(desc.Description));
+                logger->warning("Ignoring adapter %s - doesn't support D3D12",
+                                Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8());
             }
 
             return true;
@@ -1003,8 +1006,7 @@ namespace renderer {
         return sig;
     }
 
-    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> RenderDevice::allocate_descriptor_table(
-        const Uint32 num_descriptors) {
+    DescriptorTableHandle RenderDevice::allocate_descriptor_table(const Uint32 num_descriptors) {
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
@@ -1133,6 +1135,17 @@ namespace renderer {
                                      .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
                                      .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
                                      .InstanceDataStepRate = 0});
+    }
+
+    void RenderDevice::create_command_signatures() {
+        const auto argument_descs = Rx::Array{
+            D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
+                                         .Constant = {.RootParameterIndex = ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                      .DestOffsetIn32BitValues = MATERIAL_INDEX_ROOT_CONSTANT_OFFSET,
+                                                      .Num32BitValuesToSet = 1}}};
+        const auto desc = D3D12_COMMAND_SIGNATURE_DESC{.NumArgumentDescs = static_cast<UINT>(argument_descs.size()),
+                                                       .pArgumentDescs = argument_descs.data()};
+        device->CreateCommandSignature(&desc, standard_root_signature.get(), IID_PPV_ARGS(standard_drawcall_command_signature.put()));
     }
 
     Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
@@ -1284,7 +1297,7 @@ namespace renderer {
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         // Submit all the command lists we batched up
         auto& lists = command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
-        lists.each_fwd([&](const com_ptr<ID3D12GraphicsCommandList4>& commands) {
+        lists.each_fwd([&](com_ptr<ID3D12GraphicsCommandList4>& commands) {
             auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.get());
 
             // First implementation - run everything on the same queue, because it's easy

@@ -10,6 +10,7 @@ using Byte = Rx::Byte;
 using Size = Rx::Size;
 
 using Uint8 = Rx::Uint8;
+using Uint16 = Rx::Uint16;
 using Uint32 = Rx::Uint32;
 using Uint64 = Rx::Uint64;
 

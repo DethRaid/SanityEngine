@@ -27,17 +27,26 @@ namespace terraingen {
         const auto place_oceans_shader_source = load_shader("FillOcean.compute");
         RX_ASSERT(!place_oceans_shader_source.is_empty(), "Could not load shader FillOcean.compute");
 
+        const auto descriptor_ranges = Rx::Array{D3D12_DESCRIPTOR_RANGE{.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV, .NumDescriptors = 1},
+                                                 D3D12_DESCRIPTOR_RANGE{.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV, .NumDescriptors = 1}};
+
         const auto root_parameters = Rx::Array{D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
                                                                     .Constants =
                                                                         {
                                                                             .Num32BitValues = 1,
                                                                         }},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV, .Descriptor = {}},
-                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV, .Descriptor = {}}};
+                                               D3D12_ROOT_PARAMETER{.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+                                                                    .DescriptorTable = {.NumDescriptorRanges = static_cast<UINT>(
+                                                                                            descriptor_ranges.size()),
+                                                                                        .pDescriptorRanges = descriptor_ranges.data()}}};
 
         const auto root_signature = device.compile_root_signature(
             {.NumParameters = static_cast<UINT>(root_parameters.size()), .pParameters = root_parameters.data()});
         place_oceans_pso = device.create_compute_pipeline_state(place_oceans_shader_source, root_signature);
+
+        auto table = device.allocate_descriptor_table(static_cast<UINT>(descriptor_ranges.size()));
+
+        
     }
 
     void create_water_flow_pos(const renderer::RenderDevice& device) {

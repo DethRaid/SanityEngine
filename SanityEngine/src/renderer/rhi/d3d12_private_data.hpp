@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+
 #include <d3d12.h>
 #include <rx/core/log.h>
 #include <rx/core/optional.h>
@@ -7,27 +9,64 @@
 #include <winrt/base.h>
 
 #include "core/types.hpp"
+#include "rhi/helpers.hpp"
+#include "rhi/render_device.hpp"
 
 using winrt::com_ptr;
 
 namespace renderer {
     namespace guids {
+        static GUID gpu_frame_idx;
+        static GUID descriptor_table_handles_guid;
+
         void init();
-    }
+    } // namespace guids
 
     RX_LOG("\033[32mD3D12PrivateData\033[0m", private_data_logger);
 
-    void set_object_name(ID3D12Object* object, const Rx::String& name);
+    // template <typename T>
+    // concept PrivateDataStore = requires(T a) {
+    //     a->SetPrivateData(GUID{}, 0, nullptr);
+    //     { a->GetPrivateData(GUID{}, std::convertible_to<UINT*>, static_cast<void**>(nullptr)) }
+    //     ->std::convertible_to<HRESULT>;
+    // };
 
-    void set_gpu_frame_idx(ID3D12Object* object, Uint32 frame_idx);
+    inline void set_object_name(ID3D12Object* object, const Rx::String& name) {
+        const auto wide_name = name.to_utf16();
 
-    [[nodisacrd]] Rx::String get_object_name(ID3D12Object* object);
+        object->SetName(reinterpret_cast<LPCWSTR>(wide_name.data()));
+    }
 
-    [[nodiscard]] Rx::Optional<Uint32> get_gpu_frame_idx(ID3D12Object* object);
+    inline void set_gpu_frame_idx(ID3D12Object* object, Uint32 frame_idx) {
+        object->SetPrivateData(guids::gpu_frame_idx, sizeof(Uint32), &frame_idx);
+    }
 
-    template <typename ObjectType>
-    void set_object_name(com_ptr<ObjectType> object, const Rx::String& name) {
-        set_object_name(object.get(), name);
+    inline void store_descriptor_table_handle(ID3D12Object* object, const DescriptorTableHandle& table) {
+        object->SetPrivateData(guids::descriptor_table_handles_guid, sizeof(DescriptorTableHandle), &table);
+    }
+
+    [[nodiscard]] inline Rx::String get_object_name(ID3D12Object* object) {
+        UINT data_size{sizeof(wchar_t*)};
+        wchar_t* name{nullptr};
+        const auto result = object->GetPrivateData(WKPDID_D3DDebugObjectName, &data_size, &name);
+        if(FAILED(result)) {
+            private_data_logger->error("Could not retrieve object name");
+            return "Unnamed object";
+        }
+
+        return Rx::WideString{reinterpret_cast<const Uint16*>(name)}.to_utf8();
+    }
+
+    [[nodiscard]] inline Rx::Optional<Uint32> get_gpu_frame_idx(ID3D12Object* object) {
+        UINT data_size{sizeof(Uint32)};
+        Uint32 gpu_frame_idx{0};
+        const auto result = object->GetPrivateData(guids::gpu_frame_idx, &data_size, &gpu_frame_idx);
+        if(FAILED(result)) {
+            private_data_logger->error("Could not get the GPU frame of object %s", get_object_name(object));
+            return Rx::nullopt;
+        }
+
+        return gpu_frame_idx;
     }
 
     template <typename InterfaceType>
@@ -52,3 +91,15 @@ namespace renderer {
         return com_pointer;
     }
 } // namespace renderer
+
+namespace Rx {
+    template <>
+    struct FormatNormalize<ID3D12Object*> {
+        char scratch[1024];
+        const char* operator()(ID3D12Object* value) {
+            const auto& object_name = renderer::get_object_name(value);
+            memcpy(scratch, object_name.data(), Algorithm::min(object_name.size(), sizeof(scratch)));
+            return scratch;
+        }
+    };
+} // namespace Rx

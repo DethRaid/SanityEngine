@@ -38,6 +38,8 @@ namespace renderer {
     struct CommandList;
     struct RenderPipelineStateCreateInfo;
 
+    using DescriptorTableHandle = Rx::Pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>;
+
     /*
      * \brief A device which can be used to render
      *
@@ -51,6 +53,7 @@ namespace renderer {
         static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 1;
         static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 2;
 
+        static constexpr Uint32 ROOT_CONSTANTS_ROOT_PARAMETER_INDEX = 0;
         static constexpr Uint32 MATERIAL_BUFFER_ROOT_PARAMETER_INDEX = 2;
         static constexpr Uint32 MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX = 8;
 
@@ -154,8 +157,7 @@ namespace renderer {
          * \brief Allocated a descriptor table with the specified number of descriptors, returning both a CPU and GPU handle to the start of
          * the table. All descriptors in the table are tightly packed
          */
-        [[nodiscard]] std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> allocate_descriptor_table(
-            Uint32 num_descriptors);
+        [[nodiscard]] DescriptorTableHandle allocate_descriptor_table(Uint32 num_descriptors);
 
     private:
         Settings settings;
@@ -289,6 +291,8 @@ namespace renderer {
                                                       .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
                                                       .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
 
+        com_ptr<ID3D12CommandSignature> standard_drawcall_command_signature;
+
 #pragma region initialization
         void enable_debugging();
 
@@ -318,6 +322,8 @@ namespace renderer {
         void create_material_resource_binders();
 
         void create_pipeline_input_layouts();
+
+        void create_command_signatures();
 #pragma endregion
 
         [[nodiscard]] Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const;

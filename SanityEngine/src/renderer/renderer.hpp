@@ -28,6 +28,30 @@ struct GLFWwindow;
 
 namespace renderer {
     /*!
+     * \brief All the information needed to decide whether or not to issue a drawcall for an object
+     */
+    struct VisibleObjectCullingInformation {
+        /*!
+         * \brief Min and max of this object's bounding box, along the x axis
+         */
+        Vec2f aabb_x_min_max{};
+
+        /*!
+         * \brief Min and max of this object's bounding box, along the y axis
+         */
+        Vec2f aabb_y_min_max{};
+
+        /*!
+         * \brief Min and max of this object's bounding box, along the z axis
+         */
+        Vec2f aabb_z_min_max{};
+
+        Uint32 vertex_count{};
+
+        Uint32 start_vertex_location{};
+    };
+
+    /*!
      * \brief Data that remains constant for the entire frame
      */
     struct PerFrameData {
@@ -258,6 +282,8 @@ namespace renderer {
         Rx::Vector<Rx::Ptr<Rx::Concurrency::Atomic<Uint32>>> next_unused_model_matrix_per_frame;
 
         RaytracingScene raytracing_scene;
+
+        Rx::Ptr<Buffer> visible_objects_buffer;
 
         void rebuild_raytracing_scene(const com_ptr<ID3D12GraphicsCommandList4>& commands);
 
