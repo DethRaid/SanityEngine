@@ -12,28 +12,6 @@
 #include "render_device.hpp"
 
 namespace renderer {
-
-    std::wstring to_wide_string(const Rx::String& string) {
-        const int wide_string_length = MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, nullptr, 0);
-        wchar_t* wide_char_string = new wchar_t[wide_string_length];
-        MultiByteToWideChar(CP_UTF8, 0, string.data(), -1, wide_char_string, wide_string_length);
-
-        std::wstring wide_string{wide_char_string};
-
-        delete[] wide_char_string;
-
-        return wide_string;
-    }
-
-    Rx::String from_wide_string(const std::wstring& wide_string) {
-        const int string_length = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, nullptr, 0, nullptr, nullptr);
-        Rx::String string;
-        string.resize(string_length);
-        WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), -1, string.data(), static_cast<int>(string.size()), nullptr, nullptr);
-
-        return string;
-    }
-
     DXGI_FORMAT to_dxgi_format(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:
@@ -297,7 +275,7 @@ namespace renderer {
         while(cur_node != nullptr) {
             const auto command_list_name = [&]() -> Rx::String {
                 if(cur_node->pCommandListDebugNameW != nullptr) {
-                    return from_wide_string(cur_node->pCommandListDebugNameW);
+                    return Rx::WideString{reinterpret_cast<const Uint16*>(cur_node->pCommandListDebugNameW)}.to_utf8();
 
                 } else if(cur_node->pCommandListDebugNameA != nullptr) {
                     return cur_node->pCommandListDebugNameA;
@@ -308,7 +286,8 @@ namespace renderer {
             }();
 
             const auto command_queue_name = cur_node->pCommandQueueDebugNameW != nullptr ?
-                                                from_wide_string(cur_node->pCommandQueueDebugNameW) :
+                                                Rx::WideString{reinterpret_cast<const Uint16*>(cur_node->pCommandQueueDebugNameW)}
+                                                    .to_utf8() :
                                                 "Unknown command queue";
 
             const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
@@ -347,7 +326,9 @@ namespace renderer {
                             if(cur_breadcrumb_context.BreadcrumbIndex == i) {
                                 breadcrumb_output_string += Rx::String::format("\n\t\t%s%s",
                                                                                colors::CONTEXT_LABEL,
-                                                                               from_wide_string(cur_breadcrumb_context.pContextString));
+                                                                               Rx::WideString{reinterpret_cast<const Uint16*>(
+                                                                                                  cur_breadcrumb_context.pContextString)}
+                                                                                   .to_utf8());
                                 break;
                             }
                         }
@@ -372,7 +353,8 @@ namespace renderer {
                 ss << allocation->ObjectNameA;
 
             } else if(allocation->ObjectNameW != nullptr) {
-                ss << from_wide_string(allocation->ObjectNameW).data();
+                const auto& name = Rx::WideString{reinterpret_cast<const Uint16*>(allocation->ObjectNameW)}.to_utf8();
+                ss << name.data();
 
             } else {
                 ss << "Unnamed allocation";

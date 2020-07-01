@@ -21,11 +21,6 @@ namespace renderer {
     constexpr uint64_t CPU_FENCE_SIGNALED = 32;
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
     constexpr Uint32 FRAME_COMPLETE = 128;
-
-    std::wstring to_wide_string(const Rx::String& string);
-
-    Rx::String from_wide_string(const std::wstring& wide_string);
-
     DXGI_FORMAT to_dxgi_format(ImageFormat format);
 
     D3D12_BLEND to_d3d12_blend(BlendFactor factor);
