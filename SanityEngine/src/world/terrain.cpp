@@ -443,23 +443,14 @@ void Terrain::upload_new_tile_meshes() {
                 loaded_terrain_tiles.find(create_info.tilecoord)->loading_phase = TerrainTile::LoadingPhase::Complete;
             }
 
-            {
-                TracyD3D12Zone(renderer::RenderDevice::tracy_context,
-                               commands.get(),
-                               "Terrain::upload_new_tile_meshes::write_draw_command");
-                PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes::write_draw_command");
-
-                tile_culling_information.push_back(
-                    renderer::VisibleObjectCullingInformation{.aabb_x_min_max = {create_info.tilecoord.x,
-                                                                                 create_info.tilecoord.x + TILE_SIZE},
-                                                              .aabb_y_min_max = {},
-                                                              .aabb_z_min_max = {create_info.tilecoord.y,
-                                                                                 create_info.tilecoord.y + TILE_SIZE},
-                                                              .vertex_count = tile_mesh_ld.num_vertices,
-                                                              .start_vertex_location = tile_mesh_ld.first_vertex});
-
-                // TODO: Write information about this tile to a slot in a staging buffer
-            }
+            const auto cull_info = renderer::VisibleObjectCullingInformation{.aabb_x_min_max = {create_info.tilecoord.x,
+                                                                                                create_info.tilecoord.x + TILE_SIZE},
+                                                                             .aabb_y_min_max = {},
+                                                                             .aabb_z_min_max = {create_info.tilecoord.y,
+                                                                                                create_info.tilecoord.y + TILE_SIZE},
+                                                                             .vertex_count = tile_mesh_ld.num_vertices,
+                                                                             .start_vertex_location = tile_mesh_ld.first_vertex};
+            tile_culling_information.push_back(cull_info);
         });
 
         locked_tile_mesh_queue->clear();

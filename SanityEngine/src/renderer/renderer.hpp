@@ -46,6 +46,8 @@ namespace renderer {
          */
         Vec2f aabb_z_min_max{};
 
+        Mat4x4f model_matrix{};
+
         Uint32 vertex_count{};
 
         Uint32 start_vertex_location{};
