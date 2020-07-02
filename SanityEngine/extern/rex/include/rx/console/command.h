@@ -73,7 +73,7 @@ struct Command {
 private:
   bool execute();
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   Delegate m_delegate;
   Vector<Argument> m_arguments;
   String m_declaration;
@@ -184,7 +184,7 @@ inline const String& Command::name() const & {
 }
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& Command::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 } // namespace rx::console

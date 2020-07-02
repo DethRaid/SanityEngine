@@ -108,7 +108,7 @@ inline constexpr Log::Log(const char* _name, const SourceLocation& _source_locat
 
 template<typename... Ts>
 inline bool Log::write(Level _level, const char* _format, Ts&&... _arguments) {
-  if (sizeof...(Ts) != 0) {
+  if constexpr (sizeof...(Ts) > 0) {
     auto format = String::format(_format, Utility::forward<Ts>(_arguments)...);
     m_queue_event.signal(_level, format);
     return enqueue(this, _level, Utility::move(format));

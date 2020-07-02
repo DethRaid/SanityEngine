@@ -168,7 +168,7 @@ String::String(String&& contents_)
 }
 
 String::String(Memory::View _view)
-  : m_allocator{*_view.owner}
+  : m_allocator{_view.owner}
   , m_data{nullptr}
   , m_last{nullptr}
   , m_capacity{nullptr}
@@ -675,7 +675,7 @@ static Size utf16_len(const Uint16* _data) {
 
 // WideString
 WideString::WideString(Memory::Allocator& _allocator)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_data{nullptr}
   , m_size{0}
 {
@@ -693,7 +693,7 @@ WideString::WideString(Memory::Allocator& _allocator, const Uint16* _contents)
 
 WideString::WideString(Memory::Allocator& _allocator, const Uint16* _contents,
                        Size _size)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_size{_size}
 {
   m_data = reinterpret_cast<Uint16*>(allocator().allocate(sizeof(Uint16) * (_size + 1)));

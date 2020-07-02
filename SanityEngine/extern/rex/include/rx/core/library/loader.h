@@ -33,7 +33,7 @@ private:
   // Returns nullptr when |_symbol_name| isn't found.
   void* address_of(const char* _symbol_name) const;
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   void* m_handle;
 };
 

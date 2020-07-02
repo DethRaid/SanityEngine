@@ -130,7 +130,7 @@ private:
 
   void swap(String& other);
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   char* m_data;
   char* m_last;
   char* m_capacity;
@@ -181,8 +181,7 @@ struct WideString {
   constexpr Memory::Allocator& allocator() const;
 
 private:
-  Ref<Memory::Allocator> m_allocator;
-
+  Memory::Allocator* m_allocator;
   Uint16* m_data;
   Size m_size;
 };
@@ -198,7 +197,7 @@ struct FormatNormalize<String> {
 // String
 template<typename... Ts>
 inline String String::format(Memory::Allocator& _allocator, const char* _format, Ts&&... _arguments) {
-  return formatter(_allocator, _format, format_normalize(Utility::forward<Ts>(_arguments))...);
+  return formatter(_allocator, _format, FormatNormalize<traits::remove_cvref<Ts>>{}(Utility::forward<Ts>(_arguments))...);
 }
 
 template<typename... Ts>
@@ -212,7 +211,7 @@ inline String::String(Memory::Allocator& _allocator, const String& _contents)
 }
 
 inline constexpr String::String(Memory::Allocator& _allocator)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_data{m_buffer}
   , m_last{m_buffer}
   , m_capacity{m_buffer + k_small_string}
@@ -362,7 +361,7 @@ bool operator<(const String& lhs, const String& rhs);
 bool operator>(const String& lhs, const String& rhs);
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& String::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 // WideString
@@ -413,7 +412,7 @@ RX_HINT_FORCE_INLINE const Uint16* WideString::data() const {
 }
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& WideString::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 Size utf16_to_utf8(const Uint16* _utf16_contents, Size _length,

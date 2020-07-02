@@ -5,7 +5,7 @@
 namespace Rx {
 
 StaticPool::StaticPool(Memory::Allocator& _allocator, Size _object_size, Size _capacity)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_object_size{Memory::Allocator::round_to_alignment(_object_size)}
   , m_capacity{_capacity}
   , m_data{allocator().allocate(m_object_size * m_capacity)}

@@ -8,7 +8,7 @@
 namespace Rx {
 
 Bitset::Bitset(Memory::Allocator& _allocator, Size _size)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_size{_size}
   , m_data{nullptr}
 {
@@ -19,7 +19,7 @@ Bitset::Bitset(Memory::Allocator& _allocator, Size _size)
 }
 
 Bitset::Bitset(const Bitset& _bitset)
-  : m_allocator{_bitset.allocator()}
+  : m_allocator{&_bitset.allocator()}
   , m_size{_bitset.m_size}
   , m_data{reinterpret_cast<BitType*>(allocator().allocate(bytes_for_size(m_size)))}
 {
@@ -30,7 +30,7 @@ Bitset::Bitset(const Bitset& _bitset)
 Bitset& Bitset::operator=(Bitset&& bitset_) {
   RX_ASSERT(&bitset_ != this, "self assignment");
 
-  m_allocator = bitset_.allocator();
+  m_allocator = &bitset_.allocator();
   m_size = Utility::exchange(bitset_.m_size, 0);
   m_data = Utility::exchange(bitset_.m_data, nullptr);
 

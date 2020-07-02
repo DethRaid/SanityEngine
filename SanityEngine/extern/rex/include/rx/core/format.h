@@ -49,11 +49,6 @@ struct FormatNormalize<char[E]> {
   }
 };
 
-// Normalize for formatting.
-template<typename T>
-inline auto format_normalize(T&& _value) {
-  return FormatNormalize<traits::remove_cvref<T>>{}(Utility::forward<T>(_value));
-};
 
 // Low-level format functions.
 Size format_buffer_va_list(char* buffer_, Size _length, const char* _format, va_list _list);
@@ -64,7 +59,7 @@ inline Size format_buffer(char* buffer_, Size _length, const char* _format,
   Ts&&... _arguments)
 {
   return format_buffer_va_args(buffer_, _length, _format,
-    format_normalize(Utility::forward<Ts>(_arguments))...);
+    FormatNormalize<traits::remove_cvref<Ts>>{}(Utility::forward<Ts>(_arguments))...);
 }
 
 } // namespace rx

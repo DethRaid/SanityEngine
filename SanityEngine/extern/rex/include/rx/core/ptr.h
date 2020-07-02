@@ -3,7 +3,6 @@
 #include "rx/core/markers.h"
 #include "rx/core/assert.h"
 #include "rx/core/hash.h"
-#include "rx/core/ref.h"
 
 #include "rx/core/memory/system_allocator.h"
 
@@ -66,7 +65,7 @@ private:
   template<typename U>
   friend struct Ptr;
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   T* m_data;
 };
 
@@ -78,7 +77,7 @@ inline constexpr Ptr<T>::Ptr()
 
 template<typename T>
 inline constexpr Ptr<T>::Ptr(Memory::Allocator& _allocator)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_data{nullptr}
 {
 }
@@ -92,7 +91,7 @@ inline constexpr Ptr<T>::Ptr(Memory::Allocator& _allocator, NullPointer)
 template<typename T>
 template<typename U>
 inline constexpr Ptr<T>::Ptr(Memory::Allocator& _allocator, U* _data)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_data{_data}
 {
 }
@@ -165,7 +164,7 @@ RX_HINT_FORCE_INLINE T* Ptr<T>::get() const {
 
 template<typename T>
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& Ptr<T>::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 template<typename T>

@@ -1,7 +1,6 @@
 #ifndef RX_CORE_BITSET_H
 #define RX_CORE_BITSET_H
 #include "rx/core/assert.h"
-#include "rx/core/ref.h"
 
 #include "rx/core/traits/is_same.h"
 #include "rx/core/traits/return_type.h"
@@ -72,7 +71,7 @@ private:
   static Size index(Size bit);
   static Size offset(Size bit);
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   Size m_size;
   BitType* m_data;
 };
@@ -83,14 +82,14 @@ inline Bitset::Bitset(Size _size)
 }
 
 inline Bitset::Bitset(Bitset&& bitset_)
-  : m_allocator{bitset_.allocator()}
+  : m_allocator{bitset_.m_allocator}
   , m_size{Utility::exchange(bitset_.m_size, 0)}
   , m_data{Utility::exchange(bitset_.m_data, nullptr)}
 {
 }
 
 inline Bitset::~Bitset() {
-  allocator().deallocate(m_data);
+  m_allocator->deallocate(m_data);
 }
 
 inline void Bitset::set(Size _bit) {
@@ -155,7 +154,7 @@ inline void Bitset::each_unset(F&& _function) const {
 }
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& Bitset::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 } // namespace rx

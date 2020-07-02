@@ -6,6 +6,7 @@
 namespace Rx {
 
 using Size = decltype(sizeof 0);
+using Bool = bool;
 using Byte = unsigned char;
 using Sint8 = signed char;
 using Uint8 = unsigned char;

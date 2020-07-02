@@ -41,7 +41,7 @@ protected:
     Set<K> dependents;
   };
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   Map<K, Relations> m_map;
 };
 
@@ -53,7 +53,7 @@ inline TopologicalSort<K>::TopologicalSort()
 
 template<typename K>
 inline TopologicalSort<K>::TopologicalSort(Memory::Allocator& _allocator)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_map{allocator()}
 {
 }
@@ -147,7 +147,7 @@ RX_HINT_FORCE_INLINE void TopologicalSort<T>::clear() {
 
 template<typename T>
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& TopologicalSort<T>::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 template<typename T>

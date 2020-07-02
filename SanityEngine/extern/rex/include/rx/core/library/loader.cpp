@@ -20,7 +20,7 @@ namespace Rx::library {
 static Concurrency::SpinLock g_lock;
 
 Loader::Loader(Memory::Allocator& _allocator, const String& _file_name)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_handle{nullptr}
 {
   // Discourage passing file extensions on the filename.
@@ -29,7 +29,7 @@ Loader::Loader(Memory::Allocator& _allocator, const String& _file_name)
 
   Concurrency::ScopeLock lock{g_lock};
 #if defined(RX_PLATFORM_POSIX)
-  const auto path = String::format(m_allocator, "%s.so", _file_name);
+  const auto path = String::format(*m_allocator, "%s.so", _file_name);
   const auto name = path.data();
   if (auto handle = dlopen(name, RTLD_NOW | RTLD_LOCAL)) {
     m_handle = handle;
@@ -37,7 +37,7 @@ Loader::Loader(Memory::Allocator& _allocator, const String& _file_name)
     // There's a non-enforced convention of using a "lib" prefix for naming
     // libraries, attempt this when the above fails and the library name
     // doesn't begin with such a prefix.
-    const auto path = String::format(m_allocator, "lib%s.so", _file_name);
+    const auto path = String::format(*m_allocator, "lib%s.so", _file_name);
     const auto name = path.data();
     m_handle = dlopen(name, RTLD_NOW | RTLD_LOCAL);
   }
@@ -75,7 +75,7 @@ void* Loader::address_of(const char* _symbol_name) const {
       // macro, however some define it as a single underscore.
       //
       // Search again with the underscore.
-      const auto symbol = String::format(m_allocator, "_%s", _symbol_name);
+      const auto symbol = String::format(*m_allocator, "_%s", _symbol_name);
       if (auto function = dlsym(m_handle, symbol.data())) {
         return reinterpret_cast<void*>(function);
       }

@@ -2,7 +2,6 @@
 #define RX_CORE_SET_H
 #include "rx/core/hash.h"
 #include "rx/core/array.h"
-#include "rx/core/ref.h"
 
 #include "rx/core/traits/is_trivially_destructible.h"
 #include "rx/core/traits/return_type.h"
@@ -83,7 +82,7 @@ private:
 
   bool lookup_index(const K& _key, Size& _index) const;
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
 
   K* m_keys;
   Size* m_hashes;
@@ -102,7 +101,7 @@ inline Set<K>::Set()
 
 template<typename K>
 inline Set<K>::Set(Memory::Allocator& _allocator)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_keys{nullptr}
   , m_hashes{nullptr}
   , m_size{0}
@@ -476,7 +475,7 @@ inline bool Set<K>::each(F&& _function) const {
 
 template<typename K>
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& Set<K>::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 } // namespace rx

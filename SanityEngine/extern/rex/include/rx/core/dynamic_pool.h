@@ -37,14 +37,14 @@ private:
   [[nodiscard]] bool add_pool();
   Size pool_index_of(const Byte* _data) const;
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   Size m_object_size;
   Size m_objects_per_pool;
   Vector<Ptr<StaticPool>> m_pools;
 };
 
 inline constexpr DynamicPool::DynamicPool(Memory::Allocator& _allocator, Size _object_size, Size _objects_per_pool)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_object_size{_object_size}
   , m_objects_per_pool{_objects_per_pool}
   , m_pools{allocator()}
@@ -97,7 +97,7 @@ void DynamicPool::destroy(T* _data) {
 }
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& DynamicPool::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 RX_HINT_FORCE_INLINE Size DynamicPool::object_size() const {

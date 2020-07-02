@@ -2,7 +2,6 @@
 #define RX_CORE_MAP_H
 #include "rx/core/array.h"
 #include "rx/core/hash.h"
-#include "rx/core/ref.h"
 
 #include "rx/core/traits/is_trivially_destructible.h"
 #include "rx/core/traits/return_type.h"
@@ -96,7 +95,7 @@ private:
 
   bool lookup_index(const K& _key, Size& _index) const;
 
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
 
   K* m_keys;
   V* m_values;
@@ -116,7 +115,7 @@ inline Map<K, V>::Map()
 
 template<typename K, typename V>
 inline Map<K, V>::Map(Memory::Allocator& _allocator)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_keys{nullptr}
   , m_values{nullptr}
   , m_hashes{nullptr}
@@ -130,7 +129,7 @@ inline Map<K, V>::Map(Memory::Allocator& _allocator)
 
 template<typename K, typename V>
 inline Map<K, V>::Map(Map&& map_)
-  : m_allocator{map_.allocator()}
+  : m_allocator{&map_.allocator()}
   , m_keys{Utility::exchange(map_.m_keys, nullptr)}
   , m_values{Utility::exchange(map_.m_values, nullptr)}
   , m_hashes{Utility::exchange(map_.m_hashes, nullptr)}
@@ -596,7 +595,7 @@ inline bool Map<K, V>::each_pair(F&& _function) const {
 
 template<typename K, typename V>
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& Map<K, V>::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 } // namespace rx

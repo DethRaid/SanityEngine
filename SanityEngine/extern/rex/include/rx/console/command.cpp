@@ -79,7 +79,7 @@ Command::Argument::Argument(Argument&& _argument)
 
 Command::Command(Memory::Allocator& _allocator, const String& _name,
                  const char* _signature, Delegate&& _function)
-  : m_allocator{_allocator}
+  : m_allocator{&_allocator}
   , m_delegate{Utility::move(_function)}
   , m_arguments{allocator()}
   , m_declaration{allocator()}

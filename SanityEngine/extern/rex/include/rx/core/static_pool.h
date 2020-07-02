@@ -41,7 +41,7 @@ struct StaticPool {
   bool owns(const Byte* _data) const;
 
 private:
-  Ref<Memory::Allocator> m_allocator;
+  Memory::Allocator* m_allocator;
   Size m_object_size;
   Size m_capacity;
   Byte* m_data;
@@ -86,7 +86,7 @@ void StaticPool::destroy(T* _data) {
 }
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& StaticPool::allocator() const {
-  return m_allocator;
+  return *m_allocator;
 }
 
 RX_HINT_FORCE_INLINE Size StaticPool::object_size() const {
