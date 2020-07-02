@@ -443,11 +443,13 @@ void Terrain::upload_new_tile_meshes() {
                 loaded_terrain_tiles.find(create_info.tilecoord)->loading_phase = TerrainTile::LoadingPhase::Complete;
             }
 
-            const auto cull_info = renderer::VisibleObjectCullingInformation{.aabb_x_min_max = {create_info.tilecoord.x,
-                                                                                                create_info.tilecoord.x + TILE_SIZE},
+            const auto cull_info = renderer::VisibleObjectCullingInformation{.aabb_x_min_max = {static_cast<float>(create_info.tilecoord.x),
+                                                                                                static_cast<float>(create_info.tilecoord.x +
+                                                                                                                   TILE_SIZE)},
                                                                              .aabb_y_min_max = {},
-                                                                             .aabb_z_min_max = {create_info.tilecoord.y,
-                                                                                                create_info.tilecoord.y + TILE_SIZE},
+                                                                             .aabb_z_min_max = {static_cast<float>(create_info.tilecoord.y),
+                                                                                                static_cast<float>(create_info.tilecoord.y +
+                                                                                                                   TILE_SIZE)},
                                                                              .vertex_count = tile_mesh_ld.num_vertices,
                                                                              .start_vertex_location = tile_mesh_ld.first_vertex};
             tile_culling_information.push_back(cull_info);

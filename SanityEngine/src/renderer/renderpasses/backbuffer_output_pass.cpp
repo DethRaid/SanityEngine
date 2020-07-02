@@ -66,8 +66,8 @@ namespace renderer {
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
-        viewport.Width = size.x;
-        viewport.Height = size.y;
+        viewport.Width = static_cast<float>(size.x);
+        viewport.Height = static_cast<float>(size.y);
         commands->RSSetViewports(1, &viewport);
 
         D3D12_RECT scissor_rect{};

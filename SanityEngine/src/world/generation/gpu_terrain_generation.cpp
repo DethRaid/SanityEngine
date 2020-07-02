@@ -103,8 +103,8 @@ namespace terraingen {
         commands->SetPipelineState(place_oceans_pso.get());
 
         const auto desc = heightmap.resource->GetDesc();
-        const auto thread_group_count_x = desc.Width / 8;
-        const auto thread_group_count_y = desc.Height / 8;
+        const auto thread_group_count_x = static_cast<Uint32>(desc.Width / 8);
+        const auto thread_group_count_y = static_cast<Uint32>(desc.Height / 8);
         commands->Dispatch(thread_group_count_x, thread_group_count_y, 1);
     }
 
@@ -125,12 +125,12 @@ namespace terraingen {
         commands->SetPipelineState(water_flow_pso.get());
 
         const auto desc = heightmap_image.resource->GetDesc();
-        const auto thread_group_count_x = desc.Width / 8;
-        const auto thread_group_count_y = desc.Height / 8;
+        const auto thread_group_count_x = static_cast<Uint32>(desc.Width / 8);
+        const auto thread_group_count_y = static_cast<Uint32>(desc.Height / 8);
 
         const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_depth_image.resource.get());
 
-        for(Uint32 water_flow_iteration = 0; water_flow_iteration < static_cast<UINT>(cvar_num_water_iterations->get());
+        for(Uint32 water_flow_iteration = 0; water_flow_iteration < static_cast<Uint32>(cvar_num_water_iterations->get());
             water_flow_iteration++) {
             commands->ResourceBarrier(1, &water_depth_map_barrier);
             commands->Dispatch(thread_group_count_x, thread_group_count_y, 1);
