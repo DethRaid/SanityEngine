@@ -17,11 +17,7 @@
 namespace Rx::Filesystem {
 
 #if defined(RX_PLATFORM_WINDOWS)
-<<<<<<< HEAD
 struct FindContext {
-=======
-struct find_context {
->>>>>>> Fixed some more PascalCase
   Vector<Uint16> path_data;
   WIN32_FIND_DATAW find_data;
   HANDLE handle;
@@ -42,11 +38,7 @@ Directory::Directory(Memory::Allocator& _allocator, String&& path_)
   RX_ASSERT(context, "out of memory");
 
   // Convert |m_path| to UTF-16 for Windows.
-<<<<<<< HEAD
   const auto path_utf16 = m_path.to_utf16();
-=======
-  const WideString path_utf16 = m_path.to_utf16();
->>>>>>> Fixed some more PascalCase
   static constexpr const wchar_t k_path_extra[] = L"\\*";
   Vector<Uint16> path_data{allocator(), path_utf16.size() + sizeof k_path_extra,
     Utility::UninitializedTag{}};
@@ -60,15 +52,9 @@ Directory::Directory(Memory::Allocator& _allocator, String&& path_)
   if (handle != INVALID_HANDLE_VALUE) {
     // The directory exists and has been opened. Cache the handle and the path
     // conversion for |each|.
-<<<<<<< HEAD
     context->handle = handle;
     context->path_data = Utility::move(path_data);
     m_impl = reinterpret_cast<void*>(context);
-=======
-    Context->handle = handle;
-    Context->path_data = Utility::move(path_data);
-    m_impl = reinterpret_cast<void*>(Context);
->>>>>>> Fixed some more PascalCase
   } else {
     allocator().destroy<FindContext>(context);
     m_impl = nullptr;
@@ -157,8 +143,8 @@ void Directory::each(Function<void(Item&&)>&& _function) {
       continue;
     }
 
-    const WideString utf16_name = reinterpret_cast<Uint16*>(&Context->find_data.cFileName);
-    const Item::Type kind = Context->find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
+    const WideString utf16_name = reinterpret_cast<Uint16*>(&context->find_data.cFileName);
+    const Item::Type kind = context->find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
       ? Item::Type::k_directory
       : Item::Type::k_file;
 

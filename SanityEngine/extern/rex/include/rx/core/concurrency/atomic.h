@@ -32,7 +32,7 @@ enum class MemoryOrder {
 
 namespace Rx::Concurrency {
 
-namespace detail {
+namespace Detail {
   template<typename T>
   struct AtomicValue : AtomicBase<T> {
     AtomicValue() = default;
@@ -247,8 +247,8 @@ namespace detail {
 } // namespace detail
 
 template<typename T>
-struct Atomic : detail::Atomic<T> {
-  using Base = detail::Atomic<T>;
+struct Atomic : Detail::Atomic<T> {
+  using Base = Detail::Atomic<T>;
 
   Atomic() = default;
   constexpr Atomic(T _value) : Base{_value} {}
@@ -265,8 +265,8 @@ struct Atomic : detail::Atomic<T> {
 };
 
 template<typename T>
-struct Atomic<T*> : detail::Atomic<T*> {
-  using Base = detail::Atomic<T*>;
+struct Atomic<T*> : Detail::Atomic<T*> {
+  using Base = Detail::Atomic<T*>;
 
   Atomic() = default;
   constexpr Atomic(T* _value) : Base{_value} {}
@@ -282,19 +282,19 @@ struct Atomic<T*> : detail::Atomic<T*> {
   }
 
   T* fetch_add(PtrDiff _delta, MemoryOrder _order = MemoryOrder::k_seq_cst) volatile {
-    return detail::atomic_fetch_add(&this->m_value, _delta, _order);
+    return Detail::atomic_fetch_add(&this->m_value, _delta, _order);
   }
 
   T* fetch_add(PtrDiff _delta, MemoryOrder _order = MemoryOrder::k_seq_cst) {
-    return detail::atomic_fetch_add(&this->m_value, _delta, _order);
+    return Detail::atomic_fetch_add(&this->m_value, _delta, _order);
   }
 
   T* fetch_sub(PtrDiff _delta, MemoryOrder _order = MemoryOrder::k_seq_cst) volatile {
-    return detail::atomic_fetch_sub(&this->m_value, _delta, _order);
+    return Detail::atomic_fetch_sub(&this->m_value, _delta, _order);
   }
 
   T* fetch_sub(PtrDiff _delta, MemoryOrder _order = MemoryOrder::k_seq_cst) {
-    return detail::atomic_fetch_sub(&this->m_value, _delta, _order);
+    return Detail::atomic_fetch_sub(&this->m_value, _delta, _order);
   }
 
   T* operator++(int) volatile {
@@ -352,24 +352,20 @@ struct AtomicFlag {
   AtomicFlag() = default;
   constexpr AtomicFlag(bool _value) : m_value{_value} {}
 
-  bool test_and_set(MemoryOrder _order = MemoryOrder::k_seq_cst) volatile {
-    return detail::atomic_exchange(&m_value, true, _order);
+  bool test_and_set(MemoryOrder _order = MemoryOrder::k_seq_cst) volatile { return Detail::atomic_exchange(&m_value, true, _order);
   }
 
-  bool test_and_set(MemoryOrder _order = MemoryOrder::k_seq_cst)  {
-    return detail::atomic_exchange(&m_value, true, _order);
+  bool test_and_set(MemoryOrder _order = MemoryOrder::k_seq_cst)  { return Detail::atomic_exchange(&m_value, true, _order);
   }
 
-  void clear(MemoryOrder _order = MemoryOrder::k_seq_cst) volatile {
-    detail::atomic_store(&m_value, false, _order);
+  void clear(MemoryOrder _order = MemoryOrder::k_seq_cst) volatile { Detail::atomic_store(&m_value, false, _order);
   }
 
-  void clear(MemoryOrder _order = MemoryOrder::k_seq_cst) {
-    detail::atomic_store(&m_value, false, _order);
+  void clear(MemoryOrder _order = MemoryOrder::k_seq_cst) { Detail::atomic_store(&m_value, false, _order);
   }
 
 private:
-  detail::AtomicBase<bool> m_value;
+  Detail::AtomicBase<bool> m_value;
 };
 
 } // namespace rx::concurrency
