@@ -109,5 +109,22 @@ SpacesInSquareBrackets: false
 Standard:        Cpp11
 TabWidth:        4
 UseTab:          Never
+StatementMacros: [
+  'RX_HINT_UNUSED',
+  'RX_HINT_ASSUME_ALIGNED',
+  'RX_HINT_UNREACHABLE',
+  'RX_MARK_NO_COPY_ASSIGN',
+  'RX_MARK_NO_MOVE_ASSIGN',,
+  'RX_MARK_NO_COPY_CONSTRUCT',
+  'RX_MARK_NO_MOVE_CONSTRUCT',
+  'RX_MARK_NO_COPY',
+  'RX_MARK_NO_MOVE',
+  'RX_MARK_INTERFACE'
+]
+# [clang-11] WhitespaceSensitiveMacros: [
+#  'RX_ASSERT',
+#  'RX_PP_PASTE',
+#  'RX_PP_STRINGIZE'
+# ]
 ...
 
