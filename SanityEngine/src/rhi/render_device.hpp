@@ -61,6 +61,15 @@ namespace renderer {
         inline static tracy::D3D12QueueCtx* tracy_context{nullptr};
 #endif
 
+        struct IndirectDrawCommandWithRootConstant {
+            Uint32 constant;
+            Uint32 vertex_count;
+            Uint32 instance_count{1};
+            Uint32 start_index_location;
+            Int32 base_vertex_location;
+            Uint32 start_instance_location;
+        };
+
         com_ptr<ID3D12Device> device;
         com_ptr<ID3D12Device1> device1;
         com_ptr<ID3D12Device5> device5;

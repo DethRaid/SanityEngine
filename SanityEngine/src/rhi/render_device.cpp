@@ -1138,12 +1138,15 @@ namespace renderer {
     }
 
     void RenderDevice::create_command_signatures() {
-        const auto argument_descs = Rx::Array{
-            D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
-                                         .Constant = {.RootParameterIndex = ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                      .DestOffsetIn32BitValues = MATERIAL_INDEX_ROOT_CONSTANT_OFFSET,
-                                                      .Num32BitValuesToSet = 1}}};
-        const auto desc = D3D12_COMMAND_SIGNATURE_DESC{.NumArgumentDescs = static_cast<UINT>(argument_descs.size()),
+        const auto
+            argument_descs = Rx::Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
+                                                                    .Constant =
+                                                                        {.RootParameterIndex = ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                                         .DestOffsetIn32BitValues = MATERIAL_INDEX_ROOT_CONSTANT_OFFSET,
+                                                                         .Num32BitValuesToSet = 1}},
+                                       D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED}};
+        const auto desc = D3D12_COMMAND_SIGNATURE_DESC{.ByteStride = sizeof(IndirectDrawCommandWithRootConstant),
+                                                       .NumArgumentDescs = static_cast<UINT>(argument_descs.size()),
                                                        .pArgumentDescs = argument_descs.data()};
         device->CreateCommandSignature(&desc, standard_root_signature.get(), IID_PPV_ARGS(standard_drawcall_command_signature.put()));
     }
