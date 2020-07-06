@@ -21,3 +21,6 @@ namespace rex {
 } // namespace rex
 
 #define RX_SYSTEM_ALLOCATOR Rx::Memory::SystemAllocator::instance()
+
+constexpr bool RX_ITERATION_CONTINUE = true;
+constexpr bool RX_ITERATION_STOP = false;

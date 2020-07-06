@@ -1,9 +1,6 @@
 #pragma once
 
-#include <rx/core/types.h>
-
-constexpr bool RX_ITERATION_CONTINUE = true;
-constexpr bool RX_ITERATION_STOP = false;
+#include "core/types.hpp"   
 
 constexpr Uint32 AMD_PCI_VENDOR_ID = 0x1022;
 constexpr Uint32 INTEL_PCI_VENDOR_ID = 0x8086;
