@@ -38,7 +38,10 @@ namespace renderer {
     struct CommandList;
     struct RenderPipelineStateCreateInfo;
 
-    using DescriptorTableHandle = Rx::Pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>;
+    struct __declspec(uuid("8FE90F37-09FE-4D01-8E3F-65A8ABC4349F")) DescriptorTableHandle {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle;
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle;
+    };
 
     /*
      * \brief A device which can be used to render
@@ -61,13 +64,14 @@ namespace renderer {
         inline static tracy::D3D12QueueCtx* tracy_context{nullptr};
 #endif
 
+        // TODO: Express this struct in compute land
         struct IndirectDrawCommandWithRootConstant {
-            Uint32 constant;
-            Uint32 vertex_count;
+            Uint32 constant{};
+            Uint32 vertex_count{};
             Uint32 instance_count{1};
-            Uint32 start_index_location;
-            Int32 base_vertex_location;
-            Uint32 start_instance_location;
+            Uint32 start_index_location{};
+            Int32 base_vertex_location{};
+            Uint32 start_instance_location{};
         };
 
         com_ptr<ID3D12Device> device;
@@ -167,6 +171,8 @@ namespace renderer {
          * the table. All descriptors in the table are tightly packed
          */
         [[nodiscard]] DescriptorTableHandle allocate_descriptor_table(Uint32 num_descriptors);
+
+        [[nodiscard]] ID3D12DescriptorHeap* get_cbv_srv_uav_heap() const;
 
     private:
         Settings settings;

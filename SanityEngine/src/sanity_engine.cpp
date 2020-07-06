@@ -98,7 +98,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
         imgui_adapter = Rx::make_ptr<DearImguiAdapter>(RX_SYSTEM_ALLOCATOR, window, *renderer);
 
-        terraingen::create_pipelines(renderer->get_render_device());
+        terraingen::initialize(renderer->get_render_device());
 
         world = World::create({.seed = 666,
                                .height = 128,

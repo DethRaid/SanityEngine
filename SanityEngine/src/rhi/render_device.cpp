@@ -654,8 +654,8 @@ namespace renderer {
             cur_adapter->GetDesc(&desc);
 
             if(desc.VendorId == INTEL_PCI_VENDOR_ID && adapters.size() > 1) {
-                // Prefer something other then the Intel GPU
-                return true;
+                // If there's a GPU other than an Intel GPU available,
+                return RX_ITERATION_CONTINUE;
             }
 
             com_ptr<ID3D12Device> try_device;
@@ -672,7 +672,7 @@ namespace renderer {
                     logger->warning("Ignoring adapter %s - Doesn't have the flexible resource binding that Sanity Engine needs",
                                     Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8());
 
-                    return true;
+                    return RX_ITERATION_CONTINUE;
                 }
 
                 D3D12_FEATURE_DATA_SHADER_MODEL shader_model{D3D_SHADER_MODEL_6_5};
@@ -682,14 +682,14 @@ namespace renderer {
                                     Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8(),
                                     to_string(res));
 
-                    return true;
+                    return RX_ITERATION_CONTINUE;
 
                 } else if(shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_5) {
                     // Only supports old-ass shaders
 
                     logger->warning("Ignoring adapter %s - Doesn't support shader model 6.5",
                                     Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8());
-                    return true;
+                    return RX_ITERATION_CONTINUE;
                 }
 
                 adapter = cur_adapter;
@@ -722,14 +722,14 @@ namespace renderer {
 
 #endif
 
-                return false;
+                return RX_ITERATION_STOP;
 
             } else {
                 logger->warning("Ignoring adapter %s - doesn't support D3D12",
                                 Rx::WideString{reinterpret_cast<const Uint16*>(desc.Description)}.to_utf8());
             }
 
-            return true;
+            return RX_ITERATION_CONTINUE;
         });
 
         if(!device) {
@@ -1018,6 +1018,8 @@ namespace renderer {
 
         return {cpu_handle, gpu_handle};
     }
+
+    ID3D12DescriptorHeap* RenderDevice::get_cbv_srv_uav_heap() const { return cbv_srv_uav_heap.get(); }
 
     void RenderDevice::create_material_resource_binders() {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());

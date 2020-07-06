@@ -18,7 +18,7 @@ namespace terraingen {
     /*!
      * \brief Creates the PSOs that will be used for terrain generation
      */
-    void create_pipelines(renderer::RenderDevice& device);
+    void initialize(renderer::RenderDevice& device);
 
     /*!
      * \brief Places oceans in the provided heightmap
