@@ -14,10 +14,11 @@
 
 using winrt::com_ptr;
 
+#define PRIVATE_DATA_ATTRIBS(type) __uuidof(type), sizeof(type)
+
 namespace renderer {
     namespace guids {
         static GUID gpu_frame_idx;
-        static GUID descriptor_table_handles_guid;
 
         void init();
     } // namespace guids
@@ -31,21 +32,17 @@ namespace renderer {
     //     ->std::convertible_to<HRESULT>;
     // };
 
-    inline void set_object_name(ID3D12Object* object, const Rx::String& name) {
+    RX_HINT_FORCE_INLINE void set_object_name(ID3D12Object* object, const Rx::String& name) {
         const auto wide_name = name.to_utf16();
 
         object->SetName(reinterpret_cast<LPCWSTR>(wide_name.data()));
     }
 
-    inline void set_gpu_frame_idx(ID3D12Object* object, Uint32 frame_idx) {
+    RX_HINT_FORCE_INLINE void set_gpu_frame_idx(ID3D12Object* object, Uint32 frame_idx) {
         object->SetPrivateData(guids::gpu_frame_idx, sizeof(Uint32), &frame_idx);
     }
 
-    inline void store_descriptor_table_handle(ID3D12Object* object, const DescriptorTableHandle& table) {
-        object->SetPrivateData(guids::descriptor_table_handles_guid, sizeof(DescriptorTableHandle), &table);
-    }
-
-    [[nodiscard]] inline Rx::String get_object_name(ID3D12Object* object) {
+    [[nodiscard]] RX_HINT_FORCE_INLINE Rx::String get_object_name(ID3D12Object* object) {
         UINT data_size{sizeof(wchar_t*)};
         wchar_t* name{nullptr};
         const auto result = object->GetPrivateData(WKPDID_D3DDebugObjectName, &data_size, &name);
@@ -57,30 +54,43 @@ namespace renderer {
         return Rx::WideString{reinterpret_cast<const Uint16*>(name)}.to_utf8();
     }
 
-    [[nodiscard]] inline Rx::Optional<Uint32> get_gpu_frame_idx(ID3D12Object* object) {
+    [[nodiscard]] RX_HINT_FORCE_INLINE Rx::Optional<Uint32> get_gpu_frame_idx(ID3D12Object* object) {
         UINT data_size{sizeof(Uint32)};
         Uint32 gpu_frame_idx{0};
         const auto result = object->GetPrivateData(guids::gpu_frame_idx, &data_size, &gpu_frame_idx);
         if(FAILED(result)) {
-            private_data_logger->error("Could not get the GPU frame of object %s", get_object_name(object));
+            private_data_logger->error("Could not get the GPU frame of object %s", object);
             return Rx::nullopt;
         }
 
         return gpu_frame_idx;
     }
 
+    template <typename ObjectType>
+    [[nodiscard]] RX_HINT_FORCE_INLINE ObjectType retrieve_object(ID3D12Object* d3d12_object) {
+        ObjectType object{};
+        auto object_size = static_cast<Uint32>(sizeof(ObjectType));
+        const auto result = d3d12_object->GetPrivateData(__uuidof(ObjectType), &object_size, &object);
+        if(FAILED(result)) {
+            private_data_logger->error("Could not retrieve object from D3D12 object %s", d3d12_object);
+            return {};
+        }
+
+        return object;
+    }
+
     template <typename InterfaceType>
-    void store_com_interface(ID3D12Object* object, InterfaceType* com_object) {
+    RX_HINT_FORCE_INLINE void store_com_interface(ID3D12Object* object, InterfaceType* com_object) {
         object->SetPrivateDataInterface(__uuidof(InterfaceType), com_object);
     }
 
     template <typename InterfaceType>
-    com_ptr<InterfaceType> get_com_interface(ID3D12Object* object) {
+    RX_HINT_FORCE_INLINE com_ptr<InterfaceType> get_com_interface(ID3D12Object* object) {
         UINT data_size{sizeof(InterfaceType*)};
         InterfaceType* com_interface{nullptr};
         const auto result = object->GetPrivateData(__uuidof(InterfaceType), &data_size, &com_interface);
         if(FAILED(result)) {
-            private_data_logger->error("Could not retrieve COM interface from D3D12 object %s", get_object_name(object));
+            private_data_logger->error("Could not retrieve COM interface from D3D12 object %s", object);
         }
 
         com_ptr<InterfaceType> com_pointer{};
