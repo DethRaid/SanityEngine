@@ -329,6 +329,9 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
                 const auto width = static_cast<Uint32>(tile_heightmap_row.size());
                 const auto face_start_idx = static_cast<Uint32>(y * width + x);
 
+                // TODO: Triangulate the terrain mesh such that the vertices joined by an edge have more similar normals the the vertices
+                // that don't share an edge
+
                 tile_indices.push_back(face_start_idx);
                 tile_indices.push_back(face_start_idx + 1);
                 tile_indices.push_back(face_start_idx + width);
