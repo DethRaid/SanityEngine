@@ -17,12 +17,6 @@ using winrt::com_ptr;
 #define PRIVATE_DATA_ATTRIBS(type) __uuidof(type), sizeof(type)
 
 namespace renderer {
-    namespace guids {
-        static GUID gpu_frame_idx;
-
-        void init();
-    } // namespace guids
-
     RX_LOG("\033[32mD3D12PrivateData\033[0m", private_data_logger);
 
     // template <typename T>
@@ -38,10 +32,6 @@ namespace renderer {
         object->SetName(reinterpret_cast<LPCWSTR>(wide_name.data()));
     }
 
-    RX_HINT_FORCE_INLINE void set_gpu_frame_idx(ID3D12Object* object, Uint32 frame_idx) {
-        object->SetPrivateData(guids::gpu_frame_idx, sizeof(Uint32), &frame_idx);
-    }
-
     [[nodiscard]] RX_HINT_FORCE_INLINE Rx::String get_object_name(ID3D12Object* object) {
         UINT data_size{sizeof(wchar_t*)};
         wchar_t* name{nullptr};
@@ -52,18 +42,6 @@ namespace renderer {
         }
 
         return Rx::WideString{reinterpret_cast<const Uint16*>(name)}.to_utf8();
-    }
-
-    [[nodiscard]] RX_HINT_FORCE_INLINE Rx::Optional<Uint32> get_gpu_frame_idx(ID3D12Object* object) {
-        UINT data_size{sizeof(Uint32)};
-        Uint32 gpu_frame_idx{0};
-        const auto result = object->GetPrivateData(guids::gpu_frame_idx, &data_size, &gpu_frame_idx);
-        if(FAILED(result)) {
-            private_data_logger->error("Could not get the GPU frame of object %s", object);
-            return Rx::nullopt;
-        }
-
-        return gpu_frame_idx;
     }
 
     template <typename ObjectType>

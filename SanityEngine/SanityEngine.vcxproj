@@ -138,7 +138,6 @@
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
-    <ClCompile Include="src\renderer\rhi\d3d12_private_data.cpp" />
     <ClCompile Include="src\rhi\bind_group.cpp" />
     <ClCompile Include="src\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\rhi\helpers.cpp" />

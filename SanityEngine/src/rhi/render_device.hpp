@@ -38,6 +38,10 @@ namespace renderer {
     struct CommandList;
     struct RenderPipelineStateCreateInfo;
 
+    struct __declspec(uuid("5A6A1D35-71A1-4DF5-81AA-EF05E0492280")) GpuFrameIdx {
+        Uint32 idx;
+    };
+
     struct __declspec(uuid("8FE90F37-09FE-4D01-8E3F-65A8ABC4349F")) DescriptorTableHandle {
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle;
         CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle;

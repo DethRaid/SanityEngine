@@ -415,6 +415,19 @@ void Terrain::upload_new_tile_meshes() {
             const auto tile_mesh_ld = meshes.add_mesh(create_info.vertices, create_info.indices, commands.get());
             const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
 
+            float max_y = 0;
+            float min_y = 256;
+
+            create_info.vertices.each_fwd([&](const StandardVertex& vertex) {
+                if(vertex.position.y < min_y) {
+                    min_y = vertex.position.y;
+                }
+
+                if(vertex.position.y > max_y) {
+                    max_y = vertex.position.y;
+                }
+            });
+
             const Rx::Vector<D3D12_RESOURCE_BARRIER>
                 barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.get(),
                                                                           D3D12_RESOURCE_STATE_COPY_DEST,
@@ -449,7 +462,7 @@ void Terrain::upload_new_tile_meshes() {
             const auto cull_info = renderer::VisibleObjectCullingInformation{.aabb_x_min_max = {static_cast<float>(create_info.tilecoord.x),
                                                                                                 static_cast<float>(create_info.tilecoord.x +
                                                                                                                    TILE_SIZE)},
-                                                                             .aabb_y_min_max = {},
+                                                                             .aabb_y_min_max = {min_y, max_y},
                                                                              .aabb_z_min_max = {static_cast<float>(create_info.tilecoord.y),
                                                                                                 static_cast<float>(create_info.tilecoord.y +
                                                                                                                    TILE_SIZE)},

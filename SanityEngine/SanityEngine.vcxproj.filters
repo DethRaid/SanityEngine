@@ -558,9 +558,6 @@
     <ClCompile Include="extern\rex\include\rx\core\format.cpp">
       <Filter>Rex\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\rhi\d3d12_private_data.cpp">
-      <Filter>Source Files\renderer\rhi</Filter>
-    </ClCompile>
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp">
       <Filter>Source Files\world\generation</Filter>
     </ClCompile>

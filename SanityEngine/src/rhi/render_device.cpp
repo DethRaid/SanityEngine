@@ -67,8 +67,6 @@ namespace renderer {
         }
 #endif
 
-        guids::init();
-
         initialize_dxgi();
 
         select_adapter();
@@ -428,7 +426,8 @@ namespace renderer {
 
         commands->SetName(L"Unnamed Sanity Engine command list");
         store_com_interface(commands.get(), command_allocator.get());
-        set_gpu_frame_idx(commands.get(), *frame_idx);
+        const auto gpu_frame_idx = GpuFrameIdx{*frame_idx};
+        commands->SetPrivateData(PRIVATE_DATA_ATTRIBS(GpuFrameIdx), &gpu_frame_idx);
         command_lists_outside_render_device.fetch_add(1);
         return commands;
     }
@@ -443,13 +442,10 @@ namespace renderer {
 #endif
         }
 
-        const auto frame_idx = get_gpu_frame_idx(commands.get());
-        if(!frame_idx) {
-            Rx::abort("Submitted command list %s without an associated GPU frame index", get_object_name(commands.get()));
-        }
+        const auto frame_idx = retrieve_object<GpuFrameIdx>(commands.get()).idx;
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
-        command_lists_to_submit_on_end_frame[*frame_idx].push_back(commands);
+        command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
 
     BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
