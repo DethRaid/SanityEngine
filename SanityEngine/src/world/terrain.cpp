@@ -42,17 +42,55 @@ struct GenerateTileTaskArgs {
     Vec2i tilecoord{};
 };
 
-Terrain::Terrain(const TerrainSize& size,
+TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
+    ZoneScoped;
+
+    auto& device = renderer.get_render_device();
+    auto commands = device.create_command_list();
+    commands->SetName(L"Terrain::generate_terrain");
+
+    const auto total_pixels_in_maps = params.width * params.height;
+    auto data = TerrainData{.size = {.max_latitude_in = params.height / 2.0, .max_longitude_in = params.width / 2.0},
+                            .heightmap = Rx::Vector<Float32>{total_pixels_in_maps}};
+
+    {
+        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::generate_terrain");
+        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
+
+        // Generate heightmap
+        generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
+        const auto heightmap_image = renderer.get_image(data.heightmap_handle);
+
+        const auto heightmap_barrier = CD3DX12_RESOURCE_BARRIER::UAV(heightmap_image.resource.get());
+
+        commands->ResourceBarrier(1, &heightmap_barrier);
+
+        // Place water sources
+        place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
+        const auto water_depth_image = renderer.get_image(data.water_depth_handle);
+
+        terraingen::place_oceans(commands, renderer, params.min_terrain_depth_under_ocean + params.max_ocean_depth, data);
+
+        // Let water flow around
+        terraingen::compute_water_flow(commands, renderer, data);
+    }
+
+    device.submit_command_list(Rx::Utility::move(commands));
+
+    return data;
+}
+
+Terrain::Terrain(const TerrainData& data,
                  renderer::Renderer& renderer_in,
                  FastNoiseSIMD& noise_generator_in,
                  SynchronizedResource<entt::registry>& registry_in)
     : renderer{&renderer_in},
       noise_generator{&noise_generator_in},
       registry{&registry_in},
-      max_latitude{size.max_latitude_in},
-      max_longitude{size.max_longitude_in},
-      min_terrain_height{size.min_terrain_height_in},
-      max_terrain_height{size.max_terrain_height_in} {
+      max_latitude{data.size.max_latitude_in},
+      max_longitude{data.size.max_longitude_in},
+      min_terrain_height{data.size.min_terrain_height_in},
+      max_terrain_height{data.size.max_terrain_height_in} {
 
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
@@ -131,43 +169,6 @@ Float32 Terrain::get_terrain_height(const Vec2f& location) {
 
 Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3f& position) {
     return Vec2i{static_cast<Int32>(round(position.x)), static_cast<Int32>(round(position.z))} / static_cast<Int32>(TILE_SIZE);
-}
-
-TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
-    ZoneScoped;
-
-    auto& device = renderer.get_render_device();
-    auto commands = device.create_command_list();
-    commands->SetName(L"Terrain::generate_terrain");
-
-    const auto total_pixels_in_maps = params.width * params.height;
-    auto data = TerrainData{.width = params.width, .height = params.height, .heightmap = Rx::Vector<Float32>{total_pixels_in_maps}};
-
-    {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::generate_terrain");
-        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
-
-        // Generate heightmap
-        generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
-        const auto heightmap_image = renderer.get_image(data.heightmap_handle);
-
-        const auto heightmap_barrier = CD3DX12_RESOURCE_BARRIER::UAV(heightmap_image.resource.get());
-
-        commands->ResourceBarrier(1, &heightmap_barrier);
-
-        // Place water sources
-        place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
-        const auto water_depth_image = renderer.get_image(data.water_depth_handle);
-
-        terraingen::place_oceans(commands, renderer, params.min_terrain_depth_under_ocean + params.max_ocean_depth, data);
-
-        // Let water flow around
-        terraingen::compute_water_flow(commands, renderer, data);
-    }
-
-    device.submit_command_list(Rx::Utility::move(commands));
-
-    return data;
 }
 
 void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,

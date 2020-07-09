@@ -74,9 +74,9 @@ private:
 
     void initialize_scripting_runtime();
 
-    void register_horus_api() const;
+    void register_wren_api() const;
 
-    Rx::Ptr<horus::ScriptingRuntime> scripting_runtime;
+    Rx::Ptr<script::ScriptingRuntime> scripting_runtime;
 
 #pragma region Spawning
     void create_planetary_atmosphere();
@@ -86,6 +86,8 @@ private:
     void create_first_person_player();
 
     void load_bve_train(const Rx::String& filename);
+
+    void create_environment_object_editor();
 
     void load_3d_object(const Rx::String& filename);
 #pragma endregion

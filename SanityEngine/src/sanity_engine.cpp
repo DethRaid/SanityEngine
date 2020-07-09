@@ -17,6 +17,7 @@
 #include "loading/entity_loading.hpp"
 #include "rhi/render_device.hpp"
 #include "ui/fps_display.hpp"
+#include "ui/scripted_ui_panel.hpp"
 #include "ui/ui_components.hpp"
 #include "world/generation/gpu_terrain_generation.hpp"
 #include "world/world.hpp"
@@ -86,7 +87,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings);
         logger->info("Initialized renderer");
 
-        // initialize_scripting_runtime();
+        initialize_scripting_runtime();
 
         bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
 
@@ -111,6 +112,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
                               *renderer);
 
         player_controller->set_current_terrain(world->get_terrain());
+
+        create_environment_object_editor();
 
         world->tick(0);
 
@@ -184,12 +187,12 @@ SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return regi
 World* SanityEngine::get_world() const { return world.get(); }
 
 void SanityEngine::initialize_scripting_runtime() {
-    scripting_runtime = horus::ScriptingRuntime::create(registry);
+    scripting_runtime = script::ScriptingRuntime::create(registry);
     if(!scripting_runtime) {
         Rx::abort("Could not initialize scripting runtime");
     }
 
-    register_horus_api();
+    register_wren_api();
 
     const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
     if(!success) {
@@ -197,7 +200,7 @@ void SanityEngine::initialize_scripting_runtime() {
     }
 }
 
-void SanityEngine::register_horus_api() const {
+void SanityEngine::register_wren_api() const {
     /*
      * Everything in this method is auto-generated when the code is re-built. You should not put any code you care about in this method, nor
      * should you modify the code in this method in any way
@@ -248,6 +251,15 @@ void SanityEngine::load_bve_train(const Rx::String& filename) {
     if(!success) {
         logger->error("Could not load train file {}", filename.data());
     }
+}
+
+void SanityEngine::create_environment_object_editor() {
+    auto* handle = scripting_runtime->instantiate("engine/ui", "EnvironmentObjectEditor");
+    auto panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
+
+    auto locked_registry = registry.lock();
+    const auto entity = locked_registry->create();
+    locked_registry->assign<ui::ScriptedUiPanel>(entity, Rx::Utility::move(panel));
 }
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {

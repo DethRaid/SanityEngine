@@ -150,7 +150,9 @@
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />
+    <ClCompile Include="src\ui\scripted_ui_panel.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
+    <ClCompile Include="src\ui\wrap_imgui_codegen.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
     <ClCompile Include="src\world\generation\dual_contouring.cpp" />
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
@@ -395,8 +397,10 @@
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
     <ClInclude Include="src\ui\fps_display.hpp" />
+    <ClInclude Include="src\ui\scripted_ui_panel.hpp" />
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
+    <ClInclude Include="src\ui\wrap_imgui_codegen.h" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
     <ClInclude Include="src\world\generation\dual_contouring.hpp" />
     <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />

@@ -8,7 +8,7 @@
 #include "scripting_runtime.hpp"
 #include "world/world.hpp"
 
-namespace horus {
+namespace script {
     Entity::Entity(WrenHandle* handle_in, const entt::entity entity_in, SynchronizedResource<entt::registry>& registry_in)
         : handle{handle_in}, entity{entity_in}, registry{&registry_in} {}
 
@@ -92,7 +92,7 @@ namespace horus {
 
 // ReSharper disable once CppInconsistentNaming
 void _entity_get_tags(WrenVM* vm) {
-    auto* entity = static_cast<horus::Entity*>(wrenGetSlotForeign(vm, 0));
+    auto* entity = static_cast<script::Entity*>(wrenGetSlotForeign(vm, 0));
 
     const auto& tags = entity->get_tags();
 
@@ -109,7 +109,7 @@ void _entity_get_tags(WrenVM* vm) {
 
 // ReSharper disable once CppInconsistentNaming
 void _entity_get_world(WrenVM* vm) {
-    auto* entity = static_cast<horus::Entity*>(wrenGetSlotForeign(vm, 0));
+    auto* entity = static_cast<script::Entity*>(wrenGetSlotForeign(vm, 0));
     auto* world = entity->get_world();
 
     if(world) {
@@ -122,7 +122,7 @@ void _entity_get_world(WrenVM* vm) {
 
 // ReSharper disable once CppInconsistentNaming
 void _component_get_entity(WrenVM* vm) {
-    auto* component = static_cast<horus::Component*>(wrenGetSlotForeign(vm, 0));
+    auto* component = static_cast<script::Component*>(wrenGetSlotForeign(vm, 0));
 
     const auto entity = component->get_entity();
 
@@ -130,7 +130,7 @@ void _component_get_entity(WrenVM* vm) {
 }
 
 // ReSharper disable once CppInconsistentNaming
-void _scripting_entity_scripting_api_register_with_scripting_runtime(horus::ScriptingRuntime& runtime) {
+void _scripting_entity_scripting_api_register_with_scripting_runtime(script::ScriptingRuntime& runtime) {
     runtime.register_script_function({.module_name = "sanity_engine",
                                       .class_name = "Entity",
                                       .is_static = false,
@@ -150,7 +150,7 @@ void _scripting_entity_scripting_api_register_with_scripting_runtime(horus::Scri
                                      _component_get_entity);
 
     runtime.register_script_object_allocator(
-        horus::ScriptingClassName{.module_name = "sanity_engine", .class_name = "Entity"},
+        script::ScriptingClassName{.module_name = "sanity_engine", .class_name = "Entity"},
         WrenForeignClassMethods{.allocate = +[](WrenVM* vm) { auto* data = wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenHandle*)); },
                                 .finalize = +[](void* data) {}});
 }

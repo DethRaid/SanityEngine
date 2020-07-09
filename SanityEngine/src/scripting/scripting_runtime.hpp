@@ -18,7 +18,7 @@ namespace std {
     }
 } // namespace std
 
-namespace horus {
+namespace script {
     struct ScriptingClassName {
         Rx::String module_name{};
 
@@ -33,6 +33,13 @@ namespace horus {
         bool is_static{false};
 
         Rx::String method_signature{};
+    };
+
+    struct UiPanelInstance
+    {
+        WrenHandle* draw_method_handle;
+
+        WrenHandle* instance_handle;
     };
 
     class ScriptingRuntime {
@@ -60,7 +67,11 @@ namespace horus {
 
         void register_script_function(const ScriptingFunctionName& name, WrenForeignMethodFn function);
 
+        [[nodiscard]] WrenVM* get_vm() const;
+
         [[nodiscard]] WrenHandle* create_entity() const;
+
+        [[nodiscard]] WrenHandle* instantiate(const Rx::String& module_name, const Rx::String& class_name);
 
         [[nodiscard]] Rx::Optional<Component> create_component(entt::entity entity,
                                                                const char* module_name,

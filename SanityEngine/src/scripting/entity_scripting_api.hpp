@@ -18,7 +18,7 @@ namespace Rx {
 
 class World;
 
-namespace horus {
+namespace script {
     class ScriptingRuntime;
 
     struct ScriptComponentMethods {
@@ -130,5 +130,5 @@ namespace horus {
  */
 
 // ReSharper disable once CppInconsistentNaming
-void _scripting_entity_scripting_api_register_with_scripting_runtime(horus::ScriptingRuntime& runtime);
+void _scripting_entity_scripting_api_register_with_scripting_runtime(script::ScriptingRuntime& runtime);
 #pragma endregion

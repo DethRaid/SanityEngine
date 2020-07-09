@@ -67,12 +67,11 @@ public:
                                  renderer::Renderer& renderer);
 
     explicit World(const glm::uvec2& size_in,
-                   Uint32 min_terrain_height,
-                   Uint32 max_terrain_height,
                    Rx::Ptr<FastNoiseSIMD> noise_generator_in,
                    entt::entity player_in,
                    SynchronizedResource<entt::registry>& registry_in,
-                   renderer::Renderer& renderer_in);
+                   renderer::Renderer& renderer_in,
+                   Rx::Ptr<Terrain> terrain_in);
 
     void tick(Float32 delta_time);
 
@@ -105,7 +104,7 @@ private:
 
     WrenHandle* handle;
 
-    void register_component(horus::Component& component);
+    void register_component(script::Component& component);
 
     void tick_script_components(Float32 delta_time);
 };

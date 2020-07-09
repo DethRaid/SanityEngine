@@ -7,7 +7,6 @@
 #include <rx/core/prng/mt19937.h>
 #include <rx/math/vec2.h>
 
-
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "core/types.hpp"
@@ -42,33 +41,33 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
     generate_climate_data(terrain_data, params, renderer);
 
+    auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
+                                         TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height},
+                                         renderer,
+                                         *noise_generator,
+                                         registry);
+
     return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
                                glm::uvec2{params.width, params.height},
-                               min_terrain_height,
-                               max_terrain_height,
                                Rx::Utility::move(noise_generator),
                                player,
                                registry,
-                               renderer);
+                               renderer,
+                               Rx::Utility::move(terrain));
 }
 
 World::World(const glm::uvec2& size_in,
-             const Uint32 min_terrain_height,
-             const Uint32 max_terrain_height,
              Rx::Ptr<FastNoiseSIMD> noise_generator_in,
-             entt::entity player_in,
+             const entt::entity player_in,
              SynchronizedResource<entt::registry>& registry_in,
-             renderer::Renderer& renderer_in)
+             renderer::Renderer& renderer_in,
+             Rx::Ptr<Terrain> terrain_in)
     : size{size_in},
       noise_generator{Rx::Utility::move(noise_generator_in)},
       player{player_in},
       registry{&registry_in},
       renderer{&renderer_in},
-      terrain{Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
-                                    TerrainSize{size_in.y / 2, size_in.x / 2, min_terrain_height, max_terrain_height},
-                                    renderer_in,
-                                    *noise_generator,
-                                    registry_in)} {}
+      terrain{Rx::Utility::move(terrain_in)} {}
 
 void World::tick(const Float32 delta_time) {
     ZoneScoped;
@@ -120,7 +119,7 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
      */
 }
 
-void World::register_component(horus::Component& component) {
+void World::register_component(script::Component& component) {
     ZoneScoped;
 
     component.begin_play(*this);

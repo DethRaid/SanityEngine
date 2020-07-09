@@ -9,13 +9,15 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "rhi/helpers.hpp"
+#include "ui/wrap_imgui_codegen.h"
 #include "world/world.hpp"
 
-namespace horus {
+namespace script {
     RX_LOG("ScriptingRuntime", logger);
     RX_LOG("Wren", script_logger); // namespace horus
 
     static const Rx::String SANITY_ENGINE_MODULE_NAME = "SanityEngine";
+    constexpr const char* CONSTRUCTOR_NAME = CONSTRUCTOR_NAME;
 
     void ScriptingRuntime::wren_error(
         WrenVM* /* vm */, WrenErrorType /* type */, const char* module_name, const int line, const char* message) {
@@ -26,6 +28,10 @@ namespace horus {
 
     WrenForeignMethodFn ScriptingRuntime::wren_bind_foreign_method(
         WrenVM* vm, const char* module_name, const char* class_name, const bool is_static, const char* signature) {
+        if(module_name == "imgui") {
+            return wrap_imgui::bindForeignMethod(vm, class_name, is_static, signature);
+        }
+
         auto* user_data = wrenGetUserData(vm);
         if(user_data != nullptr) {
             auto* runtime = static_cast<ScriptingRuntime*>(user_data);
@@ -36,6 +42,13 @@ namespace horus {
     }
 
     WrenForeignClassMethods ScriptingRuntime::wren_bind_foreign_class(WrenVM* vm, const char* module_name, const char* class_name) {
+        if(module_name == "imgui") {
+            WrenForeignClassMethods methods = {nullptr, nullptr};
+            if(wrap_imgui::bindForeignClass(vm, class_name, methods)) {
+                return methods;
+            }
+        }
+
         auto* user_data = wrenGetUserData(vm);
         if(user_data != nullptr) {
             auto* runtime = static_cast<ScriptingRuntime*>(user_data);
@@ -56,6 +69,10 @@ namespace horus {
     }
 
     char* ScriptingRuntime::wren_load_module(WrenVM* vm, const char* module_name) {
+        if(module_name == "imgui") {
+            return wrap_imgui::loadModule(vm);
+        }
+
         auto* user_data = wrenGetUserData(vm);
         if(user_data != nullptr) {
             auto* runtime = static_cast<ScriptingRuntime*>(user_data);
@@ -314,12 +331,14 @@ namespace horus {
         wren_class.insert(name.method_signature, function);
     }
 
+    WrenVM* ScriptingRuntime::get_vm() const { return vm; }
+
     WrenHandle* ScriptingRuntime::create_entity() const {
         // Load the class into a slot so we can get methods from it
         wrenEnsureSlots(vm, 1);
-        wrenGetVariable(vm, "sanity_engine", "Entity", 0);
+        wrenGetVariable(vm, "engine", "Entity", 0);
 
-        auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
+        auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
         if(constructor_handle == nullptr) {
             logger->error("Could not get handle to constructor for Entity");
             return nullptr;
@@ -353,6 +372,46 @@ namespace horus {
         }
     }
 
+    WrenHandle* ScriptingRuntime::instantiate(const Rx::String& module_name, const Rx::String& class_name) {
+        wrenEnsureSlots(vm, 1);
+        wrenGetVariable(vm, module_name.data(), class_name.data(), 0);
+
+        auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
+        if(constructor_handle == nullptr) {
+            logger->error("Could not get handle to constructor for {}/{}", module_name, class_name);
+            return nullptr;
+        }
+
+        const auto result = wrenCall(vm, constructor_handle);
+        switch(result) {
+            case WREN_RESULT_SUCCESS: {
+                auto* component_handle = wrenGetSlotHandle(vm, 0);
+                if(component_handle == nullptr) {
+                    logger->error("Could not instantiate {}/{}", module_name, class_name);
+                }
+
+                return component_handle;
+            }
+
+            case WREN_RESULT_COMPILE_ERROR: {
+                logger->error("Compilation error when instantiating an {}/{}", module_name, class_name);
+                return nullptr;
+            }
+
+            case WREN_RESULT_RUNTIME_ERROR: {
+                logger->error("Runtime error when instantiating an {}/{}", module_name, class_name);
+                return nullptr;
+            }
+
+            default: {
+                logger->error("Unknown error when instantiating an {}/{}", module_name, class_name);
+                return nullptr;
+            }
+        }
+
+        return nullptr;
+    }
+
     Rx::Optional<Component> ScriptingRuntime::create_component(const entt::entity entity,
                                                                const char* module_name,
                                                                const char* component_class_name) const {
@@ -361,7 +420,7 @@ namespace horus {
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, module_name, component_class_name, 0);
 
-        auto* constructor_handle = wrenMakeCallHandle(vm, "new()");
+        auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
         if(constructor_handle == nullptr) {
             logger->error("Could not get handle to constructor for %s", component_class_name);
             return Rx::nullopt;
@@ -448,4 +507,4 @@ namespace horus {
             list_idx++;
         });
     }
-} // namespace horus
+} // namespace script

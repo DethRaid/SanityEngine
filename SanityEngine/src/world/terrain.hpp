@@ -33,11 +33,11 @@ struct TerrainTile {
 
     LoadingPhase loading_phase{LoadingPhase::GeneratingHeightmap};
 
-    Rx::Vector<Rx::Vector<Float32>> heightmap;
+    Rx::Vector<Rx::Vector<Float32>> heightmap{};
 
-    Vec2i coord;
+    Vec2i coord{};
 
-    entt::entity entity;
+    entt::entity entity{};
 };
 
 struct TerrainTileMeshCreateInfo {
@@ -59,8 +59,7 @@ struct TerrainTileComponent {
 };
 
 struct TerrainData {
-    Uint32 width;
-    Uint32 height;
+    TerrainSize size;
 
     Rx::Vector<Float32> heightmap;
 
@@ -115,7 +114,7 @@ public:
 
     [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Vec3f& position);
 
-    explicit Terrain(const TerrainSize& size,
+    explicit Terrain(const TerrainData& data,
                      renderer::Renderer& renderer_in,
                      FastNoiseSIMD& noise_generator_in,
                      SynchronizedResource<entt::registry>& registry_in);
