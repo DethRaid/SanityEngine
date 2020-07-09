@@ -11,10 +11,10 @@
 struct WorldParameters;
 
 struct TerrainSize {
-    Uint32 max_latitude_in;
-    Uint32 max_longitude_in;
-    Uint32 min_terrain_height_in;
-    Uint32 max_terrain_height_in;
+    Uint32 max_latitude;
+    Uint32 max_longitude;
+    Uint32 min_terrain_height;
+    Uint32 max_terrain_height;
 };
 
 struct TerrainSamplerParams {

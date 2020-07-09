@@ -92,8 +92,8 @@ namespace terraingen {
             .name = "Terrain water depth map",
             .usage = renderer::ImageUsage::UnorderedAccess,
             .format = renderer::ImageFormat::R32F,
-            .width = data.width,
-            .height = data.height,
+            .width = data.size.max_longitude * 2,
+            .height = data.size.max_latitude * 2,
         });
 
         const auto land_heightmap = renderer.get_image(data.heightmap_handle);

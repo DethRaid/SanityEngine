@@ -77,7 +77,7 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
     auto& io = ImGui::GetIO();
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable mouse
     io.BackendPlatformName = "Sanity Engine";
-    io.ImeWindowHandle = glfwGetWin32Window(window);
+    // io.ImeWindowHandle = glfwGetWin32Window(window);
 
     io.SetClipboardTextFn = set_clipboard_text;
     io.GetClipboardTextFn = get_clipboard_text;
@@ -212,7 +212,7 @@ void DearImguiAdapter::initialize_style() {
     style.GrabRounding = 3;
 
 #ifdef IMGUI_HAS_DOCK
-    style.TabBorderSize = is3D;
+    style.TabBorderSize = is_3d;
     style.TabRounding = 3;
 
     colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);

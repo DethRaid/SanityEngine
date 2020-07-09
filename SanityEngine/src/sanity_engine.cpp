@@ -254,12 +254,12 @@ void SanityEngine::load_bve_train(const Rx::String& filename) {
 }
 
 void SanityEngine::create_environment_object_editor() {
-    auto* handle = scripting_runtime->instantiate("engine/ui", "EnvironmentObjectEditor");
-    auto panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
-
     auto locked_registry = registry.lock();
     const auto entity = locked_registry->create();
-    locked_registry->assign<ui::ScriptedUiPanel>(entity, Rx::Utility::move(panel));
+    auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
+
+    auto* handle = scripting_runtime->instantiate("engine/ui", "EnvironmentObjectEditor");
+    ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {

@@ -34,15 +34,16 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
     noise_generator->SetFractalLacunarity(2);
     noise_generator->SetFractalGain(0.5f);
 
+    auto terrain_data = Terrain::generate_terrain(*noise_generator, params, renderer);
+
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
-
-    auto terrain_data = Terrain::generate_terrain(*noise_generator, params, renderer);
+    terrain_data.size = TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height};;
 
     generate_climate_data(terrain_data, params, renderer);
 
     auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
-                                         TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height},
+                                         terrain_data,
                                          renderer,
                                          *noise_generator,
                                          registry);

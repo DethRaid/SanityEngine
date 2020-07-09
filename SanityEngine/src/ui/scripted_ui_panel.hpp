@@ -10,7 +10,7 @@ namespace script {
 }
 
 namespace ui {
-    class ScriptedUiPanel final : UiPanel {
+    class ScriptedUiPanel final : public UiPanel {
     public:
         explicit ScriptedUiPanel(WrenHandle* wren_handle_in, script::ScriptingRuntime& runtime_in);
 

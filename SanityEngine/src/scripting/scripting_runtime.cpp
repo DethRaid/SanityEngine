@@ -17,7 +17,7 @@ namespace script {
     RX_LOG("Wren", script_logger); // namespace horus
 
     static const Rx::String SANITY_ENGINE_MODULE_NAME = "SanityEngine";
-    constexpr const char* CONSTRUCTOR_NAME = CONSTRUCTOR_NAME;
+    constexpr const char* CONSTRUCTOR_NAME = "new()";
 
     void ScriptingRuntime::wren_error(
         WrenVM* /* vm */, WrenErrorType /* type */, const char* module_name, const int line, const char* message) {

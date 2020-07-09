@@ -50,7 +50,7 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
     commands->SetName(L"Terrain::generate_terrain");
 
     const auto total_pixels_in_maps = params.width * params.height;
-    auto data = TerrainData{.size = {.max_latitude_in = params.height / 2.0, .max_longitude_in = params.width / 2.0},
+    auto data = TerrainData{.size = {.max_latitude = params.height, .max_longitude = params.width},
                             .heightmap = Rx::Vector<Float32>{total_pixels_in_maps}};
 
     {
@@ -87,10 +87,10 @@ Terrain::Terrain(const TerrainData& data,
     : renderer{&renderer_in},
       noise_generator{&noise_generator_in},
       registry{&registry_in},
-      max_latitude{data.size.max_latitude_in},
-      max_longitude{data.size.max_longitude_in},
-      min_terrain_height{data.size.min_terrain_height_in},
-      max_terrain_height{data.size.max_terrain_height_in} {
+      max_latitude{data.size.max_latitude},
+      max_longitude{data.size.max_longitude},
+      min_terrain_height{data.size.min_terrain_height},
+      max_terrain_height{data.size.max_terrain_height} {
 
     // TODO: Make a good data structure to load the terrain material(s) at runtime
     load_terrain_textures_and_create_material();
