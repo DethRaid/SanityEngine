@@ -206,7 +206,7 @@ void SanityEngine::register_wren_api() const {
      * should you modify the code in this method in any way
      */
 
-    _scripting_entity_scripting_api_register_with_scripting_runtime(*scripting_runtime);
+    // _scripting_entity_scripting_api_register_with_scripting_runtime(*scripting_runtime);
 }
 
 void SanityEngine::create_planetary_atmosphere() {

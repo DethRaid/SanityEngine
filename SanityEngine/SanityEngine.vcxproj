@@ -44,6 +44,7 @@
     </ClCompile>
     <ClCompile Include="extern\imgui\src\imgui_draw.cpp" />
     <ClCompile Include="extern\imgui\src\imgui_widgets.cpp" />
+    <ClCompile Include="extern\imgui\src\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\command.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\interface.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\parser.cpp" />

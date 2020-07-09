@@ -372,7 +372,8 @@ namespace script {
         }
     }
 
-    WrenHandle* ScriptingRuntime::instantiate(const Rx::String& module_name, const Rx::String& class_name) {
+    WrenHandle* ScriptingRuntime::instantiate(const Rx::String& module_name, const Rx::String& class_name) const
+    {
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, module_name.data(), class_name.data(), 0);
 

@@ -71,7 +71,7 @@ namespace script {
 
         [[nodiscard]] WrenHandle* create_entity() const;
 
-        [[nodiscard]] WrenHandle* instantiate(const Rx::String& module_name, const Rx::String& class_name);
+        [[nodiscard]] WrenHandle* instantiate(const Rx::String& module_name, const Rx::String& class_name) const;
 
         [[nodiscard]] Rx::Optional<Component> create_component(entt::entity entity,
                                                                const char* module_name,

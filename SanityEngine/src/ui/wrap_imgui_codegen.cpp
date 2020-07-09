@@ -1536,24 +1536,24 @@ void w_Render(WrenVM *vm)
 // skipping w_GetDrawData due to unimplemented return type: "ImDrawData*"
 
 /*  create Demo window (previously called ShowTestWindow). demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application! */
-void w_ShowDemoWindow(WrenVM *vm)
-{
-	auto p_open = static_cast<bool>(Box::getCPP<bool>(vm, 1));
-	
-	ImGui::ShowDemoWindow(&p_open);
-	
-	Box::setCPP<bool>(vm, 1, p_open);
-}
-
-/*  create About window. display Dear ImGui version, credits and build/system information. */
-void w_ShowAboutWindow(WrenVM *vm)
-{
-	auto p_open = static_cast<bool>(Box::getCPP<bool>(vm, 1));
-	
-	ImGui::ShowAboutWindow(&p_open);
-	
-	Box::setCPP<bool>(vm, 1, p_open);
-}
+// void w_ShowDemoWindow(WrenVM *vm)
+// {
+// 	auto p_open = static_cast<bool>(Box::getCPP<bool>(vm, 1));
+// 	
+// 	ImGui::ShowDemoWindow(&p_open);
+// 	
+// 	Box::setCPP<bool>(vm, 1, p_open);
+// }
+// 
+// /*  create About window. display Dear ImGui version, credits and build/system information. */
+// void w_ShowAboutWindow(WrenVM *vm)
+// {
+// 	auto p_open = static_cast<bool>(Box::getCPP<bool>(vm, 1));
+// 	
+// 	ImGui::ShowAboutWindow(&p_open);
+// 	
+// 	Box::setCPP<bool>(vm, 1, p_open);
+// }
 
 /*  create Debug/Metrics window. display Dear ImGui internals: draw commands (with individual draw calls and vertices), window list, basic internal state, etc. */
 void w_ShowMetricsWindow(WrenVM *vm)
@@ -1568,30 +1568,30 @@ void w_ShowMetricsWindow(WrenVM *vm)
 // skipping w_ShowStyleEditor due to unimplemented argument type: "ImGuiStyle*"
 
 /*  add style selector block (not a window), essentially a combo listing the default styles. */
-void w_ShowStyleSelector(WrenVM *vm)
-{
-	auto label = wrenGetSlotString(vm, 1);
-	
-	bool out = ImGui::ShowStyleSelector(label);
-	wrenSetSlotBool(vm, 0, out);
-	
-}
+// void w_ShowStyleSelector(WrenVM *vm)
+// {
+// 	auto label = wrenGetSlotString(vm, 1);
+// 	
+// 	bool out = ImGui::ShowStyleSelector(label);
+// 	wrenSetSlotBool(vm, 0, out);
+// 	
+// }
 
 /*  add font selector block (not a window), essentially a combo listing the loaded fonts. */
-void w_ShowFontSelector(WrenVM *vm)
-{
-	auto label = wrenGetSlotString(vm, 1);
-	
-	ImGui::ShowFontSelector(label);
-	
-}
-
-/*  add basic help/info block (not a window): how to manipulate ImGui as a end-user (mouse/keyboard controls). */
-void w_ShowUserGuide(WrenVM *vm)
-{
-	ImGui::ShowUserGuide();
-	
-}
+// void w_ShowFontSelector(WrenVM *vm)
+// {
+// 	auto label = wrenGetSlotString(vm, 1);
+// 	
+// 	ImGui::ShowFontSelector(label);
+// 	
+// }
+// 
+// /*  add basic help/info block (not a window): how to manipulate ImGui as a end-user (mouse/keyboard controls). */
+// void w_ShowUserGuide(WrenVM *vm)
+// {
+// 	ImGui::ShowUserGuide();
+// 	
+// }
 
 /*  get the compiled version string e.g. "1.23" (essentially the compiled value for IMGUI_VERSION) */
 void w_GetVersion(WrenVM *vm)
@@ -4568,15 +4568,15 @@ const std::unordered_map<std::string, WrenForeignMethodFn> foreignMethods = {
 {"ImGui::SetTabItemClosed(_)", w_SetTabItemClosed},
 {"ImGui::SetTooltip(_)", w_SetTooltip},
 {"ImGui::SetWindowFontScale(_)", w_SetWindowFontScale},
-{"ImGui::ShowAboutWindow()", w_ShowAboutWindow},
-{"ImGui::ShowAboutWindow(_)", w_ShowAboutWindow},
-{"ImGui::ShowDemoWindow()", w_ShowDemoWindow},
-{"ImGui::ShowDemoWindow(_)", w_ShowDemoWindow},
-{"ImGui::ShowFontSelector(_)", w_ShowFontSelector},
+// {"ImGui::ShowAboutWindow()", w_ShowAboutWindow},
+// {"ImGui::ShowAboutWindow(_)", w_ShowAboutWindow},
+// {"ImGui::ShowDemoWindow()", w_ShowDemoWindow},
+// {"ImGui::ShowDemoWindow(_)", w_ShowDemoWindow},
+// {"ImGui::ShowFontSelector(_)", w_ShowFontSelector},
 {"ImGui::ShowMetricsWindow()", w_ShowMetricsWindow},
 {"ImGui::ShowMetricsWindow(_)", w_ShowMetricsWindow},
-{"ImGui::ShowStyleSelector(_)", w_ShowStyleSelector},
-{"ImGui::ShowUserGuide()", w_ShowUserGuide},
+// {"ImGui::ShowStyleSelector(_)", w_ShowStyleSelector},
+// {"ImGui::ShowUserGuide()", w_ShowUserGuide},
 {"ImGui::SliderAngle(_,_)", w_SliderAngle},
 {"ImGui::SliderAngle(_,_,_)", w_SliderAngle},
 {"ImGui::SliderAngle(_,_,_,_)", w_SliderAngle},
@@ -4806,8 +4806,6 @@ class ImGui {
 	foreign static EndMenuBar()
 	foreign static GetKeyIndex(imgui_key)
 	foreign static ColorConvertU32ToFloat4(input)
-	foreign static ShowAboutWindow()
-	foreign static ShowAboutWindow(p_open)
 	foreign static CheckboxFlags(label, flags, flags_value)
 	foreign static GetFrameHeight()
 	foreign static SetNextWindowFocus()
@@ -5009,8 +5007,6 @@ class ImGui {
 	foreign static SetNextWindowViewport(viewport_id)
 	foreign static Render()
 	foreign static TextColored(col, fmt)
-	foreign static ShowDemoWindow()
-	foreign static ShowDemoWindow(p_open)
 	foreign static InvisibleButton(str_id, size)
 	foreign static EndDragDropTarget()
 	foreign static Text(fmt)
