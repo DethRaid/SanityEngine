@@ -9,12 +9,13 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "rhi/helpers.hpp"
+#include "rx/core/filesystem/file.h"
 #include "ui/wrap_imgui_codegen.h"
 #include "world/world.hpp"
 
 namespace script {
-    RX_LOG("ScriptingRuntime", logger);
-    RX_LOG("Wren", script_logger); // namespace horus
+    RX_LOG("\033[90;107mScriptingRuntime\033[0m", logger);
+    RX_LOG("\033[90;107mWren\033[0m", script_logger);
 
     static const Rx::String SANITY_ENGINE_MODULE_NAME = "SanityEngine";
     constexpr const char* CONSTRUCTOR_NAME = "new()";
@@ -28,7 +29,8 @@ namespace script {
 
     WrenForeignMethodFn ScriptingRuntime::wren_bind_foreign_method(
         WrenVM* vm, const char* module_name, const char* class_name, const bool is_static, const char* signature) {
-        if(module_name == "imgui") {
+        logger->info("Binding foreign method `%s%s/%s.%s`", is_static ? "static " : "", module_name, class_name, signature);
+        if(strcmp(module_name, "imgui") == 0) {
             return wrap_imgui::bindForeignMethod(vm, class_name, is_static, signature);
         }
 
@@ -42,7 +44,9 @@ namespace script {
     }
 
     WrenForeignClassMethods ScriptingRuntime::wren_bind_foreign_class(WrenVM* vm, const char* module_name, const char* class_name) {
-        if(module_name == "imgui") {
+        logger->info("Binding foreign class `%s/%s`", module_name, class_name);
+        Rx::Log::flush();
+        if(strcmp(module_name, "imgui") == 0) {
             WrenForeignClassMethods methods = {nullptr, nullptr};
             if(wrap_imgui::bindForeignClass(vm, class_name, methods)) {
                 return methods;
@@ -58,18 +62,10 @@ namespace script {
         return {};
     }
 
-    const char* ScriptingRuntime::wren_resolve_module(WrenVM* /* vm */, const char* importer, const char* name) {
-        const auto resolved_path = std::filesystem::path{importer} / name;
-
-        const auto& resolved_path_string = resolved_path.string();
-        auto* resolved_module = new char[resolved_path_string.size()];
-        memcpy(resolved_module, resolved_path_string.data(), resolved_path_string.size());
-
-        return resolved_module;
-    }
-
     char* ScriptingRuntime::wren_load_module(WrenVM* vm, const char* module_name) {
-        if(module_name == "imgui") {
+        logger->info("Loading module %s", module_name);
+        Rx::Log::flush();
+        if(strcmp(module_name, "imgui") == 0) {
             return wrap_imgui::loadModule(vm);
         }
 
@@ -82,19 +78,26 @@ namespace script {
         return nullptr;
     }
 
-    void ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path& directory) const {
+    Uint32 ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path& directory) const {
         if(!exists(directory)) {
             logger->error("Could not load scripts in directory %s: directory does not exist", directory.string().c_str());
-            return;
+            return 0;
         }
         if(!is_directory(directory)) {
             logger->error("Could not load scripts in directory %s: This path does not refer to a directory", directory.string().c_str());
-            return;
+            return 0;
         }
         Uint32 num_loaded_modules{0};
         for(const auto& module_entry : std::filesystem::directory_iterator{directory}) {
             const auto& module_path = module_entry.path();
-            if(!module_entry.is_directory() && module_path.extension() == ".wren") {
+            const auto& module_string = module_path.string();
+
+            logger->info("Looking at potential Wren script %s", module_string.c_str());
+
+            if(module_entry.is_directory()) {
+                num_loaded_modules += load_all_scripts_in_directory(module_path);
+
+            } else if(module_path.extension() == ".wren") {
                 auto* file = fopen(module_path.string().c_str(), "r");
                 if(file == nullptr) {
                     // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
@@ -164,6 +167,8 @@ namespace script {
                 "No modules loaded from directory %s. If you are planning on adding scripts here while the application is running, you may ignore this warning",
                 directory.string().c_str());
         }
+
+        return num_loaded_modules;
     }
 
     WrenForeignMethodFn ScriptingRuntime::bind_foreign_method(const Rx::String& module_name,
@@ -211,7 +216,6 @@ namespace script {
             if(file == nullptr) {
                 // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
                 logger->verbose("Could not open file %s", potential_filename);
-                fclose(file);
                 return RX_ITERATION_STOP;
             }
 
@@ -267,7 +271,6 @@ namespace script {
         config.writeFn = wren_log;
         config.bindForeignMethodFn = wren_bind_foreign_method;
         config.bindForeignClassFn = wren_bind_foreign_class;
-        config.resolveModuleFn = wren_resolve_module;
         config.loadModuleFn = wren_load_module;
 
         auto* vm = wrenNewVM(&config);
@@ -311,9 +314,9 @@ namespace script {
 
     bool ScriptingRuntime::add_script_directory(const std::filesystem::path& directory) {
         module_paths.insert(directory);
-        load_all_scripts_in_directory(directory);
+        const auto num_scripts_loaded = load_all_scripts_in_directory(directory);
 
-        return true;
+        return num_scripts_loaded > 0;
     }
 
     void ScriptingRuntime::register_script_object_allocator(const ScriptingClassName& name,
@@ -372,14 +375,17 @@ namespace script {
         }
     }
 
-    WrenHandle* ScriptingRuntime::instantiate(const Rx::String& module_name, const Rx::String& class_name) const
-    {
+    WrenHandle* ScriptingRuntime::instantiate_script_object(const Rx::String& module_name, const Rx::String& class_name) const {
+
+        logger->verbose("Instantiating instance of `%s/%s`", module_name, class_name);
+        Rx::Log::flush();
+
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, module_name.data(), class_name.data(), 0);
 
         auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
         if(constructor_handle == nullptr) {
-            logger->error("Could not get handle to constructor for {}/{}", module_name, class_name);
+            logger->error("Could not get handle to constructor for %s/%s", module_name, class_name);
             return nullptr;
         }
 
@@ -388,24 +394,24 @@ namespace script {
             case WREN_RESULT_SUCCESS: {
                 auto* component_handle = wrenGetSlotHandle(vm, 0);
                 if(component_handle == nullptr) {
-                    logger->error("Could not instantiate {}/{}", module_name, class_name);
+                    logger->error("Could not instantiate %s/%s", module_name, class_name);
                 }
 
                 return component_handle;
             }
 
             case WREN_RESULT_COMPILE_ERROR: {
-                logger->error("Compilation error when instantiating an {}/{}", module_name, class_name);
+                logger->error("Compilation error when instantiating an %s/%s", module_name, class_name);
                 return nullptr;
             }
 
             case WREN_RESULT_RUNTIME_ERROR: {
-                logger->error("Runtime error when instantiating an {}/{}", module_name, class_name);
+                logger->error("Runtime error when instantiating an %s/%s", module_name, class_name);
                 return nullptr;
             }
 
             default: {
-                logger->error("Unknown error when instantiating an {}/{}", module_name, class_name);
+                logger->error("Unknown error when instantiating an %s/%s", module_name, class_name);
                 return nullptr;
             }
         }
@@ -432,7 +438,7 @@ namespace script {
             case WREN_RESULT_SUCCESS: {
                 auto* component_handle = wrenGetSlotHandle(vm, 0);
                 if(component_handle == nullptr) {
-                    logger->error("Could not create instance of class {}", component_class_name);
+                    logger->error("Could not create instance of class %s", component_class_name);
                 }
 
                 const auto init_signature = Rx::String::format("%s::init_self()", component_class_name);

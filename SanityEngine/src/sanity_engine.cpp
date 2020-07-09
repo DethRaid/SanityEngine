@@ -196,7 +196,7 @@ void SanityEngine::initialize_scripting_runtime() {
 
     const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
     if(!success) {
-        Rx::abort("Could not register SanityEngine builtin scripts modifier");
+        Rx::abort("Could not register SanityEngine builtin scripts directory");
     }
 }
 
@@ -258,7 +258,7 @@ void SanityEngine::create_environment_object_editor() {
     const auto entity = locked_registry->create();
     auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
 
-    auto* handle = scripting_runtime->instantiate("engine/ui", "EnvironmentObjectEditor");
+    auto* handle = scripting_runtime->instantiate_script_object("engine/terraingen", "EnvironmentObjectEditor");
     ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
 

@@ -1,3 +1,5 @@
+import "imgui" for ImGui
+
 class EnvironmentObjectEditor {
     draw() {
         ImGui.Begin("Environment Object")

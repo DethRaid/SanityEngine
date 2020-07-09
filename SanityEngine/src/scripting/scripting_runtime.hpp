@@ -71,7 +71,7 @@ namespace script {
 
         [[nodiscard]] WrenHandle* create_entity() const;
 
-        [[nodiscard]] WrenHandle* instantiate(const Rx::String& module_name, const Rx::String& class_name) const;
+        [[nodiscard]] WrenHandle* instantiate_script_object(const Rx::String& module_name, const Rx::String& class_name) const;
 
         [[nodiscard]] Rx::Optional<Component> create_component(entt::entity entity,
                                                                const char* module_name,
@@ -107,8 +107,6 @@ namespace script {
 
         [[nodiscard]] static WrenForeignClassMethods wren_bind_foreign_class(WrenVM* vm, const char* module_name, const char* class_name);
 
-        [[nodiscard]] static const char* wren_resolve_module(WrenVM* vm, const char* importer, const char* name);
-
         [[nodiscard]] static char* wren_load_module(WrenVM* vm, const char* module_name);
 
         WrenVM* vm{nullptr};
@@ -117,7 +115,7 @@ namespace script {
 
         Rx::Set<std::filesystem::path> module_paths{};
 
-        void load_all_scripts_in_directory(const std::filesystem::path& directory) const;
+        Uint32 load_all_scripts_in_directory(const std::filesystem::path& directory) const;
 
         [[nodiscard]] WrenForeignMethodFn bind_foreign_method(const Rx::String& module_name,
                                                               const Rx::String& class_name,
