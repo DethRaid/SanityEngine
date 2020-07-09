@@ -1,7 +1,7 @@
 // This is an automatically generated file!!
 #pragma once
 
-#include <wren/wren.h>
+#include "wren/wren.h"
 
 namespace wrap_imgui {
 char* loadModule(WrenVM* vm);

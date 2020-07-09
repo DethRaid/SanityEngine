@@ -1,14 +1,13 @@
 #pragma once
 
-#include <glm/fwd.hpp>
-#include <glm/vec2.hpp>
-#include <rx/core/ptr.h>
-
 #include "core/types.hpp"
+#include "glm/fwd.hpp"
+#include "glm/vec2.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
 #include "rhi/framebuffer.hpp"
 #include "rhi/render_pipeline_state.hpp"
+#include "rx/core/ptr.h"
 
 namespace renderer {
     struct BindGroup;
@@ -52,9 +51,7 @@ namespace renderer {
 
         void begin_render_pass(ID3D12GraphicsCommandList4* commands) const;
 
-        void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
-                                   entt::registry& registry,
-                                   Uint32 frame_idx);
+        void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx);
 
         void draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world);
 

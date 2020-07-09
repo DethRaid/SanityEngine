@@ -3,10 +3,10 @@
 #include <concepts>
 
 #include <d3d12.h>
-#include <rx/core/string.h>
 #include <winrt/base.h>
 
 #include "core/types.hpp"
+#include "rx/core/string.h"
 
 using winrt::com_ptr;
 
@@ -104,4 +104,4 @@ namespace renderer {
         { a.allocation }
         ->std::convertible_to<D3D12MA::Allocation*>;
     };
-} // namespace rhi
+} // namespace renderer

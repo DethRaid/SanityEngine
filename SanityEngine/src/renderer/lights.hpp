@@ -1,8 +1,8 @@
 #pragma once
 
-#include <glm/geometric.hpp>
-#include <glm/trigonometric.hpp>
-#include <glm/vec3.hpp>
+#include "glm/geometric.hpp"
+#include "glm/trigonometric.hpp"
+#include "glm/vec3.hpp"
 
 namespace renderer {
     constexpr Uint32 MAX_NUM_LIGHTS = 32;

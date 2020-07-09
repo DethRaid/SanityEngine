@@ -1,12 +1,11 @@
 #pragma once
 
-#include <rx/core/concurrency/mutex.h>
-#include <rx/core/map.h>
-#include <rx/core/vector.h>
-
 #include "core/async/synchronized_resource.hpp"
 #include "noise/FastNoiseSIMD/FastNoiseSIMD.h"
 #include "renderer/renderer.hpp"
+#include "rx/core/concurrency/mutex.h"
+#include "rx/core/map.h"
+#include "rx/core/vector.h"
 
 struct WorldParameters;
 
@@ -25,11 +24,7 @@ struct TerrainSamplerParams {
 };
 
 struct TerrainTile {
-    enum class LoadingPhase {
-        GeneratingHeightmap,
-        GeneratingMesh,
-        Complete
-    };
+    enum class LoadingPhase { GeneratingHeightmap, GeneratingMesh, Complete };
 
     LoadingPhase loading_phase{LoadingPhase::GeneratingHeightmap};
 

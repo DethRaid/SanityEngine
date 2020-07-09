@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rx/core/concurrency/mutex.h>
+#include "rx/core/concurrency/mutex.h"
 
 template <typename T>
 concept Mutex = requires(T a) {

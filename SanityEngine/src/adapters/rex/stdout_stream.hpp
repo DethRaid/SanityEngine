@@ -1,9 +1,8 @@
 #pragma once
 
-#include <rx/core/stream.h>
-#include <rx/core/string.h>
-
 #include "core/types.hpp"
+#include "rx/core/stream.h"
+#include "rx/core/string.h"
 
 namespace rex {
     class StdoutStream final : public Rx::Stream {

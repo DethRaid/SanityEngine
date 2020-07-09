@@ -1,9 +1,8 @@
 #pragma once
 
-#include <rx/core/ptr.h>
-
 #include "renderer/handles.hpp"
 #include "resources.hpp"
+#include "rx/core/ptr.h"
 
 namespace renderer {
     constexpr Uint32 OPAQUE_OBJECT_BIT = 0x01;

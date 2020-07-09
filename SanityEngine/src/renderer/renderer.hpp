@@ -3,9 +3,6 @@
 #include <chrono>
 #include <queue>
 
-#include <rx/core/ptr.h>
-#include <rx/core/vector.h>
-
 #include "core/async/synchronized_resource.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
@@ -17,6 +14,8 @@
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_pipeline_state.hpp"
+#include "rx/core/ptr.h"
+#include "rx/core/vector.h"
 #include "settings.hpp"
 
 namespace renderer {

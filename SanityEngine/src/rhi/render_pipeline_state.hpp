@@ -1,13 +1,13 @@
 #pragma once
 
 #include <d3d12.h>
-#include <rx/core/array.h>
-#include <rx/core/optional.h>
-#include <rx/core/string.h>
-#include <rx/core/vector.h>
 #include <wrl/client.h>
 
 #include "resources.hpp"
+#include "rx/core/array.h"
+#include "rx/core/optional.h"
+#include "rx/core/string.h"
+#include "rx/core/vector.h"
 
 using winrt::com_ptr;
 

@@ -2,11 +2,11 @@
 
 #include <unordered_set>
 
-#include <glm/glm.hpp>
-#include <json5/json5.hpp>
-#include <json5/json5_input.hpp>
-#include <json5/json5_output.hpp>
-#include <json5/json5_reflect.hpp>
+#include "glm/glm.hpp"
+#include "json5/json5.hpp"
+#include "json5/json5_input.hpp"
+#include "json5/json5_output.hpp"
+#include "json5/json5_reflect.hpp"
 
 // Serializers for SanityEngine's dependencies
 

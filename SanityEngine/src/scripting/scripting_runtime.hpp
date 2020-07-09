@@ -1,14 +1,13 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
-#include <rx/core/map.h>
-#include <rx/core/optional.h>
-#include <rx/core/ptr.h>
-#include <rx/core/string.h>
-#include <wren/wren.hpp>
-
-#include "entity_scripting_api.hpp"
 #include "core/async/synchronized_resource.hpp"
+#include "entity_scripting_api.hpp"
+#include "entt/entity/fwd.hpp"
+#include "rx/core/map.h"
+#include "rx/core/optional.h"
+#include "rx/core/ptr.h"
+#include "rx/core/string.h"
+#include "wren/wren.hpp"
 
 class World;
 
@@ -35,8 +34,7 @@ namespace script {
         Rx::String method_signature{};
     };
 
-    struct UiPanelInstance
-    {
+    struct UiPanelInstance {
         WrenHandle* draw_method_handle;
 
         WrenHandle* instance_handle;
@@ -126,4 +124,4 @@ namespace script {
 
         [[nodiscard]] char* load_module(const Rx::String& module_name) const;
     };
-} // namespace horus
+} // namespace script

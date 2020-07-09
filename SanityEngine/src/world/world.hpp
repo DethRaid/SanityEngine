@@ -1,12 +1,11 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
-#include <entt/entity/observer.hpp>
-#include <ftl/fibtex.h>
-#include <rx/core/types.h>
-#include <rx/core/vector.h>
-
 #include "core/types.hpp"
+#include "entt/entity/fwd.hpp"
+#include "entt/entity/observer.hpp"
+#include "ftl/fibtex.h"
+#include "rx/core/types.h"
+#include "rx/core/vector.h"
 #include "scripting/scripting_runtime.hpp"
 #include "world/terrain.hpp"
 
