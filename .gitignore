@@ -406,3 +406,4 @@ MigrationBackup/
 out/
 /build
 /SanityEngine/data/bve_trains
+*.fbx
