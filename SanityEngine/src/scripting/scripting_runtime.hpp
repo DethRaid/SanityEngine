@@ -7,7 +7,7 @@
 #include "rx/core/optional.h"
 #include "rx/core/ptr.h"
 #include "rx/core/string.h"
-#include "wren/wren.hpp"
+#include "wren.hpp"
 
 class World;
 

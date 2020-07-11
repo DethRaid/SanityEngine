@@ -2,15 +2,14 @@
 
 #include <concepts>
 
-#include <entt/entity/fwd.hpp>
-#include <entt/entity/registry.hpp>
-#include <rx/core/map.h>
-#include <rx/core/set.h>
-#include <rx/core/string.h>
-#include <wren/wren.hpp>
-
-#include "core/types.hpp"
 #include "core/async/synchronized_resource.hpp"
+#include "core/types.hpp"
+#include "entt/entity/fwd.hpp"
+#include "entt/entity/registry.hpp"
+#include "rx/core/map.h"
+#include "rx/core/set.h"
+#include "rx/core/string.h"
+#include "wren.hpp"
 
 namespace Rx {
     struct String;
@@ -53,7 +52,7 @@ namespace script {
     public:
         [[horus::constructor]] explicit Entity(WrenHandle * handle_in,
                                                entt::entity entity_in,
-                                               SynchronizedResource<entt::registry>& registry_in);
+                                               SynchronizedResource<entt::registry> & registry_in);
 
         [[horus::method]] void add_tag(const Rx::String& tag) const;
 
@@ -121,7 +120,7 @@ namespace script {
 
         WrenVM* vm;
     };
-} // namespace horus
+} // namespace script
 
 #pragma region Wren bindings
 /*

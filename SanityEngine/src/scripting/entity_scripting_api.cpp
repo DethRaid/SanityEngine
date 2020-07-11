@@ -1,12 +1,11 @@
 #include "entity_scripting_api.hpp"
 
-#include <rx/core/string.h>
-#include <wren/wren.hpp>
-
 #include "globals.hpp"
+#include "rx/core/string.h"
 #include "sanity_engine.hpp"
 #include "scripting_runtime.hpp"
 #include "world/world.hpp"
+#include "wren.hpp"
 
 namespace script {
     Entity::Entity(WrenHandle* handle_in, const entt::entity entity_in, SynchronizedResource<entt::registry>& registry_in)
@@ -82,7 +81,7 @@ namespace script {
 
         return Entity{handle, entity, registry};
     }
-} // namespace horus
+} // namespace script
 
 #pragma region Wren bindings
 /*

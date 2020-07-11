@@ -208,6 +208,18 @@
     <Filter Include="Header Files\renderer\debugging">
       <UniqueIdentifier>{5bae8e19-9b56-49b4-b15e-53974bfeff57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Wren">
+      <UniqueIdentifier>{a40feeed-a053-4982-a630-40a438662b19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wren\vm">
+      <UniqueIdentifier>{d6e2be15-b794-42c4-a375-0cd06a35b6b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wren\include">
+      <UniqueIdentifier>{5ef3eb5c-e9d2-43b4-b070-f54ac06ba3a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wren\optional">
+      <UniqueIdentifier>{f3f3eb03-8f88-4ceb-9467-fe23f34fc23c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -569,6 +581,33 @@
     </ClCompile>
     <ClCompile Include="extern\imgui\src\misc\cpp\imgui_stdlib.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_compiler.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_core.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_debug.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_primitive.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_utils.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_value.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\vm\wren_vm.c">
+      <Filter>Wren\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\optional\wren_opt_meta.c">
+      <Filter>Wren\optional</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\wren\src\optional\wren_opt_random.c">
+      <Filter>Wren\optional</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1310,6 +1349,45 @@
     <ClInclude Include="src\ui\scripted_ui_panel.hpp">
       <Filter>Header Files\ui</Filter>
     </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_common.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_compiler.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_core.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_debug.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_opcodes.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_primitive.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_utils.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_value.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\vm\wren_vm.h">
+      <Filter>Wren\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\include\wren.h">
+      <Filter>Wren\include</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\include\wren.hpp">
+      <Filter>Wren\include</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\optional\wren_opt_meta.h">
+      <Filter>Wren\optional</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\wren\src\optional\wren_opt_random.h">
+      <Filter>Wren\optional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
@@ -1372,6 +1450,27 @@
       <Filter>Shaders\inc</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="extern\wren\src\README.md">
+      <Filter>Wren</Filter>
+    </None>
+    <None Include="extern\wren\src\vm\wren_core.wren">
+      <Filter>Wren\vm</Filter>
+    </None>
+    <None Include="extern\wren\src\vm\wren_core.wren.inc">
+      <Filter>Wren\vm</Filter>
+    </None>
+    <None Include="extern\wren\src\optional\wren_opt_meta.wren">
+      <Filter>Wren\optional</Filter>
+    </None>
+    <None Include="extern\wren\src\optional\wren_opt_meta.wren.inc">
+      <Filter>Wren\optional</Filter>
+    </None>
+    <None Include="extern\wren\src\optional\wren_opt_random.wren">
+      <Filter>Wren\optional</Filter>
+    </None>
+    <None Include="extern\wren\src\optional\wren_opt_random.wren.inc">
+      <Filter>Wren\optional</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SanityEngine.rc">

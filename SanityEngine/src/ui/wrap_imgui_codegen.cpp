@@ -1,6 +1,6 @@
 // This is an automatically generated file!!
 
-#include <wren/wren.hpp>
+#include "wren.hpp"
 #include "wrap_imgui_codegen.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_stdlib.h>
@@ -4706,7 +4706,6 @@ class ImGui {
 	foreign static VSliderInt(label, size, v, v_min, v_max)
 	foreign static VSliderInt(label, size, v, v_min, v_max, format)
 	foreign static LogFinish()
-	foreign static ShowFontSelector(label)
 	foreign static SetScrollHereX()
 	foreign static SetScrollHereX(center_x_ratio)
 	foreign static PushAllowKeyboardFocus(allow_keyboard_focus)
@@ -4740,7 +4739,6 @@ class ImGui {
 	foreign static BeginTooltip()
 	foreign static BeginMenu(label)
 	foreign static BeginMenu(label, enabled)
-	foreign static ShowUserGuide()
 	foreign static DragFloat(label, v)
 	foreign static DragFloat(label, v, v_speed)
 	foreign static DragFloat(label, v, v_speed, v_min)
@@ -4876,7 +4874,6 @@ class ImGui {
 	foreign static IsItemHovered()
 	foreign static IsItemHovered(flags)
 	foreign static SetNextWindowBgAlpha(alpha)
-	foreign static ShowStyleSelector(label)
 	foreign static SetKeyboardFocusHere()
 	foreign static SetKeyboardFocusHere(offset)
 	foreign static BeginDragDropTarget()

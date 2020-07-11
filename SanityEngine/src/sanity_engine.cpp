@@ -3,19 +3,19 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <filesystem>
-#include <glm/ext/quaternion_trigonometric.inl>
 
-#include <GLFW/glfw3.h>
-#include <TracyD3D12.hpp>
-#include <rx/core/abort.h>
-#include <rx/core/log.h>
-#include <stb_image.h>
 #include <winrt/Windows.Foundation.h>
 
+#include "GLFW/glfw3.h"
+#include "TracyD3D12.hpp"
 #include "adapters/tracy.hpp"
+#include "glm/ext/quaternion_trigonometric.inl"
 #include "globals.hpp"
 #include "loading/entity_loading.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/abort.h"
+#include "rx/core/log.h"
+#include "stb_image.h"
 #include "ui/fps_display.hpp"
 #include "ui/scripted_ui_panel.hpp"
 #include "ui/ui_components.hpp"
@@ -192,12 +192,36 @@ void SanityEngine::initialize_scripting_runtime() {
         Rx::abort("Could not initialize scripting runtime");
     }
 
-    register_wren_api();
+    // register_wren_api();
 
-    const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
-    if(!success) {
-        Rx::abort("Could not register SanityEngine builtin scripts directory");
+    // Hardcode loading a thing
+    const Rx::String terraingen_module = R"MODULE(
+import "imgui" for ImGui, ImVec2, Box
+
+class EnvironmentObjectEditor {
+    construct new() {}
+    
+    draw() {
+        var pos = ImVec2.new(300, 300)
+        var pivot = ImVec2.new(0.5, 0.5)
+        ImGui.SetNextWindowPos(pos, "Always", pivot)
+
+        ImGui.Begin("Environment Object", Box.new(true), 0)
+        ImGui.Text("This is where the object stuff will go")
+        ImGui.End()
     }
+}
+)MODULE";
+
+    const auto result = wrenInterpret(scripting_runtime->get_vm(), "engine/terraingen", terraingen_module.data());
+    if(result != WREN_RESULT_SUCCESS) {
+        Rx::abort("Could not load terraingen module");
+    }
+
+    // const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
+    // if(!success) {
+    //     Rx::abort("Could not register SanityEngine builtin scripts directory");
+    // }
 }
 
 void SanityEngine::register_wren_api() const {

@@ -17,14 +17,16 @@ namespace script {
     RX_LOG("\033[90;107mWren\033[0m", script_logger);
 
     static const Rx::String SANITY_ENGINE_MODULE_NAME = "SanityEngine";
-    constexpr const char* CONSTRUCTOR_NAME = "new()";
+    constexpr const char* WREN_CONSTRUCTOR_SIGNATURE = "new()";
 
     void ScriptingRuntime::wren_error(
         WrenVM* /* vm */, WrenErrorType /* type */, const char* module_name, const int line, const char* message) {
         script_logger->error("[%s] Line %d: %s", module_name, line, message);
     }
 
-    void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) { script_logger->info("%s", text); }
+    void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) {
+        script_logger->info("%s", text);
+    }
 
     WrenForeignMethodFn ScriptingRuntime::wren_bind_foreign_method(
         WrenVM* vm, const char* module_name, const char* class_name, const bool is_static, const char* signature) {
@@ -43,8 +45,7 @@ namespace script {
     }
 
     WrenForeignClassMethods ScriptingRuntime::wren_bind_foreign_class(WrenVM* vm, const char* module_name, const char* class_name) {
-        logger->info("Binding foreign class `%s/%s`", module_name, class_name);
-        Rx::Log::flush();
+        logger->verbose("Binding foreign class `%s/%s`", module_name, class_name);
         if(strcmp(module_name, "imgui") == 0) {
             WrenForeignClassMethods methods = {nullptr, nullptr};
             if(wrap_imgui::bindForeignClass(vm, class_name, methods)) {
@@ -62,7 +63,7 @@ namespace script {
     }
 
     char* ScriptingRuntime::wren_load_module(WrenVM* vm, const char* module_name) {
-        logger->info("Loading module %s", module_name);
+        logger->verbose("Loading module %s", module_name);
         Rx::Log::flush();
         if(strcmp(module_name, "imgui") == 0) {
             return wrap_imgui::loadModule(vm);
@@ -340,7 +341,7 @@ namespace script {
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, "engine", "Entity", 0);
 
-        auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
+        auto* constructor_handle = wrenMakeCallHandle(vm, WREN_CONSTRUCTOR_SIGNATURE);
         if(constructor_handle == nullptr) {
             logger->error("Could not get handle to constructor for Entity");
             return nullptr;
@@ -375,14 +376,12 @@ namespace script {
     }
 
     WrenHandle* ScriptingRuntime::instantiate_script_object(const Rx::String& module_name, const Rx::String& class_name) const {
-
         logger->verbose("Instantiating instance of `%s/%s`", module_name, class_name);
-        Rx::Log::flush();
 
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, module_name.data(), class_name.data(), 0);
 
-        auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
+        auto* constructor_handle = wrenMakeCallHandle(vm, WREN_CONSTRUCTOR_SIGNATURE);
         if(constructor_handle == nullptr) {
             logger->error("Could not get handle to constructor for %s/%s", module_name, class_name);
             return nullptr;
@@ -394,6 +393,7 @@ namespace script {
                 auto* component_handle = wrenGetSlotHandle(vm, 0);
                 if(component_handle == nullptr) {
                     logger->error("Could not instantiate %s/%s", module_name, class_name);
+                    return nullptr;
                 }
 
                 return component_handle;
@@ -426,7 +426,7 @@ namespace script {
         wrenEnsureSlots(vm, 1);
         wrenGetVariable(vm, module_name, component_class_name, 0);
 
-        auto* constructor_handle = wrenMakeCallHandle(vm, CONSTRUCTOR_NAME);
+        auto* constructor_handle = wrenMakeCallHandle(vm, WREN_CONSTRUCTOR_SIGNATURE);
         if(constructor_handle == nullptr) {
             logger->error("Could not get handle to constructor for %s", component_class_name);
             return Rx::nullopt;
