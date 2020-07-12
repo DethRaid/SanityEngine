@@ -355,10 +355,21 @@ inline String& operator+=(String& lhs_, const String& _contents) {
 }
 
 // not inlined since it would explode code size
-bool operator==(const String& lhs, const String& rhs);
-bool operator!=(const String& lhs, const String& rhs);
-bool operator<(const String& lhs, const String& rhs);
-bool operator>(const String& lhs, const String& rhs);
+bool operator==(const String& _lhs, const String& _rhs);
+bool operator==(const String& _lhs, const char* _rhs);
+bool operator==(const char* _lhs, const String& _rhs);
+
+bool operator!=(const String& _lhs, const String& rhs);
+bool operator!=(const String& _lhs, const char* _rhs);
+bool operator!=(const char* _lhs, const String& _rhs);
+
+bool operator<(const String& _lhs, const String& _rhs);
+bool operator<(const String& _lhs, const char* _rhs);
+bool operator<(const char* _lhs, const String& _rhs);
+
+bool operator>(const String& _lhs, const String& _rhs);
+bool operator>(const String& _lhs, const char* _rhs);
+bool operator>(const char* _lhs, const String& _rhs);
 
 RX_HINT_FORCE_INLINE constexpr Memory::Allocator& String::allocator() const {
   return *m_allocator;
@@ -421,9 +432,10 @@ Size utf16_to_utf8(const Uint16* _utf16_contents, Size _length,
 Size utf8_to_utf16(const char* _utf8_contents, Size _length,
   Uint16* utf16_contents_);
 
+/*
 RX_HINT_FORCE_INLINE Rx::String operator""_s(const char* _contents, Size _length) {
   return {_contents, _length};
-}
+}*/
 
 } // namespace rx
 

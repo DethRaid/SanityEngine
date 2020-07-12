@@ -3,6 +3,7 @@
 #include "rx/core/function.h"
 #include "rx/core/vector.h"
 #include "rx/core/markers.h"
+#include "rx/core/hints/thread.h"
 
 #include "rx/core/concurrency/spin_lock.h"
 #include "rx/core/concurrency/scope_lock.h"
@@ -16,6 +17,9 @@ struct Event;
 
 template<typename R, typename... Ts>
 struct Event<R(Ts...)> {
+  RX_MARK_NO_COPY(Event);
+  RX_MARK_NO_MOVE(Event);
+
   using Delegate = Function<R(Ts...)>;
 
   struct Handle {
@@ -45,7 +49,8 @@ struct Event<R(Ts...)> {
 private:
   friend struct Handle;
   mutable Concurrency::SpinLock m_lock;
-  Vector<Delegate> m_delegates; // protected by |m_lock|
+
+  Vector<Delegate> m_delegates RX_HINT_GUARDED_BY(m_lock);
 };
 
 template<typename R, typename... Ts>

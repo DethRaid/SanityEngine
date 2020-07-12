@@ -162,11 +162,6 @@ inline constexpr Vec4<T> operator*(const Vec4<T>& _v, T _scalar) {
   return _scalar * _v;
 }
 
-template <typename T>
-inline constexpr Vec4<T> operator/(const Vec4<T>& _v, T _scalar) {
-    return {_v.x / _scalar, _v.y / _scalar, _v.z / _scalar, _v.w / _scalar};
-}
-
 template<typename T>
 inline constexpr Vec4<T> operator<(const Vec4<T>& _a, const Vec4<T>& _b) {
   return _a.x < _b.x && _a.y < _b.y && _a.z < _b.z && _a.w < _b.w;

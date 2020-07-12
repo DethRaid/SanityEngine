@@ -18,7 +18,7 @@
 namespace Rx::Console {
 
 static Concurrency::SpinLock g_lock;
-static VariableReference* g_head; // protected by |g_lock|
+static VariableReference* g_head RX_HINT_GUARDED_BY(g_lock);
 
 RX_LOG("console", logger);
 

@@ -15,8 +15,8 @@ struct WaitGroup {
   void wait();
 
 private:
-  Size m_signaled_count; // protected by |m_mutex|
-  Size m_count;          // protected by |m_mutex|
+  Size m_signaled_count RX_HINT_GUARDED_BY(m_mutex);
+  Size m_count          RX_HINT_GUARDED_BY(m_mutex);
   Mutex m_mutex;
   ConditionVariable m_condition_variable;
 };

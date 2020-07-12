@@ -32,7 +32,7 @@ private:
   VMA* allocate_vma(Size _size);
 
   Concurrency::Mutex m_lock;
-  Map<Byte*, VMA> m_mappings; // protected by |m_lock|.
+  Map<Byte*, VMA> m_mappings RX_HINT_GUARDED_BY(m_lock);
 
   static Global<ElectricFenceAllocator> s_instance;
 };

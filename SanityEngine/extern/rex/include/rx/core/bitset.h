@@ -20,6 +20,8 @@ struct Bitset {
   static constexpr const Size k_word_bits = 8 * sizeof(BitType);
 
   Bitset(Memory::Allocator& _allocator, Size _size);
+  Bitset(Memory::Allocator& _allocator, const Bitset& _bitset);
+
   Bitset(Size _size);
   Bitset(Bitset&& bitset_);
   Bitset(const Bitset& _bitset);
@@ -78,6 +80,11 @@ private:
 
 inline Bitset::Bitset(Size _size)
   : Bitset{Memory::SystemAllocator::instance(), _size}
+{
+}
+
+inline Bitset::Bitset(const Bitset& _bitset)
+  : Bitset{_bitset.allocator(), _bitset}
 {
 }
 

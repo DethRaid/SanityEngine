@@ -11,7 +11,8 @@
 
 #include "rx/core/hints/unreachable.h"
 
-#include "rx/core/memory/system_allocator.h" // allocator, g_system_allocator
+#include "rx/core/memory/system_allocator.h"
+#include "rx/core/memory/aggregate.h"
 
 namespace Rx {
 
@@ -27,6 +28,7 @@ struct Set {
 
   Set();
   Set(Memory::Allocator& _allocator);
+  Set(Memory::Allocator& _allocator, const Set& _set);
   Set(Set&& set_);
   Set(const Set& _set);
 
@@ -84,7 +86,10 @@ private:
 
   Memory::Allocator* m_allocator;
 
-  K* m_keys;
+  union {
+    Byte* m_data;
+    K* m_keys;
+  };
   Size* m_hashes;
 
   Size m_size;
@@ -125,8 +130,8 @@ inline Set<K>::Set(Set&& set_)
 }
 
 template<typename K>
-inline Set<K>::Set(const Set& _set)
-  : Set{_set.allocator()}
+inline Set<K>::Set(Memory::Allocator& _allocator, const Set& _set)
+  : Set{_allocator}
 {
   for (Size i{0}; i < _set.m_capacity; i++) {
     const auto hash = _set.element_hash(i);
@@ -134,6 +139,12 @@ inline Set<K>::Set(const Set& _set)
       insert(_set.m_keys[i]);
     }
   }
+}
+
+template<typename K>
+inline Set<K>::Set(const Set& _set)
+  : Set{_set.allocator(), _set}
+{
 }
 
 template<typename K>
@@ -181,8 +192,7 @@ template<typename K>
 inline void Set<K>::clear_and_deallocate() {
   clear();
 
-  allocator().deallocate(m_keys);
-  allocator().deallocate(m_hashes);
+  allocator().deallocate(m_data);
 }
 
 template<typename K>
@@ -319,12 +329,17 @@ inline Size Set<K>::element_hash(Size _index) const {
 
 template<typename K>
 inline bool Set<K>::allocate() {
-  m_keys = reinterpret_cast<K*>(allocator().allocate(sizeof(K) * m_capacity));
-  m_hashes = reinterpret_cast<Size*>(allocator().allocate(sizeof(Size) * m_capacity));
+  Memory::Aggregate aggregate;
+  aggregate.add<K>(m_capacity);
+  aggregate.add<Size>(m_capacity);
+  aggregate.finalize();
 
-  if (!m_keys || !m_hashes) {
+  if (!(m_data = allocator().allocate(aggregate.bytes()))) {
     return false;
   }
+
+  m_keys = reinterpret_cast<K*>(m_data + aggregate[0]);
+  m_hashes = reinterpret_cast<Size*>(m_data + aggregate[1]);
 
   for (Size i{0}; i < m_capacity; i++) {
     element_hash(i) = 0;
@@ -340,10 +355,11 @@ template<typename K>
 inline bool Set<K>::grow() {
   const auto old_capacity{m_capacity};
 
+  auto data = m_data;
+  RX_ASSERT(data, "unallocated");
+
   auto keys_data = m_keys;
   auto hashes_data = m_hashes;
-
-  RX_ASSERT(keys_data && hashes_data, "unallocated");
 
   m_capacity *= 2;
   if (!allocate()) {
@@ -360,8 +376,7 @@ inline bool Set<K>::grow() {
     }
   }
 
-  allocator().deallocate(keys_data);
-  allocator().deallocate(hashes_data);
+  allocator().deallocate(data);
 
   return true;
 }

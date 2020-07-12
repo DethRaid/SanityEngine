@@ -55,11 +55,11 @@ private:
   Concurrency::ConditionVariable m_ready_cond;
   Concurrency::ConditionVariable m_wakeup_cond;
 
-  Vector<Stream*> m_streams;       // protected by |m_mutex|
-  Vector<Queue> m_queues;          // protected by |m_mutex|
-  Vector<Ptr<Message>> m_messages; // protected by |m_mutex|
-  int m_status;                    // protected by |m_mutex|
-  int m_padding;                   // protected by |m_mutex|
+  Vector<Stream*> m_streams       RX_HINT_GUARDED_BY(m_mutex);
+  Vector<Queue> m_queues          RX_HINT_GUARDED_BY(m_mutex);
+  Vector<Ptr<Message>> m_messages RX_HINT_GUARDED_BY(m_mutex);
+  int m_status                    RX_HINT_GUARDED_BY(m_mutex);
+  int m_padding                   RX_HINT_GUARDED_BY(m_mutex);
 
   // NOTE(dweiler): This should come last.
   Concurrency::Thread m_thread;

@@ -44,7 +44,7 @@ struct StatsAllocator
 private:
   Allocator& m_allocator;
   mutable Concurrency::SpinLock m_lock;
-  Statistics m_statistics; // protected by |m_lock|
+  Statistics m_statistics RX_HINT_GUARDED_BY(m_lock);
 };
 
 inline constexpr StatsAllocator::StatsAllocator(Allocator& _allocator)

@@ -45,8 +45,9 @@ private:
   Byte* m_data;
 
   Concurrency::SpinLock m_lock;
-  Byte* m_this_point; // protected by |m_lock|
-  Byte* m_last_point; // protected by |m_lock|
+
+  Byte* m_this_point RX_HINT_GUARDED_BY(m_lock);
+  Byte* m_last_point RX_HINT_GUARDED_BY(m_lock);
 };
 
 inline Size BumpPointAllocator::used() const {

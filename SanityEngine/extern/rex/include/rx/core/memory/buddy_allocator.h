@@ -21,8 +21,8 @@ private:
 
   Concurrency::SpinLock m_lock;
 
-  void* m_head; // protected by |m_lock|
-  void* m_tail; // protected by |m_lock|
+  void* m_head RX_HINT_GUARDED_BY(m_lock);
+  void* m_tail RX_HINT_GUARDED_BY(m_lock);
 };
 
 } // namespace rx::memory

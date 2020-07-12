@@ -110,7 +110,7 @@ template<typename... Ts>
 inline bool Log::write(Level _level, const char* _format, Ts&&... _arguments) {
   if constexpr (sizeof...(Ts) > 0) {
     auto format = String::format(_format, Utility::forward<Ts>(_arguments)...);
-    m_queue_event.signal(_level, format);
+    m_queue_event.signal(_level, {format.allocator(), format});
     return enqueue(this, _level, Utility::move(format));
   } else {
     m_queue_event.signal(_level, _format);

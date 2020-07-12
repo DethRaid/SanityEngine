@@ -4,20 +4,21 @@
 
 namespace Rx::Math {
 
-struct camera
+struct Camera
   : Transform
 {
-  constexpr camera(Transform* _parent = nullptr);
+  constexpr Camera(Transform* _parent = nullptr);
+
   Mat4x4f view() const;
   Mat4x4f projection;
 };
 
-inline constexpr camera::camera(Transform* _parent)
+inline constexpr Camera::Camera(Transform* _parent)
   : Transform{_parent}
 {
 }
 
-inline Mat4x4f camera::view() const {
+inline Mat4x4f Camera::view() const {
   return Mat4x4f::invert(to_mat4());
 }
 

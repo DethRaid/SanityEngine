@@ -283,7 +283,7 @@ inline bool JSON::each(F&& _function) const {
   return true;
 }
 
-inline constexpr Memory::Allocator& JSON::allocator() const {
+RX_HINT_FORCE_INLINE constexpr Memory::Allocator& JSON::allocator() const {
   RX_ASSERT(m_shared, "reference count reached zero");
   return m_shared->m_allocator;
 }

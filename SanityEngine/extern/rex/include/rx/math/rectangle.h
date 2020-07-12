@@ -5,15 +5,15 @@
 namespace Rx::Math {
 
 template<typename T>
-struct rectangle {
+struct Rectangle {
   Vec2<T> offset;
   Vec2<T> dimensions;
 
-  bool contains(const rectangle& _other) const;
+  bool contains(const Rectangle& _other) const;
 };
 
 template<typename T>
-inline bool rectangle<T>::contains(const rectangle& _other) const {
+inline bool Rectangle<T>::contains(const Rectangle& _other) const {
   return _other.offset + _other.dimensions < offset + dimensions && _other.offset > offset;
 }
 

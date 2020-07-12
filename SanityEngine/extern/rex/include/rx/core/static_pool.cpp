@@ -8,7 +8,7 @@ StaticPool::StaticPool(Memory::Allocator& _allocator, Size _object_size, Size _c
   : m_allocator{&_allocator}
   , m_object_size{Memory::Allocator::round_to_alignment(_object_size)}
   , m_capacity{_capacity}
-  , m_data{allocator().allocate(m_object_size * m_capacity)}
+  , m_data{allocator().allocate(m_object_size, m_capacity)}
   , m_bitset{allocator(), m_capacity}
 {
 }

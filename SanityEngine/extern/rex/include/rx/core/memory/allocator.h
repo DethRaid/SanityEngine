@@ -40,6 +40,8 @@ struct Allocator {
   template<typename T>
   void destroy(void* _data);
 
+  Byte* allocate(Size _size, Size _count);
+
   static constexpr UintPtr round_to_alignment(UintPtr _ptr_or_size);
 };
 

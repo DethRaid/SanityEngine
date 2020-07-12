@@ -22,7 +22,7 @@ static void abort_debug() {
 #endif
 }
 
-[[maybe_unused]]
+[[noreturn, maybe_unused]]
 static void abort_release() {
 #if defined(RX_PLATFORM_POSIX)
   raise(SIGABRT);
@@ -37,6 +37,7 @@ static void abort_release() {
 #else
   static_assert(0, "implement abort_release");
 #endif
+  RX_HINT_UNREACHABLE();
 }
 
 [[noreturn]]

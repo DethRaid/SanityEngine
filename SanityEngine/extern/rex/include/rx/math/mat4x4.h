@@ -26,7 +26,7 @@ struct Mat4x4 {
   static constexpr Mat4x4 translate(const Vec3<T>& _translate);
   static constexpr Mat4x4 transpose(const Mat4x4& _mat);
   static constexpr Mat4x4 invert(const Mat4x4& _mat);
-  static constexpr Mat4x4 perspective(T _fov, const range<T>& _planes, T _aspect);
+  static constexpr Mat4x4 perspective(T _fov, const Range<T>& _planes, T _aspect);
 
   static constexpr Vec3<T> transform_point(const Vec3<T>& _point, const Mat4x4& _mat);
   static constexpr Vec3<T> transform_vector(const Vec3<T>& _vector, const Mat4x4& _mat);
@@ -172,7 +172,7 @@ inline constexpr Mat4x4<T> Mat4x4<T>::invert(const Mat4x4& _mat) {
 }
 
 template<typename T>
-inline constexpr Mat4x4<T> Mat4x4<T>::perspective(T _fov, const range<T>& _planes, T _aspect) {
+inline constexpr Mat4x4<T> Mat4x4<T>::perspective(T _fov, const Range<T>& _planes, T _aspect) {
   const T range{_planes.min - _planes.max};
   const T half{tan(deg_to_rad(_fov*T{.5}))};
   if (_aspect < 1) {

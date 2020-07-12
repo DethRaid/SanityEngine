@@ -18,10 +18,10 @@ Bitset::Bitset(Memory::Allocator& _allocator, Size _size)
   clear_all();
 }
 
-Bitset::Bitset(const Bitset& _bitset)
-  : m_allocator{&_bitset.allocator()}
+Bitset::Bitset(Memory::Allocator& _allocator, const Bitset& _bitset)
+  : m_allocator{&_allocator}
   , m_size{_bitset.m_size}
-  , m_data{reinterpret_cast<BitType*>(allocator().allocate(bytes_for_size(m_size)))}
+  , m_data{reinterpret_cast<BitType*>(_allocator.allocate(bytes_for_size(m_size)))}
 {
   RX_ASSERT(m_data, "out of memory");
   memcpy(m_data, _bitset.m_data, bytes_for_size(m_size));

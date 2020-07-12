@@ -146,7 +146,7 @@ inline constexpr Vector<T>::Vector(Memory::Allocator& _allocator)
 
 template<typename T>
 inline constexpr Vector<T>::Vector(Memory::View _view)
-  : m_allocator{*_view.owner}
+  : m_allocator{_view.owner}
   , m_data{reinterpret_cast<T*>(_view.data)}
   , m_size{_view.size / sizeof(T)}
   , m_capacity{m_size}
@@ -184,7 +184,7 @@ inline Vector<T>::Vector(Memory::Allocator& _allocator, Size _size, Utility::Uni
   static_assert(traits::is_trivially_copyable<T>,
     "T isn't trivial, cannot leave uninitialized");
 
-  m_data = reinterpret_cast<T*>(allocator().allocate(m_size * sizeof *m_data));
+  m_data = reinterpret_cast<T*>(allocator().allocate(sizeof(T), m_size));
   RX_ASSERT(m_data, "out of memory");
 }
 
@@ -195,7 +195,7 @@ inline Vector<T>::Vector(Memory::Allocator& _allocator, Size _size)
   , m_size{_size}
   , m_capacity{_size}
 {
-  m_data = reinterpret_cast<T*>(allocator().allocate(m_size * sizeof *m_data));
+  m_data = reinterpret_cast<T*>(allocator().allocate(sizeof(T), m_size));
   RX_ASSERT(m_data, "out of memory");
 
   // TODO(dweiler): is_trivial trait so we can memset this.
@@ -211,7 +211,7 @@ inline Vector<T>::Vector(Memory::Allocator& _allocator, const Vector& _other)
   , m_size{_other.m_size}
   , m_capacity{_other.m_capacity}
 {
-  m_data = reinterpret_cast<T*>(allocator().allocate(_other.m_capacity * sizeof *m_data));
+  m_data = reinterpret_cast<T*>(allocator().allocate(sizeof(T), _other.m_capacity));
   RX_ASSERT(m_data, "out of memory");
 
   if constexpr(traits::is_trivially_copyable<T>) {
@@ -258,7 +258,7 @@ inline Vector<T>& Vector<T>::operator=(const Vector& _other) {
   m_size = _other.m_size;
   m_capacity = _other.m_capacity;
 
-  m_data = reinterpret_cast<T*>(allocator().allocate(_other.m_capacity * sizeof *m_data));
+  m_data = reinterpret_cast<T*>(allocator().allocate(sizeof(T), _other.m_capacity));
   RX_ASSERT(m_data, "out of memory");
 
   if constexpr(traits::is_trivially_copyable<T>) {
@@ -363,7 +363,7 @@ bool Vector<T>::reserve(Size _size) {
     m_data = resize;
     return true;
   } else {
-    T* resize = reinterpret_cast<T*>(allocator().allocate(m_capacity * sizeof *m_data));
+    T* resize = reinterpret_cast<T*>(allocator().allocate(sizeof(T), m_capacity));
     if (RX_HINT_UNLIKELY(!resize)) {
       return false;
     }

@@ -132,7 +132,7 @@ template<typename T>
 template<typename U>
 inline void Ptr<T>::reset(Memory::Allocator& _allocator, U* _data) {
   destroy();
-  m_allocator = _allocator;
+  m_allocator = &_allocator;
   m_data = _data;
 }
 

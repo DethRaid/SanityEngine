@@ -2,6 +2,8 @@
 #define RX_CORE_CONCURRENCY_CLANG_ATOMIC_H
 #if defined(RX_COMPILER_CLANG)
 
+#include <atomic>
+
 #include "rx/core/traits/remove_const.h"
 
 namespace Rx::Concurrency::detail {

@@ -208,7 +208,7 @@ String& String::operator=(const String& _contents) {
 
 String& String::operator=(const char* _contents) {
   RX_ASSERT(_contents, "empty string");
-  String(_contents).swap(*this);
+  String(allocator(), _contents).swap(*this);
   return *this;
 }
 
@@ -375,7 +375,7 @@ Vector<String> String::split(Memory::Allocator& _allocator, int _token, Size _co
     result.reserve(_count);
   }
 
-  result.push_back("");
+  result.emplace_back(_allocator, "");
   _count--;
 
   for (const char* ch{m_data}; *ch; ch++) {
@@ -400,7 +400,7 @@ Vector<String> String::split(Memory::Allocator& _allocator, int _token, Size _co
     }
 
     if (*ch == _token && !quoted && (!limit || _count)) {
-      result.push_back("");
+      result.emplace_back(_allocator, "");
       _count--;
     } else {
       result.last() += *ch;
@@ -625,6 +625,14 @@ bool operator==(const String& _lhs, const String& _rhs) {
   return !strcmp(_lhs.data(), _rhs.data());
 }
 
+bool operator==(const String& _lhs, const char* _rhs) {
+  return !strcmp(_lhs.data(), _rhs);
+}
+
+bool operator==(const char* _lhs, const String& _rhs) {
+  return !strcmp(_lhs, _rhs.data());;
+}
+
 bool operator!=(const String& _lhs, const String& _rhs) {
   if (&_lhs == &_rhs) {
     return false;
@@ -637,12 +645,36 @@ bool operator!=(const String& _lhs, const String& _rhs) {
   return strcmp(_lhs.data(), _rhs.data());
 }
 
+bool operator!=(const String& _lhs, const char* _rhs) {
+  return strcmp(_lhs.data(), _rhs);
+}
+
+bool operator!=(const char* _lhs, const String& _rhs) {
+  return strcmp(_lhs, _rhs.data());
+}
+
 bool operator<(const String& _lhs, const String& _rhs) {
   return &_lhs == &_rhs ? false : strcmp(_lhs.data(), _rhs.data()) < 0;
 }
 
+bool operator<(const String& _lhs, const char* _rhs) {
+  return strcmp(_lhs.data(), _rhs) < 0;
+}
+
+bool operator<(const char* _lhs, const String& _rhs) {
+  return strcmp(_lhs, _rhs.data()) < 0;
+}
+
 bool operator>(const String& _lhs, const String& _rhs) {
   return &_lhs == &_rhs ? false : strcmp(_lhs.data(), _rhs.data()) > 0;
+}
+
+bool operator>(const String& _lhs, const char* _rhs) {
+  return strcmp(_lhs.data(), _rhs) > 0;
+}
+
+bool operator>(const char* _lhs, const String& _rhs) {
+  return strcmp(_lhs, _rhs.data()) > 0;
 }
 
 bool WideString::resize(Size _size) {
@@ -696,7 +728,7 @@ WideString::WideString(Memory::Allocator& _allocator, const Uint16* _contents,
   : m_allocator{&_allocator}
   , m_size{_size}
 {
-  m_data = reinterpret_cast<Uint16*>(allocator().allocate(sizeof(Uint16) * (_size + 1)));
+  m_data = reinterpret_cast<Uint16*>(allocator().allocate(sizeof(Uint16), _size + 1));
   RX_ASSERT(m_data, "out of memory");
 
   memcpy(m_data, _contents, sizeof(Uint16) * (_size + 1));

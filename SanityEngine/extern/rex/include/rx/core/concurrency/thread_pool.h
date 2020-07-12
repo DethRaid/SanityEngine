@@ -33,10 +33,10 @@ private:
   ConditionVariable m_task_cond;
   ConditionVariable m_ready_cond;
 
-  IntrusiveList m_queue;     // protected by |m_mutex|
-  Vector<Thread> m_threads;  // protected by |m_mutex|
-  DynamicPool m_job_memory; // protected by |m_mutex|
-  bool m_stop;               // protected by |m_mutex|
+  IntrusiveList m_queue     RX_HINT_GUARDED_BY(m_mutex);
+  Vector<Thread> m_threads  RX_HINT_GUARDED_BY(m_mutex);
+  DynamicPool m_job_memory  RX_HINT_GUARDED_BY(m_mutex);
+  bool m_stop               RX_HINT_GUARDED_BY(m_mutex);
 
   static Global<ThreadPool> s_instance;
 };

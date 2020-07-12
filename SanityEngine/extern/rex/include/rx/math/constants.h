@@ -10,14 +10,14 @@ template<typename T>
 inline constexpr const T k_tau{k_pi<T>*2.0};
 
 template<typename T>
-struct range {
-  constexpr range(const T& _min, const T& _max);
+struct Range {
+  constexpr Range(const T& _min, const T& _max);
   T min;
   T max;
 };
 
 template<typename T>
-inline constexpr range<T>::range(const T& _min, const T& _max)
+inline constexpr Range<T>::Range(const T& _min, const T& _max)
   : min{_min}
   , max{_max}
 {
@@ -25,4 +25,4 @@ inline constexpr range<T>::range(const T& _min, const T& _max)
 
 } // namespace rx
 
-#endif //
+#endif // RX_MATH_CONSTANTS_H

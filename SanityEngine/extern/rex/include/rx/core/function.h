@@ -25,6 +25,8 @@ struct Function<R(Ts...)> {
   template<typename F, typename = traits::enable_if<traits::is_callable<F, Ts...>>>
   Function(F&& _function);
 
+  Function(Memory::Allocator& _allocator, const Function& _function);
+
   Function(const Function& _function);
   Function(Function&& function_);
 
@@ -130,8 +132,8 @@ inline Function<R(Ts...)>::Function(Memory::Allocator& _allocator, F&& _function
 }
 
 template<typename R, typename... Ts>
-inline Function<R(Ts...)>::Function(const Function& _function)
-  : Function{_function.allocator()}
+inline Function<R(Ts...)>::Function(Memory::Allocator& _allocator, const Function& _function)
+  : Function{_allocator}
 {
   if (_function.m_data) {
     m_size = _function.m_size;
@@ -142,6 +144,12 @@ inline Function<R(Ts...)>::Function(const Function& _function)
     Utility::construct<ControlBlock>(m_data, *_function.control());
     control()->modify_lifetime(Lifetime::k_construct, storage(), _function.storage());
   }
+}
+
+template<typename R, typename... Ts>
+inline Function<R(Ts...)>::Function(const Function& _function)
+  : Function{_function.allocator(), _function}
+{
 }
 
 template<typename R, typename... Ts>
