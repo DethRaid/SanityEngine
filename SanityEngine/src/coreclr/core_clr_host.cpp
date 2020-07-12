@@ -54,15 +54,17 @@ namespace coreclr {
             }
         }
 
-        const char* property_keys[] = {"TRUSTED_PLATFORM_ASSEMBLIES"};
+        Rx::Vector<const char*> property_keys = Rx::Array{"TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS"};
 
-        const char* property_values[] = {tpa_list.data()};
+        const char* tpa_list_ptr = tpa_list.data();
+        Rx::Vector<const char*> property_values = Rx::Array{tpa_list_ptr,
+                                                            R"(E:\Documents\SanityEngine\SanityEngine-CSharp\bin\Debug\netcoreapp3.1)"};
 
         const auto result = coreclr_initialize_func(coreclr_working_directory.data(),
                                                     "SanityEngine",
-                                                    sizeof(property_keys) / sizeof(char*),
-                                                    property_keys,
-                                                    property_values,
+                                                    property_values.size(),
+                                                    property_keys.data(),
+                                                    property_values.data(),
                                                     &host_handle,
                                                     &domain_id);
         if(FAILED(result)) {
@@ -83,6 +85,21 @@ namespace coreclr {
     }
 
     void Host::load_assembly(const Rx::String& assembly_path) {
-        // TODO
+        // For now we hardcode a bunch of stuff. Eventually I'll figure out what I'm doing
+
+        typedef void (*HiFunctionPtr)();
+        HiFunctionPtr hi_function;
+
+        const HRESULT result = coreclr_create_delegate_func(host_handle,
+                                                            domain_id,
+                                                            "SanityEngine-CSharp Version=1.0.0",
+                                                            "SanityEngine.EnvironmentObjectEditor",
+                                                            "Hi",
+                                                            reinterpret_cast<void**>(&hi_function));
+        if(FAILED(result)) {
+            logger->error("Could not get a pointer to the Hi function: %s", to_string(result));
+        } else {
+            hi_function();
+        }
     }
 } // namespace coreclr

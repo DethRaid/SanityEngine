@@ -192,6 +192,8 @@ void SanityEngine::initialize_scripting_runtime() {
     if(!scripting_runtime) {
         Rx::abort("Could not initialize scripting runtime");
     }
+
+    scripting_runtime->load_assembly("");
 }
 
 void SanityEngine::create_planetary_atmosphere() {

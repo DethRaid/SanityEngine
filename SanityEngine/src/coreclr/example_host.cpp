@@ -12,6 +12,8 @@
 // Define OS-specific items like the CoreCLR library's name and path elements
 #include <D3D12MemAlloc.h>
 #include <Windows.h>
+
+#include "core_clr_host.hpp"
 #define FS_SEPARATOR "\\"
 #define PATH_DELIMITER ";"
 #define CORECLR_FILE_NAME "coreclr.dll"

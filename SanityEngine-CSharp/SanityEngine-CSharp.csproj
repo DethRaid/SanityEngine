@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>SanityEngine_CSharp</RootNamespace>
+    <RootNamespace>SanityEngine</RootNamespace>
   </PropertyGroup>
 
 </Project>
