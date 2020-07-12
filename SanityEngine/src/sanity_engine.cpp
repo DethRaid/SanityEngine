@@ -193,7 +193,45 @@ void SanityEngine::initialize_scripting_runtime() {
         Rx::abort("Could not initialize scripting runtime");
     }
 
-    scripting_runtime->load_assembly("");
+    // register_wren_api();
+
+    // Hardcode loading a thing
+    const Rx::String terraingen_module = R"MODULE(
+import "imgui" for ImGui, ImVec2, Box
+
+class EnvironmentObjectEditor {
+    construct new() {}
+    
+    draw() {
+        var pos = ImVec2.new(300, 300)
+        var pivot = ImVec2.new(0.5, 0.5)
+        ImGui.SetNextWindowPos(pos, "Always", pivot)
+
+        ImGui.Begin("Environment Object", Box.new(true), 0)
+        ImGui.Text("This is where the object stuff will go")
+        ImGui.End()
+    }
+}
+)MODULE";
+
+    const auto result = wrenInterpret(scripting_runtime->get_vm(), "engine/terraingen", terraingen_module.data());
+    if(result != WREN_RESULT_SUCCESS) {
+        Rx::abort("Could not load terraingen module");
+    }
+
+    // const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
+    // if(!success) {
+    //     Rx::abort("Could not register SanityEngine builtin scripts directory");
+    // }
+}
+
+void SanityEngine::register_wren_api() const {
+    /*
+     * Everything in this method is auto-generated when the code is re-built. You should not put any code you care about in this method, nor
+     * should you modify the code in this method in any way
+     */
+
+    // _scripting_entity_scripting_api_register_with_scripting_runtime(*scripting_runtime);
 }
 
 void SanityEngine::create_planetary_atmosphere() {

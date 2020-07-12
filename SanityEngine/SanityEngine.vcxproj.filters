@@ -220,12 +220,6 @@
     <Filter Include="Wren\optional">
       <UniqueIdentifier>{f3f3eb03-8f88-4ceb-9467-fe23f34fc23c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\coreclr">
-      <UniqueIdentifier>{4177a9bc-c0f8-4db6-ae12-f91cdd7b6cd6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\coreclr">
-      <UniqueIdentifier>{d090d8c0-e9d4-4856-ab9f-f565571013e7}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -614,18 +608,6 @@
     </ClCompile>
     <ClCompile Include="extern\wren\src\optional\wren_opt_random.c">
       <Filter>Wren\optional</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp">
-      <Filter>Rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp">
-      <Filter>Rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="src\coreclr\example_host.cpp">
-      <Filter>Source Files\coreclr</Filter>
-    </ClCompile>
-    <ClCompile Include="src\coreclr\core_clr_host.cpp">
-      <Filter>Source Files\coreclr</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1405,15 +1387,6 @@
     </ClInclude>
     <ClInclude Include="extern\wren\src\optional\wren_opt_random.h">
       <Filter>Wren\optional</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h">
-      <Filter>Rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="src\coreclr\core_clr_host.hpp">
-      <Filter>Header Files\coreclr</Filter>
-    </ClInclude>
-    <ClInclude Include="src\coreclr\coreclr_host_api.hpp">
-      <Filter>Header Files\coreclr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

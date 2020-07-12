@@ -81,8 +81,6 @@
     <ClCompile Include="extern\rex\include\rx\core\math\sin.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\math\sqrt.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\math\tan.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\memory\buddy_allocator.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\memory\bump_point_allocator.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\memory\electric_fence_allocator.cpp" />
@@ -128,10 +126,6 @@
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
-    <ClCompile Include="src\coreclr\core_clr_host.cpp" />
-    <ClCompile Include="src\coreclr\example_host.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\globals.cpp" />
@@ -253,7 +247,6 @@
     <ClInclude Include="extern\rex\include\rx\core\math\sin.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\sqrt.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\tan.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\allocator.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\buddy_allocator.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\bump_point_allocator.h" />
@@ -376,8 +369,6 @@
     <ClInclude Include="src\adapters\tracy.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
-    <ClInclude Include="src\coreclr\coreclr_host_api.hpp" />
-    <ClInclude Include="src\coreclr\core_clr_host.hpp" />
     <ClInclude Include="src\core\align.hpp" />
     <ClInclude Include="src\core\ansi_colors.hpp" />
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
@@ -743,8 +734,6 @@
     <ProjectGuid>{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}</ProjectGuid>
     <RootNamespace>SanityEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <TargetFrameworkVersion>
-    </TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
