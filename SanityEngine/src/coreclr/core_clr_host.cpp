@@ -62,7 +62,7 @@ namespace coreclr {
 
         const auto result = coreclr_initialize_func(coreclr_working_directory.data(),
                                                     "SanityEngine",
-                                                    property_values.size(),
+                                                    1,
                                                     property_keys.data(),
                                                     property_values.data(),
                                                     &host_handle,
@@ -92,7 +92,7 @@ namespace coreclr {
 
         const HRESULT result = coreclr_create_delegate_func(host_handle,
                                                             domain_id,
-                                                            "SanityEngine-CSharp Version=1.0.0",
+                                                            "SanityEngine-CSharp",
                                                             "SanityEngine.EnvironmentObjectEditor",
                                                             "Hi",
                                                             reinterpret_cast<void**>(&hi_function));
