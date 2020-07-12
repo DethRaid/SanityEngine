@@ -10,6 +10,7 @@
 #include "input/input_manager.hpp"
 #include "renderer/renderer.hpp"
 #include "settings.hpp"
+#include "coreclr/core_clr_host.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
@@ -74,9 +75,7 @@ private:
 
     void initialize_scripting_runtime();
 
-    void register_wren_api() const;
-
-    Rx::Ptr<script::ScriptingRuntime> scripting_runtime;
+    Rx::Ptr<coreclr::Host> scripting_runtime;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

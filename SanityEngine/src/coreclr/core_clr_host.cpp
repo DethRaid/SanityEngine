@@ -2,8 +2,7 @@
 
 #include <filesystem>
 
-#include <Windows.h>
-
+#include "Tracy.hpp"
 #include "core/errors.hpp"
 #include "core/types.hpp"
 #include "rx/core/abort.h"
@@ -14,6 +13,8 @@ namespace coreclr {
     RX_LOG("\033[35;47mCoreCLR\033[0m", logger);
 
     Host::Host(const Rx::String& coreclr_working_directory) {
+        ZoneScoped;
+
         const auto core_clr_assembly_path = Rx::String::format("%s/coreclr.dll", coreclr_working_directory);
         coreclr = LoadLibraryExA(core_clr_assembly_path.data(), nullptr, 0);
         if(coreclr == nullptr) {
