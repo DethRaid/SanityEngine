@@ -80,12 +80,16 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         logger->info("Created window");
 
         glfwSetWindowUserPointer(window, input_manager.get());
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        // TODO: Only enable this in play-in-editor mode
+        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         glfwSetKeyCallback(window, key_func);
 
         renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings);
         logger->info("Initialized renderer");
+
+        asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
         initialize_scripting_runtime();
 
@@ -111,7 +115,9 @@ SanityEngine::SanityEngine(const Settings& settings_in)
                               registry,
                               *renderer);
 
-        player_controller->set_current_terrain(world->get_terrain());
+        if(player_controller) {
+            player_controller->set_current_terrain(world->get_terrain());
+        }
 
         create_environment_object_editor();
 
@@ -137,7 +143,9 @@ void SanityEngine::run() {
         const auto frame_start_time = std::chrono::steady_clock::now();
         glfwPollEvents();
 
-        player_controller->update_player_transform(last_frame_duration);
+        if(player_controller) {
+            player_controller->update_player_transform(last_frame_duration);
+        }
 
         {
             auto locked_registry = registry.lock();
@@ -151,10 +159,6 @@ void SanityEngine::run() {
         // There might not be a world if the player is still in the main menu
         if(world) {
             world->tick(last_frame_duration);
-        }
-
-        if(frame_count == 1) {
-            // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
         }
 
         renderer->render_all(registry.lock(), *world);
@@ -194,30 +198,6 @@ void SanityEngine::initialize_scripting_runtime() {
 
     // register_wren_api();
 
-    // Hardcode loading a thing
-//     const Rx::String terraingen_module = R"MODULE(
-// import "imgui" for ImGui, ImVec2, Box
-// 
-// class EnvironmentObjectEditor {
-//     construct new() {}
-//     
-//     draw() {
-//         var pos = ImVec2.new(300, 300)
-//         var pivot = ImVec2.new(0.5, 0.5)
-//         ImGui.SetNextWindowPos(pos, "Always", pivot)
-// 
-//         ImGui.Begin("Environment Object", Box.new(true), 0)
-//         ImGui.Text("This is where the object stuff will go")
-//         ImGui.End()
-//     }
-// }
-// )MODULE";
-// 
-//     const auto result = wrenInterpret(scripting_runtime->get_vm(), "terraingen", terraingen_module.data());
-//     if(result != WREN_RESULT_SUCCESS) {
-//         Rx::abort("Could not load terraingen module");
-//     }
-
     const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
     if(!success) {
         Rx::abort("Could not register SanityEngine builtin scripts directory");
@@ -256,23 +236,16 @@ void SanityEngine::create_first_person_player() {
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     locked_registry->assign<renderer::CameraComponent>(player);
 
-    player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
+    // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
     logger->info("Created flycam");
-}
-
-void SanityEngine::load_bve_train(const Rx::String& filename) {
-    const auto success = bve->add_train_to_scene(filename, registry, *renderer);
-    if(!success) {
-        logger->error("Could not load train file {}", filename.data());
-    }
 }
 
 void SanityEngine::create_environment_object_editor() {
     auto locked_registry = registry.lock();
     const auto entity = locked_registry->create();
     auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
-    
+
     auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
     ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }

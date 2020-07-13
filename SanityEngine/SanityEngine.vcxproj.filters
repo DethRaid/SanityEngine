@@ -220,6 +220,12 @@
     <Filter Include="Wren\optional">
       <UniqueIdentifier>{f3f3eb03-8f88-4ceb-9467-fe23f34fc23c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\world\environment">
+      <UniqueIdentifier>{0954654f-ac9d-401d-9e9e-ebb9a30044ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\world\environment">
+      <UniqueIdentifier>{45e0c90d-bb1d-4652-acb3-7f4f3cea32fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sanity_engine.cpp">
@@ -614,6 +620,12 @@
     </ClCompile>
     <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp">
       <Filter>Rex\core\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\environment\environment_object.cpp">
+      <Filter>Source Files\world\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\asset_registry.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1396,6 +1408,12 @@
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h">
       <Filter>Rex\core\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\environment\environment_object.hpp">
+      <Filter>Header Files\world\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\asset_registry.hpp">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

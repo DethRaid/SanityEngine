@@ -9,6 +9,7 @@
 #include "renderer/renderer.hpp"
 #include "rx/core/ptr.h"
 #include "settings.hpp"
+#include "core/asset_registry.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
@@ -75,14 +76,14 @@ private:
 
     Rx::Ptr<script::ScriptingRuntime> scripting_runtime;
 
+    Rx::Ptr<AssetRegistry> asset_registry;
+
 #pragma region Spawning
     void create_planetary_atmosphere();
 
     void make_frametime_display();
 
     void create_first_person_player();
-
-    void load_bve_train(const Rx::String& filename);
 
     void create_environment_object_editor();
 
