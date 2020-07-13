@@ -195,33 +195,33 @@ void SanityEngine::initialize_scripting_runtime() {
     // register_wren_api();
 
     // Hardcode loading a thing
-    const Rx::String terraingen_module = R"MODULE(
-import "imgui" for ImGui, ImVec2, Box
+//     const Rx::String terraingen_module = R"MODULE(
+// import "imgui" for ImGui, ImVec2, Box
+// 
+// class EnvironmentObjectEditor {
+//     construct new() {}
+//     
+//     draw() {
+//         var pos = ImVec2.new(300, 300)
+//         var pivot = ImVec2.new(0.5, 0.5)
+//         ImGui.SetNextWindowPos(pos, "Always", pivot)
+// 
+//         ImGui.Begin("Environment Object", Box.new(true), 0)
+//         ImGui.Text("This is where the object stuff will go")
+//         ImGui.End()
+//     }
+// }
+// )MODULE";
+// 
+//     const auto result = wrenInterpret(scripting_runtime->get_vm(), "terraingen", terraingen_module.data());
+//     if(result != WREN_RESULT_SUCCESS) {
+//         Rx::abort("Could not load terraingen module");
+//     }
 
-class EnvironmentObjectEditor {
-    construct new() {}
-    
-    draw() {
-        var pos = ImVec2.new(300, 300)
-        var pivot = ImVec2.new(0.5, 0.5)
-        ImGui.SetNextWindowPos(pos, "Always", pivot)
-
-        ImGui.Begin("Environment Object", Box.new(true), 0)
-        ImGui.Text("This is where the object stuff will go")
-        ImGui.End()
+    const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
+    if(!success) {
+        Rx::abort("Could not register SanityEngine builtin scripts directory");
     }
-}
-)MODULE";
-
-    const auto result = wrenInterpret(scripting_runtime->get_vm(), "engine/terraingen", terraingen_module.data());
-    if(result != WREN_RESULT_SUCCESS) {
-        Rx::abort("Could not load terraingen module");
-    }
-
-    // const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
-    // if(!success) {
-    //     Rx::abort("Could not register SanityEngine builtin scripts directory");
-    // }
 }
 
 void SanityEngine::create_planetary_atmosphere() {
@@ -273,7 +273,7 @@ void SanityEngine::create_environment_object_editor() {
     const auto entity = locked_registry->create();
     auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
     
-    auto* handle = scripting_runtime->instantiate_script_object("engine/terraingen", "EnvironmentObjectEditor");
+    auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
     ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
 

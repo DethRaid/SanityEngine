@@ -24,9 +24,7 @@ namespace script {
         script_logger->error("[%s] Line %d: %s", module_name, line, message);
     }
 
-    void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) {
-        script_logger->info("%s", text);
-    }
+    void ScriptingRuntime::wren_log(WrenVM* /* vm */, const char* text) { script_logger->info("%s", text); }
 
     WrenForeignMethodFn ScriptingRuntime::wren_bind_foreign_method(
         WrenVM* vm, const char* module_name, const char* class_name, const bool is_static, const char* signature) {
@@ -79,12 +77,13 @@ namespace script {
     }
 
     Uint32 ScriptingRuntime::load_all_scripts_in_directory(const std::filesystem::path& directory) const {
+        const auto& directory_string = directory.string();
         if(!exists(directory)) {
-            logger->error("Could not load scripts in directory %s: directory does not exist", directory.string().c_str());
+            logger->error("Could not load scripts in directory %s: directory does not exist", directory_string.c_str());
             return 0;
         }
         if(!is_directory(directory)) {
-            logger->error("Could not load scripts in directory %s: This path does not refer to a directory", directory.string().c_str());
+            logger->error("Could not load scripts in directory %s: This path does not refer to a directory", directory_string.c_str());
             return 0;
         }
         Uint32 num_loaded_modules{0};
@@ -92,30 +91,28 @@ namespace script {
             const auto& module_path = module_entry.path();
             const auto& module_string = module_path.string();
 
-            logger->info("Looking at potential Wren script %s", module_string.c_str());
-
             if(module_entry.is_directory()) {
                 num_loaded_modules += load_all_scripts_in_directory(module_path);
 
             } else if(module_path.extension() == ".wren") {
-                auto* file = fopen(module_path.string().c_str(), "r");
+                auto* file = fopen(module_string.c_str(), "r");
                 if(file == nullptr) {
                     // The module wasn't found at this module path - that's perfectly fine! We'll just check another one
-                    logger->error("Could not open file %s", module_entry);
+                    logger->error("Could not open file %s", module_string.c_str());
                     fclose(file);
                     continue;
                 }
 
                 auto result = static_cast<size_t>(fseek(file, 0, SEEK_END));
                 if(result != 0) {
-                    logger->error("Could not get length of file %s", module_entry);
+                    logger->error("Could not get length of file %s", module_string.c_str());
                     fclose(file);
                     continue;
                 }
 
                 const auto length = ftell(file);
                 if(length == 0) {
-                    logger->error("File %s exists, but it has a length of 0", module_entry);
+                    logger->error("File %s exists, but it has a length of 0", module_string.c_str());
                     fclose(file);
                     continue;
                 }
@@ -126,7 +123,7 @@ namespace script {
 
                 result = fread(module_contents, 1, length, file);
                 if(result == 0) {
-                    logger->error("Could not read contents of file %s", module_entry);
+                    logger->error("Could not read contents of file %s", module_string.c_str());
 
                     delete[] module_contents;
 
@@ -142,21 +139,21 @@ namespace script {
                 const auto wren_result = wrenInterpret(vm, module_name_string.c_str(), module_contents);
                 switch(wren_result) {
                     case WREN_RESULT_SUCCESS:
-                        logger->info("Successfully loaded module %s", module_entry);
+                        logger->info("Successfully loaded module %s", module_name_string.c_str());
                         num_loaded_modules++;
                         break;
 
                     case WREN_RESULT_COMPILE_ERROR:
-                        logger->error("Compile error while loading module %s", module_name_string);
+                        logger->error("Compile error while loading module %s", module_name_string.c_str());
                         break;
 
                     case WREN_RESULT_RUNTIME_ERROR:
                         logger->error("Runtime error when loading module %s - are you sure you defined all your foreign methods?",
-                                      module_name_string);
+                                      module_name_string.c_str());
                         break;
 
                     default:
-                        logger->error("Unknown error when loading module %s");
+                        logger->error("Unknown error when loading module %s", module_name_string.c_str());
                 }
 
                 delete[] module_contents;
@@ -165,7 +162,7 @@ namespace script {
         if(num_loaded_modules == 0) {
             logger->warning(
                 "No modules loaded from directory %s. If you are planning on adding scripts here while the application is running, you may ignore this warning",
-                directory.string().c_str());
+                directory_string.c_str());
         }
 
         return num_loaded_modules;
