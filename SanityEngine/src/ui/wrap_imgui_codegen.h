@@ -1,6 +1,5 @@
 // This is an automatically generated file!!
 #pragma once
-
 #include "wren.hpp"
 
 namespace wrap_imgui {

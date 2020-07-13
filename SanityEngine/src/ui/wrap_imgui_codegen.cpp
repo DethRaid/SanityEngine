@@ -2,8 +2,8 @@
 
 #include "wren.hpp"
 #include "wrap_imgui_codegen.h"
-#include <imgui/imgui.h>
-#include <imgui/imgui_stdlib.h>
+#include "imgui/imgui.h"
+#include "imgui/imgui_stdlib.h"
 
 #include <codecvt>
 #include <locale>
@@ -13,7 +13,6 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
-
 
 namespace {
 
@@ -1533,28 +1532,6 @@ void w_Render(WrenVM *vm)
 	
 }
 
-// skipping w_GetDrawData due to unimplemented return type: "ImDrawData*"
-
-/*  create Demo window (previously called ShowTestWindow). demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application! */
-// void w_ShowDemoWindow(WrenVM *vm)
-// {
-// 	auto p_open = static_cast<bool>(Box::getCPP<bool>(vm, 1));
-// 	
-// 	ImGui::ShowDemoWindow(&p_open);
-// 	
-// 	Box::setCPP<bool>(vm, 1, p_open);
-// }
-// 
-// /*  create About window. display Dear ImGui version, credits and build/system information. */
-// void w_ShowAboutWindow(WrenVM *vm)
-// {
-// 	auto p_open = static_cast<bool>(Box::getCPP<bool>(vm, 1));
-// 	
-// 	ImGui::ShowAboutWindow(&p_open);
-// 	
-// 	Box::setCPP<bool>(vm, 1, p_open);
-// }
-
 /*  create Debug/Metrics window. display Dear ImGui internals: draw commands (with individual draw calls and vertices), window list, basic internal state, etc. */
 void w_ShowMetricsWindow(WrenVM *vm)
 {
@@ -1564,34 +1541,6 @@ void w_ShowMetricsWindow(WrenVM *vm)
 	
 	Box::setCPP<bool>(vm, 1, p_open);
 }
-
-// skipping w_ShowStyleEditor due to unimplemented argument type: "ImGuiStyle*"
-
-/*  add style selector block (not a window), essentially a combo listing the default styles. */
-// void w_ShowStyleSelector(WrenVM *vm)
-// {
-// 	auto label = wrenGetSlotString(vm, 1);
-// 	
-// 	bool out = ImGui::ShowStyleSelector(label);
-// 	wrenSetSlotBool(vm, 0, out);
-// 	
-// }
-
-/*  add font selector block (not a window), essentially a combo listing the loaded fonts. */
-// void w_ShowFontSelector(WrenVM *vm)
-// {
-// 	auto label = wrenGetSlotString(vm, 1);
-// 	
-// 	ImGui::ShowFontSelector(label);
-// 	
-// }
-// 
-// /*  add basic help/info block (not a window): how to manipulate ImGui as a end-user (mouse/keyboard controls). */
-// void w_ShowUserGuide(WrenVM *vm)
-// {
-// 	ImGui::ShowUserGuide();
-// 	
-// }
 
 /*  get the compiled version string e.g. "1.23" (essentially the compiled value for IMGUI_VERSION) */
 void w_GetVersion(WrenVM *vm)
@@ -4241,6 +4190,12 @@ void w_InputTextWithHint_Override2(WrenVM *vm)
 // {{{ Function overrides
 // }}}
 
+const std::unordered_map<std::string, WrenForeignClassMethods> foreignAllocators = {
+{"Box", {Box::alloc, Box::finalize}},
+{"ImVec2", {WrapImVec2::alloc, WrapImVec2::finalize}},
+{"ImVec4", {WrapImVec4::alloc, WrapImVec4::finalize}},
+};
+
 const std::unordered_map<std::string, WrenForeignMethodFn> foreignMethods = {
 {"Box::init new(_)", Box::init},
 {"Box::value", Box::get},
@@ -4568,15 +4523,8 @@ const std::unordered_map<std::string, WrenForeignMethodFn> foreignMethods = {
 {"ImGui::SetTabItemClosed(_)", w_SetTabItemClosed},
 {"ImGui::SetTooltip(_)", w_SetTooltip},
 {"ImGui::SetWindowFontScale(_)", w_SetWindowFontScale},
-// {"ImGui::ShowAboutWindow()", w_ShowAboutWindow},
-// {"ImGui::ShowAboutWindow(_)", w_ShowAboutWindow},
-// {"ImGui::ShowDemoWindow()", w_ShowDemoWindow},
-// {"ImGui::ShowDemoWindow(_)", w_ShowDemoWindow},
-// {"ImGui::ShowFontSelector(_)", w_ShowFontSelector},
 {"ImGui::ShowMetricsWindow()", w_ShowMetricsWindow},
 {"ImGui::ShowMetricsWindow(_)", w_ShowMetricsWindow},
-// {"ImGui::ShowStyleSelector(_)", w_ShowStyleSelector},
-// {"ImGui::ShowUserGuide()", w_ShowUserGuide},
 {"ImGui::SliderAngle(_,_)", w_SliderAngle},
 {"ImGui::SliderAngle(_,_,_)", w_SliderAngle},
 {"ImGui::SliderAngle(_,_,_,_)", w_SliderAngle},
@@ -5022,9 +4970,12 @@ char* wrap_imgui::loadModule(WrenVM* vm)
 
 bool wrap_imgui::bindForeignClass(WrenVM* vm, const char* className, WrenForeignClassMethods& methods)
 {
-	if(strcmp("Box", className) == 0) {
-		methods.allocate = Box::alloc;
-		methods.finalize = Box::finalize;
+	auto pair = foreignAllocators.find(className);
+
+	if(pair != foreignAllocators.end()) {
+		const WrenForeignClassMethods& methods2 = pair->second;
+		methods.allocate = methods2.allocate;
+		methods.finalize = methods2.finalize;
 		return true;
 	}
 	return false;
