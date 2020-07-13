@@ -609,6 +609,12 @@
     <ClCompile Include="extern\wren\src\optional\wren_opt_random.c">
       <Filter>Wren\optional</Filter>
     </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp">
+      <Filter>Rex\core\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp">
+      <Filter>Rex\core\memory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sanity_engine.hpp">
@@ -1387,6 +1393,9 @@
     </ClInclude>
     <ClInclude Include="extern\wren\src\optional\wren_opt_random.h">
       <Filter>Wren\optional</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h">
+      <Filter>Rex\core\memory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

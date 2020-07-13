@@ -187,8 +187,7 @@ SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return regi
 World* SanityEngine::get_world() const { return world.get(); }
 
 void SanityEngine::initialize_scripting_runtime() {
-    scripting_runtime = Rx::make_ptr<coreclr::Host>(RX_SYSTEM_ALLOCATOR,
-                                                    R"(C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.0-preview.4.20251.6)");
+    scripting_runtime = script::ScriptingRuntime::create(registry);
     if(!scripting_runtime) {
         Rx::abort("Could not initialize scripting runtime");
     }
@@ -223,15 +222,6 @@ class EnvironmentObjectEditor {
     // if(!success) {
     //     Rx::abort("Could not register SanityEngine builtin scripts directory");
     // }
-}
-
-void SanityEngine::register_wren_api() const {
-    /*
-     * Everything in this method is auto-generated when the code is re-built. You should not put any code you care about in this method, nor
-     * should you modify the code in this method in any way
-     */
-
-    // _scripting_entity_scripting_api_register_with_scripting_runtime(*scripting_runtime);
 }
 
 void SanityEngine::create_planetary_atmosphere() {
@@ -279,12 +269,12 @@ void SanityEngine::load_bve_train(const Rx::String& filename) {
 }
 
 void SanityEngine::create_environment_object_editor() {
-    // auto locked_registry = registry.lock();
-    // const auto entity = locked_registry->create();
-    // auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
-    //
-    // auto* handle = scripting_runtime->instantiate_script_object("engine/terraingen", "EnvironmentObjectEditor");
-    // ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
+    auto locked_registry = registry.lock();
+    const auto entity = locked_registry->create();
+    auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
+    
+    auto* handle = scripting_runtime->instantiate_script_object("engine/terraingen", "EnvironmentObjectEditor");
+    ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {

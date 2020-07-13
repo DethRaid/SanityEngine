@@ -73,7 +73,7 @@ private:
 
     void initialize_scripting_runtime();
 
-    Rx::Ptr<coreclr::Host> scripting_runtime;
+    Rx::Ptr<script::ScriptingRuntime> scripting_runtime;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

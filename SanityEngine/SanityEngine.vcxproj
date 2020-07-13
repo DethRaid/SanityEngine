@@ -81,6 +81,8 @@
     <ClCompile Include="extern\rex\include\rx\core\math\sin.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\math\sqrt.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\math\tan.cpp" />
+    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp" />
+    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\memory\buddy_allocator.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\memory\bump_point_allocator.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\memory\electric_fence_allocator.cpp" />
@@ -247,6 +249,7 @@
     <ClInclude Include="extern\rex\include\rx\core\math\sin.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\sqrt.h" />
     <ClInclude Include="extern\rex\include\rx\core\math\tan.h" />
+    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\allocator.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\buddy_allocator.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\bump_point_allocator.h" />
