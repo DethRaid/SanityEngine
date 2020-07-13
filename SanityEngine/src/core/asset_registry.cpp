@@ -2,12 +2,14 @@
 
 #include <filesystem>
 
+#include <combaseapi.h>
+
 #include "rx/core/log.h"
 
 RX_LOG("AssetRegistry", logger);
 
-AssetRegistry::AssetRegistry(Rx::String content_directory_in) : content_directory{Rx::Utility::move(content_directory_in)} {
-    register_assets_in_directory(std::filesystem::path{content_directory_in.data()});
+AssetRegistry::AssetRegistry(const Rx::String& content_directory_in) : content_directory{content_directory_in} {
+    register_assets_in_directory(content_directory);
 }
 
 Rx::Optional<Rx::String> AssetRegistry::get_path_from_guid(GUID guid) const {
@@ -19,28 +21,49 @@ Rx::Optional<Rx::String> AssetRegistry::get_path_from_guid(GUID guid) const {
     return *path_ptr;
 }
 
-void AssetRegistry::register_assets_in_directory(const std::filesystem::path& directory_to_scan) {
-    const auto directory_to_scan_string = directory_to_scan.string();
-    logger->verbose("Scanning directory %s for assets", directory_to_scan.c_str());
-    for(const auto& potential_asset_path : directory_to_scan) {
-        const auto potential_asset_path_string = potential_asset_path.string();
-        logger->verbose("Examining potential asset %s", potential_asset_path_string.c_str());
+void AssetRegistry::register_assets_in_directory(Rx::Filesystem::Directory& directory_to_scan) {
+    logger->verbose("Scanning directory %s for assets", directory_to_scan.path());
+    directory_to_scan.each([&](Rx::Filesystem::Directory::Item& potential_asset_path) {
+        logger->verbose("Examining potential asset %s", potential_asset_path.name());
 
-        if(is_directory(potential_asset_path)) {
+        if(potential_asset_path.is_directory()) {
             // Recurse into directories
-            register_assets_in_directory(potential_asset_path);
+            auto child_directory = Rx::Filesystem::Directory{potential_asset_path.name()};
+            register_assets_in_directory(child_directory);
 
-        } else if(potential_asset_path.has_extension() && potential_asset_path.extension() != "meta") {
+        } else if(!potential_asset_path.name().ends_with("meta")) {
             // We have a file that isn't a meta file! Does it already have a .meta file?
-            const auto meta_file_path_string = Rx::String::format("%s.meta", potential_asset_path_string.c_str());
+            const auto meta_file_path_string = Rx::String::format("%s.meta", potential_asset_path.name());
             const auto meta_file_path = std::filesystem::path{meta_file_path_string.data()};
 
             if(!exists(meta_file_path)) {
                 // Generate the meta file if it doesn't already exist
-                generate_meta_file_for_asset(potential_asset_path);
+                generate_meta_file_for_asset(potential_asset_path.name());
             }
 
-            register_asset_from_meta_file(meta_file_path);
+
+            AssetMetadataFile metadata;
+            json5::from_file(meta_file_path_string.data(), metadata);
+            register_asset_from_meta_data(metadata);
         }
+    });
+}
+
+void AssetRegistry::register_asset_from_meta_data(const AssetMetadataFile& meta_data)
+{
+    
+}
+
+void AssetRegistry::generate_meta_file_for_asset(const Rx::Filesystem::Directory& asset_path) {
+    GUID guid;
+    const auto result = CoCreateGuid(&guid);
+    if(FAILED(result)) {
+        logger->error("Could not create GUID for file %s", asset_path.path());
+        return;
     }
+
+    const auto meta_file_path = Rx::String::format("%s.meta", asset_path.path());
+
+    const auto meta_data = AssetMetadataFile{.version = METADATA_CURRENT_VERSION, .guid = guid};
+    json5::to_file(meta_file_path.data(), meta_data);
 }

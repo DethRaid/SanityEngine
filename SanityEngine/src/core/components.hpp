@@ -72,5 +72,3 @@ struct [[component]] SanityEngineEntity {
 };
 
 JSON5_CLASS(TransformComponent, location, rotation, scale)
-
-JSON5_CLASS(SanityEngineEntity, tags)
