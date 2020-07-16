@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 # Force VS to use C++20
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest /arch:AVX2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest /arch:AVX2 /experimental:module")
 
 # Global compile definitions that make my life
 add_compile_definitions(
@@ -98,6 +98,7 @@ target_link_libraries(SanityEngine PRIVATE
 
 find_path(CPPWINRT_INCLUDE_DIRS "winrt/Windows.ApplicationModel.Activation.h")
 target_include_directories(SanityEngine PRIVATE ${CPPWINRT_INCLUDE_DIRS})
+message(STATUS "Found CPPWINRT at path '${CPPWINRT_INCLUDE_DIRS}'")
 
 find_path(NETHOST_INCLUDE_DIRS nethost.h)
 target_include_directories(SanityEngine PRIVATE ${NETHOST_INCLUDE_DIRS})
