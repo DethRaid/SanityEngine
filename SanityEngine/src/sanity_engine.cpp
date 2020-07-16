@@ -30,7 +30,7 @@ struct AtmosphereMaterial {
     glm::vec3 sun_vector;
 };
 
-int main() {
+int main(int argc, char** argv) {
     winrt::init_apartment();
 
     const Settings settings{};
@@ -52,8 +52,10 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-SanityEngine::SanityEngine(const Settings& settings_in)
-    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
+SanityEngine::SanityEngine(Rx::String executable_directory_in, const Settings& settings_in)
+    : executable_directory{Rx::Utility::move(executable_directory_in)},
+      settings{settings_in},
+      input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
 
     {
@@ -185,6 +187,8 @@ entt::entity SanityEngine::get_player() const { return player; }
 SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
 World* SanityEngine::get_world() const { return world.get(); }
+
+const Rx::String& SanityEngine::get_executable_directory() const { return executable_directory; }
 
 void SanityEngine::initialize_scripting_runtime() {
     scripting_runtime = Rx::make_ptr<coreclr::Host>(RX_SYSTEM_ALLOCATOR,

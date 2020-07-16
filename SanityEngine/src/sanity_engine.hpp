@@ -22,7 +22,7 @@ public:
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    explicit SanityEngine(const Settings& settings_in);
+    explicit SanityEngine(Rx::String executable_directory_in, const Settings& settings_in);
 
     /*!
      * \brief De-initializes the engine, flushing all logs
@@ -40,8 +40,12 @@ public:
 
     [[nodiscard]] World* get_world() const;
 
+    [[nodiscard]] const Rx::String& get_executable_directory() const;
+
 private:
     rex::Wrapper rex;
+
+    Rx::String executable_directory;
 
     Settings settings;
 
