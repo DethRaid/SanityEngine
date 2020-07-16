@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include <nethost.h>
+
 #include "Tracy.hpp"
 #include "core/errors.hpp"
 #include "core/types.hpp"
@@ -9,74 +11,66 @@
 #include "rx/core/log.h"
 #include "rx/core/string.h"
 
+// Based on https://github.com/novelrt/NovelRT/blob/master/src/NovelRT/DotNet/RuntimeService.cpp
+
 namespace coreclr {
     RX_LOG("\033[35;47mCoreCLR\033[0m", logger);
 
     Host::Host(const Rx::String& coreclr_working_directory) {
         ZoneScoped;
 
-        const auto core_clr_assembly_path = Rx::String::format("%s/coreclr.dll", coreclr_working_directory);
-        coreclr = LoadLibraryExA(core_clr_assembly_path.data(), nullptr, 0);
-        if(coreclr == nullptr) {
-            Rx::abort("Could not load CoreCLR assembly at '%s'", core_clr_assembly_path);
+        char_t buffer[MAX_PATH];
+        auto buffer_size = sizeof(buffer) / sizeof(char);
+        auto result = get_hostfxr_path(buffer, &buffer_size, nullptr);
+        if(result != 0) {
+            Rx::abort("Could not find HostFXR");
         }
 
-        logger->verbose("CoreCLR assembly loaded");
-
-        coreclr_initialize_func = reinterpret_cast<coreclr_initialize_ptr>(GetProcAddress(coreclr, "coreclr_initialize"));
-        coreclr_create_delegate_func = reinterpret_cast<coreclr_create_delegate_ptr>(GetProcAddress(coreclr, "coreclr_create_delegate"));
-        coreclr_shutdown_func = reinterpret_cast<coreclr_shutdown_ptr>(GetProcAddress(coreclr, "coreclr_shutdown"));
-
-        if(coreclr_initialize_func == nullptr) {
-            Rx::abort("Could not load CoreCLR initialize function");
+        hostfxr = LoadLibraryExA(reinterpret_cast<LPCSTR>(buffer), nullptr, 0);
+        if(hostfxr == nullptr) {
+            Rx::abort("Could not load HostFXR assembly at '%s'", Rx::WideString{reinterpret_cast<Uint16*>(buffer)});
         }
 
-        if(coreclr_create_delegate_func == nullptr) {
-            Rx::abort("Could not load CoreCLR create delegate function");
+        logger->verbose("HostFXR assembly loaded");
+
+        hostfxr_initialize_func = reinterpret_cast<hostfxr_initialize_for_runtime_config_fn>(
+            GetProcAddress(hostfxr, "hostfxr_initialize_for_runtime_config"));
+        hostfxr_create_delegate_func = reinterpret_cast<hostfxr_get_runtime_delegate_fn>(
+            GetProcAddress(hostfxr, "hostfxr_get_runtime_delegate"));
+        hostfxr_shutdown_func = reinterpret_cast<hostfxr_close_fn>(GetProcAddress(hostfxr, "hostfxr_close"));
+
+        if(hostfxr_initialize_func == nullptr) {
+            Rx::abort("Could not load HostFXR initialize function");
         }
 
-        if(coreclr_shutdown_func == nullptr) {
-            Rx::abort("Could not load CoreCLR shutdown function");
+        if(hostfxr_create_delegate_func == nullptr) {
+            Rx::abort("Could not load HostFXR create delegate function");
         }
 
-        Rx::String tpa_list;
-        tpa_list.reserve(coreclr_working_directory.size() * 32); // Wild guess
-
-        // Note that the CLR does not guarantee which assembly will be loaded if an assembly is in the TPA list multiple times (perhaps from
-        // different paths or perhaps with different NI/NI.dll extensions. Therefore, a real host should probably add items to the list in
-        // priority order and only add a file if it's not already present on the list.
-        const auto coreclr_path = std::filesystem::path{coreclr_working_directory.data()};
-        for(const auto& child_path : coreclr_path) {
-            if(child_path.extension() == ".dll") {
-                const auto& child_path_string = child_path.string();
-                tpa_list += child_path_string.c_str();
-                tpa_list += ";";
-            }
+        if(hostfxr_shutdown_func == nullptr) {
+            Rx::abort("Could not load HostFXR shutdown function");
         }
 
-        Rx::Vector<const char*> property_keys = Rx::Array{"TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS"};
+        const auto* runtime_config_path = L"E:/Documents/SanityEngine/SanityEngine.NET/SanityEngine.NET.runtimeconfig.json";
 
-        const char* tpa_list_ptr = tpa_list.data();
-        Rx::Vector<const char*> property_values = Rx::Array{tpa_list_ptr,
-                                                            R"(E:\Documents\SanityEngine\SanityEngine-CSharp\bin\Debug\netcoreapp3.1)"};
-
-        const auto result = coreclr_initialize_func(coreclr_working_directory.data(),
-                                                    "SanityEngine",
-                                                    1,
-                                                    property_keys.data(),
-                                                    property_values.data(),
-                                                    &host_handle,
-                                                    &domain_id);
-        if(FAILED(result)) {
-            Rx::abort("Could not initialize CoreCLR: %s", to_string(result));
+        result = hostfxr_initialize_func(runtime_config_path, nullptr, &host_context);
+        if(result != 0) {
+            Rx::abort("Could not initialize the HostFXR context");
         }
 
-        logger->info("Initialized CoreCLR host");
-        logger->verbose("Domain ID: %u", domain_id);
+        result = hostfxr_create_delegate_func(host_context,
+                                              hdt_load_assembly_and_get_function_pointer,
+                                              reinterpret_cast<void**>(&hostfxr_load_assembly_and_get_function_pointer_func));
+        if(result != 0 || hostfxr_load_assembly_and_get_function_pointer_func == nullptr) {
+            hostfxr_shutdown_func(host_context);
+            Rx::abort("Could not load the function to load an assembly and get a function pointer from it");
+        }
+
+        logger->info("Initialized HostFXR");
     }
 
     Host::~Host() {
-        const auto result = coreclr_shutdown_func(host_handle, domain_id);
+        const auto result = hostfxr_shutdown_func(host_context);
         if(FAILED(result)) {
             logger->error("Could not shut down the CoreCLR host: %s", to_string(result));
         } else {
@@ -90,12 +84,13 @@ namespace coreclr {
         typedef void (*HiFunctionPtr)();
         HiFunctionPtr hi_function;
 
-        const HRESULT result = coreclr_create_delegate_func(host_handle,
-                                                            domain_id,
-                                                            "SanityEngine-CSharp",
-                                                            "SanityEngine.EnvironmentObjectEditor",
-                                                            "Hi",
-                                                            reinterpret_cast<void**>(&hi_function));
+        const HRESULT
+            result = hostfxr_load_assembly_and_get_function_pointer_func(L"SanityEngine.NET.dll",
+                                                                         L"SanityEngine.EnvironmentObjectEditor, SanityEngine.NET",
+                                                                         L"Hi",
+                                                                         nullptr,
+                                                                         nullptr,
+                                                                         reinterpret_cast<void**>(&hi_function));
         if(FAILED(result)) {
             logger->error("Could not get a pointer to the Hi function: %s", to_string(result));
         } else {

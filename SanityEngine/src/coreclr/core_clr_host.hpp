@@ -3,7 +3,9 @@
 #include <Windows.h>
 
 #include "core/types.hpp"
-#include "coreclr_host_api.hpp"
+
+#include "hostfxr.h"
+#include "coreclr_delegates.h"
 
 namespace Rx {
     struct String;
@@ -33,25 +35,22 @@ namespace coreclr {
 
     private:
         /*!
-         * \brief Handle to the CoreCLR assembly
+         * \brief Handle to the hostfxr assembly
          */
-        HMODULE coreclr{nullptr};
+        HMODULE hostfxr{nullptr};
 
         /*!
          * \brief Function in the CoreCLR assembly that initializes CoreCLR
          */
-        coreclr_initialize_ptr coreclr_initialize_func{nullptr};
-        coreclr_create_delegate_ptr coreclr_create_delegate_func{nullptr};
-        coreclr_shutdown_ptr coreclr_shutdown_func{nullptr};
+        hostfxr_initialize_for_runtime_config_fn hostfxr_initialize_func{nullptr};
+        hostfxr_get_runtime_delegate_fn hostfxr_create_delegate_func{nullptr};
+        hostfxr_close_fn hostfxr_shutdown_func{nullptr};
+
+        load_assembly_and_get_function_pointer_fn hostfxr_load_assembly_and_get_function_pointer_func{nullptr};
 
         /*!
-         * \brief Handle to this CoreCLR host
+         * \brief Handle to this HostFXR host
          */
-        HANDLE host_handle{nullptr};
-
-        /*!
-         * \brief Domain ID of this CoreCLR host
-         */
-        Uint32 domain_id{0};
+        hostfxr_handle host_context{nullptr};
     };
 } // namespace coreclr
