@@ -86,9 +86,6 @@ void World::tick(const Float32 delta_time) {
 
 Terrain& World::get_terrain() const { return *terrain; }
 
-// ReSharper disable once CppInconsistentNaming
-WrenHandle* World::_get_wren_handle() const { return handle; }
-
 void World::generate_climate_data(TerrainData& terrain_data, const WorldParameters& params, renderer::Renderer& renderer) {
     ZoneScoped;
 
@@ -118,12 +115,6 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
      *
      * After the computations are done, we copy those textures back to the CPU so that they can be used for biome generation
      */
-}
-
-void World::register_component(script::Component& component) {
-    ZoneScoped;
-
-    component.begin_play(*this);
 }
 
 void World::tick_script_components(Float32 delta_time) {
