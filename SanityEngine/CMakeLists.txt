@@ -38,15 +38,26 @@ find_package(imgui REQUIRED)
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/extern)
 
 set(D3D12MA_SOURCE 
-    ${THIRD_PARTY_DIR}/D3D12MemoryAllocator/D3D12MemAlloc.cpp)
+    ${THIRD_PARTY_DIR}/D3D12MemoryAllocator/D3D12MemAlloc.cpp
+    )
 
 set(IMGUI_SOURCE 
     ${THIRD_PARTY_DIR}/imgui/src/imgui.cpp
     ${THIRD_PARTY_DIR}/imgui/src/imgui_draw.cpp
-    ${THIRD_PARTY_DIR}/imgui/src/imgui_widgets.cpp)
+    ${THIRD_PARTY_DIR}/imgui/src/imgui_widgets.cpp
+    )
 
 set(TRACY_SOURCE 
-    ${THIRD_PARTY_DIR}/Tracy/TracyClient.cpp)
+    ${THIRD_PARTY_DIR}/Tracy/TracyClient.cpp
+    )
+
+file(GLOB_RECURSE REX_SOURCE 
+     LIST_DIRECTORIES false
+     CONFIGURE_DEPENDS
+     ${THIRD_PARTY_DIR}/rex/include/**
+     )    
+
+source_group(TREE ${THIRD_PARTY_DIR}/rex/include FILES ${REX_SOURCE})
 
 #########################
 # Compile Sanity Engine #
@@ -56,12 +67,6 @@ file(GLOB_RECURSE SANITY_ENGINE_SOURCE
      CONFIGURE_DEPENDS
      ${CMAKE_CURRENT_LIST_DIR}/src/**
      )
-
-file(GLOB_RECURSE REX_SOURCE 
-     LIST_DIRECTORIES false
-     CONFIGURE_DEPENDS
-     ${CMAKE_CURRENT_LIST_DIR}/extern/rex/include/**
-     )    
 
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${SANITY_ENGINE_SOURCE})
 
