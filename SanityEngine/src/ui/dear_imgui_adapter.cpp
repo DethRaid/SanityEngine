@@ -6,6 +6,7 @@
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "imgui/imgui.h"
+#include "renderer/debugging/pix.hpp"
 #include "renderer/renderer.hpp"
 #include "rhi/render_device.hpp"
 #include "rhi/resources.hpp"

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/fwd.hpp"
+#include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
 #include "rhi/framebuffer.hpp"
