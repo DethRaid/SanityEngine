@@ -404,6 +404,7 @@ MigrationBackup/
 # End of https://www.gitignore.io/api/c++,cmake,visualstudio
 
 out/
-/build
-/SanityEngine/data/bve_trains
+build/
+SanityEngine/data/bve_trains/
 *.fbx
+vcpkg_installed/
