@@ -379,9 +379,4 @@ namespace renderer {
     };
 
     [[nodiscard]] Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings);
-
-    template <GpuResource ResourceType>
-    void RenderDevice::destroy_resource_immediate(const ResourceType& resource) {
-        resource.resource->Release();
-    }
 } // namespace renderer
