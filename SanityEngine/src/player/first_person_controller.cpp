@@ -1,12 +1,11 @@
 #include "first_person_controller.hpp"
 
-#include <GLFW/glfw3.h>
-#include <entt/entity/registry.hpp>
-#include <glm/ext/quaternion_transform.hpp>
-
-#include <rx/core/log.h>
-#include "src/core/components.hpp"
-#include "src/world/terrain.hpp"
+#include "GLFW/glfw3.h"
+#include "core/components.hpp"
+#include "entt/entity/registry.hpp"
+#include "glm/ext/quaternion_transform.hpp"
+#include "rx/core/log.h"
+#include "world/terrain.hpp"
 
 RX_LOG("FirstPersonController", logger);
 

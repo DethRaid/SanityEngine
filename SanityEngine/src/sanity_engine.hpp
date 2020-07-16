@@ -1,16 +1,15 @@
 ﻿#pragma once
 
-#include <assimp/Importer.hpp>
-#include <entt/entity/registry.hpp>
-#include <rx/core/ptr.h>
-
-#include "../first_person_controller.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
+#include "assimp/Importer.hpp"
 #include "bve/bve_wrapper.hpp"
-#include "input/input_manager.hpp"
-#include "renderer/renderer.hpp"
-#include "settings.hpp"
 #include "coreclr/core_clr_host.hpp"
+#include "entt/entity/registry.hpp"
+#include "input/input_manager.hpp"
+#include "player/first_person_controller.hpp"
+#include "renderer/renderer.hpp"
+#include "rx/core/ptr.h"
+#include "settings.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"

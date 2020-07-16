@@ -32,6 +32,22 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 
+######################
+# Other dependencies #
+######################
+set(THIRD_PARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/extern)
+
+set(D3D12MA_SOURCE 
+    ${THIRD_PARTY_DIR}/D3D12MemoryAllocator/D3D12MemAlloc.cpp)
+
+set(IMGUI_SOURCE 
+    ${THIRD_PARTY_DIR}/imgui/src/imgui.cpp
+    ${THIRD_PARTY_DIR}/imgui/src/imgui_draw.cpp
+    ${THIRD_PARTY_DIR}/imgui/src/imgui_widgets.cpp)
+
+set(TRACY_SOURCE 
+    ${THIRD_PARTY_DIR}/Tracy/TracyClient.cpp)
+
 #########################
 # Compile Sanity Engine #
 #########################
@@ -45,13 +61,12 @@ file(GLOB_RECURSE REX_SOURCE
      LIST_DIRECTORIES false
      CONFIGURE_DEPENDS
      ${CMAKE_CURRENT_LIST_DIR}/extern/rex/include/**
-     )
+     )    
 
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${SANITY_ENGINE_SOURCE})
 
-add_executable(SanityEngine ${SANITY_ENGINE_SOURCE} ${REX_SOURCE})
+add_executable(SanityEngine ${SANITY_ENGINE_SOURCE} ${REX_SOURCE} ${D3D12MA_SOURCE} ${IMGUI_SOURCE} ${TRACY_SOURCE})
 
-set(THIRD_PARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/extern)
 target_include_directories(SanityEngine PRIVATE 
     ${THIRD_PARTY_DIR}/physx/include
     ${THIRD_PARTY_DIR}/physx/include/physx
@@ -94,7 +109,7 @@ target_link_libraries(SanityEngine PRIVATE
     dxgi
     d3dcompiler
     WinPixEventRuntime
-    glfw3)
+    glfw)
 
 find_path(CPPWINRT_INCLUDE_DIRS "winrt/Windows.ApplicationModel.Activation.h")
 target_include_directories(SanityEngine PRIVATE ${CPPWINRT_INCLUDE_DIRS})
