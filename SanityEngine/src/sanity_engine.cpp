@@ -35,7 +35,11 @@ int main(int argc, char** argv) {
 
     const Settings settings{};
 
-    g_engine = new SanityEngine{settings};
+    const auto exe_path = Rx::String{argv[0]};
+    const auto slash_pos = exe_path.find_last_of("/");  // Lol how do paths work
+    const auto exe_folder = exe_path.substring(0, slash_pos);
+
+    g_engine = new SanityEngine{exe_folder, settings};
 
     g_engine->run();
 
