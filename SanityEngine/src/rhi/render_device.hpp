@@ -3,21 +3,21 @@
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi1_4.h>
-#include <glm/glm.hpp>
-#include <rx/console/variable.h>
-#include <rx/core/concurrency/mutex.h>
 #include <wrl/client.h>
 
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
 
 #include "core/types.hpp"
+#include "glm/glm.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/descriptor_allocator.hpp"
 #include "rhi/framebuffer.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_pipeline_state.hpp"
+#include "rx/console/variable.h"
+#include "rx/core/concurrency/mutex.h"
 #include "settings.hpp"
 
 struct GLFWwindow;

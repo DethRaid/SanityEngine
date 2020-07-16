@@ -1,16 +1,15 @@
 #include "image_loading.hpp"
 
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-#include <rx/core/log.h>
-#include <stb_image.h>
-
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 #include "rhi/resources.hpp"
+#include "rx/core/log.h"
+#include "stb_image.h"
 
 RX_LOG("ImageLoading", logger);
 

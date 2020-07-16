@@ -1,8 +1,7 @@
 #include "gpu_terrain_generation.hpp"
 
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
@@ -177,7 +176,6 @@ namespace terraingen {
                                                 nullptr,
                                                 &water_height_map_uav_desc,
                                                 descriptor_table.cpu_handle.Offset(descriptor_size));
-
 
         const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(water_flow_pso.get());
         commands->SetComputeRootSignature(root_signature.get());

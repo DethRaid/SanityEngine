@@ -1,17 +1,15 @@
 #include "world.hpp"
 
-#include <Tracy.hpp>
-#include <ftl/atomic_counter.h>
-#include <ftl/task_scheduler.h>
-#include <rx/core/log.h>
-#include <rx/core/prng/mt19937.h>
-#include <rx/math/vec2.h>
-
+#include "Tracy.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "core/types.hpp"
-#include "generation/dual_contouring.hpp"
+#include "ftl/atomic_counter.h"
+#include "ftl/task_scheduler.h"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
+#include "rx/core/prng/mt19937.h"
+#include "rx/math/vec2.h"
 
 RX_LOG("World", logger);
 RX_LOG("ChunkMeshGenTaskDispatcher", logger_dispatch);
@@ -38,15 +36,12 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
-    terrain_data.size = TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height};;
+    terrain_data.size = TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height};
+    ;
 
     generate_climate_data(terrain_data, params, renderer);
 
-    auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
-                                         terrain_data,
-                                         renderer,
-                                         *noise_generator,
-                                         registry);
+    auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR, terrain_data, renderer, *noise_generator, registry);
 
     return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
                                glm::uvec2{params.width, params.height},

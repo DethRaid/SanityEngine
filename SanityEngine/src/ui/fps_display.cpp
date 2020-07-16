@@ -1,7 +1,6 @@
 #include "fps_display.hpp"
 
-#include <imgui/imgui.h>
-
+#include "imgui/imgui.h"
 #include "stats/framerate_tracker.hpp"
 
 namespace ui {

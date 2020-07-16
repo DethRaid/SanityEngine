@@ -1,8 +1,7 @@
 #pragma once
 
-#include <rx/core/vector.h>
-
 #include "core/types.hpp"
+#include "rx/core/vector.h"
 
 namespace Rx {
     struct String;

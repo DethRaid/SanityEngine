@@ -1,8 +1,7 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
-
 #include "core/async/synchronized_resource.hpp"
+#include "entt/entity/fwd.hpp"
 
 namespace Rx {
     struct String;

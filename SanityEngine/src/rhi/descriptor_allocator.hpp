@@ -1,8 +1,9 @@
 #pragma once
 
 #include <d3d12.h>
-#include <rx/core/vector.h>
 #include <winrt/base.h>
+
+#include "rx/core/vector.h"
 
 using winrt::com_ptr;
 

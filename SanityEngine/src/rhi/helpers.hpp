@@ -4,9 +4,9 @@
 
 #include <d3d12.h>
 #include <dxgi.h>
-#include <pix3.h>
 
 #include "mesh_data_store.hpp"
+#include "pix3.h"
 #include "raytracing_structs.hpp"
 #include "render_pipeline_state.hpp"
 #include "resources.hpp"

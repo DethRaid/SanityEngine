@@ -1,8 +1,5 @@
 #pragma once
 
-#include <d3d12.h>
-#include <pix3.h>
-
 #include "glm/vec4.hpp"
 #include "resources.hpp"
 #include "rx/core/optional.h"

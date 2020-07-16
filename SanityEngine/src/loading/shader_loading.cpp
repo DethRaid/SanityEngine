@@ -2,8 +2,8 @@
 
 #include <cstdio> // fopen, fseek, ftell, rewind, fread, fclose, SEEK_END
 
-#include <rx/core/log.h>
-#include <rx/core/string.h>
+#include "rx/core/log.h"
+#include "rx/core/string.h"
 
 RX_LOG("ShaderLoading", logger);
 
