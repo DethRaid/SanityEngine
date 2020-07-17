@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "adapters/rex/rex_wrapper.hpp"
 #include "assimp/Importer.hpp"
 #include "bve/bve_wrapper.hpp"
 #include "coreclr/core_clr_host.hpp"
@@ -19,10 +18,12 @@
  */
 class SanityEngine {
 public:
+    static Rx::String executable_directory;
+
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    explicit SanityEngine(Rx::String executable_directory_in, const Settings& settings_in);
+    explicit SanityEngine(const Settings& settings_in);
 
     /*!
      * \brief De-initializes the engine, flushing all logs
@@ -40,13 +41,7 @@ public:
 
     [[nodiscard]] World* get_world() const;
 
-    [[nodiscard]] const Rx::String& get_executable_directory() const;
-
 private:
-    rex::Wrapper rex;
-
-    Rx::String executable_directory;
-
     Settings settings;
 
     Rx::Ptr<InputManager> input_manager;

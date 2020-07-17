@@ -5,6 +5,7 @@
 #include "GLFW/glfw3.h"
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "core/align.hpp"
 #include "core/components.hpp"
 #include "core/constants.hpp"

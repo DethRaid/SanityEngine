@@ -8,6 +8,7 @@
 
 #include "GLFW/glfw3.h"
 #include "TracyD3D12.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "glm/ext/quaternion_trigonometric.inl"
 #include "globals.hpp"
@@ -32,14 +33,15 @@ struct AtmosphereMaterial {
 
 int main(int argc, char** argv) {
     winrt::init_apartment();
+    rex::Wrapper rex;
 
     const Settings settings{};
 
     const auto exe_path = Rx::String{argv[0]};
-    const auto slash_pos = exe_path.find_last_of("/");  // Lol how do paths work
-    const auto exe_folder = exe_path.substring(0, slash_pos);
+    const auto slash_pos = exe_path.find_last_of("\\"); // Lol how do paths work
+    SanityEngine::executable_directory = exe_path.substring(0, slash_pos);
 
-    g_engine = new SanityEngine{exe_folder, settings};
+    g_engine = new SanityEngine{settings};
 
     g_engine->run();
 
@@ -56,10 +58,10 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-SanityEngine::SanityEngine(Rx::String executable_directory_in, const Settings& settings_in)
-    : executable_directory{Rx::Utility::move(executable_directory_in)},
-      settings{settings_in},
-      input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
+Rx::String SanityEngine::executable_directory;
+
+SanityEngine::SanityEngine(const Settings& settings_in)
+    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
 
     {
@@ -191,8 +193,6 @@ entt::entity SanityEngine::get_player() const { return player; }
 SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
 World* SanityEngine::get_world() const { return world.get(); }
-
-const Rx::String& SanityEngine::get_executable_directory() const { return executable_directory; }
 
 void SanityEngine::initialize_scripting_runtime() {
     scripting_runtime = Rx::make_ptr<coreclr::Host>(RX_SYSTEM_ALLOCATOR,

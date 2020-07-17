@@ -4,11 +4,14 @@
 
 #include "rx/core/log.h"
 #include "rx/core/string.h"
+#include "sanity_engine.hpp"
 
 RX_LOG("ShaderLoading", logger);
 
 Rx::Vector<Uint8> load_shader(const Rx::String& shader_filename) {
-    const auto shader_filepath = Rx::String::format("data/shaders/%s", shader_filename);
+    const auto& exe_directory = SanityEngine::executable_directory;
+
+    const auto shader_filepath = Rx::String::format("%s/data/shaders/%s", exe_directory, shader_filename);
 
     auto* shader_file = fopen(shader_filepath.data(), "rb");
     if(shader_file == nullptr) {

@@ -20,13 +20,13 @@ namespace coreclr {
         ZoneScoped;
 
         char_t buffer[MAX_PATH];
-        auto buffer_size = sizeof(buffer) / sizeof(char);
+        auto buffer_size = static_cast<size_t>(MAX_PATH);
         auto result = get_hostfxr_path(buffer, &buffer_size, nullptr);
         if(result != 0) {
             Rx::abort("Could not find HostFXR");
         }
 
-        hostfxr = LoadLibraryExA(reinterpret_cast<LPCSTR>(buffer), nullptr, 0);
+        hostfxr = LoadLibraryExW(reinterpret_cast<LPCWSTR>(buffer), nullptr, 0);
         if(hostfxr == nullptr) {
             Rx::abort("Could not load HostFXR assembly at '%s'", Rx::WideString{reinterpret_cast<Uint16*>(buffer)});
         }
