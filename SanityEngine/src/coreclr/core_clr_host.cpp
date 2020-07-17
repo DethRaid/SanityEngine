@@ -58,13 +58,14 @@ namespace coreclr {
             Rx::abort("Could not initialize the HostFXR context");
         }
 
-        result = hostfxr_create_delegate_func(host_context,
-                                              hdt_load_assembly_and_get_function_pointer,
-                                              reinterpret_cast<void**>(&hostfxr_load_assembly_and_get_function_pointer_func));
-        if(result != 0 || hostfxr_load_assembly_and_get_function_pointer_func == nullptr) {
+        void* func_ptr{nullptr};
+        result = hostfxr_create_delegate_func(host_context, hdt_load_assembly_and_get_function_pointer, &func_ptr);
+        if(result != 0 || func_ptr == nullptr) {
             hostfxr_shutdown_func(host_context);
             Rx::abort("Could not load the function to load an assembly and get a function pointer from it");
         }
+
+        hostfxr_load_assembly_and_get_function_pointer_func = reinterpret_cast<load_assembly_and_get_function_pointer_fn>(func_ptr);
 
         logger->info("Initialized HostFXR");
     }
