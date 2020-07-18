@@ -4,8 +4,6 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "core/types.hpp"
-#include "ftl/atomic_counter.h"
-#include "ftl/task_scheduler.h"
 #include "loading/mesh_loading.hpp"
 #include "rhi/render_device.hpp"
 #include "rx/core/filesystem/directory.h"
