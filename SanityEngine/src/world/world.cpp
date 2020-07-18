@@ -6,11 +6,13 @@
 #include "core/types.hpp"
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
+#include "loading/mesh_loading.hpp"
 #include "rhi/render_device.hpp"
-#include "rx/core/log.h"
 #include "rx/core/filesystem/directory.h"
+#include "rx/core/log.h"
 #include "rx/core/prng/mt19937.h"
 #include "rx/math/vec2.h"
+#include "sanity_engine.hpp"
 
 RX_LOG("World", logger);
 RX_LOG("ChunkMeshGenTaskDispatcher", logger_dispatch);
@@ -114,11 +116,39 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
 }
 
 void World::load_environment_objects(const Rx::String& environment_objects_folder) {
-    auto environment_objects_directory = Rx::Filesystem::Directory{environment_objects_folder};
-    environment_objects_directory.each([&](const Rx::Filesystem::Directory::Item& item)
-    {
-        //auto 
+    const auto environment_objects_absolute_directory = Rx::String::format("%s/%s",
+                                                                           SanityEngine::executable_directory,
+                                                                           environment_objects_folder);
+
+    auto& device = renderer->get_render_device();
+    auto commands = device.create_command_list();
+
+    bool loaded_anything = false;
+
+    auto environment_objects_directory = Rx::Filesystem::Directory{environment_objects_absolute_directory};
+    environment_objects_directory.each([&](const Rx::Filesystem::Directory::Item& item) {
+        auto sub_folder = item.as_directory();
+        if(sub_folder) {
+            // load
+        } else {
+            // TODO: Define an asset format, and handle it reasonably
+
+            const auto filepath = Rx::String::format("%s/%s", environment_objects_absolute_directory.data(), item.name());
+
+            // For not, just yeet FBXs into memory
+            const auto filename = item.name();
+            if(filename.ends_with(".fbx")) {
+                const auto imported_mesh = import_mesh(filepath, commands, *renderer);
+                if(imported_mesh) {
+                    loaded_anything = true;
+                }
+            }
+        }
     });
+
+    if(loaded_anything) {
+        device.submit_command_list(Rx::Utility::move(commands));
+    }
 }
 
 void World::tick_script_components(Float32 delta_time) {

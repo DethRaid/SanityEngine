@@ -71,10 +71,11 @@ public:
                    renderer::Renderer& renderer_in,
                    Rx::Ptr<Terrain> terrain_in);
 
+    void load_environment_objects(const Rx::String& environment_objects_folder);
+
     void tick(Float32 delta_time);
 
     [[nodiscard]] Terrain& get_terrain() const;
-
 
 private:
     /*!
@@ -95,8 +96,6 @@ private:
     renderer::Renderer* renderer;
 
     Rx::Ptr<Terrain> terrain;
-
-    void load_environment_objects(const Rx::String& environment_objects_folder);
 
     void tick_script_components(Float32 delta_time);
 };

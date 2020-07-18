@@ -22,13 +22,6 @@ namespace json5::detail {
     RX_LOG("Json5", json5_logger);
 
     RX_HINT_FORCE_INLINE value write(writer& w, const GUID& guid) {
-        // yolo
-        // const auto guid_string = Rx::String::format("%X-%X-%X-%X",
-        //                                            guid.Data1,
-        //                                            guid.Data2,
-        //                                            guid.Data3,
-        //                                             Rx::String{reinterpret_cast<const char*>(guid.Data4), Size(8)});
-
         Rx::WideString wide_string;
 
         LPOLESTR guid_wide_string_array;
@@ -42,8 +35,6 @@ namespace json5::detail {
         const auto guid_string = guid_wide_string.to_utf8();
 
         CoTaskMemFree(guid_wide_string_array);
-
-        json5_logger->verbose("Serializing GUID %s", guid_string);
 
         return write(w, guid_string.data());
     }

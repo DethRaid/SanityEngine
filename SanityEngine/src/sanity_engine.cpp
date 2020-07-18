@@ -146,6 +146,8 @@ void SanityEngine::run() {
 
     Float32 last_frame_duration = 0;
 
+    world->load_environment_objects("data/content/models/environment");
+
     while(!glfwWindowShouldClose(window)) {
         ZoneScopedN("tick");
         const auto frame_start_time = std::chrono::steady_clock::now();
