@@ -22,6 +22,8 @@ namespace coreclr {
 
     constexpr const char* GET_DELEGATE_FUNC_NAME = "hostfxr_get_runtime_delegate";
 
+    constexpr const char_t* TPA_PROPERTY = L"TRUSTED_PLATFORM_ASSEMBLIES";
+
     RX_LOG("\033[35;47mCoreCLR\033[0m", logger);
 
     Host::Host(const Rx::String& coreclr_working_directory) {
@@ -50,22 +52,7 @@ namespace coreclr {
             Rx::abort("Could not initialize the HostFXR context");
         }
 
-        // Add our assembly to the trusted platform assemblies list
-        const char_t* tpa_list;
-        result = hostfxr_get_runtime_property_value(host_context, L"TRUSTED_PLATFORM_ASSEMBLIES", &tpa_list);
-        if(result != 0) {
-            Rx::abort("Could not get TPA list");
-        }
-        auto tpa_list_string = Rx::WideString{reinterpret_cast<const Uint16*>(tpa_list)}.to_utf8();
-        tpa_list_string += R"(;E:\Documents\SanityEngine\build\SanityEngine\Debug\SanityEngine.NET.dll)";
-        logger->info("TPA List: %s", tpa_list_string);
-        const auto tpa_list_wide_string = tpa_list_string.to_utf16();
-        result = hostfxr_set_runtime_property_value(host_context,
-                                                    L"TRUSTED_PLATFORM_ASSEMBLIES",
-                                                    reinterpret_cast<const char_t*>(tpa_list_wide_string.data()));
-        if(result != 0) {
-            Rx::abort("Could not set TPA list");
-        }
+        add_managed_assembly_to_tpa_list();
 
         void* func_ptr{nullptr};
         result = hostfxr_create_delegate(host_context, hdt_load_assembly_and_get_function_pointer, &func_ptr);
@@ -93,13 +80,13 @@ namespace coreclr {
         typedef void (*HiFunctionPtr)();
         HiFunctionPtr hi_function;
 
-        const HRESULT
-            result = hostfxr_load_assembly_and_get_function_pointer_func(L"E:\\Documents\\SanityEngine\\build\\SanityEngine\\Debug\\SanityEngine.NET.dll",
-                                                                         L"SanityEngine.EnvironmentObjectEditor, SanityEngine.NET",
-                                                                         L"Hi",
-                                                                         nullptr,
-                                                                         nullptr,
-                                                                         reinterpret_cast<void**>(&hi_function));
+        const HRESULT result = hostfxr_load_assembly_and_get_function_pointer_func(
+            L"E:\\Documents\\SanityEngine\\build\\SanityEngine\\Debug\\SanityEngine.NET.dll",
+            L"SanityEngine.EnvironmentObjectEditor, SanityEngine.NET",
+            L"Hi",
+            L"System.Action, System.Private.Corelib",
+            nullptr,
+            reinterpret_cast<void**>(&hi_function));
         if(FAILED(result)) {
             logger->error("Could not get a pointer to the Hi function: %s", to_string(result));
         } else {
@@ -134,6 +121,23 @@ namespace coreclr {
 
         if(hostfxr_create_delegate == nullptr) {
             Rx::abort("Could not load HostFXR create delegate function");
+        }
+    }
+
+    void Host::add_managed_assembly_to_tpa_list() const {
+        const char_t* tpa_list;
+        auto result = hostfxr_get_runtime_property_value(host_context, TPA_PROPERTY, &tpa_list);
+        if(result != 0) {
+            Rx::abort("Could not get TPA list");
+        }
+        auto tpa_list_string = Rx::WideString{reinterpret_cast<const Uint16*>(tpa_list)}.to_utf8();
+        tpa_list_string += ";E:\\Documents\\SanityEngine\\build\\SanityEngine\\Debug\\SanityEngine.NET.dll";
+        const auto tpa_list_wide_string = tpa_list_string.to_utf16();
+        result = hostfxr_set_runtime_property_value(host_context,
+                                                    TPA_PROPERTY,
+                                                    reinterpret_cast<const char_t*>(tpa_list_wide_string.data()));
+        if(result != 0) {
+            Rx::abort("Could not add managed assembly to TPA list");
         }
     }
 } // namespace coreclr

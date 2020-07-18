@@ -96,5 +96,7 @@ private:
 
     Rx::Ptr<Terrain> terrain;
 
+    void load_environment_objects(const Rx::String& environment_objects_folder);
+
     void tick_script_components(Float32 delta_time);
 };

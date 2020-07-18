@@ -8,6 +8,7 @@
 #include "ftl/task_scheduler.h"
 #include "rhi/render_device.hpp"
 #include "rx/core/log.h"
+#include "rx/core/filesystem/directory.h"
 #include "rx/core/prng/mt19937.h"
 #include "rx/math/vec2.h"
 
@@ -110,6 +111,14 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
      *
      * After the computations are done, we copy those textures back to the CPU so that they can be used for biome generation
      */
+}
+
+void World::load_environment_objects(const Rx::String& environment_objects_folder) {
+    auto environment_objects_directory = Rx::Filesystem::Directory{environment_objects_folder};
+    environment_objects_directory.each([&](const Rx::Filesystem::Directory::Item& item)
+    {
+        //auto 
+    });
 }
 
 void World::tick_script_components(Float32 delta_time) {

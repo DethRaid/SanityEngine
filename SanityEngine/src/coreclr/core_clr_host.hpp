@@ -56,5 +56,8 @@ namespace coreclr {
         hostfxr_handle host_context{nullptr};
 
         void load_hostfxr_functions(HMODULE hostfxr_module);
+
+        void add_managed_assembly_to_tpa_list() const;
     };
+
 } // namespace coreclr
