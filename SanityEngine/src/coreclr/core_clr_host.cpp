@@ -131,7 +131,7 @@ namespace coreclr {
             Rx::abort("Could not get TPA list");
         }
         auto tpa_list_string = Rx::WideString{reinterpret_cast<const Uint16*>(tpa_list)}.to_utf8();
-        tpa_list_string += ";E:\\Documents\\SanityEngine\\build\\SanityEngine\\Debug\\SanityEngine.NET.dll";
+        tpa_list_string += R"(;E:\Documents\SanityEngine\build\SanityEngine\Debug\SanityEngine.NET.dll)";
         const auto tpa_list_wide_string = tpa_list_string.to_utf16();
         result = hostfxr_set_runtime_property_value(host_context,
                                                     TPA_PROPERTY,
