@@ -199,17 +199,13 @@ SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return regi
 World* SanityEngine::get_world() const { return world.get(); }
 
 void SanityEngine::initialize_scripting_runtime() {
-    scripting_runtime = script::ScriptingRuntime::create(registry);
+    scripting_runtime = Rx::make_ptr<coreclr::Host>(RX_SYSTEM_ALLOCATOR,
+                                                    R"(C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.0-preview.4.20251.6)");
     if(!scripting_runtime) {
         Rx::abort("Could not initialize scripting runtime");
     }
 
-    // register_wren_api();
-
-    const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
-    if(!success) {
-        Rx::abort("Could not register SanityEngine builtin scripts directory");
-    }
+    scripting_runtime->load_assembly("");
 }
 
 void SanityEngine::create_planetary_atmosphere() {
@@ -250,12 +246,12 @@ void SanityEngine::create_first_person_player() {
 }
 
 void SanityEngine::create_environment_object_editor() {
-    auto locked_registry = registry.lock();
-    const auto entity = locked_registry->create();
-    auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
-
-    auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
-    ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
+    // auto locked_registry = registry.lock();
+    // const auto entity = locked_registry->create();
+    // auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
+    // 
+    // auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
+    // ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {

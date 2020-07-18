@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include "../first_person_controller.hpp"
-#include "adapters/rex/rex_wrapper.hpp"
 #include "assimp/Importer.hpp"
 #include "coreclr/core_clr_host.hpp"
 #include "bve/bve_wrapper.hpp"
@@ -76,7 +74,7 @@ private:
 
     void initialize_scripting_runtime();
 
-    Rx::Ptr<script::ScriptingRuntime> scripting_runtime;
+    Rx::Ptr<coreclr::Host> scripting_runtime;
 
     Rx::Ptr<AssetRegistry> asset_registry;
 

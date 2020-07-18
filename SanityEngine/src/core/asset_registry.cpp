@@ -5,11 +5,13 @@
 #include <combaseapi.h>
 
 #include "rx/core/log.h"
+#include "sanity_engine.hpp"
 
 RX_LOG("AssetRegistry", logger);
 
-AssetRegistry::AssetRegistry(const Rx::String& content_directory_in) : content_directory{content_directory_in} {
-    register_assets_in_directory(content_directory);
+AssetRegistry::AssetRegistry(const Rx::String& content_directory_in)
+    : content_directory{Rx::String::format("%s/%s", SanityEngine::executable_directory, content_directory_in)} {
+    // register_assets_in_directory(content_directory);
 }
 
 Rx::Optional<Rx::String> AssetRegistry::get_path_from_guid(GUID guid) const {
@@ -41,7 +43,6 @@ void AssetRegistry::register_assets_in_directory(Rx::Filesystem::Directory& dire
                 generate_meta_file_for_asset(potential_asset_path.name());
             }
 
-
             AssetMetadataFile metadata;
             json5::from_file(meta_file_path_string.data(), metadata);
             register_asset_from_meta_data(metadata);
@@ -49,10 +50,7 @@ void AssetRegistry::register_assets_in_directory(Rx::Filesystem::Directory& dire
     });
 }
 
-void AssetRegistry::register_asset_from_meta_data(const AssetMetadataFile& meta_data)
-{
-    
-}
+void AssetRegistry::register_asset_from_meta_data(const AssetMetadataFile& meta_data) {}
 
 void AssetRegistry::generate_meta_file_for_asset(const Rx::Filesystem::Directory& asset_path) {
     GUID guid;
