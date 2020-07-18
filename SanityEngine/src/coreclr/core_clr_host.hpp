@@ -6,6 +6,7 @@
 
 #include "hostfxr.h"
 #include "coreclr_delegates.h"
+#include "rx/core/concurrency/thread.h"
 
 namespace Rx {
     struct String;
@@ -34,6 +35,16 @@ namespace coreclr {
         void load_assembly(const Rx::String& assembly_path);
 
     private:
+        HANDLE coreclr_stdout_pipe_write;
+        HANDLE coreclr_stdout_pipe_read;
+
+        Rx::Ptr<Rx::Concurrency::Thread> coreclr_stdout_thread;
+
+        HANDLE coreclr_stderr_pipe_write;
+        HANDLE coreclr_stderr_pipe_read;
+
+        Rx::Ptr<Rx::Concurrency::Thread> coreclr_stderr_thread;
+
         /*!
          * \brief Handle to the hostfxr assembly
          */
@@ -54,6 +65,8 @@ namespace coreclr {
          * \brief Handle to this HostFXR host
          */
         hostfxr_handle host_context{nullptr};
+
+        void redirect_stdout();
 
         void load_hostfxr_functions(HMODULE hostfxr_module);
 

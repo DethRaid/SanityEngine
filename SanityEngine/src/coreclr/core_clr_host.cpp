@@ -5,6 +5,7 @@
 #include <nethost.h>
 
 #include "Tracy.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "core/errors.hpp"
 #include "core/types.hpp"
 #include "rx/core/abort.h"
@@ -24,10 +25,13 @@ namespace coreclr {
 
     constexpr const char_t* TPA_PROPERTY = L"TRUSTED_PLATFORM_ASSEMBLIES";
 
-    RX_LOG("\033[35;47mCoreCLR\033[0m", logger);
+    RX_LOG("\033[35;47mCoreCLR Host\033[0m", logger);
+    RX_LOG("\033[35;47mCoreCLR\033[0m", coreclr_logger);
 
     Host::Host(const Rx::String& coreclr_working_directory) {
         ZoneScoped;
+
+        redirect_stdout();
 
         char_t buffer[MAX_PATH];
         auto buffer_size = static_cast<size_t>(MAX_PATH);
@@ -62,15 +66,15 @@ namespace coreclr {
         }
         hostfxr_load_assembly_and_get_function_pointer_func = load_assembly_and_get_function_pointer_fn(func_ptr);
 
-        logger->info("Initialized HostFXR");
+        logger->info("Initialized CoreCLR");
     }
 
     Host::~Host() {
         const auto result = hostfxr_close(host_context);
         if(FAILED(result)) {
-            logger->error("Could not shut down the CoreCLR host: %s", to_string(result));
+            logger->error("Could not shut down CoreCLR: %s", to_string(result));
         } else {
-            logger->info("Shut down the CoreCLR host");
+            logger->info("Shut down CoreCLR");
         }
     }
 
@@ -92,6 +96,74 @@ namespace coreclr {
         } else {
             hi_function();
         }
+    }
+
+    void Host::redirect_stdout() {
+        auto success = CreatePipe(&coreclr_stdout_pipe_read, &coreclr_stdout_pipe_write, nullptr, 0);
+        if(!success) {
+            Rx::abort("Could not create a pipe for CoreCLR stdout");
+        }
+        success = CreatePipe(&coreclr_stderr_pipe_read, &coreclr_stderr_pipe_write, nullptr, 0);
+        if(!success) {
+            Rx::abort("Could not create a pipe for CoreCLR stderr");
+        }
+
+        success = SetStdHandle(STD_OUTPUT_HANDLE, coreclr_stdout_pipe_write);
+        if(!success) {
+            Rx::abort("Could not redirect stdout from CoreCLR");
+        }
+        success = SetStdHandle(STD_ERROR_HANDLE, coreclr_stderr_pipe_write);
+        if(!success) {
+            Rx::abort("Could not redirect stderr from CoreCLR");
+        }
+
+        coreclr_stdout_thread = Rx::make_ptr<Rx::Concurrency::Thread>(RX_SYSTEM_ALLOCATOR, "CoreCLR stdout thread", [&](Int32) {
+            logger->verbose("Redirected stdout");
+
+            DWORD num_read_chars;
+            Rx::Array<char[2048]> coreclr_log_buffer;
+
+            for(;;) {
+                const auto read_log_msg_success = ReadFile(coreclr_stdout_pipe_read,
+                                                           coreclr_log_buffer.data(),
+                                                           coreclr_log_buffer.size(),
+                                                           &num_read_chars,
+                                                           nullptr);
+                if(!read_log_msg_success || num_read_chars == 0) {
+                    logger->error("Failed to read from the CoreCLR stdout pipe");
+                    break;
+                }
+
+                // Add a null-terminator, just to be sure
+                coreclr_log_buffer[num_read_chars] = '\0';
+
+                coreclr_logger->info("%s", coreclr_log_buffer.data());
+            }
+        });
+
+        coreclr_stderr_thread = Rx::make_ptr<Rx::Concurrency::Thread>(RX_SYSTEM_ALLOCATOR, "CoreCLR stderr thread", [&](Int32) {
+            logger->verbose("Redirected stderr");
+
+            DWORD num_read_chars;
+            Rx::Array<char[2048]> coreclr_log_buffer;
+
+            for(;;) {
+                const auto read_log_msg_success = ReadFile(coreclr_stderr_pipe_read,
+                                                           coreclr_log_buffer.data(),
+                                                           coreclr_log_buffer.size(),
+                                                           &num_read_chars,
+                                                           nullptr);
+                if(!read_log_msg_success || num_read_chars == 0) {
+                    logger->error("Failed to read from the CoreCLR stderr pipe");
+                    break;
+                }
+
+                // Add a null-terminator, just to be sure
+                coreclr_log_buffer[num_read_chars] = '\0';
+
+                coreclr_logger->error("%s", coreclr_log_buffer.data());
+            }
+        });
     }
 
     void Host::load_hostfxr_functions(const HMODULE hostfxr_module) {
