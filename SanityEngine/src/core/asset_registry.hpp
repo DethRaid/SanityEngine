@@ -17,13 +17,13 @@ namespace std {
 } // namespace std
 
 struct AssetMetadataFile {
-    Uint32 version{1};
+    int version{1};
     GUID guid;
 };
 
 JSON5_CLASS(AssetMetadataFile, version, guid)
 
-constexpr Uint32 METADATA_CURRENT_VERSION = 1;
+constexpr int METADATA_CURRENT_VERSION = 1;
 
 /*!
  * \brief Stores references to all the assets and how awesome they all are

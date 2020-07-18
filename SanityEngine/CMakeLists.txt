@@ -126,8 +126,6 @@ target_include_directories(SanityEngine PRIVATE ${NETHOST_INCLUDE_DIRS})
 find_library(NETHOST_LIBRARY NAMES libnethost nethost)
 target_link_libraries(SanityEngine PRIVATE ${NETHOST_LIBRARY})
 
-add_dependencies(SanityEngine SanityEngineDotNet)
-
 ###################
 # Compile shaders #
 ###################

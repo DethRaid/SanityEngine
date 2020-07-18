@@ -4,6 +4,7 @@
 
 #include <combaseapi.h>
 
+#include "rx/core/filesystem/file.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
 
@@ -11,7 +12,7 @@ RX_LOG("AssetRegistry", logger);
 
 AssetRegistry::AssetRegistry(const Rx::String& content_directory_in)
     : content_directory{Rx::String::format("%s/%s", SanityEngine::executable_directory, content_directory_in)} {
-    // register_assets_in_directory(content_directory);
+    register_assets_in_directory(content_directory);
 }
 
 Rx::Optional<Rx::String> AssetRegistry::get_path_from_guid(GUID guid) const {
@@ -28,23 +29,28 @@ void AssetRegistry::register_assets_in_directory(Rx::Filesystem::Directory& dire
     directory_to_scan.each([&](Rx::Filesystem::Directory::Item& potential_asset_path) {
         logger->verbose("Examining potential asset %s", potential_asset_path.name());
 
-        if(potential_asset_path.is_directory()) {
+        auto child_directory = potential_asset_path.as_directory();
+        if(child_directory) {
             // Recurse into directories
-            auto child_directory = Rx::Filesystem::Directory{potential_asset_path.name()};
-            register_assets_in_directory(child_directory);
+            register_assets_in_directory(*child_directory);
 
         } else if(!potential_asset_path.name().ends_with("meta")) {
-            // We have a file that isn't a meta file! Does it already have a .meta file?
-            const auto meta_file_path_string = Rx::String::format("%s.meta", potential_asset_path.name());
-            const auto meta_file_path = std::filesystem::path{meta_file_path_string.data()};
+            const auto full_file_path = Rx::String::format("%s/%s", directory_to_scan.path(), potential_asset_path.name());
 
-            if(!exists(meta_file_path)) {
-                // Generate the meta file if it doesn't already exist
-                generate_meta_file_for_asset(potential_asset_path.name());
+            // We have a file that isn't a meta file! Does it already have a .meta file?
+            const auto meta_file_path = Rx::String::format("%s.meta", full_file_path);
+
+            logger->verbose("Attempting to read meta file %s", meta_file_path);
+
+            auto meta_file_contents = Rx::Filesystem::read_text_file(meta_file_path);
+            if(!meta_file_contents) {
+                generate_meta_file_for_asset(full_file_path);
+                meta_file_contents = Rx::Filesystem::read_text_file(meta_file_path);
             }
 
             AssetMetadataFile metadata;
-            json5::from_file(meta_file_path_string.data(), metadata);
+            json5::from_string(std::string{reinterpret_cast<const char*>(meta_file_contents->data())}, metadata);
+
             register_asset_from_meta_data(metadata);
         }
     });
@@ -64,4 +70,6 @@ void AssetRegistry::generate_meta_file_for_asset(const Rx::Filesystem::Directory
 
     const auto meta_data = AssetMetadataFile{.version = METADATA_CURRENT_VERSION, .guid = guid};
     json5::to_file(meta_file_path.data(), meta_data);
+
+    logger->verbose("Created meta file %s", meta_file_path);
 }
