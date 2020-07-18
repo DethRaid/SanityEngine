@@ -1,31 +1,34 @@
 #include "image_loading.hpp"
 
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-#include <rx/core/log.h>
-#include <stb_image.h>
-
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 #include "rhi/resources.hpp"
+#include "rx/core/log.h"
+#include "sanity_engine.hpp"
+#include "stb_image.h"
 
 RX_LOG("ImageLoading", logger);
 
 bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
     ZoneScoped;
 
+    const auto& exe_directory = SanityEngine::executable_directory;
+    const auto full_image_path = Rx::String::format("%s/%s", exe_directory, image_name);
+
     int raw_width, raw_height, num_components;
 
     stbi_uc* texture_data;
     {
         ZoneScopedN("load_image::stbi_load");
-        texture_data = stbi_load(image_name.data(), &raw_width, &raw_height, &num_components, 0);
+        texture_data = stbi_load(full_image_path.data(), &raw_width, &raw_height, &num_components, 0);
         if(texture_data == nullptr) {
             const auto* failure_reason = stbi_failure_reason();
-            logger->error("Could not load image %s: %s", image_name, failure_reason);
+            logger->error("Could not load image %s: %s", full_image_path, failure_reason);
             return false;
         }
     }

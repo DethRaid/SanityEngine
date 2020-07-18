@@ -1,17 +1,14 @@
 #include "flycam_controller.hpp"
 
-#include <entt/entity/registry.hpp>
-#include <glm/ext/quaternion_transform.hpp>
-#include <rx/core/log.h>
-
 #include "core/components.hpp"
+#include "entt/entity/registry.hpp"
+#include "glm/ext/quaternion_transform.hpp"
+#include "rx/core/log.h"
 
 RX_LOG("FlycamController", logger);
 
 FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity controlled_entity_in, entt::registry& registry_in)
-    : window{window_in},
-      controlled_entity{controlled_entity_in},
-      registry{&registry_in} {
+    : window{window_in}, controlled_entity{controlled_entity_in}, registry{&registry_in} {
     // Quick validation
     RX_ASSERT(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 

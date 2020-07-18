@@ -1,10 +1,9 @@
 #pragma once
 
-#include <rx/core/optional.h>
-#include <rx/core/string.h>
-#include <rx/core/vector.h>
-
 #include "renderer/handles.hpp"
+#include "rx/core/optional.h"
+#include "rx/core/string.h"
+#include "rx/core/vector.h"
 
 namespace renderer {
     class Renderer;

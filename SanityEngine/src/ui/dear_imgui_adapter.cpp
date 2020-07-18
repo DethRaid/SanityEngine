@@ -2,11 +2,11 @@
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 
-#include <GLFW/glfw3native.h>
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-#include <imgui/imgui.h>
-
+#include "GLFW/glfw3native.h"
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
+#include "imgui/imgui.h"
+#include "renderer/debugging/pix.hpp"
 #include "renderer/renderer.hpp"
 #include "rhi/render_device.hpp"
 #include "rhi/resources.hpp"

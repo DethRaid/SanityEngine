@@ -20,8 +20,6 @@ enum class MemoryOrder {
 
 } // namespace rx::concurrency
 
-#include "rx/core/concurrency/std/atomic.h"
-
 #if defined(RX_COMPILER_GCC)
 #include "rx/core/concurrency/gcc/atomic.h"
 #elif defined(RX_COMPILER_CLANG)

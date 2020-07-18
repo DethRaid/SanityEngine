@@ -3,14 +3,14 @@
 #include <concepts>
 
 #include <d3d12.h>
-#include <rx/core/log.h>
-#include <rx/core/optional.h>
-#include <rx/core/string.h>
 #include <winrt/base.h>
 
 #include "core/types.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
+#include "rx/core/optional.h"
+#include "rx/core/string.h"
 
 using winrt::com_ptr;
 

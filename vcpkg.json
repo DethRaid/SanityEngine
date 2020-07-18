@@ -1,0 +1,15 @@
+{
+    "name": "sanityengine",
+    "version-string": "0.5.0",
+    "description": "A D3D12 game engine made for fun and education",
+    "supports": "windows",
+    "dependencies": [
+        "assimp",
+        "cppwinrt",
+        "entt",
+        "glfw3",
+        "glm",
+        "imgui",
+        "nethost"
+    ]
+}

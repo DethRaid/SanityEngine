@@ -2,11 +2,9 @@
 
 #include <filesystem>
 
-#include <TracyD3D12.hpp>
-#include <entt/entity/registry.hpp>
-#include <stb_image.h>
-
+#include "TracyD3D12.hpp"
 #include "adapters/tracy.hpp"
+#include "entt/entity/registry.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
@@ -15,6 +13,7 @@
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
 #include "rx/core/log.h"
+#include "stb_image.h"
 
 using namespace bve;
 

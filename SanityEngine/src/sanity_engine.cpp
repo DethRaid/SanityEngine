@@ -8,6 +8,7 @@
 
 #include "GLFW/glfw3.h"
 #include "TracyD3D12.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "glm/ext/quaternion_trigonometric.inl"
 #include "globals.hpp"
@@ -30,10 +31,15 @@ struct AtmosphereMaterial {
     glm::vec3 sun_vector;
 };
 
-int main() {
+int main(int argc, char** argv) {
     winrt::init_apartment();
+    rex::Wrapper rex;
 
     const Settings settings{};
+
+    const auto exe_path = Rx::String{argv[0]};
+    const auto slash_pos = exe_path.find_last_of("\\"); // Lol how do paths work
+    SanityEngine::executable_directory = exe_path.substring(0, slash_pos);
 
     g_engine = new SanityEngine{settings};
 
@@ -51,6 +57,8 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 
     input_manager->on_key(key, action, mods);
 }
+
+Rx::String SanityEngine::executable_directory;
 
 SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {

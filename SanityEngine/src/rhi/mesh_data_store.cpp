@@ -1,11 +1,10 @@
 #include "mesh_data_store.hpp"
 
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-#include <rx/core/log.h>
-
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
 
 namespace renderer {
     RX_LOG("MeshDataStore", logger);
@@ -138,4 +137,3 @@ namespace renderer {
         commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 } // namespace renderer
-

@@ -6,7 +6,6 @@
 #include "ftl/fibtex.h"
 #include "rx/core/types.h"
 #include "rx/core/vector.h"
-#include "scripting/scripting_runtime.hpp"
 #include "world/terrain.hpp"
 
 namespace renderer {
@@ -76,10 +75,6 @@ public:
 
     [[nodiscard]] Terrain& get_terrain() const;
 
-#pragma region Scripting
-    // ReSharper disable once CppInconsistentNaming
-    [[nodiscard]] WrenHandle* _get_wren_handle() const;
-#pragma endregion
 
 private:
     /*!
@@ -101,9 +96,7 @@ private:
 
     Rx::Ptr<Terrain> terrain;
 
-    WrenHandle* handle;
-
-    void register_component(script::Component& component);
+    void load_environment_objects(const Rx::String& environment_objects_folder);
 
     void tick_script_components(Float32 delta_time);
 };

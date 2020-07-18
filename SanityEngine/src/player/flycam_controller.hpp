@@ -1,10 +1,9 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-#include <entt/entity/fwd.hpp>
-#include <glm/vec2.hpp>
-
+#include "GLFW/glfw3.h"
 #include "core/types.hpp"
+#include "entt/entity/fwd.hpp"
+#include "glm/vec2.hpp"
 
 /*!
  * \brief Simple controller for a simple flycam

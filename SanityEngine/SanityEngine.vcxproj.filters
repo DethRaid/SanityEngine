@@ -97,12 +97,6 @@
     <Filter Include="Source Files\world\generation">
       <UniqueIdentifier>{079276f9-ecbf-4978-bcaa-b29edfddb308}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\scripting">
-      <UniqueIdentifier>{8ea576e0-5011-41c7-a254-583cdf43f142}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\scripting">
-      <UniqueIdentifier>{e1488741-592e-40bc-9fb2-d994385b2e3a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\serialization">
       <UniqueIdentifier>{de8b31ff-9489-48fe-895e-ba659d086844}</UniqueIdentifier>
     </Filter>
@@ -320,12 +314,6 @@
     </ClCompile>
     <ClCompile Include="first_person_controller.cpp">
       <Filter>Source Files\player</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scripting\scripting_runtime.cpp">
-      <Filter>Source Files\scripting</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scripting\entity_scripting_api.cpp">
-      <Filter>Source Files\scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\globals.cpp">
       <Filter>Source Files</Filter>
@@ -766,12 +754,6 @@
     </ClInclude>
     <ClInclude Include="first_person_controller.hpp">
       <Filter>Header Files\player</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scripting\scripting_runtime.hpp">
-      <Filter>Header Files\scripting</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scripting\entity_scripting_api.hpp">
-      <Filter>Header Files\scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\globals.hpp">
       <Filter>Header Files</Filter>

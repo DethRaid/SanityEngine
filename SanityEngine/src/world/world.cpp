@@ -1,17 +1,16 @@
 #include "world.hpp"
 
-#include <Tracy.hpp>
-#include <ftl/atomic_counter.h>
-#include <ftl/task_scheduler.h>
-#include <rx/core/log.h>
-#include <rx/core/prng/mt19937.h>
-#include <rx/math/vec2.h>
-
+#include "Tracy.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "core/types.hpp"
-#include "generation/dual_contouring.hpp"
+#include "ftl/atomic_counter.h"
+#include "ftl/task_scheduler.h"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
+#include "rx/core/filesystem/directory.h"
+#include "rx/core/prng/mt19937.h"
+#include "rx/math/vec2.h"
 
 RX_LOG("World", logger);
 RX_LOG("ChunkMeshGenTaskDispatcher", logger_dispatch);
@@ -38,15 +37,12 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
-    terrain_data.size = TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height};;
+    terrain_data.size = TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height};
+    ;
 
     generate_climate_data(terrain_data, params, renderer);
 
-    auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR,
-                                         terrain_data,
-                                         renderer,
-                                         *noise_generator,
-                                         registry);
+    auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR, terrain_data, renderer, *noise_generator, registry);
 
     return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
                                glm::uvec2{params.width, params.height},
@@ -86,9 +82,6 @@ void World::tick(const Float32 delta_time) {
 
 Terrain& World::get_terrain() const { return *terrain; }
 
-// ReSharper disable once CppInconsistentNaming
-WrenHandle* World::_get_wren_handle() const { return handle; }
-
 void World::generate_climate_data(TerrainData& terrain_data, const WorldParameters& params, renderer::Renderer& renderer) {
     ZoneScoped;
 
@@ -120,10 +113,12 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
      */
 }
 
-void World::register_component(script::Component& component) {
-    ZoneScoped;
-
-    component.begin_play(*this);
+void World::load_environment_objects(const Rx::String& environment_objects_folder) {
+    auto environment_objects_directory = Rx::Filesystem::Directory{environment_objects_folder};
+    environment_objects_directory.each([&](const Rx::Filesystem::Directory::Item& item)
+    {
+        //auto 
+    });
 }
 
 void World::tick_script_components(Float32 delta_time) {

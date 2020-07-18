@@ -3,6 +3,7 @@
 #include "core/types.hpp"
 #include "glm/fwd.hpp"
 #include "glm/vec2.hpp"
+#include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
 #include "rhi/framebuffer.hpp"

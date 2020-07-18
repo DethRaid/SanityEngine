@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Tracy.hpp>
-
-#include <rx/core/types.h>
+#include "Tracy.hpp"
+#include "rx/core/types.h"
 
 enum SubsystemMask : Uint32 {
     SubsystemNeverProfile = 0,
@@ -15,6 +14,5 @@ enum SubsystemMask : Uint32 {
     SubsystemScripting = 1 << 4,
     SubsystemSerialization = 1 << 5,
 };
-
 
 #define SUBSYSTEMS_TO_PROFILE 0xFFFFFFFF

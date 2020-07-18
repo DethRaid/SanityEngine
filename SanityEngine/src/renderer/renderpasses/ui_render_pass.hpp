@@ -1,9 +1,8 @@
 #pragma once
 
-#include <rx/core/ptr.h>
-
 #include "renderer/renderpass.hpp"
 #include "rhi/render_pipeline_state.hpp"
+#include "rx/core/ptr.h"
 
 namespace renderer {
     class Renderer;

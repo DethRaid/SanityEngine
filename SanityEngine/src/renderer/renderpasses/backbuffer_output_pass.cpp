@@ -1,13 +1,12 @@
 #include "backbuffer_output_pass.hpp"
 
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-#include <rx/core/log.h>
-
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
 
 namespace renderer {
     struct BackbufferOutputMaterial {
@@ -29,8 +28,8 @@ namespace renderer {
         backbuffer_output_pipeline = device.create_render_pipeline_state(create_info);
 
         backbuffer_output_material_buffer = device.create_buffer(BufferCreateInfo{.name = "Backbuffer output material buffer",
-                                                                                       .usage = BufferUsage::StagingBuffer,
-                                                                                       .size = sizeof(BackbufferOutputMaterial)});
+                                                                                  .usage = BufferUsage::StagingBuffer,
+                                                                                  .size = sizeof(BackbufferOutputMaterial)});
 
         const auto material = BackbufferOutputMaterial{.scene_output_image = denoiser_pass.get_output_image()};
 
@@ -40,9 +39,9 @@ namespace renderer {
     }
 
     void BackbufferOutputPass::render(ID3D12GraphicsCommandList4* commands,
-                                       entt::registry& /* registry */,
-                                       Uint32 /* frame_idx */,
-                                       const World& /* world */) {
+                                      entt::registry& /* registry */,
+                                      Uint32 /* frame_idx */,
+                                      const World& /* world */) {
         ZoneScoped;
         TracyD3D12Zone(RenderDevice::tracy_context, commands, "BackbufferOutputPassExecute");
         PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");

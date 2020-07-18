@@ -1,19 +1,16 @@
 #include "render_device.hpp"
 
-#include <rx/core/string.h>
-
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <algorithm>
 
-#include <D3D12MemAlloc.h>
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-#include <TracyD3D12.hpp>
+#include <combaseapi.h>
 #include <d3dcompiler.h>
 #include <dxgi1_3.h>
-#include <rx/core/abort.h>
-#include <rx/core/log.h>
 
+#include "D3D12MemAlloc.h"
+#include "GLFW/glfw3.h"
+#include "GLFW/glfw3native.h"
+#include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "core/constants.hpp"
@@ -22,6 +19,9 @@
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_pipeline_state.hpp"
+#include "rx/core/abort.h"
+#include "rx/core/log.h"
+#include "rx/core/string.h"
 #include "settings.hpp"
 #include "windows/windows_helpers.hpp"
 
@@ -61,7 +61,7 @@ namespace renderer {
           scratch_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())} {
 #ifndef NDEBUG
         // Only enable the debug layer if we're not running in PIX
-        const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
+        const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(graphics_analysis.put()));
         if(FAILED(result)) {
             enable_debugging();
         }
@@ -160,7 +160,7 @@ namespace renderer {
                                                              initial_state,
                                                              nullptr,
                                                              &buffer->allocation,
-                                                             IID_PPV_ARGS(&buffer->resource));
+                                                             IID_PPV_ARGS(buffer->resource.put()));
         if(FAILED(result)) {
             logger->error("Could not create buffer %s: %s", create_info.name, to_string(result));
             return {};
@@ -228,7 +228,7 @@ namespace renderer {
                                                              initial_state,
                                                              nullptr,
                                                              &image->allocation,
-                                                             IID_PPV_ARGS(&image->resource));
+                                                             IID_PPV_ARGS(image->resource.put()));
         if(FAILED(result)) {
             logger->error("Could not create image %s", create_info.name);
             return {};
@@ -394,7 +394,8 @@ namespace renderer {
 
         // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
         com_ptr<ID3D12CommandAllocator> command_allocator;
-        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator));
+        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                     IID_PPV_ARGS(command_allocator.put()));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -406,9 +407,12 @@ namespace renderer {
             Rx::abort("Could not create command list: %s", to_string(result));
         }
 
-        com_ptr<ID3D12GraphicsCommandList4> commands;
         com_ptr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.get(), nullptr, IID_PPV_ARGS(&cmds));
+        result = device->CreateCommandList(0,
+                                           D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                           command_allocator.get(),
+                                           nullptr,
+                                           IID_PPV_ARGS(cmds.put()));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -419,8 +423,8 @@ namespace renderer {
             Rx::abort("Could not create command list: %s", to_string(result));
         }
 
-        result = cmds.as(IID_PPV_ARGS(commands.put()));
-        if(FAILED(result)) {
+        auto commands = cmds.try_as<ID3D12GraphicsCommandList4>();
+        if(!commands) {
             Rx::abort("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
         }
 
@@ -571,7 +575,7 @@ namespace renderer {
     ID3D12Device* RenderDevice::get_d3d12_device() const { return device.get(); }
 
     void RenderDevice::enable_debugging() {
-        auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
+        auto result = D3D12GetDebugInterface(IID_PPV_ARGS(debug_controller.put()));
         if(SUCCEEDED(result)) {
             debug_controller->EnableDebugLayer();
 
@@ -583,7 +587,7 @@ namespace renderer {
             logger->error("Could not enable the D3D12 validation layer: %s", to_string(result).data());
         }
 
-        result = D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings));
+        result = D3D12GetDebugInterface(IID_PPV_ARGS(dred_settings.put()));
         if(FAILED(result)) {
             logger->error("Could not enable DRED");
 
@@ -598,13 +602,13 @@ namespace renderer {
         ZoneScoped;
 
         com_ptr<IDXGIFactory> basic_factory;
-        auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
+        auto result = CreateDXGIFactory(IID_PPV_ARGS(basic_factory.put()));
         if(FAILED(result)) {
             Rx::abort("Could not initialize DXGI");
         }
 
-        result = basic_factory.as(IID_PPV_ARGS(factory.put()));
-        if(FAILED(result)) {
+        factory = basic_factory.as<IDXGIFactory4>();
+        if(!factory) {
             Rx::abort("DXGI is not at a new enough version, please update your graphics drivers");
         }
     }
@@ -623,7 +627,9 @@ namespace renderer {
             UINT adapter_idx = 0;
             IDXGIAdapter* cur_adapter;
             while(factory->EnumAdapters(adapter_idx, &cur_adapter) != DXGI_ERROR_NOT_FOUND) {
-                adapters.push_back(com_ptr<IDXGIAdapter>{cur_adapter, {}});
+                auto ptr = com_ptr<IDXGIAdapter>();
+                ptr.attach(cur_adapter);
+                adapters.push_back(ptr);
                 adapter_idx++;
             }
         }
@@ -631,7 +637,7 @@ namespace renderer {
         {
             if(cvar_use_warp_driver->get()) {
                 com_ptr<IDXGIAdapter> cur_adapter;
-                const auto result = factory->EnumWarpAdapter(IID_PPV_ARGS(&cur_adapter));
+                const auto result = factory->EnumWarpAdapter(IID_PPV_ARGS(cur_adapter.put()));
 
                 if(FAILED(result)) {
                     logger->warning("Could not get the WARP adapter: %s", to_string(result));
@@ -655,7 +661,7 @@ namespace renderer {
             }
 
             com_ptr<ID3D12Device> try_device;
-            auto res = D3D12CreateDevice(cur_adapter.get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&try_device));
+            auto res = D3D12CreateDevice(cur_adapter.get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(try_device.put()));
             if(SUCCEEDED(res)) {
                 // check the features we care about
                 D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12_options;
@@ -692,8 +698,8 @@ namespace renderer {
 
                 device = try_device;
 
-                device.as(IID_PPV_ARGS(device1.put()));
-                device.as(IID_PPV_ARGS(device5.put()));
+                device1 = device.as<ID3D12Device1>();
+                device5 = device.as<ID3D12Device5>();
 
                 // Save information about the device
                 D3D12_FEATURE_DATA_ARCHITECTURE arch;
@@ -710,8 +716,8 @@ namespace renderer {
                 }
 
 #ifndef NDEBUG
-                res = device.as(IID_PPV_ARGS(info_queue.put()));
-                if(SUCCEEDED(res) && cvar_break_on_validation_error->get()) {
+                info_queue = device.as<ID3D12InfoQueue>();
+                if(info_queue && cvar_break_on_validation_error->get()) {
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
                 }
@@ -744,7 +750,7 @@ namespace renderer {
         graphics_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
         graphics_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-        auto result = device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&direct_command_queue));
+        auto result = device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(direct_command_queue.put()));
         if(FAILED(result)) {
             Rx::abort("Could not create graphics command queue");
         }
@@ -764,7 +770,7 @@ namespace renderer {
             dma_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
             dma_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-            result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(&async_copy_queue));
+            result = device->CreateCommandQueue(&dma_queue_desc, IID_PPV_ARGS(async_copy_queue.put()));
             if(FAILED(result)) {
                 logger->warning("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
@@ -801,7 +807,7 @@ namespace renderer {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
 
-        hr = swapchain1.as(IID_PPV_ARGS(swapchain.put()));
+        swapchain = swapchain1.as<IDXGISwapChain3>();
         if(FAILED(hr)) {
             Rx::abort("Could not get new swapchain interface, please update your drivers");
         }
@@ -810,7 +816,7 @@ namespace renderer {
     void RenderDevice::create_gpu_frame_synchronization_objects() {
         frame_fence_values.resize(cvar_max_in_flight_gpu_frames->get());
 
-        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
+        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(frame_fences.put()));
         set_object_name(frame_fences.get(), "Frame Synchronization Fence");
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
@@ -849,7 +855,7 @@ namespace renderer {
         swapchain_rtv_handles.reserve(desc.BufferCount);
 
         for(Uint32 i = 0; i < desc.BufferCount; i++) {
-            swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_images[i]));
+            swapchain->GetBuffer(i, IID_PPV_ARGS(swapchain_images[i].put()));
 
             const auto rtv_handle = rtv_allocator->get_next_free_descriptor();
 
@@ -993,7 +999,7 @@ namespace renderer {
         result = device->CreateRootSignature(0,
                                              root_signature_blob->GetBufferPointer(),
                                              root_signature_blob->GetBufferSize(),
-                                             IID_PPV_ARGS(&sig));
+                                             IID_PPV_ARGS(sig.put()));
         if(FAILED(result)) {
             logger->error("Could not create root signature: %s", to_string(result));
             return {};
@@ -1151,7 +1157,7 @@ namespace renderer {
 
     Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
         com_ptr<ID3D12ShaderReflection> reflection;
-        auto result = D3DReflect(shader.data(), shader.size() * sizeof(Uint8), IID_PPV_ARGS(&reflection));
+        auto result = D3DReflect(shader.data(), shader.size() * sizeof(Uint8), IID_PPV_ARGS(reflection.put()));
         if(FAILED(result)) {
             logger->error("Could not retrieve shader reflection information: %s", to_string(result));
         }
@@ -1281,7 +1287,7 @@ namespace renderer {
         }
 
         auto pipeline = Rx::make_ptr<RenderPipelineState>(RX_SYSTEM_ALLOCATOR);
-        pipeline->root_signature = com_ptr<ID3D12RootSignature>(&root_signature, {});
+        pipeline->root_signature.copy_from(&root_signature);
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipeline->pso.put()));
         if(FAILED(result)) {
@@ -1357,12 +1363,9 @@ namespace renderer {
     void RenderDevice::destroy_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
         auto& buffers = buffer_deletion_list[frame_idx];
-        buffers.each_fwd([&](const Rx::Ptr<Buffer>& buffer) { destroy_resource_immediate(*buffer); });
-
         buffers.clear();
 
         auto& images = image_deletion_list[cur_gpu_frame_idx];
-        images.each_fwd([&](const Rx::Ptr<Image>& image) { destroy_resource_immediate(*image); });
         images.clear();
     }
 
@@ -1443,8 +1446,12 @@ namespace renderer {
         alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
         auto buffer = Buffer{};
-        auto result = device_allocator
-                          ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
+        auto result = device_allocator->CreateResource(&alloc_desc,
+                                                       &desc,
+                                                       initial_state,
+                                                       nullptr,
+                                                       &buffer.allocation,
+                                                       IID_PPV_ARGS(buffer.resource.put()));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -1482,7 +1489,7 @@ namespace renderer {
                                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                              nullptr,
                                                              &scratch_buffer.allocation,
-                                                             IID_PPV_ARGS(&scratch_buffer.resource));
+                                                             IID_PPV_ARGS(scratch_buffer.resource.put()));
         if(FAILED(result)) {
             logger->error("Could not create scratch buffer: %s", to_string(result));
         }
@@ -1508,7 +1515,7 @@ namespace renderer {
         }
 
         com_ptr<ID3D12Fence> fence;
-        const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+        const auto result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.put()));
         if(FAILED(result)) {
             logger->error("Could not create fence: %s", to_string(result));
             const auto removed_reason = device->GetDeviceRemovedReason();
@@ -1519,15 +1526,14 @@ namespace renderer {
     }
 
     void RenderDevice::log_dred_report() const {
-        com_ptr<ID3D12DeviceRemovedExtendedData1> dred;
-        auto result = device.as(IID_PPV_ARGS(&dred));
-        if(FAILED(result)) {
+        auto dred = device.as < ID3D12DeviceRemovedExtendedData1>();
+        if(!dred) {
             logger->error("Could not retrieve DRED report");
             return;
         }
 
         D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1 breadcrumbs;
-        result = dred->GetAutoBreadcrumbsOutput1(&breadcrumbs);
+        auto result = dred->GetAutoBreadcrumbsOutput1(&breadcrumbs);
         if(FAILED(result)) {
             return;
         }

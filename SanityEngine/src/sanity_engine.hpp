@@ -3,9 +3,11 @@
 #include "../first_person_controller.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "assimp/Importer.hpp"
+#include "coreclr/core_clr_host.hpp"
 #include "bve/bve_wrapper.hpp"
 #include "entt/entity/registry.hpp"
 #include "input/input_manager.hpp"
+#include "player/first_person_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "rx/core/ptr.h"
 #include "settings.hpp"
@@ -19,6 +21,8 @@
  */
 class SanityEngine {
 public:
+    static Rx::String executable_directory;
+
     /*!
      * \brief Initializes the engine, including loading static data
      */
@@ -41,8 +45,6 @@ public:
     [[nodiscard]] World* get_world() const;
 
 private:
-    rex::Wrapper rex;
-
     Settings settings;
 
     Rx::Ptr<InputManager> input_manager;

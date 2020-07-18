@@ -2,16 +2,13 @@
 
 #include <filesystem>
 
-#include <Tracy.hpp>
-#include <TracyD3D12.hpp>
-#include <assimp/Importer.hpp>
-#include <assimp/material.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <entt/entity/registry.hpp>
-#include <rx/core/log.h>
-#include <rx/core/string.h>
-
+#include "Tracy.hpp"
+#include "TracyD3D12.hpp"
+#include "assimp/Importer.hpp"
+#include "assimp/material.h"
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "entt/entity/registry.hpp"
 #include "image_loading.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderer.hpp"
@@ -20,6 +17,8 @@
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_device.hpp"
+#include "rx/core/log.h"
+#include "rx/core/string.h"
 
 static Assimp::Importer importer;
 
