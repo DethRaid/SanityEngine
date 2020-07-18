@@ -22,20 +22,30 @@ namespace json5::detail {
     RX_LOG("Json5", json5_logger);
 
     RX_HINT_FORCE_INLINE value write(writer& w, const GUID& guid) {
-        w.push_object();
+        // yolo
+        // const auto guid_string = Rx::String::format("%X-%X-%X-%X",
+        //                                            guid.Data1,
+        //                                            guid.Data2,
+        //                                            guid.Data3,
+        //                                             Rx::String{reinterpret_cast<const char*>(guid.Data4), Size(8)});
 
-        wchar_t guid_wide_string[64] = {0};
+        Rx::WideString wide_string;
 
-        const auto result = StringFromIID(guid, reinterpret_cast<LPOLESTR*>(guid_wide_string));
+        LPOLESTR guid_wide_string_array;
+
+        const auto result = StringFromIID(guid, &guid_wide_string_array);
         if(FAILED(result)) {
             json5_logger->error("Could not serialize GUID: %s", ::to_string(result));
-            return w.pop();
         }
 
-        const auto guid_string = Rx::WideString{reinterpret_cast<Uint16*>(guid_wide_string)}.to_utf8();
-        w += write(w, guid_string.data());
+        const auto guid_wide_string = Rx::WideString{reinterpret_cast<Uint16*>(guid_wide_string_array)};
+        const auto guid_string = guid_wide_string.to_utf8();
 
-        return w.pop();
+        CoTaskMemFree(guid_wide_string_array);
+
+        json5_logger->verbose("Serializing GUID %s", guid_string);
+
+        return write(w, guid_string.data());
     }
 
     RX_HINT_FORCE_INLINE error read(const value& in, GUID& guid) {
@@ -49,12 +59,4 @@ namespace json5::detail {
 
         return {error::none};
     }
-
-    RX_HINT_FORCE_INLINE value write(writer& w, const Uint32& value) {
-        w.push_object();
-        w += write(w, static_cast<uint32_t>(value));
-        return w.pop();
-    }
-
-    RX_HINT_FORCE_INLINE error read(const value& in, Uint32& value) { return read(in, static_cast<uint32_t&>(value)); }
 } // namespace json5::detail
