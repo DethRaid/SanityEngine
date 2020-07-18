@@ -128,10 +128,7 @@
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
-    <ClCompile Include="src\coreclr\core_clr_host.cpp" />
-    <ClCompile Include="src\coreclr\example_host.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="src\core\asset_registry.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\globals.cpp" />
@@ -168,6 +165,7 @@
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\wrap_imgui_codegen.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
+    <ClCompile Include="src\world\environment\environment_object.cpp" />
     <ClCompile Include="src\world\generation\dual_contouring.cpp" />
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
@@ -374,10 +372,9 @@
     <ClInclude Include="src\adapters\tracy.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
-    <ClInclude Include="src\coreclr\coreclr_host_api.hpp" />
-    <ClInclude Include="src\coreclr\core_clr_host.hpp" />
     <ClInclude Include="src\core\align.hpp" />
     <ClInclude Include="src\core\ansi_colors.hpp" />
+    <ClInclude Include="src\core\asset_registry.hpp" />
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
@@ -430,6 +427,7 @@
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\ui\wrap_imgui_codegen.h" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
+    <ClInclude Include="src\world\environment\environment_object.hpp" />
     <ClInclude Include="src\world\generation\dual_contouring.hpp" />
     <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
@@ -739,8 +737,6 @@
     <ProjectGuid>{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}</ProjectGuid>
     <RootNamespace>SanityEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <TargetFrameworkVersion>
-    </TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

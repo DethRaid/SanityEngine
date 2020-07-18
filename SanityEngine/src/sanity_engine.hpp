@@ -1,14 +1,17 @@
 ﻿#pragma once
 
+#include "../first_person_controller.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 #include "assimp/Importer.hpp"
-#include "bve/bve_wrapper.hpp"
 #include "coreclr/core_clr_host.hpp"
+#include "bve/bve_wrapper.hpp"
 #include "entt/entity/registry.hpp"
 #include "input/input_manager.hpp"
 #include "player/first_person_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "rx/core/ptr.h"
 #include "settings.hpp"
+#include "core/asset_registry.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
@@ -73,7 +76,9 @@ private:
 
     void initialize_scripting_runtime();
 
-    Rx::Ptr<coreclr::Host> scripting_runtime;
+    Rx::Ptr<script::ScriptingRuntime> scripting_runtime;
+
+    Rx::Ptr<AssetRegistry> asset_registry;
 
 #pragma region Spawning
     void create_planetary_atmosphere();
@@ -81,8 +86,6 @@ private:
     void make_frametime_display();
 
     void create_first_person_player();
-
-    void load_bve_train(const Rx::String& filename);
 
     void create_environment_object_editor();
 

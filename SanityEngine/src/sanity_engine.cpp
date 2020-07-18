@@ -88,12 +88,16 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         logger->info("Created window");
 
         glfwSetWindowUserPointer(window, input_manager.get());
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        // TODO: Only enable this in play-in-editor mode
+        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         glfwSetKeyCallback(window, key_func);
 
         renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings);
         logger->info("Initialized renderer");
+
+        asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
         initialize_scripting_runtime();
 
@@ -119,7 +123,9 @@ SanityEngine::SanityEngine(const Settings& settings_in)
                               registry,
                               *renderer);
 
-        player_controller->set_current_terrain(world->get_terrain());
+        if(player_controller) {
+            player_controller->set_current_terrain(world->get_terrain());
+        }
 
         create_environment_object_editor();
 
@@ -145,7 +151,9 @@ void SanityEngine::run() {
         const auto frame_start_time = std::chrono::steady_clock::now();
         glfwPollEvents();
 
-        player_controller->update_player_transform(last_frame_duration);
+        if(player_controller) {
+            player_controller->update_player_transform(last_frame_duration);
+        }
 
         {
             auto locked_registry = registry.lock();
@@ -159,10 +167,6 @@ void SanityEngine::run() {
         // There might not be a world if the player is still in the main menu
         if(world) {
             world->tick(last_frame_duration);
-        }
-
-        if(frame_count == 1) {
-            // load_bve_train("data/bve_trains/R46 2014 (8 Car)/Cars/Body/BodyA.b3d");
         }
 
         renderer->render_all(registry.lock(), *world);
@@ -195,13 +199,17 @@ SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return regi
 World* SanityEngine::get_world() const { return world.get(); }
 
 void SanityEngine::initialize_scripting_runtime() {
-    scripting_runtime = Rx::make_ptr<coreclr::Host>(RX_SYSTEM_ALLOCATOR,
-                                                    R"(C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.0-preview.4.20251.6)");
+    scripting_runtime = script::ScriptingRuntime::create(registry);
     if(!scripting_runtime) {
         Rx::abort("Could not initialize scripting runtime");
     }
 
-    scripting_runtime->load_assembly("");
+    // register_wren_api();
+
+    const auto success = scripting_runtime->add_script_directory(R"(E:\Documents\SanityEngine\SanityEngine\scripts)");
+    if(!success) {
+        Rx::abort("Could not register SanityEngine builtin scripts directory");
+    }
 }
 
 void SanityEngine::create_planetary_atmosphere() {
@@ -236,25 +244,18 @@ void SanityEngine::create_first_person_player() {
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
     locked_registry->assign<renderer::CameraComponent>(player);
 
-    player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
+    // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
     logger->info("Created flycam");
 }
 
-void SanityEngine::load_bve_train(const Rx::String& filename) {
-    const auto success = bve->add_train_to_scene(filename, registry, *renderer);
-    if(!success) {
-        logger->error("Could not load train file {}", filename.data());
-    }
-}
-
 void SanityEngine::create_environment_object_editor() {
-    // auto locked_registry = registry.lock();
-    // const auto entity = locked_registry->create();
-    // auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
-    //
-    // auto* handle = scripting_runtime->instantiate_script_object("engine/terraingen", "EnvironmentObjectEditor");
-    // ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
+    auto locked_registry = registry.lock();
+    const auto entity = locked_registry->create();
+    auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
+
+    auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
+    ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
 
 void SanityEngine::load_3d_object(const Rx::String& filename) {
