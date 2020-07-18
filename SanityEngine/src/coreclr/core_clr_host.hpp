@@ -42,9 +42,11 @@ namespace coreclr {
         /*!
          * \brief Function in the CoreCLR assembly that initializes CoreCLR
          */
-        hostfxr_initialize_for_runtime_config_fn hostfxr_initialize_func{nullptr};
-        hostfxr_get_runtime_delegate_fn hostfxr_create_delegate_func{nullptr};
-        hostfxr_close_fn hostfxr_shutdown_func{nullptr};
+        hostfxr_initialize_for_runtime_config_fn hostfxr_init{nullptr};
+        hostfxr_get_runtime_property_value_fn hostfxr_get_runtime_property_value{nullptr};
+        hostfxr_set_runtime_property_value_fn hostfxr_set_runtime_property_value{nullptr};
+        hostfxr_get_runtime_delegate_fn hostfxr_create_delegate{nullptr};
+        hostfxr_close_fn hostfxr_close{nullptr};
 
         load_assembly_and_get_function_pointer_fn hostfxr_load_assembly_and_get_function_pointer_func{nullptr};
 
@@ -52,5 +54,7 @@ namespace coreclr {
          * \brief Handle to this HostFXR host
          */
         hostfxr_handle host_context{nullptr};
+
+        void load_hostfxr_functions(HMODULE hostfxr_module);
     };
 } // namespace coreclr

@@ -14,6 +14,14 @@
 // Based on https://github.com/novelrt/NovelRT/blob/master/src/NovelRT/DotNet/RuntimeService.cpp
 
 namespace coreclr {
+    constexpr const char* INIT_FUNC_NAME = "hostfxr_initialize_for_runtime_config";
+    constexpr const char* CLOSE_FUNC_NAME = "hostfxr_close";
+
+    constexpr const char* GET_PROPERTY_FUNC_NAME = "hostfxr_get_runtime_property_value";
+    constexpr const char* SET_PROPERTY_FUNC_NAME = "hostfxr_set_runtime_property_value";
+
+    constexpr const char* GET_DELEGATE_FUNC_NAME = "hostfxr_get_runtime_delegate";
+
     RX_LOG("\033[35;47mCoreCLR\033[0m", logger);
 
     Host::Host(const Rx::String& coreclr_working_directory) {
@@ -33,45 +41,45 @@ namespace coreclr {
 
         logger->verbose("HostFXR assembly loaded");
 
-        hostfxr_initialize_func = reinterpret_cast<hostfxr_initialize_for_runtime_config_fn>(
-            GetProcAddress(hostfxr, "hostfxr_initialize_for_runtime_config"));
-        hostfxr_create_delegate_func = reinterpret_cast<hostfxr_get_runtime_delegate_fn>(
-            GetProcAddress(hostfxr, "hostfxr_get_runtime_delegate"));
-        hostfxr_shutdown_func = reinterpret_cast<hostfxr_close_fn>(GetProcAddress(hostfxr, "hostfxr_close"));
-
-        if(hostfxr_initialize_func == nullptr) {
-            Rx::abort("Could not load HostFXR initialize function");
-        }
-
-        if(hostfxr_create_delegate_func == nullptr) {
-            Rx::abort("Could not load HostFXR create delegate function");
-        }
-
-        if(hostfxr_shutdown_func == nullptr) {
-            Rx::abort("Could not load HostFXR shutdown function");
-        }
+        load_hostfxr_functions(hostfxr);
 
         const auto* runtime_config_path = L"E:/Documents/SanityEngine/SanityEngine.NET/SanityEngine.NET.runtimeconfig.json";
 
-        result = hostfxr_initialize_func(runtime_config_path, nullptr, &host_context);
+        result = hostfxr_init(runtime_config_path, nullptr, &host_context);
         if(result != 0) {
             Rx::abort("Could not initialize the HostFXR context");
         }
 
-        void* func_ptr{nullptr};
-        result = hostfxr_create_delegate_func(host_context, hdt_load_assembly_and_get_function_pointer, &func_ptr);
-        if(result != 0 || func_ptr == nullptr) {
-            hostfxr_shutdown_func(host_context);
-            Rx::abort("Could not load the function to load an assembly and get a function pointer from it");
+        // Add our assembly to the trusted platform assemblies list
+        const char_t* tpa_list;
+        result = hostfxr_get_runtime_property_value(host_context, L"TRUSTED_PLATFORM_ASSEMBLIES", &tpa_list);
+        if(result != 0) {
+            Rx::abort("Could not get TPA list");
+        }
+        auto tpa_list_string = Rx::WideString{reinterpret_cast<const Uint16*>(tpa_list)}.to_utf8();
+        tpa_list_string += R"(;E:\Documents\SanityEngine\build\SanityEngine\Debug\SanityEngine.NET.dll)";
+        logger->info("TPA List: %s", tpa_list_string);
+        const auto tpa_list_wide_string = tpa_list_string.to_utf16();
+        result = hostfxr_set_runtime_property_value(host_context,
+                                                    L"TRUSTED_PLATFORM_ASSEMBLIES",
+                                                    reinterpret_cast<const char_t*>(tpa_list_wide_string.data()));
+        if(result != 0) {
+            Rx::abort("Could not set TPA list");
         }
 
-        hostfxr_load_assembly_and_get_function_pointer_func = reinterpret_cast<load_assembly_and_get_function_pointer_fn>(func_ptr);
+        void* func_ptr{nullptr};
+        result = hostfxr_create_delegate(host_context, hdt_load_assembly_and_get_function_pointer, &func_ptr);
+        if(result != 0 || func_ptr == nullptr) {
+            hostfxr_close(host_context);
+            Rx::abort("Could not load the function to load an assembly and get a function pointer from it");
+        }
+        hostfxr_load_assembly_and_get_function_pointer_func = load_assembly_and_get_function_pointer_fn(func_ptr);
 
         logger->info("Initialized HostFXR");
     }
 
     Host::~Host() {
-        const auto result = hostfxr_shutdown_func(host_context);
+        const auto result = hostfxr_close(host_context);
         if(FAILED(result)) {
             logger->error("Could not shut down the CoreCLR host: %s", to_string(result));
         } else {
@@ -86,7 +94,7 @@ namespace coreclr {
         HiFunctionPtr hi_function;
 
         const HRESULT
-            result = hostfxr_load_assembly_and_get_function_pointer_func(L"SanityEngine.NET.dll",
+            result = hostfxr_load_assembly_and_get_function_pointer_func(L"E:\\Documents\\SanityEngine\\build\\SanityEngine\\Debug\\SanityEngine.NET.dll",
                                                                          L"SanityEngine.EnvironmentObjectEditor, SanityEngine.NET",
                                                                          L"Hi",
                                                                          nullptr,
@@ -96,6 +104,36 @@ namespace coreclr {
             logger->error("Could not get a pointer to the Hi function: %s", to_string(result));
         } else {
             hi_function();
+        }
+    }
+
+    void Host::load_hostfxr_functions(const HMODULE hostfxr_module) {
+        hostfxr_init = hostfxr_initialize_for_runtime_config_fn(GetProcAddress(hostfxr_module, INIT_FUNC_NAME));
+        hostfxr_close = hostfxr_close_fn(GetProcAddress(hostfxr_module, CLOSE_FUNC_NAME));
+
+        hostfxr_get_runtime_property_value = hostfxr_get_runtime_property_value_fn(GetProcAddress(hostfxr, GET_PROPERTY_FUNC_NAME));
+        hostfxr_set_runtime_property_value = hostfxr_set_runtime_property_value_fn(GetProcAddress(hostfxr_module, SET_PROPERTY_FUNC_NAME));
+
+        hostfxr_create_delegate = hostfxr_get_runtime_delegate_fn(GetProcAddress(hostfxr_module, GET_DELEGATE_FUNC_NAME));
+
+        if(hostfxr_init == nullptr) {
+            Rx::abort("Could not load HostFXR initialize function");
+        }
+
+        if(hostfxr_close == nullptr) {
+            Rx::abort("Could not load HostFXR close function");
+        }
+
+        if(hostfxr_get_runtime_property_value == nullptr) {
+            Rx::abort("Could not load HostFXR get property function");
+        }
+
+        if(hostfxr_set_runtime_property_value == nullptr) {
+            Rx::abort("Could not load HostFXR set property function");
+        }
+
+        if(hostfxr_create_delegate == nullptr) {
+            Rx::abort("Could not load HostFXR create delegate function");
         }
     }
 } // namespace coreclr
