@@ -41,12 +41,6 @@ set(D3D12MA_SOURCE
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator/D3D12MemAlloc.cpp
     )
 
-set(IMGUI_SOURCE 
-    ${THIRD_PARTY_DIR}/imgui/src/imgui.cpp
-    ${THIRD_PARTY_DIR}/imgui/src/imgui_draw.cpp
-    ${THIRD_PARTY_DIR}/imgui/src/imgui_widgets.cpp
-    )
-
 set(TRACY_SOURCE 
     ${THIRD_PARTY_DIR}/Tracy/TracyClient.cpp
     )
@@ -78,12 +72,7 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/tracy
     ${THIRD_PARTY_DIR}/json5/include
-    ${THIRD_PARTY_DIR}/ftl/third_party/nonius/include
-    ${THIRD_PARTY_DIR}/ftl/third_party/catch2/include
-    ${THIRD_PARTY_DIR}/ftl/third_party/boost_context/include
-    ${THIRD_PARTY_DIR}/ftl/include
     ${THIRD_PARTY_DIR}/assimp/include
-    ${THIRD_PARTY_DIR}/imgui/include
     ${THIRD_PARTY_DIR}/stb/include
     ${THIRD_PARTY_DIR}/glm/include
     ${THIRD_PARTY_DIR}/entt/include
@@ -95,8 +84,8 @@ target_include_directories(SanityEngine PRIVATE
 target_link_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/physx/lib/debug
-    ${THIRD_PARTY_DIR}/ftl/lib
     ${THIRD_PARTY_DIR}/assimp/lib
+    ${THIRD_PARTY_DIR}/pix/lib
     ${THIRD_PARTY_DIR}/bve/lib
     ${THIRD_PARTY_DIR}/pix/lib
     ${THIRD_PARTY_DIR}/glfw/lib-vs2019)
@@ -106,13 +95,12 @@ target_link_libraries(SanityEngine PRIVATE
     PhysX_64
     PhysXCommon_64
     PhysXFoundation_64
-    boost_contextd
-    ftld
     assimp-vc142-mtd
     bve_native.dll.lib
     d3d12
     dxgi
     d3dcompiler
+    imgui::imgui
     WinPixEventRuntime
     glfw)
 
