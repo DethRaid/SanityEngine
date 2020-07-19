@@ -72,6 +72,7 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/tracy
     ${THIRD_PARTY_DIR}/json5/include
+    ${THIRD_PARTY_DIR}/dotnet/include
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator
     ${THIRD_PARTY_DIR}/bve/include
     ${THIRD_PARTY_DIR}/pix/include
