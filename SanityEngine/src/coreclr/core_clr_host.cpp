@@ -126,7 +126,7 @@ namespace coreclr {
             for(;;) {
                 const auto read_log_msg_success = ReadFile(coreclr_stdout_pipe_read,
                                                            coreclr_log_buffer.data(),
-                                                           coreclr_log_buffer.size(),
+                                                           static_cast<DWORD>(coreclr_log_buffer.size()),
                                                            &num_read_chars,
                                                            nullptr);
                 if(!read_log_msg_success || num_read_chars == 0) {
@@ -150,7 +150,7 @@ namespace coreclr {
             for(;;) {
                 const auto read_log_msg_success = ReadFile(coreclr_stderr_pipe_read,
                                                            coreclr_log_buffer.data(),
-                                                           coreclr_log_buffer.size(),
+                                                           static_cast<DWORD>(coreclr_log_buffer.size()),
                                                            &num_read_chars,
                                                            nullptr);
                 if(!read_log_msg_success || num_read_chars == 0) {

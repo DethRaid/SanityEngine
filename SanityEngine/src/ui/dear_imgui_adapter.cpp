@@ -212,7 +212,7 @@ void DearImguiAdapter::initialize_style() {
     style.GrabRounding = 3;
 
 #ifdef IMGUI_HAS_DOCK
-    style.TabBorderSize = is_3d;
+    style.TabBorderSize = static_cast<float>(is_3d);
     style.TabRounding = 3;
 
     colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
