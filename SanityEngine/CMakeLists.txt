@@ -27,7 +27,7 @@ add_compile_definitions(
 # VCPKG dependencies #
 ######################
 find_package(assimp REQUIRED)
-find_package(entt REQUIRED)
+find_package(entt CONFIG REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
@@ -72,10 +72,8 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/tracy
     ${THIRD_PARTY_DIR}/json5/include
-    ${THIRD_PARTY_DIR}/assimp/include
     ${THIRD_PARTY_DIR}/stb/include
     ${THIRD_PARTY_DIR}/glm/include
-    ${THIRD_PARTY_DIR}/entt/include
     ${THIRD_PARTY_DIR}/glfw/include
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator
     ${THIRD_PARTY_DIR}/bve/include
@@ -84,7 +82,6 @@ target_include_directories(SanityEngine PRIVATE
 target_link_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/physx/lib/debug
-    ${THIRD_PARTY_DIR}/assimp/lib
     ${THIRD_PARTY_DIR}/pix/lib
     ${THIRD_PARTY_DIR}/bve/lib
     ${THIRD_PARTY_DIR}/pix/lib
@@ -95,8 +92,9 @@ target_link_libraries(SanityEngine PRIVATE
     PhysX_64
     PhysXCommon_64
     PhysXFoundation_64
-    assimp-vc142-mtd
+    assimp::assimp
     bve_native.dll.lib
+    EnTT::EnTT
     d3d12
     dxgi
     d3dcompiler
