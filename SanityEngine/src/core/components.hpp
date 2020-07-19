@@ -10,18 +10,18 @@
 
 // The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
 
-struct [[component]] TransformComponent {
-    [[horus::field]] glm::vec3 location{0};
+struct TransformComponent {
+    glm::vec3 location{0};
 
-    [[horus::field]] glm::quat rotation{};
+    glm::quat rotation{};
 
-    [[horus::field]] glm::vec3 scale{1};
+    glm::vec3 scale{1};
 
-    [[nodiscard]] [[horus::method]] __forceinline glm::vec3 get_forward_vector() const;
+    [[nodiscard]] __forceinline glm::vec3 get_forward_vector() const;
 
-    [[nodiscard]] [[horus::method]] __forceinline glm::vec3 get_right_vector() const;
+    [[nodiscard]] __forceinline glm::vec3 get_right_vector() const;
 
-    [[nodiscard]] [[horus::method]] __forceinline glm::vec3 get_up_vector() const;
+    [[nodiscard]] __forceinline glm::vec3 get_up_vector() const;
 
     [[nodiscard]] __forceinline glm::mat4 to_matrix() const;
 
@@ -61,7 +61,7 @@ inline glm::mat4 TransformComponent::to_matrix() const {
  *
  * Entities have a system for sending and receiving events. Other components may subscribe to that system and react to events
  */
-struct [[component]] SanityEngineEntity {
+struct SanityEngineEntity {
     Rx::Map<Rx::String, Int32> tags;
 
     void add_tag(const Rx::String& tag);

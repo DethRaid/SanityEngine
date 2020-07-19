@@ -79,7 +79,7 @@ namespace renderer {
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
-        [[yesdiscard]] TextureHandle create_image(const ImageCreateInfo& create_info);
+        TextureHandle create_image(const ImageCreateInfo& create_info);
 
         [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,

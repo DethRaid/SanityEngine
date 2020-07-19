@@ -88,7 +88,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
 
         auto locked_registry = registry.lock();
         const auto mesh_entity = locked_registry->create();
-        auto& mesh_renderer = locked_registry->assign<renderer::StandardRenderableComponent>(mesh_entity);
+        auto& mesh_renderer = locked_registry->emplace<renderer::StandardRenderableComponent>(mesh_entity);
         mesh_renderer.mesh = mesh;
 
         meshes.push_back(mesh);

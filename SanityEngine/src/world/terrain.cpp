@@ -448,8 +448,8 @@ void Terrain::upload_new_tile_meshes() {
 
             {
                 auto locked_registry = registry->lock();
-                locked_registry->assign<renderer::StandardRenderableComponent>(create_info.entity, tile_mesh, terrain_material);
-                locked_registry->assign<TransformComponent>(create_info.entity,
+                locked_registry->emplace<renderer::StandardRenderableComponent>(create_info.entity, tile_mesh, terrain_material);
+                locked_registry->emplace<TransformComponent>(create_info.entity,
                                                             glm::vec3{create_info.tilecoord.x, 0.0f, create_info.tilecoord.y});
             }
 

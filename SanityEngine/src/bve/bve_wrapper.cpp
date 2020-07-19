@@ -118,7 +118,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
             auto locked_registry = registry.lock();
             const auto entity = locked_registry->create();
 
-            auto& mesh_component = locked_registry->assign<renderer::StandardRenderableComponent>(entity);
+            auto& mesh_component = locked_registry->emplace<renderer::StandardRenderableComponent>(entity);
 
             mesh_component.mesh = mesh_data.add_mesh(vertices, indices, commands.get());
             train_meshes.push_back(mesh_component.mesh);
