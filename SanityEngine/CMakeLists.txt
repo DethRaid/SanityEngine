@@ -26,9 +26,9 @@ add_compile_definitions(
 ######################
 # VCPKG dependencies #
 ######################
-find_package(assimp REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 find_package(entt CONFIG REQUIRED)
-find_package(glfw3 REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 
@@ -74,18 +74,18 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/json5/include
     ${THIRD_PARTY_DIR}/stb/include
     ${THIRD_PARTY_DIR}/glm/include
-    ${THIRD_PARTY_DIR}/glfw/include
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator
     ${THIRD_PARTY_DIR}/bve/include
     ${THIRD_PARTY_DIR}/pix/include
-    ${CMAKE_CURRENT_LIST_DIR}/src)
+    ${CMAKE_CURRENT_LIST_DIR}/src
+    )
 target_link_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/physx/lib/debug
     ${THIRD_PARTY_DIR}/pix/lib
     ${THIRD_PARTY_DIR}/bve/lib
     ${THIRD_PARTY_DIR}/pix/lib
-    ${THIRD_PARTY_DIR}/glfw/lib-vs2019)
+    )
 target_link_libraries(SanityEngine PRIVATE
     dxguid
     WindowsApp
@@ -100,7 +100,8 @@ target_link_libraries(SanityEngine PRIVATE
     d3dcompiler
     imgui::imgui
     WinPixEventRuntime
-    glfw)
+    glfw
+    )
 
 find_path(CPPWINRT_INCLUDE_DIRS "winrt/Windows.ApplicationModel.Activation.h")
 target_include_directories(SanityEngine PRIVATE ${CPPWINRT_INCLUDE_DIRS})
