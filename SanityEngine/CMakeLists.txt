@@ -29,8 +29,8 @@ add_compile_definitions(
 find_package(assimp CONFIG REQUIRED)
 find_package(entt CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
-find_package(glm REQUIRED)
-find_package(imgui REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 ######################
 # Other dependencies #
@@ -73,7 +73,6 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/tracy
     ${THIRD_PARTY_DIR}/json5/include
     ${THIRD_PARTY_DIR}/stb/include
-    ${THIRD_PARTY_DIR}/glm/include
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator
     ${THIRD_PARTY_DIR}/bve/include
     ${THIRD_PARTY_DIR}/pix/include
