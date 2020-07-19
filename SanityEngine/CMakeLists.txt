@@ -72,7 +72,6 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/tracy
     ${THIRD_PARTY_DIR}/json5/include
-    ${THIRD_PARTY_DIR}/stb/include
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator
     ${THIRD_PARTY_DIR}/bve/include
     ${THIRD_PARTY_DIR}/pix/include
@@ -104,7 +103,9 @@ target_link_libraries(SanityEngine PRIVATE
 
 find_path(CPPWINRT_INCLUDE_DIRS "winrt/Windows.ApplicationModel.Activation.h")
 target_include_directories(SanityEngine PRIVATE ${CPPWINRT_INCLUDE_DIRS})
-message(STATUS "Found CPPWINRT at path '${CPPWINRT_INCLUDE_DIRS}'")
+
+find_path(STB_INCLUDE_DIRS "stb.h")
+target_include_directories(SanityEngine PRIVATE ${STB_INCLUDE_DIRS})
 
 find_path(NETHOST_INCLUDE_DIRS nethost.h)
 target_include_directories(SanityEngine PRIVATE ${NETHOST_INCLUDE_DIRS})
