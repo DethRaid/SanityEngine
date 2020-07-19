@@ -12,7 +12,6 @@
 #include "core/defer.hpp"
 #include "core/errors.hpp"
 #include "entt/entity/registry.hpp"
-#include "ftl/atomic_counter.h"
 #include "imgui/imgui.h"
 #include "loading/image_loading.hpp"
 #include "loading/shader_loading.hpp"
