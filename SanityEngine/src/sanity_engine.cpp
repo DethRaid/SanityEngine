@@ -10,7 +10,7 @@
 #include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
-#include "glm/ext/quaternion_trigonometric.inl"
+#include "glm/ext/quaternion_trigonometric.hpp"
 #include "globals.hpp"
 #include "loading/entity_loading.hpp"
 #include "rhi/render_device.hpp"
@@ -215,13 +215,13 @@ void SanityEngine::create_planetary_atmosphere() {
     const auto atmosphere = locked_registry->create();
 
     // No need to set parameters, the default light component represents the Earth's sun
-    locked_registry->assign<renderer::LightComponent>(atmosphere);
-    locked_registry->assign<renderer::AtmosphericSkyComponent>(atmosphere);
-    locked_registry->assign<TransformComponent>(atmosphere); // Light rotations come from a Transform
+    locked_registry->emplace<renderer::LightComponent>(atmosphere);
+    locked_registry->emplace<renderer::AtmosphericSkyComponent>(atmosphere);
+    locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform
 
     // Camera for the directional light's shadow
     // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
-    auto& shadow_camera = locked_registry->assign<renderer::CameraComponent>(atmosphere);
+    auto& shadow_camera = locked_registry->emplace<renderer::CameraComponent>(atmosphere);
     shadow_camera.aspect_ratio = 1;
     shadow_camera.fov = 0;
 }
@@ -229,18 +229,19 @@ void SanityEngine::create_planetary_atmosphere() {
 void SanityEngine::make_frametime_display() {
     auto locked_registry = registry.lock();
     const auto frametime_display = locked_registry->create();
-    locked_registry->assign<ui::UiComponent>(frametime_display, Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+    locked_registry->emplace<ui::UiComponent>(frametime_display,
+                                              Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
 }
 
 void SanityEngine::create_first_person_player() {
     auto locked_registry = registry.lock();
     player = locked_registry->create();
 
-    auto& transform = locked_registry->assign<TransformComponent>(player);
+    auto& transform = locked_registry->emplace<TransformComponent>(player);
     transform.location.z = 5;
     transform.location.y = 2;
     transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-    locked_registry->assign<renderer::CameraComponent>(player);
+    locked_registry->emplace<renderer::CameraComponent>(player);
 
     // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
@@ -251,7 +252,7 @@ void SanityEngine::create_environment_object_editor() {
     // auto locked_registry = registry.lock();
     // const auto entity = locked_registry->create();
     // auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
-    // 
+    //
     // auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
     // ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
 }
