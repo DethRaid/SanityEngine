@@ -41,9 +41,13 @@ set(D3D12MA_SOURCE
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator/D3D12MemAlloc.cpp
     )
 
+source_group(TREE ${THIRD_PARTY_DIR} FILES ${D3D12MA_SOURCE})
+
 set(TRACY_SOURCE 
     ${THIRD_PARTY_DIR}/Tracy/TracyClient.cpp
     )
+
+source_group(TREE ${THIRD_PARTY_DIR} FILES ${TRACY_SOURCE})
 
 file(GLOB_RECURSE REX_SOURCE 
      LIST_DIRECTORIES false
@@ -52,6 +56,8 @@ file(GLOB_RECURSE REX_SOURCE
      )    
 
 source_group(TREE ${THIRD_PARTY_DIR}/rex/include FILES ${REX_SOURCE})
+
+add_subdirectory(runtimeclasses)
 
 #########################
 # Compile Sanity Engine #
@@ -113,6 +119,8 @@ target_include_directories(SanityEngine PRIVATE ${NETHOST_INCLUDE_DIRS})
 
 find_library(NETHOST_LIBRARY NAMES libnethost nethost)
 target_link_libraries(SanityEngine PRIVATE ${NETHOST_LIBRARY})
+
+# target_link_libraries(SanityEngine PRIVATE SanityEngineRuntimeApi)
 
 ###################
 # Compile shaders #

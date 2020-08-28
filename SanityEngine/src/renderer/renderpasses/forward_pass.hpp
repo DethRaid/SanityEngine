@@ -33,7 +33,7 @@ namespace renderer {
         Renderer* renderer;
 
         Rx::Ptr<RenderPipelineState> standard_pipeline;
-        Rx::Ptr<RenderPipelineState> opaque_chunk_geometry_pipeline;
+        Rx::Ptr<RenderPipelineState> terrain_pipeline;
         Rx::Ptr<RenderPipelineState> chunk_water_pipeline;
         Rx::Ptr<RenderPipelineState> atmospheric_sky_pipeline;
 

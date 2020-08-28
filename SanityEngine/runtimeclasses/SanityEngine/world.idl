@@ -1,0 +1,7 @@
+namespace SanityEngine {
+    runtimeclass World {
+        World();
+
+        String Name;
+    }
+}

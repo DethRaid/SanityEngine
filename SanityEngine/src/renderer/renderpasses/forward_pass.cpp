@@ -30,10 +30,10 @@ namespace renderer {
         });
         logger->verbose("Created standard pipeline");
 
-        opaque_chunk_geometry_pipeline = device.create_render_pipeline_state({
+        terrain_pipeline = device.create_render_pipeline_state({
             .name = "Opaque chunk geometry pipeline",
-            .vertex_shader = load_shader("chunk.vertex"),
-            .pixel_shader = load_shader("opaque_chunk.pixel"),
+            .vertex_shader = load_shader("terrain.vertex"),
+            .pixel_shader = load_shader("terrain.pixel"),
             .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
             .depth_stencil_format = ImageFormat::Depth32,
         });
@@ -141,8 +141,8 @@ namespace renderer {
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
         viewport.MaxDepth = 1;
-        viewport.Width = render_target_size.x;
-        viewport.Height = render_target_size.y;
+        viewport.Width = static_cast<float>(render_target_size.x);
+        viewport.Height = static_cast<float>(render_target_size.y);
         commands->RSSetViewports(1, &viewport);
 
         D3D12_RECT scissor_rect{};

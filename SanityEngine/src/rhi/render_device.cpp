@@ -1111,7 +1111,7 @@ namespace renderer {
                                      .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
                                      .InstanceDataStepRate = 0});
 
-        dear_imgui_graphics_pipeline_input_layout.reserve(2);
+        dear_imgui_graphics_pipeline_input_layout.reserve(3);
 
         dear_imgui_graphics_pipeline_input_layout.push_back(
             D3D12_INPUT_ELEMENT_DESC{.SemanticName = "Position",

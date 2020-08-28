@@ -15,30 +15,40 @@ namespace renderer {
 
         auto& device = renderer_in.get_render_device();
 
-        const auto create_info = RenderPipelineStateCreateInfo{
+        auto vertex_shader = load_shader("ui.vertex");
+        auto pixel_shader = load_shader("ui.pixel");
+
+        auto blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true},
+                                                               RenderTargetBlendState{.enabled = false},
+                                                               RenderTargetBlendState{.enabled = false},
+                                                               RenderTargetBlendState{.enabled = false},
+                                                               RenderTargetBlendState{.enabled = false},
+                                                               RenderTargetBlendState{.enabled = false},
+                                                               RenderTargetBlendState{.enabled = false},
+                                                               RenderTargetBlendState{.enabled = false}}};
+
+        ui_pipeline = device.create_render_pipeline_state({
             .name = "UI Pipeline",
-            .vertex_shader = load_shader("ui.vertex"),
-            .pixel_shader = load_shader("ui.pixel"),
+            .vertex_shader = vertex_shader,
+            .pixel_shader = pixel_shader,
 
             .input_assembler_layout = InputAssemblerLayout::DearImGui,
 
-            .blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true}}},
+            .blend_state = blend_state,
 
             .rasterizer_state =
-                RasterizerState{
+                {
                     .cull_mode = CullMode::None,
                 },
 
             .depth_stencil_state =
-                DepthStencilState{
+                {
                     .enable_depth_test = false,
                     .enable_depth_write = false,
                 },
 
             .render_target_formats = Rx::Array{ImageFormat::Rgba8},
-        };
-
-        ui_pipeline = device.create_render_pipeline_state(create_info);
+        });
     }
 
     void UiPass::render(ID3D12GraphicsCommandList4* commands,
