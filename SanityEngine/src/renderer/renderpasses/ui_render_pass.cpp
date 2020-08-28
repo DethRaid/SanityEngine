@@ -13,24 +13,20 @@ namespace renderer {
     UiPass::UiPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 
+        const auto blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true},
+                                                                     RenderTargetBlendState{.enabled = false},
+                                                                     RenderTargetBlendState{.enabled = false},
+                                                                     RenderTargetBlendState{.enabled = false},
+                                                                     RenderTargetBlendState{.enabled = false},
+                                                                     RenderTargetBlendState{.enabled = false},
+                                                                     RenderTargetBlendState{.enabled = false},
+                                                                     RenderTargetBlendState{.enabled = false}}};
+
         auto& device = renderer_in.get_render_device();
-
-        auto vertex_shader = load_shader("ui.vertex");
-        auto pixel_shader = load_shader("ui.pixel");
-
-        auto blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true},
-                                                               RenderTargetBlendState{.enabled = false},
-                                                               RenderTargetBlendState{.enabled = false},
-                                                               RenderTargetBlendState{.enabled = false},
-                                                               RenderTargetBlendState{.enabled = false},
-                                                               RenderTargetBlendState{.enabled = false},
-                                                               RenderTargetBlendState{.enabled = false},
-                                                               RenderTargetBlendState{.enabled = false}}};
-
         ui_pipeline = device.create_render_pipeline_state({
             .name = "UI Pipeline",
-            .vertex_shader = vertex_shader,
-            .pixel_shader = pixel_shader,
+            .vertex_shader = load_shader("ui.vertex"),
+            .pixel_shader = load_shader("ui.pixel"),
 
             .input_assembler_layout = InputAssemblerLayout::DearImGui,
 

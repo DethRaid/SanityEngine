@@ -123,25 +123,28 @@ void World::load_environment_objects(const Rx::String& environment_objects_folde
     bool loaded_anything = false;
 
     auto environment_objects_directory = Rx::Filesystem::Directory{environment_objects_absolute_directory};
-    environment_objects_directory.each([&](const Rx::Filesystem::Directory::Item& item) {
-        auto sub_folder = item.as_directory();
-        if(sub_folder) {
-            // load
-        } else {
-            // TODO: Define an asset format, and handle it reasonably
+    if(environment_objects_directory) {
+        // Only try to register assets in this directory is the directory exists
+        environment_objects_directory.each([&](const Rx::Filesystem::Directory::Item& item) {
+            auto sub_folder = item.as_directory();
+            if(sub_folder) {
+                // load
+            } else {
+                // TODO: Define an asset format, and handle it reasonably
 
-            const auto filepath = Rx::String::format("%s/%s", environment_objects_absolute_directory.data(), item.name());
+                const auto filepath = Rx::String::format("%s/%s", environment_objects_absolute_directory.data(), item.name());
 
-            // For not, just yeet FBXs into memory
-            const auto filename = item.name();
-            if(filename.ends_with(".fbx")) {
-                const auto imported_mesh = import_mesh(filepath, commands, *renderer);
-                if(imported_mesh) {
-                    loaded_anything = true;
+                // For not, just yeet FBXs into memory
+                const auto filename = item.name();
+                if(filename.ends_with(".fbx")) {
+                    const auto imported_mesh = import_mesh(filepath, commands, *renderer);
+                    if(imported_mesh) {
+                        loaded_anything = true;
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     if(loaded_anything) {
         device.submit_command_list(Rx::Utility::move(commands));
