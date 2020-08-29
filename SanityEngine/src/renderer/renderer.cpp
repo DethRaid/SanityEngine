@@ -180,8 +180,8 @@ namespace renderer {
         };
 
         const auto result = UpdateSubresources(commands.get(), image.resource.get(), staging_buffer.resource.get(), 0, 0, 1, &subresource);
-        if(result == 0 || FAILED(result)) {
-            logger->error("Could not upload texture data");
+        if(FAILED(result)) {
+            logger->error("Could not upload texture data: %s", to_string(result));
 
             return pink_texture_handle;
         } else {
@@ -354,7 +354,7 @@ namespace renderer {
     void Renderer::create_builtin_images() {
         ZoneScoped;
 
-        load_noise_texture("data/textures/LDR_RGBA_0.png");
+        load_noise_texture("textures/LDR_RGBA_0.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");

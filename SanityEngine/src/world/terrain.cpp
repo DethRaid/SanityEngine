@@ -250,9 +250,8 @@ void Terrain::compute_water_flow(renderer::Renderer& renderer, const com_ptr<ID3
 }
 
 void Terrain::load_terrain_textures_and_create_material() {
-    const char* albedo_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Albedo.jpg";
-    const char*
-        normal_roughness_texture_name = "data/textures/terrain/Ground_Forest_sfjmafua_8K_surface_ms/sfjmafua_512_Normal_Roughness.jpg";
+    const char* albedo_texture_name = "textures/block/grass_block_top.png";
+    const char* normal_roughness_texture_name = "textures/block/grass_block_top_n.png";
 
     ZoneScoped;
 
@@ -450,7 +449,7 @@ void Terrain::upload_new_tile_meshes() {
                 auto locked_registry = registry->lock();
                 locked_registry->emplace<renderer::StandardRenderableComponent>(create_info.entity, tile_mesh, terrain_material);
                 locked_registry->emplace<TransformComponent>(create_info.entity,
-                                                            glm::vec3{create_info.tilecoord.x, 0.0f, create_info.tilecoord.y});
+                                                             glm::vec3{create_info.tilecoord.x, 0.0f, create_info.tilecoord.y});
             }
 
             {

@@ -130,8 +130,6 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         create_environment_object_editor();
 
         world->tick(0);
-
-        load_3d_object("data/models/davifactory.obj");
     }
 }
 

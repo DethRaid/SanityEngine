@@ -30,7 +30,6 @@ find_package(assimp CONFIG REQUIRED)
 find_package(entt CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
 
 ######################
 # Other dependencies #
@@ -40,21 +39,26 @@ set(THIRD_PARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/extern)
 set(D3D12MA_SOURCE 
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator/D3D12MemAlloc.cpp
     )
-
 source_group(TREE ${THIRD_PARTY_DIR} FILES ${D3D12MA_SOURCE})
 
 set(TRACY_SOURCE 
-    ${THIRD_PARTY_DIR}/Tracy/TracyClient.cpp
+    ${THIRD_PARTY_DIR}/tracy/TracyClient.cpp
     )
-
 source_group(TREE ${THIRD_PARTY_DIR} FILES ${TRACY_SOURCE})
+
+set(IMGUI_SOURCE
+    ${THIRD_PARTY_DIR}/tracy/imgui/imgui.cpp 
+    ${THIRD_PARTY_DIR}/tracy/imgui/imgui_draw.cpp 
+    ${THIRD_PARTY_DIR}/tracy/imgui/imgui_widgets.cpp 
+    ${THIRD_PARTY_DIR}/tracy/imgui/imgui_demo.cpp 
+    )
+source_group(TREE ${THIRD_PARTY_DIR} FILES ${IMGUI_SOURCE})
 
 file(GLOB_RECURSE REX_SOURCE 
      LIST_DIRECTORIES false
      CONFIGURE_DEPENDS
      ${THIRD_PARTY_DIR}/rex/include/**
-     )    
-
+     )
 source_group(TREE ${THIRD_PARTY_DIR}/rex/include FILES ${REX_SOURCE})
 
 add_subdirectory(runtimeclasses)
@@ -77,6 +81,7 @@ target_include_directories(SanityEngine PRIVATE
     ${THIRD_PARTY_DIR}/physx/include/physx
     ${THIRD_PARTY_DIR}/rex/include
     ${THIRD_PARTY_DIR}/tracy
+    ${THIRD_PARTY_DIR}/tracy/imgui
     ${THIRD_PARTY_DIR}/json5/include
     ${THIRD_PARTY_DIR}/dotnet/include
     ${THIRD_PARTY_DIR}/D3D12MemoryAllocator
@@ -103,7 +108,6 @@ target_link_libraries(SanityEngine PRIVATE
     d3d12
     dxgi
     d3dcompiler
-    imgui::imgui
     WinPixEventRuntime
     glfw
     )

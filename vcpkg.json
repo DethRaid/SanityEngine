@@ -9,7 +9,6 @@
         "entt",
         "glfw3",
         "glm",
-        "imgui",
         "nethost",
         "stb"
     ]
