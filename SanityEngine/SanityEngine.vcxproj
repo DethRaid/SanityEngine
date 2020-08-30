@@ -1,30 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Memory Debug|Win32">
-      <Configuration>Memory Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Memory Debug|x64">
-      <Configuration>Memory Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="MemoryDebug|Win32">
-      <Configuration>MemoryDebug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="MemoryDebug|x64">
-      <Configuration>MemoryDebug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -33,1006 +12,762 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
-    <ClCompile Include="extern\imgui\src\imgui.cpp" />
-    <ClCompile Include="extern\imgui\src\imgui_demo.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="extern\imgui\src\imgui_draw.cpp" />
-    <ClCompile Include="extern\imgui\src\imgui_widgets.cpp" />
-    <ClCompile Include="extern\imgui\src\misc\cpp\imgui_stdlib.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\command.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\interface.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\parser.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\variable.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\abort.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\assert.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\bitset.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\condition_variable.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\mutex.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\spin_lock.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\thread.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\thread_pool.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\wait_group.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\yield.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\dynamic_pool.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\directory.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\file.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\path_resolver.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\format.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\global.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\hash\fnv1a.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_list.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_xor_list.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\library\loader.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\log.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\abs.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\ceil.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\cos.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\floor.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\half.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\mod.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\pow.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\round.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\sin.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\sqrt.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\tan.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\buddy_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\bump_point_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\electric_fence_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\heap_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\single_shot_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\stats_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\system_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\vma.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\prng\mt19937.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\profiler.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\serialize\buffer.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\serialize\decoder.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\serialize\encoder.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\static_pool.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\stream.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\string.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\string_table.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\delay.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\qpc.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\span.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\stop_watch.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\vector.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\aabb.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\frustum.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\mat3x3.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\mat3x4.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\noise\perlin.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\quat.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\vec2.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\vec3.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\vec4.cpp" />
-    <ClCompile Include="extern\tracy\TracyClient.cpp" />
-    <ClCompile Include="extern\wren\src\optional\wren_opt_meta.c" />
-    <ClCompile Include="extern\wren\src\optional\wren_opt_random.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_compiler.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_core.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_debug.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_primitive.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_utils.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_value.c" />
-    <ClCompile Include="extern\wren\src\vm\wren_vm.c" />
-    <ClCompile Include="first_person_controller.cpp" />
-    <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
-    <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
-    <ClCompile Include="src\bve\bve_wrapper.cpp" />
-    <ClCompile Include="src\core\asset_registry.cpp" />
-    <ClCompile Include="src\core\errors.cpp" />
-    <ClCompile Include="src\game\game.cpp" />
-    <ClCompile Include="src\globals.cpp" />
-    <ClCompile Include="src\input\input_manager.cpp" />
-    <ClCompile Include="src\loading\entity_loading.cpp" />
-    <ClCompile Include="src\loading\image_loading.cpp" />
-    <ClCompile Include="src\loading\shader_loading.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx512.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_neon.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse2.cpp" />
-    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp" />
-    <ClCompile Include="src\player\flycam_controller.cpp" />
-    <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
-    <ClCompile Include="src\renderer\handles.hpp" />
-    <ClCompile Include="src\renderer\renderer.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
-    <ClCompile Include="src\rhi\bind_group.cpp" />
-    <ClCompile Include="src\rhi\descriptor_allocator.cpp" />
-    <ClCompile Include="src\rhi\helpers.cpp" />
-    <ClCompile Include="src\rhi\mesh_data_store.cpp" />
-    <ClCompile Include="src\rhi\render_device.cpp" />
-    <ClCompile Include="src\rhi\resources.cpp" />
-    <ClCompile Include="src\sanity_engine.cpp" />
-    <ClCompile Include="src\stats\framerate_tracker.cpp" />
-    <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
-    <ClCompile Include="src\ui\fps_display.cpp" />
-    <ClCompile Include="src\ui\scripted_ui_panel.cpp" />
-    <ClCompile Include="src\ui\ui_components.cpp" />
-    <ClCompile Include="src\ui\wrap_imgui_codegen.cpp" />
-    <ClCompile Include="src\windows\windows_helpers.cpp" />
-    <ClCompile Include="src\world\environment\environment_object.cpp" />
-    <ClCompile Include="src\world\generation\dual_contouring.cpp" />
-    <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
-    <ClCompile Include="src\world\terrain.cpp" />
-    <ClCompile Include="src\world\world.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="extern\imgui\include\imgui\imconfig.h" />
-    <ClInclude Include="extern\imgui\include\imgui\imgui.h" />
-    <ClInclude Include="extern\imgui\include\imgui\imgui_internal.h" />
-    <ClInclude Include="extern\imgui\include\imgui\imstb_rectpack.h" />
-    <ClInclude Include="extern\imgui\include\imgui\imstb_textedit.h" />
-    <ClInclude Include="extern\imgui\include\imgui\imstb_truetype.h" />
-    <ClInclude Include="extern\rex\include\rx\console\command.h" />
-    <ClInclude Include="extern\rex\include\rx\console\interface.h" />
-    <ClInclude Include="extern\rex\include\rx\console\parser.h" />
-    <ClInclude Include="extern\rex\include\rx\console\variable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\abort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\clamp.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\insertion_sort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\max.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\min.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\quick_sort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\topological_sort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\array.h" />
-    <ClInclude Include="extern\rex\include\rx\core\assert.h" />
-    <ClInclude Include="extern\rex\include\rx\core\bitset.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concepts\interface.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concepts\no_copy.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concepts\no_move.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\atomic.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\condition_variable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\msvc\atomic.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\mutex.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\scope_lock.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\scope_unlock.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\spin_lock.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\thread.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\thread_pool.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\wait_group.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\yield.h" />
-    <ClInclude Include="extern\rex\include\rx\core\config.h" />
-    <ClInclude Include="extern\rex\include\rx\core\deferred_function.h" />
-    <ClInclude Include="extern\rex\include\rx\core\dynamic_pool.h" />
-    <ClInclude Include="extern\rex\include\rx\core\event.h" />
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\directory.h" />
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\file.h" />
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\path_resolver.h" />
-    <ClInclude Include="extern\rex\include\rx\core\format.h" />
-    <ClInclude Include="extern\rex\include\rx\core\function.h" />
-    <ClInclude Include="extern\rex\include\rx\core\global.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hash.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hash\fnv1a.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\assume_aligned.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\empty_bases.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\force_inline.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\likely.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\may_alias.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\no_inline.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\restrict.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\unlikely.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\unreachable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_list.h" />
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_xor_list.h" />
-    <ClInclude Include="extern\rex\include\rx\core\library\loader.h" />
-    <ClInclude Include="extern\rex\include\rx\core\log.h" />
-    <ClInclude Include="extern\rex\include\rx\core\map.h" />
-    <ClInclude Include="extern\rex\include\rx\core\markers.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\abs.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\ceil.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\cos.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\floor.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\force_eval.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\half.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\isnan.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\log2.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\mod.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\pow.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\round.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\shape.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\sign.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\sin.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\sqrt.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\tan.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\buddy_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\bump_point_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\electric_fence_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\heap_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\single_shot_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\stats_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\system_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\uninitialized_storage.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\vma.h" />
-    <ClInclude Include="extern\rex\include\rx\core\optional.h" />
-    <ClInclude Include="extern\rex\include\rx\core\prng\mt19937.h" />
-    <ClInclude Include="extern\rex\include\rx\core\profiler.h" />
-    <ClInclude Include="extern\rex\include\rx\core\ptr.h" />
-    <ClInclude Include="extern\rex\include\rx\core\ref.h" />
-    <ClInclude Include="extern\rex\include\rx\core\result.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\buffer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\decoder.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\encoder.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\header.h" />
-    <ClInclude Include="extern\rex\include\rx\core\set.h" />
-    <ClInclude Include="extern\rex\include\rx\core\source_location.h" />
-    <ClInclude Include="extern\rex\include\rx\core\static_pool.h" />
-    <ClInclude Include="extern\rex\include\rx\core\stream.h" />
-    <ClInclude Include="extern\rex\include\rx\core\string.h" />
-    <ClInclude Include="extern\rex\include\rx\core\string_table.h" />
-    <ClInclude Include="extern\rex\include\rx\core\tagged_ptr.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\delay.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\qpc.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\span.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\stop_watch.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_const.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_cv.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_lvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_pointer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_rvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_volatile.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\conditional.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\decay.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\detect.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\enable_if.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_array.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_assignable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_callable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_enum.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_floating_point.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_function.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_integral.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_lvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_pointer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_referenceable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_restrict.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_rvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_same.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_signed.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_trivially_copyable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_trivially_destructible.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_unsigned.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_void.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_all_extents.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_const.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_cv.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_cvref.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_extent.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_pointer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_volatile.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\return_type.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\type_identity.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\underlying_type.h" />
-    <ClInclude Include="extern\rex\include\rx\core\types.h" />
-    <ClInclude Include="extern\rex\include\rx\core\uninitialized.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\bit.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\construct.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\declval.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\destruct.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\exchange.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\forward.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\move.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\nat.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\pair.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\swap.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\uninitialized.h" />
-    <ClInclude Include="extern\rex\include\rx\core\vector.h" />
-    <ClInclude Include="extern\rex\include\rx\math\aabb.h" />
-    <ClInclude Include="extern\rex\include\rx\math\camera.h" />
-    <ClInclude Include="extern\rex\include\rx\math\compare.h" />
-    <ClInclude Include="extern\rex\include\rx\math\constants.h" />
-    <ClInclude Include="extern\rex\include\rx\math\frustum.h" />
-    <ClInclude Include="extern\rex\include\rx\math\mat3x3.h" />
-    <ClInclude Include="extern\rex\include\rx\math\mat3x4.h" />
-    <ClInclude Include="extern\rex\include\rx\math\mat4x4.h" />
-    <ClInclude Include="extern\rex\include\rx\math\noise\perlin.h" />
-    <ClInclude Include="extern\rex\include\rx\math\plane.h" />
-    <ClInclude Include="extern\rex\include\rx\math\quat.h" />
-    <ClInclude Include="extern\rex\include\rx\math\rectangle.h" />
-    <ClInclude Include="extern\rex\include\rx\math\transform.h" />
-    <ClInclude Include="extern\rex\include\rx\math\trig.h" />
-    <ClInclude Include="extern\rex\include\rx\math\vec2.h" />
-    <ClInclude Include="extern\rex\include\rx\math\vec3.h" />
-    <ClInclude Include="extern\rex\include\rx\math\vec4.h" />
-    <ClInclude Include="extern\wren\src\include\wren.h" />
-    <ClInclude Include="extern\wren\src\include\wren.hpp" />
-    <ClInclude Include="extern\wren\src\optional\wren_opt_meta.h" />
-    <ClInclude Include="extern\wren\src\optional\wren_opt_random.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_common.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_compiler.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_core.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_debug.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_opcodes.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_primitive.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_utils.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_value.h" />
-    <ClInclude Include="extern\wren\src\vm\wren_vm.h" />
-    <ClInclude Include="first_person_controller.hpp" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
-    <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
-    <ClInclude Include="src\adapters\tracy.hpp" />
-    <ClInclude Include="src\bve\bve_wrapper.hpp" />
-    <ClInclude Include="src\bve\train_components.hpp" />
-    <ClInclude Include="src\core\align.hpp" />
-    <ClInclude Include="src\core\ansi_colors.hpp" />
-    <ClInclude Include="src\core\asset_registry.hpp" />
-    <ClInclude Include="src\core\async\synchronized_resource.hpp" />
-    <ClInclude Include="src\core\components.hpp" />
-    <ClInclude Include="src\core\constants.hpp" />
-    <ClInclude Include="src\core\defer.hpp" />
-    <ClInclude Include="src\core\errors.hpp" />
-    <ClInclude Include="src\core\pix_colors.hpp" />
-    <ClInclude Include="src\core\types.hpp" />
-    <ClInclude Include="src\game\game.hpp" />
-    <ClInclude Include="src\globals.hpp" />
-    <ClInclude Include="src\input\input_manager.hpp" />
-    <ClInclude Include="src\loading\entity_loading.hpp" />
-    <ClInclude Include="src\loading\image_loading.hpp" />
-    <ClInclude Include="src\loading\shader_loading.hpp" />
-    <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.h" />
-    <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h" />
-    <ClInclude Include="src\player\components.hpp" />
-    <ClInclude Include="src\player\flycam_controller.hpp" />
-    <ClInclude Include="src\renderer\camera_matrix_buffer.hpp" />
-    <ClInclude Include="src\renderer\debugging\pix.hpp" />
-    <ClInclude Include="src\renderer\material.hpp" />
-    <ClInclude Include="src\renderer\mesh.hpp" />
-    <ClInclude Include="src\renderer\renderpass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp" />
-    <ClInclude Include="src\renderer\render_components.hpp" />
-    <ClInclude Include="src\renderer\lights.hpp" />
-    <ClInclude Include="src\renderer\renderer.hpp" />
-    <ClInclude Include="src\renderer\rhi\command_list.hpp" />
-    <ClInclude Include="src\renderer\rhi\d3d12_private_data.hpp" />
-    <ClInclude Include="src\renderer\standard_material.hpp" />
-    <ClInclude Include="src\rhi\bind_group.hpp" />
-    <ClInclude Include="src\rhi\d3dx12.hpp" />
-    <ClInclude Include="src\rhi\descriptor_allocator.hpp" />
-    <ClInclude Include="src\rhi\framebuffer.hpp" />
-    <ClInclude Include="src\rhi\helpers.hpp" />
-    <ClInclude Include="src\rhi\mesh_data_store.hpp" />
-    <ClInclude Include="src\rhi\raytracing_structs.hpp" />
-    <ClInclude Include="src\rhi\render_device.hpp" />
-    <ClInclude Include="src\rhi\render_pipeline_state.hpp" />
-    <ClInclude Include="src\rhi\resources.hpp" />
-    <ClInclude Include="src\sanity_engine.hpp" />
-    <ClInclude Include="src\serialization\serialization.hpp" />
-    <ClInclude Include="src\stats\framerate_tracker.hpp" />
-    <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
-    <ClInclude Include="src\ui\fps_display.hpp" />
-    <ClInclude Include="src\ui\scripted_ui_panel.hpp" />
-    <ClInclude Include="src\ui\ui_components.hpp" />
-    <ClInclude Include="src\ui\ui_panel.hpp" />
-    <ClInclude Include="src\ui\wrap_imgui_codegen.h" />
-    <ClInclude Include="src\windows\windows_helpers.hpp" />
-    <ClInclude Include="src\world\environment\environment_object.hpp" />
-    <ClInclude Include="src\world\generation\dual_contouring.hpp" />
-    <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />
-    <ClInclude Include="src\world\terrain.hpp" />
-    <ClInclude Include="src\world\world.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\terrain.vertex.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-    </FxCompile>
-    <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Vertex</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\inc\lighting.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\terrain.pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="data\shaders\worldgen\FillOcean.compute.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\worldgen\TickWaterSimulation.compute.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <None Include="data\shaders\inc\atmospheric_scattering.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">4.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">4.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </None>
-    <None Include="data\shaders\inc\standard_root_signature.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </None>
-    <FxCompile Include="data\shaders\inc\brdf.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\inc\shadow.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\make_transparent_texture.compute.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Compute</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\shadow.pixel.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\standard.pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\standard.vertex.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Vertex</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\ui.pixel.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="data\shaders\ui.vertex.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">6.4</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">6.4</ShaderModel>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">true</EnableUnboundedDescriptorTables>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">true</EnableUnboundedDescriptorTables>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <None Include="extern\wren\src\optional\wren_opt_meta.wren" />
-    <None Include="extern\wren\src\optional\wren_opt_meta.wren.inc" />
-    <None Include="extern\wren\src\optional\wren_opt_random.wren" />
-    <None Include="extern\wren\src\optional\wren_opt_random.wren.inc" />
-    <None Include="extern\wren\src\README.md" />
-    <None Include="extern\wren\src\vm\wren_core.wren" />
-    <None Include="extern\wren\src\vm\wren_core.wren.inc" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="SanityEngine.rc" />
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{69D8BE26-0BD8-4C1D-A923-53E9E47EEEB9}</ProjectGuid>
-    <RootNamespace>SanityEngine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectGuid>{A6D26A06-5F0C-3136-9293-218915CC95C4}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>SanityEngine</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-    <EnableASAN>false</EnableASAN>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="do_not_import_user.props" Condition="exists('do_not_import_user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SanityEngine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Documents\SanityEngine\build\SanityEngine\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SanityEngine.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SanityEngine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Documents\SanityEngine\build\SanityEngine\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">SanityEngine.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">SanityEngine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Documents\SanityEngine\build\SanityEngine\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">SanityEngine.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">SanityEngine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\wren\src\optional;E:\Documents\SanityEngine\SanityEngine\extern\wren\src\vm;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)src;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\wren\src\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
-    <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
+    <MultiProcMIDL>true</MultiProcMIDL>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)src;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\wren\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)extern\wren\lib;$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
-    <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)src;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\wren\include;$(ProjectDir)extern\ftl\third_party\nonius\include;$(ProjectDir)extern\ftl\third_party\catch2\include;$(ProjectDir)extern\ftl\third_party\boost_context\include;$(ProjectDir)extern\ftl\include;$(ProjectDir)extern\assimp\include;$(ProjectDir)extern\imgui\include;$(ProjectDir)extern\stb\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\spdlog\include;$(ProjectDir)extern\glm\include;$(ProjectDir)extern\entt\include;$(ProjectDir)extern\glfw\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)extern\wren\lib;$(ProjectDir)extern\ftl\lib;$(ProjectDir)extern\assimp\lib;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\spdlog\lib;$(ProjectDir)extern\glfw\lib-vc2019;$(LibraryPath)</LibraryPath>
-    <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TRACY_ENABLE;RX_LOG_QUEUE_LENGTH=0;NUM_WAITING_FIBER_SLOTS=512;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>false</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <EnableModules>true</EnableModules>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableModules>true</EnableModules>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PostBuildEvent>
-      <Command>
-      </Command>
-    </PostBuildEvent>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)extern\winrt</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+      <EnableWindowsRuntime>true</EnableWindowsRuntime>
+      <WarningLevel>4</WarningLevel>
+      <EnableErrorChecks>All</EnableErrorChecks>
+      <ErrorCheckAllocations>true</ErrorCheckAllocations>
+      <ErrorCheckBounds>true</ErrorCheckBounds>
+      <ErrorCheckEnumRange>true</ErrorCheckEnumRange>
+      <ErrorCheckRefPointers>true</ErrorCheckRefPointers>
+      <ErrorCheckStubData>true</ErrorCheckStubData>
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+E:\msys64\mingw64\bin\python3.7.exe E:/Documents/SanityEngine/SanityEngine/tools/compile_shaders.py E:/Documents/SanityEngine/SanityEngine/data/shaders E:/Documents/SanityEngine/build/SanityEngine/data/shaders
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
     <PostBuildEvent>
       <Message>
       </Message>
+      <Command>setlocal
+powershell -noprofile -executionpolicy Bypass -file E:/Documents/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.exe -installedDir E:/Documents/SanityEngine/build/vcpkg_installed/x64-windows/debug/bin -OutVariable out
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
-    <CustomBuildStep>
-      <Message>Compiling shaders</Message>
-    </CustomBuildStep>
-    <FxCompile>
-      <ShaderModel>6.4</ShaderModel>
-    </FxCompile>
-    <FxCompile>
-      <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
-    </FxCompile>
-    <PreBuildEvent>
-      <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>Compile Shaders</Message>
-    </PreBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memory Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>false</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <EnableModules>true</EnableModules>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\debug\lib\assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\debug\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wren.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PostBuildEvent>
-      <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Compile shaders</Message>
-    </PostBuildEvent>
-    <CustomBuildStep>
-      <Message>Compiling shaders</Message>
-    </CustomBuildStep>
-    <FxCompile>
-      <ShaderModel>6.4</ShaderModel>
-    </FxCompile>
-    <FxCompile>
-      <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
-    </FxCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MemoryDebug|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>false</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <EnableModules>true</EnableModules>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <Link>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.lib</ImportLibrary>
+      <ProgramDataBaseFile>E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wren.lib;boost_contextd.lib;ftld.lib;assimp-vc142-mtd.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>python3 tools/compile_shaders.py $(ProjectDir)data\shaders $(OutDir)data\shaders</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Compile shaders</Message>
-    </PostBuildEvent>
-    <CustomBuildStep>
-      <Message>Compiling shaders</Message>
-    </CustomBuildStep>
-    <FxCompile>
-      <ShaderModel>6.4</ShaderModel>
-    </FxCompile>
-    <FxCompile>
-      <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
-    </FxCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableModules>true</EnableModules>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+E:\msys64\mingw64\bin\python3.7.exe E:/Documents/SanityEngine/SanityEngine/tools/compile_shaders.py E:/Documents/SanityEngine/SanityEngine/data/shaders E:/Documents/SanityEngine/build/SanityEngine/data/shaders
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+powershell -noprofile -executionpolicy Bypass -file E:/Documents/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary E:/Documents/SanityEngine/build/SanityEngine/Release/SanityEngine.exe -installedDir E:/Documents/SanityEngine/build/vcpkg_installed/x64-windows/bin -OutVariable out
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
     <Link>
+      <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\lib\assimp-vc142-mt.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>E:/Documents/SanityEngine/build/SanityEngine/Release/SanityEngine.lib</ImportLibrary>
+      <ProgramDataBaseFile>E:/Documents/SanityEngine/build/SanityEngine/Release/SanityEngine.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableModules>true</EnableModules>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+E:\msys64\mingw64\bin\python3.7.exe E:/Documents/SanityEngine/SanityEngine/tools/compile_shaders.py E:/Documents/SanityEngine/SanityEngine/data/shaders E:/Documents/SanityEngine/build/SanityEngine/data/shaders
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+powershell -noprofile -executionpolicy Bypass -file E:/Documents/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary E:/Documents/SanityEngine/build/SanityEngine/MinSizeRel/SanityEngine.exe -installedDir E:/Documents/SanityEngine/build/vcpkg_installed/x64-windows/bin -OutVariable out
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\lib\assimp-vc142-mt.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>E:/Documents/SanityEngine/build/SanityEngine/MinSizeRel/SanityEngine.lib</ImportLibrary>
+      <ProgramDataBaseFile>E:/Documents/SanityEngine/build/SanityEngine/MinSizeRel/SanityEngine.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableModules>true</EnableModules>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+E:\msys64\mingw64\bin\python3.7.exe E:/Documents/SanityEngine/SanityEngine/tools/compile_shaders.py E:/Documents/SanityEngine/SanityEngine/data/shaders E:/Documents/SanityEngine/build/SanityEngine/data/shaders
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+      <Command>setlocal
+powershell -noprofile -executionpolicy Bypass -file E:/Documents/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary E:/Documents/SanityEngine/build/SanityEngine/RelWithDebInfo/SanityEngine.exe -installedDir E:/Documents/SanityEngine/build/vcpkg_installed/x64-windows/bin -OutVariable out
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\lib\assimp-vc142-mt.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>E:/Documents/SanityEngine/build/SanityEngine/RelWithDebInfo/SanityEngine.lib</ImportLibrary>
+      <ProgramDataBaseFile>E:/Documents/SanityEngine/build/SanityEngine/RelWithDebInfo/SanityEngine.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\stdout_stream.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\stdout_stream.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\tracy.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\bve\bve_wrapper.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\bve\bve_wrapper.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\bve\train_components.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\align.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\ansi_colors.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\core\asset_registry.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\asset_registry.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\async\synchronized_resource.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\components.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\constants.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\defer.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\core\errors.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\errors.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\pix_colors.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\core\types.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\coreclr\core_clr_host.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\coreclr\core_clr_host.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\game\game.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\game\game.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\globals.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\globals.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\input\input_manager.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\input\input_manager.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\loading\entity_loading.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\entity_loading.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\loading\image_loading.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\image_loading.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\loading\mesh_loading.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\mesh_loading.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\loading\shader_loading.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\shader_loading.hpp" />
+    <None Include="E:\Documents\SanityEngine\SanityEngine\src\noise\.gitignore" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_avx512.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_neon.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_sse2.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp" />
+    <None Include="E:\Documents\SanityEngine\SanityEngine\src\noise\LICENSE" />
+    <None Include="E:\Documents\SanityEngine\SanityEngine\src\noise\README.md" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\player\components.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\player\first_person_controller.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\player\first_person_controller.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\player\flycam_controller.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\player\flycam_controller.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\camera_matrix_buffer.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\camera_matrix_buffer.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\debugging\pix.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\handles.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\lights.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\material.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\mesh.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\render_components.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderer.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderer.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpass.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\backbuffer_output_pass.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\backbuffer_output_pass.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\denoiser_pass.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\denoiser_pass.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\forward_pass.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\forward_pass.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\ui_render_pass.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\ui_render_pass.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\rhi\command_list.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\rhi\d3d12_private_data.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\standard_material.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\bind_group.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\bind_group.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\d3dx12.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\descriptor_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\descriptor_allocator.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\framebuffer.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\helpers.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\helpers.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\mesh_data_store.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\mesh_data_store.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\raytracing_structs.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_device.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_device.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_pipeline_state.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\resources.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\resources.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\sanity_engine.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\sanity_engine.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\serialization\serialization.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\settings.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\stats\framerate_tracker.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\stats\framerate_tracker.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\ui\dear_imgui_adapter.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\ui\dear_imgui_adapter.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\ui\fps_display.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\ui\fps_display.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\ui\scripted_ui_panel.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\ui\scripted_ui_panel.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\ui\ui_components.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\ui\ui_components.hpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\ui\ui_panel.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\windows\windows_helpers.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\windows\windows_helpers.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\world\environment\environment_object.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\world\environment\environment_object.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\world\generation\gpu_terrain_generation.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\world\generation\gpu_terrain_generation.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\world\terrain.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\world\terrain.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\world\world.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\world\world.hpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\command.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\command.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\interface.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\interface.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\parser.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\parser.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\variable.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\console\variable.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\abort.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\abort.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\algorithm\clamp.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\algorithm\insertion_sort.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\algorithm\max.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\algorithm\min.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\algorithm\quick_sort.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\algorithm\topological_sort.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\array.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\assert.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\assert.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\bitset.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\bitset.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concepts\interface.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concepts\no_copy.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concepts\no_move.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\atomic.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\clang\atomic.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\condition_variable.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\condition_variable.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\gcc\atomic.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\mutex.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\mutex.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\recursive_mutex.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\recursive_mutex.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\scope_lock.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\scope_unlock.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\spin_lock.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\spin_lock.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\std\atomic.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\thread.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\thread.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\thread_pool.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\thread_pool.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\wait_group.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\wait_group.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\yield.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\concurrency\yield.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\config.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\deferred_function.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\dynamic_pool.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\dynamic_pool.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\event.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\filesystem\directory.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\filesystem\directory.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\filesystem\file.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\filesystem\file.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\filesystem\path_resolver.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\filesystem\path_resolver.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\format.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\format.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\function.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\global.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\global.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hash.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hash\fnv1a.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hash\fnv1a.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\assume_aligned.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\empty_bases.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\force_inline.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\format.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\likely.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\may_alias.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\no_inline.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\restrict.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\thread.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\unlikely.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\hints\unreachable.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\intrusive_list.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\intrusive_list.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\intrusive_xor_list.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\intrusive_xor_list.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\library\loader.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\library\loader.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\log.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\log.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\map.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\markers.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\abs.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\abs.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\ceil.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\ceil.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\cos.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\cos.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\floor.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\floor.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\force_eval.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\half.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\half.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\isnan.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\log2.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\mod.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\mod.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\pow.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\pow.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\round.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\round.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\shape.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\sign.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\sin.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\sin.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\sqrt.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\sqrt.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\tan.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\math\tan.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\aggregate.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\aggregate.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\buddy_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\buddy_allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\bump_point_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\bump_point_allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\electric_fence_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\electric_fence_allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\heap_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\heap_allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\single_shot_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\single_shot_allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\stats_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\stats_allocator.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\system_allocator.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\system_allocator.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\uninitialized_storage.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\vma.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\memory\vma.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\optional.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\prng\mt19937.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\prng\mt19937.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\profiler.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\profiler.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\ptr.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\buffer.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\buffer.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\decoder.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\decoder.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\encoder.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\encoder.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\serialize\header.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\set.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\source_location.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\static_pool.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\static_pool.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\stream.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\stream.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\string.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\string.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\string_table.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\string_table.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\tagged_ptr.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\delay.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\delay.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\qpc.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\qpc.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\span.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\span.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\stop_watch.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\time\stop_watch.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\add_const.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\add_cv.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\add_lvalue_reference.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\add_pointer.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\add_rvalue_reference.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\add_volatile.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\conditional.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\decay.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\detect.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\enable_if.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_array.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_assignable.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_callable.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_enum.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_floating_point.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_function.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_integral.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_lvalue_reference.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_pointer.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_reference.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_referenceable.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_restrict.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_rvalue_reference.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_same.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_signed.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_trivially_copyable.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_trivially_destructible.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_unsigned.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\is_void.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_all_extents.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_const.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_cv.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_cvref.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_extent.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_pointer.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_reference.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\remove_volatile.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\return_type.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\type_identity.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\traits\underlying_type.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\types.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\uninitialized.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\bit.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\construct.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\declval.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\destruct.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\exchange.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\forward.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\move.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\nat.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\pair.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\swap.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\utility\uninitialized.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\vector.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\core\vector.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\aabb.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\aabb.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\camera.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\compare.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\constants.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\frustum.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\frustum.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\mat3x3.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\mat3x3.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\mat3x4.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\mat3x4.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\mat4x4.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\noise\perlin.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\noise\perlin.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\plane.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\quat.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\quat.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\rectangle.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\sphere.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\sphere.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\transform.h" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\trig.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec2.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec2.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec3.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec3.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec4.cpp" />
+    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec4.h" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui\imgui.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui\imgui_draw.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui\imgui_demo.cpp" />
+    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\tracy\TracyClient.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="E:\Documents\SanityEngine\build\ZERO_CHECK.vcxproj">
+      <Project>{A5644789-E05C-3F54-858A-8A173F943A25}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets'))" />
-  </Target>
 </Project>
