@@ -169,7 +169,8 @@ void SanityEngine::run() {
             world->tick(last_frame_duration);
         }
 
-        renderer->render_all(registry.lock(), *world);
+        auto locked_registry = registry.lock();
+        renderer->render_all(locked_registry, *world);
 
         renderer->end_frame();
 

@@ -61,7 +61,14 @@ file(GLOB_RECURSE REX_SOURCE
      )
 source_group(TREE ${THIRD_PARTY_DIR}/rex/include FILES ${REX_SOURCE})
 
-add_subdirectory(runtimeclasses)
+file(GLOB_RECURSE WINRT_SOURCE 
+    LIST_DIRECTORIES false
+    CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_LIST_DIR}/runtimeclasses/**
+    )
+source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${WINRT_SOURCE})
+
+# add_subdirectory(runtimeclasses)
 
 #########################
 # Compile Sanity Engine #
@@ -74,7 +81,7 @@ file(GLOB_RECURSE SANITY_ENGINE_SOURCE
 
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${SANITY_ENGINE_SOURCE})
 
-add_executable(SanityEngine ${SANITY_ENGINE_SOURCE} ${REX_SOURCE} ${D3D12MA_SOURCE} ${IMGUI_SOURCE} ${TRACY_SOURCE})
+add_executable(SanityEngine ${SANITY_ENGINE_SOURCE} ${REX_SOURCE} ${D3D12MA_SOURCE} ${IMGUI_SOURCE} ${TRACY_SOURCE} ${WINRT_SOURCE})
 
 target_include_directories(SanityEngine PRIVATE 
     ${THIRD_PARTY_DIR}/physx/include
@@ -123,8 +130,6 @@ target_include_directories(SanityEngine PRIVATE ${NETHOST_INCLUDE_DIRS})
 
 find_library(NETHOST_LIBRARY NAMES libnethost nethost)
 target_link_libraries(SanityEngine PRIVATE ${NETHOST_LIBRARY})
-
-# target_link_libraries(SanityEngine PRIVATE SanityEngineRuntimeApi)
 
 ###################
 # Compile shaders #

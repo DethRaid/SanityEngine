@@ -1,5 +1,9 @@
-namespace SanityEngine {
-    runtimeclass World {
+import "Windows.Foundation.idl";
+
+namespace SanityEngine 
+{
+    runtimeclass World 
+    {
         World();
 
         String Name;
