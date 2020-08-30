@@ -1,0 +1,9 @@
+namespace SanityEngine_WinRT
+{
+    [default_interface]
+    runtimeclass World
+    {
+        World();
+        Int32 MyProperty;
+    }
+}
