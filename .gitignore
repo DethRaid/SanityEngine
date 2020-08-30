@@ -408,3 +408,4 @@ build/
 SanityEngine/data/bve_trains/
 *.fbx
 vcpkg_installed/
+/SanityEngine.NET-Old
