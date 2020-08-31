@@ -372,6 +372,9 @@
     <ClCompile Include="src\sanity_engine.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\api\sanity.SanityEngine.cpp">
+      <Filter>src\winrt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1116,6 +1119,9 @@
     <ClInclude Include="src\settings.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\api\sanity.SanityEngine.hpp">
+      <Filter>src\winrt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="SanityEngine_WinRT.def" />
@@ -1130,9 +1136,15 @@
     <None Include="src\noise\README.md">
       <Filter>src\noise</Filter>
     </None>
+    <None Include="src\api\README.md">
+      <Filter>src\winrt</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="World.idl" />
+    <Midl Include="public\SanityEngine.idl">
+      <Filter>public</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="D3D12MemoryAllocator">
@@ -1281,6 +1293,12 @@
     </Filter>
     <Filter Include="tracy\imgui">
       <UniqueIdentifier>{889968ac-45c3-48d4-806a-74f15a137582}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="public">
+      <UniqueIdentifier>{07ce4e74-340e-467f-b4a5-c6d13f36d1d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\winrt">
+      <UniqueIdentifier>{2aede624-815f-4adf-abec-4cede0be2f97}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

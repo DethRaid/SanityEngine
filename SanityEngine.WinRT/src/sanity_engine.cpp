@@ -7,6 +7,7 @@
 #include <winrt/Windows.Foundation.h>
 
 #include "GLFW/glfw3.h"
+#include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
@@ -43,7 +44,7 @@ int main(int argc, char** argv) {
 
     g_engine = new SanityEngine{settings};
 
-    g_engine->run();
+    g_engine->tick();
 
     logger->warning("REMAIN INDOORS");
 
@@ -139,58 +140,43 @@ SanityEngine::~SanityEngine() {
     glfwTerminate();
 }
 
-void SanityEngine::run() {
-    uint64_t frame_count = 1;
+void SanityEngine::tick(double delta_time) {
+    ZoneScopedN("tick");
+    glfwPollEvents();
 
-    Float32 last_frame_duration = 0;
+    if(player_controller) {
+        player_controller->update_player_transform(delta_time);
+    }
 
-    world->load_environment_objects("data/content/models/environment");
-
-    while(!glfwWindowShouldClose(window)) {
-        ZoneScopedN("tick");
-        const auto frame_start_time = std::chrono::steady_clock::now();
-        glfwPollEvents();
-
-        if(player_controller) {
-            player_controller->update_player_transform(last_frame_duration);
-        }
-
-        {
-            auto locked_registry = registry.lock();
-            imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
-        }
-
-        // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
-        // generation, etc
-        renderer->begin_frame(frame_count);
-
-        // There might not be a world if the player is still in the main menu
-        if(world) {
-            world->tick(last_frame_duration);
-        }
-
+    {
         auto locked_registry = registry.lock();
-        renderer->render_all(locked_registry, *world);
+        imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
+    }
 
-        renderer->end_frame();
+    // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
+    // generation, etc
+    renderer->begin_frame(delta_time);
 
-        FrameMark;
+    // There might not be a world if the player is still in the main menu
+    if(world) {
+        world->tick(delta_time);
+    }
+
+    auto locked_registry = registry.lock();
+    renderer->render_all(locked_registry, *world);
+
+    renderer->end_frame();
+
+    FrameMark;
 #ifdef TRACY_ENABLE
-        TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
+    TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
 #endif
 
-        const auto frame_end_time = std::chrono::steady_clock::now();
+    framerate_tracker.add_frame_time(delta_time);
 
-        const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time)
-                                                    .count();
-        last_frame_duration = static_cast<Float32>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
+    frame_count++;
 
-        framerate_tracker.add_frame_time(last_frame_duration);
-
-        frame_count++;
-
-        TracyD3D12Collect(renderer::RenderBackend::tracy_context);
-    }
+    TracyD3D12Collect(renderer::RenderBackend::tracy_context);
 }
 
 entt::entity SanityEngine::get_player() const { return player; }

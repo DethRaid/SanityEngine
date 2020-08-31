@@ -1,0 +1,10 @@
+namespace sanity
+{
+    [default_interface]
+    runtimeclass SanityEngine 
+    { 
+        SanityEngine();
+
+        void tick();
+    }
+}

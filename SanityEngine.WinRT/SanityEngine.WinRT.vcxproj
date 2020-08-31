@@ -82,8 +82,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine.WinRT\extern\rex\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\pix\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\physx\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\json5\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\bve\include;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Documents\SanityEngine\SanityEngine.WinRT\extern\pix\lib;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\physx\lib\debug;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\bve\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)extern\pix\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\bve\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -306,6 +306,7 @@
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\adapters\tracy.hpp" />
+    <ClInclude Include="src\api\sanity.SanityEngine.hpp" />
     <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\bve\train_components.hpp" />
     <ClInclude Include="src\coreclr\core_clr_host.hpp" />
@@ -459,6 +460,7 @@
     </ClCompile>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
+    <ClCompile Include="src\api\sanity.SanityEngine.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
     <ClCompile Include="src\coreclr\core_clr_host.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
@@ -509,11 +511,13 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="public\SanityEngine.idl" />
     <Midl Include="World.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="SanityEngine_WinRT.def" />
+    <None Include="src\api\README.md" />
     <None Include="src\noise\.gitignore" />
     <None Include="src\noise\LICENSE" />
     <None Include="src\noise\README.md" />

@@ -32,9 +32,9 @@ public:
     ~SanityEngine();
 
     /*!
-     * \brief Runs the main loop of the engine. This method eventually returns, after the user is finished playing their game
+     * \brief Ticks the internal simulations by the provided amount of time
      */
-    void run();
+    void tick(double delta_time);
 
     [[nodiscard]] entt::entity get_player() const;
 
@@ -77,6 +77,8 @@ private:
     Rx::Ptr<coreclr::Host> scripting_runtime;
 
     Rx::Ptr<AssetRegistry> asset_registry;
+
+    uint64_t frame_count = 1;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

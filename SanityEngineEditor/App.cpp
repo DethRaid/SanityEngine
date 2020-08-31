@@ -23,6 +23,15 @@ struct App : implements<App, IFrameworkViewSource, IFrameworkView>
 
     void Initialize(CoreApplicationView const &)
     {
+        rex::Wrapper rex;
+
+        const Settings settings{};
+
+        const auto exe_path = Rx::String{argv[0]};
+        const auto slash_pos = exe_path.find_last_of("\\"); // Lol how do paths work
+        SanityEngine::executable_directory = exe_path.substring(0, slash_pos);
+
+        g_engine = new SanityEngine{settings};
     }
 
     void Load(hstring const&)
