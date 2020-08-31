@@ -8,7 +8,7 @@
 struct TerrainData;
 
 namespace renderer {
-    class RenderDevice;
+    class RenderBackend;
     class Renderer;
 } // namespace renderer
 
@@ -18,7 +18,7 @@ namespace terraingen {
     /*!
      * \brief Creates the PSOs that will be used for terrain generation
      */
-    void initialize(renderer::RenderDevice& device);
+    void initialize(renderer::RenderBackend& device);
 
     /*!
      * \brief Places oceans in the provided heightmap

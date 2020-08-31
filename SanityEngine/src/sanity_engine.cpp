@@ -176,7 +176,7 @@ void SanityEngine::run() {
 
         FrameMark;
 #ifdef TRACY_ENABLE
-        TracyD3D12NewFrame(renderer::RenderDevice::tracy_context);
+        TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
 #endif
 
         const auto frame_end_time = std::chrono::steady_clock::now();
@@ -189,7 +189,7 @@ void SanityEngine::run() {
 
         frame_count++;
 
-        TracyD3D12Collect(renderer::RenderDevice::tracy_context);
+        TracyD3D12Collect(renderer::RenderBackend::tracy_context);
     }
 }
 

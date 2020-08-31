@@ -54,7 +54,7 @@ TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const Worl
                             .heightmap = Rx::Vector<Float32>{total_pixels_in_maps}};
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::generate_terrain");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "Terrain::generate_terrain");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
 
         // Generate heightmap
@@ -179,7 +179,7 @@ void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
                                  const unsigned total_pixels_in_maps) {
     ZoneScoped;
 
-    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::generate_heightmap");
+    TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "Terrain::generate_heightmap");
     PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::generate_heightmap");
 
     auto* height_noise = noise_generator.GetNoiseSet(-static_cast<Int32>(params.width) / 2,
@@ -213,7 +213,7 @@ void Terrain::place_water_sources(const WorldParameters& params,
                                   const unsigned total_pixels_in_maps) {
     ZoneScoped;
 
-    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::place_water_sources");
+    TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "Terrain::place_water_sources");
     PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::place_water_sources");
 
     Rx::Vector<Float32> water_depth_map{total_pixels_in_maps};
@@ -396,7 +396,7 @@ void Terrain::upload_new_tile_meshes() {
     auto commands = device.create_command_list();
     commands->SetName(L"Terrain::upload_new_tile_meshes");
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes");
 
         Rx::Vector<renderer::VisibleObjectCullingInformation> tile_culling_information{locked_tile_mesh_queue->size()};
@@ -474,7 +474,7 @@ void Terrain::upload_new_tile_meshes() {
         locked_tile_mesh_queue->clear();
     }
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes::upload_visible_objects");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "Terrain::upload_new_tile_meshes::upload_visible_objects");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Terrain::upload_new_tile_meshes::upload_visible_objects");
 
         // TODO: Copy the staging buffer to the global scene cullable objects buffer

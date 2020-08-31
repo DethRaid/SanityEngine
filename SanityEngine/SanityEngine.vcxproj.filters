@@ -367,6 +367,9 @@
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\extern\tracy\TracyClient.cpp">
       <Filter>tracy</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\world_preview_panel.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.hpp">
@@ -1106,6 +1109,9 @@
     </ClInclude>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\extern\rex\include\rx\math\vec4.h">
       <Filter>rx\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\world_preview_panel.hpp">
+      <Filter>src\ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

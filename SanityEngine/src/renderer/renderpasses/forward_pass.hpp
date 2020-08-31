@@ -12,7 +12,7 @@
 
 namespace renderer {
     struct BindGroup;
-    class RenderDevice;
+    class RenderBackend;
     class Renderer;
 
     class ForwardPass final : public virtual RenderPass {

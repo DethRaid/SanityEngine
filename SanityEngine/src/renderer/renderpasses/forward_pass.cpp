@@ -66,7 +66,7 @@ namespace renderer {
     void ForwardPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "ForwardPass::execute");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "ForwardPass::execute");
         PIXScopedEvent(commands, forward_pass_color, "ForwardPass::execute");
 
         begin_render_pass(commands);
@@ -78,7 +78,7 @@ namespace renderer {
 
         // Hardcode camera 0 as the player camera
         // TODO: Decide if this is fine
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
 
         // Draw atmosphere first because projection matrices are hard
         draw_atmosphere(commands, registry);
@@ -158,7 +158,7 @@ namespace renderer {
 
         {
             auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
-            commands->SetGraphicsRootShaderResourceView(RenderDevice::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
+            commands->SetGraphicsRootShaderResourceView(RenderBackend::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
                                                         model_matrix_buffer.resource->GetGPUVirtualAddress());
         }
 
@@ -167,7 +167,7 @@ namespace renderer {
 
         auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
 
-        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
+        commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     material_buffer.resource->GetGPUVirtualAddress());
 
         {
@@ -177,11 +177,11 @@ namespace renderer {
 
                 // TODO: Figure out the priority queues to put things in
 
-                commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+                commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 
                 const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform, frame_idx);
 
-                commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderDevice::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
+                commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
 
                 commands->DrawIndexedInstanced(renderable.mesh.num_indices, 1, renderable.mesh.first_index, 0, 0);
             });

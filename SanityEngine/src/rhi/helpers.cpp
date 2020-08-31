@@ -384,7 +384,7 @@ namespace renderer {
     }
 
     RaytracableGeometry build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                RenderDevice& device,
+                                                                RenderBackend& device,
                                                                 const Buffer& vertex_buffer,
                                                                 const Buffer& index_buffer,
                                                                 const Rx::Vector<Mesh>& meshes) {
@@ -448,7 +448,7 @@ namespace renderer {
     }
 
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList4* commands,
-                                         RenderDevice& device,
+                                         RenderBackend& device,
                                          ID3D12Resource* dst,
                                          const void* src,
                                          const Uint32 size,

@@ -61,7 +61,7 @@ namespace renderer {
 
         auto& device = renderer->get_render_device();
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "UiRenderPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "UiRenderPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "UiRenderPass::render");
         {
             const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
@@ -127,8 +127,8 @@ namespace renderer {
 
                     } else {
                         const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
-                        const auto texture_idx = static_cast<Uint32>(imgui_material_idx);
-                        commands->SetGraphicsRoot32BitConstant(0, texture_idx, 1);
+                        const auto material_idx = static_cast<Uint32>(imgui_material_idx);
+                        commands->SetGraphicsRoot32BitConstant(0, material_idx, RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX);
 
                         {
                             const auto& clip_rect = cmd.ClipRect;

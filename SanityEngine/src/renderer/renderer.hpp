@@ -20,7 +20,7 @@
 
 namespace renderer {
     class RenderCommandList;
-    class RenderDevice;
+    class RenderBackend;
 } // namespace renderer
 
 struct GLFWwindow;
@@ -99,7 +99,7 @@ namespace renderer {
 
         void deallocate_standard_material(StandardMaterialHandle handle);
 
-        [[nodiscard]] RenderDevice& get_render_device() const;
+        [[nodiscard]] RenderBackend& get_render_device() const;
 
         [[nodiscard]] MeshDataStore& get_static_mesh_store() const;
 
@@ -222,7 +222,7 @@ namespace renderer {
 
         glm::uvec2 output_framebuffer_size;
 
-        Rx::Ptr<RenderDevice> device;
+        Rx::Ptr<RenderBackend> device;
 
         Rx::Ptr<MeshDataStore> static_mesh_storage;
 

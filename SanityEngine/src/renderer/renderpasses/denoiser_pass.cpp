@@ -44,7 +44,7 @@ namespace renderer {
                               const World& /* world */) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "DenoiserPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "DenoiserPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DenoiserPass::render");
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
@@ -68,8 +68,8 @@ namespace renderer {
 
         commands->SetPipelineState(denoising_pipeline->pso.get());
 
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     denoiser_material_buffer->resource->GetGPUVirtualAddress());
 
         commands->DrawInstanced(3, 1, 0, 0);

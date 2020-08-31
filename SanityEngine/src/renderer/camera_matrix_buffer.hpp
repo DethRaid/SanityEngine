@@ -10,7 +10,7 @@
 #include "rx/core/vector.h"
 
 namespace renderer {
-    class RenderDevice;
+    class RenderBackend;
 }
 
 namespace renderer {
@@ -37,7 +37,7 @@ namespace renderer {
      */
     class CameraMatrixBuffer {
     public:
-        explicit CameraMatrixBuffer(RenderDevice& device_in);
+        explicit CameraMatrixBuffer(RenderBackend& device_in);
 
         CameraMatrixBuffer(const CameraMatrixBuffer& other) = delete;
         CameraMatrixBuffer& operator=(const CameraMatrixBuffer& other) = delete;
@@ -60,7 +60,7 @@ namespace renderer {
         void upload_data(Uint32 frame_idx) const;
 
     private:
-        RenderDevice* device;
+        RenderBackend* device;
 
         std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data{};
 

@@ -50,13 +50,13 @@ namespace renderer {
     Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
 
     RaytracableGeometry build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                RenderDevice& device,
+                                                                RenderBackend& device,
                                                                 const Buffer& vertex_buffer,
                                                                 const Buffer& index_buffer,
                                                                 const Rx::Vector<Mesh>& meshes);
 
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList4* commands,
-                                         RenderDevice& device,
+                                         RenderBackend& device,
                                          ID3D12Resource* dst,
                                          const void* src,
                                          Uint32 size,

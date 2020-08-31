@@ -16,7 +16,7 @@ struct StandardVertex {
 
 namespace renderer {
     class ResourceCommandList;
-    class RenderDevice;
+    class RenderBackend;
 
     struct Mesh {
         Uint32 first_vertex{0};
@@ -48,7 +48,7 @@ namespace renderer {
 
     class MeshDataStore {
     public:
-        MeshDataStore(RenderDevice& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
+        MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
         MeshDataStore& operator=(const MeshDataStore& other) = delete;
@@ -83,7 +83,7 @@ namespace renderer {
         void bind_to_command_list(ID3D12GraphicsCommandList4* commands) const;
 
     private:
-        RenderDevice* device;
+        RenderBackend* device;
 
         Rx::Ptr<Buffer> vertex_buffer;
 

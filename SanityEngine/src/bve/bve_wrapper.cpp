@@ -54,7 +54,7 @@ static const stbi_uc* expand_rgb8_to_rgba8(const stbi_uc* texture_data, const in
 
 RX_LOG("Bve", logger);
 
-BveWrapper::BveWrapper(renderer::RenderDevice& device) {
+BveWrapper::BveWrapper(renderer::RenderBackend& device) {
     bve_init();
 
     create_texture_filter_pipeline(device);
@@ -96,7 +96,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
     auto commands = device.create_command_list();
     commands->SetName(L"BveWrapper::add_train_to_scene");
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "BveWrapper::add_train_to_scene");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "BveWrapper::add_train_to_scene");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "BveWrapper::add_train_0to_scene");
 
         mesh_data.bind_to_command_list(commands.get());
@@ -243,7 +243,7 @@ bool BveWrapper::add_train_to_scene(const Rx::String& filename,
     return true;
 }
 
-Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(renderer::RenderDevice& device) {
+Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_group_builder(renderer::RenderBackend& device) {
     auto [cpu_handle, gpu_handle] = device.allocate_descriptor_table(2);
     const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
@@ -260,7 +260,7 @@ Rx::Ptr<renderer::BindGroupBuilder> BveWrapper::create_texture_processor_bind_gr
     return device.create_bind_group_builder({}, descriptors, tables);
 }
 
-void BveWrapper::create_texture_filter_pipeline(renderer::RenderDevice& device) {
+void BveWrapper::create_texture_filter_pipeline(renderer::RenderBackend& device) {
     ZoneScoped;
 
     Rx::Vector<CD3DX12_ROOT_PARAMETER> root_params{1};

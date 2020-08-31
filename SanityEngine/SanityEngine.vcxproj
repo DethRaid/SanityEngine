@@ -388,7 +388,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.cpp" />
-    <ClCompile Include="src\ui\scene_view_panel.cpp" />
+    <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.hpp" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\stdout_stream.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\stdout_stream.hpp" />
@@ -424,7 +424,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\mesh_loading.hpp" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\loading\shader_loading.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\shader_loading.hpp" />
-    <ClInclude Include="src\ui\scene_view_panel.hpp" />
+    <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <None Include="E:\Documents\SanityEngine\SanityEngine\src\noise\.gitignore" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD.h" />

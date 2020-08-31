@@ -49,7 +49,7 @@ namespace renderer {
 
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
 
-    RenderDevice::RenderDevice(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
+    RenderBackend::RenderBackend(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
                                const glm::uvec2& window_size,
                                const Settings& settings_in)
         : settings{settings_in},
@@ -96,7 +96,7 @@ namespace renderer {
         logger->info("Initialized D3D12 render device");
     }
 
-    RenderDevice::~RenderDevice() {
+    RenderBackend::~RenderBackend() {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             wait_for_frame(i);
@@ -112,7 +112,7 @@ namespace renderer {
         device_allocator->Release();
     }
 
-    Rx::Ptr<Buffer> RenderDevice::create_buffer(const BufferCreateInfo& create_info) const {
+    Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info) const {
         ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
 
@@ -180,7 +180,7 @@ namespace renderer {
         return Rx::Utility::move(buffer);
     }
 
-    Rx::Ptr<Image> RenderDevice::create_image(const ImageCreateInfo& create_info) const {
+    Rx::Ptr<Image> RenderBackend::create_image(const ImageCreateInfo& create_info) const {
         auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
@@ -243,7 +243,7 @@ namespace renderer {
         return image;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::create_rtv_handle(const Image& image) const {
+    D3D12_CPU_DESCRIPTOR_HANDLE RenderBackend::create_rtv_handle(const Image& image) const {
         const auto handle = rtv_allocator->get_next_free_descriptor();
 
         device->CreateRenderTargetView(image.resource.get(), nullptr, handle);
@@ -251,7 +251,7 @@ namespace renderer {
         return handle;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::create_dsv_handle(const Image& image) const {
+    D3D12_CPU_DESCRIPTOR_HANDLE RenderBackend::create_dsv_handle(const Image& image) const {
         const auto desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
             .Format = to_dxgi_format(image.format),
             .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
@@ -265,7 +265,7 @@ namespace renderer {
         return handle;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderDevice::get_backbuffer_rtv_handle() {
+    D3D12_CPU_DESCRIPTOR_HANDLE RenderBackend::get_backbuffer_rtv_handle() {
         const auto cur_swapchain_index = swapchain->GetCurrentBackBufferIndex();
 
         RX_ASSERT(cur_swapchain_index < swapchain_rtv_handles.size(),
@@ -275,14 +275,14 @@ namespace renderer {
         return swapchain_rtv_handles[cur_swapchain_index];
     }
 
-    Vec2u RenderDevice::get_backbuffer_size() const {
+    Vec2u RenderBackend::get_backbuffer_size() const {
         Vec2u vec;
         swapchain->GetSourceSize(&vec.x, &vec.y);
 
         return vec;
     }
 
-    void* RenderDevice::map_buffer(const Buffer& buffer) const {
+    void* RenderBackend::map_buffer(const Buffer& buffer) const {
         void* ptr;
         D3D12_RANGE range{0, buffer.size};
         const auto result = buffer.resource->Map(0, &range, &ptr);
@@ -294,15 +294,15 @@ namespace renderer {
         return ptr;
     }
 
-    void RenderDevice::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
+    void RenderBackend::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
     }
 
-    void RenderDevice::schedule_image_destruction(Rx::Ptr<Image> image) {
+    void RenderBackend::schedule_image_destruction(Rx::Ptr<Image> image) {
         image_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Image*>(image.release()));
     }
 
-    Rx::Ptr<BindGroupBuilder> RenderDevice::create_bind_group_builder(
+    Rx::Ptr<BindGroupBuilder> RenderBackend::create_bind_group_builder(
         const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors,
         const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
         const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
@@ -319,7 +319,7 @@ namespace renderer {
                                               descriptor_table_handles);
     }
 
-    com_ptr<ID3D12PipelineState> RenderDevice::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
+    com_ptr<ID3D12PipelineState> RenderBackend::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
                                                                              const com_ptr<ID3D12RootSignature>& root_signature) const {
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
             .pRootSignature = root_signature.get(),
@@ -342,7 +342,7 @@ namespace renderer {
         return pso;
     }
 
-    Rx::Ptr<RenderPipelineState> RenderDevice::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
+    Rx::Ptr<RenderPipelineState> RenderBackend::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
         return create_pipeline_state(create_info, *standard_root_signature.get());
     }
 
@@ -385,7 +385,7 @@ namespace renderer {
         }
     }
 
-    com_ptr<ID3D12GraphicsCommandList4> RenderDevice::create_command_list(Rx::Optional<Uint32> frame_idx) {
+    com_ptr<ID3D12GraphicsCommandList4> RenderBackend::create_command_list(Rx::Optional<Uint32> frame_idx) {
         Rx::Concurrency::ScopeLock l{create_command_list_mutex};
 
         if(!frame_idx) {
@@ -436,7 +436,7 @@ namespace renderer {
         return commands;
     }
 
-    void RenderDevice::submit_command_list(com_ptr<ID3D12GraphicsCommandList4>&& commands) {
+    void RenderBackend::submit_command_list(com_ptr<ID3D12GraphicsCommandList4>&& commands) {
         const auto result = commands->Close();
         if(FAILED(result)) {
 #ifndef NDEBUG
@@ -452,13 +452,13 @@ namespace renderer {
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
 
-    BindGroupBuilder& RenderDevice::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
+    BindGroupBuilder& RenderBackend::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
         RX_ASSERT(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
 
         return *material_bind_group_builder[frame_idx];
     }
 
-    void RenderDevice::begin_frame(const uint64_t frame_count) {
+    void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
 
         wait_for_frame(cur_gpu_frame_idx);
@@ -480,7 +480,7 @@ namespace renderer {
         in_init_phase = false;
     }
 
-    void RenderDevice::end_frame() {
+    void RenderBackend::end_frame() {
         ZoneScoped;
         // Transition the swapchain image into the correct format and request presentation
         transition_swapchain_image_to_presentable();
@@ -504,25 +504,25 @@ namespace renderer {
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % cvar_max_in_flight_gpu_frames->get();
     }
 
-    Uint32 RenderDevice::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
+    Uint32 RenderBackend::get_cur_gpu_frame_idx() const { return cur_gpu_frame_idx; }
 
-    void RenderDevice::begin_capture() const {
+    void RenderBackend::begin_capture() const {
         if(graphics_analysis) {
             graphics_analysis->BeginCapture();
         }
     }
 
-    void RenderDevice::end_capture() const {
+    void RenderBackend::end_capture() const {
         if(graphics_analysis) {
             graphics_analysis->EndCapture();
         }
     }
 
-    Uint32 RenderDevice::get_max_num_gpu_frames() const { return static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get()); }
+    Uint32 RenderBackend::get_max_num_gpu_frames() const { return static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get()); }
 
-    bool RenderDevice::has_separate_device_memory() const { return !is_uma; }
+    bool RenderBackend::has_separate_device_memory() const { return !is_uma; }
 
-    Buffer RenderDevice::get_staging_buffer(const Uint32 num_bytes) {
+    Buffer RenderBackend::get_staging_buffer(const Uint32 num_bytes) {
         ZoneScoped;
 
         for(size_t i = 0; i < staging_buffers.size(); i++) {
@@ -539,11 +539,11 @@ namespace renderer {
         return create_staging_buffer(num_bytes);
     }
 
-    void RenderDevice::return_staging_buffer(const Buffer& buffer) {
+    void RenderBackend::return_staging_buffer(const Buffer& buffer) {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
 
-    Buffer RenderDevice::get_scratch_buffer(const Uint32 num_bytes) {
+    Buffer RenderBackend::get_scratch_buffer(const Uint32 num_bytes) {
         size_t best_fit_idx = scratch_buffers.size();
         for(size_t i = 0; i < scratch_buffers.size(); i++) {
             if(scratch_buffers[i].size >= num_bytes) {
@@ -566,15 +566,15 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::return_scratch_buffer(const Buffer& buffer) {
+    void RenderBackend::return_scratch_buffer(const Buffer& buffer) {
         scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
 
-    UINT RenderDevice::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
+    UINT RenderBackend::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
-    ID3D12Device* RenderDevice::get_d3d12_device() const { return device.get(); }
+    ID3D12Device* RenderBackend::get_d3d12_device() const { return device.get(); }
 
-    void RenderDevice::enable_debugging() {
+    void RenderBackend::enable_debugging() {
         auto result = D3D12GetDebugInterface(IID_PPV_ARGS(debug_controller.put()));
         if(SUCCEEDED(result)) {
             debug_controller->EnableDebugLayer();
@@ -598,7 +598,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::initialize_dxgi() {
+    void RenderBackend::initialize_dxgi() {
         ZoneScoped;
 
         com_ptr<IDXGIFactory> basic_factory;
@@ -613,7 +613,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::select_adapter() {
+    void RenderBackend::select_adapter() {
         ZoneScoped;
 
         // We want an adapter:
@@ -741,7 +741,7 @@ namespace renderer {
         set_object_name(device.get(), "D3D12 Device");
     }
 
-    void RenderDevice::create_queues() {
+    void RenderBackend::create_queues() {
         ZoneScoped;
 
         // One graphics queue and one optional DMA queue
@@ -780,7 +780,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::create_swapchain(HWND window_handle, const glm::uvec2& window_size) {
+    void RenderBackend::create_swapchain(HWND window_handle, const glm::uvec2& window_size) {
         ZoneScoped;
 
         const auto swapchain_desc = DXGI_SWAP_CHAIN_DESC1{
@@ -813,7 +813,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::create_gpu_frame_synchronization_objects() {
+    void RenderBackend::create_gpu_frame_synchronization_objects() {
         frame_fence_values.resize(cvar_max_in_flight_gpu_frames->get());
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(frame_fences.put()));
@@ -822,7 +822,7 @@ namespace renderer {
         frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
 
-    void RenderDevice::create_command_allocators() {
+    void RenderBackend::create_command_allocators() {
         ZoneScoped;
 
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
@@ -831,7 +831,7 @@ namespace renderer {
         direct_command_allocators.resize(num_gpu_frames);
     }
 
-    void RenderDevice::create_descriptor_heaps() {
+    void RenderBackend::create_descriptor_heaps() {
         ZoneScoped;
 
         const auto [new_cbv_srv_uav_heap,
@@ -848,7 +848,7 @@ namespace renderer {
         dsv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, dsv_heap, dsv_size);
     }
 
-    void RenderDevice::initialize_swapchain_descriptors() {
+    void RenderBackend::initialize_swapchain_descriptors() {
         DXGI_SWAP_CHAIN_DESC1 desc;
         swapchain->GetDesc1(&desc);
         swapchain_images.resize(desc.BufferCount);
@@ -867,7 +867,7 @@ namespace renderer {
         }
     }
 
-    std::pair<com_ptr<ID3D12DescriptorHeap>, UINT> RenderDevice::create_descriptor_heap(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+    std::pair<com_ptr<ID3D12DescriptorHeap>, UINT> RenderBackend::create_descriptor_heap(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
                                                                                         const Uint32 num_descriptors) const {
         com_ptr<ID3D12DescriptorHeap> heap;
 
@@ -889,7 +889,7 @@ namespace renderer {
         return {heap, descriptor_size};
     }
 
-    void RenderDevice::initialize_dma() {
+    void RenderBackend::initialize_dma() {
         ZoneScoped;
 
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
@@ -902,7 +902,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::create_standard_root_signature() {
+    void RenderBackend::create_standard_root_signature() {
         ZoneScoped;
 
         Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{10};
@@ -980,7 +980,7 @@ namespace renderer {
         set_object_name(standard_root_signature.get(), "Standard Root Signature");
     }
 
-    com_ptr<ID3D12RootSignature> RenderDevice::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
+    com_ptr<ID3D12RootSignature> RenderBackend::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
         ZoneScoped;
 
         const auto versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{.Version = D3D_ROOT_SIGNATURE_VERSION_1_0,
@@ -1008,7 +1008,7 @@ namespace renderer {
         return sig;
     }
 
-    DescriptorTableHandle RenderDevice::allocate_descriptor_table(const Uint32 num_descriptors) {
+    DescriptorTableHandle RenderBackend::allocate_descriptor_table(const Uint32 num_descriptors) {
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
                                                  static_cast<INT>(next_free_cbv_srv_uav_descriptor),
                                                  cbv_srv_uav_size};
@@ -1021,9 +1021,9 @@ namespace renderer {
         return {cpu_handle, gpu_handle};
     }
 
-    ID3D12DescriptorHeap* RenderDevice::get_cbv_srv_uav_heap() const { return cbv_srv_uav_heap.get(); }
+    ID3D12DescriptorHeap* RenderBackend::get_cbv_srv_uav_heap() const { return cbv_srv_uav_heap.get(); }
 
-    void RenderDevice::create_material_resource_binders() {
+    void RenderBackend::create_material_resource_binders() {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
 
         Rx::Map<Rx::String, RootDescriptorDescription> root_descriptors;
@@ -1063,7 +1063,7 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::create_pipeline_input_layouts() {
+    void RenderBackend::create_pipeline_input_layouts() {
         standard_graphics_pipeline_input_layout.reserve(5);
 
         standard_graphics_pipeline_input_layout.push_back(
@@ -1141,7 +1141,7 @@ namespace renderer {
                                      .InstanceDataStepRate = 0});
     }
 
-    void RenderDevice::create_command_signatures() {
+    void RenderBackend::create_command_signatures() {
         const auto
             argument_descs = Rx::Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
                                                                     .Constant =
@@ -1155,7 +1155,7 @@ namespace renderer {
         device->CreateCommandSignature(&desc, standard_root_signature.get(), IID_PPV_ARGS(standard_drawcall_command_signature.put()));
     }
 
-    Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderDevice::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
+    Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderBackend::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
         com_ptr<ID3D12ShaderReflection> reflection;
         auto result = D3DReflect(shader.data(), shader.size() * sizeof(Uint8), IID_PPV_ARGS(reflection.put()));
         if(FAILED(result)) {
@@ -1180,7 +1180,7 @@ namespace renderer {
         return input_descs;
     }
 
-    Rx::Ptr<RenderPipelineState> RenderDevice::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
+    Rx::Ptr<RenderPipelineState> RenderBackend::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                      ID3D12RootSignature& root_signature) {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
@@ -1300,7 +1300,7 @@ namespace renderer {
         return pipeline;
     }
 
-    void RenderDevice::flush_batched_command_lists() {
+    void RenderBackend::flush_batched_command_lists() {
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         // Submit all the command lists we batched up
         auto& lists = command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
@@ -1340,14 +1340,14 @@ namespace renderer {
         command_lists_to_submit_on_end_frame[cur_gpu_frame_idx] = {};
     }
 
-    void RenderDevice::return_staging_buffers_for_frame(const Uint32 frame_idx) {
+    void RenderBackend::return_staging_buffers_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
         staging_buffers.append(staging_buffers_for_frame);
         staging_buffers_for_frame.clear();
     }
 
-    void RenderDevice::reset_command_allocators_for_frame(const Uint32 frame_idx) {
+    void RenderBackend::reset_command_allocators_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
@@ -1360,7 +1360,7 @@ namespace renderer {
         command_allocators_to_reset_on_begin_frame[frame_idx] = {};
     }
 
-    void RenderDevice::destroy_resources_for_frame(const Uint32 frame_idx) {
+    void RenderBackend::destroy_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
         auto& buffers = buffer_deletion_list[frame_idx];
         buffers.clear();
@@ -1369,7 +1369,7 @@ namespace renderer {
         images.clear();
     }
 
-    void RenderDevice::transition_swapchain_image_to_render_target() {
+    void RenderBackend::transition_swapchain_image_to_render_target() {
         ZoneScoped;
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_render_target");
@@ -1388,7 +1388,7 @@ namespace renderer {
         submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
 
-    void RenderDevice::transition_swapchain_image_to_presentable() {
+    void RenderBackend::transition_swapchain_image_to_presentable() {
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
@@ -1406,7 +1406,7 @@ namespace renderer {
         submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
 
-    void RenderDevice::wait_for_frame(const uint64_t frame_index) {
+    void RenderBackend::wait_for_frame(const uint64_t frame_index) {
         ZoneScoped;
         const auto desired_fence_value = frame_fence_values[frame_index];
         const auto initial_fence_value = frame_fences->GetCompletedValue();
@@ -1431,13 +1431,13 @@ namespace renderer {
         }
     }
 
-    void RenderDevice::wait_gpu_idle(const uint64_t frame_index) {
+    void RenderBackend::wait_gpu_idle(const uint64_t frame_index) {
         frame_fence_values[frame_index] += 3;
         direct_command_queue->Signal(frame_fences.get(), frame_fence_values[frame_index]);
         wait_for_frame(frame_index);
     }
 
-    Buffer RenderDevice::create_staging_buffer(const Uint32 num_bytes) {
+    Buffer RenderBackend::create_staging_buffer(const Uint32 num_bytes) {
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
 
         const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
@@ -1476,7 +1476,7 @@ namespace renderer {
         return buffer;
     }
 
-    Buffer RenderDevice::create_scratch_buffer(const Uint32 num_bytes) {
+    Buffer RenderBackend::create_scratch_buffer(const Uint32 num_bytes) {
         constexpr auto alignment = std::max(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                             D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, alignment);
@@ -1506,7 +1506,7 @@ namespace renderer {
         return scratch_buffer;
     }
 
-    com_ptr<ID3D12Fence> RenderDevice::get_next_command_list_done_fence() {
+    com_ptr<ID3D12Fence> RenderBackend::get_next_command_list_done_fence() {
         if(!command_list_done_fences.is_empty()) {
             auto fence = command_list_done_fences[command_list_done_fences.size() - 1];
             command_list_done_fences.pop_back();
@@ -1525,7 +1525,7 @@ namespace renderer {
         return fence;
     }
 
-    void RenderDevice::log_dred_report() const {
+    void RenderBackend::log_dred_report() const {
         auto dred = device.as < ID3D12DeviceRemovedExtendedData1>();
         if(!dred) {
             logger->error("Could not retrieve DRED report");
@@ -1548,7 +1548,7 @@ namespace renderer {
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
-    Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings) {
+    Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window, const Settings& settings) {
         auto hwnd = glfwGetWin32Window(window); // NOLINT(readability-qualified-auto)
 
         glm::ivec2 framebuffer_size{};
@@ -1556,6 +1556,6 @@ namespace renderer {
 
         logger->info("Creating D3D12 backend");
 
-        return Rx::make_ptr<RenderDevice>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
+        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
     }
 } // namespace renderer

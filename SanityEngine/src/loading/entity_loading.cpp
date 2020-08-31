@@ -38,7 +38,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
     commands->SetName(L"Renderer::create_raytracing_geometry");
 
     {
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "Renderer::create_raytracing_geometry");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
         Rx::Map<Uint32, renderer::StandardMaterialHandle> materials;

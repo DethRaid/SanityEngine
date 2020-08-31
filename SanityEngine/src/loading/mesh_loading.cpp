@@ -23,7 +23,7 @@ Rx::Optional<renderer::MeshObject> import_mesh(const Rx::String& filepath,
     ZoneScoped;
     static Assimp::Importer importer;
 
-    TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "load_mesh");
+    TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "load_mesh");
     PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "load_mesh");
 
     const auto* scene = importer.ReadFile(filepath.data(), aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);

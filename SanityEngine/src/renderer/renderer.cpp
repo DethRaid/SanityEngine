@@ -93,7 +93,7 @@ namespace renderer {
         command_list->SetName(L"Main Render Command List");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, command_list.get(), "Renderer::render_all");
+            TracyD3D12Zone(RenderBackend::tracy_context, command_list.get(), "Renderer::render_all");
             PIXScopedEvent(command_list.get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
                 rebuild_raytracing_scene(command_list);
@@ -114,7 +114,7 @@ namespace renderer {
             {
                 ZoneScopedN("Renderer::render_passes");
 
-                TracyD3D12Zone(RenderDevice::tracy_context, command_list.get(), "Renderer::render_passes");
+                TracyD3D12Zone(RenderBackend::tracy_context, command_list.get(), "Renderer::render_passes");
                 PIXScopedEvent(command_list.get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
                 render_passes.each_fwd(
@@ -154,7 +154,7 @@ namespace renderer {
         ZoneScoped;
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
-        TracyD3D12Zone(RenderDevice::tracy_context, commands.get(), scope_name.data());
+        TracyD3D12Zone(RenderBackend::tracy_context, commands.get(), scope_name.data());
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, scope_name.data());
 
         const auto handle = create_image(create_info);
@@ -245,7 +245,7 @@ namespace renderer {
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
 
-    RenderDevice& Renderer::get_render_device() const { return *device; }
+    RenderBackend& Renderer::get_render_device() const { return *device; }
 
     MeshDataStore& Renderer::get_static_mesh_store() const { return *static_mesh_storage; }
 
@@ -265,7 +265,7 @@ namespace renderer {
                                                                    const Buffer& index_buffer,
                                                                    const Rx::Vector<Mesh>& meshes,
                                                                    ID3D12GraphicsCommandList4* commands) {
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "Renderer::create_raytracing_geometry");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
         auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
@@ -360,7 +360,7 @@ namespace renderer {
         commands->SetName(L"Renderer::create_builtin_images");
 
         {
-            TracyD3D12Zone(RenderDevice::tracy_context, commands.get(), "Renderer::create_builtin_images");
+            TracyD3D12Zone(RenderBackend::tracy_context, commands.get(), "Renderer::create_builtin_images");
             PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {
@@ -475,7 +475,7 @@ namespace renderer {
     }
 
     void Renderer::rebuild_raytracing_scene(const com_ptr<ID3D12GraphicsCommandList4>& commands) {
-        TracyD3D12Zone(RenderDevice::tracy_context, commands.get(), "RebuildRaytracingScene");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands.get(), "RebuildRaytracingScene");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild

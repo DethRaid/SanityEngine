@@ -9,7 +9,7 @@
 namespace renderer {
     RX_LOG("MeshDataStore", logger);
 
-    MeshDataStore::MeshDataStore(RenderDevice& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)
+    MeshDataStore::MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)
         : device{&device_in}, vertex_buffer{Rx::Utility::move(vertex_buffer_in)}, index_buffer{Rx::Utility::move(index_buffer_in)} {
 
         vertex_bindings.reserve(4);
@@ -48,7 +48,7 @@ namespace renderer {
                                  ID3D12GraphicsCommandList4* commands) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "MeshDataStore::add_mesh");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "MeshDataStore::add_mesh");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "MeshDataStore::add_mesh");
 
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());

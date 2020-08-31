@@ -43,7 +43,7 @@ namespace renderer {
                                       Uint32 /* frame_idx */,
                                       const World& /* world */) {
         ZoneScoped;
-        TracyD3D12Zone(RenderDevice::tracy_context, commands, "BackbufferOutputPassExecute");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "BackbufferOutputPassExecute");
         PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");
 
         auto& device = renderer->get_render_device();
@@ -74,9 +74,9 @@ namespace renderer {
         scissor_rect.bottom = static_cast<LONG>(size.y);
         commands->RSSetScissorRects(1, &scissor_rect);
 
-        commands->SetGraphicsRootShaderResourceView(RenderDevice::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
+        commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderDevice::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetPipelineState(backbuffer_output_pipeline->pso.get());
         commands->DrawInstanced(3, 1, 0, 0);
 

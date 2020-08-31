@@ -54,7 +54,7 @@ namespace renderer {
      * one frame for each image in the swapchain. Most of the synchronization concerns should be hidden behind this interface, but be aware
      * that the frame that the GPU may be several frames behind the CPU
      */
-    class RenderDevice {
+    class RenderBackend {
     public:
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
         static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 1;
@@ -82,15 +82,15 @@ namespace renderer {
         com_ptr<ID3D12Device1> device1;
         com_ptr<ID3D12Device5> device5;
 
-        RenderDevice(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
+        RenderBackend(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
 
-        RenderDevice(const RenderDevice& other) = delete;
-        RenderDevice& operator=(const RenderDevice& other) = delete;
+        RenderBackend(const RenderBackend& other) = delete;
+        RenderBackend& operator=(const RenderBackend& other) = delete;
 
-        RenderDevice(RenderDevice&& old) noexcept = delete;
-        RenderDevice& operator=(RenderDevice&& old) noexcept = delete;
+        RenderBackend(RenderBackend&& old) noexcept = delete;
+        RenderBackend& operator=(RenderBackend&& old) noexcept = delete;
 
-        ~RenderDevice();
+        ~RenderBackend();
 
         [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
 
@@ -378,5 +378,5 @@ namespace renderer {
         void log_dred_report() const;
     };
 
-    [[nodiscard]] Rx::Ptr<RenderDevice> make_render_device(GLFWwindow* window, const Settings& settings);
+    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window, const Settings& settings);
 } // namespace renderer

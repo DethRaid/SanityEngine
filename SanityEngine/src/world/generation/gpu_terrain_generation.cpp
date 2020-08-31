@@ -21,7 +21,7 @@ namespace terraingen {
     static com_ptr<ID3D12PipelineState> place_oceans_pso;
     static com_ptr<ID3D12PipelineState> water_flow_pso;
 
-    static void create_place_ocean_pipeline(renderer::RenderDevice& device) {
+    static void create_place_ocean_pipeline(renderer::RenderBackend& device) {
         ZoneScoped;
 
         const auto place_oceans_shader_source = load_shader("FillOcean.compute");
@@ -48,7 +48,7 @@ namespace terraingen {
         place_oceans_pso->SetPrivateData(PRIVATE_DATA_ATTRIBS(renderer::DescriptorTableHandle), &table);
     }
 
-    static void create_water_flow_pipeline(renderer::RenderDevice& device) {
+    static void create_water_flow_pipeline(renderer::RenderBackend& device) {
         ZoneScoped;
 
         const auto descriptor_ranges = Rx::Array{D3D12_DESCRIPTOR_RANGE{.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV, .NumDescriptors = 1},
@@ -71,7 +71,7 @@ namespace terraingen {
         water_flow_pso->SetPrivateData(PRIVATE_DATA_ATTRIBS(renderer::DescriptorTableHandle), &table);
     }
 
-    void initialize(renderer::RenderDevice& device) {
+    void initialize(renderer::RenderBackend& device) {
         ZoneScoped;
 
         create_place_ocean_pipeline(device);
@@ -84,7 +84,7 @@ namespace terraingen {
                       TerrainData& data) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "gpu_terrain_generation::place_oceans");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "gpu_terrain_generation::place_oceans");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::place_oceans");
 
         data.water_depth_handle = renderer.create_image({
@@ -147,7 +147,7 @@ namespace terraingen {
     void compute_water_flow(const com_ptr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderDevice::tracy_context, commands.get(), "gpu_terrain_generation::compute_water_flow");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "gpu_terrain_generation::compute_water_flow");
         PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::compute_water_flow");
 
         const auto land_heightmap = renderer.get_image(data.heightmap_handle);

@@ -46,7 +46,7 @@ namespace renderer {
         inverse_projection_matrix = inverse(projection_matrix);
     }
 
-    CameraMatrixBuffer::CameraMatrixBuffer(RenderDevice& device_in) : device{&device_in} {
+    CameraMatrixBuffer::CameraMatrixBuffer(RenderBackend& device_in) : device{&device_in} {
         const auto num_gpu_frames = device->get_max_num_gpu_frames();
         device_data.reserve(num_gpu_frames);
 
