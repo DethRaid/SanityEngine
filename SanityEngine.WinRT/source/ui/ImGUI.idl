@@ -1,9 +1,0 @@
-namespace sanity.ui
-{ 
-    runtimeclass IMGUI 
-    { 
-        IMGUI();
-
-        Int32 DummyProperty;
-    }
-}
