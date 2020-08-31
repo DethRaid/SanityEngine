@@ -1,8 +1,8 @@
-namespace SanityEngine_WinRT 
-{
-    runtimeclass ImGUI 
+namespace sanity.ui
+{ 
+    runtimeclass IMGUI 
     { 
-        ImGUI();
+        IMGUI();
 
         Int32 DummyProperty;
     }
