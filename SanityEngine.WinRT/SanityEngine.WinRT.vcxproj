@@ -81,7 +81,10 @@
     <Import Project="PropertySheet.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>E:\Documents\SanityEngine\SanityEngine.WinRT\extern\rex\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\pix\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\physx\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\json5\include;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\bve\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\SanityEngine\SanityEngine.WinRT\extern\pix\lib;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\physx\lib\debug;E:\Documents\SanityEngine\SanityEngine.WinRT\extern\bve\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <VcpkgUseStatic>true</VcpkgUseStatic>

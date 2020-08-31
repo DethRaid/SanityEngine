@@ -13,7 +13,7 @@
 #include "glm/ext/quaternion_trigonometric.hpp"
 #include "globals.hpp"
 #include "loading/entity_loading.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "stb_image.h"
