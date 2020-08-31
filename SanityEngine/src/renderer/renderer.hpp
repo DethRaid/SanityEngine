@@ -123,6 +123,7 @@ namespace renderer {
         [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
+
         Uint32 add_model_matrix_to_frame(const TransformComponent& transform, const Uint32 frame_idx);
 
     private:

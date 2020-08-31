@@ -388,6 +388,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.cpp" />
+    <ClCompile Include="src\renderer\rhi\bind_group.cpp" />
+    <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp" />
+    <ClCompile Include="src\renderer\rhi\helpers.cpp" />
+    <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp" />
+    <ClCompile Include="src\renderer\rhi\render_device.cpp" />
+    <ClCompile Include="src\renderer\rhi\resources.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.hpp" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\stdout_stream.cpp" />
@@ -424,6 +430,16 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\mesh_loading.hpp" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\loading\shader_loading.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\loading\shader_loading.hpp" />
+    <ClInclude Include="src\renderer\rhi\bind_group.hpp" />
+    <ClInclude Include="src\renderer\rhi\d3dx12.hpp" />
+    <ClInclude Include="src\renderer\rhi\descriptor_allocator.hpp" />
+    <ClInclude Include="src\renderer\rhi\framebuffer.hpp" />
+    <ClInclude Include="src\renderer\rhi\helpers.hpp" />
+    <ClInclude Include="src\renderer\rhi\mesh_data_store.hpp" />
+    <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp" />
+    <ClInclude Include="src\renderer\rhi\render_device.hpp" />
+    <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp" />
+    <ClInclude Include="src\renderer\rhi\resources.hpp" />
     <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <None Include="E:\Documents\SanityEngine\SanityEngine\src\noise\.gitignore" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp" />
@@ -464,22 +480,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\rhi\command_list.hpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\rhi\d3d12_private_data.hpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\standard_material.hpp" />
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\bind_group.cpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\bind_group.hpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\d3dx12.hpp" />
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\descriptor_allocator.cpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\descriptor_allocator.hpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\framebuffer.hpp" />
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\helpers.cpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\helpers.hpp" />
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\mesh_data_store.cpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\mesh_data_store.hpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\raytracing_structs.hpp" />
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_device.cpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_device.hpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_pipeline_state.hpp" />
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\resources.cpp" />
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\resources.hpp" />
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\sanity_engine.cpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\sanity_engine.hpp" />
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\serialization\serialization.hpp" />

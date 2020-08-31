@@ -1,6 +1,6 @@
 #include "world_preview_panel.hpp"
 
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 
 namespace ui {
     WorldPreviewPane::WorldPreviewPane(const renderer::Renderer& renderer_in) : renderer{&renderer_in} {

@@ -85,24 +85,6 @@
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\renderpasses\ui_render_pass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\bind_group.cpp">
-      <Filter>src\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\descriptor_allocator.cpp">
-      <Filter>src\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\helpers.cpp">
-      <Filter>src\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\mesh_data_store.cpp">
-      <Filter>src\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_device.cpp">
-      <Filter>src\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\resources.cpp">
-      <Filter>src\rhi</Filter>
-    </ClCompile>
     <ClCompile Include="E:\Documents\SanityEngine\SanityEngine\src\sanity_engine.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -370,6 +352,24 @@
     <ClCompile Include="src\ui\world_preview_panel.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\rhi\bind_group.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\helpers.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\render_device.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\resources.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\adapters\rex\rex_wrapper.hpp">
@@ -503,36 +503,6 @@
     </ClInclude>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\renderer\standard_material.hpp">
       <Filter>src\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\bind_group.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\d3dx12.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\descriptor_allocator.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\framebuffer.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\helpers.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\mesh_data_store.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\raytracing_structs.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_device.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\render_pipeline_state.hpp">
-      <Filter>src\rhi</Filter>
-    </ClInclude>
-    <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\rhi\resources.hpp">
-      <Filter>src\rhi</Filter>
     </ClInclude>
     <ClInclude Include="E:\Documents\SanityEngine\SanityEngine\src\sanity_engine.hpp">
       <Filter>src</Filter>
@@ -1113,6 +1083,36 @@
     <ClInclude Include="src\ui\world_preview_panel.hpp">
       <Filter>src\ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\rhi\bind_group.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\d3dx12.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\descriptor_allocator.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\framebuffer.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\helpers.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\mesh_data_store.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\render_device.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\resources.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="E:\Documents\SanityEngine\SanityEngine\src\noise\.gitignore">
@@ -1245,9 +1245,6 @@
     </Filter>
     <Filter Include="src\renderer\rhi">
       <UniqueIdentifier>{44593FD4-B743-3C3B-9159-5CAA2D4AA8CA}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\rhi">
-      <UniqueIdentifier>{A004B4A5-EDDC-397F-9402-CEC9CD5FCCC3}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\serialization">
       <UniqueIdentifier>{93186838-5DE3-359E-8F02-03B12A1167D5}</UniqueIdentifier>
