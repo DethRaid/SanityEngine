@@ -10,6 +10,10 @@
     d:DesignWidth="400">
 
     <Grid>
-
+        <SwapChainPanel x:Name="renderSurface">
+            <SwapChainPanel.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+            </SwapChainPanel.ColumnDefinitions>
+        </SwapChainPanel>
     </Grid>
 </UserControl>

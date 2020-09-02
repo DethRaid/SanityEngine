@@ -20,9 +20,13 @@ namespace SanityEngineEditor
 {
     public sealed partial class WorldPreview : UserControl
     {
+        Sanity.SanityEngine engine;
+
         public WorldPreview()
         {
             this.InitializeComponent();
+
+            engione = new(renderSurface);
         }
     }
 }

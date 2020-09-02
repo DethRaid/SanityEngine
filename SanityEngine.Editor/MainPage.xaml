@@ -9,10 +9,5 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <SwapChainPanel x:Name="renderSurface">
-            <SwapChainPanel.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-            </SwapChainPanel.ColumnDefinitions>
-        </SwapChainPanel>
     </Grid>
 </Page>

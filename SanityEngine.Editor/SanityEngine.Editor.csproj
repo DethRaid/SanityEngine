@@ -186,9 +186,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SanityEngine.WinRT\SanityEngine.WinRT.vcxproj">
-      <Project>{95911bdf-3dfd-4c16-a4fe-c344c99e4549}</Project>
-      <Name>SanityEngine.WinRT</Name>
+    <ProjectReference Include="..\SanityEngine.Interop.Cs\SanityEngine.Interop.Cs.csproj">
+      <Project>{cd1aeeda-ed3a-42b4-a0cf-646746af4b4d}</Project>
+      <Name>SanityEngine.Interop.Cs</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

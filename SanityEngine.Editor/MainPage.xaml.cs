@@ -24,11 +24,11 @@ namespace SanityEngineEditor
     {
         Sanity.SanityEngine engine;
 
-        SwapChainPanel renderSurface;
-
         public MainPage()
         {
             this.InitializeComponent();
+
+            engine = new(renderSurface);
         }
     }
 }
