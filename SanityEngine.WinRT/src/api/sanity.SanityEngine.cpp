@@ -16,7 +16,11 @@ namespace winrt::sanity::implementation {
 
     void SanityEngine::SetRenderSurface(Windows::UI::Xaml::Controls::SwapChainPanel const& renderSurface) {}
 
-    void SanityEngine::Tick(double deltaTime) { throw hresult_not_implemented(); }
+    void SanityEngine::Tick(double deltaTime) {
+        if(g_engine != nullptr) {
+            g_engine->tick(deltaTime);
+        }
+    }
 
     void SanityEngine::create_engine() {
         Settings settings;

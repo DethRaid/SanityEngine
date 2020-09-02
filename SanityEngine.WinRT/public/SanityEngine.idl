@@ -1,5 +1,15 @@
 namespace Sanity
 {
+    /*!
+     * \brief Interface for interacting with SanityEngine
+     * 
+     * SanityEngine is actually a singleton. This class is actually a handle to the engine singleton. That is hard to
+     * express in a class name :(
+     * 
+     * This class, and the SanityEngine API in general, is not internally synchronized. The caller must synchronize
+     * access to the engine if it wishes to be multithreaded. If this ends up being a common use case I'll make an API
+     * for it
+     */
     [default_interface]
     runtimeclass SanityEngine
     { 
