@@ -1141,7 +1141,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="World.idl" />
     <Midl Include="public\SanityEngine.idl">
       <Filter>public</Filter>
     </Midl>

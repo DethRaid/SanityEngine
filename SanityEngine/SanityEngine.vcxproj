@@ -84,7 +84,7 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <MultiProcMIDL>true</MultiProcMIDL>
+    <MultiProcMIDL>false</MultiProcMIDL>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -113,11 +113,12 @@
     </ResourceCompile>
     <Midl>
       <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(ProjectDir)extern\winrt</OutputDirectory>
-      <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
-      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+      <OutputDirectory>
+      </OutputDirectory>
+      <HeaderFileName>nul</HeaderFileName>
+      <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>nul</InterfaceIdentifierFileName>
+      <ProxyFileName>nul</ProxyFileName>
       <EnableWindowsRuntime>true</EnableWindowsRuntime>
       <WarningLevel>4</WarningLevel>
       <EnableErrorChecks>All</EnableErrorChecks>
@@ -126,7 +127,14 @@
       <ErrorCheckEnumRange>true</ErrorCheckEnumRange>
       <ErrorCheckRefPointers>true</ErrorCheckRefPointers>
       <ErrorCheckStubData>true</ErrorCheckStubData>
-      <ValidateAllParameters>true</ValidateAllParameters>
+      <AdditionalMetadataDirectories>$(WindowsSDK_MetadataFoundationPath);%(AdditionalMetadataDirectories)</AdditionalMetadataDirectories>
+      <GenerateStublessProxies>false</GenerateStublessProxies>
+      <MetadataFileName>%(IntDir)Unmerged\%(Filename).winmd</MetadataFileName>
+      <DllDataFileName>nul</DllDataFileName>
+      <GenerateTypeLibrary>false</GenerateTypeLibrary>
+      <GenerateClientFiles>None</GenerateClientFiles>
+      <GenerateServerFiles>None</GenerateServerFiles>
+      <PrependWithABINamepsace>true</PrependWithABINamepsace>
     </Midl>
     <PreBuildEvent>
       <Message>
@@ -393,6 +401,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="public\Sanity\SanityEngine.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

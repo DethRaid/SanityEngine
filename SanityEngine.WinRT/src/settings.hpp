@@ -13,5 +13,5 @@ struct Settings {
      *
      * Gets translated into an actual resolution with a heurustic of the size of the main screen and the amount of available VRAM
      */
-    QualityLevel shadow_quality;
+    QualityLevel shadow_quality = QualityLevel::Ultra;
 };

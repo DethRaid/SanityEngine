@@ -1,0 +1,14 @@
+namespace Sanity 
+{
+    [default_interface]
+	runtimeclass SanityEngine 
+	{ 
+		/// <summary>
+		/// </summary>
+		[method_name("GetInstance")] SanityEngine();
+
+		void SetSwapchain(Windows.UI.Xaml.Controls.SwapChainPanel renderSurface);
+
+		void Tick(double deltaTime);
+	}
+}
