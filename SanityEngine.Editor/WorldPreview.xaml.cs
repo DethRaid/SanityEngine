@@ -26,7 +26,7 @@ namespace SanityEngineEditor
         {
             this.InitializeComponent();
 
-            engione = new(renderSurface);
+            engine = new(renderSurface);
         }
     }
 }
