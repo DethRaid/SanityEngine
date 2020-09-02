@@ -14,19 +14,21 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
+using Sanity.SanityEngine;
+
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace SanityEngineEditor
 {
     public sealed partial class WorldPreview : UserControl
     {
-        Sanity.SanityEngine engine;
+        SanityEngine engine;
 
         public WorldPreview()
         {
             this.InitializeComponent();
 
-            engine = new(renderSurface);
+            engine = new SanityEngine(renderSurface);
         }
     }
 }
