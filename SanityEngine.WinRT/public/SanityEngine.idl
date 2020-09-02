@@ -1,10 +1,10 @@
-namespace sanity
+namespace Sanity
 {
     [default_interface]
     runtimeclass SanityEngine 
     { 
-        SanityEngine();
+        SanityEngine(SwapChainPanel renderSurface);
 
-        void tick();
+        void Tick();
     }
 }
