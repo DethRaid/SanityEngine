@@ -6,8 +6,8 @@
 #include "bve/bve.hpp"
 #include "core/async/synchronized_resource.hpp"
 #include "entt/entity/fwd.hpp"
-#include "rhi/bind_group.hpp"
-#include "rhi/mesh_data_store.hpp"
+#include "renderer/rhi/bind_group.hpp"
+#include "renderer/rhi/mesh_data_store.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 

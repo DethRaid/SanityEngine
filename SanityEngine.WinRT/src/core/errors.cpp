@@ -2,7 +2,7 @@
 
 #include <comdef.h>
 
-#include "rhi/helpers.hpp"
+#include "renderer/rhi/helpers.hpp"
 
 Rx::String to_string(const HRESULT hr) {
     const _com_error err(hr);

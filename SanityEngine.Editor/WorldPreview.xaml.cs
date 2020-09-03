@@ -22,13 +22,13 @@ namespace SanityEngineEditor
 {
     public sealed partial class WorldPreview : UserControl
     {
-        SanityEngine engine;
+        SanityEngine engine = new SanityEngine();
 
         public WorldPreview()
         {
             this.InitializeComponent();
 
-            engine = new SanityEngine(renderSurface);
+            engine.SetRenderSurface(renderSurface);
         }
     }
 }
