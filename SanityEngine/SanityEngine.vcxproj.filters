@@ -16,4 +16,7 @@
       <Filter>public\Sanity</Filter>
     </Midl>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>

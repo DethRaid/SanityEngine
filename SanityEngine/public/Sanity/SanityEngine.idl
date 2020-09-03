@@ -1,14 +1,34 @@
-namespace Sanity 
-{
-    [default_interface]
-	runtimeclass SanityEngine 
-	{ 
-		/// <summary>
-		/// </summary>
-		[method_name("GetInstance")] SanityEngine();
+namespace Sanity {
+    /*!
+     * \brief Interface for interacting with SanityEngine
+     *
+     * SanityEngine is actually a singleton. This class is actually a handle to the engine singleton. That is hard to
+     * express in a class name :(
+     *
+     * This class, and the SanityEngine API in general, is not internally synchronized. The caller must synchronize
+     * access to the engine if it wishes to be multithreaded. If this ends up being a common use case I'll make an API
+     * for it
+     */
+    [default_interface] runtimeclass SanityEngine {
+        /*!
+         * \brief Initializes the engine to render with the provided swapchain
+         *
+         * Note that this doesn't create a new instance of SanityEngine. As the method_name attribute implies, this
+         * method gets the current instance of SanityEngine - or, if there isn't one, this method will make one
+         */
+        [method_name("GetInstance")] SanityEngine();
 
-		void SetSwapchain(Windows.UI.Xaml.Controls.SwapChainPanel renderSurface);
+        /*!
+         * \brief Tells SanityEngine to render to a specific swap chain panel
+         *
+         * This method breaks the connection to whatever swapchain panel SanityEngine is currently rendering to. It is
+         * the caller's responsibility to manage the swapchains
+         */
+        void SetRenderSurface(Windows.UI.Xaml.Controls.SwapChainPanel renderSurface);
 
-		void Tick(double deltaTime);
-	}
-}
+        /*!
+         * \brief Ticks the SanityEngine simulation and rendering by the specified number of seconds
+         */
+        void Tick(Double deltaTime);
+    }
+} // namespace Sanity
