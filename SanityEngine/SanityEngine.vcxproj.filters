@@ -10,6 +10,69 @@
     <Filter Include="public\Sanity">
       <UniqueIdentifier>{3a4ec0e0-59f7-46ad-b9dc-d81447886f79}</UniqueIdentifier>
     </Filter>
+    <Filter Include="private\adapters">
+      <UniqueIdentifier>{08f25d35-4137-4302-95a8-1d9cb2b3b889}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\bve">
+      <UniqueIdentifier>{05398d6c-7b4e-4a4f-a103-355ca6c53bb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\core">
+      <UniqueIdentifier>{2e9807b4-da06-4afb-930b-6d891c95bc79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\game">
+      <UniqueIdentifier>{7b395d97-2861-4e16-a95c-aa621420f6e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\input">
+      <UniqueIdentifier>{493ff886-d02b-4204-9c92-fbd7ae11c5a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\loading">
+      <UniqueIdentifier>{b7cc14e8-632a-4486-ac8d-90cfe38e247d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\noise">
+      <UniqueIdentifier>{097b50c1-1390-4fac-a125-65abfbc2a7b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\player">
+      <UniqueIdentifier>{51ebe046-43f7-4ed8-8cad-c3718dbcea9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\renderer">
+      <UniqueIdentifier>{92a2f810-06cb-4554-9dad-91088df97a06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\resources">
+      <UniqueIdentifier>{8af9d47c-f508-42a2-9ae4-7b1294b70109}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\serialization">
+      <UniqueIdentifier>{59b2431d-dd6a-44ec-8cc6-b1080b480a38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\windows">
+      <UniqueIdentifier>{030167c5-acce-4e05-a490-458149b2b6de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\world">
+      <UniqueIdentifier>{761115de-e7c9-46eb-af25-68a10cf09a80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\adapters\rex">
+      <UniqueIdentifier>{1f4b862d-bd1b-4218-94c6-9d355b19fb42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\core\async">
+      <UniqueIdentifier>{505e9b99-5404-44f7-9ca9-f3bfe2c570a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\noise\FastNoiseSIMD">
+      <UniqueIdentifier>{01d51398-c790-46b8-8557-c49ff45a49aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\renderer\debugging">
+      <UniqueIdentifier>{5c9ca394-e039-4c8c-a15a-482361af8cf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\renderer\renderpasses">
+      <UniqueIdentifier>{625a5084-952c-4ed8-ba23-e5c4465d1644}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\renderer\rhi">
+      <UniqueIdentifier>{3cc3a248-24b7-4f43-9cf7-3916a0cc94de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\world\environment">
+      <UniqueIdentifier>{604d985b-aacd-4506-b5b3-0fb9776d505f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\world\generation">
+      <UniqueIdentifier>{d32cd7dd-277d-404f-a1c7-f9e136f0278e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="public\Sanity\SanityEngine.idl">
@@ -18,5 +81,294 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\adapters\tracy.hpp">
+      <Filter>private\adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="src\adapters\rex\rex_wrapper.hpp">
+      <Filter>private\adapters\rex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\adapters\rex\stdout_stream.hpp">
+      <Filter>private\adapters\rex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bve\bve_wrapper.hpp">
+      <Filter>private\bve</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bve\train_components.hpp">
+      <Filter>private\bve</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\align.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\ansi_colors.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\asset_registry.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\components.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\constants.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\defer.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\errors.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\pix_colors.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\types.hpp">
+      <Filter>private\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\async\synchronized_resource.hpp">
+      <Filter>private\core\async</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\game.hpp">
+      <Filter>private\game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input\input_manager.hpp">
+      <Filter>private\input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loading\entity_loading.hpp">
+      <Filter>private\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loading\image_loading.hpp">
+      <Filter>private\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loading\mesh_loading.hpp">
+      <Filter>private\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loading\shader_loading.hpp">
+      <Filter>private\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\terrain.hpp">
+      <Filter>private\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\world.hpp">
+      <Filter>private\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\environment\environment_object.hpp">
+      <Filter>private\world\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp">
+      <Filter>private\world\generation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\windows\windows_helpers.hpp">
+      <Filter>private\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serialization\serialization.hpp">
+      <Filter>private\serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\camera_matrix_buffer.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\handles.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\lights.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\material.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\mesh.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\render_components.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderer.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpass.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\standard_material.hpp">
+      <Filter>private\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\debugging\pix.hpp">
+      <Filter>private\renderer\debugging</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\bind_group.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\command_list.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\d3d12_private_data.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\d3dx12.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\descriptor_allocator.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\framebuffer.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\helpers.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\mesh_data_store.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\render_device.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\resources.hpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\player\components.hpp">
+      <Filter>private\player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\player\first_person_controller.hpp">
+      <Filter>private\player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\player\flycam_controller.hpp">
+      <Filter>private\player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.h">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
+      <Filter>private\adapters\rex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\adapters\rex\stdout_stream.cpp">
+      <Filter>private\adapters\rex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bve\bve_wrapper.cpp">
+      <Filter>private\bve</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\asset_registry.cpp">
+      <Filter>private\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\errors.cpp">
+      <Filter>private\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\game.cpp">
+      <Filter>private\game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input\input_manager.cpp">
+      <Filter>private\input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\loading\entity_loading.cpp">
+      <Filter>private\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\loading\image_loading.cpp">
+      <Filter>private\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\loading\mesh_loading.cpp">
+      <Filter>private\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\loading\shader_loading.cpp">
+      <Filter>private\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\terrain.cpp">
+      <Filter>private\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\world.cpp">
+      <Filter>private\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\environment\environment_object.cpp">
+      <Filter>private\world\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp">
+      <Filter>private\world\generation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\windows\windows_helpers.cpp">
+      <Filter>private\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\camera_matrix_buffer.cpp">
+      <Filter>private\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderer.cpp">
+      <Filter>private\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\bind_group.cpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\helpers.cpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\render_device.cpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\resources.cpp">
+      <Filter>private\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp">
+      <Filter>private\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\player\first_person_controller.cpp">
+      <Filter>private\player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\player\flycam_controller.cpp">
+      <Filter>private\player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx512.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_neon.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse2.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
+      <Filter>private\noise\FastNoiseSIMD</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

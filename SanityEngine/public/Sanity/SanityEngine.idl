@@ -24,7 +24,7 @@ namespace Sanity {
          * This method breaks the connection to whatever swapchain panel SanityEngine is currently rendering to. It is
          * the caller's responsibility to manage the swapchains
          */
-        void SetRenderSurface(Windows.UI.Xaml.Controls.SwapChainPanel renderSurface);
+        void SetRenderSurface(Microsoft.UI.Xaml.Controls.SwapChainPanel renderSurface);
 
         /*!
          * \brief Ticks the SanityEngine simulation and rendering by the specified number of seconds
