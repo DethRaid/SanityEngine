@@ -10,7 +10,7 @@
 #include "rx/core/global.h"
 #include "rx/core/log.h"
 #include "rx/core/profiler.h"
-#include "stdout_stream.hpp"
+#include "adapters/rex/stdout_stream.hpp"
 
 namespace rex {
     static Rx::Global<StdoutStream> stdout_stream{"system", "stdout_stream"};

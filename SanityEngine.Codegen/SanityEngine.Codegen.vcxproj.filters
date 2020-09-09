@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -82,14 +74,15 @@
     <Filter Include="extern\rex\math\noise">
       <UniqueIdentifier>{9d6998ad-47a7-4fbe-8362-e6639c82f5b9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Rex">
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\Rex">
       <UniqueIdentifier>{9594d950-cd06-4df6-a60a-599bc751a2a6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SanityEngine.Codegen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\abort.cpp">
       <Filter>extern\rex\core</Filter>
     </ClCompile>
@@ -303,8 +296,14 @@
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\math\noise\perlin.cpp">
       <Filter>extern\rex\math\noise</Filter>
     </ClCompile>
-    <ClCompile Include="RexWrapper.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\RexWrapper.cpp">
+      <Filter>src\Rex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SanityEngine.Codegen.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rex\StdoutStream.cpp">
+      <Filter>src\Rex</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -842,8 +841,14 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\math\noise\perlin.h">
       <Filter>extern\rex\math\noise</Filter>
     </ClInclude>
-    <ClInclude Include="RexWrapper.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\RexWrapper.hpp">
+      <Filter>src\Rex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rex\StdoutStream.hpp">
+      <Filter>src\Rex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Types.hpp">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

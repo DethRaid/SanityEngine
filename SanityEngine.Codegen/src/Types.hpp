@@ -9,10 +9,10 @@
 using Rx::Byte;
 using Rx::Size;
 
-using Rx::Uint8;
 using Rx::Uint16;
 using Rx::Uint32;
 using Rx::Uint64;
+using Rx::Uint8;
 
 using Rx::Sint32;
 using Rx::Sint64;
