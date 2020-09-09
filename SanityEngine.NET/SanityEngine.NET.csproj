@@ -1,14 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
-		<TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net5.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<TargetPlatformVersion>10.0.19041</TargetPlatformVersion>
-		<TargetPlatformMinVersion>10.0.19041</TargetPlatformMinVersion>
-		<TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
-		<Platforms>AnyCPU;x64</Platforms>
-		<StartupObject>Sanity.Editor.UwpApp</StartupObject>
 		<Copyright>Mozilla Public License</Copyright>
 		<Authors>DethRaid</Authors>
 		<Company>Jotun Studios</Company>
@@ -22,8 +17,44 @@
 		<RunPostBuildEvent>Always</RunPostBuildEvent>
 	</PropertyGroup>
 
+	<Target Name="GenerateProjection" BeforeTargets="Build">
+		<PropertyGroup>
+			<CsWinRTVerbosity>high</CsWinRTVerbosity>
+			<CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_test.rsp</CsWinRTResponseFile>
+			<CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+		</PropertyGroup>
+		<PropertyGroup>
+			<CsWinRTParams>
+-verbose
+
+# Include Windows SDK metadata to satisfy references to
+# Windows types from project-specific metadata.
+-in 10.0.19041.0
+
+# Don't project referenced Windows types, as these are
+# provided by the Windows interop assembly.
+-exclude Windows
+
+# Reference project-specific winmd files, defined elsewhere,
+# such as from a NuGet package.
+-in $(SolutionDir)SanityEngine\x64\Debug\Merged\Sanity.winmd
+
+# Include project-specific namespaces/types in the projection
+-include Sanity
+
+# Write projection sources to the "Generated Files" folder,
+# which should be excluded from checkin (e.g., .gitignored).
+-out "$(ProjectDir)Generated Files"
+			</CsWinRTParams>
+		</PropertyGroup>
+		<WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+		<Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+		<Exec Command="$(CsWinRTCommand)" />
+	</Target>
+
 	<PropertyGroup>
 		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+		<Description>C# Bindings for the SanityEngine public API</Description>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
@@ -34,6 +65,19 @@
 		<PlatformTarget>x64</PlatformTarget>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<NoWarn>1701;1702;8767;8765</NoWarn>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.UI.Xaml" Version="2.5.0-prerelease.200812001" />
+	  <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200629.3" GeneratePathProperty="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\LICENSE">
+	    <Pack>True</Pack>
+	    <PackagePath></PackagePath>
+	  </None>
+	</ItemGroup>
 
 </Project>
