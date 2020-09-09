@@ -11,8 +11,8 @@
 #include "pix3.h"
 #include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
-#include "rhi/helpers.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/helpers.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/console/variable.h"
 #include "rx/core/array.h"
 #include "rx/core/log.h"
@@ -96,7 +96,7 @@ Terrain::Terrain(const TerrainData& data,
     load_terrain_textures_and_create_material();
 }
 
-void Terrain::tick(float delta_time) {
+void Terrain::tick(const Float64 delta_time) {
     ZoneScoped;
 
     upload_new_tile_meshes();
@@ -149,7 +149,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     // }
 }
 
-Float32 Terrain::get_terrain_height(const Vec2f& location) {
+Float32 Terrain::get_terrain_height(const Vec2d& location) {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
     const auto tile_start_location = tilecoords * static_cast<Int32>(TILE_SIZE);
@@ -167,7 +167,7 @@ Float32 Terrain::get_terrain_height(const Vec2f& location) {
     return 0;
 }
 
-Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3f& position) {
+Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3d& position) {
     return Vec2i{static_cast<Int32>(round(position.x)), static_cast<Int32>(round(position.z))} / static_cast<Int32>(TILE_SIZE);
 }
 
@@ -318,12 +318,18 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
         for(Uint32 x = 0; x < tile_heightmap_row.size(); x++) {
             const auto height = tile_heightmap_row[x];
 
-            const auto normal = get_normal_at_location(Vec2f{static_cast<Float32>(x), static_cast<Float32>(y)});
+            const auto x_float = static_cast<Float64>(x);
+            const auto y_float = static_cast<Float64>(y);
 
-            tile_vertices.push_back(StandardVertex{.position = {static_cast<Float32>(x), height, static_cast<Float32>(y)},
-                                                   .normal = normal,
-                                                   .color = 0xFFFFFFFF,
-                                                   .texcoord = {static_cast<Float32>(x), static_cast<Float32>(y)}});
+            const auto normal = get_normal_at_location(Vec2d{x_float, y_float});
+
+            // While I _should_ use a designated initializer and construct everything inline, Visual Studio is an incredibly stupid buttface
+            auto vertex = StandardVertex{};
+            vertex.position = Vec3d{x_float, height, y_float}.cast<Float32>();
+            vertex.normal = normal.cast<Float32>();
+            vertex.texcoord = Vec2d{x_float, y_float}.cast<Float32>();
+
+            tile_vertices.push_back(vertex);
 
             if(x < tile_heightmap_row.size() - 1 && y < tile_heightmap.size() - 1) {
                 const auto width = static_cast<Uint32>(tile_heightmap_row.size());
@@ -483,11 +489,11 @@ void Terrain::upload_new_tile_meshes() {
     device.submit_command_list(Rx::Utility::move(commands));
 }
 
-Vec3f Terrain::get_normal_at_location(const Vec2f& location) {
-    const auto height_middle_right = get_terrain_height(location + Vec2f{1, 0});
-    const auto height_bottom_middle = get_terrain_height(location + Vec2f{0, -1});
-    const auto height_top_middle = get_terrain_height(location + Vec2f{0, 1});
-    const auto height_middle_left = get_terrain_height(location + Vec2f{-1, 0});
+Vec3f Terrain::get_normal_at_location(const Vec2d& location) {
+    const auto height_middle_right = get_terrain_height(location + Vec2d{1, 0});
+    const auto height_bottom_middle = get_terrain_height(location + Vec2d{0, -1});
+    const auto height_top_middle = get_terrain_height(location + Vec2d{0, 1});
+    const auto height_middle_left = get_terrain_height(location + Vec2d{-1, 0});
 
     const auto va = normalize(Vec3f{2.0, 0.0, height_middle_right - height_middle_left});
     const auto vb = normalize(Vec3f{0.0, 2.0, height_bottom_middle - height_top_middle});

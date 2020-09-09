@@ -107,20 +107,20 @@ public:
                                                       const WorldParameters& params,
                                                       renderer::Renderer& renderer);
 
-    [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Vec3f& position);
+    [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Vec3d& position);
 
     explicit Terrain(const TerrainData& data,
                      renderer::Renderer& renderer_in,
                      FastNoiseSIMD& noise_generator_in,
                      SynchronizedResource<entt::registry>& registry_in);
 
-    void tick(float delta_time);
+    void tick(Float64 delta_time);
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] Float32 get_terrain_height(const Vec2f& location);
+    [[nodiscard]] Float32 get_terrain_height(const Vec2d& location);
 
-    [[nodiscard]] Vec3f get_normal_at_location(const Vec2f& location);
+    [[nodiscard]] Vec3f get_normal_at_location(const Vec2d& location);
 
     [[nodiscard]] Rx::Concurrency::Atomic<Uint32>& get_num_active_tilegen_tasks();
 

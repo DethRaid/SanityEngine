@@ -1,15 +1,16 @@
 ﻿#pragma once
 
+#include "adapters/rex/rex_wrapper.hpp"
 #include "assimp/Importer.hpp"
-#include "coreclr/core_clr_host.hpp"
 #include "bve/bve_wrapper.hpp"
+#include "core/asset_registry.hpp"
 #include "entt/entity/registry.hpp"
 #include "input/input_manager.hpp"
 #include "player/first_person_controller.hpp"
 #include "renderer/renderer.hpp"
 #include "rx/core/ptr.h"
+#include "rx/core/time/stop_watch.h"
 #include "settings.hpp"
-#include "core/asset_registry.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
@@ -17,7 +18,7 @@
 /*!
  * \brief Main class for my glorious engine
  */
-class SanityEngine {
+class [[sanity::runtimeclass]] SanityEngine {
 public:
     static Rx::String executable_directory;
 
@@ -27,14 +28,14 @@ public:
     explicit SanityEngine(const Settings& settings_in);
 
     /*!
-     * \brief De-initializes the engine, flushing all logs
+     * \brief De-initializes the engine
      */
     ~SanityEngine();
 
     /*!
      * \brief Runs the main loop of the engine. This method eventually returns, after the user is finished playing their game
      */
-    void run();
+    void Tick(bool isVisible);
 
     [[nodiscard]] entt::entity get_player() const;
 
@@ -43,6 +44,8 @@ public:
     [[nodiscard]] World* get_world() const;
 
 private:
+    rex::Wrapper rex;
+
     Settings settings;
 
     Rx::Ptr<InputManager> input_manager;
@@ -72,11 +75,18 @@ private:
 
     Assimp::Importer importer;
 
-    void initialize_scripting_runtime();
-
-    Rx::Ptr<coreclr::Host> scripting_runtime;
-
     Rx::Ptr<AssetRegistry> asset_registry;
+
+    Rx::Time::StopWatch frame_timer;
+
+    /*!
+     * \brief Number of seconds since the engine started running
+     */
+    double t = 0;
+
+    const double dt = 0.01; // Physics timestep
+
+    double accumulator = 0;
 
 #pragma region Spawning
     void create_planetary_atmosphere();
@@ -88,5 +98,9 @@ private:
     void create_environment_object_editor();
 
     void load_3d_object(const Rx::String& filename);
+#pragma endregion
+
+#pragma region Update loop
+    void render();
 #pragma endregion
 };

@@ -5,7 +5,7 @@
 #include "core/components.hpp"
 #include "core/types.hpp"
 #include "loading/mesh_loading.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/filesystem/directory.h"
 #include "rx/core/log.h"
 #include "rx/core/prng/mt19937.h"
@@ -65,7 +65,7 @@ World::World(const glm::uvec2& size_in,
       renderer{&renderer_in},
       terrain{Rx::Utility::move(terrain_in)} {}
 
-void World::tick(const Float32 delta_time) {
+void World::tick(const Float64 delta_time) {
     ZoneScoped;
 
     {
@@ -75,8 +75,6 @@ void World::tick(const Float32 delta_time) {
     }
 
     terrain->tick(delta_time);
-
-    tick_script_components(delta_time);
 }
 
 Terrain& World::get_terrain() const { return *terrain; }
@@ -149,14 +147,4 @@ void World::load_environment_objects(const Rx::String& environment_objects_folde
     if(loaded_anything) {
         device.submit_command_list(Rx::Utility::move(commands));
     }
-}
-
-void World::tick_script_components(Float32 delta_time) {
-    ZoneScoped;
-
-    // registry->view<horus::Component>().each([&](horus::Component& script_component) {
-    //     if(script_component.lifetime_stage == horus::LifetimeStage::ReadyToTick) {
-    //         script_component.tick(delta_time);
-    //     }
-    // });
 }

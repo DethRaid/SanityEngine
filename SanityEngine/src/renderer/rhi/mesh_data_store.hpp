@@ -8,8 +8,8 @@
 #include "rx/core/vector.h"
 
 struct StandardVertex {
-    Vec3f position;
-    Vec3f normal;
+    Vec3f position{};
+    Vec3f normal{};
     Uint32 color{0xFFFFFFFF};
     Vec2f texcoord{};
 };

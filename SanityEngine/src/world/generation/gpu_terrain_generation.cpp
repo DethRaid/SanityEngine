@@ -5,7 +5,7 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "world/terrain.hpp"
 
 namespace terraingen {

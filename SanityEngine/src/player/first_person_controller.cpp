@@ -24,7 +24,7 @@ FirstPersonController::FirstPersonController(GLFWwindow* window_in,
 
 void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }
 
-void FirstPersonController::update_player_transform(const float delta_time) {
+void FirstPersonController::update_player_transform(const Float64 delta_time) {
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
     auto locked_registry = registry->lock();
@@ -37,8 +37,8 @@ void FirstPersonController::update_player_transform(const float delta_time) {
     const auto up = player_transform.get_up_vector();
 
     if(is_grounded) {
-        const auto forward_move_vector = normalize(glm::vec3{forward.x, 0, forward.z});
-        const auto right_move_vector = normalize(glm::vec3{right.x, 0, right.z});
+        const auto forward_move_vector = normalize(glm::dvec3{forward.x, 0, forward.z});
+        const auto right_move_vector = normalize(glm::dvec3{right.x, 0, right.z});
 
         velocity = glm::vec3{0};
 
@@ -67,14 +67,14 @@ void FirstPersonController::update_player_transform(const float delta_time) {
         }
     } else {
         // Gravity
-        velocity.y -= 9.8f * delta_time;
+        velocity.y -= 9.8 * delta_time;
     }
 
     player_transform.location += velocity * delta_time;
 
     // Make sure they're on the terrain
     if(terrain) {
-        const auto height = terrain->get_terrain_height(Vec2f{player_transform.location.x, player_transform.location.z});
+        const auto height = terrain->get_terrain_height(Vec2d{player_transform.location.x, player_transform.location.z});
         if(player_transform.location.y < height + 1.51f) {
             player_transform.location.y = height + 1.5f;
 
@@ -101,6 +101,6 @@ void FirstPersonController::update_player_transform(const float delta_time) {
     const auto pitch_delta = std::atan2(mouse_delta.y * 0.0001, 1);
     const auto yaw_delta = std::atan2(mouse_delta.x * 0.0001, 1);
 
-    player_transform.rotation = glm::rotate(player_transform.rotation, static_cast<float>(yaw_delta), glm::vec3{0, 1, 0});
-    player_transform.rotation = glm::rotate(player_transform.rotation, static_cast<float>(pitch_delta), right);
+    player_transform.rotation = glm::rotate(player_transform.rotation, yaw_delta, glm::dvec3{0, 1, 0});
+    player_transform.rotation = glm::rotate(player_transform.rotation, pitch_delta, right);
 }

@@ -6,8 +6,8 @@
 #include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
-#include "rhi/framebuffer.hpp"
-#include "rhi/render_pipeline_state.hpp"
+#include "renderer/rhi/framebuffer.hpp"
+#include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 
 namespace renderer {

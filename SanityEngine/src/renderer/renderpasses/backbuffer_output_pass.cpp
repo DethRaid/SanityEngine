@@ -5,7 +5,7 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 
 namespace renderer {

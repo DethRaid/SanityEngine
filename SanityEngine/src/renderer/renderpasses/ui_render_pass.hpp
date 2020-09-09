@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderpass.hpp"
-#include "rhi/render_pipeline_state.hpp"
+#include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 
 namespace renderer {

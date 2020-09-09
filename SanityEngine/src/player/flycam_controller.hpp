@@ -12,7 +12,7 @@ class FlycamController {
 public:
     explicit FlycamController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
 
-    void update_player_transform(Float32 delta_time);
+    void update_player_transform(Float64 delta_time);
 
 private:
     /*!

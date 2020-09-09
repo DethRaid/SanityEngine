@@ -1,9 +1,9 @@
 #include "bind_group.hpp"
 
 #include "Tracy.hpp"
-#include "rhi/d3dx12.hpp"
-#include "rhi/helpers.hpp"
-#include "rhi/raytracing_structs.hpp"
+#include "renderer/rhi/d3dx12.hpp"
+#include "renderer/rhi/helpers.hpp"
+#include "renderer/rhi/raytracing_structs.hpp"
 #include "rx/core/log.h"
 
 namespace renderer {

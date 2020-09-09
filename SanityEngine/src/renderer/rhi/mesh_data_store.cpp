@@ -2,8 +2,8 @@
 
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
-#include "rhi/helpers.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/helpers.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 
 namespace renderer {

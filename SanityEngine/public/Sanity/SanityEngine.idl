@@ -11,6 +11,13 @@ namespace Sanity {
      */
     [default_interface] runtimeclass SanityEngine {
         /*!
+         * \brief Name of this SanityEngine instance
+         *
+         * Usually the name of the game that SanityEngine is running, sometimes the name of the SanityEngine editor
+         */
+        String Name;
+
+        /*!
          * \brief Initializes the engine to render with the provided swapchain
          *
          * Note that this doesn't create a new instance of SanityEngine. As the method_name attribute implies, this
@@ -24,11 +31,22 @@ namespace Sanity {
          * This method breaks the connection to whatever swapchain panel SanityEngine is currently rendering to. It is
          * the caller's responsibility to manage the swapchains
          */
-        void SetRenderSurface(Microsoft.UI.Xaml.Controls.SwapChainPanel renderSurface);
+        // TODO
+        // void SetRenderSurface(Microsoft.UI.Xaml.Controls.SwapChainPanel renderSurface);
 
         /*!
-         * \brief Ticks the SanityEngine simulation and rendering by the specified number of seconds
+         * \brief Sets the resolution that SanityEngine will render at
+         */
+        void SetRenderResolution(UInt32 width, UInt32 height);
+
+        /*!
+         * \brief Ticks the simulation
          */
         void Tick(Double deltaTime);
+
+        /*!
+         * \brief Renders the world at its current state
+         */
+        void Render();
     }
 } // namespace Sanity

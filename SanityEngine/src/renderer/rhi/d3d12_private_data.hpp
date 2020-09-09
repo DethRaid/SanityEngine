@@ -6,8 +6,8 @@
 #include <winrt/base.h>
 
 #include "core/types.hpp"
-#include "rhi/helpers.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/helpers.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 #include "rx/core/optional.h"
 #include "rx/core/string.h"

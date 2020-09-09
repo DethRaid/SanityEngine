@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/async/synchronized_resource.hpp"
+#include "core/types.hpp"
 #include "entt/entity/fwd.hpp"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
@@ -15,14 +16,14 @@ public:
                                    entt::entity controlled_entity_in,
                                    SynchronizedResource<entt::registry>& registry_in);
 
-    void update_player_transform(float delta_time);
+    void update_player_transform(Float64 delta_time);
 
     void set_current_terrain(Terrain& terrain_in);
 
 private:
-    float normal_move_speed = 5;
+    Float64 normal_move_speed = 5;
 
-    float jump_velocity = 5;
+    Float64 jump_velocity = 5;
 
     /*!
      * \brief Window that will receive input
@@ -43,8 +44,8 @@ private:
 
     glm::dvec2 last_mouse_pos;
 
-    glm::vec3 previous_location{};
-    glm::vec3 velocity{0};
+    glm::dvec3 previous_location{};
+    glm::dvec3 velocity{0};
 
     Terrain* terrain{nullptr};
     bool is_grounded{true};

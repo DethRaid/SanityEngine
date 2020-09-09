@@ -11,7 +11,7 @@
 #include "assimp/scene.h"
 #include "image_loading.hpp"
 #include "renderer/renderer.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
 

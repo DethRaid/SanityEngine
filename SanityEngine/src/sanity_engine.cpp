@@ -13,7 +13,7 @@
 #include "glm/ext/quaternion_trigonometric.hpp"
 #include "globals.hpp"
 #include "loading/entity_loading.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "stb_image.h"
@@ -31,25 +31,6 @@ struct AtmosphereMaterial {
     glm::vec3 sun_vector;
 };
 
-int main(int argc, char** argv) {
-    winrt::init_apartment();
-    rex::Wrapper rex;
-
-    const Settings settings{};
-
-    const auto exe_path = Rx::String{argv[0]};
-    const auto slash_pos = exe_path.find_last_of("\\"); // Lol how do paths work
-    SanityEngine::executable_directory = exe_path.substring(0, slash_pos);
-
-    g_engine = new SanityEngine{settings};
-
-    g_engine->run();
-
-    logger->warning("REMAIN INDOORS");
-
-    delete g_engine;
-}
-
 static void error_callback(const int error, const char* description) { logger->error("%s (GLFW error %d}", description, error); }
 
 static void key_func(GLFWwindow* window, const int key, int /* scancode */, const int action, const int mods) {
@@ -63,6 +44,8 @@ Rx::String SanityEngine::executable_directory;
 SanityEngine::SanityEngine(const Settings& settings_in)
     : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
+
+    executable_directory = settings.executable_directory;
 
     {
         ZoneScoped;
@@ -99,8 +82,6 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
         asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
-        initialize_scripting_runtime();
-
         bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
 
         create_first_person_player();
@@ -130,6 +111,8 @@ SanityEngine::SanityEngine(const Settings& settings_in)
         create_environment_object_editor();
 
         world->tick(0);
+
+        frame_timer.start();
     }
 }
 
@@ -137,60 +120,36 @@ SanityEngine::~SanityEngine() {
     glfwDestroyWindow(window);
 
     glfwTerminate();
+
+    logger->warning("REMAIN INDOORS");
 }
 
-void SanityEngine::run() {
-    uint64_t frame_count = 1;
+void SanityEngine::Tick(bool isVisible) {
+    const auto frame_duration = frame_timer.elapsed();
+    frame_timer.restart();
 
-    Float32 last_frame_duration = 0;
+    double frame_duration_seconds = frame_duration.total_seconds();
 
-    world->load_environment_objects("data/content/models/environment");
+    accumulator += frame_duration_seconds;
 
-    while(!glfwWindowShouldClose(window)) {
-        ZoneScopedN("tick");
-        const auto frame_start_time = std::chrono::steady_clock::now();
-        glfwPollEvents();
-
+    while(accumulator >= dt) {
         if(player_controller) {
-            player_controller->update_player_transform(last_frame_duration);
+            player_controller->update_player_transform(dt);
         }
 
-        {
-            auto locked_registry = registry.lock();
-            imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
-        }
-
-        // Renderer MUST begin the frame before any tasks that potentially do render-related things like data streaming, terrain
-        // generation, etc
-        renderer->begin_frame(frame_count);
-
-        // There might not be a world if the player is still in the main menu
         if(world) {
-            world->tick(last_frame_duration);
+            world->tick(dt);
         }
 
-        auto locked_registry = registry.lock();
-        renderer->render_all(locked_registry, *world);
-
-        renderer->end_frame();
-
-        FrameMark;
-#ifdef TRACY_ENABLE
-        TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
-#endif
-
-        const auto frame_end_time = std::chrono::steady_clock::now();
-
-        const auto microsecond_frame_duration = std::chrono::duration_cast<std::chrono::microseconds>(frame_end_time - frame_start_time)
-                                                    .count();
-        last_frame_duration = static_cast<Float32>(static_cast<double>(microsecond_frame_duration) / 1000000.0);
-
-        framerate_tracker.add_frame_time(last_frame_duration);
-
-        frame_count++;
-
-        TracyD3D12Collect(renderer::RenderBackend::tracy_context);
+        accumulator -= dt;
+        t += dt;
     }
+
+    // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/
+
+    render();
+
+    framerate_tracker.add_frame_time(frame_duration_seconds);
 }
 
 entt::entity SanityEngine::get_player() const { return player; }
@@ -198,16 +157,6 @@ entt::entity SanityEngine::get_player() const { return player; }
 SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
 World* SanityEngine::get_world() const { return world.get(); }
-
-void SanityEngine::initialize_scripting_runtime() {
-    scripting_runtime = Rx::make_ptr<coreclr::Host>(RX_SYSTEM_ALLOCATOR,
-                                                    R"(C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.0-preview.4.20251.6)");
-    if(!scripting_runtime) {
-        Rx::abort("Could not initialize scripting runtime");
-    }
-
-    scripting_runtime->load_assembly("");
-}
 
 void SanityEngine::create_planetary_atmosphere() {
     auto locked_registry = registry.lock();
@@ -260,4 +209,21 @@ void SanityEngine::load_3d_object(const Rx::String& filename) {
     const auto msg = Rx::String::format("load_3d_object(%s)", filename);
     ZoneScopedN(msg.data());
     load_static_mesh(filename, registry, *renderer);
+}
+
+void SanityEngine::render() {
+    auto locked_registry = registry.lock();
+
+    imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
+
+    renderer->render_all(locked_registry, *world);
+
+    renderer->end_frame();
+
+    FrameMark;
+#ifdef TRACY_ENABLE
+    TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
+#endif
+
+    TracyD3D12Collect(renderer::RenderBackend::tracy_context);
 }

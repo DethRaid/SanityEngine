@@ -9,9 +9,9 @@
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/standard_material.hpp"
-#include "rhi/d3dx12.hpp"
-#include "rhi/helpers.hpp"
-#include "rhi/render_device.hpp"
+#include "renderer/rhi/d3dx12.hpp"
+#include "renderer/rhi/helpers.hpp"
+#include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 #include "stb_image.h"
 

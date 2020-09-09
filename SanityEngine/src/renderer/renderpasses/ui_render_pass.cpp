@@ -6,8 +6,8 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/debugging/pix.hpp"
 #include "renderer/renderer.hpp"
-#include "rhi/render_device.hpp"
-#include "rhi/resources.hpp"
+#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/resources.hpp"
 
 namespace renderer {
     UiPass::UiPass(Renderer& renderer_in) : renderer{&renderer_in} {

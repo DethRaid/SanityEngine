@@ -180,8 +180,8 @@ namespace renderer {
         };
 
         const auto result = UpdateSubresources(commands.get(), image.resource.get(), staging_buffer.resource.get(), 0, 0, 1, &subresource);
-        if(FAILED(result)) {
-            logger->error("Could not upload texture data: %s", to_string(result));
+        if(result == 0) {
+            logger->error("Could not upload texture data");
 
             return pink_texture_handle;
         } else {

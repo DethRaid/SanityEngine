@@ -4,7 +4,7 @@
 #include <winrt/base.h>
 
 #include "renderer/mesh.hpp"
-#include "rhi/mesh_data_store.hpp"
+#include "renderer/rhi/mesh_data_store.hpp"
 #include "rx/core/optional.h"
 
 namespace renderer {

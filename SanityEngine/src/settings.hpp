@@ -14,4 +14,9 @@ struct Settings {
      * Gets translated into an actual resolution with a heurustic of the size of the main screen and the amount of available VRAM
      */
     QualityLevel shadow_quality;
+
+    /*!
+     * \brief Absolute path to the directory where the SanityEngine executable is
+     */
+    const char* executable_directory;
 };
