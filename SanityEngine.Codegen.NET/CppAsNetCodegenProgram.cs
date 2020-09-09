@@ -5,30 +5,8 @@ using System.Linq;
 
 namespace SanityEngine.Codegen.NET
 {
-    class CodegenProgram
+    class CppAsNetCodegenProgram
     {
-        static int Main(string[] args)
-        {
-            Console.WriteLine("HELLO HUMAN");
-
-            var returnValue = 0;
-            if(args.Length != 2)
-            {
-                Console.Error.WriteLine("Incorrect number of arguments!");
-                Console.Error.WriteLine("Usage:");
-                Console.Error.WriteLine("\tSanityEngine.Codegen.NET <C++ Directory> <Output Directory>");
-                returnValue = -1;
-            }
-            else
-            {
-                GenerateRuntimeClasses(args[0], args[1]);
-            }
-
-            Console.WriteLine("REMAIN INDOORS");
-
-            return returnValue;
-        }
-
         private static void GenerateRuntimeClasses(string cppDirectory, string outputDirectory)
         {
             Console.WriteLine("Examining directory '{0}' for header files", cppDirectory);

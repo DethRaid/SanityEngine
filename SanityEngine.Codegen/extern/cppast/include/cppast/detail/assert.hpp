@@ -5,7 +5,7 @@
 #ifndef CPPAST_ASSERT_HPP_INCLUDED
 #define CPPAST_ASSERT_HPP_INCLUDED
 
-#include <debug_assert.hpp>
+#include "type_safe/../debug_assert/debug_assert.hpp"
 
 #ifndef CPPAST_ASSERTION_LEVEL
 #    define CPPAST_ASSERTION_LEVEL 0

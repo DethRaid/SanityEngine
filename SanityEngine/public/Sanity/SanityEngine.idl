@@ -42,7 +42,7 @@ namespace Sanity {
         /*!
          * \brief Ticks the simulation
          */
-        void Tick(Double deltaTime);
+        void Tick(Boolean isVisible);
 
         /*!
          * \brief Renders the world at its current state

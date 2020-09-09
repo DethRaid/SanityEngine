@@ -11,7 +11,7 @@ namespace Sanity.Editor
 {
     public class UwpApp : IFrameworkView
     {
-        private SanityEngine? application = null;
+        private SanityEditor? editor = null;
 
         private bool windowClosed = false;
         private bool windowVisible = false;
@@ -33,9 +33,9 @@ namespace Sanity.Editor
 
         public void Load(string entryPoint)
         {
-            if(application is null)
+            if(editor is null)
             {
-                application = new();
+                editor = new();
             }
         }
 
@@ -52,7 +52,7 @@ namespace Sanity.Editor
                     CoreWindow.GetForCurrentThread().Dispatcher.ProcessEvents(CoreProcessEventsOption.ProcessOneAndAllPending);
                 }
 
-                application?.Tick(windowVisible);
+                editor?.Tick(windowVisible);
             }
         }
 
@@ -91,7 +91,7 @@ namespace Sanity.Editor
         private void OnWindowSizeChanged(CoreWindow sender, WindowSizeChangedEventArgs args)
         {
             // Resize the swapchain and any swapchain-relative sized render targets
-            application.SetRenderResolution(args.Size.Width, args.Size.Height);
+            editor.SetWindowSize(args.Size);
         }
 
         private void OnWindowClosed(CoreWindow sender, CoreWindowEventArgs args)

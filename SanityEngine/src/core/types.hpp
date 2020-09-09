@@ -16,6 +16,8 @@ using Rx::Uint64;
 
 using Rx::Sint32;
 using Rx::Sint64;
+using Int32 = Sint32;
+using Int64 = Sint64;
 
 using Rx::Float32;
 using Rx::Float64;
