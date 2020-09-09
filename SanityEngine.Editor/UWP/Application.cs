@@ -9,8 +9,10 @@ using Windows.UI.Core;
 
 namespace Sanity.Editor
 {
-    public class UwpApp : IFrameworkView
+    public class UwpApp : IFrameworkView, IDisposable
     {
+        private static string projectName;
+
         private SanityEditor? editor = null;
 
         private bool windowClosed = false;
@@ -19,6 +21,8 @@ namespace Sanity.Editor
         [MTAThread]
         private static int Main(string[] args)
         {
+            projectName = args[0];
+
             var sanityEngineApplicationSource = new SanityEngineApplicaionSource();
             CoreApplication.Run(sanityEngineApplicationSource);
             return ReturnCodes.Success;
@@ -35,7 +39,7 @@ namespace Sanity.Editor
         {
             if(editor is null)
             {
-                editor = new();
+                editor = new(projectName);
             }
         }
 
@@ -103,6 +107,8 @@ namespace Sanity.Editor
         {
             windowVisible = args.Visible;
         }
+
+        public void Dispose() => ((IDisposable)editor).Dispose();
 
         private static class ReturnCodes
         {

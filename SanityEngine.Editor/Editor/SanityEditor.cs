@@ -19,15 +19,20 @@ namespace Sanity.Editor
 
         private WinRTNursery nursery = new();
 
-        public SanityEditor()
+        public SanityEditor(string projectDirectory)
         {
             nursery.StartSoon(RunUi);
+
+            // Kick off tasks to scan for the world and environment definition files
+            nursery.StartSoon(BeginLoadWorld);
+
+            // Then kick off tasks to load structures like villages and cities
+            // Next, kick off tasks for animals, characters, and their AI
+            // That's probably close to it
         }
 
         public void Tick(bool windowVisible)
         {
-            
-
             Engine.Tick(windowVisible);
         }
 
@@ -44,5 +49,9 @@ namespace Sanity.Editor
         {
         }
 
+        private void BeginLoadWorld()
+        {
+
+        }
     }
 }
