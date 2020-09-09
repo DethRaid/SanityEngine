@@ -81,6 +81,12 @@
     <Filter Include="src\Rex">
       <UniqueIdentifier>{9594d950-cd06-4df6-a60a-599bc751a2a6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Generators">
+      <UniqueIdentifier>{213a2981-2ec5-4d41-8c83-37b24b615d1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Generators\RuntimeClasses">
+      <UniqueIdentifier>{fe4e8702-cd2f-4d40-8301-f7f4d1b0ceed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\abort.cpp">
@@ -304,6 +310,15 @@
     </ClCompile>
     <ClCompile Include="src\Rex\StdoutStream.cpp">
       <Filter>src\Rex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Generators\RuntimeClasses\RuntimeClassGenerator.cpp">
+      <Filter>src\Generators\RuntimeClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Generators\IGenerator.cpp">
+      <Filter>src\Generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Generators\RuntimeClasses\UnsupportedType.cpp">
+      <Filter>src\Generators\RuntimeClasses</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -849,6 +864,15 @@
     </ClInclude>
     <ClInclude Include="src\Types.hpp">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Generators\RuntimeClasses\RuntimeClassGenerator.hpp">
+      <Filter>src\Generators\RuntimeClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Generators\IGenerator.hpp">
+      <Filter>src\Generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Generators\RuntimeClasses\UnsupportedType.hpp">
+      <Filter>src\Generators\RuntimeClasses</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
