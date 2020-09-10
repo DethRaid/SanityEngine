@@ -5,6 +5,7 @@
     <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <StartupObject>SanityEngine.Codegen.NET.CodegenProgram</StartupObject>
     <RootNamespace>Sanity.Codegen</RootNamespace>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
