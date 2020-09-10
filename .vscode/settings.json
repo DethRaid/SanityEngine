@@ -14,6 +14,7 @@
         "procedurally spawnable object",
         "repulsor",
         "repulsors",
+        "sanityproject",
         "spawnable"
     ],
     "cmake.configureOnOpen": false
