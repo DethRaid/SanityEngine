@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 
-using Microsoft.Toolkit.Uwp.UI.Controls;
-
-using SanityEngineEditor.UI.Project;
+using Sanity.Editor.UI.Project;
 
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -34,14 +32,14 @@ namespace Sanity.Editor
             this.InitializeComponent();
         }
 
-        public void NewProject_Click(object sender, RoutedEventArgs e)
+        public void NewProject_Click(object _, RoutedEventArgs e)
         {
             // Show the user the project creation wizard
 
-            // Frame rootFrame = Window.Current.Content as Frame;
+            Frame rootFrame = Window.Current.Content as Frame;
 
             // No parameters - the page should not get populated with any data, allowing the user to fill out their project's information
-            // rootFrame.Navigate(typeof(EditProjectPage), default);
+            rootFrame.Navigate(typeof(EditProjectPage), default);
         }
 
         public void SaveProject_Click(object sender, RoutedEventArgs e)
@@ -86,3 +84,30 @@ namespace Sanity.Editor
         }
     }
 }
+
+/*
+ * 
+        <WinUI:MenuBar x:Name="MainMenuBar" HorizontalAlignment="Left" VerticalAlignment="Top" TabNavigation="Cycle">
+            <WinUI:MenuBarItem Title="File">
+                <MenuFlyoutItem Text="New Project" Click="NewProject_Click" />
+                <MenuFlyoutItem Text="Save Project" Click="SaveProject_Click" />
+                <MenuFlyoutItem Text="Open Project" Click="OpenProject_Click" />
+            </WinUI:MenuBarItem>
+            <WinUI:MenuBarItem Title="Project">
+                <MenuFlyoutItem Text="Edit Project Settings" Click="EditProject_Click" />
+            </WinUI:MenuBarItem>
+            <WinUI:MenuBarItem Title="World">
+                <MenuFlyoutItem Text="Edit World Settings" Click="EditWorld_Click" />
+            </WinUI:MenuBarItem>
+            <WinUI:MenuBarItem Title="AI">
+                <MenuFlyoutSubItem Text="Senses">
+                    <MenuFlyoutItem Text="New" Click="NewAiSense_Click" />
+                    <MenuFlyoutItem Text="Edit" Click="EditAiSense_Click" />
+                </MenuFlyoutSubItem>
+                <MenuFlyoutSubItem Text="Behavior Trees">
+                    <MenuFlyoutItem Text="New" Click="NewAiBehaviorTree_Click" />
+                    <MenuFlyoutItem Text="Edit" Click="EditAiBehaviorTree_Click" />
+                </MenuFlyoutSubItem>
+            </WinUI:MenuBarItem>
+        </WinUI:MenuBar>
+ */

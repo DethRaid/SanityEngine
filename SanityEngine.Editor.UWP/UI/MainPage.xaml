@@ -8,30 +8,12 @@
     x:Class="Sanity.Editor.MainPage"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <x:Double x:Key="Text.Menu.MenuBar">14</x:Double>
+    </Page.Resources>
 
     <Grid>
-        <WinUI:MenuBar x:Name="MainMenuBar" HorizontalAlignment="Left" VerticalAlignment="Top" TabNavigation="Cycle">
-            <WinUI:MenuBarItem Title="File">
-                <MenuFlyoutItem Text="New Project" Click="NewProject_Click" />
-                <MenuFlyoutItem Text="Save Project" Click="SaveProject_Click" />
-                <MenuFlyoutItem Text="Open Project" Click="OpenProject_Click" />
-            </WinUI:MenuBarItem>
-            <WinUI:MenuBarItem Title="Project">
-                <MenuFlyoutItem Text="Edit Project Settings" Click="EditProject_Click" />
-            </WinUI:MenuBarItem>
-            <WinUI:MenuBarItem Title="World">
-                <MenuFlyoutItem Text="Edit World Settings" Click="EditWorld_Click" />
-            </WinUI:MenuBarItem>
-            <WinUI:MenuBarItem Title="AI">
-                <MenuFlyoutSubItem Text="Senses">
-                    <MenuFlyoutItem Text="New" Click="NewAiSense_Click" />
-                    <MenuFlyoutItem Text="Edit" Click="EditAiSense_Click" />
-                </MenuFlyoutSubItem>
-                <MenuFlyoutSubItem Text="Behavior Trees">
-                    <MenuFlyoutItem Text="New" Click="NewAiBehaviorTree_Click" />
-                    <MenuFlyoutItem Text="Edit" Click="EditAiBehaviorTree_Click" />
-                </MenuFlyoutSubItem>
-            </WinUI:MenuBarItem>
-        </WinUI:MenuBar>
+        <Button Content="New Project" VerticalAlignment="Top" FontSize="{StaticResource Text.Menu.MenuBar}" Click="NewProject_Click"/>
+
     </Grid>
 </Page>
