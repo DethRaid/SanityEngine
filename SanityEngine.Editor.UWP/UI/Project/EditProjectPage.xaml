@@ -1,0 +1,19 @@
+﻿<Page
+    x:Class="SanityEngineEditor.UI.Project.EditProjectPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SanityEngineEditor.UI.Project"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <x:Double x:Key="Text.Headering.PageTitle">48</x:Double>
+    </Page.Resources>
+
+    <Grid>
+        <TextBox HorizontalAlignment="Left" Text="New Project" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="{StaticResource Text.Headering.PageTitle}"/>
+        <TextBlock HorizontalAlignment="Left" Margin="154,442,0,0" Text="TextBlock" TextWrapping="Wrap" VerticalAlignment="Top"/>
+
+    </Grid>
+</Page>

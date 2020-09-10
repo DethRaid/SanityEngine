@@ -4,7 +4,8 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
+  xmlns:uap4="http://schemas.microsoft.com/appx/manifest/uap/windows10/4"
+  IgnorableNamespaces="uap mp uap4">
 
   <Identity
     Name="9fef7818-82c2-4e49-b2c5-0958d6b17f76"
@@ -14,8 +15,8 @@
   <mp:PhoneIdentity PhoneProductId="9fef7818-82c2-4e49-b2c5-0958d6b17f76" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>SanityEngineEditor</DisplayName>
-    <PublisherDisplayName>gold1</PublisherDisplayName>
+    <DisplayName>Sanity.Editor</DisplayName>
+    <PublisherDisplayName>Jotun Studios</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -30,20 +31,26 @@
   <Applications>
     <Application Id="App"
       Executable="$targetnametoken$.exe"
-      EntryPoint="SanityEngineEditor.App">
+      EntryPoint="Sanity.Editor.App">
       <uap:VisualElements
-        DisplayName="SanityEngineEditor"
+        DisplayName="Sanity Editor"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="SanityEngineEditor"
+        Description="World editor for games made with the Sanity Engine"
         BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png">
+        </uap:DefaultTile >
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape"/></uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>
 
   <Capabilities>
     <Capability Name="internetClient" />
+    <Capability Name="codeGeneration"/>
+    <uap:Capability Name="objects3D"/>
+    <uap4:Capability Name="userDataTasks"/>
   </Capabilities>
 </Package>
