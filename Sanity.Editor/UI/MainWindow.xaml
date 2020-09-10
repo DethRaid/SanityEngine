@@ -7,9 +7,11 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Menu>
-            
+        <Menu x:Name="MainMenuBar" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <MenuItem FontSize="14" Header="Project"></MenuItem>
+            <MenuItem FontSize="14" Header="World"></MenuItem>
+            <MenuItem FontSize="14" Header="Environment"></MenuItem>
+            <MenuItem FontSize="14" Header="AI"></MenuItem>
         </Menu>
-
     </Grid>
 </Window>

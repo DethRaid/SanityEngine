@@ -2,8 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Sanity.Editor"
-             StartupUri="UI/MainWindow.xaml">
+             StartupUri="UI/MainWindow.xaml"
+    xmlns:System="clr-namespace:System;assembly=System.Runtime">
     <Application.Resources>
-         
+        <System:Double x:Key="Size.Text.Menu.ManuBar">48</System:Double>
+        <DynamicResource x:Key="Size.Text.Menu.MenuBar" ResourceKey="Size.Text.Menu.ManuBar"/>
     </Application.Resources>
 </Application>
