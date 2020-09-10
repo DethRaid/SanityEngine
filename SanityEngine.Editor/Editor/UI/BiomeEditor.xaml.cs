@@ -16,11 +16,11 @@ using Windows.UI.Xaml.Navigation;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace SanityEngineEditor
+namespace Sanity.Editor.UI
 {
-    public sealed partial class WorldPreview : UserControl
+    public sealed partial class BiomeEditor : UserControl
     {
-        public WorldPreview()
+        public BiomeEditor()
         {
             this.InitializeComponent();
         }

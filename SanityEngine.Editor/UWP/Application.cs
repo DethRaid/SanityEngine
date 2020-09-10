@@ -13,7 +13,7 @@ namespace Sanity.Editor
     {
         private static string projectName;
 
-        private SanityEditor? editor = null;
+        private SanityEditor editor;
 
         private bool windowClosed = false;
         private bool windowVisible = false;

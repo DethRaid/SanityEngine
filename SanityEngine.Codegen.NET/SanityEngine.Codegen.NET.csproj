@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <StartupObject>SanityEngine.Codegen.NET.CodegenProgram</StartupObject>
     <RootNamespace>Sanity.Codegen</RootNamespace>
   </PropertyGroup>
