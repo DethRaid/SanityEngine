@@ -122,6 +122,13 @@ namespace Sanity.Editor.UI.Project
                 isValid = false;
             }
 
+            var trimmedProjectAuthor = ProjectAuthorTextBox.Text.Trim();
+            if(trimmedProjectAuthor.Length == 0)
+            {
+                ProjectAuthorErrorMessage.Text = "Project author field is empty";
+                isValid = false;
+            }
+
             if(!isProjectFolderSelected)
             {
                 ProjectDirectoryErrorMessage.Text = "Must select a project directory";
@@ -150,7 +157,7 @@ namespace Sanity.Editor.UI.Project
 
             if(isValid)
             {
-                Info = new ProjectInfo { Name = projectName, Directory = projectDirectory, CreationTime = DateTime.Now };
+                Info = new ProjectInfo { Name = projectName, Directory = projectDirectory, Author = trimmedProjectAuthor, CreationTime = DateTime.Now };
 
                 // Close ourself
                 Close();

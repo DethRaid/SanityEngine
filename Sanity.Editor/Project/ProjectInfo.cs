@@ -1,33 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Sanity.Editor.Project
 {
-    public struct ProjectInfo
+    public record ProjectInfo(string Name, string Directory, string Author, DateTime CreationTime)
     {
-        public string Name
+        public static string ContentDirectory
         {
-            get; set;
+            get => "Content";
         }
 
-        [JsonIgnore]
-        public string Directory
+        public static string SourceDirectory
         {
-            get; set;
+            get => "Source";
         }
 
-        public string Author
+        public static string BuildDirectory
         {
-            get; set;
+            get => "Build";
         }
 
-        public DateTime CreationTime
+        public static string CacheDirectory
         {
-            get; set;
+            get => "Cache";
+        }
+
+        public static string UserDataDrectory
+        {
+            get => "User";
         }
     }
 }

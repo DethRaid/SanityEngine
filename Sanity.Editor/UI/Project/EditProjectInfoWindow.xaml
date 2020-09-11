@@ -8,13 +8,20 @@
         Title="EditProjectInfoWindow" Height="450" Width="800">
     <Grid>
         <TextBlock Name="PageTitle" HorizontalAlignment="Left" Margin="10,10,0,0" Text="Edit Project" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="{DynamicResource Size.Text.Heading.PageTitle}"/>
+        
         <TextBlock HorizontalAlignment="Left" Margin="10,58,0,0" Text="Project Name:" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <TextBox Name="ProjectNameTextBox" HorizontalAlignment="Left" Margin="89,58,0,0" Text="..." TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameTextBox_TextChanged"/>
-        <TextBlock Name="ProjectDirectoryLabel" HorizontalAlignment="Left" Margin="10,81,0,0" Text="Choose project directory..." TextWrapping="Wrap" VerticalAlignment="Top"/>
-        <Button Content="Select directory" HorizontalAlignment="Left" Margin="420,79,0,0" VerticalAlignment="Top" Click="ProjectSelectDirectory_Click"/>
         <TextBlock Name="ProjectNameErrorMessage" HorizontalAlignment="Left" Margin="523,102,0,0" Text="Project name field is empty" TextWrapping="Wrap" VerticalAlignment="Top" Visibility="Hidden" Foreground="#FFE4546E"/>
-        <TextBlock x:Name="ProjectDirectoryErrorMessage" HorizontalAlignment="Left" Margin="523,134,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Visibility="Hidden" Foreground="#FFE4546E" Width="185" Height="18"><Run Text="Project directory is not valid"/><LineBreak/><Run/></TextBlock>
-        <Button Content="Button" Name="CloseWizardButton" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Click="CloseWizardButton_Click"/>
 
+
+        <TextBlock Name="ProjectDirectoryLabel" HorizontalAlignment="Left" Margin="11,105,0,0" Text="Choose project directory..." TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <Button Content="Select directory" HorizontalAlignment="Left" Margin="421,103,0,0" VerticalAlignment="Top" Click="ProjectSelectDirectory_Click"/>
+        <TextBlock x:Name="ProjectDirectoryErrorMessage" HorizontalAlignment="Left" Margin="523,134,0,0" Text="Project directory is not valid" TextWrapping="Wrap" VerticalAlignment="Top" Visibility="Hidden" Foreground="#FFE4546E" Width="185" Height="18"/>
+
+        <TextBlock HorizontalAlignment="Left" Margin="11,81,0,0" Text="Author:" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <TextBox x:Name="ProjectAuthorTextBox" HorizontalAlignment="Left" Margin="89,81,0,0" Text="..." TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameTextBox_TextChanged"/>
+        <TextBlock x:Name="ProjectAuthorErrorMessage" HorizontalAlignment="Left" Margin="523,134,0,0" Text="Project author is not valid" TextWrapping="Wrap" VerticalAlignment="Top" Visibility="Hidden" Foreground="#FFE4546E" Width="185" Height="18"/>
+
+        <Button Content="Button" Name="CloseWizardButton" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Click="CloseWizardButton_Click"/>
     </Grid>
 </Window>
