@@ -7,15 +7,27 @@ using System.Threading.Tasks;
 
 namespace Sanity.Editor.Project
 {
-    public class ProjectInfo
+    public struct ProjectInfo
     {
-        public string Name;
+        public string Name
+        {
+            get; set;
+        }
 
         [JsonIgnore]
-        public string Directory;
+        public string Directory
+        {
+            get; set;
+        }
 
-        public string Author;
+        public string Author
+        {
+            get; set;
+        }
 
-        public DateTime CreationTime;
+        public DateTime CreationTime
+        {
+            get; set;
+        }
     }
 }

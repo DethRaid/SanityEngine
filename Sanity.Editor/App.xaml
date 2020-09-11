@@ -5,7 +5,7 @@
              StartupUri="UI/MainWindow.xaml"
     xmlns:System="clr-namespace:System;assembly=System.Runtime">
     <Application.Resources>
-        <System:Double x:Key="Size.Text.Menu.MenuBar">48</System:Double>
-        <System:Double x:Key="Size.Text.Heading.PageTitle">48</System:Double>
+        <System:Double x:Key="Size.Text.Menu.MenuBar">24</System:Double>
+        <System:Double x:Key="Size.Text.Heading.PageTitle">32</System:Double>
     </Application.Resources>
 </Application>

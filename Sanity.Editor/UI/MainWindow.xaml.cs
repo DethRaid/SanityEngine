@@ -38,6 +38,10 @@ namespace Sanity.Editor.UI
                 if(result != null && result == true)
                 {
                     // Create a project from the information in the window
+                    var app = Application.Current as App;
+                    app.Editor.CreateProject(projectDialog.Info);
+
+                    // app.Editor.OpenProject(projectDialog.Info);
                 }
             } 
         }

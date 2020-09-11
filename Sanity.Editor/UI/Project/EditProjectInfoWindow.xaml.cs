@@ -38,7 +38,7 @@ namespace Sanity.Editor.UI.Project
     /// </summary>
     public partial class EditProjectInfoWindow : Window
     {
-        public ProjectInfo Data
+        public ProjectInfo Info
         {
             get; private set;
         }
@@ -60,9 +60,11 @@ namespace Sanity.Editor.UI.Project
             {
                 case EditProjectInfoWindowMode.CreateNewProject:
                     PageTitle.Text = "Create Project";
+                    CloseWizardButton.Content = "Create";
                     break;
                 case EditProjectInfoWindowMode.EditExistingProject:
                     PageTitle.Text = "Edit Project";
+                    CloseWizardButton.Content = "Save";
                     break;
             }
         }
@@ -120,6 +122,13 @@ namespace Sanity.Editor.UI.Project
                 isValid = false;
             }
 
+            if(!isProjectFolderSelected)
+            {
+                ProjectDirectoryErrorMessage.Text = "Must select a project directory";
+                ProjectDirectoryErrorMessage.Visibility = Visibility.Visible;
+                isValid = false;
+            }
+
             var trimmedParentDirectory = projectParentDirectory.Trim();
             var projectDirectory = string.Format("{0}\\{1}", trimmedParentDirectory, trimmedName);
             if(projectDirectory.Length == 0)
@@ -137,9 +146,11 @@ namespace Sanity.Editor.UI.Project
                 isValid = false;
             }
 
+            DialogResult = isValid;
+
             if(isValid)
             {
-                Data = new ProjectInfo { Name = projectName, Directory = projectDirectory };
+                Info = new ProjectInfo { Name = projectName, Directory = projectDirectory, CreationTime = DateTime.Now };
 
                 // Close ourself
                 Close();
