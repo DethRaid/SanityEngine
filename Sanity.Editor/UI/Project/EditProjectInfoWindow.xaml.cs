@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Printing;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,24 +14,57 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+using Microsoft.VisualBasic.CompilerServices;
+
 using Ookii.Dialogs.Wpf;
+
+using Sanity.Editor.Project;
 
 namespace Sanity.Editor.UI.Project
 {
+    public enum EditProjectInfoWindowMode
+    {
+        CreateNewProject,
+        EditExistingProject,
+    }
+
+    public struct EditProjectInfoWindowParams
+    {
+        public EditProjectInfoWindowMode mode;
+    }
+
     /// <summary>
     /// Interaction logic for EditProjectInfoWindow.xaml
     /// </summary>
     public partial class EditProjectInfoWindow : Window
     {
+        public ProjectInfo Data
+        {
+            get; private set;
+        }
+
+        private readonly EditProjectInfoWindowMode mode;
+
         private bool isProjectFolderSelected = false;
 
         private string projectName = "NewProject";
 
         private string projectParentDirectory = "";
 
-        public EditProjectInfoWindow()
+        public EditProjectInfoWindow(EditProjectInfoWindowParams parameters)
         {
             InitializeComponent();
+
+            mode = parameters.mode;
+            switch(mode)
+            {
+                case EditProjectInfoWindowMode.CreateNewProject:
+                    PageTitle.Text = "Create Project";
+                    break;
+                case EditProjectInfoWindowMode.EditExistingProject:
+                    PageTitle.Text = "Edit Project";
+                    break;
+            }
         }
 
         /// <summary>
@@ -72,6 +106,43 @@ namespace Sanity.Editor.UI.Project
             {
                 projectName = ProjectNameTextBox.Text;
                 UpdateProjectDirectoryLabel();
+            }
+        }
+
+        private void CloseWizardButton_Click(object sender, RoutedEventArgs e)
+        {
+            var isValid = true;
+            // Validate the data
+            var trimmedName = projectName.Trim();
+            if(trimmedName.Length == 0)
+            {
+                ProjectNameErrorMessage.Visibility = Visibility.Visible;
+                isValid = false;
+            }
+
+            var trimmedParentDirectory = projectParentDirectory.Trim();
+            var projectDirectory = string.Format("{0}\\{1}", trimmedParentDirectory, trimmedName);
+            if(projectDirectory.Length == 0)
+            {
+                ProjectDirectoryErrorMessage.Text = "Project directory field is empty";
+                ProjectDirectoryErrorMessage.Visibility = Visibility.Visible;
+                isValid = false;
+            }
+
+            // Check if the project directory already exists
+            if(Directory.Exists(projectDirectory))
+            {
+                ProjectDirectoryErrorMessage.Text = "Project directory already exists";
+                ProjectDirectoryErrorMessage.Visibility = Visibility.Visible;
+                isValid = false;
+            }
+
+            if(isValid)
+            {
+                Data = new ProjectInfo { Name = projectName, Directory = projectDirectory };
+
+                // Close ourself
+                Close();
             }
         }
     }

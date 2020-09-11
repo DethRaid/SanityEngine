@@ -18,22 +18,11 @@ namespace Sanity.Editor.UI
     /// <summary>
     /// Interaction logic for MainPage.xaml
     /// </summary>
-    public partial class MainPage : Page
+    public partial class EnvironmentEditor : Page
     {
-        public MainPage()
+        public EnvironmentEditor()
         {
             InitializeComponent();
-        }
-
-
-        private void NewProject_Click(object sender, RoutedEventArgs e)
-        {
-            // Create a new project and partayyyyyy
-            if(IsInitialized)
-            {
-                var newProjectPage = new EditProjectPage();
-                NavigationService.Navigate(newProjectPage);
-            }
         }
     }
 }

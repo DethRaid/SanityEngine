@@ -33,8 +33,12 @@ namespace Sanity.Editor.UI
             if(IsInitialized)
             {
                 // Open the new project wizard
-                var projectDialog = new EditProjectInfoWindow();
+                var projectDialog = new EditProjectInfoWindow(new EditProjectInfoWindowParams { mode = EditProjectInfoWindowMode.CreateNewProject });
                 var result = projectDialog.ShowDialog();
+                if(result != null && result == true)
+                {
+                    // Create a project from the information in the window
+                }
             } 
         }
     }

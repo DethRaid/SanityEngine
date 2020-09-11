@@ -17,5 +17,7 @@
             <MenuItem Header="Environment"></MenuItem>
             <MenuItem Header="AI"></MenuItem>
         </Menu>
+        <Frame Name="PageFrame" Content="Frame" Margin="0,23,0,0" Source="/UI/EnvironmentEditor.xaml"/>
+
     </Grid>
 </Window>
