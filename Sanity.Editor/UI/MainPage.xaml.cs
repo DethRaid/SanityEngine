@@ -13,29 +13,27 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using Sanity.Editor.UI;
-using Sanity.Editor.UI.Project;
-
 namespace Sanity.Editor.UI
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for MainPage.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainPage : Page
     {
-        public MainWindow()
+        public MainPage()
         {
             InitializeComponent();
         }
 
+
         private void NewProject_Click(object sender, RoutedEventArgs e)
         {
+            // Create a new project and partayyyyyy
             if(IsInitialized)
             {
-                // Open the new project wizard
-                var projectDialog = new EditProjectInfoWindow();
-                var result = projectDialog.ShowDialog();
-            } 
+                var newProjectPage = new EditProjectPage();
+                NavigationService.Navigate(newProjectPage);
+            }
         }
     }
 }

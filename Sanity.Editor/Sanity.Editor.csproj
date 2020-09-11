@@ -12,10 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.UI.Xaml" Version="2.5.0-prerelease.200812001" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="UI\" />
+    <PackageReference Include="Ookii.Dialogs.Wpf" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

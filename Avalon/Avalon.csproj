@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SanityEngine.NET\SanityEngine.NET.csproj" />
+    <ProjectReference Include="..\SanityEngine.NET\Sanity.Engine.NET.csproj" />
   </ItemGroup>
 
 </Project>

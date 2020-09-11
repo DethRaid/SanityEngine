@@ -24,6 +24,7 @@
     <ProjectGuid>{5e09e58a-49ef-4ec5-92bc-48006b6a8878}</ProjectGuid>
     <RootNamespace>SanityEngineCodegen</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Sanity.Codegen</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

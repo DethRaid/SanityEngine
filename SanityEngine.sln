@@ -2,13 +2,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30420.98
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SanityEngine", "SanityEngine\SanityEngine.vcxproj", "{A6D26A06-5F0C-3136-9293-218915CC95C4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sanity.Engine", "SanityEngine\SanityEngine.vcxproj", "{A6D26A06-5F0C-3136-9293-218915CC95C4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SanityEngine.NET", "SanityEngine.NET\SanityEngine.NET.csproj", "{0B0A27AC-DEB4-4D8A-A6C3-03C84279B764}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sanity.Engine.NET", "SanityEngine.NET\Sanity.Engine.NET.csproj", "{0B0A27AC-DEB4-4D8A-A6C3-03C84279B764}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SanityEngine.Codegen", "SanityEngine.Codegen\SanityEngine.Codegen.vcxproj", "{5E09E58A-49EF-4EC5-92BC-48006B6A8878}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sanity.Codegen", "SanityEngine.Codegen\SanityEngine.Codegen.vcxproj", "{5E09E58A-49EF-4EC5-92BC-48006B6A8878}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SanityEngine.Codegen.NET", "SanityEngine.Codegen.NET\SanityEngine.Codegen.NET.csproj", "{79E9DFCA-07EB-4C4A-B623-E8B64D45E20A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sanity.Codegen.NET", "SanityEngine.Codegen.NET\Sanity.Codegen.NET.csproj", "{79E9DFCA-07EB-4C4A-B623-E8B64D45E20A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avalon", "Avalon\Avalon.csproj", "{C9B5AF2D-C715-414F-AB20-BBD2D8F5FA7D}"
 EndProject
