@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <Authors>DethRaid</Authors>
     <Company>Jorun Studios</Company>
     <Description>World editor for Sanity Engine games</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,6 +34,10 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SanityEngine.NET\Sanity.Engine.NET.csproj" />
   </ItemGroup>
 
 </Project>

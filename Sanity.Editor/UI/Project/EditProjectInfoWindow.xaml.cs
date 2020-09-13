@@ -157,7 +157,7 @@ namespace Sanity.Editor.UI.Project
 
             if(isValid)
             {
-                Info = new ProjectInfo { Name = projectName, Directory = projectDirectory, Author = trimmedProjectAuthor, CreationTime = DateTime.Now };
+                Info = new ProjectInfo(projectName, projectDirectory, trimmedProjectAuthor, DateTime.Now);
 
                 // Close ourself
                 Close();

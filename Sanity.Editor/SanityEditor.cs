@@ -6,40 +6,55 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using Sanity;
+
+using NLog;
+
 using Sanity.Editor.Project;
 
 namespace Sanity.Editor
 {
     public class SanityEditor
     {
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
-        public void CreateProject(ProjectInfo info)
+        private ProjectInfo curProjectInfo;
+
+        public SanityEngine Engine
         {
-            Directory.CreateDirectory(info.Directory);
+            get; init;
+        } = new();
 
-            var projectInfoFileName = string.Format("{0}\\{1}.sanityproject", info.Directory, info.Name);
+        public void CreateProject(ProjectInfo projectInto)
+        {
+            Directory.CreateDirectory(projectInto.Directory);
 
-            var projectInfoJson = JsonSerializer.Serialize(info);
+            var projectInfoFileName = string.Format("{0}\\{1}.sanityproject", projectInto.Directory, projectInto.Name);
+
+            var projectInfoJson = JsonSerializer.Serialize(projectInto);
             File.WriteAllText(projectInfoFileName, projectInfoJson);
 
-            var contentDirectory = string.Format("{0}\\{1}", info.Directory, ProjectInfo.ContentDirectory);
+            var contentDirectory = string.Format("{0}\\{1}", projectInto.Directory, ProjectInfo.ContentDirectory);
             Directory.CreateDirectory(contentDirectory);
 
-            var sourceDirectory = string.Format("{0}\\{1}", info.Directory, ProjectInfo.SourceDirectory);
+            var sourceDirectory = string.Format("{0}\\{1}", projectInto.Directory, ProjectInfo.SourceDirectory);
             Directory.CreateDirectory(sourceDirectory);
 
-            var buildDirectory = string.Format("{0}\\{1}", info.Directory, ProjectInfo.BuildDirectory);
+            var buildDirectory = string.Format("{0}\\{1}", projectInto.Directory, ProjectInfo.BuildDirectory);
             Directory.CreateDirectory(buildDirectory);
 
-            var cacheDirectory = string.Format("{0}\\{1}", info.Directory, ProjectInfo.CacheDirectory);
+            var cacheDirectory = string.Format("{0}\\{1}", projectInto.Directory, ProjectInfo.CacheDirectory);
             Directory.CreateDirectory(cacheDirectory);
 
-            var userDataDirectory = string.Format("{0}\\{1}", info.Directory, ProjectInfo.UserDataDrectory);
+            var userDataDirectory = string.Format("{0}\\{1}", projectInto.Directory, ProjectInfo.UserDataDrectory);
             Directory.CreateDirectory(userDataDirectory);
 
-
+            log.Info("Created project {0}", projectInto.Name);
         }
 
-        public void OpenProject(ProjectInfo info) => throw new NotImplementedException();
+        public void OpenProject(ProjectInfo projectInfo)
+        {
+            curProjectInfo = projectInfo;
+        }
     }
 }

@@ -28,5 +28,10 @@ namespace Sanity.Editor.Project
         {
             get => "User";
         }
+
+        public ProjectInfo MakeDefault()
+        {
+            return new ProjectInfo("NewProject", "NewProject", "The Void", DateTime.Now );
+        }
     }
 }
