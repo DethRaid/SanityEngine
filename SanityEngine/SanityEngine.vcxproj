@@ -676,6 +676,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DensityMapEditorUI.ixx" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
@@ -757,6 +758,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\tracy\imgui\imgui_draw.cpp" />
     <ClCompile Include="extern\tracy\imgui\imgui_widgets.cpp" />
     <ClCompile Include="extern\tracy\TracyClient.cpp" />
+    <ClCompile Include="NodeEditorUi.ixx" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />

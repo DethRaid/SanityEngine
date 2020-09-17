@@ -1338,6 +1338,12 @@
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp">
       <Filter>extern\imgui-node-editor</Filter>
     </ClCompile>
+    <ClCompile Include="DensityMapEditorUI.ixx">
+      <Filter>private\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="NodeEditorUi.ixx">
+      <Filter>private\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
