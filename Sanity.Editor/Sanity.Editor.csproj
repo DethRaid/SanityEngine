@@ -40,4 +40,8 @@
     <ProjectReference Include="..\SanityEngine.NET\Sanity.Engine.NET.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Validation\" />
+  </ItemGroup>
+
 </Project>

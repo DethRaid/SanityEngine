@@ -26,6 +26,11 @@ namespace Sanity {
         [method_name("GetInstance")] SanityEngine();
 
         /*!
+         * \brief Sets the directory that SanityEngine will load content from
+         */
+        void SetContentDirectory(String directory);
+
+        /*!
          * \brief Tells SanityEngine to render to a specific swap chain panel
          *
          * This method breaks the connection to whatever swapchain panel SanityEngine is currently rendering to. It is

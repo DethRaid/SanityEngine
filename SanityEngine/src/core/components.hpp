@@ -1,12 +1,11 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "glm/ext/quaternion_float.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include "glm/ext/quaternion_float.hpp"
 #include "rx/core/map.h"
 #include "rx/core/string.h"
-#include "serialization/serialization.hpp"
 
 // The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
 
@@ -70,5 +69,3 @@ struct SanityEngineEntity {
 
     void remove_tag(const Rx::String& tag, bool remove_all_stacks = false);
 };
-
-JSON5_CLASS(TransformComponent, location, rotation, scale)

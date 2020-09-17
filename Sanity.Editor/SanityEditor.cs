@@ -11,6 +11,8 @@ using Sanity;
 using NLog;
 
 using Sanity.Editor.Project;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Sanity.Editor
 {
@@ -24,6 +26,12 @@ namespace Sanity.Editor
         {
             get; init;
         } = new();
+
+        public string contentDirectory
+        {
+            get;
+            private set;
+        }
 
         public void CreateProject(ProjectInfo projectInto)
         {
@@ -55,6 +63,17 @@ namespace Sanity.Editor
         public void OpenProject(ProjectInfo projectInfo)
         {
             curProjectInfo = projectInfo;
+            SetProjectDirectory(projectInfo.Directory);
+
+            // TODO: Validate caches, compile shaders, munge textures, etc
+        }
+
+        private void SetProjectDirectory(string directory)
+        {
+            contentDirectory = string.Format("{0}\\{1}", directory, ProjectInfo.ContentDirectory);
+            Engine.SetContentDirectory(contentDirectory);
+
+            // TODO: Set other directories as needed
         }
     }
 }

@@ -369,7 +369,7 @@ inline error parser::parse_number( double &result )
 //---------------------------------------------------------------------------------------------------------------------
 inline error parser::parse_string( detail::string_offset &result )
 {
-	static constexpr char *hexChars = "0123456789abcdefABCDEF";
+	static constexpr const char *hexChars = "0123456789abcdefABCDEF";
 
 	bool singleQuoted = peek() == '\'';
 	next(); // Consume '\'' or '"'

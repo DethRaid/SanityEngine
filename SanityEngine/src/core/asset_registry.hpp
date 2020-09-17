@@ -6,7 +6,6 @@
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
 #include "rx/core/string.h"
-#include "serialization/serialization.hpp"
 #include "types.hpp"
 
 namespace std {
@@ -15,13 +14,6 @@ namespace std {
         class path;
     } // namespace filesystem
 } // namespace std
-
-struct AssetMetadataFile {
-    int version{1};
-    GUID guid;
-};
-
-JSON5_CLASS(AssetMetadataFile, version, guid)
 
 constexpr int METADATA_CURRENT_VERSION = 1;
 
@@ -48,25 +40,4 @@ private:
     Rx::Filesystem::Directory content_directory;
 
     Rx::Map<GUID, Rx::String> guid_to_file_path;
-
-    /*!
-     * \brief Registers all the assets in the provided directory with the asset registry
-     *
-     * If the assets doesn't have a .meta file, this method generates one
-     *
-     * \param directory_to_scan The directory to look in for assets
-     */
-    void register_assets_in_directory(Rx::Filesystem::Directory& directory_to_scan);
-
-    /*!
-     * \brief Registers the asset described by the provided meta file
-     */
-    void register_asset_from_meta_data(const AssetMetadataFile& meta_data);
-
-    /*!
-     * \brief Generates the meta file for the asset at the provided path, overwriting any existing meta file
-     *
-     * This method does not register the asset with the asset registry
-     */
-    void generate_meta_file_for_asset(const Rx::Filesystem::Directory& asset_path);
 };

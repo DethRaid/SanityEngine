@@ -107,7 +107,10 @@ namespace Sanity.Editor.UI.Project
             if(IsInitialized)
             {
                 projectName = ProjectNameTextBox.Text;
-                UpdateProjectDirectoryLabel();
+                if(isProjectFolderSelected)
+                {
+                    UpdateProjectDirectoryLabel();
+                }
             }
         }
 

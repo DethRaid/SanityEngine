@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Sanity.Editor.UI
+namespace Sanity.Editor.UI.Environment
 {
     /// <summary>
-    /// Interaction logic for MainPage.xaml
+    /// Interaction logic for EnvironmentObjectsEditor.xaml
     /// </summary>
-    public partial class EnvironmentEditor : Page
+    public partial class EnvironmentObjectsEditor : UserControl
     {
-        public EnvironmentEditor()
+        public EnvironmentObjectsEditor()
         {
             InitializeComponent();
         }
