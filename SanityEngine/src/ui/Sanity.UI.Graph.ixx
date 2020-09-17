@@ -1,17 +1,21 @@
-export module NodeEditorUi;
+module;
 
 #include "imgui_node_editor.h"
 
-namespace sanity::ui {
+export module Sanity.UI.Graph;
+
+namespace Sanity::UI::Graph {
     /// <summary>
     /// Base class for nodes in a node editor GUI
     /// </summary>
     export class Node;
 } // namespace sanity::ui
 
+module :private;
+
 namespace ed = ax::NodeEditor;
 
-namespace sanity::ui {
+namespace Sanity::UI::Graph {
     class Node {
     public:
         void Draw();

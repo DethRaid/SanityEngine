@@ -411,6 +411,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
     <None Include="packages.config" />
+    <ClCompile Include="Sanity.UI.Graph.Environment.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
@@ -676,7 +679,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DensityMapEditorUI.ixx" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
@@ -758,7 +760,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\tracy\imgui\imgui_draw.cpp" />
     <ClCompile Include="extern\tracy\imgui\imgui_widgets.cpp" />
     <ClCompile Include="extern\tracy\TracyClient.cpp" />
-    <ClCompile Include="NodeEditorUi.ixx" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\bve\bve_wrapper.cpp" />
@@ -796,10 +797,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />
+    <ClCompile Include="src\ui\Sanity.UI.Graph.ixx" />
     <ClCompile Include="src\ui\scripted_ui_panel.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
+    <ClCompile Include="src\world\environment\Sanity.Environment.ixx" />
     <ClCompile Include="src\world\environment\DensityMapPipeline.cpp" />
     <ClCompile Include="src\world\environment\environment_object.cpp" />
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />

@@ -1338,10 +1338,13 @@
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp">
       <Filter>extern\imgui-node-editor</Filter>
     </ClCompile>
-    <ClCompile Include="DensityMapEditorUI.ixx">
+    <ClCompile Include="src\ui\Sanity.UI.Graph.ixx">
       <Filter>private\ui</Filter>
     </ClCompile>
-    <ClCompile Include="NodeEditorUi.ixx">
+    <ClCompile Include="src\world\environment\Sanity.Environment.ixx">
+      <Filter>private\world\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Sanity.UI.Graph.Environment.ixx">
       <Filter>private\ui</Filter>
     </ClCompile>
   </ItemGroup>
