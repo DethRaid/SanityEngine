@@ -40,9 +40,6 @@
     <Filter Include="private\resources">
       <UniqueIdentifier>{8af9d47c-f508-42a2-9ae4-7b1294b70109}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\serialization">
-      <UniqueIdentifier>{59b2431d-dd6a-44ec-8cc6-b1080b480a38}</UniqueIdentifier>
-    </Filter>
     <Filter Include="private\windows">
       <UniqueIdentifier>{030167c5-acce-4e05-a490-458149b2b6de}</UniqueIdentifier>
     </Filter>
@@ -157,6 +154,9 @@
     <Filter Include="extern\rex\math\noise">
       <UniqueIdentifier>{aec61f3a-092b-4d9c-bf92-63f281b86112}</UniqueIdentifier>
     </Filter>
+    <Filter Include="extern\imgui-node-editor">
+      <UniqueIdentifier>{fa40cf9a-ba95-435f-85f5-4be39a3cb224}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="public\Sanity\SanityEngine.idl">
@@ -165,6 +165,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="extern\imgui-node-editor\imgui_bezier_math.inl">
+      <Filter>extern\imgui-node-editor</Filter>
+    </None>
+    <None Include="extern\imgui-node-editor\imgui_extra_math.inl">
+      <Filter>extern\imgui-node-editor</Filter>
+    </None>
+    <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl">
+      <Filter>extern\imgui-node-editor</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\adapters\tracy.hpp">
@@ -244,9 +253,6 @@
     </ClInclude>
     <ClInclude Include="src\windows\windows_helpers.hpp">
       <Filter>private\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="src\serialization\serialization.hpp">
-      <Filter>private\serialization</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\camera_matrix_buffer.hpp">
       <Filter>private\renderer</Filter>
@@ -932,6 +938,25 @@
     <ClInclude Include="extern\rex\include\rx\math\noise\perlin.h">
       <Filter>extern\rex\math\noise</Filter>
     </ClInclude>
+    <ClInclude Include="src\world\environment\DensityMapPipeline.hpp" />
+    <ClInclude Include="extern\imgui-node-editor\crude_json.h">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui-node-editor\imgui_bezier_math.h">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui-node-editor\imgui_canvas.h">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui-node-editor\imgui_extra_math.h">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui-node-editor\imgui_node_editor.h">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1300,10 +1325,28 @@
     <ClCompile Include="extern\rex\include\rx\math\noise\perlin.cpp">
       <Filter>extern\rex\math\noise</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\environment\DensityMapPipeline.cpp" />
+    <ClCompile Include="extern\imgui-node-editor\crude_json.cpp">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui-node-editor\imgui_node_editor.cpp">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp">
+      <Filter>extern\imgui-node-editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
       <Filter>extern\DearImGUI</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis">
+      <Filter>extern\imgui-node-editor</Filter>
+    </Natvis>
   </ItemGroup>
 </Project>

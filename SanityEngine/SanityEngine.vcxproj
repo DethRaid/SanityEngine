@@ -85,7 +85,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <MultiProcMIDL>false</MultiProcMIDL>
-    <IncludePath>$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\pix\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,6 +119,8 @@
       <OpenMPSupport>false</OpenMPSupport>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <DisableSpecificWarnings>4291;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -405,10 +407,19 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <Midl Include="public\Sanity\SanityEngine.idl" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
+    <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
+    <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
+    <ClInclude Include="extern\imgui-node-editor\crude_json.h" />
+    <ClInclude Include="extern\imgui-node-editor\imgui_bezier_math.h" />
+    <ClInclude Include="extern\imgui-node-editor\imgui_canvas.h" />
+    <ClInclude Include="extern\imgui-node-editor\imgui_extra_math.h" />
+    <ClInclude Include="extern\imgui-node-editor\imgui_node_editor.h" />
+    <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h" />
     <ClInclude Include="extern\rex\include\rx\console\command.h" />
     <ClInclude Include="extern\rex\include\rx\console\interface.h" />
     <ClInclude Include="extern\rex\include\rx\console\parser.h" />
@@ -649,7 +660,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\rhi\resources.hpp" />
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
-    <ClInclude Include="src\serialization\serialization.hpp" />
     <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
@@ -659,6 +669,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
+    <ClInclude Include="src\world\environment\DensityMapPipeline.hpp" />
     <ClInclude Include="src\world\environment\environment_object.hpp" />
     <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
@@ -666,6 +677,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
+    <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
+    <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
+    <ClCompile Include="extern\imgui-node-editor\imgui_node_editor.cpp" />
+    <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\command.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\interface.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\parser.cpp" />
@@ -783,6 +798,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
+    <ClCompile Include="src\world\environment\DensityMapPipeline.cpp" />
     <ClCompile Include="src\world\environment\environment_object.cpp" />
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />
@@ -790,6 +806,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
