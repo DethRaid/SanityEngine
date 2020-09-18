@@ -85,8 +85,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <MultiProcMIDL>false</MultiProcMIDL>
-    <IncludePath>E:\Documents\SanityEngine\SanityEngine\extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\pix\lib;$(LibraryPath)</LibraryPath>
+    <PublicIncludeDirectories>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;</PublicIncludeDirectories>
+    <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -411,9 +413,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
     <None Include="packages.config" />
-    <ClCompile Include="Sanity.UI.Graph.Environment.ixx">
-      <FileType>Document</FileType>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
@@ -797,12 +796,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />
-    <ClCompile Include="src\ui\Sanity.UI.Graph.ixx" />
     <ClCompile Include="src\ui\scripted_ui_panel.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
-    <ClCompile Include="src\world\environment\Sanity.Environment.ixx" />
     <ClCompile Include="src\world\environment\DensityMapPipeline.cpp" />
     <ClCompile Include="src\world\environment\environment_object.cpp" />
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
