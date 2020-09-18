@@ -8,15 +8,7 @@ namespace Sanity::UI::Graph {
     /// <summary>
     /// Base class for nodes in a node editor GUI
     /// </summary>
-    export class Node;
-} // namespace sanity::ui
-
-module :private;
-
-namespace ed = ax::NodeEditor;
-
-namespace Sanity::UI::Graph {
-    class Node {
+    export class Node {
     public:
         void Draw();
 
@@ -26,6 +18,13 @@ namespace Sanity::UI::Graph {
     private:
         static int unique_id;
     };
+} // namespace Sanity::UI::Graph
+
+module :private;
+
+namespace ed = ax::NodeEditor;
+
+namespace Sanity::UI::Graph {
 
     int Node::unique_id = 1;
 
@@ -36,4 +35,4 @@ namespace Sanity::UI::Graph {
 
         ed::EndNode();
     }
-} // namespace sanity::ui
+} // namespace Sanity::UI::Graph

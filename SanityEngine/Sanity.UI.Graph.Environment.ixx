@@ -7,10 +7,6 @@ namespace Sanity::UI::Graph::Environment {
     /// <summary>
     /// This node reads a builtin environment texture
     /// </summary>
-    export class BuiltinEnvironmentTextureNode;
-} // namespace Sanity::UI::Graph::Environment
-
-namespace Sanity::UI::Graph::Environment {
     export class BuiltinEnvironmentTextureNode : public Node {
     public:
     protected:
@@ -19,6 +15,8 @@ namespace Sanity::UI::Graph::Environment {
     private:
         Sanity::Environment::BuiltinTextureType texture_type;
     };
+} // namespace Sanity::UI::Graph::Environment
 
+namespace Sanity::UI::Graph::Environment {
     void BuiltinEnvironmentTextureNode::DrawSelf() {}
 } // namespace Sanity::UI::Graph::Environment
