@@ -4,6 +4,7 @@
 
 #include <d3d12.h>
 #include <winrt/base.h>
+Apparently the WinRT base header only works in pre-C++20
 
 #include "core/types.hpp"
 #include "rx/core/string.h"
