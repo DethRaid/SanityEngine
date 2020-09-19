@@ -77,7 +77,7 @@ namespace renderer {
         commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     backbuffer_output_material_buffer->resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-        commands->SetPipelineState(backbuffer_output_pipeline->pso.get());
+        commands->SetPipelineState(backbuffer_output_pipeline->pso.Get());
         commands->DrawInstanced(3, 1, 0, 0);
 
         commands->EndRenderPass();

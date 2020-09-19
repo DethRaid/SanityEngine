@@ -93,8 +93,8 @@ namespace renderer {
         command_list->SetName(L"Main Render Command List");
 
         {
-            TracyD3D12Zone(RenderBackend::tracy_context, command_list.get(), "Renderer::render_all");
-            PIXScopedEvent(command_list.get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
+            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_all");
+            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
                 rebuild_raytracing_scene(command_list);
                 raytracing_scene_dirty = false;
@@ -114,11 +114,11 @@ namespace renderer {
             {
                 ZoneScopedN("Renderer::render_passes");
 
-                TracyD3D12Zone(RenderBackend::tracy_context, command_list.get(), "Renderer::render_passes");
-                PIXScopedEvent(command_list.get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+                TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
+                PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
                 render_passes.each_fwd(
-                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.get(), *registry, frame_idx, world); });
+                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.Get(), *registry, frame_idx, world); });
             }
         }
 
@@ -150,19 +150,19 @@ namespace renderer {
 
     TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
                                          const void* image_data,
-                                         const com_ptr<ID3D12GraphicsCommandList4>& commands) {
+                                         const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         ZoneScoped;
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
-        TracyD3D12Zone(RenderBackend::tracy_context, commands.get(), scope_name.data());
-        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, scope_name.data());
+        TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), scope_name.data());
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, scope_name.data());
 
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
         if(create_info.usage == ImageUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
-            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.get(),
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
                                                                                  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                  D3D12_RESOURCE_STATE_COPY_DEST)};
 
@@ -179,7 +179,7 @@ namespace renderer {
             .SlicePitch = create_info.width * create_info.height * 4,
         };
 
-        const auto result = UpdateSubresources(commands.get(), image.resource.get(), staging_buffer.resource.get(), 0, 0, 1, &subresource);
+        const auto result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0) {
             logger->error("Could not upload texture data");
 
@@ -187,7 +187,7 @@ namespace renderer {
         } else {
             if(create_info.usage == ImageUsage::UnorderedAccess) {
                 // Transition the image back to UNORDERED_ACCESS
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.get(),
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
                                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
 
@@ -360,8 +360,8 @@ namespace renderer {
         commands->SetName(L"Renderer::create_builtin_images");
 
         {
-            TracyD3D12Zone(RenderBackend::tracy_context, commands.get(), "Renderer::create_builtin_images");
-            PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
+            TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), "Renderer::create_builtin_images");
+            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {
                 const auto pink_texture_create_info = ImageCreateInfo{.name = "Pink",
@@ -448,7 +448,7 @@ namespace renderer {
         Rx::Vector<const Image*> images;
         images.reserve(all_images.size());
 
-        all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.get()); });
+        all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.Get()); });
 
         return images;
     }
@@ -474,9 +474,9 @@ namespace renderer {
         memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
     }
 
-    void Renderer::rebuild_raytracing_scene(const com_ptr<ID3D12GraphicsCommandList4>& commands) {
-        TracyD3D12Zone(RenderBackend::tracy_context, commands.get(), "RebuildRaytracingScene");
-        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
+    void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+        TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), "RebuildRaytracingScene");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
@@ -548,7 +548,7 @@ namespace renderer {
 
             commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-            const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.get())};
+            const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
             raytracing_scene = {Rx::Utility::move(as_buffer)};

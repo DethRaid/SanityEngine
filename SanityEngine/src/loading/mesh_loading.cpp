@@ -18,13 +18,13 @@
 RX_LOG("MeshLoading", logger);
 
 Rx::Optional<renderer::MeshObject> import_mesh(const Rx::String& filepath,
-                                               com_ptr<ID3D12GraphicsCommandList4> commands,
+                                               ComPtr<ID3D12GraphicsCommandList4> commands,
                                                renderer::Renderer& renderer) {
     ZoneScoped;
     static Assimp::Importer importer;
 
-    TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "load_mesh");
-    PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "load_mesh");
+    TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "load_mesh");
+    PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "load_mesh");
 
     const auto* scene = importer.ReadFile(filepath.data(), aiProcess_MakeLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality);
     if(scene == nullptr) {
@@ -77,11 +77,11 @@ Rx::Optional<renderer::MeshObject> import_mesh(const Rx::String& filepath,
         indices.push_back(face.mIndices[2]);
     }
 
-    mesh_data.begin_adding_meshes(commands.get());
+    mesh_data.begin_adding_meshes(commands.Get());
 
-    const auto mesh = mesh_data.add_mesh(vertices, indices, commands.get());
+    const auto mesh = mesh_data.add_mesh(vertices, indices, commands.Get());
 
-    mesh_data.end_adding_meshes(commands.get());
+    mesh_data.end_adding_meshes(commands.Get());
 
     auto material = renderer::StandardMaterial{};
     material.noise = renderer.get_noise_texture();

@@ -3,7 +3,7 @@
 #include "d3dx12.hpp"
 
 namespace renderer {
-    DescriptorAllocator::DescriptorAllocator(com_ptr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
+    DescriptorAllocator::DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, const UINT descriptor_size_in)
         : heap{Rx::Utility::move(heap_in)}, descriptor_size{descriptor_size_in} {}
 
     DescriptorAllocator::DescriptorAllocator(DescriptorAllocator&& old) noexcept
@@ -29,9 +29,12 @@ namespace renderer {
             return handle;
         }
 
-        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{heap->GetCPUDescriptorHandleForHeapStart(),
-                                                          next_free_descriptor,
-                                                          descriptor_size};
+        // Intentionally calling a constructor, do not convert to braces
+        // MSVC can's parse this statement if it's braces
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heap->GetCPUDescriptorHandleForHeapStart(),
+                                                                                   next_free_descriptor,
+                                                                                   descriptor_size);
+
         next_free_descriptor++;
         return handle;
     }

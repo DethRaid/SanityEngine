@@ -441,7 +441,7 @@ namespace renderer {
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.get());
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
 
         return {Rx::Utility::move(result_buffer)};
@@ -456,7 +456,7 @@ namespace renderer {
         auto staging_buffer = device.get_staging_buffer(size);
         memcpy(staging_buffer.mapped_ptr, src, size);
 
-        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.get(), 0, size);
+        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.Get(), 0, size);
 
         device.return_staging_buffer(Rx::Utility::move(staging_buffer));
     }

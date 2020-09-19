@@ -29,8 +29,8 @@ namespace renderer {
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
     void MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) const {
-        auto* vertex_resource = vertex_buffer->resource.get();
-        auto* index_resource = index_buffer->resource.get();
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -62,8 +62,8 @@ namespace renderer {
 
         indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
-        auto* vertex_resource = vertex_buffer->resource.get();
-        auto* index_resource = index_buffer->resource.get();
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
@@ -92,8 +92,8 @@ namespace renderer {
     }
 
     void MeshDataStore::end_adding_meshes(ID3D12GraphicsCommandList4* commands) const {
-        auto* vertex_resource = vertex_buffer->resource.get();
-        auto* index_resource = index_buffer->resource.get();
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,

@@ -215,7 +215,7 @@ namespace renderer {
                         srv_desc.Buffer.StructureByteStride = desc.structured_buffer_element_size;
                         srv_desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-                        device->CreateShaderResourceView(buffer->resource.get(), &srv_desc, desc.handle);
+                        device->CreateShaderResourceView(buffer->resource.Get(), &srv_desc, desc.handle);
                     } break;
 
                     case DescriptorType::UnorderedAccess: {
@@ -227,7 +227,7 @@ namespace renderer {
                         uav_desc.Buffer.StructureByteStride = desc.structured_buffer_element_size;
                         uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-                        device->CreateUnorderedAccessView(buffer->resource.get(), nullptr, &uav_desc, desc.handle);
+                        device->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &uav_desc, desc.handle);
 
                         states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                     } break;
@@ -261,7 +261,7 @@ namespace renderer {
                                 srv_desc.Texture2D.PlaneSlice = 0;
                                 srv_desc.Texture2D.ResourceMinLODClamp = 0;
 
-                                device->CreateShaderResourceView(image->resource.get(), &srv_desc, handle);
+                                device->CreateShaderResourceView(image->resource.Get(), &srv_desc, handle);
                             }
 
                             handle.Offset(descriptor_size);
@@ -279,7 +279,7 @@ namespace renderer {
                                                                                        .PlaneSlice = 0,
                                                                                    }};
 
-                            device->CreateUnorderedAccessView(image->resource.get(), nullptr, &uav_desc, handle);
+                            device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &uav_desc, handle);
 
                             handle.Offset(descriptor_size);
                         });

@@ -83,7 +83,7 @@ namespace renderer {
 
         [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,
-                                                 const com_ptr<ID3D12GraphicsCommandList4>& commands);
+                                                 const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
@@ -287,7 +287,7 @@ namespace renderer {
 
         Rx::Ptr<Buffer> visible_objects_buffer;
 
-        void rebuild_raytracing_scene(const com_ptr<ID3D12GraphicsCommandList4>& commands);
+        void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void update_lights(entt::registry& registry, Uint32 frame_idx);
 

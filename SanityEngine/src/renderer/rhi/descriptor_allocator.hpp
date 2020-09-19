@@ -1,16 +1,16 @@
 #pragma once
 
 #include <d3d12.h>
-#include <winrt/base.h>
+#include <wrl/client.h>
 
 #include "rx/core/vector.h"
 
-using winrt::com_ptr;
+using Microsoft::WRL::ComPtr;
 
 namespace renderer {
     class DescriptorAllocator {
     public:
-        DescriptorAllocator(com_ptr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);
+        DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);
 
         DescriptorAllocator(const DescriptorAllocator& other) = delete;
         DescriptorAllocator& operator=(const DescriptorAllocator& other) = delete;
@@ -25,7 +25,7 @@ namespace renderer {
         void return_descriptor(D3D12_CPU_DESCRIPTOR_HANDLE handle);
 
     private:
-        com_ptr<ID3D12DescriptorHeap> heap;
+        ComPtr<ID3D12DescriptorHeap> heap;
 
         UINT descriptor_size;
 

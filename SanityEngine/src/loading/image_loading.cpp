@@ -88,13 +88,13 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
     auto commands = device.create_command_list();
 
     const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
-    renderer::set_object_name(commands.get(), msg);
+    renderer::set_object_name(commands.Get(), msg);
 
     renderer::TextureHandle handle_out;
 
     {
-        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), msg.data());
-        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, msg.data());
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
 
         handle_out = renderer.create_image(create_info, pixels.data(), commands);
     }

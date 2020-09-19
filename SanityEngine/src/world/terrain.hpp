@@ -152,17 +152,17 @@ private:
     static void generate_heightmap(FastNoiseSIMD& noise_generator,
                                    const WorldParameters& params,
                                    renderer::Renderer& renderer,
-                                   const com_ptr<ID3D12GraphicsCommandList4>& commands,
+                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                    TerrainData& data,
                                    unsigned total_pixels_in_maps);
 
     static void place_water_sources(const WorldParameters& params,
                                     renderer::Renderer& renderer,
-                                    const com_ptr<ID3D12GraphicsCommandList4>& commands,
+                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
                                     TerrainData& data,
                                     unsigned total_pixels_in_maps);
 
-    static void compute_water_flow(renderer::Renderer& renderer, const com_ptr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
+    static void compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
 
     void load_terrain_textures_and_create_material();
 

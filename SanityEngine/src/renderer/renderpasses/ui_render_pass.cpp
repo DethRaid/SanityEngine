@@ -78,7 +78,7 @@ namespace renderer {
 
         // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in
 
-        commands->SetPipelineState(ui_pipeline->pso.get());
+        commands->SetPipelineState(ui_pipeline->pso.Get());
 
         {
             const auto viewport = D3D12_VIEWPORT{.TopLeftX = draw_data->DisplayPos.x,

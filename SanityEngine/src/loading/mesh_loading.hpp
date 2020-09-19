@@ -1,7 +1,6 @@
 #pragma once
 
 #include <d3d12.h>
-#include <winrt/base.h>
 
 #include "renderer/mesh.hpp"
 #include "renderer/rhi/mesh_data_store.hpp"
@@ -15,8 +14,6 @@ namespace Rx {
     struct String;
 }
 
-using winrt::com_ptr;
-
 /*!
  * \brief Loads a mesh from disk
  *
@@ -25,5 +22,5 @@ using winrt::com_ptr;
  * \param renderer The renderer that will eventually render the mesh
  */
 Rx::Optional<renderer::MeshObject> import_mesh(const Rx::String& filepath,
-                                               com_ptr<ID3D12GraphicsCommandList4> commands,
+                                               ComPtr<ID3D12GraphicsCommandList4> commands,
                                                renderer::Renderer& renderer);

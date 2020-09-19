@@ -3,13 +3,9 @@
 #include <concepts>
 
 #include <d3d12.h>
-#include <winrt/base.h>
-Apparently the WinRT base header only works in pre-C++20
 
 #include "core/types.hpp"
 #include "rx/core/string.h"
-
-using winrt::com_ptr;
 
 namespace D3D12MA {
     class Allocation;
@@ -21,7 +17,7 @@ namespace renderer {
 
         Uint32 size{};
 
-        com_ptr<ID3D12Resource> resource;
+        ComPtr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
 
@@ -71,7 +67,7 @@ namespace renderer {
         Uint32 height{1};
         Uint32 depth{1};
 
-        winrt::com_ptr<ID3D12Resource> resource;
+        ComPtr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
 

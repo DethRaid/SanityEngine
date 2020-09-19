@@ -3,7 +3,6 @@
 #include <concepts>
 
 #include <d3d12.h>
-#include <winrt/base.h>
 
 #include "core/types.hpp"
 #include "renderer/rhi/helpers.hpp"
@@ -11,8 +10,6 @@
 #include "rx/core/log.h"
 #include "rx/core/optional.h"
 #include "rx/core/string.h"
-
-using winrt::com_ptr;
 
 #define PRIVATE_DATA_ATTRIBS(type) __uuidof(type), sizeof(type)
 
@@ -63,7 +60,7 @@ namespace renderer {
     }
 
     template <typename InterfaceType>
-    RX_HINT_FORCE_INLINE com_ptr<InterfaceType> get_com_interface(ID3D12Object* object) {
+    RX_HINT_FORCE_INLINE ComPtr<InterfaceType> get_com_interface(ID3D12Object* object) {
         UINT data_size{sizeof(InterfaceType*)};
         InterfaceType* com_interface{nullptr};
         const auto result = object->GetPrivateData(__uuidof(InterfaceType), &data_size, &com_interface);
@@ -71,10 +68,9 @@ namespace renderer {
             private_data_logger->error("Could not retrieve COM interface from D3D12 object %s", object);
         }
 
-        com_ptr<InterfaceType> com_pointer{};
-        com_pointer.attach(com_interface);
+        auto com_pointer = ComPtr<InterfaceType>{com_interface};
 
-        // Don't need to release here - `com_ptr::attach` doesn't AddRef, so the ref count is good
+        // Don't need to release here - `ComPtr::attach` doesn't AddRef, so the ref count is good
 
         return com_pointer;
     }

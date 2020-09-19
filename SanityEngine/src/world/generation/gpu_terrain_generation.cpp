@@ -18,8 +18,8 @@ namespace terraingen {
                     128,
                     16);
 
-    static com_ptr<ID3D12PipelineState> place_oceans_pso;
-    static com_ptr<ID3D12PipelineState> water_flow_pso;
+    static ComPtr<ID3D12PipelineState> place_oceans_pso;
+    static ComPtr<ID3D12PipelineState> water_flow_pso;
 
     static void create_place_ocean_pipeline(renderer::RenderBackend& device) {
         ZoneScoped;
@@ -78,14 +78,14 @@ namespace terraingen {
         create_water_flow_pipeline(device);
     }
 
-    void place_oceans(const com_ptr<ID3D12GraphicsCommandList4>& commands,
+    void place_oceans(const ComPtr<ID3D12GraphicsCommandList4>& commands,
                       renderer::Renderer& renderer,
                       const Uint32 sea_level,
                       TerrainData& data) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "gpu_terrain_generation::place_oceans");
-        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::place_oceans");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "gpu_terrain_generation::place_oceans");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::place_oceans");
 
         data.water_depth_handle = renderer.create_image({
             .name = "Terrain water depth map",
@@ -102,7 +102,7 @@ namespace terraingen {
         auto d3d12_device = device.device;
         const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
-        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorTableHandle>(place_oceans_pso.get());
+        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorTableHandle>(place_oceans_pso.Get());
 
         const auto heightmap_desc = land_heightmap.resource->GetDesc();
         const auto heightmap_uav_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = heightmap_desc.Format,
@@ -112,29 +112,29 @@ namespace terraingen {
                                                                             .MostDetailedMip = 0,
                                                                             .MipLevels = 0xFFFFFFFF,
                                                                         }};
-        d3d12_device->CreateShaderResourceView(land_heightmap.resource.get(), &heightmap_uav_desc, descriptor_table.cpu_handle);
+        d3d12_device->CreateShaderResourceView(land_heightmap.resource.Get(), &heightmap_uav_desc, descriptor_table.cpu_handle);
 
         const auto water_height_map_desc = water_heightmap.resource->GetDesc();
         const auto water_height_map_uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = water_height_map_desc.Format,
                                                                                 .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                                                 .Texture2D = {}};
-        d3d12_device->CreateUnorderedAccessView(water_heightmap.resource.get(),
+        d3d12_device->CreateUnorderedAccessView(water_heightmap.resource.Get(),
                                                 nullptr,
                                                 &water_height_map_uav_desc,
                                                 descriptor_table.cpu_handle.Offset(descriptor_size));
 
-        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_heightmap.resource.get());
+        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_heightmap.resource.Get());
         commands->ResourceBarrier(1, &water_depth_map_barrier);
 
         auto* heap = device.get_cbv_srv_uav_heap();
         commands->SetDescriptorHeaps(1, &heap);
 
-        const auto root_sig = renderer::get_com_interface<ID3D12RootSignature>(place_oceans_pso.get());
-        commands->SetComputeRootSignature(root_sig.get());
+        const auto root_sig = renderer::get_com_interface<ID3D12RootSignature>(place_oceans_pso.Get());
+        commands->SetComputeRootSignature(root_sig.Get());
         commands->SetComputeRoot32BitConstant(0, sea_level, 0);
         commands->SetComputeRootDescriptorTable(1, descriptor_table.gpu_handle);
 
-        commands->SetPipelineState(place_oceans_pso.get());
+        commands->SetPipelineState(place_oceans_pso.Get());
 
         const auto desc = land_heightmap.resource->GetDesc();
         const auto thread_group_count_x = static_cast<Uint32>(desc.Width / 8);
@@ -144,11 +144,11 @@ namespace terraingen {
         logger->info("Recorded place oceans compute shader dispatches");
     }
 
-    void compute_water_flow(const com_ptr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data) {
+    void compute_water_flow(const ComPtr<ID3D12GraphicsCommandList4>& commands, renderer::Renderer& renderer, TerrainData& data) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.get(), "gpu_terrain_generation::compute_water_flow");
-        PIXScopedEvent(commands.get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::compute_water_flow");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "gpu_terrain_generation::compute_water_flow");
+        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "gpu_terrain_generation::compute_water_flow");
 
         const auto land_heightmap = renderer.get_image(data.heightmap_handle);
         const auto water_heightmap = renderer.get_image(data.water_depth_handle);
@@ -156,7 +156,7 @@ namespace terraingen {
         auto d3d12_device = device.device;
         const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
-        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorTableHandle>(place_oceans_pso.get());
+        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorTableHandle>(place_oceans_pso.Get());
 
         const auto heightmap_desc = land_heightmap.resource->GetDesc();
         const auto heightmap_uav_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = heightmap_desc.Format,
@@ -166,28 +166,28 @@ namespace terraingen {
                                                                             .MostDetailedMip = 0,
                                                                             .MipLevels = 0xFFFFFFFF,
                                                                         }};
-        d3d12_device->CreateShaderResourceView(land_heightmap.resource.get(), &heightmap_uav_desc, descriptor_table.cpu_handle);
+        d3d12_device->CreateShaderResourceView(land_heightmap.resource.Get(), &heightmap_uav_desc, descriptor_table.cpu_handle);
 
         const auto water_height_map_desc = water_heightmap.resource->GetDesc();
         const auto water_height_map_uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = water_height_map_desc.Format,
                                                                                 .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                                                 .Texture2D = {}};
-        d3d12_device->CreateUnorderedAccessView(water_heightmap.resource.get(),
+        d3d12_device->CreateUnorderedAccessView(water_heightmap.resource.Get(),
                                                 nullptr,
                                                 &water_height_map_uav_desc,
                                                 descriptor_table.cpu_handle.Offset(descriptor_size));
 
-        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(water_flow_pso.get());
-        commands->SetComputeRootSignature(root_signature.get());
+        const auto root_signature = renderer::get_com_interface<ID3D12RootSignature>(water_flow_pso.Get());
+        commands->SetComputeRootSignature(root_signature.Get());
         commands->SetComputeRootDescriptorTable(0, descriptor_table.gpu_handle);
 
-        commands->SetPipelineState(water_flow_pso.get());
+        commands->SetPipelineState(water_flow_pso.Get());
 
         const auto desc = land_heightmap.resource->GetDesc();
         const auto thread_group_count_x = static_cast<Uint32>(desc.Width / 8);
         const auto thread_group_count_y = static_cast<Uint32>(desc.Height / 8);
 
-        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_heightmap.resource.get());
+        const auto water_depth_map_barrier = CD3DX12_RESOURCE_BARRIER::UAV(water_heightmap.resource.Get());
 
         for(Uint32 water_flow_iteration = 0; water_flow_iteration < static_cast<Uint32>(cvar_num_water_iterations->get());
             water_flow_iteration++) {

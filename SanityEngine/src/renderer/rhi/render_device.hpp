@@ -3,7 +3,6 @@
 #include <d3d12.h>
 #include <d3d12shader.h>
 #include <dxgi1_4.h>
-#include <wrl/client.h>
 
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
@@ -21,8 +20,6 @@
 #include "settings.hpp"
 
 struct GLFWwindow;
-
-using winrt::com_ptr;
 
 namespace D3D12MA {
     class Allocator;
@@ -78,9 +75,9 @@ namespace renderer {
             Uint32 start_instance_location{};
         };
 
-        com_ptr<ID3D12Device> device;
-        com_ptr<ID3D12Device1> device1;
-        com_ptr<ID3D12Device5> device5;
+        ComPtr<ID3D12Device> device;
+        ComPtr<ID3D12Device1> device1;
+        ComPtr<ID3D12Device5> device5;
 
         RenderBackend(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
 
@@ -123,8 +120,8 @@ namespace renderer {
             const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
             const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
-        [[nodiscard]] com_ptr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
-                                                                                 const com_ptr<ID3D12RootSignature>& root_signature) const;
+        [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
+                                                                                 const ComPtr<ID3D12RootSignature>& root_signature) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
@@ -136,9 +133,9 @@ namespace renderer {
          *
          * This method is internally synchronized. You can (in theory) call it safely from a multithreaded environment
          */
-        [[nodiscard]] com_ptr<ID3D12GraphicsCommandList4> create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
-        void submit_command_list(com_ptr<ID3D12GraphicsCommandList4>&& commands);
+        void submit_command_list(ComPtr<ID3D12GraphicsCommandList4>&& commands);
 
         BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
@@ -168,7 +165,7 @@ namespace renderer {
 
         [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
 
-        [[nodiscard]] com_ptr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
+        [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
 
         /*!
          * \brief Allocated a descriptor table with the specified number of descriptors, returning both a CPU and GPU handle to the start of
@@ -188,42 +185,42 @@ namespace renderer {
          */
         bool in_init_phase{true};
 
-        com_ptr<ID3D12Debug1> debug_controller;
-        com_ptr<ID3D12DeviceRemovedExtendedDataSettings1> dred_settings;
-        com_ptr<IDXGraphicsAnalysis> graphics_analysis;
+        ComPtr<ID3D12Debug1> debug_controller;
+        ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred_settings;
+        ComPtr<IDXGraphicsAnalysis> graphics_analysis;
 
-        com_ptr<IDXGIFactory4> factory;
+        ComPtr<IDXGIFactory4> factory;
 
-        com_ptr<IDXGIAdapter> adapter;
+        ComPtr<IDXGIAdapter> adapter;
 
-        com_ptr<ID3D12InfoQueue> info_queue;
+        ComPtr<ID3D12InfoQueue> info_queue;
 
-        com_ptr<ID3D12CommandQueue> direct_command_queue;
+        ComPtr<ID3D12CommandQueue> direct_command_queue;
 
-        com_ptr<ID3D12CommandQueue> async_copy_queue;
+        ComPtr<ID3D12CommandQueue> async_copy_queue;
 
         Rx::Concurrency::Mutex create_command_list_mutex;
         Rx::Concurrency::Atomic<Size> command_lists_outside_render_device{0};
 
         Rx::Concurrency::Mutex direct_command_allocators_mutex;
-        Rx::Vector<com_ptr<ID3D12CommandAllocator>> direct_command_allocators;
+        Rx::Vector<ComPtr<ID3D12CommandAllocator>> direct_command_allocators;
 
         Rx::Concurrency::Mutex command_lists_by_frame_mutex;
-        Rx::Vector<Rx::Vector<com_ptr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
-        Rx::Vector<Rx::Vector<com_ptr<ID3D12CommandAllocator>>> command_allocators_to_reset_on_begin_frame;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> command_allocators_to_reset_on_begin_frame;
 
-        com_ptr<IDXGISwapChain3> swapchain;
-        Rx::Vector<com_ptr<ID3D12Resource>> swapchain_images;
+        ComPtr<IDXGISwapChain3> swapchain;
+        Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
         Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> swapchain_rtv_handles;
 
         HANDLE frame_event;
-        com_ptr<ID3D12Fence> frame_fences;
+        ComPtr<ID3D12Fence> frame_fences;
         Rx::Vector<uint64_t> frame_fence_values;
 
         Rx::Vector<Rx::Vector<Rx::Ptr<Buffer>>> buffer_deletion_list;
         Rx::Vector<Rx::Vector<Rx::Ptr<Image>>> image_deletion_list;
 
-        com_ptr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
+        ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
         UINT cbv_srv_uav_size{};
         UINT next_free_cbv_srv_uav_descriptor{0};
 
@@ -233,7 +230,7 @@ namespace renderer {
 
         D3D12MA::Allocator* device_allocator;
 
-        com_ptr<ID3D12RootSignature> standard_root_signature;
+        ComPtr<ID3D12RootSignature> standard_root_signature;
 
         Rx::Vector<D3D12_INPUT_ELEMENT_DESC> standard_graphics_pipeline_input_layout;
         Rx::Vector<D3D12_INPUT_ELEMENT_DESC> dear_imgui_graphics_pipeline_input_layout;
@@ -276,7 +273,7 @@ namespace renderer {
 
         DXGI_FORMAT swapchain_format{DXGI_FORMAT_R8G8B8A8_UNORM};
 
-        Rx::Vector<com_ptr<ID3D12Fence>> command_list_done_fences;
+        Rx::Vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
         Rx::Vector<Rx::Ptr<BindGroupBuilder>> material_bind_group_builder;
 
@@ -310,7 +307,7 @@ namespace renderer {
                                                       .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
                                                       .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
 
-        com_ptr<ID3D12CommandSignature> standard_drawcall_command_signature;
+        ComPtr<ID3D12CommandSignature> standard_drawcall_command_signature;
 
 #pragma region initialization
         void enable_debugging();
@@ -331,7 +328,7 @@ namespace renderer {
 
         void initialize_swapchain_descriptors();
 
-        [[nodiscard]] std::pair<com_ptr<ID3D12DescriptorHeap>, UINT> create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
+        [[nodiscard]] std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
                                                                                             Uint32 num_descriptors) const;
 
         void initialize_dma();
@@ -373,7 +370,7 @@ namespace renderer {
 
         [[nodiscard]] Buffer create_scratch_buffer(Uint32 num_bytes);
 
-        [[nodiscard]] com_ptr<ID3D12Fence> get_next_command_list_done_fence();
+        [[nodiscard]] ComPtr<ID3D12Fence> get_next_command_list_done_fence();
 
         void log_dred_report() const;
     };
