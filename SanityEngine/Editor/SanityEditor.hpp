@@ -6,8 +6,10 @@
 
 namespace Sanity::Editor {
     class SanityEditor {
+    public:
+        explicit SanityEditor();
     private:
-        std::shared_ptr<sanity::SanityEngine> sanity_engine;
+        std::unique_ptr<SanityEngine> sanity_engine;
     };
 } // namespace Sanity::Editor
 

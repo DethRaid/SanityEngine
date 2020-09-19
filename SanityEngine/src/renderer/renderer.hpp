@@ -71,6 +71,11 @@ namespace renderer {
     public:
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
+        /// <summary>
+        /// Reloads all the shaders from disk
+        /// </summary>
+        void reload_shaders();
+
         void begin_frame(uint64_t frame_count);
 
         void render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);

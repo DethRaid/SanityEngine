@@ -97,13 +97,7 @@ namespace renderer {
     }
 
     RenderBackend::~RenderBackend() {
-        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
-        for(Uint32 i = 0; i < num_gpu_frames; i++) {
-            wait_for_frame(i);
-            direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
-        }
-
-        wait_gpu_idle(0);
+        wait_idle();
 
         staging_buffers.each_fwd([&](const Buffer& buffer) { buffer.allocation->Release(); });
 
@@ -515,6 +509,16 @@ namespace renderer {
         if(graphics_analysis) {
             graphics_analysis->EndCapture();
         }
+    }
+
+    void RenderBackend::wait_idle() {
+        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
+        for(Uint32 i = 0; i < num_gpu_frames; i++) {
+            wait_for_frame(i);
+            direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
+        }
+
+        wait_gpu_idle(0);
     }
 
     Uint32 RenderBackend::get_max_num_gpu_frames() const { return static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get()); }

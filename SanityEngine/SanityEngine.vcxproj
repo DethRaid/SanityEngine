@@ -33,7 +33,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
@@ -370,6 +370,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Editor\SanityEditor.hpp" />
+    <ClInclude Include="Editor\UI\NodeGraphNode.hpp" />
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
     <ClInclude Include="extern\imgui-node-editor\crude_json.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_bezier_math.h" />
@@ -632,6 +634,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Editor\Sanity.Engine.main.cpp" />
+    <ClCompile Include="Editor\SanityEditor.cpp" />
+    <ClCompile Include="Editor\UI\NodeGraphNode.cpp" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />

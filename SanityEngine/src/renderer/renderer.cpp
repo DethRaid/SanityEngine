@@ -70,6 +70,14 @@ namespace renderer {
         create_render_passes();
     }
 
+    void Renderer::reload_shaders() {
+        device->wait_idle();
+
+        reload_builtin_shaders();
+
+        reload_renderpass_shaders();
+    }
+
     void Renderer::begin_frame(const uint64_t frame_count) {
         device->begin_frame(frame_count);
 

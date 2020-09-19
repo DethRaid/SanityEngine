@@ -149,6 +149,8 @@ namespace renderer {
 
         void end_capture() const;
 
+        void wait_idle();
+
         [[nodiscard]] Uint32 get_max_num_gpu_frames() const;
 
         [[nodiscard]] bool has_separate_device_memory() const;

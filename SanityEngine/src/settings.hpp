@@ -1,6 +1,6 @@
 #pragma once
 
-enum class QualityLevel { Low, Medium, High, Ultra };
+enum class RenderQualityLevel { Low, Medium, High, Ultra, Custom };
 
 struct Settings {
     /*!
@@ -9,11 +9,9 @@ struct Settings {
     Float32 render_scale{1.0f};
 
     /*!
-     * \brief Quality to render the shadowmap at
-     *
-     * Gets translated into an actual resolution with a heurustic of the size of the main screen and the amount of available VRAM
+     * \brief Overall quality to render at
      */
-    QualityLevel shadow_quality;
+    RenderQualityLevel render_quality = RenderQualityLevel::Ultra;
 
     /*!
      * \brief Absolute path to the directory where the SanityEngine executable is

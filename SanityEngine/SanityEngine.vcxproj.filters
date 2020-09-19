@@ -151,6 +151,12 @@
     <Filter Include="src\stats">
       <UniqueIdentifier>{48e8b244-e765-485f-b850-c9d0277d253a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Editor">
+      <UniqueIdentifier>{60d87d02-c17c-42d4-815d-1304099d1988}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\UI">
+      <UniqueIdentifier>{e5131684-9d5c-4d5b-9f6a-f96c8ff6a418}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -945,6 +951,12 @@
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h">
       <Filter>extern\imgui-node-editor</Filter>
     </ClInclude>
+    <ClInclude Include="Editor\SanityEditor.hpp">
+      <Filter>Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\UI\NodeGraphNode.hpp">
+      <Filter>Editor\UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1324,6 +1336,15 @@
     </ClCompile>
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp">
       <Filter>extern\imgui-node-editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Sanity.Engine.main.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\SanityEditor.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\UI\NodeGraphNode.cpp">
+      <Filter>Editor\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
