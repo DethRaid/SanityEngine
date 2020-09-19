@@ -84,7 +84,6 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <MultiProcMIDL>false</MultiProcMIDL>
     <IncludePath>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\pix\lib;$(LibraryPath)</LibraryPath>
     <PublicIncludeDirectories>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;</PublicIncludeDirectories>
@@ -130,25 +129,6 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Midl>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>
-      </OutputDirectory>
-      <HeaderFileName>nul</HeaderFileName>
-      <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
-      <InterfaceIdentifierFileName>nul</InterfaceIdentifierFileName>
-      <ProxyFileName>nul</ProxyFileName>
-      <EnableWindowsRuntime>true</EnableWindowsRuntime>
-      <WarningLevel>4</WarningLevel>
-      <AdditionalMetadataDirectories>$(WindowsSDK_MetadataFoundationPath);%(AdditionalMetadataDirectories)</AdditionalMetadataDirectories>
-      <GenerateStublessProxies>false</GenerateStublessProxies>
-      <MetadataFileName>%(IntDir)Unmerged\%(Filename).winmd</MetadataFileName>
-      <DllDataFileName>nul</DllDataFileName>
-      <GenerateTypeLibrary>false</GenerateTypeLibrary>
-      <GenerateClientFiles>None</GenerateClientFiles>
-      <GenerateServerFiles>None</GenerateServerFiles>
-      <PrependWithABINamepsace>true</PrependWithABINamepsace>
-    </Midl>
     <PreBuildEvent>
       <Message>
       </Message>
@@ -214,14 +194,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Midl>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
-      <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
-      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
-    </Midl>
     <PreBuildEvent>
       <Message>
       </Message>
@@ -287,14 +259,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Midl>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
-      <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
-      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
-    </Midl>
     <PreBuildEvent>
       <Message>
       </Message>
@@ -359,14 +323,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Midl>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
-      <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
-      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
-    </Midl>
     <PreBuildEvent>
       <Message>
       </Message>
@@ -812,7 +768,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.VCRTForwarders.140.1.0.6\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\packages\Microsoft.VCRTForwarders.140.1.0.6\build\native\Microsoft.VCRTForwarders.140.targets')" />
-    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.200917.4\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.200917.4\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
