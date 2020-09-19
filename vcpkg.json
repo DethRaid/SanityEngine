@@ -5,7 +5,6 @@
     "supports": "windows",
     "dependencies": [
         "assimp",
-        "cppwinrt",
         "entt",
         "glfw3",
         "glm",

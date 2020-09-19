@@ -448,7 +448,7 @@ namespace renderer {
         Rx::Vector<const Image*> images;
         images.reserve(all_images.size());
 
-        all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.Get()); });
+        all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.get()); });
 
         return images;
     }

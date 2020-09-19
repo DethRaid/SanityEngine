@@ -278,8 +278,8 @@ void Terrain::load_terrain_textures_and_create_material() {
         }
     });
 
-    albedo_task.Get();
-    normal_roughness_task.Get();
+    albedo_task.get();
+    normal_roughness_task.get();
 
     terrain_material = renderer->allocate_standard_material(material);
 }
