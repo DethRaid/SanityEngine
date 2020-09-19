@@ -12,7 +12,7 @@ A 3D video game engine made to increase my sanity
 
 - Python 3
 - `dxc` must be in your PATH
-- Visual Studio 16.6
+- Visual Studio 16.8 preview 2
 - Windows Kit 10.0.19042.0
 - vcpkg with [manifest file support](https://github.com/microsoft/vcpkg/blob/master/docs/specifications/manifests.md)
 
