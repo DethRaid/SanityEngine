@@ -14,6 +14,7 @@ A 3D video game engine made to increase my sanity
 - `dxc` must be in your PATH
 - Visual Studio 16.8 preview 2
 - Windows Kit 10.0.19042.0
+- .NET 5 preview 8 or newer
 - vcpkg with [manifest file support](https://github.com/microsoft/vcpkg/blob/master/docs/specifications/manifests.md)
 
 ## Runtime requirements
@@ -21,6 +22,7 @@ A 3D video game engine made to increase my sanity
 - Windows 10 2004/20H1 or better
 - Graphics driver with support for DirectX 12 Ultimate. At the time of writing, only Nvidia driver 451.48 support DX12U
 - Graphics hardware with support for DXR 1.1. At the time of writing, only Nvidia's Turing GPUs support DXR 1.1
+- .NET 5 preview 8 or newer
 
 ## Acknowledgement
 
