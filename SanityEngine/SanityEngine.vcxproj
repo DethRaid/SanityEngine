@@ -84,7 +84,7 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)Editor;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\pix\lib;$(LibraryPath)</LibraryPath>
     <PublicIncludeDirectories>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;</PublicIncludeDirectories>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -370,8 +370,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp" />
     <ClInclude Include="Editor\SanityEditor.hpp" />
+    <ClInclude Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.hpp" />
+    <ClInclude Include="Editor\UI\DensityMap\EngineTextureNode.hpp" />
     <ClInclude Include="Editor\UI\NodeGraphNode.hpp" />
+    <ClInclude Include="Editor\UI\PropertyEditors.hpp" />
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
     <ClInclude Include="extern\imgui-node-editor\crude_json.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_bezier_math.h" />
@@ -575,14 +579,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\asset_registry.hpp" />
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
     <ClInclude Include="src\core\components.hpp" />
+    <ClInclude Include="src\core\concepts\EnumLike.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />
+    <ClInclude Include="src\core\SmartEnum.hpp" />
     <ClInclude Include="src\core\types.hpp" />
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\globals.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
+    <ClInclude Include="src\input\PlatformInput.hpp" />
     <ClInclude Include="src\loading\entity_loading.hpp" />
     <ClInclude Include="src\loading\image_loading.hpp" />
     <ClInclude Include="src\loading\mesh_loading.hpp" />
@@ -628,15 +635,20 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
+    <ClInclude Include="src\world\environment\Environment.hpp" />
     <ClInclude Include="src\world\environment\environment_object.hpp" />
     <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />
     <ClInclude Include="src\world\terrain.hpp" />
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp" />
     <ClCompile Include="Editor\Sanity.Engine.main.cpp" />
     <ClCompile Include="Editor\SanityEditor.cpp" />
+    <ClCompile Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.cpp" />
+    <ClCompile Include="Editor\UI\DensityMap\EngineTextureNode.cpp" />
     <ClCompile Include="Editor\UI\NodeGraphNode.cpp" />
+    <ClCompile Include="Editor\UI\PropertyEditors.cpp" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
@@ -726,6 +738,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\globals.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />
+    <ClCompile Include="src\input\PlatformInput.cpp" />
     <ClCompile Include="src\loading\entity_loading.cpp" />
     <ClCompile Include="src\loading\image_loading.cpp" />
     <ClCompile Include="src\loading\mesh_loading.cpp" />
@@ -759,6 +772,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
+    <ClCompile Include="src\world\environment\Environment.cpp" />
     <ClCompile Include="src\world\environment\environment_object.cpp" />
     <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
     <ClCompile Include="src\world\terrain.cpp" />

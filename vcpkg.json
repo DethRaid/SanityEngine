@@ -8,6 +8,7 @@
         "entt",
         "glfw3",
         "glm",
+        "magic-enum",
         "nethost",
         "stb"
     ]

@@ -157,6 +157,15 @@
     <Filter Include="Editor\UI">
       <UniqueIdentifier>{e5131684-9d5c-4d5b-9f6a-f96c8ff6a418}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Editor\UI\DensityMap">
+      <UniqueIdentifier>{1b88f48f-5d73-4c39-b6a8-0ea928dd145a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\concepts">
+      <UniqueIdentifier>{7608827b-7147-4850-95a7-2747c83de2fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Input">
+      <UniqueIdentifier>{c70bdf3f-9b23-4731-b98a-1f3e71305b13}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -957,6 +966,28 @@
     <ClInclude Include="Editor\UI\NodeGraphNode.hpp">
       <Filter>Editor\UI</Filter>
     </ClInclude>
+    <ClInclude Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.hpp">
+      <Filter>Editor\UI\DensityMap</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\UI\DensityMap\EngineTextureNode.hpp">
+      <Filter>Editor\UI\DensityMap</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\environment\Environment.hpp">
+      <Filter>src\world\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\UI\PropertyEditors.hpp">
+      <Filter>Editor\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\concepts\EnumLike.hpp">
+      <Filter>src\core\concepts</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\SmartEnum.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input\PlatformInput.hpp">
+      <Filter>src\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1346,6 +1377,22 @@
     <ClCompile Include="Editor\UI\NodeGraphNode.cpp">
       <Filter>Editor\UI</Filter>
     </ClCompile>
+    <ClCompile Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.cpp">
+      <Filter>Editor\UI\DensityMap</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\UI\DensityMap\EngineTextureNode.cpp">
+      <Filter>Editor\UI\DensityMap</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\environment\Environment.cpp">
+      <Filter>src\world\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\UI\PropertyEditors.cpp">
+      <Filter>Editor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input\PlatformInput.cpp">
+      <Filter>src\input</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

@@ -149,11 +149,11 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
     // }
 }
 
-Float32 Terrain::get_terrain_height(const Vec2d& location) {
+Float32 Terrain::get_terrain_height(const Double2& location) {
     const auto tilecoords = get_coords_of_tile_containing_position({location.x, 0, location.y});
 
     const auto tile_start_location = tilecoords * static_cast<Int32>(TILE_SIZE);
-    const auto location_within_tile = Vec2u{static_cast<Uint32>(abs(round(location.x - tile_start_location.x))),
+    const auto location_within_tile = Uint2{static_cast<Uint32>(abs(round(location.x - tile_start_location.x))),
                                             static_cast<Uint32>(abs(round(location.y - tile_start_location.y)))};
 
     Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
@@ -167,7 +167,7 @@ Float32 Terrain::get_terrain_height(const Vec2d& location) {
     return 0;
 }
 
-Vec2i Terrain::get_coords_of_tile_containing_position(const Vec3d& position) {
+Vec2i Terrain::get_coords_of_tile_containing_position(const Double3& position) {
     return Vec2i{static_cast<Int32>(round(position.x)), static_cast<Int32>(round(position.z))} / static_cast<Int32>(TILE_SIZE);
 }
 
@@ -288,7 +288,7 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
     ZoneScoped;
 
     const auto top_left = tilecoord * static_cast<Int32>(TILE_SIZE);
-    const auto size = Vec2u{TILE_SIZE, TILE_SIZE};
+    const auto size = Uint2{TILE_SIZE, TILE_SIZE};
 
     logger->info("Generating tile (%d, %d) with size (%d, %d)", tilecoord.x, tilecoord.y, size.x, size.y);
 
@@ -321,13 +321,13 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
             const auto x_float = static_cast<Float64>(x);
             const auto y_float = static_cast<Float64>(y);
 
-            const auto normal = get_normal_at_location(Vec2d{x_float, y_float});
+            const auto normal = get_normal_at_location(Double2{x_float, y_float});
 
             // While I _should_ use a designated initializer and construct everything inline, Visual Studio is an incredibly stupid buttface
             auto vertex = StandardVertex{};
-            vertex.position = Vec3d{x_float, height, y_float}.cast<Float32>();
+            vertex.position = Double3{x_float, height, y_float}.cast<Float32>();
             vertex.normal = normal.cast<Float32>();
-            vertex.texcoord = Vec2d{x_float, y_float}.cast<Float32>();
+            vertex.texcoord = Double2{x_float, y_float}.cast<Float32>();
 
             tile_vertices.push_back(vertex);
 
@@ -359,7 +359,7 @@ void Terrain::generate_tile(const Vec2i& tilecoord) {
     num_active_tilegen_tasks.fetch_sub(1);
 }
 
-Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size) {
+Rx::Vector<Rx::Vector<Float32>> Terrain::generate_terrain_heightmap(const Vec2i& top_left, const Uint2& size) {
     const auto height_range = max_terrain_height - min_terrain_height;
 
     Rx::Vector<Rx::Vector<Float32>> heightmap;
@@ -489,11 +489,11 @@ void Terrain::upload_new_tile_meshes() {
     device.submit_command_list(Rx::Utility::move(commands));
 }
 
-Vec3f Terrain::get_normal_at_location(const Vec2d& location) {
-    const auto height_middle_right = get_terrain_height(location + Vec2d{1, 0});
-    const auto height_bottom_middle = get_terrain_height(location + Vec2d{0, -1});
-    const auto height_top_middle = get_terrain_height(location + Vec2d{0, 1});
-    const auto height_middle_left = get_terrain_height(location + Vec2d{-1, 0});
+Vec3f Terrain::get_normal_at_location(const Double2& location) {
+    const auto height_middle_right = get_terrain_height(location + Double2{1, 0});
+    const auto height_bottom_middle = get_terrain_height(location + Double2{0, -1});
+    const auto height_top_middle = get_terrain_height(location + Double2{0, 1});
+    const auto height_middle_left = get_terrain_height(location + Double2{-1, 0});
 
     const auto va = normalize(Vec3f{2.0, 0.0, height_middle_right - height_middle_left});
     const auto vb = normalize(Vec3f{0.0, 2.0, height_bottom_middle - height_top_middle});

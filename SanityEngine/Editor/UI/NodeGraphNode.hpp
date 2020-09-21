@@ -7,7 +7,8 @@ namespace Sanity::Editor::UI {
      */
     class NodeGraphNode {
     public:
-        /*!
+	    virtual ~NodeGraphNode() = default;
+	    /*!
          * \brief Draws the node
          */
         void draw();

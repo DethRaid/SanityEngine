@@ -1,6 +1,5 @@
 #include "first_person_controller.hpp"
 
-#include "GLFW/glfw3.h"
 #include "core/components.hpp"
 #include "entt/entity/registry.hpp"
 #include "glm/ext/quaternion_transform.hpp"
@@ -74,7 +73,7 @@ void FirstPersonController::update_player_transform(const Float64 delta_time) {
 
     // Make sure they're on the terrain
     if(terrain) {
-        const auto height = terrain->get_terrain_height(Vec2d{player_transform.location.x, player_transform.location.z});
+        const auto height = terrain->get_terrain_height(Double2{player_transform.location.x, player_transform.location.z});
         if(player_transform.location.y < height + 1.51f) {
             player_transform.location.y = height + 1.5f;
 

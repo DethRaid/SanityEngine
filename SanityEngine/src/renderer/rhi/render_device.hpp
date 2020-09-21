@@ -99,7 +99,7 @@ namespace renderer {
 
         [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_backbuffer_rtv_handle();
 
-        [[nodiscard]] Vec2u get_backbuffer_size() const;
+        [[nodiscard]] Uint2 get_backbuffer_size() const;
 
         [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
 

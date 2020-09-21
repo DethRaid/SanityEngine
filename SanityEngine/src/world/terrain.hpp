@@ -107,7 +107,7 @@ public:
                                                       const WorldParameters& params,
                                                       renderer::Renderer& renderer);
 
-    [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Vec3d& position);
+    [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Double3& position);
 
     explicit Terrain(const TerrainData& data,
                      renderer::Renderer& renderer_in,
@@ -118,9 +118,9 @@ public:
 
     void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] Float32 get_terrain_height(const Vec2d& location);
+    [[nodiscard]] Float32 get_terrain_height(const Double2& location);
 
-    [[nodiscard]] Vec3f get_normal_at_location(const Vec2d& location);
+    [[nodiscard]] Vec3f get_normal_at_location(const Double2& location);
 
     [[nodiscard]] Rx::Concurrency::Atomic<Uint32>& get_num_active_tilegen_tasks();
 
@@ -174,7 +174,7 @@ private:
      * \param top_left World x and y coordinates of the top left of this terrain heightmap
      * \param size Size in world units of this terrain heightmap
      */
-    [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const Vec2i& top_left, const Vec2u& size);
+    [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const Vec2i& top_left, const Uint2& size);
 
     void upload_new_tile_meshes();
 };

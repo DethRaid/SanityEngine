@@ -269,8 +269,8 @@ namespace renderer {
         return swapchain_rtv_handles[cur_swapchain_index];
     }
 
-    Vec2u RenderBackend::get_backbuffer_size() const {
-        Vec2u vec;
+    Uint2 RenderBackend::get_backbuffer_size() const {
+        Uint2 vec;
         swapchain->GetSourceSize(&vec.x, &vec.y);
 
         return vec;

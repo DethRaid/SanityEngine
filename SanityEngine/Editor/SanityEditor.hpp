@@ -12,5 +12,3 @@ namespace Sanity::Editor {
         std::unique_ptr<SanityEngine> sanity_engine;
     };
 } // namespace Sanity::Editor
-
-class SanityEditor {};

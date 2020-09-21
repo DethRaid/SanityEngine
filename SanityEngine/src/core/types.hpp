@@ -28,18 +28,18 @@ using Rx::Float64;
 
 using Rx::Math::Vec2f;
 using Rx::Math::Vec2i;
-using Vec2u = Rx::Math::Vec2<Uint32>;
-using Vec2d = Rx::Math::Vec2<Float64>;
+using Uint2 = Rx::Math::Vec2<Uint32>;
+using Double2 = Rx::Math::Vec2<Float64>;
 
 using Rx::Math::Vec3f;
 using Rx::Math::Vec3i;
-using Vec3u = Rx::Math::Vec3<Uint32>;
-using Vec3d = Rx::Math::Vec3<Float64>;
+using Uint3 = Rx::Math::Vec3<Uint32>;
+using Double3 = Rx::Math::Vec3<Float64>;
 
 using Rx::Math::Vec4f;
 using Rx::Math::Vec4i;
-using Vec4u = Rx::Math::Vec4<Uint32>;
-using Vec4d = Rx::Math::Vec4<Float64>;
+using Uint4 = Rx::Math::Vec4<Uint32>;
+using Double4 = Rx::Math::Vec4<Float64>;
 
 using Rx::Math::Mat4x4f;
 

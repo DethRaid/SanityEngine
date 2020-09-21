@@ -1,6 +1,6 @@
 #include "NodeGraphNode.hpp"
 
-#include <imgui_node_editor.h>
+#include "imgui_node_editor.h"
 
 namespace ed = ax::NodeEditor;
 
