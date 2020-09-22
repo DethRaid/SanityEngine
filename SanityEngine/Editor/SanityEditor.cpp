@@ -1,10 +1,11 @@
 #include "SanityEditor.hpp"
 
 namespace Sanity::Editor {
-    SanityEditor::SanityEditor()
-    {
-        Settings settings{};
+    SanityEditor::SanityEditor() {
+        auto* window = glfwCreateWindow(640, 480, "Sanity Engine", nullptr, nullptr);
     	
-	    sanity_engine = std::make_unique<SanityEngine>(settings);
+        Settings settings{};
+
+        sanity_engine = std::make_unique<SanityEngine>(settings);
     }
 } // namespace Sanity::Editor
