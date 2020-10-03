@@ -409,3 +409,5 @@ SanityEngine/data/bve_trains/
 *.fbx
 vcpkg_installed/
 /SanityEngine.NET-Old
+/SanityEngine.NET/tools/ClangSharp/sources/ClangSharp/Interop
+/SanityEngine.NET/tools/ClangSharp/tests/ClangSharp/Interop

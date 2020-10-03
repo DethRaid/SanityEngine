@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "adapters/rex/rex_wrapper.hpp"
-#include "assimp/Importer.hpp"
 #include "bve/bve_wrapper.hpp"
 #include "core/asset_registry.hpp"
 #include "entt/entity/registry.hpp"
@@ -72,8 +71,6 @@ private:
     entt::entity player;
 
     Rx::Ptr<FirstPersonController> player_controller;
-
-    Assimp::Importer importer;
 
     Rx::Ptr<AssetRegistry> asset_registry;
 

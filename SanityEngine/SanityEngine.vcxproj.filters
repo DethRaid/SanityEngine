@@ -987,7 +987,9 @@
     <ClInclude Include="src\input\PlatformInput.hpp">
       <Filter>src\input</Filter>
     </ClInclude>
-    <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp" />
+    <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp">
+      <Filter>src\input</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1392,7 +1394,9 @@
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>
     </ClCompile>
-    <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp" />
+    <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp">
+      <Filter>src\input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

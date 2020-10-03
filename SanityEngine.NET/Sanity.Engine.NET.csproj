@@ -81,4 +81,8 @@
 	  </None>
 	</ItemGroup>
 
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+	  <Exec Command="&quot;$(MSBuildProjectDirectory)\tools\ClangSharp\ClangSharpPInvokeGenerator.exe&quot; &quot;@$(MSBuildProjectDirectory)/tools/GenerateSanity.rsp&quot; --file-directory &quot;$(MSBuildProjectDirectory)\..\SanityEngine\src&quot;" />
+	</Target>
+
 </Project>
