@@ -8,9 +8,9 @@ namespace Sanity::Editor::Input {
     public:
         explicit GlfwPlatformInput(GLFWwindow* window_in);
 
-        [[nodiscard]] bool is_key_down(int key) override;
+        [[nodiscard]] bool is_key_down(InputKey key) const override;
     	
-        [[nodiscard]] Double2 get_mouse_location() override;
+        [[nodiscard]] Double2 get_mouse_location() const override;
     	
     private:
         GLFWwindow* window{nullptr};
