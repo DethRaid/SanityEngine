@@ -9,6 +9,7 @@
 #include "cppast/visitor.hpp"
 #include "nlohmann/json.hpp"
 #include "rx/core/filesystem/directory.h"
+#include "rx/core/filesystem/file.h"
 #include "rx/core/log.h"
 #include "rx/core/map.h"
 #include "rx/core/time/stop_watch.h"
@@ -43,12 +44,16 @@ namespace Sanity::Codegen {
     void RunCodegenForDirectory(const Rx::String& cpp_input_directory, const Rx::String& c_sharp_output_directory) {
         logger->info("Scanning directory %s for C++ header files", cpp_input_directory);
 
-        auto json = nlohmann::json::array();
-
         auto dir = Rx::Filesystem::Directory{cpp_input_directory.data()};
         const auto db_entries = CollectHeadersFromDirectory(dir);
-
-    	
+        const auto compilation_database = json{db_entries};
+        const auto compilation_database_string = compilation_database.dump();
+        const auto compilation_database_filename = Rx::String::format("%s/compile_commands.json", cpp_input_directory);
+        {
+            auto compilation_database_file = Rx::Filesystem::File{compilation_database_filename, "w"};
+            compilation_database_file.print(compilation_database_string.c_str());
+            compilation_database_file.close();
+        }
 
         logger->info("Parsing files in directory %s", cpp_input_directory);
 

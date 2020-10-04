@@ -66,5 +66,5 @@ namespace rex {
 namespace Rx {
     void to_json(json& j, const Rx::String& entry) { j = json{entry.data()}; }
 
-    void from_json(const json& j, Rx::String& entry) { entry = j.get<const char*>(); }
+    void from_json(const json& j, Rx::String& entry) { entry = j.get<std::string>().c_str(); }
 } // namespace Rx
