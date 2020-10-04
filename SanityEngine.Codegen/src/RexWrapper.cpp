@@ -1,12 +1,14 @@
-#include <cstdio>
-
 #include "RexWrapper.hpp"
 
+#include <cstdio>
+
+#include "Rex/StdoutStream.hpp"
+#include "nlohmann/json.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/global.h"
 #include "rx/core/log.h"
 #include "rx/core/profiler.h"
-#include "Rex/StdoutStream.hpp"
+#include "rx/core/string.h"
 
 namespace rex {
     static Rx::Global<StdoutStream> stdout_stream{"system", "stdout_stream"};
@@ -60,3 +62,9 @@ namespace rex {
 #endif
     }
 } // namespace rex
+
+namespace Rx {
+    void to_json(json& j, const Rx::String& entry) { j = json{entry.data()}; }
+
+    void from_json(const json& j, Rx::String& entry) { entry = j.get<const char*>(); }
+} // namespace Rx

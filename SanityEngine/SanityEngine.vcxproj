@@ -783,6 +783,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SanityEngine.Codegen\SanityEngine.Codegen.vcxproj">
+      <Project>{5e09e58a-49ef-4ec5-92bc-48006b6a8878}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.VCRTForwarders.140.1.0.6\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\packages\Microsoft.VCRTForwarders.140.1.0.6\build\native\Microsoft.VCRTForwarders.140.targets')" />

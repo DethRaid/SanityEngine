@@ -10,6 +10,7 @@
         "glm",
         "magic-enum",
         "nethost",
+        "nlohmann-json",
         "stb"
     ]
 }

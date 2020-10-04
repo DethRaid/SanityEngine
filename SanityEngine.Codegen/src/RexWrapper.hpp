@@ -1,6 +1,14 @@
 #pragma once
 
+#include "nlohmann/json.hpp"
 #include "rx/core/memory/system_allocator.h"
+#include "rx/core/vector.h"
+
+namespace Rx {
+    struct String;
+}
+
+using nlohmann::json;
 
 namespace rex {
     class Wrapper {
@@ -24,3 +32,27 @@ namespace rex {
 
 constexpr bool RX_ITERATION_CONTINUE = true;
 constexpr bool RX_ITERATION_STOP = false;
+
+namespace Rx {
+	// ReSharper disable CppInconsistentNaming
+	void to_json(json& j, const String& entry);
+
+	void from_json(const json& j, String& entry);
+
+    template <typename ValueType>
+    void to_json(json& j, const Vector<ValueType>& vector) {
+        j = json::array();
+        for(const auto& element : vector) {
+            j.push_back(json{element});
+        }
+    }
+
+    template <typename ValueType>
+    void from_json(const json& j, Vector<ValueType>& vector) {
+        vector.reserve(j.size());
+        for(const auto& element : j) {
+            vector.push_back(element.get<ValueType>());
+        }
+    }
+    // ReSharper restore CppInconsistentNaming
+} // namespace Rx

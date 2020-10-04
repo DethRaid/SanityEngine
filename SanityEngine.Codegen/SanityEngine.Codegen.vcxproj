@@ -220,12 +220,14 @@
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\math\vec2.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\math\vec3.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\math\vec4.cpp" />
-    <ClCompile Include="src\Generators\IGenerator.cpp" />
+    <ClCompile Include="src\CompilationDatabase.cpp" />
+    <ClCompile Include="src\Generators\Generator.cpp" />
     <ClCompile Include="src\Generators\RuntimeClasses\RuntimeClassGenerator.cpp" />
     <ClCompile Include="src\Generators\RuntimeClasses\UnsupportedType.cpp" />
     <ClCompile Include="src\RexWrapper.cpp" />
     <ClCompile Include="src\Rex\StdoutStream.cpp" />
     <ClCompile Include="src\SanityEngine.Codegen.cpp" />
+    <ClCompile Include="src\StringBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\command.h" />
@@ -406,11 +408,13 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\math\vec2.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\math\vec3.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\math\vec4.h" />
-    <ClInclude Include="src\Generators\IGenerator.hpp" />
+    <ClInclude Include="src\CompilationDatabase.hpp" />
+    <ClInclude Include="src\Generators\Generator.hpp" />
     <ClInclude Include="src\Generators\RuntimeClasses\RuntimeClassGenerator.hpp" />
     <ClInclude Include="src\Generators\RuntimeClasses\UnsupportedType.hpp" />
     <ClInclude Include="src\RexWrapper.hpp" />
     <ClInclude Include="src\Rex\StdoutStream.hpp" />
+    <ClInclude Include="src\StringBuilder.hpp" />
     <ClInclude Include="src\Types.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

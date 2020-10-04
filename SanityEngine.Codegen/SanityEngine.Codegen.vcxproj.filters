@@ -314,11 +314,17 @@
     <ClCompile Include="src\Generators\RuntimeClasses\RuntimeClassGenerator.cpp">
       <Filter>src\Generators\RuntimeClasses</Filter>
     </ClCompile>
-    <ClCompile Include="src\Generators\IGenerator.cpp">
-      <Filter>src\Generators</Filter>
-    </ClCompile>
     <ClCompile Include="src\Generators\RuntimeClasses\UnsupportedType.cpp">
       <Filter>src\Generators\RuntimeClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StringBuilder.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Generators\Generator.cpp">
+      <Filter>src\Generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompilationDatabase.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -868,11 +874,17 @@
     <ClInclude Include="src\Generators\RuntimeClasses\RuntimeClassGenerator.hpp">
       <Filter>src\Generators\RuntimeClasses</Filter>
     </ClInclude>
-    <ClInclude Include="src\Generators\IGenerator.hpp">
-      <Filter>src\Generators</Filter>
-    </ClInclude>
     <ClInclude Include="src\Generators\RuntimeClasses\UnsupportedType.hpp">
       <Filter>src\Generators\RuntimeClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Generators\Generator.hpp">
+      <Filter>src\Generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StringBuilder.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CompilationDatabase.hpp">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
