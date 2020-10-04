@@ -61,6 +61,7 @@ namespace Sanity::Codegen {
         config.set_flags(cppast::cpp_standard::cpp_1z);
 
         // TODO: Relative directories
+        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\rex\include)");
         config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\physx\include)");
         config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx)");
         config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\rex\include)");
