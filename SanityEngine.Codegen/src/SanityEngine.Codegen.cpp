@@ -17,14 +17,14 @@ int main(const Sint32 argc, const char** argv) {
     logger->info("HELLO HUMAN");
 
     if(argc != 3) {
-        logger->error("Wrong number of command-line parameters. Usage:\n\n\tSanityEngine.Codegen <C++ directory> <IDL directory>");
+        logger->error("Wrong number of command-line parameters. Usage:\n\n\tSanityEngine.Codegen <C++ directory> <C# directory>");
         return_code = -1;
 
     } else {
         const auto cpp_directory = Rx::String{argv[1]};
-        const auto idl_directory = Rx::String{argv[2]};
+        const auto c_sharp_directory = Rx::String{argv[2]};
 
-        GenerateRuntimeClasses(cpp_directory, idl_directory);
+        GenerateCSharpBindings(cpp_directory, c_sharp_directory);
     }
 
     logger->warning("REMAIN INDOORS");

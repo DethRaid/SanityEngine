@@ -80,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>(ProjectDir)extern\type_safe\include\debug_assert;$(ProjectDir)extern\type_safe\include;$(ProjectDir)extern\cppast\include;$(SolutionDir)SanityEngine\extern\rex\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)extern\cppast\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files\LLVM\lib;$(ProjectDir)extern\cppast\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -129,6 +129,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>_cppast_tiny_processd.lib;libclang.lib;cppastd.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

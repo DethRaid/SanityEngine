@@ -8,11 +8,11 @@
 
 class Terrain;
 
-struct GLFWwindow;
+class PlatformInput;
 
 class FirstPersonController {
 public:
-    explicit FirstPersonController(GLFWwindow* window_in,
+    explicit FirstPersonController(const PlatformInput& input_in,
                                    entt::entity controlled_entity_in,
                                    SynchronizedResource<entt::registry>& registry_in);
 
@@ -25,12 +25,7 @@ private:
 
     Float64 jump_velocity = 5;
 
-    /*!
-     * \brief Window that will receive input
-     *
-     * This player controller queries GLFW for key states directly. This may or may not be a Bad Idea
-     */
-    GLFWwindow* window;
+    const PlatformInput& input;
 
     /*!
      * \brief The entity which represents the player
@@ -42,7 +37,7 @@ private:
      */
     SynchronizedResource<entt::registry>* registry;
 
-    glm::dvec2 last_mouse_pos;
+    Double2 last_cursor_location;
 
     glm::dvec3 previous_location{};
     glm::dvec3 velocity{0};

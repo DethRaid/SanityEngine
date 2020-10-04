@@ -3,22 +3,23 @@
 #include "core/components.hpp"
 #include "entt/entity/registry.hpp"
 #include "glm/ext/quaternion_transform.hpp"
+#include "input\PlatformInput.hpp"
 #include "rx/core/log.h"
 #include "world/terrain.hpp"
 
 RX_LOG("FirstPersonController", logger);
 
-FirstPersonController::FirstPersonController(GLFWwindow* window_in,
+FirstPersonController::FirstPersonController(const PlatformInput& input_in,
                                              const entt::entity controlled_entity_in,
                                              SynchronizedResource<entt::registry>& registry_in)
-    : window{window_in}, controlled_entity{controlled_entity_in}, registry{&registry_in} {
+    : input{input_in}, controlled_entity{controlled_entity_in}, registry{&registry_in} {
     auto locked_registry = registry->lock();
     // Quick validation
     RX_ASSERT(locked_registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
     previous_location = locked_registry->get<TransformComponent>(controlled_entity).location;
 
-    glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
+    glfwGetCursorPos(window, &last_cursor_location.x, &last_cursor_location.y);
 }
 
 void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }
@@ -42,25 +43,25 @@ void FirstPersonController::update_player_transform(const Float64 delta_time) {
         velocity = glm::vec3{0};
 
         // Translation
-        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        if(input.is_key_down(InputKey::W)) {
             // Move the player entity in its forward direction
             velocity -= forward_move_vector * normal_move_speed;
 
-        } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        } else if(input.is_key_down(InputKey::S)) {
             // Move the player entity in its backward direction
             velocity += forward_move_vector * normal_move_speed;
         }
 
-        if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        if(input.is_key_down(InputKey::D)) {
             // Move the player entity in its right direction
             velocity += right_move_vector * normal_move_speed;
 
-        } else if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        } else if(input.is_key_down(InputKey::A)) {
             // Move the player entity in its left direction
             velocity -= right_move_vector * normal_move_speed;
         }
 
-        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        if(input.is_key_down(InputKey::SPACE)) {
             velocity.y = jump_velocity;
             is_grounded = false;
         }
@@ -90,12 +91,11 @@ void FirstPersonController::update_player_transform(const Float64 delta_time) {
     }
 
     // Rotation
-    glm::dvec2 mouse_pos;
-    glfwGetCursorPos(window, &mouse_pos.x, &mouse_pos.y);
+    const auto cursor_location = input.get_mouse_location();
 
-    const auto mouse_delta = mouse_pos - last_mouse_pos;
+    const auto mouse_delta = cursor_location - last_cursor_location;
 
-    last_mouse_pos = mouse_pos;
+    last_cursor_location = cursor_location;
 
     const auto pitch_delta = std::atan2(mouse_delta.y * 0.0001, 1);
     const auto yaw_delta = std::atan2(mouse_delta.x * 0.0001, 1);
