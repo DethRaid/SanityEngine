@@ -192,9 +192,6 @@
     <ClInclude Include="src\bve\bve_wrapper.hpp">
       <Filter>src\bve</Filter>
     </ClInclude>
-    <ClInclude Include="src\bve\train_components.hpp">
-      <Filter>src\bve</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\align.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
