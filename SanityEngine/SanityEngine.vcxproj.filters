@@ -987,6 +987,9 @@
     <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp">
       <Filter>src\input</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\Prelude.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">

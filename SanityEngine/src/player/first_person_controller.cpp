@@ -19,7 +19,7 @@ FirstPersonController::FirstPersonController(const PlatformInput& input_in,
 
     previous_location = locked_registry->get<TransformComponent>(controlled_entity).location;
 
-    glfwGetCursorPos(window, &last_cursor_location.x, &last_cursor_location.y);
+    last_cursor_location = input.get_mouse_location();
 }
 
 void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }

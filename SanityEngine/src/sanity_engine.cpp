@@ -4,8 +4,6 @@
 
 #include <filesystem>
 
-#include <winrt/Windows.Foundation.h>
-
 #include "GLFW/glfw3.h"
 #include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"

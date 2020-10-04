@@ -2,6 +2,7 @@
 
 #include "adapters/rex/rex_wrapper.hpp"
 #include "bve/bve_wrapper.hpp"
+#include "core/Prelude.hpp"
 #include "core/asset_registry.hpp"
 #include "entt/entity/registry.hpp"
 #include "input/input_manager.hpp"
@@ -17,7 +18,7 @@
 /*!
  * \brief Main class for my glorious engine
  */
-class [[sanity::runtime_class]] SanityEngine {
+SANITY_API class [[sanity::runtime_class]] SanityEngine {
 public:
     static Rx::String executable_directory;
 

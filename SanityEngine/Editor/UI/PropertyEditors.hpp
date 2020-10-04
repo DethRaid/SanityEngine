@@ -18,8 +18,14 @@ namespace Sanity::Editor::UI {
     EnumType draw_enum_property(EnumType selected_value) {
         auto selected_idx = magic_enum::enum_integer(selected_value);        
         const auto enum_names = magic_enum::enum_names<EnumType>();
+
+        auto enum_names_vector = Rx::Vector<Rx::String>{};
+        enum_names_vector.reserve(enum_names.size());
+        for(const auto& enum_name : enum_names) {
+            enum_names_vector.emplace_back(enum_name.c_str());
+        }
     	
-        selected_idx = draw_enum_property(enum_names, selected_idx);
+        selected_idx = draw_enum_property(enum_names_vector, selected_idx);
 
     	return magic_enum::enum_value<EnumType>(selected_idx);
     }
