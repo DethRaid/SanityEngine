@@ -14,7 +14,7 @@
 #include "rx/core/map.h"
 #include "rx/core/time/stop_watch.h"
 
-RX_LOG("SanityEngine.Codegen", logger);
+RX_LOG("Sanity.Codegen", logger);
 
 namespace Sanity::Codegen {
     /*!
@@ -46,7 +46,7 @@ namespace Sanity::Codegen {
 
         auto dir = Rx::Filesystem::Directory{cpp_input_directory.data()};
         const auto db_entries = CollectHeadersFromDirectory(dir);
-        const auto compilation_database = json{db_entries};
+        const json compilation_database = db_entries;
         const auto compilation_database_string = compilation_database.dump();
         const auto compilation_database_filename = Rx::String::format("%s/compile_commands.json", cpp_input_directory);
         {

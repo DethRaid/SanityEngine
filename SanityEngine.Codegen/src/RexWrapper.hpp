@@ -41,8 +41,10 @@ namespace Rx {
 
     template <typename ValueType>
     void to_json(json& j, const Vector<ValueType>& vector) {
-        j = json::array();
-        vector.each_fwd([&](const ValueType& element) { j.push_back(json{element}); });
+        vector.each_fwd([&](const ValueType& element) {
+            const auto element_json = json{element};
+            j.push_back(element);
+        });
     }
 
     template <typename ValueType>
