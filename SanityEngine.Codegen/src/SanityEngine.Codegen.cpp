@@ -25,6 +25,40 @@ namespace Sanity::Codegen {
     [[nodiscard]] Rx::String ToString(cppast::cpp_entity_kind kind);
 
     [[nodiscard]] Rx::Vector<CompilationDatabaseEntry> CollectHeadersFromDirectory(Rx::Filesystem::Directory& dir) {
+        const Rx::Vector<Rx::String> arguments = Rx::Array{
+        	// Language options
+        	"--std=c++20"
+
+        	// Include paths
+        	R"(-IE:\Documents\SanityEngine\SanityEngine\extern\rex\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\physx\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\rex\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\tracy)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\json5\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\dotnet\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\bve\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern\pix\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\extern)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\src)",
+            R"(-IE:\Documents\SanityEngine\vcpkg_installed\x64-windows\include)",
+            R"(-IE:\Documents\SanityEngine\SanityEngine\src)",
+
+        	// Global defines
+            "-DWIN32",
+            "-D_WINDOWS",
+            "-DTRACY_ENABLE",
+            "-DRX_DEBUG",
+            "-DGLM_ENABLE_EXPERIMENTAL",
+            "-D_CRT_SECURE_NO_WARNINGS",
+            "-DGLM_FORCE_LEFT_HANDED",
+            "-DNOMINMAX",
+            "-DWIN32_LEAN_AND_MEAN",
+            "-DGLFW_DLL",
+            "-DCMAKE_INTDIR=Debug",
+        };
+    	
         Rx::Vector<CompilationDatabaseEntry> db_entries;
         dir.each([&](Rx::Filesystem::Directory::Item&& item) {
             if(item.is_directory()) {
@@ -34,7 +68,7 @@ namespace Sanity::Codegen {
 
             } else if(item.is_file() && item.name().ends_with(".hpp")) {
                 db_entries.push_back(
-                    CompilationDatabaseEntry{.directory = dir.path(), .file = item.name(), .arguments = Rx::Array{"--std=c++20"}});
+                    CompilationDatabaseEntry{.directory = dir.path(), .file = item.name(), .arguments = arguments});
             }
         });
 
@@ -56,37 +90,6 @@ namespace Sanity::Codegen {
         }
 
         logger->info("Parsing files in directory %s", cpp_input_directory);
-
-        cppast::libclang_compile_config config;
-        config.set_flags(cppast::cpp_standard::cpp_1z);
-
-        // TODO: Relative directories
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\rex\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\physx\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\rex\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\tracy)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\json5\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\bve\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern\pix\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\extern)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\src)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\vcpkg_installed\x64-windows\include)");
-        config.add_include_dir(R"(E:\Documents\SanityEngine\SanityEngine\src)");
-
-        config.define_macro("WIN32", {});
-        config.define_macro("_WINDOWS", {});
-        config.define_macro("TRACY_ENABLE", {});
-        config.define_macro("RX_DEBUG", {});
-        config.define_macro("GLM_ENABLE_EXPERIMENTAL", {});
-        config.define_macro("_CRT_SECURE_NO_WARNINGS", {});
-        config.define_macro("GLM_FORCE_LEFT_HANDED", {});
-        config.define_macro("NOMINMAX", {});
-        config.define_macro("WIN32_LEAN_AND_MEAN", {});
-        config.define_macro("GLFW_DLL", {});
-        config.define_macro("CMAKE_INTDIR", "Debug");
 
         cppast::cpp_entity_index index;
         cppast::simple_file_parser<cppast::libclang_parser> parser{type_safe::ref(index)};
