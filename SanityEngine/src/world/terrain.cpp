@@ -1,8 +1,5 @@
 #include "terrain.hpp"
 
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.System.Threading.h>
-
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "entt/entity/registry.hpp"
@@ -10,19 +7,14 @@
 #include "loading/image_loading.hpp"
 #include "pix3.h"
 #include "renderer/renderer.hpp"
-#include "renderer/standard_material.hpp"
 #include "renderer/rhi/helpers.hpp"
 #include "renderer/rhi/render_device.hpp"
+#include "renderer/standard_material.hpp"
 #include "rx/console/variable.h"
 #include "rx/core/array.h"
 #include "rx/core/log.h"
 #include "rx/core/prng/mt19937.h"
 #include "sanity_engine.hpp"
-
-using namespace winrt;
-using winrt::Windows::Foundation::AsyncStatus;
-using winrt::Windows::Foundation::IAsyncAction;
-using winrt::Windows::System::Threading::ThreadPool;
 
 RX_LOG("\033[32mTerrain\033[0m", logger);
 
@@ -121,7 +113,7 @@ void Terrain::load_terrain_around_player(const TransformComponent& player_transf
                         coords_of_tile_containing_player.y);
         loaded_terrain_tiles.insert(coords_of_tile_containing_player, {});
         num_active_tilegen_tasks.fetch_add(1);
-        ThreadPool::RunAsync([=](const IAsyncAction& /* work_item */) { generate_tile(coords_of_tile_containing_player); });
+        generate_tile(coords_of_tile_containing_player);
     }
 
     // const auto max_tile_distance = cvar_max_terrain_tile_distance->get();
@@ -258,28 +250,21 @@ void Terrain::load_terrain_textures_and_create_material() {
     auto material = renderer::StandardMaterial{};
     material.noise = renderer->get_noise_texture();
 
-    const auto albedo_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
-        const auto albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
-        if(albedo_image_handle) {
-            material.albedo = *albedo_image_handle;
-        } else {
-            logger->error("Could not load terrain albedo texture %s", albedo_texture_name);
-            material.albedo = renderer->get_pink_texture();
-        }
-    });
+    const auto albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
+    if(albedo_image_handle) {
+        material.albedo = *albedo_image_handle;
+    } else {
+        logger->error("Could not load terrain albedo texture %s", albedo_texture_name);
+        material.albedo = renderer->get_pink_texture();
+    }
 
-    const auto normal_roughness_task = ThreadPool::RunAsync([&](const IAsyncAction& /* work_item */) {
-        const auto normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);
-        if(normal_roughness_image_handle) {
-            material.normal_roughness = *normal_roughness_image_handle;
-        } else {
-            logger->error("Could not load terrain normal roughness texture %s", normal_roughness_texture_name);
-            material.normal_roughness = renderer->get_default_normal_roughness_texture();
-        }
-    });
-
-    albedo_task.get();
-    normal_roughness_task.get();
+    const auto normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);
+    if(normal_roughness_image_handle) {
+        material.normal_roughness = *normal_roughness_image_handle;
+    } else {
+        logger->error("Could not load terrain normal roughness texture %s", normal_roughness_texture_name);
+        material.normal_roughness = renderer->get_default_normal_roughness_texture();
+    }
 
     terrain_material = renderer->allocate_standard_material(material);
 }

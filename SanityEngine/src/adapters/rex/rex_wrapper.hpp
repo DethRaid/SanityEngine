@@ -1,9 +1,10 @@
 #pragma once
 
 #include "rx/core/memory/system_allocator.h"
+#include "core/Prelude.hpp"
 
 namespace rex {
-    class Wrapper {
+    class SANITY_API Wrapper {
     public:
         Wrapper();
 

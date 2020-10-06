@@ -4,6 +4,7 @@
 #include "core/concepts/EnumLike.hpp"
 #include "rx/core/string.h"
 #include "magic_enum.hpp"
+#include "adapters/rex/rex_wrapper.hpp"
 
 namespace Sanity::Editor::UI {
 
@@ -22,7 +23,7 @@ namespace Sanity::Editor::UI {
         auto enum_names_vector = Rx::Vector<Rx::String>{};
         enum_names_vector.reserve(enum_names.size());
         for(const auto& enum_name : enum_names) {
-            enum_names_vector.emplace_back(enum_name.c_str());
+            enum_names_vector.emplace_back(RX_SYSTEM_ALLOCATOR, enum_name.data(), enum_name.length());
         }
     	
         selected_idx = draw_enum_property(enum_names_vector, selected_idx);

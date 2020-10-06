@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Prelude.hpp"
 #include "core/async/synchronized_resource.hpp"
 #include "core/types.hpp"
 #include "entt/entity/fwd.hpp"
@@ -10,7 +11,7 @@ class Terrain;
 
 class PlatformInput;
 
-class FirstPersonController {
+class SANITY_API FirstPersonController {
 public:
     explicit FirstPersonController(const PlatformInput& input_in,
                                    entt::entity controlled_entity_in,

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "rx/core/vector.h"
+#include "core/Prelude.hpp"
 #include "rx/core/function.h"
+#include "rx/core/vector.h"
 
-class InputManager {
+class SANITY_API InputManager {
 public:
     void on_key(int key, int action, int mods) const;
 

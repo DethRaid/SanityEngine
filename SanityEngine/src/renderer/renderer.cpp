@@ -1,7 +1,5 @@
 #include "renderer.hpp"
 
-#include <winrt/Windows.System.Threading.h>
-
 #include "GLFW/glfw3.h"
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
@@ -26,8 +24,6 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
-
-using winrt::Windows::System::Threading::ThreadPool;
 
 namespace renderer {
 
@@ -449,6 +445,10 @@ namespace renderer {
             Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
         render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
     }
+
+    void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }
+
+    void Renderer::reload_renderpass_shaders() { throw std::runtime_error{"Not implemented"}; }
 
     Rx::Vector<const Image*> Renderer::get_texture_array() const {
         ZoneScoped;

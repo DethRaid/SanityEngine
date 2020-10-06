@@ -2,6 +2,7 @@
 
 #include <list>
 
+#include "core/Prelude.hpp"
 #include "core/types.hpp"
 
 enum class FramerateDisplayMode { FrameTime, FramesPerSecond, Both };
@@ -12,7 +13,7 @@ struct FrametimeStats {
     double maximum;
 };
 
-class FramerateTracker {
+class SANITY_API FramerateTracker {
 public:
     explicit FramerateTracker(Uint32 max_num_samples_in);
 

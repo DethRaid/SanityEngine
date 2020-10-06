@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Prelude.hpp"
 #include "rx/core/concurrency/mutex.h"
 #include "rx/core/utility/forward.h"
 
@@ -36,7 +37,7 @@ private:
 };
 
 template <typename ResourceType, Mutex MutexType = Rx::Concurrency::Mutex>
-class SynchronizedResource {
+class SANITY_API SynchronizedResource {
 public:
     SynchronizedResource() {}
 

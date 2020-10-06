@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 
+#include "core/Prelude.hpp"
 #include "rx/core/filesystem/directory.h"
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
@@ -20,7 +21,7 @@ constexpr int METADATA_CURRENT_VERSION = 1;
 /*!
  * \brief Stores references to all the assets and how awesome they all are
  */
-class AssetRegistry {
+class SANITY_API AssetRegistry {
 public:
     /*!
      * \brief Creates a new AssetRegistry instance

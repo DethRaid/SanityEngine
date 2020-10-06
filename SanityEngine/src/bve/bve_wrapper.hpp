@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "bve/bve.hpp"
+#include "core/Prelude.hpp"
 #include "core/async/synchronized_resource.hpp"
 #include "entt/entity/fwd.hpp"
 #include "renderer/rhi/bind_group.hpp"
@@ -19,7 +20,7 @@ namespace renderer {
 // bad support for those
 using BveMeshHandle = std::unique_ptr<bve::BVE_Loaded_Static_Mesh, std::function<void(bve::BVE_Loaded_Static_Mesh*)>>;
 
-class BveWrapper {
+class SANITY_API BveWrapper {
 public:
     explicit BveWrapper(renderer::RenderBackend& device);
 

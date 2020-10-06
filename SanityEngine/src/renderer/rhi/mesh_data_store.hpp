@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
@@ -7,7 +8,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 
-struct StandardVertex {
+struct SANITY_API StandardVertex {
     Vec3f position{};
     Vec3f normal{};
     Uint32 color{0xFFFFFFFF};

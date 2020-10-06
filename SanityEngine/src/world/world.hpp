@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "entt/entity/fwd.hpp"
 #include "entt/entity/observer.hpp"
@@ -51,7 +52,7 @@ struct WorldParameters {
     int32_t max_height_above_sea_level;
 };
 
-class World {
+class SANITY_API World {
 public:
     static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
 

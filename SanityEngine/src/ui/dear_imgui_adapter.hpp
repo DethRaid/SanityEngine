@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GLFW/glfw3.h"
+#include "core/Prelude.hpp"
 #include "entt/entity/view.hpp"
 #include "imgui/imgui.h"
 #include "renderer/handles.hpp"
@@ -13,7 +14,7 @@ namespace renderer {
 /*!
  * \brief Adapter class to hook Dear ImGUI into Sanity Engine. Largely based on the GLFW impl in the Dear ImGUI examples
  */
-class DearImguiAdapter {
+class SANITY_API DearImguiAdapter {
 public:
     explicit DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& renderer);
 

@@ -25,12 +25,18 @@ namespace Sanity.Editor
         public SanityEngine Engine
         {
             get; init;
-        } = new();
+        }
 
-        public string contentDirectory
+        public string ContentDirectory
         {
             get;
             private set;
+        }
+
+        public SanityEditor()
+        {
+            var settings = new Settings { ExecutableDirectory = "", QualityLevel = RenderQualityLevel.Ultra, RenderScale = 1 };
+            Engine = new(ref settings);
         }
 
         public void CreateProject(ProjectInfo projectInto)
@@ -70,8 +76,8 @@ namespace Sanity.Editor
 
         private void SetProjectDirectory(string directory)
         {
-            contentDirectory = string.Format("{0}\\{1}", directory, ProjectInfo.ContentDirectory);
-            Engine.SetContentDirectory(contentDirectory);
+            ContentDirectory = string.Format("{0}\\{1}", directory, ProjectInfo.ContentDirectory);
+            Engine.SetContentDirectory(ContentDirectory);
 
             // TODO: Set other directories as needed
         }

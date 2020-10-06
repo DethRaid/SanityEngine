@@ -3,10 +3,12 @@
 #include <chrono>
 #include <queue>
 
+#include "core/Prelude.hpp"
 #include "core/async/synchronized_resource.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/render_components.hpp"
+#include "rhi/render_device.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "renderer/renderpasses/forward_pass.hpp"
 #include "renderer/standard_material.hpp"
@@ -20,7 +22,6 @@
 
 namespace renderer {
     class RenderCommandList;
-    class RenderBackend;
 } // namespace renderer
 
 struct GLFWwindow;
@@ -67,7 +68,7 @@ namespace renderer {
      *
      * It won't actually do that for a while, but having a strong name is very useful
      */
-    class Renderer {
+    class SANITY_API Renderer {
     public:
         explicit Renderer(GLFWwindow* window, const Settings& settings_in);
 
@@ -271,6 +272,10 @@ namespace renderer {
         void load_noise_texture(const Rx::String& filepath);
 
         void create_render_passes();
+
+        void reload_builtin_shaders();
+
+        void reload_renderpass_shaders();
 #pragma endregion
 
         [[nodiscard]] Rx::Vector<const Image*> get_texture_array() const;

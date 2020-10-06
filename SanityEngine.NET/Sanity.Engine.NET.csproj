@@ -17,41 +17,6 @@
 		<RunPostBuildEvent>Always</RunPostBuildEvent>
 	</PropertyGroup>
 
-	<Target Name="GenerateProjection" BeforeTargets="Build">
-		<PropertyGroup>
-			<CsWinRTVerbosity>high</CsWinRTVerbosity>
-			<CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_test.rsp</CsWinRTResponseFile>
-			<CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-		</PropertyGroup>
-		<PropertyGroup>
-			<CsWinRTParams>
--verbose
-
-# Include Windows SDK metadata to satisfy references to
-# Windows types from project-specific metadata.
--in 10.0.19041.0
-
-# Don't project referenced Windows types, as these are
-# provided by the Windows interop assembly.
--exclude Windows
-
-# Reference project-specific winmd files, defined elsewhere,
-# such as from a NuGet package.
--in $(SolutionDir)SanityEngine\x64\Debug\Merged\Sanity.winmd
-
-# Include project-specific namespaces/types in the projection
--include Sanity
-
-# Write projection sources to the "Generated Files" folder,
-# which should be excluded from checkin (e.g., .gitignored).
--out "$(IntermediateOutputPath)Generated Files"
-			</CsWinRTParams>
-		</PropertyGroup>
-		<WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-		<Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
-		<Exec Command="$(CsWinRTCommand)" />
-	</Target>
-
 	<PropertyGroup>
 		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
 		<Description>C# Bindings for the SanityEngine public API</Description>
@@ -70,8 +35,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.UI.Xaml" Version="2.5.0-prerelease.200812001" />
-	  <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200629.3" GeneratePathProperty="true" />
+	  <PackageReference Include="Microsoft.UI.Xaml" Version="2.5.0-prerelease.200923002" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -81,8 +45,8 @@
 	  </None>
 	</ItemGroup>
 
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-	  <Exec Command="&quot;$(MSBuildProjectDirectory)\tools\ClangSharp\ClangSharpPInvokeGenerator.exe&quot; &quot;@$(MSBuildProjectDirectory)/tools/GenerateSanity.rsp&quot; --file-directory &quot;$(MSBuildProjectDirectory)\..\SanityEngine\src&quot;" />
-	</Target>
+	<ItemGroup>
+	  <Folder Include="sources\" />
+	</ItemGroup>
 
 </Project>
