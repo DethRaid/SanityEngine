@@ -21,7 +21,5 @@ namespace rex {
 
     private:
         Rx::String my_name = "SanityEngineLogStream";
-
-        FILE* fileyboi{nullptr};
     };
 } // namespace rex

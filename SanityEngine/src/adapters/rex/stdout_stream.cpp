@@ -3,18 +3,17 @@
 #include <cstdio>
 
 namespace rex {
-    StdoutStream::StdoutStream() : Stream(k_flush | k_write), fileyboi{freopen("CON", "wb", stdout)} {
-    }
+    StdoutStream::StdoutStream() : Stream(k_flush | k_write) {}
 
-    StdoutStream::~StdoutStream() { fclose(fileyboi); }
+    StdoutStream::~StdoutStream() { }
 
     Uint64 StdoutStream::on_write(const Byte* data, const Uint64 size) {
-        const auto result = fwrite(data, size, 1, fileyboi);
-        return result == 1 ? size : ftell(fileyboi);
+        const auto result = fwrite(data, size, 1, stdout);
+        return result == 1 ? size : ftell(stdout);
     }
 
     bool StdoutStream::on_flush() {
-        fflush(fileyboi);
+        fflush(stdout);
         return true;
     }
 
