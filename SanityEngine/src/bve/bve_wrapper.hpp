@@ -11,7 +11,7 @@
 #include "renderer/rhi/mesh_data_store.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
-
+/*
 namespace renderer {
     class Renderer;
 }
@@ -40,3 +40,4 @@ private:
 
     [[nodiscard]] std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> process_vertices(const bve::BVE_Mesh& mesh) const;
 };
+*/

@@ -14,7 +14,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 #include "stb_image.h"
-
+/*
 using namespace bve;
 
 constexpr Uint32 THREAD_GROUP_WIDTH = 8;
@@ -337,3 +337,4 @@ std::pair<Rx::Vector<StandardVertex>, Rx::Vector<Uint32>> BveWrapper::process_ve
 
     return {vertices, indices};
 }
+*/

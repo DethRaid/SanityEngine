@@ -91,9 +91,6 @@
     <Filter Include="src\adapters\rex">
       <UniqueIdentifier>{1f4b862d-bd1b-4218-94c6-9d355b19fb42}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\bve">
-      <UniqueIdentifier>{05398d6c-7b4e-4a4f-a103-355ca6c53bb9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\core">
       <UniqueIdentifier>{2e9807b4-da06-4afb-930b-6d891c95bc79}</UniqueIdentifier>
     </Filter>
@@ -166,6 +163,9 @@
     <Filter Include="Editor\Input">
       <UniqueIdentifier>{c70bdf3f-9b23-4731-b98a-1f3e71305b13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\adapters\bve">
+      <UniqueIdentifier>{05398d6c-7b4e-4a4f-a103-355ca6c53bb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -190,7 +190,7 @@
       <Filter>src\adapters\rex</Filter>
     </ClInclude>
     <ClInclude Include="src\bve\bve_wrapper.hpp">
-      <Filter>src\bve</Filter>
+      <Filter>src\adapters\bve</Filter>
     </ClInclude>
     <ClInclude Include="src\core\align.hpp">
       <Filter>src\core</Filter>
@@ -999,7 +999,7 @@
       <Filter>src\adapters\rex</Filter>
     </ClCompile>
     <ClCompile Include="src\bve\bve_wrapper.cpp">
-      <Filter>src\bve</Filter>
+      <Filter>src\adapters\bve</Filter>
     </ClCompile>
     <ClCompile Include="src\core\asset_registry.cpp">
       <Filter>src\core</Filter>

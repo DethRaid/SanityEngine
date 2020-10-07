@@ -80,7 +80,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
         asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
-        bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
+        // bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
 
         create_first_person_player();
 

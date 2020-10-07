@@ -56,7 +56,7 @@ private:
 
     FramerateTracker framerate_tracker{1000};
 
-    Rx::Ptr<BveWrapper> bve;
+    // Rx::Ptr<BveWrapper> bve;
 
     GLFWwindow* window;
 
