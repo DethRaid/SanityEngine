@@ -145,7 +145,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <PostBuildEvent>
       <Message>
       </Message>
-      <Command>setlocal
+      <Command>copy $(SolutionDir)$(IntDir)Sanity.dll $(SolutionDir)Sanity.Editor\bin\$(ConfigurationName)\net5.0\
+
+setlocal
 powershell -noprofile -executionpolicy Bypass -file E:/Documents/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.exe -installedDir E:/Documents/SanityEngine/build/vcpkg_installed/x64-windows/debug/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd

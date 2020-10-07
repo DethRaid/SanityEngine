@@ -9,6 +9,11 @@
     <Description>World editor for Sanity Engine games</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <StartupObject>Sanity.Editor.App</StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +28,7 @@
     <PackageReference Include="NLog.Windows.Forms" Version="4.3.0" />
     <PackageReference Include="NLog.WindowsEventLog" Version="4.7.4" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="1.1.0" />
+    <PackageReference Include="PostSharp" Version="6.7.9-rc" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +48,21 @@
 
   <ItemGroup>
     <Folder Include="Validation\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
 </Project>
