@@ -27,7 +27,7 @@ namespace Sanity::Codegen {
     [[nodiscard]] Rx::Vector<CompilationDatabaseEntry> CollectHeadersFromDirectory(Rx::Filesystem::Directory& dir) {
         const Rx::Vector<Rx::String> arguments = Rx::Array{
         	// Language options
-        	"--std=c++20",
+        	"--std=c++1z",
 
         	// Include paths
         	R"(-IE:\Documents\SanityEngine\SanityEngine\extern\rex\include)",
