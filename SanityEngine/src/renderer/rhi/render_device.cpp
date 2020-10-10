@@ -50,10 +50,8 @@ namespace renderer {
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
 
     RenderBackend::RenderBackend(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
-                               const glm::uvec2& window_size,
-                               const Settings& settings_in)
-        : settings{settings_in},
-          command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+                                 const glm::uvec2& window_size)
+        : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           command_allocators_to_reset_on_begin_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           image_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -401,10 +399,7 @@ namespace renderer {
         }
 
         ComPtr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0,
-                                           D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                           command_allocator.Get(),
-                                           nullptr, IID_PPV_ARGS(&cmds));
+        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -799,12 +794,8 @@ namespace renderer {
         };
 
         ComPtr<IDXGISwapChain1> swapchain1;
-        auto hr = factory->CreateSwapChainForHwnd(direct_command_queue.Get(),
-                                                  window_handle,
-                                                  &swapchain_desc,
-                                                  nullptr,
-                                                  nullptr,
-                                                  &swapchain1);
+        auto hr = factory
+                      ->CreateSwapChainForHwnd(direct_command_queue.Get(), window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
         if(FAILED(hr)) {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
@@ -1183,7 +1174,7 @@ namespace renderer {
     }
 
     Rx::Ptr<RenderPipelineState> RenderBackend::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
-                                                                     ID3D12RootSignature& root_signature) {
+                                                                      ID3D12RootSignature& root_signature) {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
         desc.pRootSignature = &root_signature;
@@ -1448,12 +1439,8 @@ namespace renderer {
         alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
         auto buffer = Buffer{};
-        auto result = device_allocator->CreateResource(&alloc_desc,
-                                                       &desc,
-                                                       initial_state,
-                                                       nullptr,
-                                                       &buffer.allocation,
-                                                       IID_PPV_ARGS(&buffer.resource));
+        auto result = device_allocator
+                          ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -1552,7 +1539,7 @@ namespace renderer {
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
-    Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window, const Settings& settings) {
+    Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window) {
         auto hwnd = glfwGetWin32Window(window); // NOLINT(readability-qualified-auto)
 
         glm::ivec2 framebuffer_size{};
@@ -1560,6 +1547,6 @@ namespace renderer {
 
         logger->info("Creating D3D12 backend");
 
-        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
+        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size);
     }
 } // namespace renderer

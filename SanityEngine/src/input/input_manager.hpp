@@ -6,6 +6,8 @@
 
 class SANITY_API InputManager {
 public:
+    InputManager();
+	
     void on_key(int key, int action, int mods) const;
 
     void register_key_callback(Rx::Function<void(int, int, int)>&& callback);

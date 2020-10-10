@@ -70,7 +70,7 @@ namespace renderer {
      */
     class SANITY_API Renderer {
     public:
-        explicit Renderer(GLFWwindow* window, const Settings& settings_in);
+        explicit Renderer(GLFWwindow* window);
 
         /// <summary>
         /// Reloads all the shaders from disk
@@ -225,7 +225,7 @@ namespace renderer {
 
         std::chrono::high_resolution_clock::time_point start_time;
 
-        Settings settings;
+        float render_scale{1.0f};
 
         glm::uvec2 output_framebuffer_size;
 

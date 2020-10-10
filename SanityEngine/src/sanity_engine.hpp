@@ -25,12 +25,14 @@ public:
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    explicit SanityEngine(const Settings& settings_in);
+    explicit SanityEngine(const char* executable_directory_in);
 
     /*!
      * \brief De-initializes the engine
      */
     ~SanityEngine();
+
+    void CreateWorld();
 
     /*!
      * \brief Runs the main loop of the engine. This method eventually returns, after the user is finished playing their game
@@ -39,14 +41,12 @@ public:
 
     [[nodiscard]] entt::entity get_player() const;
 
-    [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
+    // [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
 
     [[nodiscard]] World* get_world() const;
 
 private:
     rex::Wrapper rex;
-
-    Settings settings;
 
     Rx::Ptr<InputManager> input_manager;
 
@@ -58,33 +58,33 @@ private:
 
     // Rx::Ptr<BveWrapper> bve;
 
-    GLFWwindow* window;
+    GLFWwindow* window{nullptr};
 
-    Rx::Ptr<World> world;
+    // Rx::Ptr<World> world;
 
-    SynchronizedResource<entt::registry> registry;
+    // SynchronizedResource<entt::registry> registry;
 
     /*!
      * \brief Entity which represents the player
      *
      * SanityEngine is a singleplayer engine, end of story. Makes my life easier and increases my sanity :)
      */
-    entt::entity player;
+    // entt::entity player;
 
-    Rx::Ptr<FirstPersonController> player_controller;
+    // Rx::Ptr<FirstPersonController> player_controller;
 
-    Rx::Ptr<AssetRegistry> asset_registry;
+    // Rx::Ptr<AssetRegistry> asset_registry;
 
-    Rx::Time::StopWatch frame_timer;
+    // Rx::Time::StopWatch frame_timer;
 
     /*!
      * \brief Number of seconds since the engine started running
      */
-    double t = 0;
+    // double t{0.0};
 
-    const double dt = 0.01; // Physics timestep
+    // const double dt{0.01}; // Physics timestep
 
-    double accumulator = 0;
+    // double accumulator{0.0};
 
 #pragma region Spawning
     void create_planetary_atmosphere();

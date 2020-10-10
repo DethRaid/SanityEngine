@@ -60,8 +60,8 @@ public:
      * \brief Created a world with the provided parameters
      */
     static Rx::Ptr<World> create(const WorldParameters& params,
-                                 entt::entity player,
-                                 SynchronizedResource<entt::registry>& registry,
+                                 // entt::entity player,
+                                 // SynchronizedResource<entt::registry>& registry,
                                  renderer::Renderer& renderer);
 
     explicit World(const glm::uvec2& size_in,

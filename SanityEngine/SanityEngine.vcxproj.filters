@@ -148,20 +148,8 @@
     <Filter Include="src\stats">
       <UniqueIdentifier>{48e8b244-e765-485f-b850-c9d0277d253a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Editor">
-      <UniqueIdentifier>{60d87d02-c17c-42d4-815d-1304099d1988}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Editor\UI">
-      <UniqueIdentifier>{e5131684-9d5c-4d5b-9f6a-f96c8ff6a418}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Editor\UI\DensityMap">
-      <UniqueIdentifier>{1b88f48f-5d73-4c39-b6a8-0ea928dd145a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\core\concepts">
       <UniqueIdentifier>{7608827b-7147-4850-95a7-2747c83de2fd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Editor\Input">
-      <UniqueIdentifier>{c70bdf3f-9b23-4731-b98a-1f3e71305b13}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\adapters\bve">
       <UniqueIdentifier>{05398d6c-7b4e-4a4f-a103-355ca6c53bb9}</UniqueIdentifier>
@@ -957,23 +945,8 @@
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h">
       <Filter>extern\imgui-node-editor</Filter>
     </ClInclude>
-    <ClInclude Include="Editor\SanityEditor.hpp">
-      <Filter>Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\UI\NodeGraphNode.hpp">
-      <Filter>Editor\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.hpp">
-      <Filter>Editor\UI\DensityMap</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\UI\DensityMap\EngineTextureNode.hpp">
-      <Filter>Editor\UI\DensityMap</Filter>
-    </ClInclude>
     <ClInclude Include="src\world\environment\Environment.hpp">
       <Filter>src\world\environment</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\UI\PropertyEditors.hpp">
-      <Filter>Editor\UI</Filter>
     </ClInclude>
     <ClInclude Include="src\core\concepts\EnumLike.hpp">
       <Filter>src\core\concepts</Filter>
@@ -1370,26 +1343,8 @@
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp">
       <Filter>extern\imgui-node-editor</Filter>
     </ClCompile>
-    <ClCompile Include="Editor\Sanity.Engine.main.cpp">
-      <Filter>Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\SanityEditor.cpp">
-      <Filter>Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\UI\NodeGraphNode.cpp">
-      <Filter>Editor\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.cpp">
-      <Filter>Editor\UI\DensityMap</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\UI\DensityMap\EngineTextureNode.cpp">
-      <Filter>Editor\UI\DensityMap</Filter>
-    </ClCompile>
     <ClCompile Include="src\world\environment\Environment.cpp">
       <Filter>src\world\environment</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\UI\PropertyEditors.cpp">
-      <Filter>Editor\UI</Filter>
     </ClCompile>
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>

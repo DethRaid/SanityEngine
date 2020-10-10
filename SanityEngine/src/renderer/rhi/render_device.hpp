@@ -79,7 +79,7 @@ namespace renderer {
         ComPtr<ID3D12Device1> device1;
         ComPtr<ID3D12Device5> device5;
 
-        RenderBackend(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
+        RenderBackend(HWND window_handle, const glm::uvec2& window_size);
 
         RenderBackend(const RenderBackend& other) = delete;
         RenderBackend& operator=(const RenderBackend& other) = delete;
@@ -178,8 +178,6 @@ namespace renderer {
         [[nodiscard]] ID3D12DescriptorHeap* get_cbv_srv_uav_heap() const;
 
     private:
-        Settings settings;
-
         /*!
          * \brief Marker for if the engine is still being initialized and hasn't yet rendered any frame
          *
@@ -377,5 +375,5 @@ namespace renderer {
         void log_dred_report() const;
     };
 
-    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window, const Settings& settings);
+    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window);
 } // namespace renderer
