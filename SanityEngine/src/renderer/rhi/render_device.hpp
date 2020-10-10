@@ -377,5 +377,5 @@ namespace renderer {
         void log_dred_report() const;
     };
 
-    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window, const Settings& settings);
+    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window);
 } // namespace renderer
