@@ -49,11 +49,9 @@ namespace renderer {
 
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
 
-    RenderBackend::RenderBackend(HWND window_handle, // NOLINT(cppcoreguidelines-pro-type-member-init)
-                               const glm::uvec2& window_size,
-                               const Settings& settings_in)
-        : settings{settings_in},
-          command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+    RenderBackend::RenderBackend(HWND window_handle, 
+                               const glm::uvec2& window_size)
+        : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           command_allocators_to_reset_on_begin_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           image_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -1552,7 +1550,7 @@ namespace renderer {
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
-    Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window, const Settings& settings) {
+    Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window) {
         auto hwnd = glfwGetWin32Window(window); // NOLINT(readability-qualified-auto)
 
         glm::ivec2 framebuffer_size{};
@@ -1560,6 +1558,6 @@ namespace renderer {
 
         logger->info("Creating D3D12 backend");
 
-        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size, settings);
+        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size);
     }
 } // namespace renderer

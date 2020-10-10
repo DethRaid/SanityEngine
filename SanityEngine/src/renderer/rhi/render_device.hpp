@@ -79,7 +79,7 @@ namespace renderer {
         ComPtr<ID3D12Device1> device1;
         ComPtr<ID3D12Device5> device5;
 
-        RenderBackend(HWND window_handle, const glm::uvec2& window_size, const Settings& settings_in);
+        RenderBackend(HWND window_handle, const glm::uvec2& window_size);
 
         RenderBackend(const RenderBackend& other) = delete;
         RenderBackend& operator=(const RenderBackend& other) = delete;

@@ -25,7 +25,7 @@ public:
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    explicit SanityEngine(const Settings& settings_in);
+    explicit SanityEngine(const char* executable_directory_in);
 
     /*!
      * \brief De-initializes the engine
@@ -45,8 +45,6 @@ public:
 
 private:
     rex::Wrapper rex;
-
-    Settings settings;
 
     Rx::Ptr<InputManager> input_manager;
 

@@ -39,11 +39,11 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 
 Rx::String SanityEngine::executable_directory;
 
-SanityEngine::SanityEngine(const Settings& settings_in)
-    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
+SanityEngine::SanityEngine(const char* executable_directory_in)
+    : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
 
-    executable_directory = settings.executable_directory;
+    executable_directory = executable_directory_in;
 
     {
         ZoneScoped;
@@ -75,7 +75,7 @@ SanityEngine::SanityEngine(const Settings& settings_in)
 
         glfwSetKeyCallback(window, key_func);
 
-        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings);
+        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window);
         logger->info("Initialized renderer");
 
         asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
