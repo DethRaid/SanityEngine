@@ -1,6 +1,7 @@
 #ifndef RX_CORE_UNINITIALIZED_H
 #define RX_CORE_UNINITIALIZED_H
 #include "rx/core/memory/uninitialized_storage.h"
+
 #include "rx/core/utility/construct.h"
 #include "rx/core/utility/destruct.h"
 

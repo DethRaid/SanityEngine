@@ -1,5 +1,5 @@
 #include "rx/console/variable.h"
-#include "rx/console/interface.h"
+#include "rx/console/context.h"
 
 #include "rx/core/hints/unreachable.h"
 
@@ -56,7 +56,7 @@ VariableReference::VariableReference(const char* name,
   , m_handle{handle}
   , m_type{type}
 {
-  m_next = Interface::add_variable(this);
+  m_next = Context::add_variable(this);
 }
 
 void VariableReference::reset() {

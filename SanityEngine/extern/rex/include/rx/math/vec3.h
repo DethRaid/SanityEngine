@@ -18,6 +18,7 @@ template<typename T>
 struct Vec3 {
   constexpr Vec3();
   constexpr Vec3(T _x, T _y, T _z);
+  constexpr Vec3(const T (&_values)[3]);
 
   T& operator[](Size _i);
   const T& operator[](Size _i) const;
@@ -74,6 +75,14 @@ inline constexpr Vec3<T>::Vec3(T _x, T _y, T _z)
   : x{_x}
   , y{_y}
   , z{_z}
+{
+}
+
+template<typename T>
+inline constexpr Vec3<T>::Vec3(const T (&_values)[3])
+  : x{_values[0]}
+  , y{_values[1]}
+  , z{_values[2]}
 {
 }
 

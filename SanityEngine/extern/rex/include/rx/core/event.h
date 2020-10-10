@@ -25,6 +25,15 @@ struct Event<R(Ts...)> {
   struct Handle {
     RX_MARK_NO_COPY(Handle);
 
+    // TODO(dweiler): Check if this breaks on MSVC like the one below,
+    // ideally these should be defined _outside_.
+    Handle& operator=(Handle&& handle_) {
+      m_event = Utility::exchange(handle_.m_event, nullptr);
+      m_index = Utility::exchange(handle_.m_index, 0);
+      return *this;
+    }
+
+    constexpr Handle();
     constexpr Handle(Event* _event, Size _index);
     constexpr Handle(Handle&& _existing)
         : m_event{Utility::exchange(_existing.m_event, nullptr)}, m_index{Utility::exchange(_existing.m_index, 0)} {};
@@ -52,6 +61,13 @@ private:
 
   Vector<Delegate> m_delegates RX_HINT_GUARDED_BY(m_lock);
 };
+
+template<typename R, typename... Ts>
+inline constexpr Event<R(Ts...)>::Handle::Handle()
+  : m_event{nullptr}
+  , m_index{0}
+{
+}
 
 template<typename R, typename... Ts>
 inline constexpr Event<R(Ts...)>::Handle::Handle(Event<R(Ts...)>* _event, Size _index)
@@ -94,8 +110,9 @@ template<typename R, typename... Ts>
 inline typename Event<R(Ts...)>::Handle Event<R(Ts...)>::connect(Delegate&& delegate_) {
   Concurrency::ScopeLock lock{m_lock};
   const Size delegates = m_delegates.size();
-  for (Size i{0}; i < delegates; i++) {
+  for (Size i = 0; i < delegates; i++) {
     if (!m_delegates[i]) {
+      m_delegates[i] = Utility::move(delegate_);
       return {this, i};
     }
   }

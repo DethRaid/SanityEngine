@@ -2,13 +2,14 @@
 #define RX_CORE_CONCURRENCY_CONDITION_VARIABLE_H
 #include "rx/core/types.h"
 #include "rx/core/concurrency/scope_lock.h"
+#include "rx/core/prelude.h"
 
 namespace Rx::Concurrency {
 
 struct Mutex;
 struct RecursiveMutex;
 
-struct ConditionVariable {
+struct RX_API ConditionVariable {
   ConditionVariable();
   ~ConditionVariable();
 

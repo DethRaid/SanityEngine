@@ -2,25 +2,16 @@
 #define RX_CORE_MEMORY_ALLOCATOR_H
 #include "rx/core/utility/construct.h"
 #include "rx/core/utility/destruct.h"
+#include "rx/core/prelude.h"
 
 #include "rx/core/markers.h"
 
 namespace Rx::Memory {
 
-struct Allocator {
+struct RX_API Allocator {
   RX_MARK_INTERFACE(Allocator);
 
-  // all allocators must align their data and round their sizes to this alignment
-  // value as well, failure to do so will lead to unaligned reads and writes to
-  // several engine interfaces that depend on this behavior and possible crashes
-  // in interfaces that rely on alignment for SIMD and being able to tag pointer
-  // bits with additional information.
-  //
-  // rounding of pointers and sizes can be done with round_to_alignment
-  static constexpr const Size k_alignment = 16;
-
-  // constexpr Allocator() = default;
-  // ~Allocator() = default;
+  static constexpr const Size ALIGNMENT = 16;
 
   // allocate memory of size |_size|
   virtual Byte* allocate(Size _size) = 0;
@@ -43,10 +34,18 @@ struct Allocator {
   Byte* allocate(Size _size, Size _count);
 
   static constexpr UintPtr round_to_alignment(UintPtr _ptr_or_size);
+
+  template<typename T>
+  static Byte* round_to_alignment(T* _ptr);
 };
 
 inline constexpr UintPtr Allocator::round_to_alignment(UintPtr _ptr_or_size) {
-  return (_ptr_or_size + (k_alignment - 1)) & ~(k_alignment - 1);
+  return (_ptr_or_size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1);
+}
+
+template<typename T>
+inline Byte* Allocator::round_to_alignment(T* _ptr) {
+  return reinterpret_cast<Byte*>(round_to_alignment(reinterpret_cast<UintPtr>(_ptr)));
 }
 
 template<typename T, typename... Ts>

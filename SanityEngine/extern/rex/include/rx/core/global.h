@@ -1,17 +1,18 @@
 #ifndef RX_CORE_GLOBAL_H
 #define RX_CORE_GLOBAL_H
-#include "rx/core/tagged_ptr.h"
-#include "rx/core/intrusive_xor_list.h"
+#include "rx/core/intrusive_compressed_list.h"
+#include "rx/core/intrusive_list.h"
 #include "rx/core/uninitialized.h"
+#include "rx/core/tagged_ptr.h"
+#include "rx/core/prelude.h"
 
 namespace Rx {
 
-// 32-bit: 24 bytes
-// 64-bit: 48 bytes
-struct alignas(Memory::Allocator::k_alignment) GlobalNode {
+// 32-bit: 32 bytes
+// 64-bit: 64 bytes
+struct alignas(Memory::Allocator::ALIGNMENT) RX_API GlobalNode {
   template<typename T, typename... Ts>
-  GlobalNode(const char* _group, const char* _name,
-             Uninitialized<T>& _storage, Ts&&... _arguments);
+  GlobalNode(const char* _group, const char* _name, Uninitialized<T>& _storage, Ts&&... _arguments);
 
   void init();
   void fini();
@@ -22,7 +23,6 @@ struct alignas(Memory::Allocator::k_alignment) GlobalNode {
   const char* name() const;
 
   Byte* data();
-  const Byte* data() const;
 
   template<typename T>
   T* cast();
@@ -34,25 +34,22 @@ private:
   friend struct Globals;
   friend struct GlobalGroup;
 
-  void init_global();
-  void fini_global();
-
   template<typename T>
   void validate_cast_for() const;
 
   template<typename F, typename... Rs>
   struct Arguments : Arguments<Rs...> {
-    constexpr Arguments(F&& _first, Rs&&... _rest)
+    constexpr Arguments(const F& _first, Rs&&... _rest)
       : Arguments<Rs...>(Utility::forward<Rs>(_rest)...)
-      , first{Utility::forward<F>(_first)}
+      , first{_first}
     {
     }
     F first;
   };
   template<typename F>
   struct Arguments<F> {
-    constexpr Arguments(F&& _first)
-      : first{Utility::forward<F>(_first)}
+    constexpr Arguments(const F& _first)
+      : first{_first}
     {
     }
     F first;
@@ -89,8 +86,7 @@ private:
 
   template<typename... Ts>
   static void construct_arguments(Byte* _argument_store, Ts... _arguments) {
-    Utility::construct<Arguments<Ts...>>(_argument_store,
-                                         Utility::forward<Ts>(_arguments)...);
+    Utility::construct<Arguments<Ts...>>(_argument_store, Utility::forward<Ts>(_arguments)...);
   }
 
   template<typename T, typename... Ts, Size... Ns>
@@ -101,13 +97,11 @@ private:
                           argument<Ns>(reinterpret_cast<Arguments<Ts...>*>(_argument_store))...);
   }
 
-  // Combine multiple operations into a single function so we only have to store
-  // a single function pointer rather than multiple.
+  // Compression technique. Only need to store a single function pointer.
   enum class StorageMode {
-    k_init_global,
-    k_fini_global,
-    k_traits_global,
-    k_fini_arguments
+    INIT,
+    FINI,
+    TRAITS
   };
 
   template<typename T, typename... Ts>
@@ -115,37 +109,41 @@ private:
     [[maybe_unused]] Byte* _global_store, [[maybe_unused]] Byte* _argument_store)
   {
     switch (_mode) {
-    case StorageMode::k_init_global:
+    case StorageMode::INIT:
       using Unpack = typename UnpackArguments<sizeof...(Ts)>::Type;
       construct_global<T, Ts...>(Unpack{}, _global_store, _argument_store);
       break;
-    case StorageMode::k_fini_global:
-      Utility::destruct<T>(_global_store);
-      break;
-    case StorageMode::k_fini_arguments:
+    case StorageMode::FINI:
+      if (_global_store) {
+        Utility::destruct<T>(_global_store);
+      }
       if constexpr(sizeof...(Ts) != 0) {
-        Utility::destruct<Arguments<Ts...>>(_argument_store);
+        if (_argument_store) {
+          Utility::destruct<Arguments<Ts...>>(_argument_store);
+        }
       }
       break;
-    case StorageMode::k_traits_global:
-      return (sizeof(T) << 32_u64) | alignof(T);
+    case StorageMode::TRAITS:
+      return (Uint64(sizeof(T)) << 32_u64) | alignof(T);
     }
     return 0;
   }
 
-  static Byte* reallocate_arguments(Byte* _existing, Size _size);
+  Byte* allocate(Size _size);
+  void deallocate(Byte* _data);
 
-  // Stored in tag bits of |m_argument_store|.
+  // Flag is set in |m_argument_store|.
   enum : Byte {
-    k_enabled     = 1 << 0,
-    k_initialized = 1 << 1,
-    k_arguments   = 1 << 2
+    INITIALIZED = 1 << 0,
+    ARGUMENTS   = 1 << 1
   };
 
   TaggedPtr<Byte> m_argument_store;
 
-  intrusive_xor_list::Node m_grouped;
-  intrusive_xor_list::Node m_ungrouped;
+  IntrusiveCompressedList::Node m_grouped;
+  IntrusiveCompressedList::Node m_ungrouped;
+
+  IntrusiveList::Node m_initialized;
 
   const char* m_group;
   const char* m_name;
@@ -154,8 +152,8 @@ private:
     Byte* _argument_store);
 };
 
-// 32-bit: 24 + sizeof(T) bytes
-// 64-bit: 48 + sizeof(T) bytes
+// 32-bit: 32 + sizeof(T) bytes
+// 64-bit: 64 + sizeof(T) bytes
 template<typename T>
 struct Global {
   template<typename... Ts>
@@ -182,7 +180,7 @@ struct Global {
   constexpr const T* data() const;
 
 private:
-  GlobalNode m_node;
+  mutable GlobalNode m_node;
   Uninitialized<T> m_global_store;
 };
 
@@ -205,16 +203,13 @@ private:
   friend struct Globals;
   friend struct GlobalNode;
 
-  void init_global();
-  void fini_global();
-
   const char* m_name;
 
-  // Nodes for this group. This is constructed after a call to |globals::link|.
-  intrusive_xor_list m_list;
+  // Nodes for this group. This is constructed after a call to |Globals::link|.
+  IntrusiveCompressedList m_list;
 
   // Link for global linked-list of groups in |globals|.
-  intrusive_xor_list::Node m_link;
+  IntrusiveCompressedList::Node m_link;
 };
 
 struct Globals {
@@ -235,10 +230,13 @@ private:
   static void link(GlobalGroup* _group);
 
   // Global linked-list of groups.
-  static inline intrusive_xor_list s_group_list;
+  static inline IntrusiveCompressedList s_group_list;
 
   // Global linked-list of ungrouped nodes.
-  static inline intrusive_xor_list s_node_list;
+  static inline IntrusiveCompressedList s_node_list;
+
+  // Global linked-list of initialized nodes.
+  static inline IntrusiveList s_initialized_list;
 };
 
 // GlobalNode
@@ -253,11 +251,9 @@ inline GlobalNode::GlobalNode(const char* _group, const char* _name,
     == reinterpret_cast<UintPtr>(data()), "misalignment");
 
   if constexpr (sizeof...(Ts) != 0) {
-    Byte* argument_store = reallocate_arguments(nullptr, sizeof(Arguments<Ts...>));
-    m_argument_store = {argument_store, k_enabled | k_arguments};
+    Byte* argument_store = allocate(sizeof(Arguments<Ts...>));
+    m_argument_store = {argument_store, ARGUMENTS};
     construct_arguments(m_argument_store.as_ptr(), Utility::forward<Ts>(_arguments)...);
-  } else {
-    m_argument_store = {nullptr, k_enabled};
   }
 
   Globals::link(this);
@@ -268,12 +264,13 @@ inline void GlobalNode::init(Ts&&... _arguments) {
   static_assert(sizeof...(Ts) != 0,
     "use void init() for default construction");
 
-  auto argument_store = m_argument_store.as_ptr();
-  if (m_argument_store.as_tag() & k_arguments) {
-    m_storage_dispatch(StorageMode::k_fini_arguments, data(), argument_store);
+  // Call destructor on existing arguments.
+  if (m_argument_store.as_tag() & ARGUMENTS) {
+    m_storage_dispatch(StorageMode::FINI, nullptr, m_argument_store.as_ptr());
   }
 
-  construct_arguments(argument_store, Utility::forward<Ts>(_arguments)...);
+  // Construct the new arguments in that memory.
+  construct_arguments(m_argument_store.as_ptr(), Utility::forward<Ts>(_arguments)...);
 
   init();
 }
@@ -288,10 +285,6 @@ inline Byte* GlobalNode::data() {
   return reinterpret_cast<Byte*>(this + 1);
 }
 
-inline const Byte* GlobalNode::data() const {
-  return reinterpret_cast<const Byte*>(this + 1);
-}
-
 template<typename T>
 inline T* GlobalNode::cast() {
   validate_cast_for<T>();
@@ -299,19 +292,13 @@ inline T* GlobalNode::cast() {
 }
 
 template<typename T>
-inline const T* GlobalNode::cast() const {
-  validate_cast_for<T>();
-  return reinterpret_cast<const T*>(data());
-}
-
-template<typename T>
 void GlobalNode::validate_cast_for() const {
-  const auto traits = m_storage_dispatch(StorageMode::k_traits_global, nullptr, nullptr);
+  const auto traits = m_storage_dispatch(StorageMode::TRAITS, nullptr, nullptr);
   RX_ASSERT(sizeof(T) == ((traits >> 32) & 0xFFFFFFFF_u32), "invalid size");
   RX_ASSERT(alignof(T) == (traits & 0xFFFFFFFF_u32), "invalid allignment");
 }
 
-// global_group
+// GlobalGroup
 inline GlobalGroup::GlobalGroup(const char* _name)
   : m_name{_name}
 {
@@ -360,44 +347,46 @@ inline constexpr const char* Global<T>::name() const {
 
 template<typename T>
 inline constexpr T* Global<T>::operator&() {
-  return m_global_store.data();
+  return data();
 }
 
 template<typename T>
 inline constexpr const T* Global<T>::operator&() const {
-  return m_global_store.data();
+  return data();
 }
 
 template<typename T>
 inline constexpr T& Global<T>::operator*() {
-  return *m_global_store.data();
+  return *data();
 }
 
 template<typename T>
-constexpr const T& Global<T>::operator*() const {
-  return *m_global_store.data();
+inline constexpr const T& Global<T>::operator*() const {
+  return *data();
 }
 
 template<typename T>
 constexpr T* Global<T>::operator->() {
-  return m_global_store.data();
+  return data();
 }
 
 template<typename T>
 constexpr const T* Global<T>::operator->() const {
-  return m_global_store.data();
+  return data();
 }
 
 template<typename T>
 inline constexpr T* Global<T>::data() {
+  m_node.init();
   return m_global_store.data();
 }
 
 template<typename T>
 inline constexpr const T* Global<T>::data() const {
+  m_node.init();
   return m_global_store.data();
 }
 
-} // namespace rx
+} // namespace Rx
 
 #endif // RX_CORE_GLOBAL_H

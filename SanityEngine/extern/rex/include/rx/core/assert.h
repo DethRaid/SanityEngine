@@ -2,11 +2,12 @@
 #define RX_CORE_ASSERT_H
 #include "rx/core/source_location.h"
 #include "rx/core/format.h"
+#include "rx/core/prelude.h"
 
 namespace Rx {
 
 [[noreturn]]
-void assert_message(const char* _expression,
+void RX_API assert_message(const char* _expression,
   const SourceLocation& _source_location, const char* _message, bool _truncated);
 
 template<typename... Ts>

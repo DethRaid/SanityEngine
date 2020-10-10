@@ -67,10 +67,10 @@ template<> struct VariableTrait<Vec3i>  : VariableTypeTrait<VariableType::k_vec3
 template<> struct VariableTrait<Vec4f>  : VariableTypeTrait<VariableType::k_vec4f> {};
 template<> struct VariableTrait<Vec4i>  : VariableTypeTrait<VariableType::k_vec4i> {};
 
-static constexpr const Sint32 k_int_min = -INT_MAX - 1;
-static constexpr const Sint32 k_int_max = INT_MAX;
-static constexpr const Float32 k_float_min = -FLT_MAX;
-static constexpr const Float32 k_float_max = FLT_MAX;
+static inline constexpr const Sint32 k_int_min = -INT_MAX - 1;
+static inline constexpr const Sint32 k_int_max = INT_MAX;
+static inline constexpr const Float32 k_float_min = -FLT_MAX;
+static inline constexpr const Float32 k_float_max = FLT_MAX;
 
 struct VariableReference {
   VariableReference() = default;
@@ -98,7 +98,7 @@ struct VariableReference {
   bool is_initial() const;
 
 private:
-  friend struct Interface;
+  friend struct Context;
 
   const char* m_name;
   const char* m_description;
@@ -159,7 +159,7 @@ struct Variable {
   const VariableReference* reference() const;
 
   void reset();
-  VariableStatus set(const T& value);
+  VariableStatus set(const T& value, bool _signal_change = true);
 
   typename OnChangeEvent::Handle on_change(typename OnChangeEvent::Delegate&& _on_change);
 
@@ -187,7 +187,7 @@ struct Variable<bool> {
   const VariableReference* reference() const;
 
   void reset();
-  VariableStatus set(bool value);
+  VariableStatus set(bool _value, bool _signal_change = true);
 
   void toggle();
 
@@ -215,8 +215,8 @@ struct Variable<String> {
   const VariableReference* reference() const;
 
   void reset();
-  VariableStatus set(const char* _value);
-  VariableStatus set(const String& _value);
+  VariableStatus set(const char* _value, bool _signal_change = true);
+  VariableStatus set(const String& _value, bool _signal_change = true);
 
   typename OnChangeEvent::Handle on_change(typename OnChangeEvent::Delegate&& _on_change);
 
@@ -245,7 +245,7 @@ struct Variable<Vec2<T>> {
   const VariableReference* reference() const;
 
   void reset();
-  VariableStatus set(const Vec2<T>& _value);
+  VariableStatus set(const Vec2<T>& _value, bool _signal_change = true);
 
   typename OnChangeEvent::Handle on_change(typename OnChangeEvent::Delegate&& _on_change);
 
@@ -275,7 +275,7 @@ struct Variable<Vec3<T>> {
   const VariableReference* reference() const;
 
   void reset();
-  VariableStatus set(const Vec3<T>& value);
+  VariableStatus set(const Vec3<T>& value, bool _signal_change = true);
 
   typename OnChangeEvent::Handle on_change(typename OnChangeEvent::Delegate&& _on_change);
 
@@ -305,7 +305,7 @@ struct Variable<Vec4<T>> {
   const VariableReference* reference() const;
 
   void reset();
-  VariableStatus set(const Vec4<T>& value);
+  VariableStatus set(const Vec4<T>& value, bool _signal_change = true);
 
   typename OnChangeEvent::Handle on_change(typename OnChangeEvent::Delegate&& _on_change);
 
@@ -371,14 +371,16 @@ inline void Variable<T>::reset() {
 }
 
 template<typename T>
-inline VariableStatus Variable<T>::set(const T& _value) {
+inline VariableStatus Variable<T>::set(const T& _value, bool _signal_change) {
   if (_value < m_min || _value > m_max) {
     return VariableStatus::k_out_of_range;
   }
 
   if (m_current != _value) {
     m_current = _value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
 
   return VariableStatus::k_success;
@@ -421,11 +423,14 @@ inline void Variable<bool>::reset() {
   m_current = m_initial;
 }
 
-inline VariableStatus Variable<bool>::set(bool value) {
+inline VariableStatus Variable<bool>::set(bool value, bool _signal_change) {
   if (m_current != value) {
     m_current = value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
+
   return VariableStatus::k_success;
 }
 
@@ -470,18 +475,23 @@ inline void Variable<String>::reset() {
   m_current = m_initial;
 }
 
-inline VariableStatus Variable<String>::set(const char* _value) {
+inline VariableStatus Variable<String>::set(const char* _value, bool _signal_change) {
   if (m_current != _value) {
     m_current = _value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
+
   return VariableStatus::k_success;
 }
 
-inline VariableStatus Variable<String>::set(const String& _value) {
+inline VariableStatus Variable<String>::set(const String& _value, bool _signal_change) {
   if (m_current != _value) {
     m_current = _value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
 
   return VariableStatus::k_success;
@@ -544,7 +554,7 @@ inline void Variable<Vec2<T>>::reset() {
 }
 
 template<typename T>
-inline VariableStatus Variable<Vec2<T>>::set(const Vec2<T>& _value) {
+inline VariableStatus Variable<Vec2<T>>::set(const Vec2<T>& _value, bool _signal_change) {
   if (_value.x < m_min.x || _value.y < m_min.y ||
       _value.x > m_max.x || _value.y > m_max.y)
   {
@@ -553,7 +563,9 @@ inline VariableStatus Variable<Vec2<T>>::set(const Vec2<T>& _value) {
 
   if (m_current != _value) {
     m_current = _value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
 
   return VariableStatus::k_success;
@@ -617,16 +629,20 @@ inline void Variable<Vec3<T>>::reset() {
 }
 
 template<typename T>
-inline VariableStatus Variable<Vec3<T>>::set(const Vec3<T>& _value) {
+inline VariableStatus Variable<Vec3<T>>::set(const Vec3<T>& _value, bool _signal_change) {
   if (_value.x < m_min.x || _value.y < m_min.y || _value.z < m_min.z ||
       _value.x > m_max.x || _value.y > m_max.y || _value.z > m_max.z)
   {
     return VariableStatus::k_out_of_range;
   }
+
   if (m_current != _value) {
     m_current = _value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
+
   return VariableStatus::k_success;
 }
 
@@ -688,16 +704,20 @@ inline void Variable<Vec4<T>>::reset() {
 }
 
 template<typename T>
-inline VariableStatus Variable<Vec4<T>>::set(const Vec4<T>& _value) {
+inline VariableStatus Variable<Vec4<T>>::set(const Vec4<T>& _value, bool _signal_change) {
   if (_value.x < m_min.x || _value.y < m_min.y || _value.z < m_min.z || _value.w < m_min.w ||
       _value.x > m_max.x || _value.y > m_max.y || _value.z > m_max.z || _value.w > m_max.w)
   {
     return VariableStatus::k_out_of_range;
   }
+
   if (m_current != _value) {
     m_current = _value;
-    m_on_change.signal(*this);
+    if (_signal_change) {
+      m_on_change.signal(*this);
+    }
   }
+
   return VariableStatus::k_success;
 }
 
@@ -716,11 +736,11 @@ inline bool VariableType_is_ranged(VariableType _type) {
 
 #define RX_CONSOLE_TRVAR(_type, _label, _name, _description, _min, _max, _initial) \
   static ::Rx::Global<::Rx::Console::Variable<_type>> _label \
-    {"cvars", (_name), (_name), (_description), (_min), (_max), (_initial)}
+    {"console", (_name), (_name), (_description), (_min), (_max), (_initial)}
 
 #define RX_CONSOLE_TUVAR(_type, _label, _name, _description, _initial) \
   static ::Rx::Global<::Rx::Console::Variable<_type>> _label \
-    {"cvars", (_name), (_name), (_description), (_initial)}
+    {"console", (_name), (_name), (_description), (_initial)}
 
 // helper macros to define console variables
 #define RX_CONSOLE_BVAR(_label, _name, _description, _initial) \

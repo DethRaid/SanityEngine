@@ -34,7 +34,7 @@ void Thread::join() {
 
 // state
 void* Thread::State::wrap(void* _data) {
-#if defined(RX_PLATFORM_POSIX)
+#if defined(RX_PLATFORM_POSIX) && !defined(RX_PLATFORM_EMSCRIPTEN)
   // Don't permit any signal delivery to threads.
   sigset_t mask;
   sigfillset(&mask);
@@ -60,8 +60,10 @@ void Thread::State::spawn() {
     RX_ASSERT(false, "thread creation failed");
   }
 
+#if !defined(RX_PLATFORM_EMSCRIPTEN)
   // Set the thread's name.
   pthread_setname_np(*handle, m_name);
+#endif
 
 #elif defined(RX_PLATFORM_WINDOWS)
   // |_beginthreadex| is a bit non-standard in that it expects the __stdcall

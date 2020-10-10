@@ -1,5 +1,6 @@
 #ifndef RX_CORE_PROFILER_H
 #define RX_CORE_PROFILER_H
+#include "rx/core/pp.h"
 #include "rx/core/global.h"
 #include "rx/core/optional.h"
 #include "rx/core/source_location.h"
@@ -216,15 +217,6 @@ inline void Profiler::end_gpu_sample(const GPUSample* _sample) {
 }
 
 } // namespace rx
-
-#define RX_PP_PASTE(_a, _b) \
-  _a ## _b
-
-#define RX_PP_CAT(_a, _b) \
-  RX_PP_PASTE(_a, _b)
-
-#define RX_PP_UNIQUE(_base) \
-  RX_PP_CAT(_base, __LINE__)
 
 #define RX_PROFILE_CPU(tag) \
   const ::Rx::Profiler::CPUSample RX_PP_UNIQUE(rx_profile){RX_SOURCE_LOCATION, (tag)}

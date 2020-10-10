@@ -1,15 +1,15 @@
-#include "rx/core/intrusive_xor_list.h"
+#include "rx/core/intrusive_compressed_list.h"
 #include "rx/core/types.h"
 
 namespace Rx {
 
-static intrusive_xor_list::Node* xor_nodes(intrusive_xor_list::Node* _x, intrusive_xor_list::Node* _y) {
+static IntrusiveCompressedList::Node* xor_nodes(IntrusiveCompressedList::Node* _x, IntrusiveCompressedList::Node* _y) {
   const auto x = reinterpret_cast<UintPtr>(_x);
   const auto y = reinterpret_cast<UintPtr>(_y);
-  return reinterpret_cast<intrusive_xor_list::Node*>(x ^ y);
+  return reinterpret_cast<IntrusiveCompressedList::Node*>(x ^ y);
 }
 
-void intrusive_xor_list::push(Node* node_) {
+void IntrusiveCompressedList::push(Node* node_) {
   if (!m_head) {
     m_head = node_;
     m_tail = node_;
@@ -20,14 +20,14 @@ void intrusive_xor_list::push(Node* node_) {
   }
 }
 
-void intrusive_xor_list::Iterator::next() {
+void IntrusiveCompressedList::Iterator::next() {
   if (m_this) {
     m_next = xor_nodes(m_prev, m_this->m_link);
     m_prev = Utility::exchange(m_this, m_next);
   }
 }
 
-void intrusive_xor_list::Iterator::prev() {
+void IntrusiveCompressedList::Iterator::prev() {
   next();
 }
 

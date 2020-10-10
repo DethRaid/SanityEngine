@@ -214,10 +214,12 @@ inline Vector<T>::Vector(Memory::Allocator& _allocator, const Vector& _other)
   m_data = reinterpret_cast<T*>(allocator().allocate(sizeof(T), _other.m_capacity));
   RX_ASSERT(m_data, "out of memory");
 
-  if constexpr(traits::is_trivially_copyable<T>) {
-    detail::copy(m_data, _other.m_data, _other.m_size * sizeof *m_data);
-  } else for (Size i{0}; i < m_size; i++) {
-    Utility::construct<T>(m_data + i, _other.m_data[i]);
+  if (m_size) {
+    if constexpr(traits::is_trivially_copyable<T>) {
+      detail::copy(m_data, _other.m_data, _other.m_size * sizeof *m_data);
+    } else for (Size i = 0; i < m_size; i++) {
+      Utility::construct<T>(m_data + i, _other.m_data[i]);
+    }
   }
 }
 
@@ -261,10 +263,12 @@ inline Vector<T>& Vector<T>::operator=(const Vector& _other) {
   m_data = reinterpret_cast<T*>(allocator().allocate(sizeof(T), _other.m_capacity));
   RX_ASSERT(m_data, "out of memory");
 
-  if constexpr(traits::is_trivially_copyable<T>) {
-    detail::copy(m_data, _other.m_data, _other.m_size * sizeof *m_data);
-  } else for (Size i = 0; i < m_size; i++) {
-    Utility::construct<T>(m_data + i, _other.m_data[i]);
+  if (m_size) {
+    if constexpr(traits::is_trivially_copyable<T>) {
+      detail::copy(m_data, _other.m_data, _other.m_size * sizeof *m_data);
+    } else for (Size i = 0; i < m_size; i++) {
+      Utility::construct<T>(m_data + i, _other.m_data[i]);
+    }
   }
 
   return *this;

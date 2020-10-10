@@ -24,8 +24,6 @@ namespace Rx::Memory {
 struct BumpPointAllocator
   final : Allocator
 {
-  // |_memory| must be aligned by allocator::k_alignment and |_size| must be
-  // a multiple of allocator::k_alignment.
   BumpPointAllocator(Byte* _memory, Size _size);
 
   virtual Byte* allocate(Size _size);

@@ -48,6 +48,9 @@
 #elif defined(__linux__)
 # define RX_PLATFORM_LINUX
 # define RX_PLATFORM_POSIX
+#elif defined(__EMSCRIPTEN__)
+# define RX_PLATFORM_EMSCRIPTEN
+# define RX_PLATFORM_POSIX
 #else
 # error "unsupported platform"
 #endif

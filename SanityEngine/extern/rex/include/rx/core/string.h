@@ -3,6 +3,7 @@
 #include "rx/core/assert.h" // RX_ASSERT
 #include "rx/core/format.h" // format
 #include "rx/core/vector.h" // vector
+#include "rx/core/prelude.h"
 
 #include "rx/core/traits/remove_cvref.h"
 
@@ -14,7 +15,7 @@ struct WideString;
 
 // 32-bit: 16 + k_small_string bytes
 // 64-bit: 32 + k_small_string bytes
-struct String {
+struct RX_API String {
   static constexpr const Size k_npos{-1_z};
   static constexpr const Size k_small_string{16};
 
@@ -139,7 +140,7 @@ private:
 };
 
 // utf-16, Windows compatible "wide-string"
-struct WideString {
+struct RX_API WideString {
   RX_MARK_NO_MOVE_ASSIGN(WideString);
 
   // custom allocator versions

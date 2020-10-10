@@ -36,7 +36,10 @@ struct StaticPool {
   bool can_allocate() const;
 
   Byte* data_of(Size _index) const;
-  Size index_of(const Byte* _data) const;
+  Size index_of_untyped(const Byte* _data) const;
+
+  template<typename T>
+  Size index_of(const T* _data) const;
 
   bool owns(const Byte* _data) const;
 
@@ -115,9 +118,14 @@ inline Byte* StaticPool::data_of(Size _index) const {
   return m_data + m_object_size * _index;
 }
 
-inline Size StaticPool::index_of(const Byte* _data) const {
+inline Size StaticPool::index_of_untyped(const Byte* _data) const {
   RX_ASSERT(owns(_data), "invalid pointer");
   return (_data - m_data) / m_object_size;
+}
+
+template<typename T>
+inline Size StaticPool::index_of(const T* _data) const {
+  return index_of_untyped(reinterpret_cast<const Byte*>(_data));
 }
 
 inline bool StaticPool::owns(const Byte* _data) const {

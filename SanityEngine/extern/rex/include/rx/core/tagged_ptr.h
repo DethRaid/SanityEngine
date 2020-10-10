@@ -7,7 +7,7 @@ namespace Rx {
 
 // # Tagged pointer
 //
-// Since all allocations are aligned by |k_alignment| there are bits that will
+// Since all allocations are aligned by |ALIGNMENT| there are bits that will
 // always be zero. We can use those bits to store a tag value along side the
 // pointer.
 //
@@ -23,7 +23,7 @@ struct TaggedPtr {
   Byte as_tag() const;
 
 private:
-  static inline constexpr auto k_tag_mask = Memory::Allocator::k_alignment - 1;
+  static inline constexpr auto k_tag_mask = Memory::Allocator::ALIGNMENT - 1;
   static inline constexpr auto k_ptr_mask = ~k_tag_mask;
 
   union {
@@ -58,6 +58,6 @@ inline Byte TaggedPtr<T>::as_tag() const {
   return m_as_bits & k_tag_mask;
 }
 
-} // namespace rx
+} // namespace Rx
 
 #endif // RX_CORE_TAGGED_POINTER_H

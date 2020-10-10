@@ -129,6 +129,7 @@ inline T* atomic_fetch_add(volatile AtomicBase<T>* base_, PtrDiff _delta,
     static_cast<int>(_order));
 }
 
+// TODO(dweiler): This can be ambigious on some platforms. Find better approach.
 template<typename T>
 inline T* atomic_fetch_add(AtomicBase<T>* base_, PtrDiff _delta,
   MemoryOrder _order)

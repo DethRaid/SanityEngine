@@ -1,5 +1,6 @@
-#ifndef RX_CORE_INTRUSIVE_XOR_LIST_H
-#define RX_CORE_INTRUSIVE_XOR_LIST_H
+#ifndef RX_CORE_INTRUSIVE_COMPRESSED_LIST_H
+#define RX_CORE_INTRUSIVE_COMPRESSED_LIST_H
+
 #include "rx/core/types.h"
 #include "rx/core/markers.h"
 
@@ -25,14 +26,14 @@ namespace Rx {
 //
 // 32-bit: 8 bytes
 // 64-bit: 16 bytes
-struct intrusive_xor_list {
-  RX_MARK_NO_COPY(intrusive_xor_list);
+struct IntrusiveCompressedList {
+  RX_MARK_NO_COPY(IntrusiveCompressedList);
 
   struct Node;
 
-  constexpr intrusive_xor_list();
-  intrusive_xor_list(intrusive_xor_list&& xor_list_);
-  intrusive_xor_list& operator=(intrusive_xor_list&& xor_list_);
+  constexpr IntrusiveCompressedList();
+  IntrusiveCompressedList(IntrusiveCompressedList&& xor_list_);
+  IntrusiveCompressedList& operator=(IntrusiveCompressedList&& xor_list_);
 
   void push(Node* _node);
 
@@ -52,7 +53,7 @@ struct intrusive_xor_list {
     T* data(Node T::*_link);
 
   private:
-    friend struct intrusive_xor_list;
+    friend struct IntrusiveCompressedList;
 
     Node* m_link;
   };
@@ -101,7 +102,8 @@ public:
     const T* data() const;
 
   private:
-    friend struct intrusive_xor_list;
+    friend struct IntrusiveCompressedList;
+
     constexpr Enumerate(Node* _root, Node T::*_link);
 
     Node T::*m_link;
@@ -115,47 +117,47 @@ public:
   bool is_empty() const;
 };
 
-// intrusive_xor_list
-inline constexpr intrusive_xor_list::intrusive_xor_list()
+// IntrusiveCompressedList
+inline constexpr IntrusiveCompressedList::IntrusiveCompressedList()
   : m_head{nullptr}
   , m_tail{nullptr}
 {
 }
 
-inline intrusive_xor_list::intrusive_xor_list(intrusive_xor_list&& xor_list_)
+inline IntrusiveCompressedList::IntrusiveCompressedList(IntrusiveCompressedList&& xor_list_)
   : m_head{Utility::exchange(xor_list_.m_head, nullptr)}
   , m_tail{Utility::exchange(xor_list_.m_tail, nullptr)}
 {
 }
 
-inline intrusive_xor_list& intrusive_xor_list::operator=(intrusive_xor_list&& xor_list_) {
+inline IntrusiveCompressedList& IntrusiveCompressedList::operator=(IntrusiveCompressedList&& xor_list_) {
   m_head = Utility::exchange(xor_list_.m_head, nullptr);
   m_tail = Utility::exchange(xor_list_.m_tail, nullptr);
   return *this;
 }
 
 template<typename T>
-inline intrusive_xor_list::Enumerate<T> intrusive_xor_list::enumerate_head(Node T::*_link) const {
+inline IntrusiveCompressedList::Enumerate<T> IntrusiveCompressedList::enumerate_head(Node T::*_link) const {
   return {m_head, _link};
 }
 
 template<typename T>
-inline intrusive_xor_list::Enumerate<T> intrusive_xor_list::enumerate_tail(Node T::*_link) const {
+inline IntrusiveCompressedList::Enumerate<T> IntrusiveCompressedList::enumerate_tail(Node T::*_link) const {
   return {m_tail, _link};
 }
 
-inline bool intrusive_xor_list::is_empty() const {
+inline bool IntrusiveCompressedList::is_empty() const {
   return m_head == nullptr;
 }
 
-// intrusive_xor_list::node
-inline constexpr intrusive_xor_list::Node::Node()
+// IntrusiveCompressedList::Node
+inline constexpr IntrusiveCompressedList::Node::Node()
   : m_link{nullptr}
 {
 }
 
 template<typename T>
-inline const T* intrusive_xor_list::Node::data(Node T::*_link) const {
+inline const T* IntrusiveCompressedList::Node::data(Node T::*_link) const {
   const auto this_address = reinterpret_cast<UintPtr>(this);
   const auto link_offset = &(reinterpret_cast<const volatile T*>(0)->*_link);
   const auto link_address = reinterpret_cast<UintPtr>(link_offset);
@@ -163,29 +165,29 @@ inline const T* intrusive_xor_list::Node::data(Node T::*_link) const {
 }
 
 template<typename T>
-inline T* intrusive_xor_list::Node::data(Node T::*_link) {
+inline T* IntrusiveCompressedList::Node::data(Node T::*_link) {
   const auto this_address = reinterpret_cast<UintPtr>(this);
   const auto link_offset = &(reinterpret_cast<const volatile T*>(0)->*_link);
   const auto link_address = reinterpret_cast<UintPtr>(link_offset);
   return reinterpret_cast<T*>(this_address - link_address);
 }
 
-// intrusive_xor_list::iterator
-inline constexpr intrusive_xor_list::Iterator::Iterator(Node* _node)
+// IntrusiveCompressedList::Iterator
+inline constexpr IntrusiveCompressedList::Iterator::Iterator(Node* _node)
   : m_this{_node}
   , m_prev{nullptr}
   , m_next{nullptr}
 {
 }
 
-inline intrusive_xor_list::Iterator::Iterator(Iterator&& iterator_)
+inline IntrusiveCompressedList::Iterator::Iterator(Iterator&& iterator_)
   : m_this{Utility::exchange(iterator_.m_this, nullptr)}
   , m_prev{Utility::exchange(iterator_.m_prev, nullptr)}
   , m_next{Utility::exchange(iterator_.m_next, nullptr)}
 {
 }
 
-inline intrusive_xor_list::Iterator& intrusive_xor_list::Iterator::operator=(Iterator&& iterator_) {
+inline IntrusiveCompressedList::Iterator& IntrusiveCompressedList::Iterator::operator=(Iterator&& iterator_) {
   m_this = Utility::exchange(iterator_.m_this, nullptr);
   m_prev = Utility::exchange(iterator_.m_prev, nullptr);
   m_next = Utility::exchange(iterator_.m_next, nullptr);
@@ -194,61 +196,61 @@ inline intrusive_xor_list::Iterator& intrusive_xor_list::Iterator::operator=(Ite
 
 // intrusive_xor_list::enumerate
 template<typename T>
-inline intrusive_xor_list::Enumerate<T>::Enumerate(Enumerate&& enumerate_)
+inline IntrusiveCompressedList::Enumerate<T>::Enumerate(Enumerate&& enumerate_)
   : Iterator{Utility::move(enumerate_)}
   , m_link{Utility::exchange(enumerate_.m_link, nullptr)}
 {
 }
 
 template<typename T>
-inline intrusive_xor_list::Enumerate<T>& intrusive_xor_list::Enumerate<T>::operator=(Enumerate&& enumerate_) {
+inline IntrusiveCompressedList::Enumerate<T>& IntrusiveCompressedList::Enumerate<T>::operator=(Enumerate&& enumerate_) {
   Iterator::operator=(Utility::move(enumerate_));
   m_link = Utility::exchange(enumerate_.m_link, nullptr);
   return *this;
 }
 
 template<typename T>
-inline constexpr intrusive_xor_list::Enumerate<T>::Enumerate(Node* _root, Node T::*_link)
+inline constexpr IntrusiveCompressedList::Enumerate<T>::Enumerate(Node* _root, Node T::*_link)
   : Iterator{_root}
   , m_link{_link}
 {
 }
 
 template<typename T>
-inline intrusive_xor_list::Enumerate<T>::operator bool() const {
+inline IntrusiveCompressedList::Enumerate<T>::operator bool() const {
   return m_this != nullptr;
 }
 
 template<typename T>
-inline T& intrusive_xor_list::Enumerate<T>::operator*() {
+inline T& IntrusiveCompressedList::Enumerate<T>::operator*() {
   return *data();
 }
 
 template<typename T>
-inline const T& intrusive_xor_list::Enumerate<T>::operator*() const {
+inline const T& IntrusiveCompressedList::Enumerate<T>::operator*() const {
   return *data();
 }
 
 template<typename T>
-inline T* intrusive_xor_list::Enumerate<T>::operator->() {
+inline T* IntrusiveCompressedList::Enumerate<T>::operator->() {
   return data();
 }
 
 template<typename T>
-inline const T* intrusive_xor_list::Enumerate<T>::operator->() const {
+inline const T* IntrusiveCompressedList::Enumerate<T>::operator->() const {
   return data();
 }
 
 template<typename T>
-inline T* intrusive_xor_list::Enumerate<T>::data() {
+inline T* IntrusiveCompressedList::Enumerate<T>::data() {
   return m_this->data<T>(m_link);
 }
 
 template<typename T>
-inline const T* intrusive_xor_list::Enumerate<T>::data() const {
+inline const T* IntrusiveCompressedList::Enumerate<T>::data() const {
   return m_this->data<T>(m_link);
 }
 
-} // namespace rx
+} // namespace Rx
 
-#endif // RX_CORE_XOR_LIST_H
+#endif // RX_CORE_INTRUSIVE_COMPRESSED_LIST

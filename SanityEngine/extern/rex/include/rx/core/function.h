@@ -72,9 +72,8 @@ private:
     }
   }
 
-  // Keep control block aligned so the function proceeding it in |m_data| is
-  // always aligned by |k_alignment| too.
-  struct alignas(Memory::Allocator::k_alignment) ControlBlock {
+  // Keep control block aligned so the function proceeding it is always aligned.
+  struct alignas(Memory::Allocator::ALIGNMENT) ControlBlock {
     constexpr ControlBlock(ModifyLifetimeFn _modify_lifetime, InvokeFn _invoke)
       : modify_lifetime{_modify_lifetime}
       , invoke{_invoke}

@@ -12,7 +12,7 @@
 namespace Rx::Memory {
 
 // Each allocation in the heap is prefixed with this header.
-struct alignas(Allocator::k_alignment) Block {
+struct alignas(Allocator::ALIGNMENT) Block {
   Size size;
   bool free;
 };
@@ -24,7 +24,7 @@ static inline Block* next(Block* _block) {
 
 // Returns size that is needed for |_size|.
 static inline Size needed(Size _size) {
-  Size result = Allocator::k_alignment; // Smallest allocation
+  Size result = Allocator::ALIGNMENT; // Smallest allocation
 
   // Storage for the block.
   _size += sizeof(Block);
@@ -169,11 +169,11 @@ static bool merge_free(Block* _head, Block* _tail) {
 }
 
 BuddyAllocator::BuddyAllocator(Byte* _data, Size _size) {
-  // Ensure |_data| and |_size| are multiples of |k_alignment|.
-  RX_ASSERT(reinterpret_cast<UintPtr>(_data) % k_alignment == 0,
-    "_data not a multiple of k_alignment");
-  RX_ASSERT(_size % k_alignment == 0,
-    "_size not a multiple of k_alignment");
+  // Ensure |_data| and |_size| are multiples of |ALIGNMENT|.
+  RX_ASSERT(reinterpret_cast<UintPtr>(_data) % ALIGNMENT == 0,
+    "_data not aligned on %zu-byte boundary", ALIGNMENT);
+  RX_ASSERT(_size % ALIGNMENT == 0,
+    "_size not a multiple of %zu", ALIGNMENT);
 
   // Ensure |_size| is a power of two.
   RX_ASSERT((_size & (_size - 1)) == 0, "_size not a power of two");

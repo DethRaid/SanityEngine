@@ -136,7 +136,7 @@ invalid_signature:
   RX_ASSERT(0, "invalid signature");
 }
 
-bool Command::execute() {
+bool Command::execute(Context& console_) {
   // Check the signature of the arguments
   if (m_arguments.size() != m_argument_count) {
     logger->error(
@@ -218,7 +218,7 @@ bool Command::execute() {
     }
   }
 
-  return m_delegate(m_arguments);
+  return m_delegate(console_, m_arguments);
 
 error:
   logger->error(
@@ -230,7 +230,7 @@ error:
   return false;
 }
 
-bool Command::execute_tokens(const Vector<Token>& _tokens) {
+bool Command::execute_tokens(Context& console_, const Vector<Token>& _tokens) {
   m_arguments.clear();
   _tokens.each_fwd([&](const Token& _token) {
     switch (_token.kind()) {
@@ -269,7 +269,8 @@ bool Command::execute_tokens(const Vector<Token>& _tokens) {
       break;
     }
   });
-  return execute();
+
+  return execute(console_);
 }
 
 } // namespace rx::console

@@ -39,6 +39,9 @@ struct Log {
   template<typename... Ts>
   bool write(Level _level, const char* _format, Ts&&... _arguments);
 
+  // Write a message given by |message_|.
+  bool write(Level _level, String&& message_);
+
   // Convenience functions that call |write| with the appropriate severity
   // level, given by their name.
   //
@@ -116,6 +119,11 @@ inline bool Log::write(Level _level, const char* _format, Ts&&... _arguments) {
     m_queue_event.signal(_level, _format);
     return enqueue(this, _level, {_format});
   }
+}
+
+inline bool Log::write(Level _level, String&& message_) {
+  m_queue_event.signal(_level, message_);
+  return enqueue(this, _level, Utility::move(message_));
 }
 
 template<typename... Ts>

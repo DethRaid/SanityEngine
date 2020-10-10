@@ -9,6 +9,8 @@
 
 namespace Rx::Console {
 
+struct Context;
+
 // The signature specification works like this
 //  b -> boolean
 //  s -> string
@@ -52,7 +54,7 @@ struct Command {
     };
   };
 
-  using Delegate = Function<bool(const Vector<Argument>& _arguments)>;
+  using Delegate = Function<bool(Context& console_, const Vector<Argument>& _arguments)>;
 
   Command(Memory::Allocator& _allocator, const String& _name,
           const char* _signature, Delegate&& _function);
@@ -62,16 +64,16 @@ struct Command {
   Command& operator=(Command&& command_);
 
   template<typename... Ts>
-  bool execute_arguments(Ts&&... _arguments);
+  bool execute_arguments(Context& console_, Ts&&... _arguments);
 
-  bool execute_tokens(const Vector<Token>& _tokens);
+  bool execute_tokens(Context& console_, const Vector<Token>& _tokens);
 
   const String& name() const &;
 
   constexpr Memory::Allocator& allocator() const;
 
 private:
-  bool execute();
+  bool execute(Context& console_);
 
   Memory::Allocator* m_allocator;
   Delegate m_delegate;
@@ -173,10 +175,10 @@ inline Command& Command::operator=(Command&& command_) {
 }
 
 template<typename... Ts>
-inline bool Command::execute_arguments(Ts&&... _arguments) {
+inline bool Command::execute_arguments(Context& console_, Ts&&... _arguments) {
   m_arguments.clear();
   (m_arguments.emplace_back(_arguments), ...);
-  return execute();
+  return execute(console_);
 }
 
 inline const String& Command::name() const & {

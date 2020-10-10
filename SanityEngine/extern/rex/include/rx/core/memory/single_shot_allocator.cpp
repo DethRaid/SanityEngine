@@ -13,10 +13,10 @@ SingleShotAllocator::SingleShotAllocator(Byte* _data, Size _size)
   , m_allocated{false}
 {
   // Ensure the memory given is suitably aligned and size is suitably rounded.
-  RX_ASSERT(reinterpret_cast<UintPtr>(m_data) % k_alignment == 0,
-    "_data not aligned on k_alignment boundary");
-  RX_ASSERT(m_size % k_alignment == 0,
-    "_size not a multiple of k_alignment");
+  RX_ASSERT(reinterpret_cast<UintPtr>(m_data) % ALIGNMENT == 0,
+    "_data not aligned on %zu-byte boundary", ALIGNMENT);
+  RX_ASSERT(m_size % ALIGNMENT == 0,
+    "_size not a multiple of %zu", ALIGNMENT);
 }
 
 Byte* SingleShotAllocator::allocate(Size _size) {

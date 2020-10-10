@@ -2,7 +2,7 @@
 #include <stdlib.h> // strtoll, strtof
 #include <errno.h> // errno, ERANGE
 
-#include "rx/console/interface.h"
+#include "rx/console/context.h"
 #include "rx/console/variable.h"
 #include "rx/console/command.h"
 #include "rx/console/parser.h"
@@ -11,41 +11,18 @@
 #include "rx/core/concurrency/scope_lock.h"
 
 #include "rx/core/filesystem/file.h"
-#include "rx/core/map.h"
 
 #include "rx/core/log.h" // RX_LOG
 
 namespace Rx::Console {
 
 static Concurrency::SpinLock g_lock;
+
 static VariableReference* g_head RX_HINT_GUARDED_BY(g_lock);
 
 RX_LOG("console", logger);
 
-static GlobalGroup g_group_cvars{"cvars"};
-static GlobalGroup g_group_console{"console"};
-
-// TODO(dweiler): limited line count queue for messages on the console.
-static Global<Vector<String>> g_lines{"console", "lines"};
-static Global<Map<String, Command>> g_commands{"console", "commands"};
-
-void Interface::write(const String& message_) {
-  g_lines->push_back(message_);
-}
-
-void Interface::clear() {
-  g_lines->clear();
-}
-
-const Vector<String>& Interface::lines() {
-  return *g_lines;
-}
-
-void Interface::add_command(const String& _name, const char* _signature,
-  Function<bool(const Vector<Command::Argument>&)>&& _function)
-{
-  g_commands->insert(_name, {_name, _signature, Utility::move(_function)});
-}
+static GlobalGroup g_group_cvars{"console"};
 
 static bool type_check(VariableType _VariableType, Token::Type _token_type) {
   switch (_VariableType) {
@@ -73,7 +50,30 @@ static bool type_check(VariableType _VariableType, Token::Type _token_type) {
   return false;
 }
 
-bool Interface::execute(const String& _contents) {
+bool Context::write(const String& message_) {
+  return m_lines.push_back(message_);
+}
+
+void Context::clear() {
+  m_lines.clear();
+}
+
+const Vector<String>& Context::lines() {
+  return m_lines;
+}
+
+Command* Context::add_command(const String& _name, const char* _signature,
+  Function<bool(Context& console_, const Vector<Command::Argument>&)>&& _function)
+{
+  // Don't allow adding the same command multiple times.
+  if (m_commands.find(_name)) {
+    return nullptr;
+  }
+
+  return m_commands.insert(_name, {_name, _signature, Utility::move(_function)});
+}
+
+bool Context::execute(const String& _contents) {
   Parser parse{Memory::SystemAllocator::instance()};
 
   if (!parse.parse(_contents)) {
@@ -130,9 +130,9 @@ bool Interface::execute(const String& _contents) {
     } else {
       print("^cinfo: ^w%s = %s", atom, variable->print_current());
     }
-  } else if (auto* command = g_commands->find(atom)) {
+  } else if (auto* command = m_commands.find(atom)) {
     tokens.erase(0, 1);
-    command->execute_tokens(tokens);
+    command->execute_tokens(*this, tokens);
   } else {
     print("^rerror: ^wCommand or variable \"%s\", not found", atom);
   }
@@ -140,19 +140,19 @@ bool Interface::execute(const String& _contents) {
   return true;
 }
 
-Vector<String> Interface::auto_complete_variables(const String& _prefix) {
+Vector<String> Context::auto_complete_variables(const String& _prefix) {
   Vector<String> results;
-  for (VariableReference* node{g_head}; node; node = node->m_next) {
-    if (!strncmp(node->m_name, _prefix.data(), _prefix.size())) {
-      results.push_back(node->m_name);
+  for (VariableReference* node = g_head; node; node = node->m_next) {
+    if (!strncmp(node->name(), _prefix.data(), _prefix.size())) {
+      results.push_back(node->name());
     }
   }
   return results;
 }
 
-Vector<String> Interface::auto_complete_commands(const String& _prefix) {
+Vector<String> Context::auto_complete_commands(const String& _prefix) {
   Vector<String> results;
-  g_commands->each_key([&](const String& _key) {
+  m_commands.each_key([&](const String& _key) {
     if (!strncmp(_key.data(), _prefix.data(), _prefix.size())) {
       results.push_back(_key);
     }
@@ -160,7 +160,7 @@ Vector<String> Interface::auto_complete_commands(const String& _prefix) {
   return results;
 }
 
-bool Interface::load(const char* file_name) {
+bool Context::load(const char* file_name) {
   // sort references
   {
     Concurrency::ScopeLock locked{g_lock};
@@ -207,8 +207,8 @@ bool Interface::load(const char* file_name) {
   return true;
 }
 
-bool Interface::save(const char* file_name) {
-  Filesystem::File file(file_name, "w");
+bool Context::save(const char* file_name) {
+  Filesystem::File file{file_name, "w"};
   if (!file) {
     return false;
   }
@@ -232,7 +232,7 @@ bool Interface::save(const char* file_name) {
 }
 
 template<typename T>
-VariableStatus Interface::set_from_reference_and_value(VariableReference* _reference, const T& _value) {
+VariableStatus Context::set_from_reference_and_value(VariableReference* _reference, const T& _value) {
   if (auto* cast{_reference->try_cast<T>()}) {
     return cast->set(_value);
   } else {
@@ -240,18 +240,18 @@ VariableStatus Interface::set_from_reference_and_value(VariableReference* _refer
   }
 }
 
-template VariableStatus Interface::set_from_reference_and_value<bool>(VariableReference* _reference, const bool& _value);
-template VariableStatus Interface::set_from_reference_and_value<String>(VariableReference* _reference, const String& _value);
-template VariableStatus Interface::set_from_reference_and_value<Sint32>(VariableReference* _reference, const Sint32& _value);
-template VariableStatus Interface::set_from_reference_and_value<Float32>(VariableReference* _reference, const Float32& _value);
-template VariableStatus Interface::set_from_reference_and_value<Math::Vec4f>(VariableReference* _reference, const Math::Vec4f& _value);
-template VariableStatus Interface::set_from_reference_and_value<Math::Vec4i>(VariableReference* _reference, const Math::Vec4i& _value);
-template VariableStatus Interface::set_from_reference_and_value<Math::Vec3f>(VariableReference* _reference, const Math::Vec3f& _value);
-template VariableStatus Interface::set_from_reference_and_value<Math::Vec3i>(VariableReference* _reference, const Math::Vec3i& _value);
-template VariableStatus Interface::set_from_reference_and_value<Math::Vec2f>(VariableReference* _reference, const Math::Vec2f& _value);
-template VariableStatus Interface::set_from_reference_and_value<Math::Vec2i>(VariableReference* _reference, const Math::Vec2i& _value);
+template VariableStatus Context::set_from_reference_and_value<bool>(VariableReference* _reference, const bool& _value);
+template VariableStatus Context::set_from_reference_and_value<String>(VariableReference* _reference, const String& _value);
+template VariableStatus Context::set_from_reference_and_value<Sint32>(VariableReference* _reference, const Sint32& _value);
+template VariableStatus Context::set_from_reference_and_value<Float32>(VariableReference* _reference, const Float32& _value);
+template VariableStatus Context::set_from_reference_and_value<Math::Vec4f>(VariableReference* _reference, const Math::Vec4f& _value);
+template VariableStatus Context::set_from_reference_and_value<Math::Vec4i>(VariableReference* _reference, const Math::Vec4i& _value);
+template VariableStatus Context::set_from_reference_and_value<Math::Vec3f>(VariableReference* _reference, const Math::Vec3f& _value);
+template VariableStatus Context::set_from_reference_and_value<Math::Vec3i>(VariableReference* _reference, const Math::Vec3i& _value);
+template VariableStatus Context::set_from_reference_and_value<Math::Vec2f>(VariableReference* _reference, const Math::Vec2f& _value);
+template VariableStatus Context::set_from_reference_and_value<Math::Vec2i>(VariableReference* _reference, const Math::Vec2i& _value);
 
-VariableStatus Interface::set_from_reference_and_token(VariableReference* reference_, const Token& _token) {
+VariableStatus Context::set_from_reference_and_token(VariableReference* reference_, const Token& _token) {
   if (!type_check(reference_->type(), _token.kind())) {
     return VariableStatus::k_type_mismatch;
   }
@@ -282,7 +282,7 @@ VariableStatus Interface::set_from_reference_and_token(VariableReference* refere
   RX_HINT_UNREACHABLE();
 }
 
-VariableReference* Interface::find_variable_by_name(const char* _name) {
+VariableReference* Context::find_variable_by_name(const char* _name) {
   for (VariableReference* head{g_head}; head; head = head->m_next) {
     if (!strcmp(head->name(), _name)) {
       return head;
@@ -291,7 +291,7 @@ VariableReference* Interface::find_variable_by_name(const char* _name) {
   return nullptr;
 }
 
-VariableReference* Interface::add_variable(VariableReference* reference) {
+VariableReference* Context::add_variable(VariableReference* reference) {
   logger->info("registered '%s'", reference->m_name);
   Concurrency::ScopeLock locked(g_lock);
   VariableReference* next = g_head;
@@ -299,7 +299,7 @@ VariableReference* Interface::add_variable(VariableReference* reference) {
   return next;
 }
 
-VariableReference* Interface::split(VariableReference* reference) {
+VariableReference* Context::split(VariableReference* reference) {
   if (!reference || !reference->m_next) {
     return nullptr;
   }
@@ -309,7 +309,7 @@ VariableReference* Interface::split(VariableReference* reference) {
   return splitted;
 }
 
-VariableReference* Interface::merge(VariableReference* lhs, VariableReference* rhs) {
+VariableReference* Context::merge(VariableReference* lhs, VariableReference* rhs) {
   if (!lhs) {
     return rhs;
   }
@@ -327,7 +327,7 @@ VariableReference* Interface::merge(VariableReference* lhs, VariableReference* r
   return lhs;
 }
 
-VariableReference* Interface::sort(VariableReference* reference) {
+VariableReference* Context::sort(VariableReference* reference) {
   if (!reference) {
     return nullptr;
   }
@@ -341,4 +341,4 @@ VariableReference* Interface::sort(VariableReference* reference) {
   return merge(sort(reference), sort(splitted));
 }
 
-} // namespace rx::console
+} // namespace Rx::Console

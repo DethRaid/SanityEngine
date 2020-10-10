@@ -171,6 +171,8 @@ bool Logger::subscribe(Stream* _stream) {
 bool Logger::unsubscribe(Stream* _stream) {
   Concurrency::ScopeLock lock{m_mutex};
   if (const auto find = m_streams.find(_stream); find != -1_z) {
+    // Flush any contents when removing a stream from the logger.
+    flush_unlocked();
     m_streams.erase(find, find + 1);
     return true;
   }
@@ -200,7 +202,7 @@ bool Logger::enqueue(Log* _owner, Log::Level _level, String&& message_) {
     this_queue.messages.push_back(&m_messages.last()->link);
 
     // Wakeup logging thread when we have a few messages.
-    if (m_streams.size() && m_messages.size() >= 0) {
+    if (m_streams.size() && m_messages.size() >= 1000) {
       m_wakeup_cond.signal();
     }
 

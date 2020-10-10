@@ -34,6 +34,9 @@ bool VMA::allocate(Size _page_size, Size _page_count) {
 
   // Determine the page size that closely matches |_page_size|.
   Size page_size = 4096;
+
+  // Emscripten does not support huge pages.
+#if !defined(RX_PLATFORM_EMSCRIPTEN)
   if (_page_size > 4096) {
     flags |= MAP_HUGETLB;
     if (_page_size > 2 * 1024 * 1024) {
@@ -46,6 +49,7 @@ bool VMA::allocate(Size _page_size, Size _page_count) {
       page_size = 1 * 1024 * 1024 * 1024;
     }
   }
+#endif
 
   const auto size = page_size * _page_count;
   const auto map = mmap(nullptr, size, PROT_NONE, flags, -1, 0);

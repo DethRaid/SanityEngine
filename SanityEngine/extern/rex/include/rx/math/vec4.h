@@ -16,6 +16,7 @@ template<typename T>
 struct Vec4 {
   constexpr Vec4();
   constexpr Vec4(T _x, T _y, T _z, T _w);
+  constexpr Vec4(const T (&_values)[4]);
 
   T& operator[](Size _i);
   const T& operator[](Size _i) const;
@@ -41,6 +42,7 @@ struct Vec4 {
   union {
     struct { T x, y, z, w; };
     struct { T r, g, b, a; };
+    struct { T s, t, p, q; };
     T array[4];
   };
 };
@@ -65,6 +67,15 @@ inline constexpr Vec4<T>::Vec4(T _x, T _y, T _z, T _w)
   , y{_y}
   , z{_z}
   , w{_w}
+{
+}
+
+template<typename T>
+inline constexpr Vec4<T>::Vec4(const T (&_values)[4])
+  : x{_values[0]}
+  , y{_values[1]}
+  , z{_values[2]}
+  , w{_values[3]}
 {
 }
 

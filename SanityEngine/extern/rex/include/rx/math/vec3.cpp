@@ -2,7 +2,7 @@
 
 #include "rx/core/math/sqrt.h"
 
-#include "rx/math/vec3.h" // vec3
+#include "rx/math/vec3.h" // Vec3
 
 namespace Rx {
 
@@ -16,4 +16,4 @@ const char* FormatNormalize<Math::Vec3i>::operator()(const Math::Vec3i& value) {
   return scratch;
 }
 
-} // namespace rx
+} // namespace Rx

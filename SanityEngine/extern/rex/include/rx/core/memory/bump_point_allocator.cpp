@@ -19,10 +19,10 @@ BumpPointAllocator::BumpPointAllocator(Byte* _data, Size _size)
   RX_ASSERT(_data, "no memory supplied");
 
   // Ensure the memory given is suitably aligned and size is suitably rounded.
-  RX_ASSERT(reinterpret_cast<UintPtr>(m_data) % k_alignment == 0,
-    "_data not aligned on k_alignment boundary");
-  RX_ASSERT(m_size % k_alignment == 0,
-    "_size not a multiple of k_alignment");
+  RX_ASSERT(reinterpret_cast<UintPtr>(m_data) % ALIGNMENT == 0,
+    "_data not aligned on %zu-byte boundary", ALIGNMENT);
+  RX_ASSERT(m_size % ALIGNMENT == 0,
+    "_size not a multiple of %zu", ALIGNMENT);
 }
 
 Byte* BumpPointAllocator::allocate(Size _size) {
@@ -31,8 +31,7 @@ Byte* BumpPointAllocator::allocate(Size _size) {
 }
 
 Byte* BumpPointAllocator::allocate_unlocked(Size _size) {
-  // Round |_size| to a multiple of k_alignment to keep all pointers
-  // aligned by k_alignment.
+  // Keep everything aligned by ALIGNMENT.
   _size = Allocator::round_to_alignment(_size);
 
   // Check for available space for the allocation.
@@ -53,8 +52,7 @@ Byte* BumpPointAllocator::reallocate(void* _data, Size _size) {
   if (RX_HINT_LIKELY(_data)) {
     Concurrency::ScopeLock locked{m_lock};
 
-    // Round |_size| to a multiple of k_alignment to keep all pointers
-    // aligned by k_alignment.
+    // Keep everything aligned by ALIGNMENT.
     _size = Allocator::round_to_alignment(_size);
 
     // Can only reallocate in-place provided |_data| is the address of |m_last_point|,

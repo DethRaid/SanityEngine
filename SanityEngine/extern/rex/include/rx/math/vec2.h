@@ -16,6 +16,7 @@ template<typename T>
 struct Vec2 {
   constexpr Vec2();
   constexpr Vec2(T _x, T _y);
+  constexpr Vec2(const T (&_values)[2]);
 
   T& operator[](Size _i);
   const T& operator[](Size _i) const;
@@ -68,6 +69,13 @@ template<typename T>
 inline constexpr Vec2<T>::Vec2(T _x, T _y)
   : x{_x}
   , y{_y}
+{
+}
+
+template<typename T>
+inline constexpr Vec2<T>::Vec2(const T (&_values)[2])
+  : x{_values[0]}
+  , y{_values[1]}
 {
 }
 
@@ -236,8 +244,18 @@ inline constexpr bool operator<(const Vec2<T>& _a, const Vec2<T>& _b) {
 }
 
 template<typename T>
+inline constexpr bool operator<=(const Vec2<T>& _a, const Vec2<T>& _b) {
+  return _a.x <= _b.x && _a.y <= _b.y;
+}
+
+template<typename T>
 inline constexpr bool operator>(const Vec2<T>& _a, const Vec2<T>& _b) {
   return _a.x > _b.x && _a.y > _b.y;
+}
+
+template<typename T>
+inline constexpr bool operator>=(const Vec2<T>& _a, const Vec2<T>& _b) {
+  return _a.x >= _b.x && _a.y >= _b.y;
 }
 
 template<typename T>

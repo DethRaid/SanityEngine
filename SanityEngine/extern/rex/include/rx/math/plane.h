@@ -2,7 +2,12 @@
 #define RX_MATH_PLANE_H
 #include "rx/math/vec3.h"
 
+#include "rx/core/optional.h"
+
 namespace Rx::Math {
+
+struct Line;
+struct Ray;
 
 struct Plane {
   constexpr Plane();
@@ -11,6 +16,9 @@ struct Plane {
 
   const Vec3f& normal() const &;
   Float32 distance() const;
+
+  Optional<Vec3f> line_intersect(const Line& _line) const;
+  Optional<Vec3f> ray_intersect(const Ray& _ray) const;
 
 private:
   Vec3f m_normal;

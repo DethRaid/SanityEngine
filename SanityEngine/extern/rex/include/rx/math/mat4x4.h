@@ -30,6 +30,7 @@ struct Mat4x4 {
 
   static constexpr Vec3<T> transform_point(const Vec3<T>& _point, const Mat4x4& _mat);
   static constexpr Vec3<T> transform_vector(const Vec3<T>& _vector, const Mat4x4& _mat);
+  static constexpr Vec4<T> transform_vector(const Vec4<T>& _vector, const Mat4x4& _mat);
 
   constexpr Mat4x4 operator*(const Mat4x4& _mat) const;
   constexpr Mat4x4 operator+(const Mat4x4& _mat) const;
@@ -200,6 +201,11 @@ inline constexpr Vec3<T> Mat4x4<T>::transform_vector(const Vec3<T>& _vector, con
   const Vec3<T>& y{_mat.y.x, _mat.y.y, _mat.y.z};
   const Vec3<T>& z{_mat.z.x, _mat.z.y, _mat.z.z};
   return x * _vector.x + y * _vector.y + z * _vector.z;
+}
+
+template<typename T>
+inline constexpr Vec4<T> Mat4x4<T>::transform_vector(const Vec4<T>& _vector, const Mat4x4& _mat) {
+  return (_mat.x * _vector.x) + (_mat.y * _vector.y) + (_mat.z * _vector.z) + (_mat.w * _vector.w);
 }
 
 template<typename T>

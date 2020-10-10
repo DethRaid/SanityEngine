@@ -19,7 +19,7 @@ inline constexpr Camera::Camera(Transform* _parent)
 }
 
 inline Mat4x4f Camera::view() const {
-  return Mat4x4f::invert(to_mat4());
+  return Mat4x4f::invert(as_mat4());
 }
 
 } // namespace rx::math
