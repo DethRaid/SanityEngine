@@ -39,10 +39,12 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
 
 Rx::String SanityEngine::executable_directory;
 
-SanityEngine::SanityEngine(const char* executable_directory_in) : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
+SanityEngine::SanityEngine(const Settings& settings_in)
+    : settings{settings_in}, input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
 
-    executable_directory = executable_directory_in;
+    executable_directory = settings.executable_directory;
+
     {
         ZoneScoped;
 
@@ -73,20 +75,42 @@ SanityEngine::SanityEngine(const char* executable_directory_in) : input_manager{
 
         glfwSetKeyCallback(window, key_func);
 
-        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window);
+        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, settings);
         logger->info("Initialized renderer");
 
-        // asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
+        asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
         // bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
+
+        create_first_person_player();
+
+        create_planetary_atmosphere();
+
+        make_frametime_display();
 
         imgui_adapter = Rx::make_ptr<DearImguiAdapter>(RX_SYSTEM_ALLOCATOR, window, *renderer);
 
         terraingen::initialize(renderer->get_render_device());
 
+        world = World::create({.seed = 666,
+                               .height = 128,
+                               .width = 128,
+                               .max_ocean_depth = 8,
+                               .min_terrain_depth_under_ocean = 8,
+                               .max_height_above_sea_level = 16},
+                              player,
+                              registry,
+                              *renderer);
+
+        if(player_controller) {
+            player_controller->set_current_terrain(world->get_terrain());
+        }
+
         create_environment_object_editor();
 
-        // frame_timer.start();
+        world->tick(0);
+
+        frame_timer.start();
     }
 }
 
@@ -98,102 +122,72 @@ SanityEngine::~SanityEngine() {
     logger->warning("REMAIN INDOORS");
 }
 
-
-void SanityEngine::CreateWorld() {
-    create_first_person_player();
-
-    create_planetary_atmosphere();
-
-    make_frametime_display();
-
-    // world = World::create({.seed = 666,
-    //                        .height = 128,
-    //                        .width = 128,
-    //                        .max_ocean_depth = 8,
-    //                        .min_terrain_depth_under_ocean = 8,
-    //                        .max_height_above_sea_level = 16},
-    //                       *renderer);
-    //
-    // // if(player_controller) {
-    // //     player_controller->set_current_terrain(world->get_terrain());
-    // // }
-    //
-    // world->tick(0);
-}
-
-
 void SanityEngine::Tick(bool isVisible) {
-    // const auto frame_duration = frame_timer.elapsed();
-    // frame_timer.restart();
+    const auto frame_duration = frame_timer.elapsed();
+    frame_timer.restart();
 
-   //  double frame_duration_seconds = frame_duration.total_seconds();
+    double frame_duration_seconds = frame_duration.total_seconds();
 
-   //  accumulator += frame_duration_seconds;
+    accumulator += frame_duration_seconds;
 
-    // while(accumulator >= dt) {
-    //     // if(player_controller) {
-    //     //     player_controller->update_player_transform(dt);
-    //     // }
-    // 
-    //     // if(world) {
-    //     //     world->tick(dt);
-    //     // }
-    // 
-    //     accumulator -= dt;
-    //     t += dt;
-    // }
+    while(accumulator >= dt) {
+        if(player_controller) {
+            player_controller->update_player_transform(dt);
+        }
+
+        if(world) {
+            world->tick(dt);
+        }
+
+        accumulator -= dt;
+        t += dt;
+    }
 
     // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/
 
     render();
 
-   //  framerate_tracker.add_frame_time(frame_duration_seconds);
+    framerate_tracker.add_frame_time(frame_duration_seconds);
 }
 
-entt::entity SanityEngine::get_player() const {
-    return {};
-    // return player;
-}
+entt::entity SanityEngine::get_player() const { return player; }
 
-// SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
+SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
-World* SanityEngine::get_world() const {
-    return nullptr;
-//    world.get();
-}
+World* SanityEngine::get_world() const { return world.get(); }
 
 void SanityEngine::create_planetary_atmosphere() {
-    // auto locked_registry = registry.lock();
-    // const auto atmosphere = locked_registry->create();
-    // 
-    // // No need to set parameters, the default light component represents the Earth's sun
-    // locked_registry->emplace<renderer::LightComponent>(atmosphere);
-    // locked_registry->emplace<renderer::AtmosphericSkyComponent>(atmosphere);
-    // locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform
-    // 
-    // // Camera for the directional light's shadow
-    // // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
-    // auto& shadow_camera = locked_registry->emplace<renderer::CameraComponent>(atmosphere);
-    // shadow_camera.aspect_ratio = 1;
-    // shadow_camera.fov = 0;
+    auto locked_registry = registry.lock();
+    const auto atmosphere = locked_registry->create();
+
+    // No need to set parameters, the default light component represents the Earth's sun
+    locked_registry->emplace<renderer::LightComponent>(atmosphere);
+    locked_registry->emplace<renderer::AtmosphericSkyComponent>(atmosphere);
+    locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform
+
+    // Camera for the directional light's shadow
+    // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
+    auto& shadow_camera = locked_registry->emplace<renderer::CameraComponent>(atmosphere);
+    shadow_camera.aspect_ratio = 1;
+    shadow_camera.fov = 0;
 }
 
 void SanityEngine::make_frametime_display() {
-    // auto locked_registry = registry.lock();
-    // const auto frametime_display = locked_registry->create();
-    // locked_registry->emplace<ui::UiComponent>(frametime_display,
-    //                                           Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+    auto locked_registry = registry.lock();
+    const auto frametime_display = locked_registry->create();
+    locked_registry->emplace<ui::UiComponent>(frametime_display,
+                                              Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
 }
 
 void SanityEngine::create_first_person_player() {
-   // auto locked_registry = registry.lock();
-   //  player = locked_registry->create();
+    auto locked_registry = registry.lock();
+    player = locked_registry->create();
 
-    // auto& transform = locked_registry->emplace<TransformComponent>(player);
-    // transform.location.z = 5;
-    // transform.location.y = 2;
-    // transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-    // locked_registry->emplace<renderer::CameraComponent>(player);
+    auto& transform = locked_registry->emplace<TransformComponent>(player);
+    transform.location.z = 5;
+    transform.location.y = 2;
+    transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
+    locked_registry->emplace<renderer::CameraComponent>(player);
 
     // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
@@ -212,17 +206,16 @@ void SanityEngine::create_environment_object_editor() {
 void SanityEngine::load_3d_object(const Rx::String& filename) {
     const auto msg = Rx::String::format("load_3d_object(%s)", filename);
     ZoneScopedN(msg.data());
-    // load_static_mesh(filename, registry, *renderer);
+    load_static_mesh(filename, registry, *renderer);
 }
 
 void SanityEngine::render() {
-    {
-        // auto locked_registry = registry.lock();
-        //
-        // imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
-        //
-        // renderer->render_all(locked_registry, *world);
-    }
+    auto locked_registry = registry.lock();
+
+    imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
+
+    renderer->render_all(locked_registry, *world);
+
     renderer->end_frame();
 
     FrameMark;

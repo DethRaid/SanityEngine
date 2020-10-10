@@ -32,15 +32,11 @@ namespace Sanity.Editor
             get;
             private set;
         }
-        public string ExecutableDirectory
-        {
-            get; init;
-        }
 
         public SanityEditor()
         {
-            ExecutableDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            Engine = new(ExecutableDirectory);
+            var settings = new Settings { ExecutableDirectory = "", QualityLevel = RenderQualityLevel.Ultra, RenderScale = 1 };
+            Engine = new(ref settings);
         }
 
         public void CreateProject(ProjectInfo projectInto)

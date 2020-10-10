@@ -16,6 +16,8 @@ RX_LOG("World", logger);
 RX_LOG("ChunkMeshGenTaskDispatcher", logger_dispatch);
 
 Rx::Ptr<World> World::create(const WorldParameters& params,
+                             const entt::entity player,
+                             SynchronizedResource<entt::registry>& registry,
                              renderer::Renderer& renderer) {
     ZoneScoped;
 
@@ -39,14 +41,15 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
     
     generate_climate_data(terrain_data, params, renderer);
 
-    // auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR, terrain_data, renderer, *noise_generator, registry);
+    auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR, terrain_data, renderer, *noise_generator, registry);
 
-    // return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
-    //                            glm::uvec2{params.width, params.height},
-    //                            Rx::Utility::move(noise_generator),
-    //                            renderer,
-    //                            Rx::Utility::move(terrain));
-    return {};
+    return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
+                               glm::uvec2{params.width, params.height},
+                               Rx::Utility::move(noise_generator),
+                               player,
+                               registry,
+                               renderer,
+                               Rx::Utility::move(terrain));
 }
 
 World::World(const glm::uvec2& size_in,
@@ -67,8 +70,8 @@ void World::tick(const Float64 delta_time) {
 
     {
         auto locked_registry = registry->lock();
-        // const auto& player_transform = locked_registry->get<TransformComponent>(player);
-        // terrain->load_terrain_around_player(player_transform);
+        const auto& player_transform = locked_registry->get<TransformComponent>(player);
+        terrain->load_terrain_around_player(player_transform);
     }
 
     terrain->tick(delta_time);

@@ -38,16 +38,20 @@ namespace renderer {
                     INT_MAX,
                     100000);
 
-    Renderer::Renderer(GLFWwindow* window)
+    Renderer::Renderer(GLFWwindow* window, // NOLINT(cppcoreguidelines-pro-type-member-init)
+                       const Settings& settings_in)
         : start_time{std::chrono::high_resolution_clock::now()},
-          device{make_render_device(window)},
+          settings{settings_in},
+          device{make_render_device(window, settings_in)},
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)} {
         ZoneScoped;
+
+        RX_ASSERT(settings.render_scale > 0, "Render scale may not be 0 or less");
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        output_framebuffer_size = {static_cast<Uint32>(width * render_scale), static_cast<Uint32>(height * render_scale)};
+        output_framebuffer_size = {static_cast<Uint32>(width * settings.render_scale), static_cast<Uint32>(height * settings.render_scale)};
 
         create_static_mesh_storage();
 

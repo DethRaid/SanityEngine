@@ -373,6 +373,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp" />
+    <ClInclude Include="Editor\SanityEditor.hpp" />
+    <ClInclude Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.hpp" />
+    <ClInclude Include="Editor\UI\DensityMap\EngineTextureNode.hpp" />
+    <ClInclude Include="Editor\UI\NodeGraphNode.hpp" />
+    <ClInclude Include="Editor\UI\PropertyEditors.hpp" />
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
     <ClInclude Include="extern\imgui-node-editor\crude_json.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_bezier_math.h" />
@@ -640,6 +645,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp" />
+    <ClCompile Include="Editor\Sanity.Engine.main.cpp" />
+    <ClCompile Include="Editor\SanityEditor.cpp" />
+    <ClCompile Include="Editor\UI\DensityMap\DensityMapGenerationPipeline.cpp" />
+    <ClCompile Include="Editor\UI\DensityMap\EngineTextureNode.cpp" />
+    <ClCompile Include="Editor\UI\NodeGraphNode.cpp" />
+    <ClCompile Include="Editor\UI\PropertyEditors.cpp" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
