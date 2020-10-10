@@ -957,9 +957,6 @@
     <ClInclude Include="src\input\PlatformInput.hpp">
       <Filter>src\input</Filter>
     </ClInclude>
-    <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp">
-      <Filter>src\input</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\Prelude.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
@@ -1347,9 +1344,6 @@
       <Filter>src\world\environment</Filter>
     </ClCompile>
     <ClCompile Include="src\input\PlatformInput.cpp">
-      <Filter>src\input</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp">
       <Filter>src\input</Filter>
     </ClCompile>
   </ItemGroup>

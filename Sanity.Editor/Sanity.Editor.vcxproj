@@ -80,6 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\rex\include;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;$(IncludePath);$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\physx\include\physx;$(SolutionDir)SanityEngine\extern\rex\include;$(SolutionDir)SanityEngine\extern\tracy;$(SolutionDir)SanityEngine\extern\tracy\imgui;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\dotnet\include;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\src;$(SolutionDir)build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories);</IncludePath>
+    <LibraryPath>E:\Documents\SanityEngine\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -142,6 +143,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>E:\Documents\SanityEngine\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Sanity.Engine.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

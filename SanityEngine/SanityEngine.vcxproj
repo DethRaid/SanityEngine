@@ -61,7 +61,6 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Sanity</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Documents\SanityEngine\build\SanityEngine\Release\</OutDir>
@@ -145,9 +144,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <PostBuildEvent>
       <Message>
       </Message>
-      <Command>copy $(SolutionDir)$(IntDir)Sanity.dll $(SolutionDir)Sanity.Editor\bin\$(ConfigurationName)\net5.0\
-
-setlocal
+      <Command>setlocal
 powershell -noprofile -executionpolicy Bypass -file E:/Documents/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.exe -installedDir E:/Documents/SanityEngine/build/vcpkg_installed/x64-windows/debug/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
@@ -163,7 +160,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.lib</ImportLibrary>
       <ProgramDataBaseFile>E:/Documents/SanityEngine/build/SanityEngine/Debug/SanityEngine.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -372,7 +368,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Editor\Input\GlfwPlatformInput.hpp" />
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
     <ClInclude Include="extern\imgui-node-editor\crude_json.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_bezier_math.h" />
@@ -639,7 +634,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Editor\Input\GlfwPlatformInput.cpp" />
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
