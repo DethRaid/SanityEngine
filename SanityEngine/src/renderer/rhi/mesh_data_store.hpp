@@ -47,7 +47,7 @@ namespace renderer {
         Uint32 vertex_size;
     };
 
-    class MeshDataStore {
+    class SANITY_API MeshDataStore {
     public:
         MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
 

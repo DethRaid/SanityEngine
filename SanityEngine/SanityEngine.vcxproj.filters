@@ -960,6 +960,9 @@
     <ClInclude Include="src\core\Prelude.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\prelude.h">
+      <Filter>extern\rex\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">

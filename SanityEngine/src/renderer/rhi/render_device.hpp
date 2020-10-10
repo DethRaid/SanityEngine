@@ -7,6 +7,7 @@
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
 
+#include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "glm/glm.hpp"
 #include "renderer/rhi/bind_group.hpp"
@@ -51,7 +52,7 @@ namespace renderer {
      * one frame for each image in the swapchain. Most of the synchronization concerns should be hidden behind this interface, but be aware
      * that the frame that the GPU may be several frames behind the CPU
      */
-    class RenderBackend {
+    class SANITY_API RenderBackend {
     public:
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
         static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 1;
@@ -121,7 +122,7 @@ namespace renderer {
             const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
 
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
-                                                                                 const ComPtr<ID3D12RootSignature>& root_signature) const;
+                                                                                const ComPtr<ID3D12RootSignature>& root_signature) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
@@ -331,7 +332,7 @@ namespace renderer {
         void initialize_swapchain_descriptors();
 
         [[nodiscard]] std::pair<ComPtr<ID3D12DescriptorHeap>, UINT> create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE descriptor_type,
-                                                                                            Uint32 num_descriptors) const;
+                                                                                           Uint32 num_descriptors) const;
 
         void initialize_dma();
 

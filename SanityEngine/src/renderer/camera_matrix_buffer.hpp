@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "core/Prelude.hpp"
 #include "core/components.hpp"
 #include "core/constants.hpp"
 #include "glm/glm.hpp"
@@ -14,7 +15,7 @@ namespace renderer {
 }
 
 namespace renderer {
-    struct CameraMatrices {
+    struct SANITY_API CameraMatrices {
         glm::mat4 view_matrix{};
         glm::mat4 projection_matrix{};
         glm::mat4 inverse_view_matrix{};
@@ -35,7 +36,7 @@ namespace renderer {
     /*!
      * \brief Abstraction for the camera matrix buffer
      */
-    class CameraMatrixBuffer {
+    class SANITY_API CameraMatrixBuffer {
     public:
         explicit CameraMatrixBuffer(RenderBackend& device_in);
 
@@ -62,7 +63,7 @@ namespace renderer {
     private:
         RenderBackend* device;
 
-        std::array<CameraMatrices, MAX_NUM_CAMERAS> host_data{};
+        Rx::Array<CameraMatrices[MAX_NUM_CAMERAS]> host_data{};
 
         Rx::Vector<Buffer*> device_data;
     };
