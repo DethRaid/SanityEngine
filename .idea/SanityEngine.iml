@@ -2,8 +2,22 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/Sanity.Editor/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sanity_editor/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.vs" />
+      <excludeFolder url="file://$MODULE_DIR$/Sanity.Editor/x64" />
+      <excludeFolder url="file://$MODULE_DIR$/SanityEngine.Codegen/x64" />
+      <excludeFolder url="file://$MODULE_DIR$/SanityEngine/Unmerged" />
+      <excludeFolder url="file://$MODULE_DIR$/SanityEngine/extern/pix/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/SanityEngine/x64" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/cmake-build-debug" />
+      <excludeFolder url="file://$MODULE_DIR$/packages" />
+      <excludeFolder url="file://$MODULE_DIR$/sanity_editor/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/vcpkg_installed" />
+      <excludeFolder url="file://$MODULE_DIR$/x64" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
