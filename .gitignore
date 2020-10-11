@@ -533,3 +533,4 @@ vcpkg_installed/
 #Added by cargo
 
 /target
+/sanity_editor/target/
