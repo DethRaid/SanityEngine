@@ -109,7 +109,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>RX_EXPORT_API;SANITY_EXPORT_API;WIN32;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RX_API=RX_EXPORT;SANITY_EXPORT_API;WIN32;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <SupportJustMyCode>true</SupportJustMyCode>
       <CompileAsManaged>false</CompileAsManaged>
@@ -376,7 +376,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h" />
     <ClInclude Include="extern\rex\include\rx\console\command.h" />
-    <ClInclude Include="extern\rex\include\rx\console\interface.h" />
+    <ClInclude Include="extern\rex\include\rx\console\context.h" />
     <ClInclude Include="extern\rex\include\rx\console\parser.h" />
     <ClInclude Include="extern\rex\include\rx\console\variable.h" />
     <ClInclude Include="extern\rex\include\rx\core\abort.h" />
@@ -429,8 +429,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\rex\include\rx\core\hints\thread.h" />
     <ClInclude Include="extern\rex\include\rx\core\hints\unlikely.h" />
     <ClInclude Include="extern\rex\include\rx\core\hints\unreachable.h" />
+    <ClInclude Include="extern\rex\include\rx\core\intrusive_compressed_list.h" />
     <ClInclude Include="extern\rex\include\rx\core\intrusive_list.h" />
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_xor_list.h" />
     <ClInclude Include="extern\rex\include\rx\core\library\loader.h" />
     <ClInclude Include="extern\rex\include\rx\core\log.h" />
     <ClInclude Include="extern\rex\include\rx\core\map.h" />
@@ -463,6 +463,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\rex\include\rx\core\memory\uninitialized_storage.h" />
     <ClInclude Include="extern\rex\include\rx\core\memory\vma.h" />
     <ClInclude Include="extern\rex\include\rx\core\optional.h" />
+    <ClInclude Include="extern\rex\include\rx\core\pp.h" />
     <ClInclude Include="extern\rex\include\rx\core\prelude.h" />
     <ClInclude Include="extern\rex\include\rx\core\prng\mt19937.h" />
     <ClInclude Include="extern\rex\include\rx\core\profiler.h" />
@@ -641,7 +642,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\command.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\interface.cpp" />
+    <ClCompile Include="extern\rex\include\rx\console\context.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\parser.cpp" />
     <ClCompile Include="extern\rex\include\rx\console\variable.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\abort.cpp" />
@@ -662,8 +663,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\rex\include\rx\core\format.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\global.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\hash\fnv1a.cpp" />
+    <ClCompile Include="extern\rex\include\rx\core\intrusive_compressed_list.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\intrusive_list.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_xor_list.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\library\loader.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\log.cpp" />
     <ClCompile Include="extern\rex\include\rx\core\math\abs.cpp" />
@@ -776,9 +777,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.VCRTForwarders.140.1.0.6\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\packages\Microsoft.VCRTForwarders.140.1.0.6\build\native\Microsoft.VCRTForwarders.140.targets')" />
-  </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>

@@ -5,7 +5,7 @@
 
 namespace Rx::Concurrency {
 
-struct RX_HINT_LOCKABLE SpinLock {
+struct RX_API RX_HINT_LOCKABLE SpinLock {
   constexpr SpinLock();
   ~SpinLock() = default;
   void lock() RX_HINT_ACQUIRE();

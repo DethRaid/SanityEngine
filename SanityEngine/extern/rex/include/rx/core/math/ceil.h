@@ -4,8 +4,8 @@
 
 namespace Rx::Math {
 
-Float64 ceil(Float64 _x);
-Float32 ceil(Float32 _x);
+RX_API Float64 ceil(Float64 _x);
+RX_API Float32 ceil(Float32 _x);
 
 } // namespace rx::math
 

@@ -4,7 +4,7 @@
 
 namespace Rx::Math {
 
-Float32 round(Float32 _value);
+RX_API Float32 round(Float32 _value);
 
 } // namespace rx::math
 

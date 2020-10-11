@@ -432,9 +432,6 @@
     <ClInclude Include="extern\rex\include\rx\core\intrusive_list.h">
       <Filter>extern\rex\core</Filter>
     </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_xor_list.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\log.h">
       <Filter>extern\rex\core</Filter>
     </ClInclude>
@@ -864,9 +861,6 @@
     <ClInclude Include="extern\rex\include\rx\console\command.h">
       <Filter>extern\rex\console</Filter>
     </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\console\interface.h">
-      <Filter>extern\rex\console</Filter>
-    </ClInclude>
     <ClInclude Include="extern\rex\include\rx\console\parser.h">
       <Filter>extern\rex\console</Filter>
     </ClInclude>
@@ -962,6 +956,15 @@
     </ClInclude>
     <ClInclude Include="extern\rex\include\rx\core\prelude.h">
       <Filter>extern\rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\intrusive_compressed_list.h">
+      <Filter>extern\rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\core\pp.h">
+      <Filter>extern\rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="extern\rex\include\rx\console\context.h">
+      <Filter>extern\rex\console</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1139,9 +1142,6 @@
     <ClCompile Include="extern\rex\include\rx\core\intrusive_list.cpp">
       <Filter>extern\rex\core</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_xor_list.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
     <ClCompile Include="extern\rex\include\rx\core\log.cpp">
       <Filter>extern\rex\core</Filter>
     </ClCompile>
@@ -1292,9 +1292,6 @@
     <ClCompile Include="extern\rex\include\rx\console\command.cpp">
       <Filter>extern\rex\console</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\console\interface.cpp">
-      <Filter>extern\rex\console</Filter>
-    </ClCompile>
     <ClCompile Include="extern\rex\include\rx\console\parser.cpp">
       <Filter>extern\rex\console</Filter>
     </ClCompile>
@@ -1348,6 +1345,12 @@
     </ClCompile>
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\core\intrusive_compressed_list.cpp">
+      <Filter>extern\rex\core</Filter>
+    </ClCompile>
+    <ClCompile Include="extern\rex\include\rx\console\context.cpp">
+      <Filter>extern\rex\console</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

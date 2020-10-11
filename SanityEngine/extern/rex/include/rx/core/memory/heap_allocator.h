@@ -14,7 +14,7 @@ namespace Rx::Memory {
 //
 // The purpose of this allocator is to provide a generic, heap allocator
 // that can be used for anything.
-struct HeapAllocator
+struct RX_API HeapAllocator
   final : Allocator
 {
   constexpr HeapAllocator() = default;

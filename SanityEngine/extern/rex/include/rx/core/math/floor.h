@@ -4,8 +4,8 @@
 
 namespace Rx::Math {
 
-Float64 floor(Float64 _x);
-Float32 floor(Float32 _x);
+RX_API Float64 floor(Float64 _x);
+RX_API Float32 floor(Float32 _x);
 
 } // namespace rx::math
 

@@ -7,7 +7,7 @@ namespace Rx {
 
 struct String;
 
-struct StringTable {
+struct RX_API StringTable {
   constexpr StringTable();
   constexpr StringTable(Memory::Allocator& _allocator);
 

@@ -13,7 +13,7 @@ namespace Rx {
 
 // 32-bit: 12 bytes
 // 64-bit: 24 bytes
-struct Bitset {
+struct RX_API Bitset {
   using BitType = Uint64;
 
   static constexpr const BitType k_bit_one = 1;

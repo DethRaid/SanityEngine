@@ -7,7 +7,7 @@
 
 namespace Rx::Filesystem {
 
-struct File
+struct RX_API File
   final : Stream
 {
   constexpr File();
@@ -142,8 +142,8 @@ inline bool File::print(const char* _format, Ts&&... _arguments) {
   return print(Memory::SystemAllocator::instance(), _format, Utility::forward<Ts>(_arguments)...);
 }
 
-Optional<Vector<Byte>> read_binary_file(Memory::Allocator& _allocator, const char* _file_name);
-Optional<Vector<Byte>> read_text_file(Memory::Allocator& _allocator, const char* _file_name);
+RX_API Optional<Vector<Byte>> read_binary_file(Memory::Allocator& _allocator, const char* _file_name);
+RX_API Optional<Vector<Byte>> read_text_file(Memory::Allocator& _allocator, const char* _file_name);
 
 inline Optional<Vector<Byte>> read_binary_file(Memory::Allocator& _allocator, const String& _file_name) {
   return read_binary_file(_allocator, _file_name.data());

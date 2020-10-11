@@ -48,7 +48,7 @@ File::File(Memory::Allocator& _allocator, const char* _file_name, const char* _m
   , m_mode{_mode}
 {
   // Convert |_file_name| to UTF-16.
-  const WideString file_name = String(_file_name).to_utf16();
+  const WideString file_name = String(_allocator, _file_name).to_utf16();
 
   // Convert the mode string to a wide char version. The mode string is in ascii
   // so there's no conversion necessary other than extending the Type size.

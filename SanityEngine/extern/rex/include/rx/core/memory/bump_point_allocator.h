@@ -21,7 +21,7 @@ namespace Rx::Memory {
 //
 // The purpose of this allocator is to provide a very quick, linear burn
 // scratch space to allocate shortly-lived objects and to reset.
-struct BumpPointAllocator
+struct RX_API BumpPointAllocator
   final : Allocator
 {
   BumpPointAllocator(Byte* _memory, Size _size);

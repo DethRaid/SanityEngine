@@ -120,7 +120,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RX_API=RX_HIDDEN;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <EnableModules>true</EnableModules>
@@ -150,7 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\command.cpp" />
-    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\interface.cpp" />
+    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\context.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\parser.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\variable.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\abort.cpp" />
@@ -171,8 +171,8 @@
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\format.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\global.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\hash\fnv1a.cpp" />
+    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_compressed_list.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_list.cpp" />
-    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_xor_list.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\library\loader.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\log.cpp" />
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\math\abs.cpp" />
@@ -231,7 +231,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\command.h" />
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\interface.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\context.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\parser.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\variable.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\abort.h" />
@@ -284,8 +284,8 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\hints\thread.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\hints\unlikely.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\hints\unreachable.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_compressed_list.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_list.h" />
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_xor_list.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\library\loader.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\log.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\map.h" />
@@ -318,6 +318,8 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\uninitialized_storage.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\vma.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\optional.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\pp.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\prelude.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\prng\mt19937.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\profiler.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\ptr.h" />

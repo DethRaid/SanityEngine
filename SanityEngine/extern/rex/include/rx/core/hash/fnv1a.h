@@ -7,7 +7,7 @@
 namespace Rx::Hash {
 
 template<typename T>
-T fnv1a(const Byte* _data, Size _size);
+RX_API T fnv1a(const Byte* _data, Size _size);
 
 } // namespace rx::hash
 

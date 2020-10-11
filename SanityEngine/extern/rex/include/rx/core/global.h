@@ -4,13 +4,12 @@
 #include "rx/core/intrusive_list.h"
 #include "rx/core/uninitialized.h"
 #include "rx/core/tagged_ptr.h"
-#include "rx/core/prelude.h"
 
 namespace Rx {
 
 // 32-bit: 32 bytes
 // 64-bit: 64 bytes
-struct alignas(Memory::Allocator::ALIGNMENT) RX_API GlobalNode {
+struct RX_API alignas(Memory::Allocator::ALIGNMENT) GlobalNode {
   template<typename T, typename... Ts>
   GlobalNode(const char* _group, const char* _name, Uninitialized<T>& _storage, Ts&&... _arguments);
 
@@ -155,7 +154,7 @@ private:
 // 32-bit: 32 + sizeof(T) bytes
 // 64-bit: 64 + sizeof(T) bytes
 template<typename T>
-struct Global {
+struct RX_API Global {
   template<typename... Ts>
   Global(const char* _group, const char* _name, Ts&&... _arguments);
 
@@ -186,7 +185,7 @@ private:
 
 // 32-bit: 20 bytes
 // 64-bit: 40 bytes
-struct GlobalGroup {
+struct RX_API GlobalGroup {
   GlobalGroup(const char* _name);
 
   constexpr const char* name() const;

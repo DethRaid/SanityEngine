@@ -8,7 +8,7 @@
 
 namespace Rx::Memory {
 
-struct VMA {
+struct RX_API VMA {
   RX_MARK_NO_COPY(VMA);
 
   constexpr VMA();

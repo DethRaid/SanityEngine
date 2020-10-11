@@ -15,7 +15,7 @@ struct Stream;
 
 namespace Rx::serialize {
 
-struct Encoder {
+struct RX_API Encoder {
   Encoder(Stream* _stream);
   Encoder(Memory::Allocator& _allocator, Stream* _stream);
   ~Encoder();

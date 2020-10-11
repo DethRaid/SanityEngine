@@ -8,7 +8,7 @@ namespace Rx {
 
 namespace Rx::serialize {
 
-struct Buffer {
+struct RX_API Buffer {
   static constexpr Size k_size = 4096;
 
   enum class Mode : Uint8 {

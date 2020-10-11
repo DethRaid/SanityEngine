@@ -12,7 +12,7 @@ namespace Rx::Memory {
 // allocator to track global system allocations. When something isn't provided
 // an allocator, this is the allocator used. More specifically, the global
 // g_system_allocator is used.
-struct SystemAllocator
+struct RX_API SystemAllocator
   final : Allocator
 {
   SystemAllocator();

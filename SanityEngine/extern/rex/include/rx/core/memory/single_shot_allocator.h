@@ -20,7 +20,7 @@ namespace Rx::Memory {
 // The purpose of this allocator is to enable containers which manage a single
 // allocation, such as array and string to be made fixed-sized without introducing
 // fixed-size variants.
-struct SingleShotAllocator
+struct RX_API SingleShotAllocator
   final : Allocator
 {
   SingleShotAllocator(Byte* _data, Size _size);

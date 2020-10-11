@@ -15,7 +15,7 @@ struct Stream;
 
 namespace Rx::serialize {
 
-struct Decoder {
+struct RX_API Decoder {
   Decoder(Stream* _stream);
   Decoder(Memory::Allocator& _allocator, Stream* _stream);
   ~Decoder();

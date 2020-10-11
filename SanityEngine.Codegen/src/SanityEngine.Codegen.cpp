@@ -159,6 +159,8 @@ int main(const Sint32 argc, const char** argv) {
 
     logger->info("HELLO HUMAN");
 
+	const auto size = alignof(long double);
+
     if(argc != 3) {
         logger->error("Wrong number of command-line parameters. Usage:\n\n\tSanityEngine.Codegen <C++ directory> <C# directory>");
         return_code = -1;

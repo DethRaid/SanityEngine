@@ -4,7 +4,7 @@
 
 namespace Rx::Time {
 
-struct StopWatch {
+struct RX_API StopWatch {
   constexpr StopWatch();
 
   void reset();

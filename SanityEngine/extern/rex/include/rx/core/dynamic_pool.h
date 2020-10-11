@@ -6,7 +6,7 @@
 
 namespace Rx {
 
-struct DynamicPool {
+struct RX_API DynamicPool {
   RX_MARK_NO_COPY(DynamicPool);
 
   constexpr DynamicPool(Memory::Allocator& _allocator, Size _object_size, Size _objects_per_pool);

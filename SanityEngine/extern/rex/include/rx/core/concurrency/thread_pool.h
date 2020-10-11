@@ -10,7 +10,7 @@
 
 namespace Rx::Concurrency {
 
-struct ThreadPool {
+struct RX_API ThreadPool {
   RX_MARK_NO_COPY(ThreadPool);
   RX_MARK_NO_MOVE(ThreadPool);
 

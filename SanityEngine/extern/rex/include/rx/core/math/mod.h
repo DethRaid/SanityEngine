@@ -4,7 +4,7 @@
 
 namespace Rx::Math {
 
-Float32 mod(Float32 _x, Float32 _y);
+RX_API Float32 mod(Float32 _x, Float32 _y);
 
 } // namespace rx::math
 

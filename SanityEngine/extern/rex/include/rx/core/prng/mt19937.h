@@ -5,7 +5,7 @@
 
 namespace Rx::PRNG {
 
-struct MT19937 {
+struct RX_API MT19937 {
   constexpr MT19937();
 
   void seed(Uint32 _seed);

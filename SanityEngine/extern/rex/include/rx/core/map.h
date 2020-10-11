@@ -221,7 +221,7 @@ inline Map<K, V>& Map<K, V>::operator=(Map<K, V>&& map_) {
 
   clear_and_deallocate();
 
-  m_allocator = map_.allocator();
+  m_allocator = &map_.allocator();
   m_keys = Utility::exchange(map_.m_keys, nullptr);
   m_values = Utility::exchange(map_.m_values, nullptr);
   m_hashes = Utility::exchange(map_.m_hashes, nullptr);

@@ -5,7 +5,7 @@
 
 namespace Rx::library {
 
-struct Loader {
+struct RX_API Loader {
   RX_MARK_NO_COPY(Loader);
 
   Loader(const String& _file_name);

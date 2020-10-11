@@ -7,7 +7,7 @@
 
 namespace Rx {
 
-struct Profiler {
+struct RX_API Profiler {
   struct Sample {
     constexpr Sample(const SourceLocation& _source_location, const char* _tag);
     ~Sample();

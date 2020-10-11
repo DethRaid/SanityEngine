@@ -20,7 +20,7 @@ namespace Rx {
 //
 // 32-bit: 8 bytes
 // 64-bit: 16 bytes
-struct IntrusiveList {
+struct RX_API IntrusiveList {
   RX_MARK_NO_COPY(IntrusiveList);
 
   struct Node;

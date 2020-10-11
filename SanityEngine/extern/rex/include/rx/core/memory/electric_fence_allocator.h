@@ -17,7 +17,7 @@ namespace Rx::Memory {
 //
 // This uses significant amounts of memory and should only be used for debugging
 // memory corruption issues.
-struct ElectricFenceAllocator
+struct RX_API ElectricFenceAllocator
   final : Allocator
 {
   ElectricFenceAllocator();

@@ -7,7 +7,7 @@ namespace Rx::Concurrency {
 
 // NOTE: Thread names must have static-storage which lives as long as the thread.
 // NOTE: Cannot deliver signals to threads.
-struct Thread {
+struct RX_API Thread {
   RX_MARK_NO_COPY(Thread);
   RX_MARK_NO_MOVE_ASSIGN(Thread);
 

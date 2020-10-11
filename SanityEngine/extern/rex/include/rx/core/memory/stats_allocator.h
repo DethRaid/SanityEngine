@@ -13,7 +13,7 @@ namespace Rx::Memory {
 //
 // The purpose of this allocator is to provide a means to debug and track
 // information about any allocator.
-struct StatsAllocator
+struct RX_API StatsAllocator
   final : Allocator
 {
   constexpr StatsAllocator(Allocator& _allocator);

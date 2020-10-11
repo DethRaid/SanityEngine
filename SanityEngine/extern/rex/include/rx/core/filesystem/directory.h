@@ -3,7 +3,6 @@
 #include "rx/core/string.h"
 #include "rx/core/function.h"
 #include "rx/core/optional.h"
-#include "rx/core/prelude.h"
 
 namespace Rx::Filesystem {
 
@@ -134,7 +133,7 @@ RX_HINT_FORCE_INLINE Directory::Item::Item(const Directory* _directory, String&&
 {
 }
 
-bool RX_API create_directory(const String& _path);
+bool create_directory(const String& _path);
 
 } // namespace rx::filesystem
 

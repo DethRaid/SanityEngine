@@ -15,7 +15,7 @@ namespace Rx::Filesystem {
 // the resolver and as it recieves them it'll translate the path accordingly.
 //
 // When you're ready to use the qualified path, call finalize().
-struct PathResolver {
+struct RX_API PathResolver {
   constexpr PathResolver();
   constexpr PathResolver(Memory::Allocator& _allocator);
 

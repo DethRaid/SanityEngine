@@ -5,7 +5,7 @@
 
 namespace Rx::Math {
 
-struct Half {
+struct RX_API Half {
   constexpr Half(const Half& _h);
   constexpr Half& operator=(const Half& _h);
 

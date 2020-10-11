@@ -5,7 +5,7 @@
 
 namespace Rx::Memory {
 
-struct Aggregate {
+struct RX_API Aggregate {
   constexpr Aggregate();
 
   Size bytes() const;

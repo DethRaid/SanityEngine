@@ -4,8 +4,8 @@
 
 namespace Rx::Time {
 
-Uint64 qpc_ticks();
-Uint64 qpc_frequency();
+RX_API Uint64 qpc_ticks();
+RX_API Uint64 qpc_frequency();
 
 } // namespace rx::time
 

@@ -5,7 +5,7 @@
 namespace Rx {
 
 [[noreturn]]
-void abort_message(const char* _message, bool _truncated);
+RX_API void abort_message(const char* _message, bool _truncated);
 
 template<typename... Ts>
 [[noreturn]]

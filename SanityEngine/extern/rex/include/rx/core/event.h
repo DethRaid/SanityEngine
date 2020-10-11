@@ -35,9 +35,13 @@ struct Event<R(Ts...)> {
 
     constexpr Handle();
     constexpr Handle(Event* _event, Size _index);
-    constexpr Handle(Handle&& _existing)
-        : m_event{Utility::exchange(_existing.m_event, nullptr)}, m_index{Utility::exchange(_existing.m_index, 0)} {};
 
+    // NOTE(dweiler): This is done inside this struct, rather than outside to avoid an ICE in MSVC
+    Handle(Handle&& handle_)
+        : m_event{Utility::exchange(handle_.m_event, nullptr)}
+        , m_index{Utility::exchange(handle_.m_index, 0)}
+    {
+    }
     ~Handle();
   private:
     Event* m_event;

@@ -4,7 +4,7 @@
 
 namespace Rx::Time {
 
-void delay(Uint64 _milliseconds);
+RX_API void delay(Uint64 _milliseconds);
 
 } // namespace rx::time
 

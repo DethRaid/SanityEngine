@@ -26,7 +26,7 @@ namespace Rx {
 //
 // 32-bit: 8 bytes
 // 64-bit: 16 bytes
-struct IntrusiveCompressedList {
+struct RX_API IntrusiveCompressedList {
   RX_MARK_NO_COPY(IntrusiveCompressedList);
 
   struct Node;

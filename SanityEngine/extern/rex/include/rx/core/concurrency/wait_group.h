@@ -7,7 +7,7 @@
 
 namespace Rx::Concurrency {
 
-struct WaitGroup {
+struct RX_API WaitGroup {
   WaitGroup(Size _count);
   WaitGroup();
 

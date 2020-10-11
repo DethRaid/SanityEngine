@@ -5,7 +5,7 @@
 
 namespace Rx::Memory {
 
-struct BuddyAllocator
+struct RX_API BuddyAllocator
   final : Allocator
 {
   BuddyAllocator(Byte* _data, Size _size);

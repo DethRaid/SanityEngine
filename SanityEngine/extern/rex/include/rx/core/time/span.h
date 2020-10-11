@@ -4,7 +4,7 @@
 
 namespace Rx::Time {
 
-struct Span {
+struct RX_API Span {
   constexpr Span(Uint64 _start_ticks, Uint64 _stop_ticks, Uint64 _frequency);
   constexpr Span(Uint64 _ticks, Uint64 _frequency);
   constexpr Span(Sint64 _ticks, Uint64 _frequency);

@@ -3,7 +3,6 @@
 #include "rx/core/assert.h" // RX_ASSERT
 #include "rx/core/format.h" // format
 #include "rx/core/vector.h" // vector
-#include "rx/core/prelude.h"
 
 #include "rx/core/traits/remove_cvref.h"
 
@@ -140,7 +139,7 @@ private:
 };
 
 // utf-16, Windows compatible "wide-string"
-struct RX_API WideString {
+struct WideString {
   RX_MARK_NO_MOVE_ASSIGN(WideString);
 
   // custom allocator versions

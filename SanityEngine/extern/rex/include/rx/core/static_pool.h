@@ -7,7 +7,7 @@
 
 namespace Rx {
 
-struct StaticPool {
+struct RX_API StaticPool {
   RX_MARK_NO_COPY(StaticPool);
 
   StaticPool(Memory::Allocator& _allocator, Size _object_size, Size _object_count);

@@ -4,8 +4,8 @@
 
 namespace Rx::Math {
 
-Float32 cos(Float32 _x);
-Float32 acos(Float32 _x);
+RX_API Float32 cos(Float32 _x);
+RX_API Float32 acos(Float32 _x);
 
 } // namespace rx::math
 

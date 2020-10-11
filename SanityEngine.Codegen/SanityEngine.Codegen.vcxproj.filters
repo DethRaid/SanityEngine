@@ -110,9 +110,6 @@
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_list.cpp">
       <Filter>extern\rex\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_xor_list.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\log.cpp">
       <Filter>extern\rex\core</Filter>
     </ClCompile>
@@ -263,9 +260,6 @@
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\command.cpp">
       <Filter>extern\rex\console</Filter>
     </ClCompile>
-    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\interface.cpp">
-      <Filter>extern\rex\console</Filter>
-    </ClCompile>
     <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\parser.cpp">
       <Filter>extern\rex\console</Filter>
     </ClCompile>
@@ -326,6 +320,12 @@
     <ClCompile Include="src\CompilationDatabase.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_compressed_list.cpp">
+      <Filter>extern\rex\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SanityEngine\extern\rex\include\rx\console\context.cpp">
+      <Filter>extern\rex\console</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\abort.h">
@@ -365,9 +365,6 @@
       <Filter>extern\rex\core</Filter>
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_list.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_xor_list.h">
       <Filter>extern\rex\core</Filter>
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\log.h">
@@ -799,9 +796,6 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\command.h">
       <Filter>extern\rex\console</Filter>
     </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\interface.h">
-      <Filter>extern\rex\console</Filter>
-    </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\parser.h">
       <Filter>extern\rex\console</Filter>
     </ClInclude>
@@ -885,6 +879,18 @@
     </ClInclude>
     <ClInclude Include="src\CompilationDatabase.hpp">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\intrusive_compressed_list.h">
+      <Filter>extern\rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\pp.h">
+      <Filter>extern\rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\prelude.h">
+      <Filter>extern\rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\console\context.h">
+      <Filter>extern\rex\console</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

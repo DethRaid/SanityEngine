@@ -7,7 +7,7 @@ namespace Rx {
 
 struct String;
 
-struct Stream {
+struct RX_API Stream {
   RX_MARK_NO_COPY(Stream);
 
   // Stream flags.
@@ -103,8 +103,8 @@ bool inline constexpr Stream::can_flush() const {
   return m_flags & k_flush;
 }
 
-Optional<Vector<Byte>> read_binary_stream(Memory::Allocator& _allocator, Stream* _stream);
-Optional<Vector<Byte>> read_text_stream(Memory::Allocator& _allocator, Stream* _stream);
+RX_API Optional<Vector<Byte>> read_binary_stream(Memory::Allocator& _allocator, Stream* _stream);
+RX_API Optional<Vector<Byte>> read_text_stream(Memory::Allocator& _allocator, Stream* _stream);
 
 } // namespace rx
 

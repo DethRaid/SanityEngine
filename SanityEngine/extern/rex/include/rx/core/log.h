@@ -8,7 +8,7 @@ namespace Rx {
 
 struct Stream;
 
-struct Log {
+struct RX_API Log {
   enum class Level {
     k_warning,
     k_info,

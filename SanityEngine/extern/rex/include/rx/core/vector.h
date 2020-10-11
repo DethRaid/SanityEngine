@@ -19,7 +19,7 @@
 namespace Rx {
 
 namespace detail {
-  void copy(void *RX_HINT_RESTRICT dst_, const void* RX_HINT_RESTRICT _src, Size _size);
+  RX_API void copy(void *RX_HINT_RESTRICT dst_, const void* RX_HINT_RESTRICT _src, Size _size);
 }
 
 // 32-bit: 16 bytes

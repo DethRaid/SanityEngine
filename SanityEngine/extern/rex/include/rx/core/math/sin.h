@@ -4,7 +4,7 @@
 
 namespace Rx::Math {
 
-Float32 sin(Float32 _x);
+RX_API Float32 sin(Float32 _x);
 
 } // namespace rx::math
 

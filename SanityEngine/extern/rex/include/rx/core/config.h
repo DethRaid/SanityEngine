@@ -106,6 +106,21 @@
 # endif
 #endif // !defined(RX_BYTE_ORDER_LITTLE_ENDIAN) && !defined(RX_BYTE_ORDER_BIG_ENDIAN)
 
+// determine visibility macros
+#if defined(RX_PLATFORM_WINDOWS)
+#define RX_HIDDEN
+#define RX_EXPORT __declspec(dllexport)
+#define RX_IMPORT __declspec(dllimport)
+#elif defined(RX_COMPILER_GCC) || defined(RX_COMPILER_CLANG)
+#define RX_HIDDEN __attribute__((visibility("hidden")))
+#define RX_EXPORT __attribute__((visibility("default")))
+#define RX_IMPORT
+#endif
+
+#if !defined(RX_API)
+#define RX_API
+#endif
+
 // disable some compiler warnings we don't care about
 #if defined(RX_COMPILER_MSVC)
 # pragma warning(disable: 4146) // unary minus operator applied to unsigned Type, result still unsigned

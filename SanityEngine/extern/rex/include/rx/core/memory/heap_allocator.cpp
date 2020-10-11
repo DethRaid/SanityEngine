@@ -1,6 +1,5 @@
 #include <stdlib.h> // malloc, realloc, free
 #include <string.h> // memmove
-#include <stddef.h> // max_align_t.
 
 #include "rx/core/memory/heap_allocator.h"
 
@@ -24,11 +23,28 @@ Global<HeapAllocator> HeapAllocator::s_instance{"system", "heap_allocator"};
 // requires we over-allocate and align stuff to |Allocator::Alignment|.
 //
 // Check if we need to perform manual alignment of allocations.
+//
+// We also implement our own MaxAlignment type here as MSVC lacks C11's
+// |max_align_t| type in stddef.h.
+union MaxAlignment {
+  struct {
+    unsigned char _0;
+    unsigned short _1;
+    unsigned int _2;
+    unsigned long _3;
+    unsigned long long _4;
+    float _5;
+    double _6;
+    long double _7;
+  } _0;
+  unsigned char _1[sizeof _0];
+};
+
 #if defined(RX_PLATFORM_EMSCRIPTEN)
 static inline constexpr const bool NEEDS_MANUAL_ALIGNMENT = true;
 #else
 static inline constexpr const bool NEEDS_MANUAL_ALIGNMENT =
-  alignof(max_align_t) < Allocator::ALIGNMENT || alignof(max_align_t) % Allocator::ALIGNMENT != 0;
+  alignof(MaxAlignment) < Allocator::ALIGNMENT || alignof(MaxAlignment) % Allocator::ALIGNMENT != 0;
 #endif
 
 // When manual alignment is needed we store the size of the allocation rounded

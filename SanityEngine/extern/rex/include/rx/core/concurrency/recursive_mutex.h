@@ -2,11 +2,10 @@
 #define RX_CORE_CONCURRENCY_RECURSIVE_MUTEX_H
 #include "rx/core/types.h" // Byte
 #include "rx/core/hints/thread.h"
-#include "rx/core/prelude.h"
 
 namespace Rx::Concurrency {
 
-struct RX_HINT_LOCKABLE RX_API RecursiveMutex {
+struct RX_API RX_HINT_LOCKABLE RecursiveMutex {
   RecursiveMutex();
   ~RecursiveMutex();
 
