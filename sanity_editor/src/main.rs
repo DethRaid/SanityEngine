@@ -1,3 +1,7 @@
+mod sanity::editor;
+
+use sanity::editor::SanityEditor;
+
 fn main() {
-    println!("Hello, world!");
+    let editor = SanityEditor::new();
 }
