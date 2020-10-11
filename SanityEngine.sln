@@ -6,12 +6,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sanity.Engine", "SanityEngi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sanity.Codegen", "SanityEngine.Codegen\SanityEngine.Codegen.vcxproj", "{5E09E58A-49EF-4EC5-92BC-48006B6A8878}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sanity Engine", "Sanity Engine", "{21591639-BDC3-4E9B-87FB-552EC7031C39}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Game", "Game", "{145FEBEE-F60E-41D7-A42B-95E20D02A6FE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Editor", "Editor", "{CDFBF414-B1D9-4AE8-BFD7-D1F212CC920E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,10 +91,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{A6D26A06-5F0C-3136-9293-218915CC95C4} = {21591639-BDC3-4E9B-87FB-552EC7031C39}
-		{5E09E58A-49EF-4EC5-92BC-48006B6A8878} = {21591639-BDC3-4E9B-87FB-552EC7031C39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E5614D4B-75B0-34AD-B294-8E5301AD0FCA}

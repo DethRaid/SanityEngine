@@ -43,8 +43,6 @@ struct RX_API IntrusiveCompressedList {
     RX_MARK_NO_COPY(Node);
 
     constexpr Node();
-    Node(Node&& node_);
-    Node& operator=(Node&& node_);
 
     template<typename T>
     const T* data(Node T::*_link) const;
@@ -64,7 +62,7 @@ private:
 
   // 32-bit: 12 bytes
   // 64-bit: 24 bytes
-  struct Iterator {
+  struct RX_API Iterator {
     RX_MARK_NO_COPY(Iterator);
 
     constexpr Iterator(Node* _node);
