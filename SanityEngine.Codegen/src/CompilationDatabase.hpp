@@ -16,8 +16,14 @@ namespace Sanity::Codegen
 
 		Rx::Vector<Rx::String> arguments{};
 
-		NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilationDatabaseEntry, directory, file, arguments);
+		// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilationDatabaseEntry, directory, file, arguments);
 	};
+
+	// ReSharper disable CppInconsistentNaming
+	void to_json(json& j, const CompilationDatabaseEntry& entry);
+
+	void from_json(const json& j, CompilationDatabaseEntry& entry);
+    // ReSharper restore CppInconsistentNaming
 }
 
 

@@ -93,7 +93,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;$(SolutionDir)build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -566,7 +566,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\adapters\tracy.hpp" />
-    <ClInclude Include="src\bve\bve_wrapper.hpp" />
     <ClInclude Include="src\core\align.hpp" />
     <ClInclude Include="src\core\ansi_colors.hpp" />
     <ClInclude Include="src\core\asset_registry.hpp" />
@@ -719,7 +718,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\tracy\TracyClient.cpp" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
-    <ClCompile Include="src\bve\bve_wrapper.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />

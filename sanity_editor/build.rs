@@ -49,11 +49,12 @@ fn generate_rust_bindings() {
     let bindings = bindgen::Builder::default()
 
         // Language arguments
-        .clang_arg(r#"-std=c++20"#)
+        .clang_arg("-std=c++2a")
+        .clang_arg("-x cxx")
 
         // Environment setup, e.g. include paths and preprocessor tokens
         .clang_arg(r#"-IE:\Documents\SanityEngine\SanityEngine\extern\rex\include"#)
-        .clang_arg(r#"-IE:\Documents\SanityEngine\vcpkg_installed\x86-windows\include"#)
+        .clang_arg(r#"-IE:\Documents\SanityEngine\vcpkg_installed\x64-windows\include"#)
         .clang_arg("-DRX_API=RX_EXPORT")
         .clang_arg("-DSANITY_EXPORT_API")
         .clang_arg("-DWIN32")

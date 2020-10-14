@@ -151,9 +151,6 @@
     <Filter Include="src\core\concepts">
       <UniqueIdentifier>{7608827b-7147-4850-95a7-2747c83de2fd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\adapters\bve">
-      <UniqueIdentifier>{05398d6c-7b4e-4a4f-a103-355ca6c53bb9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -176,9 +173,6 @@
     </ClInclude>
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp">
       <Filter>src\adapters\rex</Filter>
-    </ClInclude>
-    <ClInclude Include="src\bve\bve_wrapper.hpp">
-      <Filter>src\adapters\bve</Filter>
     </ClInclude>
     <ClInclude Include="src\core\align.hpp">
       <Filter>src\core</Filter>
@@ -973,9 +967,6 @@
     </ClCompile>
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp">
       <Filter>src\adapters\rex</Filter>
-    </ClCompile>
-    <ClCompile Include="src\bve\bve_wrapper.cpp">
-      <Filter>src\adapters\bve</Filter>
     </ClCompile>
     <ClCompile Include="src\core\asset_registry.cpp">
       <Filter>src\core</Filter>
