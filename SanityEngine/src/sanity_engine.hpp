@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "adapters/rex/rex_wrapper.hpp"
-#include "bve/bve_wrapper.hpp"
 #include "core/Prelude.hpp"
 #include "core/asset_registry.hpp"
 #include "entt/entity/registry.hpp"

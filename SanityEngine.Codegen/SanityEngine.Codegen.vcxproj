@@ -79,7 +79,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>(ProjectDir)extern\type_safe\include\debug_assert;$(ProjectDir)extern\type_safe\include;$(ProjectDir)extern\cppast\include;$(SolutionDir)SanityEngine\extern\rex\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files\LLVM\lib;$(ProjectDir)extern\cppast\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -125,6 +125,7 @@
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <EnableModules>true</EnableModules>
       <DisableSpecificWarnings>4291</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>(ProjectDir)extern\type_safe\include\debug_assert;$(ProjectDir)extern\type_safe\include;$(ProjectDir)extern\cppast\include;$(ProjectDir)..\SanityEngine\extern\rex\include;$(ProjectDir)src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

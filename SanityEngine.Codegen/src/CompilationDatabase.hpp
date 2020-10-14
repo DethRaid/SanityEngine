@@ -16,7 +16,7 @@ namespace Sanity::Codegen
 
 		Rx::Vector<Rx::String> arguments{};
 
-		NLOHMANN_DEFINE_TYPE_INTRUSIVE(CompilationDatabaseEntry, directory, file, arguments);
+		NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilationDatabaseEntry, directory, file, arguments);
 	};
 }
 

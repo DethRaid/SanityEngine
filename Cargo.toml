@@ -6,18 +6,5 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-async-std = "1.6.5"
-bitflags = "1.2.1"
-futures-intrusive = "0.3.1"
-log = "0.4.11"
-rand = "0.7.3"
-raw-window-handle = "0.3.3"
-serde = "1.0.116"
-winit = "0.23.0"
-switchyard = { version = "0.1", git = "https://github.com/BVE-Reborn/switchyard.git", rev = "b216ac0c9f2612e2d258430cf856f448f4a3bcc2" }
-
-sanity_editor = { path = "sanity_editor" }
-
-[build-dependencies]
-bindgen = "0.55.1"
+[workspace]
+members = ["sanity_editor"]
