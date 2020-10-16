@@ -17,10 +17,10 @@ struct RX_API MT19937 {
   Float64 f64();
 
 private:
-  static constexpr const auto k_size = 624_z;
-  static constexpr const auto k_period = 397_z;
-  static constexpr const auto k_difference = k_size - k_period;
-  static constexpr const auto k_max = 0xffffffff_u32;
+  static inline constexpr const auto k_size = 624_z;
+  static inline constexpr const auto k_period = 397_z;
+  static inline constexpr const auto k_difference = k_size - k_period;
+  static inline constexpr const auto k_max = 0xffffffff_u32;
 
   void generate();
 

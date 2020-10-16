@@ -29,7 +29,7 @@ struct Vector {
   template<typename U, Size E>
   using Initializers = Array<U[E]>;
 
-  static constexpr const Size k_npos{-1_z};
+  static inline constexpr const Size k_npos{-1_z};
 
   constexpr Vector();
   constexpr Vector(Memory::Allocator& _allocator);

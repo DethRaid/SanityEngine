@@ -211,7 +211,7 @@ private:
   IntrusiveCompressedList::Node m_link;
 };
 
-struct Globals {
+struct RX_API Globals {
   static GlobalGroup* find(const char* _name);
 
   // Goes over global linked-list of groups, adding nodes to the group

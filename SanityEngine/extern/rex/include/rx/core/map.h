@@ -24,8 +24,8 @@ struct Map {
   template<typename Kt, typename Vt, Size E>
   using Initializers = Array<Pair<Kt, Vt>[E]>;
 
-  static constexpr Size k_initial_size{256};
-  static constexpr Size k_load_factor{90};
+  static inline constexpr Size k_initial_size{256};
+  static inline constexpr Size k_load_factor{90};
 
   Map();
   Map(Memory::Allocator& _allocator);

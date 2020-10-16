@@ -23,8 +23,8 @@ struct Set {
   template<typename Kt, Size E>
   using Initializers = Array<Kt[E]>;
 
-  static constexpr Size k_initial_size{256};
-  static constexpr Size k_load_factor{90};
+  static inline constexpr Size k_initial_size{256};
+  static inline constexpr Size k_load_factor{90};
 
   Set();
   Set(Memory::Allocator& _allocator);

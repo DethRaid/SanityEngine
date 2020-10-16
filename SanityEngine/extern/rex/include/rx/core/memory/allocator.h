@@ -10,7 +10,7 @@ namespace Rx::Memory {
 struct RX_API Allocator {
   RX_MARK_INTERFACE(Allocator);
 
-  static constexpr const Size ALIGNMENT = 16;
+  static inline constexpr const Size ALIGNMENT = 16;
 
   // allocate memory of size |_size|
   virtual Byte* allocate(Size _size) = 0;

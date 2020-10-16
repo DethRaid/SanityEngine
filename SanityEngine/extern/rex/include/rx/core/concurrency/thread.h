@@ -25,7 +25,7 @@ struct RX_API Thread {
   constexpr Memory::Allocator& allocator() const;
 
 private:
-  struct State {
+  struct RX_API State {
     template<typename F>
     State(Memory::Allocator& _allocator, const char* _name, F&& _function);
 
