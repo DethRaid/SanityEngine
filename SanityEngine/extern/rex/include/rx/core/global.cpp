@@ -1,5 +1,5 @@
 #include <string.h> // strcmp
-#include <stdlib.h> // atexit
+#include <stdlib.h> // malloc, free
 
 #include "rx/core/global.h"
 #include "rx/core/log.h"
@@ -142,12 +142,5 @@ void Globals::link(GlobalGroup* _group) {
   Concurrency::ScopeLock lock{g_lock};
   s_group_list.push(&_group->m_link);
 }
-
-// Register Globals::fini with atexit.
-static struct AtExit {
-  AtExit() {
-    atexit(&Globals::fini);
-  }
-} g_globals_at_exit;
 
 } // namespace rx

@@ -1,3 +1,8 @@
+#define XSTR(x) STR(x)
+#define STR(x) #x
+
+#pragma message "RX_API=" XSTR(RX_API)
+
 #ifndef RX_CORE_MEMORY_SYSTEM_ALLOCATOR_H
 #define RX_CORE_MEMORY_SYSTEM_ALLOCATOR_H
 #include "rx/core/memory/stats_allocator.h"

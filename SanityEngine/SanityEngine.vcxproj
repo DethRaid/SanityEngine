@@ -101,7 +101,7 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableModules>true</EnableModules>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -183,10 +183,13 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RX_API=RX_EXPORT;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>

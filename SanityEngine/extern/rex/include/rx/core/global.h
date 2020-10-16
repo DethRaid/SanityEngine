@@ -154,7 +154,7 @@ private:
 // 32-bit: 32 + sizeof(T) bytes
 // 64-bit: 64 + sizeof(T) bytes
 template<typename T>
-struct RX_API Global {
+struct Global {
   template<typename... Ts>
   Global(const char* _group, const char* _name, Ts&&... _arguments);
 

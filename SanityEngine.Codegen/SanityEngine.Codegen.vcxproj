@@ -126,6 +126,7 @@
       <EnableModules>true</EnableModules>
       <DisableSpecificWarnings>4291</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir)..\vcpkg_installed\x64-windows\include;(ProjectDir)extern\type_safe\include\debug_assert;$(ProjectDir)extern\type_safe\include;$(ProjectDir)extern\cppast\include;$(ProjectDir)..\SanityEngine\extern\rex\include;$(ProjectDir)src;</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,6 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
