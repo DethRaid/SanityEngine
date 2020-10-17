@@ -100,7 +100,7 @@ GlobalGroup* Globals::find(const char* _name) {
   return nullptr;
 }
 
-void Globals::link() {
+bool Globals::link() {
   // Link ungrouped globals from |s_node_list| managed by |GlobalNode::m_ungrouped|
   // with the appropriate group given by |GlobalGroup::m_list|, which is managed
   // by |GlobalNode::m_grouped| when the given global shares the same group
@@ -112,19 +112,15 @@ void Globals::link() {
       if (!strcmp(node->m_group, group->name())) {
         group->m_list.push(&node->m_grouped);
         unlinked = false;
-        break;
       }
     }
 
     if (unlinked) {
-      // NOTE(dweiler): If you've hit this code-enforced crash it means there
-      // exists an rx::Global<T> that is associated with a group by name which
-      // doesn't exist. This can be caused by misnaming the group in the
-      // global's constructor, or because the rx::GlobalGroup with that name
-      // doesn't exist in any translation unit.
-      *reinterpret_cast<volatile int*>(0) = 0;
+      return false;
     }
   }
+
+  return true;
 }
 
 void Globals::init() {

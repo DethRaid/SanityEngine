@@ -12,7 +12,7 @@ namespace renderer {
     class ForwardPass;
     class Renderer;
 
-    class DenoiserPass final : public virtual RenderPass {
+    class DenoiserPass final : public RenderPass {
     public:
         /*!
          * \brief Constructs a new denoiser pass to denoise some stuff

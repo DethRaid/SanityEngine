@@ -58,6 +58,11 @@ static inline constexpr const bool NEEDS_MANUAL_ALIGNMENT =
 #define BASE(_data) \
   (reinterpret_cast<Byte*>(_data) - sizeof(Size) - (HEADER(_data) & (ALIGNMENT - 1)))
 
+template<typename T>
+static bool is_aligned(T* _data) {
+  return reinterpret_cast<UintPtr>(_data) % Allocator::ALIGNMENT == 0;
+}
+
 Byte* HeapAllocator::allocate(Size _size) {
   if constexpr (NEEDS_MANUAL_ALIGNMENT) {
     const auto size = round_to_alignment(_size);
@@ -76,6 +81,8 @@ Byte* HeapAllocator::allocate(Size _size) {
 }
 
 Byte* HeapAllocator::reallocate(void* _data, Size _size) {
+  RX_ASSERT(is_aligned(_data), "invalid pointer passed");
+
   if constexpr (NEEDS_MANUAL_ALIGNMENT) {
     if (RX_HINT_UNLIKELY(!_data)) {
       return allocate(_size);
@@ -110,6 +117,8 @@ Byte* HeapAllocator::reallocate(void* _data, Size _size) {
 }
 
 void HeapAllocator::deallocate(void* _data) {
+  RX_ASSERT(is_aligned(_data), "invalid pointer passed");
+
   if constexpr (NEEDS_MANUAL_ALIGNMENT) {
     if (RX_HINT_LIKELY(_data)) {
       free(BASE(_data));

@@ -23,7 +23,7 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 
     logger->info("Creating world with seed %d", params.seed);
 
-    auto noise_generator = Rx::Ptr<FastNoiseSIMD>{RX_SYSTEM_ALLOCATOR, FastNoiseSIMD::NewFastNoiseSIMD(params.seed)};
+    auto noise_generator = FastNoiseSIMD::NewFastNoiseSIMD(params.seed);
 
     // Settings gotten from messing around in the demo application. High chance these should be tuned in-game
     noise_generator->SetNoiseType(FastNoiseSIMD::PerlinFractal);
@@ -38,14 +38,14 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
     const auto min_terrain_height = params.min_terrain_depth_under_ocean;
     const auto max_terrain_height = params.min_terrain_depth_under_ocean + params.max_ocean_depth + params.max_height_above_sea_level;
     terrain_data.size = TerrainSize{params.height / 2, params.width / 2, min_terrain_height, max_terrain_height};
-    
+
     generate_climate_data(terrain_data, params, renderer);
 
     auto terrain = Rx::make_ptr<Terrain>(RX_SYSTEM_ALLOCATOR, terrain_data, renderer, *noise_generator, registry);
 
     return Rx::make_ptr<World>(RX_SYSTEM_ALLOCATOR,
                                glm::uvec2{params.width, params.height},
-                               Rx::Utility::move(noise_generator),
+                               noise_generator,
                                player,
                                registry,
                                renderer,
@@ -53,17 +53,19 @@ Rx::Ptr<World> World::create(const WorldParameters& params,
 }
 
 World::World(const glm::uvec2& size_in,
-             Rx::Ptr<FastNoiseSIMD> noise_generator_in,
+             FastNoiseSIMD* noise_generator_in,
              const entt::entity player_in,
              SynchronizedResource<entt::registry>& registry_in,
              renderer::Renderer& renderer_in,
              Rx::Ptr<Terrain> terrain_in)
     : size{size_in},
-      noise_generator{Rx::Utility::move(noise_generator_in)},
+      noise_generator{noise_generator_in},
       player{player_in},
       registry{&registry_in},
       renderer{&renderer_in},
       terrain{Rx::Utility::move(terrain_in)} {}
+
+World::~World() { delete noise_generator; }
 
 void World::tick(const Float64 delta_time) {
     ZoneScoped;

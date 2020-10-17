@@ -64,12 +64,20 @@ public:
                                  SynchronizedResource<entt::registry>& registry,
                                  renderer::Renderer& renderer);
 
+	/*!
+	 * \brief Constructs a new World
+	 *
+	 * Takes ownership of the noise generator. The callee should not destroy the pointed-to object, nor should they use
+	 * the pointer after this World object gets destructed
+	 */
     explicit World(const glm::uvec2& size_in,
-                   Rx::Ptr<FastNoiseSIMD> noise_generator_in,
+                   FastNoiseSIMD* noise_generator_in,
                    entt::entity player_in,
                    SynchronizedResource<entt::registry>& registry_in,
                    renderer::Renderer& renderer_in,
                    Rx::Ptr<Terrain> terrain_in);
+
+	~World();
 
     void load_environment_objects(const Rx::String& environment_objects_folder);
 
@@ -85,7 +93,7 @@ private:
 
     glm::uvec2 size;
 
-    Rx::Ptr<FastNoiseSIMD> noise_generator;
+    FastNoiseSIMD* noise_generator;
 
     entt::entity player;
 

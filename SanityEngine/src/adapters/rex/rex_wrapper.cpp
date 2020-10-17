@@ -44,7 +44,7 @@ namespace rex {
         Rx::Globals::link();
 
 #if TRACY_ENABLE
-        Rx::Profiler::instance().bind_cpu({nullptr, rex::SetThreadName, rex::BeginSample, rex::EndSample});
+        Rx::Profiler::instance().bind_cpu({nullptr, SetThreadName, BeginSample, EndSample });
 #endif
     }
 

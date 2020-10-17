@@ -5,7 +5,7 @@
 class FramerateTracker;
 
 namespace ui {
-    class FramerateDisplay : public virtual UiPanel {
+    class FramerateDisplay : public UiPanel {
     public:
         explicit FramerateDisplay(FramerateTracker& tracker_in);
 

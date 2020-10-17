@@ -15,7 +15,7 @@ namespace renderer {
     class RenderBackend;
     class Renderer;
 
-    class ForwardPass final : public virtual RenderPass {
+    class ForwardPass final : public RenderPass {
     public:
         explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 

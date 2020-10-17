@@ -9,7 +9,7 @@ namespace renderer {
     class Renderer;
     class DenoiserPass;
 
-    class BackbufferOutputPass final : public virtual RenderPass {
+    class BackbufferOutputPass final : public RenderPass {
     public:
         explicit BackbufferOutputPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass);
 

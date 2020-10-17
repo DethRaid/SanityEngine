@@ -216,7 +216,16 @@ struct RX_API Globals {
 
   // Goes over global linked-list of groups, adding nodes to the group
   // if the |GlobalNode::m_group| matches the group name.
-  static void link();
+  //
+  // Should this function return false, it indicates that there exists a
+  // Rx::Global<T> that is associated with a group by name which doesn't exist.
+  // This can be caused by misnaming the group in the global's constructor, or
+  // because the Rx::GlobalGroup with that name doesn't exist in any translation
+  // unit.
+  //
+  // WARNING: It's not safe to use any globals or to initialize any globals if
+  // linking of them fails. This is why this is marked [[nodiscard]].
+  [[nodiscard]] static bool link();
 
   static void init();
   static void fini();

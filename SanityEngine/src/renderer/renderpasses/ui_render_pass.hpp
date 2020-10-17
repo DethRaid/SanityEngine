@@ -7,7 +7,7 @@
 namespace renderer {
     class Renderer;
 
-    class UiPass final : public virtual RenderPass {
+    class UiPass final : public RenderPass {
     public:
         explicit UiPass(Renderer& renderer_in);
 
