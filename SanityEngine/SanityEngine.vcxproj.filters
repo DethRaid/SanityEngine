@@ -151,6 +151,12 @@
     <Filter Include="src\core\concepts">
       <UniqueIdentifier>{7608827b-7147-4850-95a7-2747c83de2fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="programs">
+      <UniqueIdentifier>{eca21a61-28ae-4fc1-9c85-2422f1b2ce64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="programs\editor">
+      <UniqueIdentifier>{f078b971-e91c-4d0a-8f57-9d1bc5760b38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -960,6 +966,9 @@
     <ClInclude Include="extern\rex\include\rx\console\context.h">
       <Filter>extern\rex\console</Filter>
     </ClInclude>
+    <ClInclude Include="programs\editor\SanityEditor.hpp">
+      <Filter>programs\editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1342,6 +1351,9 @@
     </ClCompile>
     <ClCompile Include="extern\rex\include\rx\console\context.cpp">
       <Filter>extern\rex\console</Filter>
+    </ClCompile>
+    <ClCompile Include="programs\editor\SanityEditor.cpp">
+      <Filter>programs\editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

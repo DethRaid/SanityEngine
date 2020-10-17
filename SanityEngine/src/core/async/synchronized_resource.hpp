@@ -37,7 +37,7 @@ private:
 };
 
 template <typename ResourceType, Mutex MutexType = Rx::Concurrency::Mutex>
-class SANITY_API SynchronizedResource {
+class SynchronizedResource {
 public:
     SynchronizedResource() {}
 

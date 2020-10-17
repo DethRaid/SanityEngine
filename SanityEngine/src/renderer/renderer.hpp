@@ -8,13 +8,13 @@
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/render_components.hpp"
-#include "rhi/render_device.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "renderer/renderpasses/forward_pass.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
+#include "rhi/render_device.hpp"
 #include "rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
@@ -68,7 +68,7 @@ namespace renderer {
      *
      * It won't actually do that for a while, but having a strong name is very useful
      */
-    class SANITY_API Renderer {
+    class Renderer {
     public:
         explicit Renderer(GLFWwindow* window);
 

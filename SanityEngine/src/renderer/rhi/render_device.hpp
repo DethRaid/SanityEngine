@@ -52,7 +52,7 @@ namespace renderer {
      * one frame for each image in the swapchain. Most of the synchronization concerns should be hidden behind this interface, but be aware
      * that the frame that the GPU may be several frames behind the CPU
      */
-    class SANITY_API RenderBackend {
+    class RenderBackend {
     public:
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
         static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 1;

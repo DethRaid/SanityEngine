@@ -52,7 +52,7 @@ struct WorldParameters {
     int32_t max_height_above_sea_level;
 };
 
-class SANITY_API World {
+class World {
 public:
     static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
 

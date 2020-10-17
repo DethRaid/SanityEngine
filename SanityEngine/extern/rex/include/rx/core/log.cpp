@@ -155,8 +155,8 @@ inline constexpr Logger& Logger::instance() {
 }
 
 bool Logger::subscribe(Stream* _stream) {
-  // The stream needs to be writable and flushable.
-  if (!_stream->can_write() || !_stream->can_flush()) {
+  // The stream needs to be writable.
+  if (!_stream->can_write()) {
     return false;
   }
 
@@ -270,13 +270,6 @@ void Logger::write(Ptr<Message>& message_) {
     const auto size = contents.size();
     RX_ASSERT(_stream->write(data, size) != 0, "failed to write to stream");
   });
-
-  // Forcefully flush all the streams so their contents are comitted.
-  const bool result = m_streams.each_fwd([](Stream* _stream) {
-    return _stream->flush();
-  });
-
-  RX_ASSERT(result, "failed to flush all streams");
 
   // Signal the write event for the log associated with this message.
   this_queue->owner->signal_write(message_->level,

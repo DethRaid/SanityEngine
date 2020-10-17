@@ -15,8 +15,8 @@ struct WideString;
 // 32-bit: 16 + k_small_string bytes
 // 64-bit: 32 + k_small_string bytes
 struct RX_API String {
-  static constexpr const Size k_npos{-1_z};
-  static constexpr const Size k_small_string{16};
+  static inline constexpr const Size k_npos{-1_z};
+  static inline constexpr const Size k_small_string{16};
 
   constexpr String(Memory::Allocator& _allocator);
   String(Memory::Allocator& _allocator, const String& _contents);
@@ -107,7 +107,7 @@ struct RX_API String {
   char* data();
   const char* data() const;
 
-  static String human_size_format(Size _size);
+  static RX_API String human_size_format(Size _size);
 
   bool begins_with(const char* _prefix) const;
   bool begins_with(const String& _prefix) const;
@@ -126,7 +126,7 @@ struct RX_API String {
   Memory::View disown();
 
 private:
-  static String formatter(Memory::Allocator& _allocator, const char* _format, ...);
+  static RX_API String formatter(Memory::Allocator& _allocator, const char* _format, ...);
 
   void swap(String& other);
 

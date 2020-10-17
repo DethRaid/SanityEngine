@@ -4,7 +4,7 @@
 #include "rx/core/function.h"
 #include "rx/core/vector.h"
 
-class SANITY_API InputManager {
+class InputManager {
 public:
     void on_key(int key, int action, int mods) const;
 

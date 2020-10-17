@@ -15,11 +15,10 @@ namespace rex {
 
         [[nodiscard]] Uint64 on_write(const Byte* data, Uint64 size) override;
 
-        [[nodiscard]] bool on_flush() override;
-
         [[nodiscard]] const Rx::String& name() const& override;
 
     private:
-        Rx::String my_name = "SanityEngineLogStream";
+        Rx::String my_name{"SanityEngineLogStream"};
+        FILE* fileyboi{nullptr};
     };
 } // namespace rex

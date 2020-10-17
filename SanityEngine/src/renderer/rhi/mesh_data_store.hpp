@@ -8,7 +8,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 
-struct SANITY_API StandardVertex {
+struct StandardVertex {
     Vec3f position{};
     Vec3f normal{};
     Uint32 color{0xFFFFFFFF};
@@ -47,7 +47,7 @@ namespace renderer {
         Uint32 vertex_size;
     };
 
-    class SANITY_API MeshDataStore {
+    class MeshDataStore {
     public:
         MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
 

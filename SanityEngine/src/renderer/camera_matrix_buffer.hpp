@@ -15,7 +15,7 @@ namespace renderer {
 }
 
 namespace renderer {
-    struct SANITY_API CameraMatrices {
+    struct CameraMatrices {
         glm::mat4 view_matrix{};
         glm::mat4 projection_matrix{};
         glm::mat4 inverse_view_matrix{};
@@ -36,7 +36,7 @@ namespace renderer {
     /*!
      * \brief Abstraction for the camera matrix buffer
      */
-    class SANITY_API CameraMatrixBuffer {
+    class CameraMatrixBuffer {
     public:
         explicit CameraMatrixBuffer(RenderBackend& device_in);
 

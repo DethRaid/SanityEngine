@@ -21,7 +21,7 @@ constexpr int METADATA_CURRENT_VERSION = 1;
 /*!
  * \brief Stores references to all the assets and how awesome they all are
  */
-class SANITY_API AssetRegistry {
+class AssetRegistry {
 public:
     /*!
      * \brief Creates a new AssetRegistry instance

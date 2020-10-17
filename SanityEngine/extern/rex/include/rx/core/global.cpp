@@ -40,8 +40,12 @@ void GlobalNode::init() {
   }
 
   m_storage_dispatch(StorageMode::INIT, data(), m_argument_store.as_ptr());
-  Globals::s_initialized_list.push_back(&m_initialized);
   m_argument_store.retag(flags | INITIALIZED);
+
+  {
+    Concurrency::ScopeLock lock{g_lock};
+    Globals::s_initialized_list.push_back(&m_initialized);
+  }
 }
 
 void GlobalNode::fini() {
@@ -58,7 +62,10 @@ void GlobalNode::fini() {
     m_storage_dispatch(StorageMode::FINI, data(), nullptr);
   }
 
-  Globals::s_initialized_list.erase(&m_initialized);
+  {
+    Concurrency::ScopeLock lock{g_lock};
+    Globals::s_initialized_list.erase(&m_initialized);
+  }
 }
 
 // GlobalGroup

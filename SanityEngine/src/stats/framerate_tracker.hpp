@@ -13,7 +13,7 @@ struct FrametimeStats {
     double maximum;
 };
 
-class SANITY_API FramerateTracker {
+class FramerateTracker {
 public:
     explicit FramerateTracker(Uint32 max_num_samples_in);
 

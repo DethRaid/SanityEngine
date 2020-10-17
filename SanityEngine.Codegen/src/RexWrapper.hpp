@@ -22,9 +22,6 @@ namespace rex {
         Wrapper& operator=(Wrapper&& old) noexcept = default;
 
         ~Wrapper();
-
-    private:
-        inline static bool initialized{false};
     };
 } // namespace rex
 

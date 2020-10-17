@@ -11,7 +11,7 @@ class Terrain;
 
 class PlatformInput;
 
-class SANITY_API FirstPersonController {
+class FirstPersonController {
 public:
     explicit FirstPersonController(const PlatformInput& input_in,
                                    entt::entity controlled_entity_in,

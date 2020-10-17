@@ -17,7 +17,7 @@
 /*!
  * \brief Main class for my glorious engine
  */
-class SANITY_API [[sanity::runtime_class]] SanityEngine {
+class [[sanity::runtime_class]] SanityEngine {
 public:
     static Rx::String executable_directory;
 

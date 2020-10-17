@@ -1,10 +1,11 @@
 #pragma once
 
+// This include is necessary, even though VS doesn't realize it
 #include "rx/core/memory/system_allocator.h"
 #include "core/Prelude.hpp"
 
 namespace rex {
-    class SANITY_API Wrapper {
+    class Wrapper {
     public:
         Wrapper();
 
@@ -15,9 +16,6 @@ namespace rex {
         Wrapper& operator=(Wrapper&& old) noexcept = default;
 
         ~Wrapper();
-
-    private:
-        inline static bool initialized{false};
     };
 } // namespace rex
 

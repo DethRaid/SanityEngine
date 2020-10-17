@@ -13,7 +13,6 @@ Encoder::Encoder(Memory::Allocator& _allocator, Stream* _stream)
   , m_strings{allocator()}
 {
   RX_ASSERT(m_stream->can_seek(), "encoder requires seekable stream");
-  RX_ASSERT(m_stream->can_tell(), "encoder requires tellable stream");
 
   // Write out the default header, we'll seek back to patch it later.
   RX_ASSERT(write_header(), "failed to write header");
@@ -132,7 +131,7 @@ bool Encoder::finalize() {
   }
 
   // Seek to the beginning of the stream to update the header.
-  if (!m_stream->seek(0, Stream::Whence::k_set)) {
+  if (!m_stream->seek(0, Stream::Whence::SET)) {
     return error("seek failed");
   }
 

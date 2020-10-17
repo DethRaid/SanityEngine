@@ -55,66 +55,69 @@ Uint64 Stream::on_write(const Byte*, Uint64) {
   abort("stream does not implement on_write");
 }
 
-bool Stream::on_seek(Sint64, Whence) {
+bool Stream::on_seek(Uint64) {
   abort("stream does not implement on_seek");
 }
 
-bool Stream::on_flush() {
-  abort("stream does not implement on_flush");
-}
-
-Uint64 Stream::on_tell() {
-  abort("stream does not implement on_tell");
+bool Stream::on_stat(Stat&) const {
+  abort("stream does not implement on_stat");
 }
 
 Uint64 Stream::read(Byte* _data, Uint64 _size) {
-  RX_ASSERT(can_read(), "cannot read");
-  return on_read(_data, _size);
+  const auto read = can_read() ? on_read(_data, _size) : 0;
+  m_offset += read;
+  return read;
 }
 
 Uint64 Stream::write(const Byte* _data, Uint64 _size) {
-  RX_ASSERT(can_write(), "cannot write");
-  return on_write(_data, _size);
+  const auto write = can_write() ? on_write(_data, _size) : 0;
+  m_offset += write;
+  return write;
 }
 
 bool Stream::seek(Sint64 _where, Whence _whence) {
-  RX_ASSERT(can_seek(), "cannot seek");
-  return on_seek(_where, _whence);
-}
+  Uint64 offset = 0;
 
-bool Stream::flush() {
-  RX_ASSERT(can_flush(), "cannot flush");
-  return on_flush();
-}
-
-Uint64 Stream::tell() {
-  RX_ASSERT(can_tell(), "cannot tell");
-  return on_tell();
-}
-
-Uint64 Stream::size() {
-  const auto cursor = tell();
-
-  if (!seek(0, Whence::k_end)) {
-    return 0;
+  // Calculate the new offset based on |_whence|
+  if (_whence == Whence::CURRENT) {
+    offset = m_offset + _where;
+  } else if (_whence == Whence::SET) {
+    offset = _where;
+  } else if (_whence == Whence::END) {
+    // Can only seek relative to END when we can stat.
+    if (auto s = stat()) {
+      offset = s->size + _where;
+    } else {
+      return false;
+    }
   }
 
-  const auto result = tell();
-  if (!seek(cursor, Whence::k_set)) {
-    return 0;
+  if (on_seek(offset)) {
+    m_offset = offset;
+    return true;
   }
 
-  return result;
+  return false;
+}
+
+Optional<Stream::Stat> Stream::stat() const {
+  if (Stat s; can_stat() && on_stat(s)) {
+    return s;
+  }
+  return nullopt;
 }
 
 Optional<Vector<Byte>> read_binary_stream(Memory::Allocator& _allocator, Stream* _stream) {
-  if (_stream->can_seek() && _stream->can_tell()) {
-    const auto size = _stream->size();
-    Vector<Byte> result = {_allocator, static_cast<Size>(size), Utility::UninitializedTag{}};
-    if (_stream->read(result.data(), size) == size) {
-      return result;
-    }
+  const auto size = _stream->size();
+  if (!size) {
+    return nullopt;
   }
+
+  Vector<Byte> result = {_allocator, static_cast<Size>(*size), Utility::UninitializedTag{}};
+  if (_stream->read(result.data(), *size) == *size) {
+    return result;
+  }
+
   return nullopt;
 }
 

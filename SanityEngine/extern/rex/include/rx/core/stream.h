@@ -9,98 +9,116 @@ struct String;
 
 struct RX_API Stream {
   RX_MARK_NO_COPY(Stream);
+  RX_MARK_NO_MOVE_ASSIGN(Stream);
+
+  struct Stat {
+    Uint64 size;
+    // Can extend with aditional stats.
+  };
 
   // Stream flags.
   enum : Uint32 {
-    k_read  = 1 << 0,
-    k_write = 1 << 1,
-    k_tell  = 1 << 2,
-    k_seek  = 1 << 3,
-    k_flush = 1 << 4
+    READ  = 1 << 0,
+    WRITE = 1 << 1,
+    SEEK  = 1 << 2,
+    STAT  = 1 << 3
   };
 
   constexpr Stream(Uint32 _flags);
   Stream(Stream&& stream_);
+
   virtual ~Stream();
 
   enum class Whence {
-    k_set,     // Beginning of stream.
-    k_current, // Current position
-    k_end      // End of stream.
+    SET,     // Beginning of stream.
+    CURRENT, // Current position
+    END      // End of stream.
   };
 
+  // Read |_size| bytes into |_data|. Returns the amount of bytes written.
   [[nodiscard]] Uint64 read(Byte* _data, Uint64 _size);
+
+  // Write |_size| bytes from |_data|. Returns the amount of bytes written.
   [[nodiscard]] Uint64 write(const Byte* _data, Uint64 _size);
+
+  // Seek stream |_where| bytes relative to |_whence|. Returns true on success.
   [[nodiscard]] bool seek(Sint64 _where, Whence _whence);
-  [[nodiscard]] bool flush();
 
-  Uint64 tell();
-  Uint64 size();
+  // Stat stream for info.
+  [[nodiscard]] Optional<Stat> stat() const;
 
-  // Query the support of features on the given stream.
+  // Where in the stream we are.
+  Uint64 tell() const;
+
+  // The size of the stream.
+  Optional<Uint64> size() const;
+
+  // Supported stream functions.
   constexpr bool can_read() const;
   constexpr bool can_write() const;
-  constexpr bool can_tell() const;
   constexpr bool can_seek() const;
-  constexpr bool can_flush() const;
-
-  // The following functions below are what streams can implement. When a
-  // stream cannot support a given feature, it should avoid providing a
-  // function for it and ignore the flag when constructing this base class.
+  constexpr bool can_stat() const;
 
   // The name of the stream. This must always be implemented.
   virtual const String& name() const & = 0;
 
+protected:
   // Read |_size| bytes from stream into |_data|.
   virtual Uint64 on_read(Byte* _data, Uint64 _size);
 
   // Write |_size| bytes from |_data| into stream.
   virtual Uint64 on_write(const Byte* _data, Uint64 _size);
 
-  // Seek to |_where| in stream relative to |_whence|.
-  virtual bool on_seek(Sint64 _where, Whence _whence);
+  // Seek to |_where| in stream.
+  virtual bool on_seek(Uint64 _where);
 
-  // Flush any buffered contents in the stream out.
-  virtual bool on_flush();
-
-  // Where we are in the stream.
-  virtual Uint64 on_tell();
+  // Stat the stream.
+  virtual bool on_stat(Stat& stat_) const;
 
 private:
   Uint32 m_flags;
+  Uint64 m_offset;
 };
 
 inline constexpr Stream::Stream(Uint32 _flags)
   : m_flags{_flags}
+  , m_offset{0}
 {
 }
 
 inline Stream::Stream(Stream&& stream_)
-  : m_flags{stream_.m_flags}
+  : m_flags{Utility::exchange(stream_.m_flags, 0)}
+  , m_offset{Utility::exchange(stream_.m_offset, 0)}
 {
-  stream_.m_flags = 0;
 }
 
 inline Stream::~Stream() = default;
 
-bool inline constexpr Stream::can_read() const {
-  return m_flags & k_read;
+inline Uint64 Stream::tell() const {
+  return m_offset;
 }
 
-bool inline constexpr Stream::can_write() const {
-  return m_flags & k_write;
+inline Optional<Uint64> Stream::size() const {
+  if (auto s = stat()) {
+    return s->size;
+  }
+  return nullopt;
 }
 
-bool inline constexpr Stream::can_tell() const {
-  return m_flags & k_tell;
+inline constexpr bool Stream::can_read() const {
+  return m_flags & READ;
 }
 
-bool inline constexpr Stream::can_seek() const {
-  return m_flags & k_seek;
+inline constexpr bool Stream::can_write() const {
+  return m_flags & WRITE;
 }
 
-bool inline constexpr Stream::can_flush() const {
-  return m_flags & k_flush;
+inline constexpr bool Stream::can_seek() const {
+  return m_flags & SEEK;
+}
+
+inline constexpr bool Stream::can_stat() const {
+  return m_flags & STAT;
 }
 
 RX_API Optional<Vector<Byte>> read_binary_stream(Memory::Allocator& _allocator, Stream* _stream);

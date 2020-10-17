@@ -28,7 +28,7 @@ struct RX_API Profiler {
     const char* m_tag;
 
     // Side-band enframing of data for profilers, cache-line in sized.
-    mutable void (*m_enframing_destruct)(Byte* _enframing);
+    mutable void (*m_enframing_destruct)(void* _enframing);
     union {
       alignas(16) mutable Byte m_enframing[64];
       Utility::Nat m_nat;
@@ -102,7 +102,7 @@ inline constexpr Profiler::Sample::Sample(const SourceLocation& _source_location
 
 inline Profiler::Sample::~Sample() {
   if (m_enframing_destruct) {
-    m_enframing_destruct(m_enframing);
+    m_enframing_destruct(reinterpret_cast<void*>(m_enframing));
   }
 }
 

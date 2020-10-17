@@ -13,7 +13,6 @@ Decoder::Decoder(Memory::Allocator& _allocator, Stream* _stream)
   , m_message{allocator()}
 {
   RX_ASSERT(_stream->can_seek(), "decoder requires seekable stream");
-  RX_ASSERT(_stream->can_tell(), "decoder requires tellable stream");
 
   // Read header and strings.
   RX_ASSERT(read_header(), "failed to read header");
@@ -177,7 +176,7 @@ bool Decoder::read_strings() {
   const auto cursor = m_stream->tell();
 
   // Seek to the strings offset.
-  if (!m_stream->seek(m_header.data_size + sizeof m_header, Stream::Whence::k_set)) {
+  if (!m_stream->seek(m_header.data_size + sizeof m_header, Stream::Whence::SET)) {
     return error("seek failed");
   }
 
@@ -198,7 +197,7 @@ bool Decoder::read_strings() {
   m_strings.init(Utility::move(strings));
 
   // Restore the stream to where we were before we seeked and read in the strings
-  if (!m_stream->seek(cursor, Stream::Whence::k_set)) {
+  if (!m_stream->seek(cursor, Stream::Whence::SET)) {
     return error("seek failed");
   }
 

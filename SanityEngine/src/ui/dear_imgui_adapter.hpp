@@ -14,7 +14,7 @@ namespace renderer {
 /*!
  * \brief Adapter class to hook Dear ImGUI into Sanity Engine. Largely based on the GLFW impl in the Dear ImGUI examples
  */
-class SANITY_API DearImguiAdapter {
+class DearImguiAdapter {
 public:
     explicit DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& renderer);
 

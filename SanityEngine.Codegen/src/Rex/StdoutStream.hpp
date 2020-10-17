@@ -15,8 +15,6 @@ namespace rex {
 
         [[nodiscard]] Uint64 on_write(const Byte* data, Uint64 size) override;
 
-        [[nodiscard]] bool on_flush() override;
-
         [[nodiscard]] const Rx::String& name() const& override;
 
     private:

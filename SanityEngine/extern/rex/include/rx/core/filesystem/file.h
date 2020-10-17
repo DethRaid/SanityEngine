@@ -21,21 +21,6 @@ struct RX_API File
 
   File& operator=(File&& file_);
 
-  // Read |_size| bytes from file into |_data|.
-  virtual Uint64 on_read(Byte* _data, Uint64 _size);
-
-  // Write |_size| bytes from |_data| into file.
-  virtual Uint64 on_write(const Byte* _data, Uint64 _size);
-
-  // Seek to |_where| in file relative to |_whence|.
-  virtual bool on_seek(Sint64 _where, Whence _whence);
-
-  // Tell where we're at in the file.
-  virtual Uint64 on_tell();
-
-  // Flush to disk.
-  virtual bool on_flush();
-
   bool read_line(String& line_);
   bool close();
 
@@ -63,10 +48,14 @@ struct RX_API File
 
   constexpr Memory::Allocator& allocator() const;
 
+protected:
+  virtual Uint64 on_read(Byte* _data, Uint64 _size);
+  virtual Uint64 on_write(const Byte* _data, Uint64 _size);
+  virtual bool on_seek(Uint64 _where);
+  virtual bool on_stat(Stat& stat_) const;
+
 private:
   File(void* _impl, const char* _file_name, const char* _mode);
-
-  static Uint32 flags_from_mode(const char* _mode);
 
   Memory::Allocator& m_allocator;
   void* m_impl;
