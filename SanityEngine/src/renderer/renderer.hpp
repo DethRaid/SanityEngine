@@ -20,13 +20,11 @@
 #include "rx/core/vector.h"
 #include "settings.hpp"
 
-namespace renderer {
-    class RenderCommandList;
-} // namespace renderer
-
 struct GLFWwindow;
 
 namespace renderer {
+    class RenderCommandList;
+	
     /*!
      * \brief All the information needed to decide whether or not to issue a drawcall for an object
      */
@@ -99,13 +97,18 @@ namespace renderer {
 
         void schedule_texture_destruction(const TextureHandle& image_handle);
 
+    	/*!
+    	 * \brief Sets the image that the 3D scene will be rendered to
+    	 */
+    	void set_scene_output_image(TextureHandle output_image_handle);
+
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
         [[nodiscard]] Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
 
         void deallocate_standard_material(StandardMaterialHandle handle);
 
-        [[nodiscard]] RenderBackend& get_render_device() const;
+        [[nodiscard]] RenderBackend& get_render_backend() const;
 
         [[nodiscard]] MeshDataStore& get_static_mesh_store() const;
 
@@ -130,7 +133,7 @@ namespace renderer {
 
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
-        Uint32 add_model_matrix_to_frame(const TransformComponent& transform, const Uint32 frame_idx);
+        Uint32 add_model_matrix_to_frame(const TransformComponent& transform, Uint32 frame_idx);
 
     private:
 #pragma region Cube

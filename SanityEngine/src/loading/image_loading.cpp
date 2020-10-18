@@ -84,7 +84,7 @@ Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& textur
                                                        .width = width,
                                                        .height = height};
 
-    auto& device = renderer.get_render_device();
+    auto& device = renderer.get_render_backend();
     auto commands = device.create_command_list();
 
     const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);

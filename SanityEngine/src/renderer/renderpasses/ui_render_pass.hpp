@@ -7,11 +7,11 @@
 namespace renderer {
     class Renderer;
 
-    class UiPass final : public RenderPass {
+    class GameUiPass final : public RenderPass {
     public:
-        explicit UiPass(Renderer& renderer_in);
+        explicit GameUiPass(Renderer& renderer_in);
 
-        ~UiPass() override = default;
+        ~GameUiPass() override = default;
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 

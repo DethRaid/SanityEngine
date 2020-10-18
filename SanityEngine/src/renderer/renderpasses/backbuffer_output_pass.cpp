@@ -15,8 +15,8 @@ namespace renderer {
 
     RX_LOG("BackbufferOutputPass", logger);
 
-    BackbufferOutputPass::BackbufferOutputPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
-        auto& device = renderer->get_render_device();
+    CopySceneOutputToTexturePass::CopySceneOutputToTexturePass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
+        auto& device = renderer->get_render_backend();
 
         const auto create_info = RenderPipelineStateCreateInfo{
             .name = "Backbuffer output",
@@ -38,7 +38,7 @@ namespace renderer {
         logger->verbose("Initialized backbuffer output pass");
     }
 
-    void BackbufferOutputPass::render(ID3D12GraphicsCommandList4* commands,
+    void CopySceneOutputToTexturePass::render(ID3D12GraphicsCommandList4* commands,
                                       entt::registry& /* registry */,
                                       Uint32 /* frame_idx */,
                                       const World& /* world */) {
@@ -46,7 +46,7 @@ namespace renderer {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "BackbufferOutputPassExecute");
         PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");
 
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
         const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
 
         const auto

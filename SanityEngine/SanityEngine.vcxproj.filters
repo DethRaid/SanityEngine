@@ -157,6 +157,9 @@
     <Filter Include="programs\editor">
       <UniqueIdentifier>{f078b971-e91c-4d0a-8f57-9d1bc5760b38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="programs\editor\ui">
+      <UniqueIdentifier>{45aa82d7-cf10-4a90-9217-81efc4419de8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -969,6 +972,16 @@
     <ClInclude Include="programs\editor\SanityEditor.hpp">
       <Filter>programs\editor</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\IndexedContainerHandle.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\concepts\IndexableContainer.hpp">
+      <Filter>src\core\concepts</Filter>
+    </ClInclude>
+    <ClInclude Include="programs\editor\ui\EditorUiController.hpp">
+      <Filter>programs\editor\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="programs\editor\ui\ApplicationGui.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1355,6 +1368,10 @@
     <ClCompile Include="programs\editor\SanityEditor.cpp">
       <Filter>programs\editor</Filter>
     </ClCompile>
+    <ClCompile Include="programs\editor\ui\EditorUiController.cpp">
+      <Filter>programs\editor\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="programs\editor\ui\ApplicationGui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

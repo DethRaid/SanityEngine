@@ -117,7 +117,7 @@ void World::load_environment_objects(const Rx::String& environment_objects_folde
                                                                            SanityEngine::executable_directory,
                                                                            environment_objects_folder);
 
-    auto& device = renderer->get_render_device();
+    auto& device = renderer->get_render_backend();
     auto commands = device.create_command_list();
 
     bool loaded_anything = false;

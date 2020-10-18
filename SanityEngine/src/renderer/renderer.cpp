@@ -227,6 +227,8 @@ namespace renderer {
         device->schedule_image_destruction(Rx::Utility::move(image));
     }
 
+    void Renderer::set_scene_output_image(TextureHandle output_image_handle) {}
+
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
         if(!free_material_handles.is_empty()) {
             const auto& handle = free_material_handles.last();
@@ -245,7 +247,7 @@ namespace renderer {
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
 
-    RenderBackend& Renderer::get_render_device() const { return *device; }
+    RenderBackend& Renderer::get_render_backend() const { return *device; }
 
     MeshDataStore& Renderer::get_static_mesh_store() const { return *static_mesh_storage; }
 
@@ -435,11 +437,12 @@ namespace renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+    	forward_pass_handle = ContainerHandle
         render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ForwardPass&>(*render_passes[0])));
         render_passes.push_back(
-            Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
-        render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
+            Rx::make_ptr<CopySceneOutputToTexturePass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
+        render_passes.push_back(Rx::make_ptr<GameUiPass>(RX_SYSTEM_ALLOCATOR, *this));
     }
 
     void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }

@@ -19,7 +19,7 @@ namespace renderer {
 
     ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         ZoneScoped;
-        auto& device = renderer_in.get_render_device();
+        auto& device = renderer_in.get_render_backend();
 
         standard_pipeline = device.create_render_pipeline_state({
             .name = "Standard material pipeline",
@@ -60,7 +60,7 @@ namespace renderer {
         ZoneScoped;
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
 
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
     }
 
     void ForwardPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
@@ -89,7 +89,7 @@ namespace renderer {
     }
 
     void ForwardPass::create_framebuffer(const glm::uvec2& render_resolution) {
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
 
         const auto color_target_create_info = ImageCreateInfo{
             .name = SCENE_COLOR_RENDER_TARGET,

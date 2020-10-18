@@ -98,7 +98,7 @@ namespace terraingen {
         const auto land_heightmap = renderer.get_image(data.heightmap_handle);
         const auto water_heightmap = renderer.get_image(data.water_depth_handle);
 
-        auto& device = renderer.get_render_device();
+        auto& device = renderer.get_render_backend();
         auto d3d12_device = device.device;
         const auto descriptor_size = device.get_shader_resource_descriptor_size();
 
@@ -152,7 +152,7 @@ namespace terraingen {
 
         const auto land_heightmap = renderer.get_image(data.heightmap_handle);
         const auto water_heightmap = renderer.get_image(data.water_depth_handle);
-        auto& device = renderer.get_render_device();
+        auto& device = renderer.get_render_backend();
         auto d3d12_device = device.device;
         const auto descriptor_size = device.get_shader_resource_descriptor_size();
 

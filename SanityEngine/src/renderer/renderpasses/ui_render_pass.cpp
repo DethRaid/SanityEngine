@@ -10,7 +10,7 @@
 #include "renderer/rhi/resources.hpp"
 
 namespace renderer {
-    UiPass::UiPass(Renderer& renderer_in) : renderer{&renderer_in} {
+    GameUiPass::GameUiPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 
         const auto blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true},
@@ -22,7 +22,7 @@ namespace renderer {
                                                                      RenderTargetBlendState{.enabled = false},
                                                                      RenderTargetBlendState{.enabled = false}}};
 
-        auto& device = renderer_in.get_render_device();
+        auto& device = renderer_in.get_render_backend();
         ui_pipeline = device.create_render_pipeline_state({
             .name = "UI Pipeline",
             .vertex_shader = load_shader("ui.vertex"),
@@ -47,7 +47,7 @@ namespace renderer {
         });
     }
 
-    void UiPass::render(ID3D12GraphicsCommandList4* commands,
+    void GameUiPass::render(ID3D12GraphicsCommandList4* commands,
                         entt::registry& /* registry */,
                         Uint32 /* frame_idx */,
                         const World& /* world */) {
@@ -59,7 +59,7 @@ namespace renderer {
             return;
         }
 
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
 
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "UiRenderPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "UiRenderPass::render");

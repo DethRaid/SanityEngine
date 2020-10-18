@@ -24,7 +24,7 @@ namespace renderer {
         : renderer{&renderer_in} {
         ZoneScoped;
 
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
 
         denoising_pipeline = device.create_render_pipeline_state(
             {.name = "Denoising Pipeline",
@@ -113,7 +113,7 @@ namespace renderer {
     TextureHandle DenoiserPass::get_output_image() const { return denoised_color_target_handle; }
 
     void DenoiserPass::create_images_and_framebuffer(const glm::uvec2& render_resolution) {
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
 
         {
             const auto color_target_create_info = ImageCreateInfo{
@@ -144,7 +144,7 @@ namespace renderer {
     }
 
     void DenoiserPass::create_material(const ForwardPass& forward_pass) {
-        auto& device = renderer->get_render_device();
+        auto& device = renderer->get_render_backend();
 
         const auto scene_color_target_handle = forward_pass.get_color_target_handle();
         const auto scene_depth_target_handle = forward_pass.get_depth_target_handle();

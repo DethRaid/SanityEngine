@@ -33,7 +33,7 @@ bool load_static_mesh(const Rx::String& filename, SynchronizedResource<entt::reg
         return false;
     }
 
-    auto& device = renderer.get_render_device();
+    auto& device = renderer.get_render_backend();
     auto commands = device.create_command_list();
     commands->SetName(L"Renderer::create_raytracing_geometry");
 

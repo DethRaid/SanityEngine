@@ -233,7 +233,7 @@ void DearImguiAdapter::initialize_style() {
 void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
     ZoneScoped;
 
-    auto& device = renderer.get_render_device();
+    auto& device = renderer.get_render_backend();
     auto commands = device.create_command_list();
     commands->SetName(L"DearImguiAdapter::create_font_texture");
 

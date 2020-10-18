@@ -9,11 +9,11 @@ namespace renderer {
     class Renderer;
     class DenoiserPass;
 
-    class BackbufferOutputPass final : public RenderPass {
+    class CopySceneOutputToTexturePass final : public RenderPass {
     public:
-        explicit BackbufferOutputPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass);
+        explicit CopySceneOutputToTexturePass(Renderer& renderer_in, const DenoiserPass& denoiser_pass);
 
-        ~BackbufferOutputPass() override = default;
+        ~CopySceneOutputToTexturePass() override = default;
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 

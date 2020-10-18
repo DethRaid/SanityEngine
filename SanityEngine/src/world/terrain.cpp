@@ -37,7 +37,7 @@ struct GenerateTileTaskArgs {
 TerrainData Terrain::generate_terrain(FastNoiseSIMD& noise_generator, const WorldParameters& params, renderer::Renderer& renderer) {
     ZoneScoped;
 
-    auto& device = renderer.get_render_device();
+    auto& device = renderer.get_render_backend();
     auto commands = device.create_command_list();
     commands->SetName(L"Terrain::generate_terrain");
 
@@ -382,7 +382,7 @@ void Terrain::upload_new_tile_meshes() {
         return;
     }
 
-    auto& device = renderer->get_render_device();
+    auto& device = renderer->get_render_backend();
 
     auto commands = device.create_command_list();
     commands->SetName(L"Terrain::upload_new_tile_meshes");

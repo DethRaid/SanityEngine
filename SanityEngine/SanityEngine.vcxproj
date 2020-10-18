@@ -93,7 +93,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)programs;$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -563,6 +563,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\tracy\Tracy.hpp" />
     <ClInclude Include="extern\tracy\TracyD3D12.hpp" />
     <ClInclude Include="programs\editor\SanityEditor.hpp" />
+    <ClInclude Include="programs\editor\ui\ApplicationGui.hpp" />
+    <ClInclude Include="programs\editor\ui\EditorUiController.hpp" />
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\adapters\tracy.hpp" />
@@ -572,9 +574,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\concepts\EnumLike.hpp" />
+    <ClInclude Include="src\core\concepts\IndexableContainer.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
+    <ClInclude Include="src\core\IndexedContainerHandle.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />
     <ClInclude Include="src\core\Prelude.hpp" />
     <ClInclude Include="src\core\SmartEnum.hpp" />
@@ -717,6 +721,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\tracy\imgui\imgui_widgets.cpp" />
     <ClCompile Include="extern\tracy\TracyClient.cpp" />
     <ClCompile Include="programs\editor\SanityEditor.cpp" />
+    <ClCompile Include="programs\editor\ui\ApplicationGui.cpp" />
+    <ClCompile Include="programs\editor\ui\EditorUiController.cpp" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
