@@ -9,7 +9,7 @@
 #include "rx/core/ptr.h"
 
 namespace renderer {
-    class ForwardPass;
+    class RaytracedLightingPass;
     class Renderer;
 
     class DenoiserPass final : public RenderPass {
@@ -21,7 +21,7 @@ namespace renderer {
          * \param render_resolution The resolution to render at. May or may not equal the final resolution
          * \param forward_pass the pass which this denoise pass will denoise the output of
          */
-        explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass);
+        explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const RaytracedLightingPass& forward_pass);
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 
@@ -52,6 +52,6 @@ namespace renderer {
 
         void create_images_and_framebuffer(const glm::uvec2& render_resolution);
 
-        void create_material(const ForwardPass& forward_pass);
+        void create_material(const RaytracedLightingPass& forward_pass);
     };
 } // namespace renderer

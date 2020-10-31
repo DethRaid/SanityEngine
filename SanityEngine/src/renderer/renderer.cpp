@@ -434,9 +434,9 @@ namespace renderer {
 
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
-        render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        render_passes.push_back(Rx::make_ptr<RaytracedLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<ForwardPass&>(*render_passes[0])));
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<RaytracedLightingPass&>(*render_passes[0])));
         render_passes.push_back(
             Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
         render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));

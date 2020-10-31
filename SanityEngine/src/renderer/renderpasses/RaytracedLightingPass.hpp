@@ -15,11 +15,11 @@ namespace renderer {
     class RenderBackend;
     class Renderer;
 
-    class ForwardPass final : public RenderPass {
+    class RaytracedLightingPass final : public RenderPass {
     public:
-        explicit ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
+        explicit RaytracedLightingPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 
-        ~ForwardPass() override;
+        ~RaytracedLightingPass() override;
 
 #pragma region RenderPass
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;

@@ -1,4 +1,4 @@
-#include "forward_pass.hpp"
+#include "RaytracedLightingPass.hpp"
 
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
@@ -15,9 +15,9 @@ namespace renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 
-    RX_LOG("ForwardPass", logger);
+    RX_LOG("RaytracedLightingPass", logger);
 
-    ForwardPass::ForwardPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
+    RaytracedLightingPass::RaytracedLightingPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         ZoneScoped;
         auto& device = renderer_in.get_render_device();
 
@@ -56,18 +56,18 @@ namespace renderer {
         create_framebuffer(render_resolution);
     }
 
-    ForwardPass::~ForwardPass() {
+    RaytracedLightingPass::~RaytracedLightingPass() {
         ZoneScoped;
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
 
         auto& device = renderer->get_render_device();
     }
 
-    void ForwardPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
+    void RaytracedLightingPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "ForwardPass::execute");
-        PIXScopedEvent(commands, forward_pass_color, "ForwardPass::execute");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "RaytracedLightingPass::execute");
+        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::execute");
 
         begin_render_pass(commands);
 
@@ -88,7 +88,7 @@ namespace renderer {
         commands->EndRenderPass();
     }
 
-    void ForwardPass::create_framebuffer(const glm::uvec2& render_resolution) {
+    void RaytracedLightingPass::create_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_device();
 
         const auto color_target_create_info = ImageCreateInfo{
@@ -131,11 +131,11 @@ namespace renderer {
         render_target_size = render_resolution;
     }
 
-    TextureHandle ForwardPass::get_color_target_handle() const { return color_target_handle; }
+    TextureHandle RaytracedLightingPass::get_color_target_handle() const { return color_target_handle; }
 
-    TextureHandle ForwardPass::get_depth_target_handle() const { return depth_target_handle; }
+    TextureHandle RaytracedLightingPass::get_depth_target_handle() const { return depth_target_handle; }
 
-    void ForwardPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
+    void RaytracedLightingPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
         commands->BeginRenderPass(1, &color_target_access, &depth_target_access, D3D12_RENDER_PASS_FLAG_NONE);
 
         D3D12_VIEWPORT viewport{};
@@ -151,8 +151,8 @@ namespace renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void ForwardPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
-        PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_object_in_scene");
+    void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_object_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -188,13 +188,13 @@ namespace renderer {
         }
     }
 
-    void ForwardPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
+    void RaytracedLightingPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
         const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
-            PIXScopedEvent(commands, forward_pass_color, "ForwardPass::draw_atmosphere");
+            PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_atmosphere");
 
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
 
