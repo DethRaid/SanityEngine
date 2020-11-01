@@ -78,9 +78,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>$(SolutionDir)SanityEngine\extern\rex\include;$(ExecutablePath)</ExecutablePath>
     <PublicIncludeDirectories>$(SolutionDir)SanityEngine\extern\rex\include</PublicIncludeDirectories>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(SolutionDir)SanityEngine\extern\rex\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -117,9 +118,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>RX_DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;RX_DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <DisableSpecificWarnings>4291</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -305,7 +307,6 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\vma.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\optional.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\pp.h" />
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\prelude.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\prng\mt19937.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\profiler.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\ptr.h" />

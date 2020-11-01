@@ -104,11 +104,11 @@ Logger::Logger()
   , m_thread{"logger", [this](int _thread_id) { process(_thread_id); }}
 {
   // Calculate padding needed for formatting log level.
-  int max_level = Algorithm::max(
+  int max_level = static_cast<int>(Algorithm::max(
     strlen(string_for_level(Log::Level::k_warning)),
     strlen(string_for_level(Log::Level::k_info)),
     strlen(string_for_level(Log::Level::k_verbose)),
-    strlen(string_for_level(Log::Level::k_error)));
+    strlen(string_for_level(Log::Level::k_error))));
 
   int max_name = 0;
   g_group_loggers.each([&](GlobalNode* _node) {

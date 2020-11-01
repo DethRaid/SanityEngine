@@ -353,9 +353,6 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\pp.h">
       <Filter>rex\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\prelude.h">
-      <Filter>rex\core</Filter>
-    </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\profiler.h">
       <Filter>rex\core</Filter>
     </ClInclude>

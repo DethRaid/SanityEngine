@@ -528,9 +528,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="..\Rex.Core\Rex.Core.vcxproj">
       <Project>{6aacae55-e651-4560-b606-7c957c8e2786}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\SanityEngine.Codegen\SanityEngine.Codegen.vcxproj">
-      <Project>{5e09e58a-49ef-4ec5-92bc-48006b6a8878}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
