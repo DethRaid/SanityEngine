@@ -81,6 +81,11 @@ namespace renderer {
 
         void render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
 
+        void execute_all_render_passes(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4>& command_list,
+                                       SynchronizedResourceAccessor<entt::registry>& registry,
+                                       const Rx::Uint32& frame_idx,
+                                       const World& world);
+
         void end_frame() const;
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
@@ -298,7 +303,6 @@ namespace renderer {
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void update_lights(entt::registry& registry, Uint32 frame_idx);
-
 #pragma endregion
     };
 } // namespace renderer

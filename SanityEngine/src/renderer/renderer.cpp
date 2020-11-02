@@ -26,7 +26,6 @@
 #include "sanity_engine.hpp"
 
 namespace renderer {
-
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     RX_LOG("Renderer", logger);
@@ -111,18 +110,56 @@ namespace renderer {
                 memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
             }
 
-            {
-                ZoneScopedN("Renderer::render_passes");
-
-                TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
-                PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
-
-                render_passes.each_fwd(
-                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.Get(), *registry, frame_idx, world); });
-            }
+            execute_all_render_passes(command_list, registry, frame_idx, world);
         }
 
         device->submit_command_list(Rx::Utility::move(command_list));
+    }
+
+    void Renderer::execute_all_render_passes(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4>& command_list,
+                                             SynchronizedResourceAccessor<entt::registry>& registry,
+                                             const Rx::Uint32& frame_idx,
+                                             const World& world) {
+        {
+            ZoneScopedN("Renderer::render_passes");
+
+            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
+            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+
+            Rx::Map<ID3D12Resource*, D3D12_RESOURCE_STATES> last_resource_usages;
+
+            render_passes.each_fwd([&](Rx::Ptr<RenderPass>& render_pass) {
+                const auto& used_resources = render_pass->get_used_resources();
+
+                auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
+                barriers.reserve(used_resources.size());
+
+                used_resources.each_fwd([&](const TextureUsage& usage) {
+                    if(const auto* previous_usage = last_resource_usages.find(usage.resource)) {
+                        // We previously used a resource - we need to barrier from the last states to this
+                        // renderpass's resource states
+
+                        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(usage.resource, *previous_usage, usage.states);
+                        barriers.push_back(barrier);
+
+                    } else {
+                        // no previous usage so just barrier from COMMON
+                        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(usage.resource,
+                                                                                   D3D12_RESOURCE_STATE_COMMON,
+                                                                                   usage.states);
+                        barriers.push_back(barrier);
+                    }
+
+                    last_resource_usages.insert(usage.resource, usage.states);
+                });
+
+                if(!barriers.is_empty()) {
+                    command_list->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+                }
+
+                render_pass->render(command_list.Get(), *registry, frame_idx, world);
+            });
+        }
     }
 
     void Renderer::end_frame() const { device->end_frame(); }
@@ -435,8 +472,10 @@ namespace renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<RaytracedLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, dynamic_cast<RaytracedLightingPass&>(*render_passes[0])));
+        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
+                                                           *this,
+                                                           output_framebuffer_size,
+                                                           dynamic_cast<RaytracedLightingPass&>(*render_passes[0])));
         render_passes.push_back(
             Rx::make_ptr<BackbufferOutputPass>(RX_SYSTEM_ALLOCATOR, *this, dynamic_cast<DenoiserPass&>(*render_passes[1])));
         render_passes.push_back(Rx::make_ptr<UiPass>(RX_SYSTEM_ALLOCATOR, *this));
@@ -566,6 +605,13 @@ namespace renderer {
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         memcpy(dst, lights.data(), lights.size() * sizeof(Light));
+    }
+
+    void Renderer::determine_barriers(const Rx::Vector<Rx::Ptr<RenderPass>>& passes) {
+        Size i = 0;
+        passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) {
+
+        });
     }
 
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {

@@ -1,11 +1,9 @@
 #include "renderpass.hpp"
 
+#include "renderer/rhi/d3dx12.hpp"
+
 namespace renderer {
-    void RenderPass::issue_pre_pass_barriers(ID3D12GraphicsCommandList* commands) { 
-        used_resources.each_fwd([&](const ResourceUsage& usage) {
-                
-        });
-    }
-    
-    void RenderPass::issue_post_pass_barriers(ID3D12GraphicsCommandList* commands) {}
+    const Rx::Vector<TextureUsage>& RenderPass::get_used_resources() const { return used_textures; }
+
+    void RenderPass::add_resource_usage(const TextureUsage& usage) { used_textures.push_back(usage); }
 } // namespace renderer
