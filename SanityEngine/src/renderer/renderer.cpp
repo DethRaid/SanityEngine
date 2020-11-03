@@ -126,7 +126,7 @@ namespace renderer {
             TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
             PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
-            Rx::Map<ID3D12Resource*, D3D12_RESOURCE_STATES> last_resource_usages;
+            Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> last_resource_usages;
 
             render_passes.each_fwd([&](Rx::Ptr<RenderPass>& render_pass) {
                 const auto& used_resources = render_pass->get_used_resources();
@@ -135,22 +135,22 @@ namespace renderer {
                 barriers.reserve(used_resources.size());
 
                 used_resources.each_fwd([&](const TextureUsage& usage) {
-                    if(const auto* previous_usage = last_resource_usages.find(usage.resource)) {
+                    auto* resource = get_image(usage.texture).resource.Get();
+
+                    if(const auto* previous_usage = last_resource_usages.find(usage.texture)) {
                         // We previously used a resource - we need to barrier from the last states to this
                         // renderpass's resource states
 
-                        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(usage.resource, *previous_usage, usage.states);
+                        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *previous_usage, usage.states);
                         barriers.push_back(barrier);
 
                     } else {
                         // no previous usage so just barrier from COMMON
-                        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(usage.resource,
-                                                                                   D3D12_RESOURCE_STATE_COMMON,
-                                                                                   usage.states);
+                        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, usage.states);
                         barriers.push_back(barrier);
                     }
 
-                    last_resource_usages.insert(usage.resource, usage.states);
+                    last_resource_usages.insert(usage.texture, usage.states);
                 });
 
                 if(!barriers.is_empty()) {

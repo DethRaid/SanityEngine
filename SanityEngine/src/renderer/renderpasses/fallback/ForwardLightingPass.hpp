@@ -16,6 +16,6 @@ namespace renderer {
         ~ForwardLightingPass() override = default;
 
         // Inherited via RenderPass
-        virtual void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
+        virtual void render(ID3D12GraphicsCommandList* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
     };
 } // namespace renderer
