@@ -10,6 +10,11 @@
 class World;
 
 namespace renderer {
+    /*!
+     * \brief Tuple of the state of a resource when a render pass begins, and the state of that resource when the
+     * render pass ends
+     */
+    using BeginEndState = Rx::Pair<D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES>;
 
     /*!
      * \brief Simple abstraction for a render pass
@@ -20,7 +25,7 @@ namespace renderer {
 
         virtual void render(ID3D12GraphicsCommandList* commands, entt::registry& registry, Uint32 frame_idx, const World& world) = 0;
 
-        const Rx::Map<TextureHandle, Rx::Pair<D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES>>& get_texture_states() const;
+        const Rx::Map<TextureHandle, BeginEndState>& get_texture_states() const;
 
     protected:
         /*!

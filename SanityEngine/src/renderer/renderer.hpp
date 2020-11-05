@@ -8,8 +8,8 @@
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/render_components.hpp"
+#include "renderer/renderpasses/RaytracedLightingPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "renderer/renderpasses/forward_pass.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/mesh_data_store.hpp"
@@ -286,6 +286,18 @@ namespace renderer {
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
         void upload_material_data(Uint32 frame_idx);
+
+#pragma region Renderpasses
+        void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list, Uint32 render_pass_index, const Rx::Ptr<RenderPass>& render_pass);
+
+        void issue_post_pass_barriers(ID3D12GraphicsCommandList* command_list,
+                                      Uint32 render_pass_index,
+                                      const Rx::Ptr<RenderPass>& renderpass);
+
+        [[nodiscard]] Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> get_previous_resource_states(Uint32 cur_renderpass_index) const;
+
+        [[nodiscard]] Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> get_next_resource_states(Uint32 cur_renderpass_index) const;
+#pragma endregion
 
 #pragma region 3D Scene
         Rx::Vector<RaytracableGeometry> raytracing_geometries;
