@@ -35,7 +35,7 @@ namespace renderer {
 
         memcpy(backbuffer_output_material_buffer->mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
 
-        add_resource_usage({.texture = material.scene_output_image, .states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE});
+        add_resource_usage(material.scene_output_image, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
         logger->verbose("Initialized backbuffer output pass");
     }
