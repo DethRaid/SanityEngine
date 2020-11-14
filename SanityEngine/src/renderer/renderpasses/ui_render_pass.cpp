@@ -10,7 +10,7 @@
 #include "renderer/rhi/resources.hpp"
 
 namespace renderer {
-    GameUiPass::GameUiPass(Renderer& renderer_in) : renderer{&renderer_in} {
+    DearImGuiRenderPass::DearImGuiRenderPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 
         const auto blend_state = BlendState{.render_target_blends = {RenderTargetBlendState{.enabled = true},
@@ -47,7 +47,7 @@ namespace renderer {
         });
     }
 
-    void GameUiPass::render(ID3D12GraphicsCommandList4* commands,
+    void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands,
                         entt::registry& /* registry */,
                         Uint32 /* frame_idx */,
                         const World& /* world */) {

@@ -13,7 +13,7 @@ namespace rex {
 
         ~StdoutStream() override;
 
-        [[nodiscard]] Uint64 on_write(const Byte* data, Uint64 size) override;
+        [[nodiscard]] Uint64 on_write(const Byte* data, Uint64 size, Uint64 offset) override;
 
         [[nodiscard]] const Rx::String& name() const& override;
 

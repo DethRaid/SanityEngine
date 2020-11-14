@@ -7,6 +7,7 @@
 #endif
 
 #include "adapters/rex/stdout_stream.hpp"
+#include "rx/core/abort.h"
 #include "rx/core/global.h"
 
 using namespace tracy;
@@ -19,14 +20,14 @@ namespace rex {
 
     void BeginSample(void* /*_context*/, const Rx::Profiler::Sample* _sample) {
         const auto& source_info = _sample->source_location();
-        
+
         // Enframe tracy::SourceLocationData in the Sample.
-        auto enframe      = _sample->enframe<SourceLocationData>();
-        enframe->name     = _sample->tag();
+        auto* enframe = _sample->enframe<SourceLocationData>();
+        enframe->name = _sample->tag();
         enframe->function = source_info.function();
-        enframe->file     = source_info.file();
-        enframe->line     = source_info.line();
-        
+        enframe->file = source_info.file();
+        enframe->line = source_info.line();
+
         TracyLfqPrepare(tracy::QueueType::ZoneBegin);
         MemWrite(&item->zoneBegin.time, Profiler::GetTime());
         MemWrite(&item->zoneBegin.srcloc, (uint64_t) enframe);
@@ -41,10 +42,13 @@ namespace rex {
 #endif
 
     Wrapper::Wrapper() {
-        Rx::Globals::link();
+        const auto globals_linked = Rx::Globals::link();
+        if(!globals_linked) {
+            Rx::abort("Could not link the Rex globals");
+        }
 
 #if TRACY_ENABLE
-        Rx::Profiler::instance().bind_cpu({nullptr, SetThreadName, BeginSample, EndSample });
+        Rx::Profiler::instance().bind_cpu({nullptr, SetThreadName, BeginSample, EndSample});
 #endif
     }
 

@@ -49,9 +49,8 @@ struct RX_API File
   constexpr Memory::Allocator& allocator() const;
 
 protected:
-  virtual Uint64 on_read(Byte* _data, Uint64 _size);
-  virtual Uint64 on_write(const Byte* _data, Uint64 _size);
-  virtual bool on_seek(Uint64 _where);
+  virtual Uint64 on_read(Byte* _data, Uint64 _size, Uint64 _offset);
+  virtual Uint64 on_write(const Byte* _data, Uint64 _size, Uint64 _offset);
   virtual bool on_stat(Stat& stat_) const;
 
 private:
@@ -158,6 +157,6 @@ inline Optional<Vector<Byte>> read_text_file(const char* _file_name) {
   return read_text_file(Memory::SystemAllocator::instance(), _file_name);
 }
 
-} // namespace rx::filesystem
+} // namespace Rx::Filesystem
 
 #endif // RX_CORE_FILESYSTEM_FILE_H

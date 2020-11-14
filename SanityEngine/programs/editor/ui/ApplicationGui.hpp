@@ -1,16 +1,17 @@
 #pragma once
-#include "ui/ui_panel.hpp"
+
+#include "ui/Window.hpp"
 
 namespace sanity::editor::ui {
     class EditorUiController;
 
-    class ApplicationGui final : public ::ui::UiPanel {
+    class ApplicationGui final : public ::ui::Window{
     public:
         explicit ApplicationGui(EditorUiController& controller_in);
 
         ~ApplicationGui() override = default;
 
-        void draw() override;
+        void draw_contents() override;
 
     private:
         EditorUiController* ui_controller{nullptr};

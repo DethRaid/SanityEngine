@@ -160,6 +160,9 @@
     <Filter Include="programs\editor\ui">
       <UniqueIdentifier>{45aa82d7-cf10-4a90-9217-81efc4419de8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="programs\editor\ui\windows">
+      <UniqueIdentifier>{649d5baf-d092-413f-9276-efee99e97754}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -972,16 +975,21 @@
     <ClInclude Include="programs\editor\SanityEditor.hpp">
       <Filter>programs\editor</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\IndexedContainerHandle.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\concepts\IndexableContainer.hpp">
-      <Filter>src\core\concepts</Filter>
-    </ClInclude>
     <ClInclude Include="programs\editor\ui\EditorUiController.hpp">
       <Filter>programs\editor\ui</Filter>
     </ClInclude>
-    <ClInclude Include="programs\editor\ui\ApplicationGui.hpp" />
+    <ClInclude Include="programs\editor\ui\ApplicationGui.hpp">
+      <Filter>programs\editor\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\Window.hpp">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="programs\editor\ui\windows\WorldgenParamsEditor.hpp">
+      <Filter>programs\editor\ui\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\VectorHandle.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -1371,7 +1379,15 @@
     <ClCompile Include="programs\editor\ui\EditorUiController.cpp">
       <Filter>programs\editor\ui</Filter>
     </ClCompile>
-    <ClCompile Include="programs\editor\ui\ApplicationGui.cpp" />
+    <ClCompile Include="programs\editor\ui\ApplicationGui.cpp">
+      <Filter>programs\editor\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\Window.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="programs\editor\ui\windows\WorldgenParamsEditor.cpp">
+      <Filter>programs\editor\ui\windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

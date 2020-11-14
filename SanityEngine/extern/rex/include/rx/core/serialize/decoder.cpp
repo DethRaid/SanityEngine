@@ -12,8 +12,6 @@ Decoder::Decoder(Memory::Allocator& _allocator, Stream* _stream)
   , m_buffer{m_stream, Buffer::Mode::k_read}
   , m_message{allocator()}
 {
-  RX_ASSERT(_stream->can_seek(), "decoder requires seekable stream");
-
   // Read header and strings.
   RX_ASSERT(read_header(), "failed to read header");
   RX_ASSERT(read_strings(), "failed to read strings");

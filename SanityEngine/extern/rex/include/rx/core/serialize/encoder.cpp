@@ -12,8 +12,6 @@ Encoder::Encoder(Memory::Allocator& _allocator, Stream* _stream)
   , m_message{allocator()}
   , m_strings{allocator()}
 {
-  RX_ASSERT(m_stream->can_seek(), "encoder requires seekable stream");
-
   // Write out the default header, we'll seek back to patch it later.
   RX_ASSERT(write_header(), "failed to write header");
 }

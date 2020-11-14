@@ -20,7 +20,6 @@ struct RX_API Stream {
   enum : Uint32 {
     READ  = 1 << 0,
     WRITE = 1 << 1,
-    SEEK  = 1 << 2,
     STAT  = 1 << 3
   };
 
@@ -56,26 +55,27 @@ struct RX_API Stream {
   // Supported stream functions.
   constexpr bool can_read() const;
   constexpr bool can_write() const;
-  constexpr bool can_seek() const;
   constexpr bool can_stat() const;
+
+  // Check if end-of-stream.
+  constexpr bool is_eos() const;
 
   // The name of the stream. This must always be implemented.
   virtual const String& name() const & = 0;
 
 protected:
-  // Read |_size| bytes from stream into |_data|.
-  virtual Uint64 on_read(Byte* _data, Uint64 _size);
+  // Read |_size| bytes from stream at |_offset| into |_data|.
+  virtual Uint64 on_read(Byte* _data, Uint64 _size, Uint64 _offset);
 
-  // Write |_size| bytes from |_data| into stream.
-  virtual Uint64 on_write(const Byte* _data, Uint64 _size);
-
-  // Seek to |_where| in stream.
-  virtual bool on_seek(Uint64 _where);
+  // Write |_size| bytes from |_data| into stream at |_offset|.
+  virtual Uint64 on_write(const Byte* _data, Uint64 _size, Uint64 _offset);
 
   // Stat the stream.
   virtual bool on_stat(Stat& stat_) const;
 
 private:
+  // End-of-stream flag. This is set when |on_read| returns a truncated result.
+  static inline constexpr Uint32 EOS = 1 << 31;
   Uint32 m_flags;
   Uint64 m_offset;
 };
@@ -113,12 +113,12 @@ inline constexpr bool Stream::can_write() const {
   return m_flags & WRITE;
 }
 
-inline constexpr bool Stream::can_seek() const {
-  return m_flags & SEEK;
-}
-
 inline constexpr bool Stream::can_stat() const {
   return m_flags & STAT;
+}
+
+inline constexpr bool Stream::is_eos() const {
+  return m_flags & EOS;
 }
 
 RX_API Optional<Vector<Byte>> read_binary_stream(Memory::Allocator& _allocator, Stream* _stream);

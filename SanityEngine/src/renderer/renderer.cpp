@@ -42,7 +42,7 @@ namespace renderer {
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)} {
-        ZoneScoped;
+        ZoneScoped
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -85,7 +85,7 @@ namespace renderer {
     }
 
     void Renderer::render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
-        ZoneScoped;
+        ZoneScoped
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
 
@@ -151,7 +151,7 @@ namespace renderer {
     TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
                                          const void* image_data,
                                          const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        ZoneScoped;
+        ZoneScoped
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
         TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), scope_name.data());
@@ -217,7 +217,7 @@ namespace renderer {
     }
 
     Image& Renderer::get_image(const TextureHandle handle) const {
-        ZoneScoped;
+        ZoneScoped
 
         return *all_images[handle.index];
     }
@@ -300,7 +300,7 @@ namespace renderer {
     }
 
     void Renderer::create_per_frame_buffers() {
-        ZoneScoped;
+        ZoneScoped
 
         const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
@@ -328,7 +328,7 @@ namespace renderer {
     }
 
     void Renderer::create_material_data_buffers() {
-        ZoneScoped;
+        ZoneScoped
 
         const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
@@ -341,7 +341,7 @@ namespace renderer {
     }
 
     void Renderer::create_light_buffers() {
-        ZoneScoped;
+        ZoneScoped
 
         const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
@@ -354,7 +354,7 @@ namespace renderer {
     }
 
     void Renderer::create_builtin_images() {
-        ZoneScoped;
+        ZoneScoped
 
         load_noise_texture("textures/LDR_RGBA_0.png");
 
@@ -422,7 +422,7 @@ namespace renderer {
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
-        ZoneScoped;
+        ZoneScoped
 
         const auto handle = load_image_to_gpu(filepath, *this);
 
@@ -437,12 +437,20 @@ namespace renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-    	forward_pass_handle = ContainerHandle
+        forward_pass_handle = RenderpassHandle{&render_passes, 0};
+
+    	
         render_passes.push_back(
             Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ForwardPass&>(*render_passes[0])));
+        denoiser_pass_handle = RenderpassHandle{&render_passes, 1};
+    	
         render_passes.push_back(
             Rx::make_ptr<CopySceneOutputToTexturePass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
-        render_passes.push_back(Rx::make_ptr<GameUiPass>(RX_SYSTEM_ALLOCATOR, *this));
+        scene_output_pass_handle = RenderpassHandle{&render_passes, 2};
+    	
+        render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
+        imgui_pass_handle = RenderpassHandle{&render_passes, 3};
+    	
     }
 
     void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }
@@ -450,7 +458,7 @@ namespace renderer {
     void Renderer::reload_renderpass_shaders() { throw std::runtime_error{"Not implemented"}; }
 
     Rx::Vector<const Image*> Renderer::get_texture_array() const {
-        ZoneScoped;
+        ZoneScoped
 
         Rx::Vector<const Image*> images;
         images.reserve(all_images.size());
@@ -461,7 +469,7 @@ namespace renderer {
     }
 
     void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
-        ZoneScoped;
+        ZoneScoped
 
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
@@ -475,7 +483,7 @@ namespace renderer {
     }
 
     void Renderer::upload_material_data(const Uint32 frame_idx) {
-        ZoneScoped;
+        ZoneScoped
 
         auto& buffer = *material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
@@ -563,7 +571,7 @@ namespace renderer {
     }
 
     void Renderer::update_lights(entt::registry& registry, const Uint32 frame_idx) {
-        ZoneScoped;
+        ZoneScoped
 
         registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
 

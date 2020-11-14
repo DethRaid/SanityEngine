@@ -565,6 +565,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="programs\editor\SanityEditor.hpp" />
     <ClInclude Include="programs\editor\ui\ApplicationGui.hpp" />
     <ClInclude Include="programs\editor\ui\EditorUiController.hpp" />
+    <ClInclude Include="programs\editor\ui\windows\WorldgenParamsEditor.hpp" />
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\adapters\tracy.hpp" />
@@ -574,11 +575,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\concepts\EnumLike.hpp" />
-    <ClInclude Include="src\core\concepts\IndexableContainer.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
-    <ClInclude Include="src\core\IndexedContainerHandle.hpp" />
+    <ClInclude Include="src\core\VectorHandle.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />
     <ClInclude Include="src\core\Prelude.hpp" />
     <ClInclude Include="src\core\SmartEnum.hpp" />
@@ -630,6 +630,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\ui\scripted_ui_panel.hpp" />
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
+    <ClInclude Include="src\ui\Window.hpp" />
     <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
     <ClInclude Include="src\world\environment\Environment.hpp" />
@@ -723,6 +724,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="programs\editor\SanityEditor.cpp" />
     <ClCompile Include="programs\editor\ui\ApplicationGui.cpp" />
     <ClCompile Include="programs\editor\ui\EditorUiController.cpp" />
+    <ClCompile Include="programs\editor\ui\windows\WorldgenParamsEditor.cpp" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
@@ -762,6 +764,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\ui\fps_display.cpp" />
     <ClCompile Include="src\ui\scripted_ui_panel.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
+    <ClCompile Include="src\ui\Window.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
     <ClCompile Include="src\world\environment\Environment.cpp" />

@@ -7,7 +7,7 @@ namespace rex {
 
     StdoutStream::~StdoutStream() { fclose(fileyboi); }
 
-    Uint64 StdoutStream::on_write(const Byte* data, const Uint64 size) {
+    Uint64 StdoutStream::on_write(const Byte* data, const Uint64 size, const Uint64 offset) {
         const auto result = fwrite(data, size, 1, fileyboi);
         return result == 1 ? size : ftell(fileyboi);
     }

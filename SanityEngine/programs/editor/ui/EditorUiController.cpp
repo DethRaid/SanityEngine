@@ -7,11 +7,21 @@
 #include "ui/ui_components.hpp"
 
 namespace sanity::editor::ui {
-    EditorUiController::EditorUiController(entt::registry& registry) { create_application_menu(registry); }
+    EditorUiController::EditorUiController() { create_application_gui(); }
 
-    void EditorUiController::create_application_menu(entt::registry& registry) {
-        application_gui = registry.create();
+    void EditorUiController::draw()
+    {
+	    main_gui->draw();
 
-        registry.emplace<::ui::UiComponent>(application_gui, Rx::make_ptr<ApplicationGui>(RX_SYSTEM_ALLOCATOR, *this));
+    	if(worldgen_params_editor.is_visible)
+    	{
+            worldgen_params_editor.draw();
+    	}
     }
+
+    void EditorUiController::show_worldgen_params_editor()
+    { worldgen_params_editor.is_visible = true;
+    }
+
+    void EditorUiController::create_application_gui() { main_gui = Rx::make_ptr<ApplicationGui>(RX_SYSTEM_ALLOCATOR, *this); }
 } // namespace sanity::editor::ui

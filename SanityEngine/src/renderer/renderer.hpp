@@ -19,11 +19,14 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
+#include "core/VectorHandle.hpp"
 
 struct GLFWwindow;
 
 namespace renderer {
     class RenderCommandList;
+
+	using RenderpassHandle = VectorHandle<Rx::Ptr<renderer::RenderPass>>;
 	
     /*!
      * \brief All the information needed to decide whether or not to issue a drawcall for an object
@@ -258,8 +261,13 @@ namespace renderer {
         TextureHandle specular_emission_texture_handle;
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
+    	
+        RenderpassHandle forward_pass_handle;
+        RenderpassHandle denoiser_pass_handle;
+        RenderpassHandle scene_output_pass_handle;
+        RenderpassHandle imgui_pass_handle;
 
-#pragma region Initialization
+        #pragma region Initialization
         void create_static_mesh_storage();
 
         void create_per_frame_buffers();

@@ -7,11 +7,14 @@
 namespace renderer {
     class Renderer;
 
-    class GameUiPass final : public RenderPass {
+	/*!
+	 * \brief Renders all the UI that's been drawn with ImGUI since the last frame
+	 */
+    class DearImGuiRenderPass final : public RenderPass {
     public:
-        explicit GameUiPass(Renderer& renderer_in);
+        explicit DearImGuiRenderPass(Renderer& renderer_in);
 
-        ~GameUiPass() override = default;
+        ~DearImGuiRenderPass() override = default;
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
 

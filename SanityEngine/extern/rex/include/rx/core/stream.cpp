@@ -47,16 +47,12 @@ static Vector<Byte> convert_text_encoding(Vector<Byte>&& data_) {
   return Utility::move(data_);
 }
 
-Uint64 Stream::on_read(Byte*, Uint64) {
+Uint64 Stream::on_read(Byte*, Uint64, Uint64) {
   abort("stream does not implement on_read");
 }
 
-Uint64 Stream::on_write(const Byte*, Uint64) {
+Uint64 Stream::on_write(const Byte*, Uint64, Uint64) {
   abort("stream does not implement on_write");
-}
-
-bool Stream::on_seek(Uint64) {
-  abort("stream does not implement on_seek");
 }
 
 bool Stream::on_stat(Stat&) const {
@@ -64,40 +60,82 @@ bool Stream::on_stat(Stat&) const {
 }
 
 Uint64 Stream::read(Byte* _data, Uint64 _size) {
-  const auto read = can_read() ? on_read(_data, _size) : 0;
+  if (!can_read() || _size == 0) {
+    return 0;
+  }
+
+  const auto read = on_read(_data, _size, m_offset);
+  if (read != _size) {
+    m_flags |= EOS;
+  }
+
   m_offset += read;
   return read;
 }
 
 Uint64 Stream::write(const Byte* _data, Uint64 _size) {
-  const auto write = can_write() ? on_write(_data, _size) : 0;
+  if (!can_write() || _size == 0) {
+    return 0;
+  }
+
+  const auto write = on_write(_data, _size, m_offset);
   m_offset += write;
   return write;
 }
 
 bool Stream::seek(Sint64 _where, Whence _whence) {
-  Uint64 offset = 0;
-
-  // Calculate the new offset based on |_whence|
+  // Calculate the new offset based on |_whence|.
   if (_whence == Whence::CURRENT) {
-    offset = m_offset + _where;
+    if (m_flags & EOS) {
+      if (_where < 0) {
+        // Rewinds the stream. Unset EOS.
+        m_flags &= ~EOS;
+      } else if (_where > 0) {
+        // Would seek beyond the end of the stream.
+        return false;
+      }
+    }
+    m_offset = m_offset + _where;
   } else if (_whence == Whence::SET) {
-    offset = _where;
-  } else if (_whence == Whence::END) {
-    // Can only seek relative to END when we can stat.
-    if (auto s = stat()) {
-      offset = s->size + _where;
-    } else {
+    // Seeking to negative position is an error.
+    if (_where < 0) {
       return false;
+    }
+
+    const auto where = static_cast<Uint64>(_where);
+
+    if (m_flags & EOS) {
+      if (where < m_offset) {
+        // Rewinds the stream. Unset EOS.
+        m_flags &= ~EOS;
+      } else if (where > m_offset) {
+        // Would seek beyond the end of the stream.
+        return false;
+      }
+    }
+    m_offset = _where;
+  } else if (_whence == Whence::END) {
+    // Seeking past the end of the stram is an error.
+    if (_where > 0) {
+      return false;
+    }
+
+    // Can only seek relative to end if stat is supported.
+    auto s = stat();
+    if (!s) {
+      return false;
+    }
+
+    m_offset = s->size + _where;
+
+    if (_where < 0) {
+      m_flags &= ~EOS;
+    } else {
+      m_flags |= EOS;
     }
   }
 
-  if (on_seek(offset)) {
-    m_offset = offset;
-    return true;
-  }
-
-  return false;
+  return true;
 }
 
 Optional<Stream::Stat> Stream::stat() const {
