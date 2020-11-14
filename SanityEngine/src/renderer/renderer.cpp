@@ -26,7 +26,6 @@
 #include "sanity_engine.hpp"
 
 namespace renderer {
-
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     RX_LOG("Renderer", logger);
@@ -44,7 +43,8 @@ namespace renderer {
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)} {
         ZoneScoped
 
-        int width, height;
+            int width,
+            height;
         glfwGetFramebufferSize(window, &width, &height);
 
         output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
@@ -87,7 +87,7 @@ namespace renderer {
     void Renderer::render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
         ZoneScoped
 
-        const auto frame_idx = device->get_cur_gpu_frame_idx();
+            const auto frame_idx = device->get_cur_gpu_frame_idx();
 
         auto command_list = device->create_command_list(frame_idx);
         command_list->SetName(L"Main Render Command List");
@@ -111,18 +111,112 @@ namespace renderer {
                 memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
             }
 
-            {
-                ZoneScopedN("Renderer::render_passes");
-
-                TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
-                PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
-
-                render_passes.each_fwd(
-                    [&](Rx::Ptr<RenderPass>& render_pass) { render_pass->render(command_list.Get(), *registry, frame_idx, world); });
-            }
+            execute_all_render_passes(command_list, registry, frame_idx, world);
         }
 
         device->submit_command_list(Rx::Utility::move(command_list));
+    }
+
+    void Renderer::issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
+                                           const Uint32 render_pass_index,
+                                           const Rx::Ptr<RenderPass>& render_pass) {
+        ZoneScoped;
+
+        const auto& used_resources = render_pass->get_texture_states();
+
+        auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
+        barriers.reserve(used_resources.size());
+
+        const auto& previous_resource_usages = get_previous_resource_states(render_pass_index);
+
+        used_resources.each_pair([&](const TextureHandle& texture, const BeginEndState& before_after_state) {
+            auto* resource = get_image(texture).resource.Get();
+
+            if(const auto* previous_state = previous_resource_usages.find(texture)) {
+                if(*previous_state != before_after_state.first) {
+                    // Only issue a barrier if we need a state transition
+                    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *previous_state, before_after_state.first);
+
+                    // Issue the end of a split barrier cause we're the best
+                    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+
+                    barriers.push_back(barrier);
+                }
+
+            } else {
+                // no previous usage so just barrier from COMMON
+                // No split barrier here, that'd be silly
+                const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, before_after_state.first);
+                barriers.push_back(barrier);
+            }
+        });
+
+        if(!barriers.is_empty()) {
+            command_list->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+    }
+
+    void Renderer::issue_post_pass_barriers(ID3D12GraphicsCommandList* command_list,
+                                            const Uint32 render_pass_index,
+                                            const Rx::Ptr<RenderPass>& render_pass) {
+        ZoneScoped;
+
+        const auto& used_resources = render_pass->get_texture_states();
+
+        auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
+        barriers.reserve(used_resources.size());
+
+        const auto& next_resource_usages = get_next_resource_states(render_pass_index);
+
+        used_resources.each_pair([&](const TextureHandle& texture, const BeginEndState& before_after_state) {
+            auto* resource = get_image(texture).resource.Get();
+
+            if(const auto* next_state = next_resource_usages.find(texture)) {
+                if(before_after_state.second != *next_state) {
+                    // Only issue a barrier if we need a state transition
+                    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, before_after_state.second, *next_state);
+
+                    // Issue the end of a split barrier cause we're the best
+                    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+
+                    barriers.push_back(barrier);
+                }
+
+            } else {
+                // no previous usage so just barrier from COMMON
+                // No split barrier here, that'd be silly
+                const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
+                                                                           before_after_state.second,
+                                                                           D3D12_RESOURCE_STATE_COMMON);
+                barriers.push_back(barrier);
+            }
+        });
+
+        if(!barriers.is_empty()) {
+            command_list->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+    }
+
+    void Renderer::execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
+                                             SynchronizedResourceAccessor<entt::registry>& registry,
+                                             const Uint32& frame_idx,
+                                             const World& world) {
+        {
+            ZoneScopedN("Renderer::render_passes");
+
+            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
+            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+
+            for(Uint32 i = 0; i < render_passes.size(); i++) {
+                Rx::Ptr<RenderPass>& render_pass = render_passes[i];
+
+                issue_pre_pass_barriers(command_list.Get(), i, render_pass);
+
+                render_pass->render(command_list.Get(), *registry, frame_idx, world);
+
+                issue_post_pass_barriers(command_list.Get(), i, render_pass);
+            });
+        }
     }
 
     void Renderer::end_frame() const { device->end_frame(); }
@@ -153,7 +247,7 @@ namespace renderer {
                                          const ComPtr<ID3D12GraphicsCommandList4>& commands) {
         ZoneScoped
 
-        const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
+            const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
         TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), scope_name.data());
         PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, scope_name.data());
 
@@ -219,7 +313,8 @@ namespace renderer {
     Image& Renderer::get_image(const TextureHandle handle) const {
         ZoneScoped
 
-        return *all_images[handle.index];
+
+            return *all_images[handle.index];
     }
 
     void Renderer::schedule_texture_destruction(const TextureHandle& image_handle) {
@@ -302,7 +397,7 @@ namespace renderer {
     void Renderer::create_per_frame_buffers() {
         ZoneScoped
 
-        const auto num_gpu_frames = device->get_max_num_gpu_frames();
+            const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         per_frame_data_buffers.reserve(num_gpu_frames);
         model_matrix_buffers.reserve(num_gpu_frames);
@@ -330,7 +425,8 @@ namespace renderer {
     void Renderer::create_material_data_buffers() {
         ZoneScoped
 
-        const auto num_gpu_frames = device->get_max_num_gpu_frames();
+
+            const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(num_gpu_frames);
@@ -343,7 +439,7 @@ namespace renderer {
     void Renderer::create_light_buffers() {
         ZoneScoped
 
-        const auto num_gpu_frames = device->get_max_num_gpu_frames();
+            const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
 
@@ -356,7 +452,7 @@ namespace renderer {
     void Renderer::create_builtin_images() {
         ZoneScoped
 
-        load_noise_texture("textures/LDR_RGBA_0.png");
+            load_noise_texture("textures/LDR_RGBA_0.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");
@@ -424,7 +520,7 @@ namespace renderer {
     void Renderer::load_noise_texture(const Rx::String& filepath) {
         ZoneScoped
 
-        const auto handle = load_image_to_gpu(filepath, *this);
+            const auto handle = load_image_to_gpu(filepath, *this);
 
         if(!handle) {
             logger->error("Could not load noise texture %s", filepath);
@@ -436,7 +532,7 @@ namespace renderer {
 
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
-        render_passes.push_back(Rx::make_ptr<ForwardPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        render_passes.push_back(Rx::make_ptr<RaytracedLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         forward_pass_handle = RenderpassHandle{&render_passes, 0};
 
     	
@@ -460,7 +556,8 @@ namespace renderer {
     Rx::Vector<const Image*> Renderer::get_texture_array() const {
         ZoneScoped
 
-        Rx::Vector<const Image*> images;
+            Rx::Vector<const Image*>
+                images;
         images.reserve(all_images.size());
 
         all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.get()); });
@@ -471,13 +568,14 @@ namespace renderer {
     void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
         ZoneScoped
 
-        registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
-            auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
+            registry.view<TransformComponent, CameraComponent>()
+                .each([&](const TransformComponent& transform, const CameraComponent& camera) {
+                    auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
 
-            matrices.copy_matrices_to_previous();
-            matrices.calculate_view_matrix(transform);
-            matrices.calculate_projection_matrix(camera);
-        });
+                    matrices.copy_matrices_to_previous();
+                    matrices.calculate_view_matrix(transform);
+                    matrices.calculate_projection_matrix(camera);
+                });
 
         camera_matrix_buffers->upload_data(frame_idx);
     }
@@ -485,8 +583,52 @@ namespace renderer {
     void Renderer::upload_material_data(const Uint32 frame_idx) {
         ZoneScoped
 
-        auto& buffer = *material_device_buffers[frame_idx];
+            auto& buffer = *material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
+    }
+
+    Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_previous_resource_states(const Uint32 cur_renderpass_index) const {
+        const auto& used_resources = render_passes[cur_renderpass_index]->get_texture_states();
+        auto previous_states = Rx::Map<TextureHandle, D3D12_RESOURCE_STATES>{};
+
+        if(cur_renderpass_index > 0) {
+            for(Int32 i = cur_renderpass_index - 1; i >= 0; i--) {
+                used_resources.each_key([&](const TextureHandle& texture) {
+                    const auto& renderpass_resources = render_passes[i]->get_texture_states();
+                    if(previous_states.find(texture) == nullptr) {
+                        // No usage for this resource has been found yes
+                        if(const auto* states = renderpass_resources.find(texture)) {
+                            // This renderpass has an entry for the resource we care about!
+                            previous_states.insert(texture, states->second);
+                        }
+                    }
+                });
+            }
+        }
+
+        return previous_states;
+    }
+
+    Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_next_resource_states(Uint32 cur_renderpass_index) const {
+        const auto& used_resources = render_passes[cur_renderpass_index]->get_texture_states();
+        auto next_states = Rx::Map<TextureHandle, D3D12_RESOURCE_STATES>{};
+
+        if(cur_renderpass_index > 0) {
+            for(Int32 i = cur_renderpass_index + 1; i < render_passes.size(); i++) {
+                used_resources.each_key([&](const TextureHandle& texture) {
+                    const auto& renderpass_resources = render_passes[i]->get_texture_states();
+                    if(next_states.find(texture) == nullptr) {
+                        // No usage for this resource has been found yes
+                        if(const auto* states = renderpass_resources.find(texture)) {
+                            // This renderpass has an entry for the resource we care about!
+                            next_states.insert(texture, states->first);
+                        }
+                    }
+                });
+            }
+        }
+
+        return next_states;
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
@@ -573,7 +715,8 @@ namespace renderer {
     void Renderer::update_lights(entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped
 
-        registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
+            registry.view<LightComponent>()
+                .each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         memcpy(dst, lights.data(), lights.size() * sizeof(Light));
@@ -582,7 +725,7 @@ namespace renderer {
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
 
-        auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
+            auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.clear_all_bindings();
 
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));

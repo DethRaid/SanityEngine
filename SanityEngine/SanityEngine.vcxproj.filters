@@ -13,72 +13,6 @@
     <Filter Include="extern\DearImGUI">
       <UniqueIdentifier>{79113a18-3f4c-48cf-ade7-f0fa3e574ffc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="extern\rex">
-      <UniqueIdentifier>{2f57dd76-8e72-487d-ae0c-c7765a6f7a52}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core">
-      <UniqueIdentifier>{cbbe7aa0-dff5-4bd4-82cb-c37fc66238d4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\algorithm">
-      <UniqueIdentifier>{44fb56c5-e819-40cb-9f72-9521d8eaf284}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\concepts">
-      <UniqueIdentifier>{1a3fed0e-0e36-488a-a31a-b651c6a0abea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\concurrency">
-      <UniqueIdentifier>{a5d2a005-ea79-4b8e-82b7-2d569072a78c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\concurrency\clang">
-      <UniqueIdentifier>{87801953-87ba-437a-bd4e-1e7ea84a5ea8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\concurrency\gcc">
-      <UniqueIdentifier>{7f0bfef1-f688-4f2f-888c-b7571239c5c7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\concurrency\std">
-      <UniqueIdentifier>{e2f9fd27-d962-479d-abc6-f01bf4585841}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\filesystem">
-      <UniqueIdentifier>{8c0f79c8-058c-4c6e-9eb7-093f6318ec27}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\hash">
-      <UniqueIdentifier>{370e4608-dfae-4a35-9166-6fe599da3bdd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\hints">
-      <UniqueIdentifier>{3b0af339-deaf-48c9-b1d1-85f95c43b3d6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\library">
-      <UniqueIdentifier>{ffb523b3-c682-4ed7-b9fb-12fe92ca930c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\math">
-      <UniqueIdentifier>{97f786c5-988b-4c92-9cb1-ed5f4f79bfb2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\memory">
-      <UniqueIdentifier>{814ae0f5-980e-4091-85c6-2cc80980ddf5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\prng">
-      <UniqueIdentifier>{6fb034df-92b1-42ef-8e2f-283728a652eb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\serialize">
-      <UniqueIdentifier>{0ae54eb9-5fcc-42de-bd6d-e1977c57d2b4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\utility">
-      <UniqueIdentifier>{ac81e56a-065a-4c3c-9569-5d6f6fe55f39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\traits">
-      <UniqueIdentifier>{34e41733-d810-45e6-b9bd-f12811bc6962}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\core\time">
-      <UniqueIdentifier>{ebd1c30b-ef72-46cd-9915-ba628716c004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\console">
-      <UniqueIdentifier>{d53eb8ec-512d-42f7-b489-d84ed08d42f7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\math">
-      <UniqueIdentifier>{81986c90-1d65-4e43-b28d-e388ca880a0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="extern\rex\math\noise">
-      <UniqueIdentifier>{aec61f3a-092b-4d9c-bf92-63f281b86112}</UniqueIdentifier>
-    </Filter>
     <Filter Include="extern\imgui-node-editor">
       <UniqueIdentifier>{fa40cf9a-ba95-435f-85f5-4be39a3cb224}</UniqueIdentifier>
     </Filter>
@@ -157,6 +91,18 @@
     <Filter Include="programs\editor">
       <UniqueIdentifier>{f078b971-e91c-4d0a-8f57-9d1bc5760b38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\renderer\renderpasses\fallback">
+      <UniqueIdentifier>{a36ff8a5-c8e9-483c-8315-e3f0a2bcc906}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{0e0342dd-1748-4193-9a06-efe3dade70ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\inc">
+      <UniqueIdentifier>{f03d648c-74d9-4031-8301-641af957f10b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{6246b1f2-9456-4cb5-9ad4-8e9d906344e4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="programs\editor\ui">
       <UniqueIdentifier>{45aa82d7-cf10-4a90-9217-81efc4419de8}</UniqueIdentifier>
     </Filter>
@@ -174,6 +120,9 @@
     </None>
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl">
       <Filter>extern\imgui-node-editor</Filter>
+    </None>
+    <None Include="tools\compile_shaders.py">
+      <Filter>tools</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -321,9 +270,6 @@
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
@@ -399,534 +345,6 @@
     <ClInclude Include="src\stats\framerate_tracker.hpp">
       <Filter>src\stats</Filter>
     </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\abort.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\array.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\assert.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\bitset.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\config.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\deferred_function.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\dynamic_pool.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\event.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\format.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\function.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\global.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hash.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_list.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\log.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\map.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\markers.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\optional.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\profiler.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\ptr.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\set.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\source_location.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\static_pool.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\stream.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\string.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\string_table.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\tagged_ptr.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\types.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\uninitialized.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\vector.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\clamp.h">
-      <Filter>extern\rex\core\algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\insertion_sort.h">
-      <Filter>extern\rex\core\algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\max.h">
-      <Filter>extern\rex\core\algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\min.h">
-      <Filter>extern\rex\core\algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\quick_sort.h">
-      <Filter>extern\rex\core\algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\topological_sort.h">
-      <Filter>extern\rex\core\algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concepts\interface.h">
-      <Filter>extern\rex\core\concepts</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concepts\no_copy.h">
-      <Filter>extern\rex\core\concepts</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concepts\no_move.h">
-      <Filter>extern\rex\core\concepts</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\atomic.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\condition_variable.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\mutex.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\recursive_mutex.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\scope_lock.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\scope_unlock.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\spin_lock.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\thread.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\thread_pool.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\wait_group.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\yield.h">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\clang\atomic.h">
-      <Filter>extern\rex\core\concurrency\clang</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\gcc\atomic.h">
-      <Filter>extern\rex\core\concurrency\gcc</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\std\atomic.h">
-      <Filter>extern\rex\core\concurrency\std</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\directory.h">
-      <Filter>extern\rex\core\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\file.h">
-      <Filter>extern\rex\core\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\path_resolver.h">
-      <Filter>extern\rex\core\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hash\fnv1a.h">
-      <Filter>extern\rex\core\hash</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\assume_aligned.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\empty_bases.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\force_inline.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\format.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\likely.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\may_alias.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\no_inline.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\restrict.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\thread.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\unlikely.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\hints\unreachable.h">
-      <Filter>extern\rex\core\hints</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\library\loader.h">
-      <Filter>extern\rex\core\library</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\abs.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\ceil.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\cos.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\floor.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\force_eval.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\half.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\isnan.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\log2.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\mod.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\pow.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\round.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\shape.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\sign.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\sin.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\sqrt.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\math\tan.h">
-      <Filter>extern\rex\core\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\buddy_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\bump_point_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\electric_fence_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\heap_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\single_shot_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\stats_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\system_allocator.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\uninitialized_storage.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\memory\vma.h">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\prng\mt19937.h">
-      <Filter>extern\rex\core\prng</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\serialize\buffer.h">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\serialize\decoder.h">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\serialize\encoder.h">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\serialize\header.h">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\bit.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\construct.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\declval.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\destruct.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\exchange.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\forward.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\move.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\nat.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\pair.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\swap.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\utility\uninitialized.h">
-      <Filter>extern\rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_const.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_cv.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_lvalue_reference.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_pointer.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_rvalue_reference.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_volatile.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\conditional.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\decay.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\detect.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\enable_if.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_array.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_assignable.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_callable.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_enum.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_floating_point.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_function.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_integral.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_lvalue_reference.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_pointer.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_reference.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_referenceable.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_restrict.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_rvalue_reference.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_same.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_signed.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_trivially_copyable.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_trivially_destructible.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_unsigned.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_void.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_all_extents.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_const.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_cv.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_cvref.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_extent.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_pointer.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_reference.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_volatile.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\return_type.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\type_identity.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\traits\underlying_type.h">
-      <Filter>extern\rex\core\traits</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\time\delay.h">
-      <Filter>extern\rex\core\time</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\time\qpc.h">
-      <Filter>extern\rex\core\time</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\time\span.h">
-      <Filter>extern\rex\core\time</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\time\stop_watch.h">
-      <Filter>extern\rex\core\time</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\console\command.h">
-      <Filter>extern\rex\console</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\console\parser.h">
-      <Filter>extern\rex\console</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\console\variable.h">
-      <Filter>extern\rex\console</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\aabb.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\camera.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\compare.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\constants.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\frustum.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\mat3x3.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\mat3x4.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\mat4x4.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\plane.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\quat.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\rectangle.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\sphere.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\transform.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\trig.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\vec2.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\vec3.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\vec4.h">
-      <Filter>extern\rex\math</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\math\noise\perlin.h">
-      <Filter>extern\rex\math\noise</Filter>
-    </ClInclude>
     <ClInclude Include="extern\imgui-node-editor\crude_json.h">
       <Filter>extern\imgui-node-editor</Filter>
     </ClInclude>
@@ -960,20 +378,17 @@
     <ClInclude Include="src\core\Prelude.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\prelude.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_compressed_list.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\core\pp.h">
-      <Filter>extern\rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="extern\rex\include\rx\console\context.h">
-      <Filter>extern\rex\console</Filter>
-    </ClInclude>
     <ClInclude Include="programs\editor\SanityEditor.hpp">
       <Filter>programs\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\RaytracedLightingPass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\fallback\ForwardLightingPass.hpp">
+      <Filter>src\renderer\renderpasses\fallback</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
     <ClInclude Include="programs\editor\ui\EditorUiController.hpp">
       <Filter>programs\editor\ui</Filter>
@@ -1067,9 +482,6 @@
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
@@ -1142,213 +554,6 @@
     <ClCompile Include="src\stats\framerate_tracker.cpp">
       <Filter>src\stats</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\abort.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\assert.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\bitset.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\dynamic_pool.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\format.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\global.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_list.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\log.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\profiler.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\static_pool.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\stream.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\string.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\string_table.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\vector.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\condition_variable.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\mutex.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\recursive_mutex.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\spin_lock.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\thread.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\thread_pool.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\wait_group.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\yield.cpp">
-      <Filter>extern\rex\core\concurrency</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\directory.cpp">
-      <Filter>extern\rex\core\filesystem</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\file.cpp">
-      <Filter>extern\rex\core\filesystem</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\path_resolver.cpp">
-      <Filter>extern\rex\core\filesystem</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\hash\fnv1a.cpp">
-      <Filter>extern\rex\core\hash</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\library\loader.cpp">
-      <Filter>extern\rex\core\library</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\abs.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\ceil.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\cos.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\floor.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\half.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\mod.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\pow.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\round.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\sin.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\sqrt.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\math\tan.cpp">
-      <Filter>extern\rex\core\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\buddy_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\bump_point_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\electric_fence_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\heap_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\single_shot_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\stats_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\system_allocator.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\memory\vma.cpp">
-      <Filter>extern\rex\core\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\prng\mt19937.cpp">
-      <Filter>extern\rex\core\prng</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\serialize\buffer.cpp">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\serialize\decoder.cpp">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\serialize\encoder.cpp">
-      <Filter>extern\rex\core\serialize</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\time\delay.cpp">
-      <Filter>extern\rex\core\time</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\time\qpc.cpp">
-      <Filter>extern\rex\core\time</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\time\span.cpp">
-      <Filter>extern\rex\core\time</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\time\stop_watch.cpp">
-      <Filter>extern\rex\core\time</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\console\command.cpp">
-      <Filter>extern\rex\console</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\console\parser.cpp">
-      <Filter>extern\rex\console</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\console\variable.cpp">
-      <Filter>extern\rex\console</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\aabb.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\frustum.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\mat3x3.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\mat3x4.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\quat.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\sphere.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\vec2.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\vec3.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\vec4.cpp">
-      <Filter>extern\rex\math</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\math\noise\perlin.cpp">
-      <Filter>extern\rex\math\noise</Filter>
-    </ClCompile>
     <ClCompile Include="extern\imgui-node-editor\crude_json.cpp">
       <Filter>extern\imgui-node-editor</Filter>
     </ClCompile>
@@ -1367,14 +572,20 @@
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>
     </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_compressed_list.cpp">
-      <Filter>extern\rex\core</Filter>
-    </ClCompile>
-    <ClCompile Include="extern\rex\include\rx\console\context.cpp">
-      <Filter>extern\rex\console</Filter>
-    </ClCompile>
     <ClCompile Include="programs\editor\SanityEditor.cpp">
       <Filter>programs\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\RaytracedLightingPass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\fallback\ForwardLightingPass.cpp">
+      <Filter>src\renderer\renderpasses\fallback</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
     <ClCompile Include="programs\editor\ui\EditorUiController.cpp">
       <Filter>programs\editor\ui</Filter>
@@ -1398,5 +609,67 @@
     <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis">
       <Filter>extern\imgui-node-editor</Filter>
     </Natvis>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\FillOcean.compute.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\make_transparent_texture.compute.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\shadow.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.vertex.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\terrain.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\terrain.vertex.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\ui.pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\ui.vertex.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\WaterFlow.compute.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\atmospheric_scattering.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\brdf.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\lighting.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\raycasting.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\shadow.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

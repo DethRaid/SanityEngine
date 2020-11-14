@@ -20,7 +20,7 @@ namespace renderer {
 
     RX_LOG("DenoiserPass", logger);
 
-    DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ForwardPass& forward_pass)
+    DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const RaytracedLightingPass& forward_pass)
         : renderer{&renderer_in} {
         ZoneScoped;
 
@@ -36,6 +36,11 @@ namespace renderer {
         create_images_and_framebuffer(render_resolution);
 
         create_material(forward_pass);
+
+        // This render pass doesn't use the renderpass resource usage thing cause idk it seems lame
+        // We do specific things with when we access the resources
+        // Part of the complexity is because I render to an image, then copy it to another image. Not sure how to
+        // refactor it into something that works better with my renderpasses, will figure it out later
     }
 
     void DenoiserPass::render(ID3D12GraphicsCommandList4* commands,
@@ -143,7 +148,7 @@ namespace renderer {
         }
     }
 
-    void DenoiserPass::create_material(const ForwardPass& forward_pass) {
+    void DenoiserPass::create_material(const RaytracedLightingPass& forward_pass) {
         auto& device = renderer->get_render_backend();
 
         const auto scene_color_target_handle = forward_pass.get_color_target_handle();

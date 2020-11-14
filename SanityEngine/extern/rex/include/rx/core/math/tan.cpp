@@ -274,7 +274,7 @@ Float32 atan2(Float32 _x, Float32 _y) {
   if ((m & 2) && iy + (26 << 23) < ix) {
     z = 0.0;
   } else {
-    z = atan(fabs(_y / _x));
+    z = atan(fabs(static_cast<Float32>(_y / _x)));
   }
 
   switch (m) {

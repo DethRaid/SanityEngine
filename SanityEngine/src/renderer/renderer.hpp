@@ -8,8 +8,8 @@
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/render_components.hpp"
+#include "renderer/renderpasses/RaytracedLightingPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "renderer/renderpasses/forward_pass.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/bind_group.hpp"
 #include "rhi/mesh_data_store.hpp"
@@ -81,6 +81,11 @@ namespace renderer {
         void begin_frame(uint64_t frame_count);
 
         void render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
+
+        void execute_all_render_passes(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4>& command_list,
+                                       SynchronizedResourceAccessor<entt::registry>& registry,
+                                       const Rx::Uint32& frame_idx,
+                                       const World& world);
 
         void end_frame() const;
 
@@ -293,6 +298,18 @@ namespace renderer {
 
         void upload_material_data(Uint32 frame_idx);
 
+#pragma region Renderpasses
+        void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list, Uint32 render_pass_index, const Rx::Ptr<RenderPass>& render_pass);
+
+        void issue_post_pass_barriers(ID3D12GraphicsCommandList* command_list,
+                                      Uint32 render_pass_index,
+                                      const Rx::Ptr<RenderPass>& renderpass);
+
+        [[nodiscard]] Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> get_previous_resource_states(Uint32 cur_renderpass_index) const;
+
+        [[nodiscard]] Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> get_next_resource_states(Uint32 cur_renderpass_index) const;
+#pragma endregion
+
 #pragma region 3D Scene
         Rx::Vector<RaytracableGeometry> raytracing_geometries;
 
@@ -309,7 +326,6 @@ namespace renderer {
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void update_lights(entt::registry& registry, Uint32 frame_idx);
-
 #pragma endregion
     };
 } // namespace renderer

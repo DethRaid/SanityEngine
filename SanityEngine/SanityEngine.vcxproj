@@ -83,7 +83,7 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\pix\lib;$(LibraryPath)</LibraryPath>
     <PublicIncludeDirectories>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;</PublicIncludeDirectories>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -127,15 +127,8 @@
     </ResourceCompile>
     <PreBuildEvent>
       <Message>Compile Shaders</Message>
-      <Command>setlocal
-E:\msys64\mingw64\bin\python3.7.exe $(ProjectDir)tools/compile_shaders.py $(ProjectDir)data/shaders $(OutDir)data/shaders
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
+      <Command>python $(ProjectDir)tools/compile_shaders.py $(ProjectDir)data/shaders $(OutDir)data/shaders
+</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -365,6 +358,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
     <None Include="packages.config" />
+    <None Include="tools\compile_shaders.py" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.h" />
@@ -374,186 +368,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\imgui-node-editor\imgui_extra_math.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor.h" />
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h" />
-    <ClInclude Include="extern\rex\include\rx\console\command.h" />
-    <ClInclude Include="extern\rex\include\rx\console\context.h" />
-    <ClInclude Include="extern\rex\include\rx\console\parser.h" />
-    <ClInclude Include="extern\rex\include\rx\console\variable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\abort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\clamp.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\insertion_sort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\max.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\min.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\quick_sort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\algorithm\topological_sort.h" />
-    <ClInclude Include="extern\rex\include\rx\core\array.h" />
-    <ClInclude Include="extern\rex\include\rx\core\assert.h" />
-    <ClInclude Include="extern\rex\include\rx\core\bitset.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concepts\interface.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concepts\no_copy.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concepts\no_move.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\atomic.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\clang\atomic.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\condition_variable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\gcc\atomic.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\mutex.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\recursive_mutex.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\scope_lock.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\scope_unlock.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\spin_lock.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\std\atomic.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\thread.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\thread_pool.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\wait_group.h" />
-    <ClInclude Include="extern\rex\include\rx\core\concurrency\yield.h" />
-    <ClInclude Include="extern\rex\include\rx\core\config.h" />
-    <ClInclude Include="extern\rex\include\rx\core\deferred_function.h" />
-    <ClInclude Include="extern\rex\include\rx\core\dynamic_pool.h" />
-    <ClInclude Include="extern\rex\include\rx\core\event.h" />
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\directory.h" />
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\file.h" />
-    <ClInclude Include="extern\rex\include\rx\core\filesystem\path_resolver.h" />
-    <ClInclude Include="extern\rex\include\rx\core\format.h" />
-    <ClInclude Include="extern\rex\include\rx\core\function.h" />
-    <ClInclude Include="extern\rex\include\rx\core\global.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hash.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hash\fnv1a.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\assume_aligned.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\empty_bases.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\force_inline.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\format.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\likely.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\may_alias.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\no_inline.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\restrict.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\thread.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\unlikely.h" />
-    <ClInclude Include="extern\rex\include\rx\core\hints\unreachable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_compressed_list.h" />
-    <ClInclude Include="extern\rex\include\rx\core\intrusive_list.h" />
-    <ClInclude Include="extern\rex\include\rx\core\library\loader.h" />
-    <ClInclude Include="extern\rex\include\rx\core\log.h" />
-    <ClInclude Include="extern\rex\include\rx\core\map.h" />
-    <ClInclude Include="extern\rex\include\rx\core\markers.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\abs.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\ceil.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\cos.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\floor.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\force_eval.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\half.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\isnan.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\log2.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\mod.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\pow.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\round.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\shape.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\sign.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\sin.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\sqrt.h" />
-    <ClInclude Include="extern\rex\include\rx\core\math\tan.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\aggregate.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\buddy_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\bump_point_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\electric_fence_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\heap_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\single_shot_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\stats_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\system_allocator.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\uninitialized_storage.h" />
-    <ClInclude Include="extern\rex\include\rx\core\memory\vma.h" />
-    <ClInclude Include="extern\rex\include\rx\core\optional.h" />
-    <ClInclude Include="extern\rex\include\rx\core\pp.h" />
-    <ClInclude Include="extern\rex\include\rx\core\prelude.h" />
-    <ClInclude Include="extern\rex\include\rx\core\prng\mt19937.h" />
-    <ClInclude Include="extern\rex\include\rx\core\profiler.h" />
-    <ClInclude Include="extern\rex\include\rx\core\ptr.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\buffer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\decoder.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\encoder.h" />
-    <ClInclude Include="extern\rex\include\rx\core\serialize\header.h" />
-    <ClInclude Include="extern\rex\include\rx\core\set.h" />
-    <ClInclude Include="extern\rex\include\rx\core\source_location.h" />
-    <ClInclude Include="extern\rex\include\rx\core\static_pool.h" />
-    <ClInclude Include="extern\rex\include\rx\core\stream.h" />
-    <ClInclude Include="extern\rex\include\rx\core\string.h" />
-    <ClInclude Include="extern\rex\include\rx\core\string_table.h" />
-    <ClInclude Include="extern\rex\include\rx\core\tagged_ptr.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\delay.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\qpc.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\span.h" />
-    <ClInclude Include="extern\rex\include\rx\core\time\stop_watch.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_const.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_cv.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_lvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_pointer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_rvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\add_volatile.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\conditional.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\decay.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\detect.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\enable_if.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_array.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_assignable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_callable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_enum.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_floating_point.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_function.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_integral.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_lvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_pointer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_referenceable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_restrict.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_rvalue_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_same.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_signed.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_trivially_copyable.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_trivially_destructible.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_unsigned.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\is_void.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_all_extents.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_const.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_cv.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_cvref.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_extent.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_pointer.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_reference.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\remove_volatile.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\return_type.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\type_identity.h" />
-    <ClInclude Include="extern\rex\include\rx\core\traits\underlying_type.h" />
-    <ClInclude Include="extern\rex\include\rx\core\types.h" />
-    <ClInclude Include="extern\rex\include\rx\core\uninitialized.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\bit.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\construct.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\declval.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\destruct.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\exchange.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\forward.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\move.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\nat.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\pair.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\swap.h" />
-    <ClInclude Include="extern\rex\include\rx\core\utility\uninitialized.h" />
-    <ClInclude Include="extern\rex\include\rx\core\vector.h" />
-    <ClInclude Include="extern\rex\include\rx\math\aabb.h" />
-    <ClInclude Include="extern\rex\include\rx\math\camera.h" />
-    <ClInclude Include="extern\rex\include\rx\math\compare.h" />
-    <ClInclude Include="extern\rex\include\rx\math\constants.h" />
-    <ClInclude Include="extern\rex\include\rx\math\frustum.h" />
-    <ClInclude Include="extern\rex\include\rx\math\mat3x3.h" />
-    <ClInclude Include="extern\rex\include\rx\math\mat3x4.h" />
-    <ClInclude Include="extern\rex\include\rx\math\mat4x4.h" />
-    <ClInclude Include="extern\rex\include\rx\math\noise\perlin.h" />
-    <ClInclude Include="extern\rex\include\rx\math\plane.h" />
-    <ClInclude Include="extern\rex\include\rx\math\quat.h" />
-    <ClInclude Include="extern\rex\include\rx\math\rectangle.h" />
-    <ClInclude Include="extern\rex\include\rx\math\sphere.h" />
-    <ClInclude Include="extern\rex\include\rx\math\transform.h" />
-    <ClInclude Include="extern\rex\include\rx\math\trig.h" />
-    <ClInclude Include="extern\rex\include\rx\math\vec2.h" />
-    <ClInclude Include="extern\rex\include\rx\math\vec3.h" />
-    <ClInclude Include="extern\rex\include\rx\math\vec4.h" />
     <ClInclude Include="extern\tracy\imgui\imconfig.h" />
     <ClInclude Include="extern\tracy\imgui\imgui.h" />
     <ClInclude Include="extern\tracy\imgui\imgui_internal.h" />
@@ -606,7 +420,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\renderpass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\forward_pass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\fallback\ForwardLightingPass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\RaytracedLightingPass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\rhi\bind_group.hpp" />
@@ -645,77 +461,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\imgui-node-editor\imgui_canvas.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor.cpp" />
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\command.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\context.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\parser.cpp" />
-    <ClCompile Include="extern\rex\include\rx\console\variable.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\abort.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\assert.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\bitset.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\condition_variable.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\mutex.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\recursive_mutex.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\spin_lock.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\thread.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\thread_pool.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\wait_group.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\concurrency\yield.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\dynamic_pool.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\directory.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\file.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\filesystem\path_resolver.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\format.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\global.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\hash\fnv1a.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_compressed_list.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\intrusive_list.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\library\loader.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\log.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\abs.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\ceil.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\cos.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\floor.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\half.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\mod.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\pow.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\round.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\sin.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\sqrt.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\math\tan.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\aggregate.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\buddy_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\bump_point_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\electric_fence_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\heap_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\single_shot_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\stats_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\system_allocator.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\memory\vma.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\prng\mt19937.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\profiler.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\serialize\buffer.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\serialize\decoder.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\serialize\encoder.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\static_pool.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\stream.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\string.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\string_table.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\delay.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\qpc.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\span.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\time\stop_watch.cpp" />
-    <ClCompile Include="extern\rex\include\rx\core\vector.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\aabb.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\frustum.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\mat3x3.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\mat3x4.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\noise\perlin.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\quat.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\sphere.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\vec2.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\vec3.cpp" />
-    <ClCompile Include="extern\rex\include\rx\math\vec4.cpp" />
     <ClCompile Include="extern\tracy\imgui\imgui.cpp" />
     <ClCompile Include="extern\tracy\imgui\imgui_demo.cpp" />
     <ClCompile Include="extern\tracy\imgui\imgui_draw.cpp" />
@@ -748,9 +493,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\player\flycam_controller.cpp" />
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
+    <ClCompile Include="src\renderer\renderpass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\forward_pass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\fallback\ForwardLightingPass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\RaytracedLightingPass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
     <ClCompile Include="src\renderer\rhi\bind_group.cpp" />
     <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp" />
@@ -780,9 +528,91 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SanityEngine.Codegen\SanityEngine.Codegen.vcxproj">
-      <Project>{5e09e58a-49ef-4ec5-92bc-48006b6a8878}</Project>
+    <ProjectReference Include="..\Rex.Core\Rex.Core.vcxproj">
+      <Project>{6aacae55-e651-4560-b606-7c957c8e2786}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\FillOcean.compute.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\atmospheric_scattering.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\brdf.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\lighting.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\raycasting.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\shadow.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\make_transparent_texture.compute.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\shadow.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\standard.vertex.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\terrain.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\terrain.vertex.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\ui.pixel.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\ui.vertex.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
+    <FxCompile Include="data\shaders\WaterFlow.compute.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
