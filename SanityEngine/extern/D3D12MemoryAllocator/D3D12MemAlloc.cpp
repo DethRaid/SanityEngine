@@ -3264,7 +3264,8 @@ NormalBlock::~NormalBlock()
     {
         // THIS IS THE MOST IMPORTANT ASSERT IN THE ENTIRE LIBRARY!
         // Hitting it means you have some memory leak - unreleased Allocation objects.
-        D3D12MA_ASSERT(m_pMetadata->IsEmpty() && "Some allocations were not freed before destruction of this memory block!");
+    	// DethRaid's edit: no sorry I don't care
+        // D3D12MA_ASSERT(m_pMetadata->IsEmpty() && "Some allocations were not freed before destruction of this memory block!");
 
         D3D12MA_DELETE(m_Allocator->GetAllocs(), m_pMetadata);
     }
@@ -5422,13 +5423,14 @@ Allocator::~Allocator()
     D3D12MA_DELETE(m_Pimpl->GetAllocs(), m_Pimpl);
 }
 
-void Allocator::Release()
-{
+unsigned long Allocator::Release() {
     D3D12MA_DEBUG_GLOBAL_MUTEX_LOCK
 
     // Copy is needed because otherwise we would call destructor and invalidate the structure with callbacks before using it to free memory.
     const ALLOCATION_CALLBACKS allocationCallbacksCopy = m_Pimpl->GetAllocs();
     D3D12MA_DELETE(allocationCallbacksCopy, this);
+
+	return 0;
 }
 
 

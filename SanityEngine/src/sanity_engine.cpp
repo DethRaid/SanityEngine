@@ -21,7 +21,7 @@
 #include "world/generation/gpu_terrain_generation.hpp"
 #include "world/world.hpp"
 
-static Rx::GlobalGroup s_sanity_engine_globals{"SanityEngine"};
+static Rx::GlobalGroup s_sanity_engine_globals{"Sanity.Engine"};
 
 RX_LOG("SanityEngine", logger);
 
@@ -29,17 +29,9 @@ struct AtmosphereMaterial {
     glm::vec3 sun_vector;
 };
 
-static void error_callback(const int error, const char* description) { logger->error("%s (GLFW error %d}", description, error); }
+const char* SanityEngine::executable_directory;
 
-static void key_func(GLFWwindow* window, const int key, int /* scancode */, const int action, const int mods) {
-    auto* input_manager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
-
-    input_manager->on_key(key, action, mods);
-}
-
-Rx::String SanityEngine::executable_directory;
-
-SanityEngine::SanityEngine(const char* executable_directory_in)
+SanityEngine::SanityEngine(const char* executable_directory_in, HWND window, const glm::ivec2& window_size)
     : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
 
@@ -48,34 +40,7 @@ SanityEngine::SanityEngine(const char* executable_directory_in)
     {
         ZoneScoped;
 
-        {
-            ZoneScopedN("glfwInit");
-            if(!glfwInit()) {
-                Rx::abort("Could not initialize GLFW");
-            }
-        }
-
-        glfwSetErrorCallback(error_callback);
-
-        {
-            ZoneScopedN("glfwCreateWindow");
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-            window = glfwCreateWindow(1000, 480, "Sanity Engine", nullptr, nullptr);
-            if(window == nullptr) {
-                Rx::abort("Could not create GLFW window");
-            }
-        }
-
-        logger->info("Created window");
-
-        glfwSetWindowUserPointer(window, input_manager.get());
-
-        // TODO: Only enable this in play-in-editor mode
-        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-        glfwSetKeyCallback(window, key_func);
-
-        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window);
+        renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window, window_size);
         logger->info("Initialized renderer");
 
         asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
@@ -114,13 +79,7 @@ SanityEngine::SanityEngine(const char* executable_directory_in)
     }
 }
 
-SanityEngine::~SanityEngine() {
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
-
-    logger->warning("REMAIN INDOORS");
-}
+SanityEngine::~SanityEngine() { logger->warning("REMAIN INDOORS"); }
 
 void SanityEngine::Tick(bool isVisible) {
     const auto frame_duration = frame_timer.elapsed();
@@ -155,6 +114,8 @@ entt::entity SanityEngine::get_player() const { return player; }
 SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
 World* SanityEngine::get_world() const { return world.get(); }
+
+InputManager* SanityEngine::get_input_manager() const { return input_manager.get(); }
 
 void SanityEngine::create_planetary_atmosphere() {
     auto locked_registry = registry.lock();

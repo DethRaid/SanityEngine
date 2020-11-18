@@ -3,6 +3,7 @@
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
+#include "globals.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/rhi/helpers.hpp"

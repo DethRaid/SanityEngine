@@ -1,5 +1,7 @@
 #include "world.hpp"
 
+
+#include "globals.hpp"
 #include "Tracy.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
@@ -114,7 +116,7 @@ void World::generate_climate_data(TerrainData& terrain_data, const WorldParamete
 
 void World::load_environment_objects(const Rx::String& environment_objects_folder) {
     const auto environment_objects_absolute_directory = Rx::String::format("%s/%s",
-                                                                           SanityEngine::executable_directory,
+                                                                           g_engine->executable_directory,
                                                                            environment_objects_folder);
 
     auto& device = renderer->get_render_backend();

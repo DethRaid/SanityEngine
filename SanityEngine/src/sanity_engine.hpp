@@ -19,12 +19,12 @@
  */
 class [[sanity::runtime_class]] SanityEngine {
 public:
-    static Rx::String executable_directory;
+    static const char* executable_directory;
 
     /*!
      * \brief Initializes the engine, including loading static data
      */
-    explicit SanityEngine(const char* executable_directory_in);
+    explicit SanityEngine(const char* executable_directory_in, HWND window, const glm::ivec2& window_size);
 
     /*!
      * \brief De-initializes the engine
@@ -42,6 +42,8 @@ public:
 
     [[nodiscard]] World* get_world() const;
 
+    [[nodiscard]] InputManager* get_input_manager() const;
+
 private:
     rex::Wrapper rex;
 
@@ -52,10 +54,6 @@ private:
     Rx::Ptr<DearImguiAdapter> imgui_adapter;
 
     FramerateTracker framerate_tracker{1000};
-
-    // Rx::Ptr<BveWrapper> bve;
-
-    GLFWwindow* window;
 
     Rx::Ptr<World> world;
 

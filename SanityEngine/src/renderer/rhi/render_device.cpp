@@ -1,6 +1,5 @@
 #include "render_device.hpp"
 
-#define GLFW_EXPOSE_NATIVE_WIN32
 #include <algorithm>
 
 #include <combaseapi.h>
@@ -8,8 +7,6 @@
 #include <dxgi1_3.h>
 
 #include "D3D12MemAlloc.h"
-#include "GLFW/glfw3.h"
-#include "GLFW/glfw3native.h"
 #include "TracyD3D12.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
@@ -100,8 +97,6 @@ namespace renderer {
         staging_buffers.each_fwd([&](const Buffer& buffer) { buffer.allocation->Release(); });
 
         TracyD3D12Destroy(tracy_context);
-
-        device_allocator->Release();
     }
 
     Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info) const {
@@ -896,7 +891,7 @@ namespace renderer {
         allocator_desc.pDevice = device.Get();
         allocator_desc.pAdapter = adapter.Get();
 
-        const auto result = D3D12MA::CreateAllocator(&allocator_desc, &device_allocator);
+        const auto result = CreateAllocator(&allocator_desc, &device_allocator);
         if(FAILED(result)) {
             Rx::abort("Could not initialize DMA");
         }
@@ -1550,14 +1545,9 @@ namespace renderer {
         logger->error(page_fault_output_to_string(page_faults).data());
     }
 
-    Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window) {
-        auto hwnd = glfwGetWin32Window(window); // NOLINT(readability-qualified-auto)
-
-        glm::ivec2 framebuffer_size{};
-        glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
-
+    Rx::Ptr<RenderBackend> make_render_device(HWND window, glm::ivec2 output_resolution) {
         logger->info("Creating D3D12 backend");
 
-        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size);
+        return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, window, output_resolution);
     }
 } // namespace renderer

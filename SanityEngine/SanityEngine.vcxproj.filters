@@ -590,6 +590,9 @@
     <ClCompile Include="programs\editor\ui\windows\WorldgenParamsEditor.cpp">
       <Filter>programs\editor\ui\windows</Filter>
     </ClCompile>
+    <ClCompile Include="programs\editor\ui\ApplicationWindow.hpp">
+      <Filter>programs\editor\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

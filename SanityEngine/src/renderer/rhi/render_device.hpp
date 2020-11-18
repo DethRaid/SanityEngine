@@ -20,8 +20,6 @@
 #include "rx/core/concurrency/mutex.h"
 #include "settings.hpp"
 
-struct GLFWwindow;
-
 namespace D3D12MA {
     class Allocator;
 }
@@ -212,6 +210,8 @@ namespace renderer {
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
         Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> command_allocators_to_reset_on_begin_frame;
 
+        ComPtr<D3D12MA::Allocator> device_allocator;
+    	
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
         Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> swapchain_rtv_handles;
@@ -230,8 +230,6 @@ namespace renderer {
         Rx::Ptr<DescriptorAllocator> rtv_allocator;
 
         Rx::Ptr<DescriptorAllocator> dsv_allocator;
-
-        D3D12MA::Allocator* device_allocator;
 
         ComPtr<ID3D12RootSignature> standard_root_signature;
 
@@ -378,5 +376,5 @@ namespace renderer {
         void log_dred_report() const;
     };
 
-    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window);
+    [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(HWND window, glm::ivec2 output_resolution);
 } // namespace renderer
