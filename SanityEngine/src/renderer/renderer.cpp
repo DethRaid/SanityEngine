@@ -37,18 +37,20 @@ namespace renderer {
                     INT_MAX,
                     100000);
 
-    Renderer::Renderer(HWND window, glm::ivec2 output_resolution)
+    Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
-		output_framebuffer_size{output_resolution},
-          device{make_render_device(window, output_resolution)},
+          device{make_render_device(window)},
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)},
           forward_pass_handle{nullptr, 0},
           denoiser_pass_handle{nullptr, 0},
           scene_output_pass_handle{nullptr, 0},
           imgui_pass_handle{nullptr, 0} {
 
-        ZoneScoped;
-            	
+        ZoneScoped int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
+
         create_static_mesh_storage();
 
         create_per_frame_buffers();

@@ -1203,7 +1203,7 @@ public:
     This function must be used instead of destructor, which is private.
     There is no reference counting involved.
     */
-    unsigned long Release();
+    void Release();
     
     /// Returns cached options retrieved from D3D12 device.
     const D3D12_FEATURE_DATA_D3D12_OPTIONS& GetD3D12Options() const;

@@ -64,9 +64,14 @@ namespace renderer {
         Float32 time_since_start{0};
     };
 
+    /*!
+     * \brief Renderer class that uses a clustered forward lighting algorithm
+     *
+     * It won't actually do that for a while, but having a strong name is very useful
+     */
     class Renderer {
     public:
-        explicit Renderer(HWND window, glm::ivec2 output_resolution);
+        explicit Renderer(GLFWwindow* window);
 
         /// <summary>
         /// Reloads all the shaders from disk

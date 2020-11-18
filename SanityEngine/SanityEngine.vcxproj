@@ -467,7 +467,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\tracy\TracyClient.cpp" />
     <ClCompile Include="programs\editor\SanityEditor.cpp" />
     <ClCompile Include="programs\editor\ui\ApplicationGui.cpp" />
-    <ClCompile Include="programs\editor\ui\ApplicationWindow.hpp" />
     <ClCompile Include="programs\editor\ui\EditorUiController.cpp" />
     <ClCompile Include="programs\editor\ui\windows\WorldgenParamsEditor.cpp" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />

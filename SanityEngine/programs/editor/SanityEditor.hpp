@@ -2,19 +2,16 @@
 
 #include "rx/core/ptr.h"
 #include "sanity_engine.hpp"
-#include "ui/ApplicationWindow.hpp"
 
 namespace sanity::editor {
     class SanityEditor {
     public:
         SanityEditor();
-
+    	
         void run_until_quit();
-
+    	
     private:
-        Rx::Ptr<ui::ApplicationWindow> main_window;
-
-        Rx::Ptr<SanityEngine> engine;
+        Rx::Ptr<SanityEngine> engine = Rx::make_ptr<SanityEngine>(RX_SYSTEM_ALLOCATOR, R"(E:\Documents\SanityEngine\x64\Debug)");
 
         void create_editor_ui();
     };
