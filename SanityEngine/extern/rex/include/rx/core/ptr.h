@@ -1,7 +1,7 @@
 #ifndef RX_CORE_PTR_H
 #define RX_CORE_PTR_H
 #include "rx/core/markers.h"
-#include "rx/core/assert.h"
+#include "rx/core/rex_assert.h"
 #include "rx/core/hash.h"
 
 #include "rx/core/memory/system_allocator.h"

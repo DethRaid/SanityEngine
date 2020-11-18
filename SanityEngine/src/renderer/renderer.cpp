@@ -40,11 +40,13 @@ namespace renderer {
     Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
-          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)} {
-        ZoneScoped
+          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)},
+          forward_pass_handle{nullptr, 0},
+          denoiser_pass_handle{nullptr, 0},
+          scene_output_pass_handle{nullptr, 0},
+          imgui_pass_handle{nullptr, 0} {
 
-            int width,
-            height;
+        ZoneScoped int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
         output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
@@ -215,7 +217,7 @@ namespace renderer {
                 render_pass->render(command_list.Get(), *registry, frame_idx, world);
 
                 issue_post_pass_barriers(command_list.Get(), i, render_pass);
-            });
+            }
         }
     }
 
@@ -237,6 +239,7 @@ namespace renderer {
             logger->verbose("Created texture %s with index %u", create_info.name, idx);
 
             return {idx};
+        	
         } else {
             return pink_texture_handle;
         }
@@ -312,7 +315,6 @@ namespace renderer {
 
     Image& Renderer::get_image(const TextureHandle handle) const {
         ZoneScoped
-
 
             return *all_images[handle.index];
     }
@@ -425,7 +427,6 @@ namespace renderer {
     void Renderer::create_material_data_buffers() {
         ZoneScoped
 
-
             const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
@@ -535,18 +536,18 @@ namespace renderer {
         render_passes.push_back(Rx::make_ptr<RaytracedLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         forward_pass_handle = RenderpassHandle{&render_passes, 0};
 
-    	
-        render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ForwardPass&>(*render_passes[0])));
+        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
+                                                           *this,
+                                                           output_framebuffer_size,
+                                                           static_cast<RaytracedLightingPass&>(*render_passes[0])));
         denoiser_pass_handle = RenderpassHandle{&render_passes, 1};
-    	
+
         render_passes.push_back(
             Rx::make_ptr<CopySceneOutputToTexturePass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
         scene_output_pass_handle = RenderpassHandle{&render_passes, 2};
-    	
+
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
         imgui_pass_handle = RenderpassHandle{&render_passes, 3};
-    	
     }
 
     void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }
@@ -725,7 +726,7 @@ namespace renderer {
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
 
-            auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
+        auto& material_bind_group_builder = device->get_material_bind_group_builder_for_frame(frame_idx);
         material_bind_group_builder.clear_all_bindings();
 
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));

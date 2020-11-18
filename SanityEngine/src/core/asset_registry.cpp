@@ -1,9 +1,5 @@
 #include "asset_registry.hpp"
 
-#include <filesystem>
-
-#include <combaseapi.h>
-
 #include "rx/core/filesystem/file.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"

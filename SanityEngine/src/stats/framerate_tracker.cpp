@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "rx/core/assert.h"
+#include "rx/core/rex_assert.h"
 #include "rx/core/log.h"
 
 RX_LOG("FramerateTracker", logger);

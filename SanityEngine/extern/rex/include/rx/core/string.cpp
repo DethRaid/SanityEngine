@@ -2,7 +2,7 @@
 #include <stdarg.h> // va_{list, start, end, copy}
 #include <stdio.h> // vsnprintf
 
-#include "rx/core/string.h" // string
+#include "rx/core/rex_string.h" // string
 
 #include "rx/core/utility/swap.h"
 

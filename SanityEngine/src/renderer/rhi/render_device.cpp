@@ -21,7 +21,7 @@
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 #include "settings.hpp"
 #include "windows/windows_helpers.hpp"
 

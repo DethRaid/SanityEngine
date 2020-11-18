@@ -230,7 +230,7 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\algorithm\quick_sort.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\algorithm\topological_sort.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\array.h" />
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\assert.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\rex_assert.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\bitset.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\concepts\interface.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\concepts\no_copy.h" />
@@ -318,7 +318,7 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\source_location.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\static_pool.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\stream.h" />
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\string.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\rex_string.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\string_table.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\tagged_ptr.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\time\delay.h" />
@@ -372,7 +372,7 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\declval.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\destruct.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\exchange.h" />
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\forward.h" />
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\rex_forward.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\move.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\nat.h" />
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\pair.h" />

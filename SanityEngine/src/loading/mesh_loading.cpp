@@ -13,7 +13,7 @@
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 
 RX_LOG("MeshLoading", logger);
 

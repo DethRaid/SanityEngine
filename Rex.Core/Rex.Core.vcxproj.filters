@@ -302,9 +302,6 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\array.h">
       <Filter>rex\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\assert.h">
-      <Filter>rex\core</Filter>
-    </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\bitset.h">
       <Filter>rex\core</Filter>
     </ClInclude>
@@ -369,9 +366,6 @@
       <Filter>rex\core</Filter>
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\stream.h">
-      <Filter>rex\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\string.h">
       <Filter>rex\core</Filter>
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\string_table.h">
@@ -557,9 +551,6 @@
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\aggregate.h">
       <Filter>rex\core\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\allocator.h">
-      <Filter>rex\core\memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\buddy_allocator.h">
       <Filter>rex\core\memory</Filter>
     </ClInclude>
@@ -615,9 +606,6 @@
       <Filter>rex\core\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\exchange.h">
-      <Filter>rex\core\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\forward.h">
       <Filter>rex\core\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\move.h">
@@ -832,6 +820,18 @@
     </ClInclude>
     <ClInclude Include="..\SanityEngine\extern\rex\include\rx\math\noise\perlin.h">
       <Filter>rex\math\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\rex_assert.h">
+      <Filter>rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\utility\rex_forward.h">
+      <Filter>rex\core\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\rex_string.h">
+      <Filter>rex\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SanityEngine\extern\rex\include\rx\core\memory\allocator.h">
+      <Filter>rex\core\memory</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

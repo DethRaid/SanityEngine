@@ -5,6 +5,8 @@
 namespace renderer {
     struct TextureHandle {
         Uint32 index{0};
+
+    	bool operator==(const TextureHandle& other) const = default;
     };
 
     struct StandardMaterialHandle {
@@ -23,3 +25,4 @@ namespace renderer {
         Uint32 index{0};
     };
 } // namespace renderer
+

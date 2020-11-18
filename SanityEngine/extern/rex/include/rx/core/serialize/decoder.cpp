@@ -2,7 +2,7 @@
 
 #include "rx/core/serialize/decoder.h"
 #include "rx/core/stream.h"
-#include "rx/core/assert.h"
+#include "rx/core/rex_assert.h"
 
 namespace Rx::serialize {
 

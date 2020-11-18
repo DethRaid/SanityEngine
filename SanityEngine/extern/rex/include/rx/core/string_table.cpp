@@ -1,7 +1,7 @@
 #include <string.h> // strstr, strlen, memcpy
 
 #include "rx/core/string_table.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 
 #include "rx/core/hints/unlikely.h"
 

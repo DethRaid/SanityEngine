@@ -3,7 +3,7 @@
 #include "rx/core/types.h" // Size
 #include "rx/core/format.h" // format
 #include "rx/core/hash.h" // hash, hash_combine
-#include "rx/core/assert.h" // RX_ASSERT
+#include "rx/core/rex_assert.h" // RX_ASSERT
 
 #include "rx/core/algorithm/min.h" // algorithm::min
 #include "rx/core/algorithm/max.h" // algorithm::max

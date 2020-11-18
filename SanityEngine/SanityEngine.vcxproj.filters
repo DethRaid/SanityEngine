@@ -91,9 +91,6 @@
     <Filter Include="programs\editor">
       <UniqueIdentifier>{f078b971-e91c-4d0a-8f57-9d1bc5760b38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\renderer\renderpasses\fallback">
-      <UniqueIdentifier>{a36ff8a5-c8e9-483c-8315-e3f0a2bcc906}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{0e0342dd-1748-4193-9a06-efe3dade70ce}</UniqueIdentifier>
     </Filter>
@@ -384,9 +381,6 @@
     <ClInclude Include="src\renderer\renderpasses\RaytracedLightingPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\fallback\ForwardLightingPass.hpp">
-      <Filter>src\renderer\renderpasses\fallback</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
@@ -577,9 +571,6 @@
     </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\RaytracedLightingPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
-    </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\fallback\ForwardLightingPass.cpp">
-      <Filter>src\renderer\renderpasses\fallback</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>

@@ -1,6 +1,6 @@
 #ifndef RX_CORE_FILESYSTEM_DIRECTORY_H
 #define RX_CORE_FILESYSTEM_DIRECTORY_H
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 #include "rx/core/function.h"
 #include "rx/core/optional.h"
 

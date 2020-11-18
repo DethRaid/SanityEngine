@@ -2,7 +2,7 @@
 
 #include "rx/core/concurrency/atomic.h"
 #include "rx/core/memory/system_allocator.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 #include "rx/core/profiler.h"
 
 #if defined(RX_PLATFORM_POSIX)

@@ -3,7 +3,7 @@
 #include "rx/core/hints/likely.h"
 #include "rx/core/hints/unlikely.h"
 
-#include "rx/core/assert.h"
+#include "rx/core/rex_assert.h"
 
 namespace Rx::Memory {
 

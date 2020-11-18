@@ -4,7 +4,7 @@
 
 #include "Types.hpp"
 #include "rx/core/stream.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 
 namespace rex {
     class StdoutStream final : public Rx::Stream {

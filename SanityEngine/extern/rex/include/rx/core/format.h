@@ -3,7 +3,7 @@
 #include <float.h> // {DBL,FLT}_MAX_10_EXP
 #include <stdarg.h> // va_list, va_{start, copy, end}
 
-#include "rx/core/utility/forward.h"
+#include "rx/core/utility/rex_forward.h"
 #include "rx/core/traits/remove_cvref.h"
 #include "rx/core/hints/format.h"
 #include "rx/core/types.h" // Size

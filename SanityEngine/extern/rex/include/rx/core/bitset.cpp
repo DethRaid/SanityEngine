@@ -1,7 +1,7 @@
 #include <string.h> // memset
 
 #include "rx/core/bitset.h"
-#include "rx/core/assert.h" // RX_ASSERT
+#include "rx/core/rex_assert.h" // RX_ASSERT
 
 #include "rx/core/memory/system_allocator.h"
 

@@ -1,6 +1,6 @@
 #ifndef RX_CORE_UTILITY_PAIR_H
 #define RX_CORE_UTILITY_PAIR_H
-#include "rx/core/utility/forward.h"
+#include "rx/core/utility/rex_forward.h"
 
 namespace Rx {
 

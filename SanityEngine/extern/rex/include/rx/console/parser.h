@@ -5,8 +5,8 @@
 #include "rx/math/vec3.h"
 #include "rx/math/vec4.h"
 
-#include "rx/core/assert.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_assert.h"
+#include "rx/core/rex_string.h"
 
 #include "rx/core/utility/construct.h"
 #include "rx/core/utility/destruct.h"

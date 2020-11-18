@@ -1,7 +1,7 @@
 #ifndef RX_CORE_LOG_H
 #define RX_CORE_LOG_H
 #include "rx/core/event.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 #include "rx/core/source_location.h"
 
 namespace Rx {

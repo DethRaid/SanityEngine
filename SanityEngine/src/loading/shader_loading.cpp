@@ -3,7 +3,7 @@
 #include <cstdio> // fopen, fseek, ftell, rewind, fread, fclose, SEEK_END
 
 #include "rx/core/log.h"
-#include "rx/core/string.h"
+#include "rx/core/rex_string.h"
 #include "sanity_engine.hpp"
 
 RX_LOG("ShaderLoading", logger);

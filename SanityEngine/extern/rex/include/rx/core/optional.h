@@ -1,6 +1,6 @@
 #ifndef RX_CORE_OPTIONAL_H
 #define RX_CORE_OPTIONAL_H
-#include "rx/core/assert.h" // RX_ASSERT
+#include "rx/core/rex_assert.h" // RX_ASSERT
 #include "rx/core/utility/move.h"
 #include "rx/core/uninitialized.h"
 

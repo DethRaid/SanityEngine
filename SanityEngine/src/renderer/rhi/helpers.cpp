@@ -447,7 +447,7 @@ namespace renderer {
         return {Rx::Utility::move(result_buffer)};
     }
 
-    void upload_data_with_staging_buffer(ID3D12GraphicsCommandList4* commands,
+    void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,
                                          RenderBackend& device,
                                          ID3D12Resource* dst,
                                          const void* src,
