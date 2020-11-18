@@ -19,7 +19,7 @@
  */
 class [[sanity::runtime_class]] SanityEngine {
 public:
-    static Rx::String executable_directory;
+    static const char* executable_directory;
 
     /*!
      * \brief Initializes the engine, including loading static data
@@ -32,15 +32,17 @@ public:
     ~SanityEngine();
 
     /*!
-     * \brief Runs the main loop of the engine. This method eventually returns, after the user is finished playing their game
+     * \brief Executes a single frame, updating game logic and rendering the scene
      */
-    void Tick(bool isVisible);
+    void tick();
 
     [[nodiscard]] entt::entity get_player() const;
 
     [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
 
     [[nodiscard]] World* get_world() const;
+
+	[[nodiscard]] GLFWwindow* get_window() const;
 
 private:
     rex::Wrapper rex;
@@ -77,11 +79,9 @@ private:
     /*!
      * \brief Number of seconds since the engine started running
      */
-    double t = 0;
+    Float32 time_since_application_start = 0;
 
-    const double dt = 0.01; // Physics timestep
-
-    double accumulator = 0;
+    Float32 accumulator = 0;
 
 #pragma region Spawning
     void create_planetary_atmosphere();

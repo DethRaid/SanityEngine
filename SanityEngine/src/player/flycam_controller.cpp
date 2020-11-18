@@ -15,7 +15,7 @@ FlycamController::FlycamController(GLFWwindow* window_in, const entt::entity con
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
 
-void FlycamController::update_player_transform(const Float64 delta_time) {
+void FlycamController::update_player_transform(const Float32 delta_time) {
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
     auto& player_transform = registry->get<TransformComponent>(controlled_entity);
@@ -60,9 +60,9 @@ void FlycamController::update_player_transform(const Float64 delta_time) {
 
     last_mouse_pos = mouse_pos;
 
-    const auto pitch_delta = std::atan2(mouse_delta.y * 0.0001, 1);
-    const auto yaw_delta = std::atan2(mouse_delta.x * 0.0001, 1);
+    const auto pitch_delta = Rx::Math::atan2(mouse_delta.y * 0.0001, 1);
+    const auto yaw_delta = Rx::Math::atan2(mouse_delta.x * 0.0001, 1);
 
-    player_transform.rotation = glm::rotate(player_transform.rotation, pitch_delta, right);
-    player_transform.rotation = glm::rotate(player_transform.rotation, yaw_delta, up);
+    player_transform.rotation = rotate(player_transform.rotation, pitch_delta, right);
+    player_transform.rotation = rotate(player_transform.rotation, yaw_delta, up);
 }

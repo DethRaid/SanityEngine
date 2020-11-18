@@ -16,7 +16,6 @@
 #include "rx/core/log.h"
 #include "stb_image.h"
 #include "ui/fps_display.hpp"
-#include "ui/scripted_ui_panel.hpp"
 #include "ui/ui_components.hpp"
 #include "world/generation/gpu_terrain_generation.hpp"
 #include "world/world.hpp"
@@ -24,6 +23,8 @@
 static Rx::GlobalGroup s_sanity_engine_globals{"SanityEngine"};
 
 RX_LOG("SanityEngine", logger);
+
+RX_CONSOLE_FVAR(simulation_timestep, "Timestep", "Timestep of SanityEngine's simulation, in seconds", 0.0f, 1.0f, 0.0069f);
 
 struct AtmosphereMaterial {
     glm::vec3 sun_vector;
@@ -37,10 +38,9 @@ static void key_func(GLFWwindow* window, const int key, int /* scancode */, cons
     input_manager->on_key(key, action, mods);
 }
 
-Rx::String SanityEngine::executable_directory;
+const char* SanityEngine::executable_directory;
 
-SanityEngine::SanityEngine(const char* executable_directory_in)
-    : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
+SanityEngine::SanityEngine(const char* executable_directory_in) : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
     logger->info("HELLO HUMAN");
 
     executable_directory = executable_directory_in;
@@ -79,8 +79,6 @@ SanityEngine::SanityEngine(const char* executable_directory_in)
         logger->info("Initialized renderer");
 
         asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
-
-        // bve = Rx::make_ptr<BveWrapper>(RX_SYSTEM_ALLOCATOR, renderer->get_render_device());
 
         create_first_person_player();
 
@@ -122,30 +120,33 @@ SanityEngine::~SanityEngine() {
     logger->warning("REMAIN INDOORS");
 }
 
-void SanityEngine::Tick(bool isVisible) {
+void SanityEngine::tick() {
     const auto frame_duration = frame_timer.elapsed();
     frame_timer.restart();
 
-    double frame_duration_seconds = frame_duration.total_seconds();
+    const auto frame_duration_seconds = static_cast<Float32>(frame_duration.total_seconds());
 
     accumulator += frame_duration_seconds;
 
-    while(accumulator >= dt) {
+    while(accumulator >= *simulation_timestep) {
         if(player_controller) {
-            player_controller->update_player_transform(dt);
+            player_controller->update_player_transform(*simulation_timestep);
         }
 
         if(world) {
-            world->tick(dt);
+            world->tick(*simulation_timestep);
         }
 
-        accumulator -= dt;
-        t += dt;
+        accumulator -= *simulation_timestep;
+        time_since_application_start += *simulation_timestep;
     }
 
     // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/
 
-    render();
+	if(glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE) {
+		// Only render when the window is visible
+        render();
+    }
 
     framerate_tracker.add_frame_time(frame_duration_seconds);
 }
@@ -155,6 +156,8 @@ entt::entity SanityEngine::get_player() const { return player; }
 SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
 
 World* SanityEngine::get_world() const { return world.get(); }
+
+GLFWwindow* SanityEngine::get_window() const { return window; }
 
 void SanityEngine::create_planetary_atmosphere() {
     auto locked_registry = registry.lock();

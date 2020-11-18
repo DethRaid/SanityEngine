@@ -67,7 +67,7 @@ World::World(const glm::uvec2& size_in,
 
 World::~World() { delete noise_generator; }
 
-void World::tick(const Float64 delta_time) {
+void World::tick(const Float32 delta_time) {
     ZoneScoped;
 
     {

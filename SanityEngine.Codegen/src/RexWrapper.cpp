@@ -1,7 +1,5 @@
 #include "RexWrapper.hpp"
 
-#include <cstdio>
-
 #if TRACY_ENABLE
 #include "Tracy.hpp"
 #include "rx/core/profiler.h"

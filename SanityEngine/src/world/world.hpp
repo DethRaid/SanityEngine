@@ -81,7 +81,7 @@ public:
 
     void load_environment_objects(const Rx::String& environment_objects_folder);
 
-    void tick(Float64 delta_time);
+    void tick(Float32 delta_time);
 
     [[nodiscard]] Terrain& get_terrain() const;
 

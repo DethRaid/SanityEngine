@@ -17,14 +17,14 @@ public:
                                    entt::entity controlled_entity_in,
                                    SynchronizedResource<entt::registry>& registry_in);
 
-    void update_player_transform(Float64 delta_time);
+    void update_player_transform(Float32 delta_time);
 
     void set_current_terrain(Terrain& terrain_in);
 
 private:
-    Float64 normal_move_speed = 5;
+    Float32 normal_move_speed = 5;
 
-    Float64 jump_velocity = 5;
+    Float32 jump_velocity = 5;
 
     const PlatformInput& input;
 
@@ -40,8 +40,8 @@ private:
 
     Double2 last_cursor_location;
 
-    glm::dvec3 previous_location{};
-    glm::dvec3 velocity{0};
+    glm::vec3 previous_location{};
+    glm::vec3 velocity{0};
 
     Terrain* terrain{nullptr};
     bool is_grounded{true};

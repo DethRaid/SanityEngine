@@ -9,6 +9,7 @@
 #include "adapters/rex/stdout_stream.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/global.h"
+#include "rx/core/log.h"
 
 using namespace tracy;
 
@@ -45,6 +46,10 @@ namespace rex {
         const auto globals_linked = Rx::Globals::link();
         if(!globals_linked) {
             Rx::abort("Could not link the Rex globals");
+        }
+
+        if(!Rx::Log::subscribe(stdout_stream.data())) {
+            Rx::abort("Could not subscribe stdout to Rex's logger");
         }
 
 #if TRACY_ENABLE
