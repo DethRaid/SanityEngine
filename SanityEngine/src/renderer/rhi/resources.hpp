@@ -5,7 +5,7 @@
 #include <d3d12.h>
 
 #include "core/types.hpp"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 namespace D3D12MA {
     class Allocation;

@@ -1,7 +1,7 @@
 #include <string.h> // memcpy
 
 #include "rx/core/config.h" // RX_PLATFORM_*
-#include "rx/core/rex_assert.h" // RX_ASSERT
+#include "rx/core/assert.h" // RX_ASSERT
 
 #if defined(RX_PLATFORM_POSIX)
 #include <dirent.h> // DIR, struct dirent, opendir, readdir, rewinddir, closedir

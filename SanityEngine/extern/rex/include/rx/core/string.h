@@ -1,6 +1,6 @@
 #ifndef RX_CORE_STRING_H
 #define RX_CORE_STRING_H
-#include "rx/core/rex_assert.h" // RX_ASSERT
+#include "rx/core/assert.h" // RX_ASSERT
 #include "rx/core/format.h" // format
 #include "rx/core/vector.h" // vector
 

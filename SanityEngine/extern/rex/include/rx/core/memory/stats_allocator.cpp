@@ -2,7 +2,7 @@
 #include "rx/core/concurrency/scope_lock.h"
 #include "rx/core/algorithm/max.h"
 #include "rx/core/hints/unlikely.h"
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 namespace Rx::Memory {
 

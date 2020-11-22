@@ -1,7 +1,7 @@
 #include <string.h> // strcmp, strerror
 
 #include "rx/core/log.h"
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 #include "rx/core/algorithm/min.h"
 

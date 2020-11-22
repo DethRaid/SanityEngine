@@ -1,7 +1,7 @@
 #ifndef RX_CORE_TAGGED_POINTER_H
 #define RX_CORE_TAGGED_POINTER_H
 #include "rx/core/memory/allocator.h" // alignment
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 namespace Rx {
 

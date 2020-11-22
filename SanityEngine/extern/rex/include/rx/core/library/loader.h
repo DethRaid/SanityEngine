@@ -1,6 +1,6 @@
 #ifndef RX_CORE_LIBRARY_LOADER_H
 #define RX_CORE_LIBRARY_LOADER_H
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 #include "rx/core/optional.h"
 
 namespace Rx::library {

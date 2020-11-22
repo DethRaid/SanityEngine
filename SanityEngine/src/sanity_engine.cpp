@@ -9,7 +9,6 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "glm/ext/quaternion_trigonometric.hpp"
-#include "globals.hpp"
 #include "loading/entity_loading.hpp"
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/abort.h"
@@ -25,6 +24,8 @@ static Rx::GlobalGroup s_sanity_engine_globals{"SanityEngine"};
 RX_LOG("SanityEngine", logger);
 
 RX_CONSOLE_FVAR(simulation_timestep, "Timestep", "Timestep of SanityEngine's simulation, in seconds", 0.0f, 1.0f, 0.0069f);
+
+SanityEngine* g_engine{nullptr};
 
 struct AtmosphereMaterial {
     glm::vec3 sun_vector;

@@ -6,7 +6,7 @@
 #include "resources.hpp"
 #include "rx/core/array.h"
 #include "rx/core/optional.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 #include "rx/core/vector.h"
 
 using Microsoft::WRL::ComPtr;

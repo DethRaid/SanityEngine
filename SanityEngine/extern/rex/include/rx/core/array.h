@@ -1,7 +1,7 @@
 #ifndef RX_CORE_ARRAY_H
 #define RX_CORE_ARRAY_H
 #include "rx/core/types.h"
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 #include "rx/core/utility/rex_forward.h"
 

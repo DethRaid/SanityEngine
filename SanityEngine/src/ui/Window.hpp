@@ -1,5 +1,5 @@
 #pragma once
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 namespace ui {
     /*!

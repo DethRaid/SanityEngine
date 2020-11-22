@@ -1,6 +1,6 @@
 #ifndef RX_CORE_MEMORY_AGGREGATE_H
 #define RX_CORE_MEMORY_AGGREGATE_H
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 #include "rx/core/utility/nat.h"
 
 namespace Rx::Memory {

@@ -398,7 +398,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\SmartEnum.hpp" />
     <ClInclude Include="src\core\types.hpp" />
     <ClInclude Include="src\game\game.hpp" />
-    <ClInclude Include="src\globals.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
     <ClInclude Include="src\input\PlatformInput.hpp" />
     <ClInclude Include="src\loading\entity_loading.hpp" />
@@ -474,7 +473,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\core\asset_registry.cpp" />
     <ClCompile Include="src\core\errors.cpp" />
     <ClCompile Include="src\game\game.cpp" />
-    <ClCompile Include="src\globals.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />
     <ClCompile Include="src\input\PlatformInput.cpp" />
     <ClCompile Include="src\loading\entity_loading.cpp" />

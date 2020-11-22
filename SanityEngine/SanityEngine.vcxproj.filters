@@ -285,9 +285,6 @@
     <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h">
       <Filter>src\noise\FastNoiseSIMD</Filter>
     </ClInclude>
-    <ClInclude Include="src\globals.hpp">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\sanity_engine.hpp">
       <Filter>src</Filter>
     </ClInclude>
@@ -505,9 +502,6 @@
     </ClCompile>
     <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
       <Filter>src\noise\FastNoiseSIMD</Filter>
-    </ClCompile>
-    <ClCompile Include="src\globals.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\sanity_engine.cpp">
       <Filter>src</Filter>

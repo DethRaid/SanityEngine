@@ -1,7 +1,7 @@
 #include <stdio.h> // vsnprintf
 
 #include "rx/core/format.h"
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 namespace Rx {
 

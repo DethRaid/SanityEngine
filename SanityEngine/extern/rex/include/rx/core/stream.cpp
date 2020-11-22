@@ -2,7 +2,7 @@
 #include <string.h> // memmove
 
 #include "rx/core/stream.h"
-#include "rx/core/rex_string.h" // utf16_to_utf8
+#include "rx/core/string.h" // utf16_to_utf8
 #include "rx/core/abort.h"
 
 #include "rx/core/hints/may_alias.h"

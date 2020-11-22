@@ -1,18 +1,17 @@
 #pragma once
 
-#include "rx/core/ptr.h"
 #include "sanity_engine.hpp"
 
 namespace sanity::editor {
     class SanityEditor {
     public:
-        SanityEditor();
-    	
-        void run_until_quit();
-    	
-    private:
-        Rx::Ptr<SanityEngine> engine = Rx::make_ptr<SanityEngine>(RX_SYSTEM_ALLOCATOR, R"(E:\Documents\SanityEngine\x64\Debug)");
+        SanityEditor(const char* executable_directory);
 
-        void create_editor_ui();
+        void run_until_quit() const;
+
+    private:
+        SanityEngine* engine{nullptr};
+
+        void create_editor_ui() const;
     };
 } // namespace sanity::editor

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "json5/json5.hpp"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 namespace environment {
     enum class FootprintClass { OneMeter, TwoMeters, FiveMeters, TenMeters };

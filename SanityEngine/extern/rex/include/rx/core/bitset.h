@@ -1,6 +1,6 @@
 #ifndef RX_CORE_BITSET_H
 #define RX_CORE_BITSET_H
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 #include "rx/core/traits/is_same.h"
 #include "rx/core/traits/return_type.h"

@@ -2,8 +2,8 @@
 #define RX_CONSOLE_VARIABLE_H
 #include <limits.h> // INT_{MIN, MAX}
 
-#include "rx/core/rex_assert.h" // RX_ASSERT
-#include "rx/core/rex_string.h" // string
+#include "rx/core/assert.h" // RX_ASSERT
+#include "rx/core/string.h" // string
 #include "rx/core/global.h" // global
 #include "rx/core/event.h" // event
 

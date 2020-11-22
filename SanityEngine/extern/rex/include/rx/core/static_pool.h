@@ -1,7 +1,7 @@
 #ifndef RX_CORE_STATIC_POOL_H
 #define RX_CORE_STATIC_POOL_H
 #include "rx/core/bitset.h"
-#include "rx/core/rex_assert.h"
+#include "rx/core/assert.h"
 
 #include "rx/core/hints/unlikely.h"
 

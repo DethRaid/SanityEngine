@@ -5,7 +5,7 @@
 #include "core/types.hpp"
 #include "rx/core/map.h"
 #include "rx/core/ptr.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 #include "rx/core/vector.h"
 
 namespace renderer {

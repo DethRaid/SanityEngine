@@ -6,7 +6,7 @@
 #include "rx/core/traits/is_signed.h"
 #include "rx/core/traits/is_unsigned.h"
 
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 #include "rx/core/string_table.h"
 
 namespace Rx {

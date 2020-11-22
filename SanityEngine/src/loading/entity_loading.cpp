@@ -18,7 +18,7 @@
 #include "renderer/rhi/raytracing_structs.hpp"
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 static Assimp::Importer importer;
 

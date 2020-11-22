@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 class UnsupportedType : public std::domain_error {
 public:

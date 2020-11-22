@@ -5,7 +5,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/ext/quaternion_float.hpp"
 #include "rx/core/map.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 // The horus::component generates a GUID handle for the Horus scripting system to use when creating a component
 

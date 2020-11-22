@@ -6,7 +6,7 @@
 #include "rx/core/filesystem/directory.h"
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 #include "types.hpp"
 
 namespace std {

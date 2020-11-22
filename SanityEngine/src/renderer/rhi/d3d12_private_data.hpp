@@ -9,7 +9,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 #include "rx/core/optional.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 #define PRIVATE_DATA_ATTRIBS(type) __uuidof(type), sizeof(type)
 

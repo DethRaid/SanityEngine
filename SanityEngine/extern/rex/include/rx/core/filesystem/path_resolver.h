@@ -1,7 +1,7 @@
 #ifndef RX_CORE_FILESYSTEM_PATH_RESOLVER_H
 #define RX_CORE_FILESYSTEM_PATH_RESOLVER_H
 #include "rx/core/vector.h"
-#include "rx/core/rex_string.h"
+#include "rx/core/string.h"
 
 namespace Rx::Filesystem {
 

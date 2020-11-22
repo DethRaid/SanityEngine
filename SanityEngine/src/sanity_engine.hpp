@@ -99,3 +99,5 @@ private:
     void render();
 #pragma endregion
 };
+
+extern SanityEngine* g_engine;
