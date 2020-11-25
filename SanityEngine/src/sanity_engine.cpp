@@ -119,7 +119,7 @@ SanityEngine::~SanityEngine() {
     logger->warning("REMAIN INDOORS");
 }
 
-void SanityEngine::tick() {
+void SanityEngine::do_frame() {
     frame_timer.stop();
     const auto frame_duration = frame_timer.elapsed();
     frame_timer.start();

@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 }
 
 namespace sanity::editor {
-    SanityEditor::SanityEditor(const char* executable_directory) {}
+    SanityEditor::SanityEditor(const char* executable_directory) { create_application_gui(); }
 
     void SanityEditor::run_until_quit() {
         auto* window = g_engine->get_window();
@@ -27,7 +27,7 @@ namespace sanity::editor {
         while(glfwWindowShouldClose(window) == GLFW_FALSE) {
             glfwPollEvents();
 
-            g_engine->tick();
+            g_engine->do_frame();
         }
     }
 

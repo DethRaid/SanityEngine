@@ -34,7 +34,7 @@ public:
     /*!
      * \brief Executes a single frame, updating game logic and rendering the scene
      */
-    void tick();
+    void do_frame();
 
     [[nodiscard]] entt::entity get_player() const;
 
