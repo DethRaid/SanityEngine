@@ -129,6 +129,9 @@ void SanityEngine::tick() {
     accumulator += frame_duration_seconds;
 
     const auto delta_time = simulation_timestep->get();
+
+    frame_count++;
+	renderer->begin_frame(frame_count);
 	
     while(accumulator >= delta_time) {
         if(player_controller) {
@@ -230,3 +233,6 @@ void SanityEngine::render() {
 
     TracyD3D12Collect(renderer::RenderBackend::tracy_context);
 }
+
+void initialize_g_engine(const char* executable_directory)
+{ g_engine = new SanityEngine{executable_directory}; }

@@ -82,8 +82,10 @@ private:
     Float32 time_since_application_start = 0;
 
     Float32 accumulator = 0;
+	
+    Uint64 frame_count = 0;
 
-#pragma region Spawning
+    #pragma region Spawning
     void create_planetary_atmosphere();
 
     void make_frametime_display();
@@ -101,3 +103,5 @@ private:
 };
 
 extern SanityEngine* g_engine;
+
+void initialize_g_engine(const char* executable_directory);
