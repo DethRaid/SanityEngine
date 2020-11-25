@@ -31,22 +31,24 @@ namespace renderer {
         /*!
          * \brief Describes how this renderpass will use a resource
          *
-         * By default, a resource will end the renderpass with the same states it had when the renderpass began.
-         * However, this is not always desired behavior. This method allows you to specify a different begin and end
-         * state, so that the renderpass itself may transition resource state
+         * \param handle A handle to the texture to mark the usage of
+         * \param states The states of this resource during this renderpass
+         */
+        void add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES states);
+    	
+        /*!
+         * \brief Describes how this renderpass will use a resource
+         *
+         * This method allows you to set a different begin and end state of a resource. You are expected to get the
+         * resource from its begin state to its end state within your override of `render`
          *
          * \param handle A handle to the texture to mark the usage of
          * \param begin_states The states that the resource must be in when this render pass begins
-         * \param end_states The states that this resource will be in when this render pass ende. The default value of
-         * D3D12_RESOURCE_STATE_COMMON means "at the end of this renderpass, the resource will have the same states it
-         * had at the beginning". I feel gross using a valid resource state as my special marker, but also I don't see
-         * a good way to get an invalid resource state? Any magic number I choose might get used by D3D12 itself in
-         * the next update. COMMON, however, is special even to D3D12 - because resources get promoted to the common 
-         * state after a command list executes. I don't expect to ever intentionally use it
+         * \param end_states The states that this resource will be in when this render pass ends
          */
         void add_resource_usage(TextureHandle handle,
                                 D3D12_RESOURCE_STATES begin_states,
-                                D3D12_RESOURCE_STATES end_states = D3D12_RESOURCE_STATE_COMMON);
+                                D3D12_RESOURCE_STATES end_states);
 
     private:
         Rx::Map<TextureHandle, Rx::Pair<D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES>> texture_states;

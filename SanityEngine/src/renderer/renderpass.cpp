@@ -10,12 +10,12 @@ namespace renderer {
         return texture_states;
     }
 
-    void RenderPass::add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states) {
-        if(end_states == D3D12_RESOURCE_STATE_COMMON) {
-            end_states = begin_states;
-        }
+    void RenderPass::add_resource_usage(const TextureHandle handle, const D3D12_RESOURCE_STATES states) {
+        add_resource_usage(handle, states, states);
+    }
 
-        if(auto* usage = texture_states.find(handle)) {
+    void RenderPass::add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states) {
+        if(texture_states.find(handle) != nullptr) {
             logger->error("Texture with handle %d already has known usages", handle.index);
             return;
         }
