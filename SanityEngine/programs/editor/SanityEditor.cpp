@@ -31,8 +31,6 @@ namespace sanity::editor {
             glfwPollEvents();
 
             engine->tick();
-
-            glfwSwapBuffers(window);
         }
     }
 

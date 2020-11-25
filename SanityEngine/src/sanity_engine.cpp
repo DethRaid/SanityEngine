@@ -107,8 +107,6 @@ SanityEngine::SanityEngine(const char* executable_directory_in) : input_manager{
 
         create_environment_object_editor();
 
-        world->tick(0);
-
         frame_timer.start();
     }
 }
@@ -122,24 +120,27 @@ SanityEngine::~SanityEngine() {
 }
 
 void SanityEngine::tick() {
+    frame_timer.stop();
     const auto frame_duration = frame_timer.elapsed();
-    frame_timer.restart();
+    frame_timer.start();
 
     const auto frame_duration_seconds = static_cast<Float32>(frame_duration.total_seconds());
 
     accumulator += frame_duration_seconds;
 
-    while(accumulator >= *simulation_timestep) {
+    const auto delta_time = simulation_timestep->get();
+	
+    while(accumulator >= delta_time) {
         if(player_controller) {
-            player_controller->update_player_transform(*simulation_timestep);
+            player_controller->update_player_transform(delta_time);
         }
 
         if(world) {
-            world->tick(*simulation_timestep);
+            world->tick(delta_time);
         }
 
-        accumulator -= *simulation_timestep;
-        time_since_application_start += *simulation_timestep;
+        accumulator -= delta_time;
+        time_since_application_start += delta_time;
     }
 
     // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/

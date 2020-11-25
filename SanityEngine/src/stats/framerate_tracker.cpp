@@ -11,7 +11,7 @@ FramerateTracker::FramerateTracker(const Uint32 max_num_samples_in) : max_num_sa
     RX_ASSERT(max_num_samples_in > 0, "Must allow more than 0 frame time samples");
 }
 
-void FramerateTracker::add_frame_time(const double frame_time) {
+void FramerateTracker::add_frame_time(const float frame_time) {
     while(frame_times.size() > max_num_samples - 1) {
         frame_times.pop_back();
     }
@@ -42,9 +42,9 @@ void FramerateTracker::log_framerate_stats(const FramerateDisplayMode display_mo
 }
 
 FrametimeStats FramerateTracker::calculate_frametime_stats() const {
-    double min_time{100000000};
-    double max_time{0};
-    double average{0};
+    float min_time{10000000};
+    float max_time{0};
+    float average{0};
 
     for(const auto sample : frame_times) {
         min_time = std::min(sample, min_time);
