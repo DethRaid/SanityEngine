@@ -121,6 +121,7 @@
     <None Include="tools\compile_shaders.py">
       <Filter>tools</Filter>
     </None>
+    <None Include="..\vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\adapters\tracy.hpp">
