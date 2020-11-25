@@ -6,16 +6,13 @@
 #include "rx/core/profiler.h"
 #endif
 
-#include "adapters/rex/stdout_stream.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/global.h"
 #include "rx/core/log.h"
 
 using namespace tracy;
 
-namespace rex {
-    static Rx::Global<StdoutStream> stdout_stream{"system", "stdout_stream"};
-
+namespace rex {    
 #if TRACY_ENABLE
     void SetThreadName(void* /*_context*/, const char* _name) { tracy::SetThreadName(_name); }
 
@@ -48,7 +45,7 @@ namespace rex {
             Rx::abort("Could not link the Rex globals");
         }
 
-        if(!Rx::Log::subscribe(stdout_stream.data())) {
+        if(!Rx::Log::subscribe(&stdout_stream)) {
             Rx::abort("Could not subscribe stdout to Rex's logger");
         }
 

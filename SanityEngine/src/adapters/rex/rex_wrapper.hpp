@@ -3,6 +3,7 @@
 // This include is necessary, even though VS doesn't realize it
 #include "rx/core/memory/system_allocator.h"
 #include "core/Prelude.hpp"
+#include "adapters/rex/stdout_stream.hpp"
 
 namespace rex {
     class Wrapper {
@@ -16,6 +17,9 @@ namespace rex {
         Wrapper& operator=(Wrapper&& old) noexcept = default;
 
         ~Wrapper();
+
+    private:
+        StdoutStream stdout_stream;
     };
 } // namespace rex
 
