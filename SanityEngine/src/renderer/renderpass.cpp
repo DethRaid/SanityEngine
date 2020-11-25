@@ -11,7 +11,7 @@ namespace renderer {
     }
 
     void RenderPass::add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states) {
-        if(end_states = D3D12_RESOURCE_STATE_COMMON) {
+        if(end_states == D3D12_RESOURCE_STATE_COMMON) {
             end_states = begin_states;
         }
 

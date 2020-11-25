@@ -73,6 +73,8 @@ namespace renderer {
      */
     class Renderer {
     public:
+	    inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000};
+    	
         explicit Renderer(GLFWwindow* window);
 
         /// <summary>
@@ -96,9 +98,9 @@ namespace renderer {
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
-        [[nodiscard]] Image& get_image(const Rx::String& image_name) const;
+        [[nodiscard]] Image get_image(const Rx::String& image_name) const;
 
-        [[nodiscard]] Image& get_image(TextureHandle handle) const;
+        [[nodiscard]] Image get_image(TextureHandle handle) const;
 
         void schedule_texture_destruction(const TextureHandle& image_handle);
 

@@ -49,8 +49,7 @@ namespace renderer {
 
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
 
-    RenderBackend::RenderBackend(HWND window_handle, 
-                               const glm::uvec2& window_size)
+    RenderBackend::RenderBackend(HWND window_handle, const glm::uvec2& window_size)
         : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           command_allocators_to_reset_on_begin_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -215,6 +214,9 @@ namespace renderer {
                 break;
         }
 
+    	// yolo
+    	initial_state = D3D12_RESOURCE_STATE_COMMON;
+
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
@@ -225,6 +227,12 @@ namespace renderer {
             logger->error("Could not create image %s", create_info.name);
             return {};
         }
+
+        logger->verbose("Created image %s (%dx%d) with initial state %s",
+                        create_info.name,
+                        create_info.width,
+                        create_info.height,
+                        resource_state_to_string(initial_state));
 
         image->name = create_info.name;
         image->width = static_cast<Uint32>(desc.Width);
@@ -399,10 +407,7 @@ namespace renderer {
         }
 
         ComPtr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0,
-                                           D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                           command_allocator.Get(),
-                                           nullptr, IID_PPV_ARGS(&cmds));
+        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -473,9 +478,9 @@ namespace renderer {
 
     void RenderBackend::end_frame() {
         ZoneScoped;
-        // Transition the swapchain image into the correct format and request presentation
-        transition_swapchain_image_to_presentable();
 
+    	transition_swapchain_image_to_presentable();
+    	
         flush_batched_command_lists();
 
         direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
@@ -797,12 +802,8 @@ namespace renderer {
         };
 
         ComPtr<IDXGISwapChain1> swapchain1;
-        auto hr = factory->CreateSwapChainForHwnd(direct_command_queue.Get(),
-                                                  window_handle,
-                                                  &swapchain_desc,
-                                                  nullptr,
-                                                  nullptr,
-                                                  &swapchain1);
+        auto hr = factory
+                      ->CreateSwapChainForHwnd(direct_command_queue.Get(), window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
         if(FAILED(hr)) {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
@@ -1181,7 +1182,7 @@ namespace renderer {
     }
 
     Rx::Ptr<RenderPipelineState> RenderBackend::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
-                                                                     ID3D12RootSignature& root_signature) {
+                                                                      ID3D12RootSignature& root_signature) {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
         desc.pRootSignature = &root_signature;
@@ -1378,6 +1379,10 @@ namespace renderer {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
             PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
 
+            logger->verbose("Transitioning swapchain image %d to state %s",
+                            cur_swapchain_idx,
+                            resource_state_to_string(D3D12_RESOURCE_STATE_RENDER_TARGET));
+
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT,
@@ -1387,8 +1392,10 @@ namespace renderer {
 
         submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
-
+	
     void RenderBackend::transition_swapchain_image_to_presentable() {
+        ZoneScoped;
+    	
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
@@ -1446,12 +1453,8 @@ namespace renderer {
         alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
         auto buffer = Buffer{};
-        auto result = device_allocator->CreateResource(&alloc_desc,
-                                                       &desc,
-                                                       initial_state,
-                                                       nullptr,
-                                                       &buffer.allocation,
-                                                       IID_PPV_ARGS(&buffer.resource));
+        auto result = device_allocator
+                          ->CreateResource(&alloc_desc, &desc, initial_state, nullptr, &buffer.allocation, IID_PPV_ARGS(&buffer.resource));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 

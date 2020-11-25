@@ -362,7 +362,7 @@ namespace renderer {
         void destroy_resources_for_frame(Uint32 frame_idx);
 
         void transition_swapchain_image_to_render_target();
-
+    	
         void transition_swapchain_image_to_presentable();
 
         void wait_for_frame(uint64_t frame_index);
