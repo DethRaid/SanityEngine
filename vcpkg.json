@@ -11,6 +11,7 @@
         "magic-enum",
         "nethost",
         "nlohmann-json",
+        "sqlite-orm",
         "stb"
     ]
 }
