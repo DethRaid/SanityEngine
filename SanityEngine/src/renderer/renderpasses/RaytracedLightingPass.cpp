@@ -54,6 +54,9 @@ namespace renderer {
         logger->verbose("Created atmospheric pipeline");
 
         create_framebuffer(render_resolution);
+
+    	add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        add_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     RaytracedLightingPass::~RaytracedLightingPass() {
