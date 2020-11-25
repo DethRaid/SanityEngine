@@ -37,10 +37,8 @@ namespace renderer {
 
         create_material(forward_pass);
 
-        // This render pass doesn't use the renderpass resource usage thing cause idk it seems lame
-        // We do specific things with when we access the resources
-        // Part of the complexity is because I render to an image, then copy it to another image. Not sure how to
-        // refactor it into something that works better with my renderpasses, will figure it out later
+        add_resource_usage(accumulation_target_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+        add_resource_usage(denoised_color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
     }
 
     void DenoiserPass::render(ID3D12GraphicsCommandList4* commands,
@@ -53,12 +51,6 @@ namespace renderer {
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DenoiserPass::render");
 
         const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
-        {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commands->ResourceBarrier(1, &barrier);
-        }
 
         {
             const auto
@@ -85,7 +77,7 @@ namespace renderer {
 
         {
             const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
-                                                                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                                 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                                                  D3D12_RESOURCE_STATE_COPY_DEST),
                                             CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
                                                                                  D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -105,13 +97,6 @@ namespace renderer {
             const auto copy_box = D3D12_BOX{.right = denoised_image.width, .bottom = denoised_image.height, .back = 1};
 
             commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &copy_box);
-        }
-
-        {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
-                                                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commands->ResourceBarrier(1, &barrier);
         }
     }
 

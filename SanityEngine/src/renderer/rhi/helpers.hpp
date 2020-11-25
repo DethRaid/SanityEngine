@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include <d3d12.h>
 #include <dxgi.h>
 
@@ -11,8 +9,6 @@
 #include "render_pipeline_state.hpp"
 #include "resources.hpp"
 
-interface ID3D12Object;
-
 namespace renderer {
     struct RenderTargetBeginningAccess;
     struct RenderTargetEndingAccess;
@@ -21,6 +17,7 @@ namespace renderer {
     constexpr uint64_t CPU_FENCE_SIGNALED = 32;
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
     constexpr Uint32 FRAME_COMPLETE = 128;
+	
     DXGI_FORMAT to_dxgi_format(ImageFormat format);
 
     D3D12_BLEND to_d3d12_blend(BlendFactor factor);
@@ -40,6 +37,8 @@ namespace renderer {
     D3D12_RENDER_PASS_BEGINNING_ACCESS to_d3d12_beginning_access(const RenderTargetBeginningAccess& access, bool is_color = true);
 
     D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access);
+
+	Rx::String resource_state_to_string(D3D12_RESOURCE_STATES state);
 
     Rx::String breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
 

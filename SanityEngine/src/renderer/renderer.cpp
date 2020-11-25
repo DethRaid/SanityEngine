@@ -124,6 +124,8 @@ namespace renderer {
                                            const Rx::Ptr<RenderPass>& render_pass) {
         ZoneScoped;
 
+        logger->info("Issuing pre pass barriers for render pass index %d", render_pass_index);
+
         const auto& used_resources = render_pass->get_texture_states();
 
         auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
@@ -131,11 +133,17 @@ namespace renderer {
 
         const auto& previous_resource_usages = get_previous_resource_states(render_pass_index);
 
-        used_resources.each_pair([&](const TextureHandle& texture, const BeginEndState& before_after_state) {
-            auto* resource = get_image(texture).resource.Get();
+        used_resources.each_pair([&](const TextureHandle& texture_handle, const BeginEndState& before_after_state) {
+            auto& image = get_image(texture_handle);
+            auto* resource = image.resource.Get();
 
-            if(const auto* previous_state = previous_resource_usages.find(texture)) {
+            if(const auto* previous_state = previous_resource_usages.find(texture_handle)) {
                 if(*previous_state != before_after_state.first) {
+                    logger->info("Issuing an end-only barrier to transition resource %s from state %s to %s",
+                                 image.name,
+                                 resource_state_to_string(*previous_state),
+                                 resource_state_to_string(before_after_state.first));
+
                     // Only issue a barrier if we need a state transition
                     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *previous_state, before_after_state.first);
 
@@ -146,10 +154,21 @@ namespace renderer {
                 }
 
             } else {
-                // no previous usage so just barrier from COMMON
-                // No split barrier here, that'd be silly
-                const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, before_after_state.first);
-                barriers.push_back(barrier);
+                if(before_after_state.first != D3D12_RESOURCE_STATE_COMMON) {
+                    // no previous usage so just barrier from COMMON
+                    // No split barrier here, that'd be silly
+                	
+                    logger->info("Issuing a transition barrier to transition resource %s from state %s to %s",
+                                 image.name,
+                                 resource_state_to_string(D3D12_RESOURCE_STATE_COMMON),
+                                 resource_state_to_string(before_after_state.first));
+                	
+                    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
+                                                                               D3D12_RESOURCE_STATE_COMMON,
+                                                                               before_after_state.first);
+
+                    barriers.push_back(barrier);
+                }
             }
         });
 
@@ -163,6 +182,8 @@ namespace renderer {
                                             const Rx::Ptr<RenderPass>& render_pass) {
         ZoneScoped;
 
+        logger->info("Issuing post pass barriers for render pass index %d", render_pass_index);
+
         const auto& used_resources = render_pass->get_texture_states();
 
         auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
@@ -170,27 +191,41 @@ namespace renderer {
 
         const auto& next_resource_usages = get_next_resource_states(render_pass_index);
 
-        used_resources.each_pair([&](const TextureHandle& texture, const BeginEndState& before_after_state) {
-            auto* resource = get_image(texture).resource.Get();
+        used_resources.each_pair([&](const TextureHandle& texture_handle, const BeginEndState& before_after_state) {
+            auto& image = get_image(texture_handle);
+            auto* resource = image.resource.Get();
 
-            if(const auto* next_state = next_resource_usages.find(texture)) {
+            if(const auto* next_state = next_resource_usages.find(texture_handle)) {
                 if(before_after_state.second != *next_state) {
+                    logger->info("Issuing a begin-only barrier to transition resource %s from state %s to %s",
+                                 image.name,
+                                 resource_state_to_string(before_after_state.second),
+                                 resource_state_to_string(*next_state));
+
                     // Only issue a barrier if we need a state transition
                     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, before_after_state.second, *next_state);
 
                     // Issue the end of a split barrier cause we're the best
-                    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+                    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
 
                     barriers.push_back(barrier);
                 }
 
             } else {
-                // no previous usage so just barrier from COMMON
-                // No split barrier here, that'd be silly
-                const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
-                                                                           before_after_state.second,
-                                                                           D3D12_RESOURCE_STATE_COMMON);
-                barriers.push_back(barrier);
+                if(before_after_state.second != D3D12_RESOURCE_STATE_COMMON) {
+                    // no previous usage so just barrier from COMMON
+                    // No split barrier here, that'd be silly
+                	
+                    logger->info("Issuing a transition barrier to transition resource %s from state %s to %s",
+                                 image.name,
+                                 resource_state_to_string(before_after_state.second),
+                                 resource_state_to_string(D3D12_RESOURCE_STATE_COMMON));
+                	
+                    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
+                                                                               before_after_state.second,
+                                                                               D3D12_RESOURCE_STATE_COMMON);
+                    barriers.push_back(barrier);
+                }
             }
         });
 
@@ -239,7 +274,7 @@ namespace renderer {
             logger->verbose("Created texture %s with index %u", create_info.name, idx);
 
             return {idx};
-        	
+
         } else {
             return pink_texture_handle;
         }

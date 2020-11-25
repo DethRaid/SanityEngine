@@ -21,6 +21,8 @@
 #include "settings.hpp"
 #include "core/VectorHandle.hpp"
 
+using Microsoft::WRL::ComPtr;
+
 struct GLFWwindow;
 
 namespace renderer {
@@ -81,11 +83,6 @@ namespace renderer {
         void begin_frame(uint64_t frame_count);
 
         void render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
-
-        void execute_all_render_passes(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4>& command_list,
-                                       SynchronizedResourceAccessor<entt::registry>& registry,
-                                       const Rx::Uint32& frame_idx,
-                                       const World& world);
 
         void end_frame() const;
 
@@ -209,11 +206,16 @@ namespace renderer {
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
+        void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
+                                       SynchronizedResourceAccessor<entt::registry>& registry,
+                                       const Uint32& frame_idx,
+                                       const World& world);
+    	
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list, Uint32 render_pass_index, const Rx::Ptr<RenderPass>& render_pass);
 
         void issue_post_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                       Uint32 render_pass_index,
-                                      const Rx::Ptr<RenderPass>& renderpass);
+                                      const Rx::Ptr<RenderPass>& render_pass);
 
         [[nodiscard]] Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> get_previous_resource_states(Uint32 cur_renderpass_index) const;
 

@@ -267,6 +267,67 @@ namespace renderer {
         return d3d12_access;
     }
 
+    Rx::String resource_state_to_string(const D3D12_RESOURCE_STATES state) {
+        switch(state) {
+            case D3D12_RESOURCE_STATE_COMMON:
+                return "COMMON";
+        	
+            case D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER:
+                return "VERTEX_AND_CONSTANT_BUFFER";
+        	
+            case D3D12_RESOURCE_STATE_INDEX_BUFFER:
+                return "INDEX_BUFFER";
+        	
+            case D3D12_RESOURCE_STATE_RENDER_TARGET:
+                return "RENDER_TARGET";
+        	
+            case D3D12_RESOURCE_STATE_UNORDERED_ACCESS:
+                return "UNORDERED_ACCESS";
+        	
+            case D3D12_RESOURCE_STATE_DEPTH_WRITE:
+                return "DEPTH_WRITE";
+        	
+            case D3D12_RESOURCE_STATE_DEPTH_READ:
+                return "DEPTH_READ";
+        	
+            case D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE:
+                return "NON_PIXEL_SHADER_RESOURCE";
+        	
+            case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE:
+                return "PIXEL_SHADER_RESOURCE";
+        	
+            case D3D12_RESOURCE_STATE_STREAM_OUT:
+                return "STREAM_OUT";
+        	
+            case D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT:
+                return "INDIRECT_ARGUMENT";
+        	
+            case D3D12_RESOURCE_STATE_COPY_DEST:
+                return "COPY_DEST";
+        	
+            case D3D12_RESOURCE_STATE_COPY_SOURCE:
+                return "COPY_SOURCE";
+        	
+            case D3D12_RESOURCE_STATE_RESOLVE_DEST:
+                return "RESOLVE_DEST";
+        	
+            case D3D12_RESOURCE_STATE_RESOLVE_SOURCE:
+                return "RESOLVE_SOURCE";
+        	
+            case D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE:
+                return "RAYTRACING_ACCELERATION_STRUCTURE";
+        	
+            case D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE:
+                return "SHADING_RATE_SOURCE";
+        	
+            case D3D12_RESOURCE_STATE_GENERIC_READ:
+                return "GENERIC_READ";
+        	
+            default:
+                return "<UNKNOWN>";
+        }
+    }
+
     Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs) {
         Rx::String breadcrumb_output_string;
 
