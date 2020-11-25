@@ -1,12 +1,16 @@
 #include "ApplicationGui.hpp"
 
-#include "editor/ui/EditorUiController.hpp"
+#include "EditorUiController.hpp"
 #include "imgui/imgui.h"
 
 namespace sanity::editor::ui {
-    ApplicationGui::ApplicationGui(EditorUiController& controller_in) : Window{"Sanity world editor"} {}
+    ApplicationGui::ApplicationGui(EditorUiController& ui_controller_in)
+        : Window{"Sanity world editor"}, ui_controller{&ui_controller_in} {}
 
-    void ApplicationGui::draw_contents() { draw_application_menu(); }
+    void ApplicationGui::draw_contents()
+    {
+	    draw_application_menu();
+    }
 
     void ApplicationGui::draw_application_menu() {
         ImGui::BeginMainMenuBar();

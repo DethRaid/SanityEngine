@@ -1,19 +1,21 @@
 #pragma once
+
+#include "ui_panel.hpp"
 #include "rx/core/string.h"
 
 namespace ui {
     /*!
-     * \brief A floating window. ZOriginal use case includes editing worldgen parameters and other global settings
+     * \brief A floating window
      */
-    class Window {
+    class Window : public UiPanel {
     public:
         bool is_visible = false;
 
         explicit Window(const Rx::String& name_in);
 
-    	virtual ~Window() = default;
+    	~Window() override = default;
 
-        void draw();
+        void draw() override;
 
     protected:
         Rx::String name{};

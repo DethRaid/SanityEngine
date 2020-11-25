@@ -3,6 +3,8 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
+#include "ui/ApplicationGui.hpp"
+#include "ui/ui_components.hpp"
 
 RX_LOG("SanityEditor", logger);
 
@@ -17,9 +19,9 @@ int main(int argc, char** argv) {
 }
 
 namespace sanity::editor {
-    SanityEditor::SanityEditor(const char* executable_directory) { create_editor_ui(); }
+    SanityEditor::SanityEditor(const char* executable_directory) {}
 
-    void SanityEditor::run_until_quit() const {
+    void SanityEditor::run_until_quit() {
         auto* window = g_engine->get_window();
 
         while(glfwWindowShouldClose(window) == GLFW_FALSE) {
@@ -29,8 +31,10 @@ namespace sanity::editor {
         }
     }
 
-    void SanityEditor::create_editor_ui() const {
-        auto& registry_synchronizer = g_engine->get_registry();
-        auto registry = registry_synchronizer.lock();
+    void SanityEditor::create_application_gui() {
+        auto registry = g_engine->get_registry().lock();
+
+        const auto application_gui_entity = registry->create();
+        registry->emplace<::ui::UiComponent>(application_gui_entity, Rx::make_ptr<ui::ApplicationGui>(RX_SYSTEM_ALLOCATOR, ui_controller));
     }
 } // namespace sanity::editor

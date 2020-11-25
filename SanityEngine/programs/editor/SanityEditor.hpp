@@ -1,13 +1,17 @@
 #pragma once
 
+#include "ui/EditorUiController.hpp"
+
 namespace sanity::editor {
     class SanityEditor {
     public:
-        SanityEditor(const char* executable_directory);
+        explicit SanityEditor(const char* executable_directory);
 
-        void run_until_quit() const;
+        void run_until_quit();
 
     private:
-        void create_editor_ui() const;
+        ui::EditorUiController ui_controller;
+
+    	void create_application_gui();
     };
 } // namespace sanity::editor

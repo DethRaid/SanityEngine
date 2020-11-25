@@ -7,7 +7,7 @@ namespace sanity::editor::ui {
 
     class ApplicationGui final : public ::ui::Window{
     public:
-        explicit ApplicationGui(EditorUiController& controller_in);
+        explicit ApplicationGui(EditorUiController& ui_controller_in);
 
         ~ApplicationGui() override = default;
 

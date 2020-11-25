@@ -1,9 +1,5 @@
 #pragma once
 
-#include <entt/fwd.hpp>
-
-#include "ApplicationGui.hpp"
-#include "rx/core/ptr.h"
 #include "windows/WorldgenParamsEditor.hpp"
 
 namespace sanity::editor::ui {
@@ -19,10 +15,6 @@ namespace sanity::editor::ui {
     	void show_worldgen_params_editor();
 
     private:
-        Rx::Ptr<ApplicationGui> main_gui;
-
     	WorldgenParamsEditor worldgen_params_editor{};
-    	
-        void create_application_gui();
     };
 } // namespace sanity::editor::ui
