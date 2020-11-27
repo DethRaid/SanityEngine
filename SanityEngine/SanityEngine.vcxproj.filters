@@ -118,9 +118,6 @@
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl">
       <Filter>extern\imgui-node-editor</Filter>
     </None>
-    <None Include="tools\compile_shaders.py">
-      <Filter>tools</Filter>
-    </None>
     <None Include="..\vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
