@@ -113,9 +113,12 @@ namespace renderer {
                                                                   .StrideInBytes = sizeof(ImDrawVert)};
                     commands->IASetVertexBuffers(0, 1, &vb_view);
 
+                    const auto index_buffer_format = sizeof(ImDrawIdx) == sizeof(unsigned int) ? DXGI_FORMAT_R32_UINT :
+                                                                                                 DXGI_FORMAT_R16_UINT;
+                	
                     const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer.resource->GetGPUVirtualAddress(),
                                                                  .SizeInBytes = index_buffer.size,
-                                                                 .Format = DXGI_FORMAT_R32_UINT};
+                                                                 .Format = index_buffer_format};
                     commands->IASetIndexBuffer(&ib_view);
 
                     commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

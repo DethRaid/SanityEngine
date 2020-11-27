@@ -77,7 +77,6 @@ DearImguiAdapter::DearImguiAdapter(GLFWwindow* window_in, renderer::Renderer& re
     auto& io = ImGui::GetIO();
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable mouse
     io.BackendPlatformName = "Sanity Engine";
-    // io.ImeWindowHandle = glfwGetWin32Window(window);
 
     io.SetClipboardTextFn = set_clipboard_text;
     io.GetClipboardTextFn = get_clipboard_text;
