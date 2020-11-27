@@ -119,6 +119,7 @@
       <Filter>extern\imgui-node-editor</Filter>
     </None>
     <None Include="..\vcpkg.json" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\adapters\tracy.hpp">
