@@ -209,8 +209,8 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
 
             reflection_factor *= brdf(surface_albedo, 0.02, STANDARD_ROUGHNESS, surface_normal, ray_direction, view_vector) / pdf;
 
-            StandardVertex hit_vertex;
-            MaterialData hit_material;
+            StandardVertex hit_vertex = {};
+            MaterialData hit_material = {};
 
             float4 incoming_light = get_incoming_light(ray_origin,
                                                        ray_direction,
