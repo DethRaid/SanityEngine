@@ -1,3 +1,5 @@
+#pragma once
+
 RayDesc cast_shadow_ray(float3 start_location, float t_min, float3 direction, float t_max) {
     // Shadow ray query
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
