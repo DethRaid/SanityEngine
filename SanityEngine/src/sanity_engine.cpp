@@ -25,6 +25,11 @@ RX_LOG("SanityEngine", logger);
 
 RX_CONSOLE_FVAR(simulation_timestep, "Timestep", "Timestep of SanityEngine's simulation, in seconds", 0.0f, 1.0f, 0.0069f);
 
+RX_CONSOLE_BVAR(show_frametime_display,
+                "Debug.ShowFramerateWindow",
+                "Show the Dear ImGUI window that displays SanityEngine's render framerate",
+                false);
+
 SanityEngine* g_engine{nullptr};
 
 struct AtmosphereMaterial {
@@ -85,7 +90,17 @@ SanityEngine::SanityEngine(const char* executable_directory_in) : input_manager{
 
         create_planetary_atmosphere();
 
-        make_frametime_display();
+        if(*show_frametime_display) {
+            make_frametime_display();
+        }
+
+        show_frametime_display->on_change([&](Rx::Console::Variable<bool>& var) {
+            if(var) {
+                make_frametime_display();
+            } else {
+                destroy_frametime_display();
+            }
+        });
 
         imgui_adapter = Rx::make_ptr<DearImguiAdapter>(RX_SYSTEM_ALLOCATOR, window, *renderer);
 
@@ -131,8 +146,8 @@ void SanityEngine::do_frame() {
     const auto delta_time = simulation_timestep->get();
 
     frame_count++;
-	renderer->begin_frame(frame_count);
-	
+    renderer->begin_frame(frame_count);
+
     while(accumulator >= delta_time) {
         if(player_controller) {
             player_controller->update_player_transform(delta_time);
@@ -148,8 +163,8 @@ void SanityEngine::do_frame() {
 
     // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/
 
-	if(glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE) {
-		// Only render when the window is visible
+    if(glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE) {
+        // Only render when the window is visible
         render();
     }
 
@@ -181,10 +196,19 @@ void SanityEngine::create_planetary_atmosphere() {
 }
 
 void SanityEngine::make_frametime_display() {
-    auto locked_registry = registry.lock();
-    const auto frametime_display = locked_registry->create();
-    locked_registry->emplace<ui::UiComponent>(frametime_display,
-                                              Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+    if(!frametime_display_entity) {
+        auto locked_registry = registry.lock();
+        frametime_display_entity = locked_registry->create();
+        locked_registry->emplace<ui::UiComponent>(*frametime_display_entity,
+                                                  Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+    }
+}
+
+void SanityEngine::destroy_frametime_display() {
+    if(frametime_display_entity) {
+        auto locked_registry = registry.lock();
+        locked_registry->destroy(*frametime_display_entity);
+    }
 }
 
 void SanityEngine::create_first_person_player() {
@@ -234,5 +258,4 @@ void SanityEngine::render() {
     TracyD3D12Collect(renderer::RenderBackend::tracy_context);
 }
 
-void initialize_g_engine(const char* executable_directory)
-{ g_engine = new SanityEngine{executable_directory}; }
+void initialize_g_engine(const char* executable_directory) { g_engine = new SanityEngine{executable_directory}; }

@@ -106,6 +106,9 @@
     <Filter Include="programs\editor\ui\windows">
       <UniqueIdentifier>{649d5baf-d092-413f-9276-efee99e97754}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\renderer\diagnostics">
+      <UniqueIdentifier>{2940a3a4-d7b0-4a78-8855-55f41a8de5f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

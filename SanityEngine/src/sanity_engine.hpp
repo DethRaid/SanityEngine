@@ -13,6 +13,7 @@
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
+#include "renderer/diagnostics/RenderingDiagnosticsController.hpp"
 
 /*!
  * \brief Main class for my glorious engine
@@ -88,8 +89,6 @@ private:
     #pragma region Spawning
     void create_planetary_atmosphere();
 
-    void make_frametime_display();
-
     void create_first_person_player();
 
     void create_environment_object_editor();
@@ -100,6 +99,14 @@ private:
 #pragma region Update loop
     void render();
 #pragma endregion
+
+	#pragma region Diagnostics
+    Rx::Optional<entt::entity> frametime_display_entity;
+	
+    void make_frametime_display();
+
+	void destroy_frametime_display();
+	#pragma endregion 
 };
 
 extern SanityEngine* g_engine;
