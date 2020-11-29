@@ -35,8 +35,6 @@ namespace sanity::engine::ui {
     }
 
     void ConsoleWindow::draw_contents() {
-        input_buffer.resize(INPUT_BUFFER_SIZE);
-
         const auto& console_lines = console_context.lines();
         const auto console_output = format_lines(console_lines);
 
@@ -54,9 +52,12 @@ namespace sanity::engine::ui {
         ImGui::InputTextWithHint("", "Command", input_buffer.data(), input_buffer.size());
         ImGui::PopItemWidth();
 
-        if(ImGui::IsKeyPressed(GLFW_KEY_ENTER)) {
+        if(ImGui::IsKeyPressed(GLFW_KEY_ENTER) || ImGui::IsKeyPressed(GLFW_KEY_KP_ENTER)) {
             console_context.execute(input_buffer);
-            input_buffer.clear();
+            if(!input_buffer.is_empty()) {
+                input_buffer.erase(0, input_buffer.size());
+                input_buffer.resize(INPUT_BUFFER_SIZE);
+            }
         }
     }
 

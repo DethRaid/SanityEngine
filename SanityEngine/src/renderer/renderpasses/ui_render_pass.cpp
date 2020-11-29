@@ -1,5 +1,8 @@
 #include "ui_render_pass.hpp"
 
+#include <rx/core/log.h>
+
+
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "imgui/imgui.h"
@@ -10,6 +13,8 @@
 #include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
+    RX_LOG("DearImGuiRenderPass", logger);
+	
     DearImGuiRenderPass::DearImGuiRenderPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 
@@ -145,6 +150,10 @@ namespace sanity::engine::renderer {
                                                          .right = static_cast<LONG>(top_left_x + width),
                                                          .bottom = static_cast<LONG>(top_left_y + height)};
                             commands->RSSetScissorRects(1, &rect);
+
+                        	logger->verbose("Clip rect: x1=%f, y1=%f, x2=%f, y2=%f", clip_rect.x, clip_rect.y, clip_rect.z, clip_rect.w);
+                            logger->verbose("Display pos: x=%f y=%f", pos.x, pos.y);
+                            logger->verbose("Scissor rect: left=%d top=%d right=%d bottom=%d", rect.left, rect.top, rect.right, rect.bottom);
                         }
 
                         commands->DrawIndexedInstanced(cmd.ElemCount, 1, cmd.IdxOffset, 0, 0);
