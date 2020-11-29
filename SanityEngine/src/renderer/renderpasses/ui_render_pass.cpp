@@ -143,17 +143,13 @@ namespace sanity::engine::renderer {
                             const auto pos = draw_data->DisplayPos;
                             const auto top_left_x = clip_rect.x - pos.x;
                             const auto top_left_y = clip_rect.y - pos.y;
-                            const auto width = clip_rect.z - pos.x;
-                            const auto height = clip_rect.w - pos.y;
+                            const auto bottom_right_x = clip_rect.z - pos.x;
+                            const auto bottom_right_y = clip_rect.w - pos.y;
                             const auto rect = D3D12_RECT{.left = static_cast<LONG>(top_left_x),
                                                          .top = static_cast<LONG>(top_left_y),
-                                                         .right = static_cast<LONG>(top_left_x + width),
-                                                         .bottom = static_cast<LONG>(top_left_y + height)};
+                                                         .right = static_cast<LONG>(bottom_right_x),
+                                                         .bottom = static_cast<LONG>(bottom_right_y)};
                             commands->RSSetScissorRects(1, &rect);
-
-                        	logger->verbose("Clip rect: x1=%f, y1=%f, x2=%f, y2=%f", clip_rect.x, clip_rect.y, clip_rect.z, clip_rect.w);
-                            logger->verbose("Display pos: x=%f y=%f", pos.x, pos.y);
-                            logger->verbose("Scissor rect: left=%d top=%d right=%d bottom=%d", rect.left, rect.top, rect.right, rect.bottom);
                         }
 
                         commands->DrawIndexedInstanced(cmd.ElemCount, 1, cmd.IdxOffset, 0, 0);
