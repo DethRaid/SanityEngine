@@ -18,6 +18,9 @@ namespace sanity::engine::ui {
 
         Rx::String input_buffer;
 
+    	// Read from ImGUI
+        float input_widget_height{30};
+
         [[nodiscard]] Rx::Vector<Rx::String> format_lines(const Rx::Vector<Rx::String>& console_lines);
     	
         void draw_contents() override;

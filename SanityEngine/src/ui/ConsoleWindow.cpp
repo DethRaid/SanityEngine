@@ -39,17 +39,17 @@ namespace sanity::engine::ui {
         const auto console_output = format_lines(console_lines);
 
         const auto height = ImGui::GetWindowHeight();
-        const auto console_output_height = height - 30;
+        const auto console_output_height = height - input_widget_height;
 
-        // if(ImGui::BeginChild("#ConsoleOutput", ImVec2{-1, console_output_height})) {
-        //     console_output.each_fwd([](const Rx::String& line) { draw_console_line(line); });
-        // }
-        // ImGui::EndChild();
-
-    	console_output.each_fwd([](const Rx::String& line) { draw_console_line(line); });
+        if(ImGui::BeginChild("#ConsoleOutput", ImVec2{-1, console_output_height - 33})) {
+            console_output.each_fwd([](const Rx::String& line) { draw_console_line(line); });
+        }
+        ImGui::EndChild();
     	
         ImGui::PushItemWidth(-1);
         ImGui::InputTextWithHint("", "Command", input_buffer.data(), input_buffer.size());
+        const auto& input_text_size = ImGui::GetItemRectSize();
+        input_widget_height = input_text_size.y;
         ImGui::PopItemWidth();
 
         if(ImGui::IsKeyPressed(GLFW_KEY_ENTER) || ImGui::IsKeyPressed(GLFW_KEY_KP_ENTER)) {
@@ -78,20 +78,20 @@ namespace sanity::engine::ui {
 
         const char* beg = line.data();
 
-    	// End pointer. Advance it until we find a ^. If we never find one, that's great, just print the whole string! If
-    	// we do, then print everything until the ^
+        // End pointer. Advance it until we find a ^. If we never find one, that's great, just print the whole string! If
+        // we do, then print everything until the ^
         const char* end = line.data();
         do {
-            end = strchr(beg, '^');        	
+            end = strchr(beg, '^');
             if(end == nullptr) {
-            	// No more color specifiers in the string. Print the rest of the string as-is
+                // No more color specifiers in the string. Print the rest of the string as-is
                 ImGui::TextUnformatted(beg, beg + strlen(beg));
                 break;
             }
 
             ImGui::TextUnformatted(beg, end);
             ImGui::SameLine();
-        	
+
             int n = 1; // Skip '^'
             switch(end[n]) {
                 case '^':
@@ -116,27 +116,27 @@ namespace sanity::engine::ui {
                     color = {0.0f, 1.0f, 1.0f, 1.0f};
                     n++;
                     break;
-            	
+
                 case 'y':
                     color = {1.0f, 1.0f, 0.0f, 1.0f};
                     n++;
                     break;
-            	
+
                 case 'm':
                     color = {1.0f, 0.0f, 1.0f, 1.0f};
                     n++;
                     break;
-            	
+
                 case 'k':
                     color = {0.0f, 0.0f, 0.0f, 1.0f};
                     n++;
                     break;
-            	
+
                 case 'w':
                     color = {1.0f, 1.0f, 1.0f, 1.0f};
                     n++;
                     break;
-            	
+
                 case '[':
                     if(const char* term = strchr(end + n, ']')) {
                         Uint32 hex = 0;
@@ -144,7 +144,7 @@ namespace sanity::engine::ui {
                         color = hex_to_color(hex);
                         n = term - end + n + 1; // skip the hex code
                     }
-            		break;
+                    break;
             }
 
             // Swap colors.
