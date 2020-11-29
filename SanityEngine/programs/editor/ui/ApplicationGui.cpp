@@ -5,9 +5,9 @@
 
 namespace sanity::editor::ui {
     ApplicationGui::ApplicationGui(EditorUiController& ui_controller_in)
-        : Window{"Sanity world editor"}, ui_controller{&ui_controller_in} {}
+        : ui_controller{&ui_controller_in} {}
 
-    void ApplicationGui::draw_contents()
+    void ApplicationGui::draw()
     {
 	    draw_application_menu();
     }

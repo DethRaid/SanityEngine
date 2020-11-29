@@ -56,10 +56,9 @@ namespace sanity::engine {
 
         executable_directory = executable_directory_in;
 
-        const auto cvar_ini_filepath = Rx::String::format("%s/%s", executable_directory, *cvar_ini_file_name);
-        const auto loaded_cvars = console_context.load(cvar_ini_filepath.data());
-        if(!loaded_cvars) {
-            Rx::abort("Could not load cvars from file %s (full path %s)", *cvar_ini_file_name, cvar_ini_filepath);
+        const auto cvar_ini_filepath = Rx::String::format("%s/%s", executable_directory, cvar_ini_file_name->get().data());
+        if(!console_context.load(cvar_ini_filepath.data())) {
+            logger->warning("Could not load cvars from file %s (full path %s). Using default values", cvar_ini_file_name->get().data(), cvar_ini_filepath);
         }
 
         {
@@ -136,10 +135,9 @@ namespace sanity::engine {
     }
 
     SanityEngine::~SanityEngine() {
-        const auto cvar_ini_filepath = Rx::String::format("%s/%s", executable_directory, *cvar_ini_file_name);
-        const auto saved_cvars = console_context.save(cvar_ini_filepath.data());
-        if(!saved_cvars) {
-            Rx::abort("Could not save cvars to file %s (full path %s)", *cvar_ini_file_name, cvar_ini_filepath);
+        const auto cvar_ini_filepath = Rx::String::format("%s/%s", executable_directory, cvar_ini_file_name->get().data());
+        if(!console_context.save(cvar_ini_filepath.data())) {
+            Rx::abort("Could not save cvars to file %s (full path %s)", cvar_ini_file_name->get().data(), cvar_ini_filepath);
         }
 
         glfwDestroyWindow(window);

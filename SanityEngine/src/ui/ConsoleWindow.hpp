@@ -18,6 +18,8 @@ namespace sanity::engine::ui {
 
         Rx::String input_buffer;
 
+        [[nodiscard]] Rx::Vector<Rx::String> format_lines(const Rx::Vector<Rx::String>& console_lines);
+    	
         void draw_contents() override;
     };
 } // namespace sanity::engine::ui
