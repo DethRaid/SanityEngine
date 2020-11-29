@@ -6,7 +6,7 @@
 #include "renderer/rhi/raytracing_structs.hpp"
 #include "rx/core/log.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     RX_LOG("BindGroupBuilder", logger);
 
     RootParameter::RootParameter() = default;

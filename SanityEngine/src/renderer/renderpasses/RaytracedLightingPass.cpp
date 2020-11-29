@@ -11,7 +11,7 @@
 #include "rx/core/log.h"
 #include "world/world.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 

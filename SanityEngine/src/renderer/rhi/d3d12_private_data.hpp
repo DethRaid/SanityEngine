@@ -13,7 +13,7 @@
 
 #define PRIVATE_DATA_ATTRIBS(type) __uuidof(type), sizeof(type)
 
-namespace renderer {
+namespace sanity::engine::renderer {
     RX_LOG("\033[32mD3D12PrivateData\033[0m", private_data_logger);
 
     // template <typename T>
@@ -81,7 +81,7 @@ namespace Rx {
     struct FormatNormalize<ID3D12Object*> {
         char scratch[1024];
         const char* operator()(ID3D12Object* value) {
-            const auto& object_name = renderer::get_object_name(value);
+            const auto& object_name = sanity::engine::renderer::get_object_name(value);
             memcpy(scratch, object_name.data(), Algorithm::min(object_name.size(), sizeof(scratch)));
             return scratch;
         }

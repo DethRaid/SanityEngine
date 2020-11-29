@@ -4,7 +4,7 @@
 #include "glm/gtx/quaternion.hpp"
 #include "rhi/render_device.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     void CameraMatrices::copy_matrices_to_previous() {
         previous_view_matrix = view_matrix;
         previous_projection_matrix = projection_matrix;

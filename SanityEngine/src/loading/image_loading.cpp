@@ -12,94 +12,96 @@
 #include "sanity_engine.hpp"
 #include "stb_image.h"
 
-RX_LOG("ImageLoading", logger);
+namespace sanity::engine {
+    RX_LOG("ImageLoading", logger);
 
-constexpr const char* RESOURCES_DIRECTORY = "data/resourcepacks/polyterra/assets/minecraft";
+    constexpr const char* RESOURCES_DIRECTORY = "data/resourcepacks/polyterra/assets/minecraft";
 
-bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
-    ZoneScoped;
+    bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
+        ZoneScoped;
 
-    const auto& exe_directory = SanityEngine::executable_directory;
-    const auto full_image_path = Rx::String::format("%s/%s/%s", exe_directory, RESOURCES_DIRECTORY, image_name);
+        const auto& exe_directory = SanityEngine::executable_directory;
+        const auto full_image_path = Rx::String::format("%s/%s/%s", exe_directory, RESOURCES_DIRECTORY, image_name);
 
-    int raw_width, raw_height, num_components;
+        int raw_width, raw_height, num_components;
 
-    stbi_uc* texture_data;
-    {
-        ZoneScopedN("load_image::stbi_load");
-        texture_data = stbi_load(full_image_path.data(), &raw_width, &raw_height, &num_components, 0);
-        if(texture_data == nullptr) {
-            const auto* failure_reason = stbi_failure_reason();
-            logger->error("Could not load image %s: %s", full_image_path, failure_reason);
-            return false;
-        }
-    }
-
-    width = static_cast<Uint32>(raw_width);
-    height = static_cast<Uint32>(raw_height);
-
-    const auto num_pixels = static_cast<Size>(width * height);
-    pixels.resize(num_pixels * 4);
-
-    if(num_components == 4) {
-        memcpy(pixels.data(), texture_data, num_pixels * 4);
-
-    } else {
-        ZoneScopedN("load_image::alpha_padding");
-        for(Uint32 i = 0; i < num_pixels; i++) {
-            const auto read_idx = i * num_components;
-            const auto write_idx = i * 4;
-
-            pixels[write_idx] = texture_data[read_idx];
-            pixels[write_idx + 1] = texture_data[read_idx + 1];
-            pixels[write_idx + 2] = texture_data[read_idx + 2];
-
-            if(num_components == 4) {
-                pixels[write_idx + 3] = texture_data[read_idx + 3];
-
-            } else {
-                pixels[write_idx + 3] = 0xFF;
+        stbi_uc* texture_data;
+        {
+            ZoneScopedN("load_image::stbi_load");
+            texture_data = stbi_load(full_image_path.data(), &raw_width, &raw_height, &num_components, 0);
+            if(texture_data == nullptr) {
+                const auto* failure_reason = stbi_failure_reason();
+                logger->error("Could not load image %s: %s", full_image_path, failure_reason);
+                return false;
             }
         }
+
+        width = static_cast<Uint32>(raw_width);
+        height = static_cast<Uint32>(raw_height);
+
+        const auto num_pixels = static_cast<Size>(width * height);
+        pixels.resize(num_pixels * 4);
+
+        if(num_components == 4) {
+            memcpy(pixels.data(), texture_data, num_pixels * 4);
+
+        } else {
+            ZoneScopedN("load_image::alpha_padding");
+            for(Uint32 i = 0; i < num_pixels; i++) {
+                const auto read_idx = i * num_components;
+                const auto write_idx = i * 4;
+
+                pixels[write_idx] = texture_data[read_idx];
+                pixels[write_idx + 1] = texture_data[read_idx + 1];
+                pixels[write_idx + 2] = texture_data[read_idx + 2];
+
+                if(num_components == 4) {
+                    pixels[write_idx + 3] = texture_data[read_idx + 3];
+
+                } else {
+                    pixels[write_idx + 3] = 0xFF;
+                }
+            }
+        }
+
+        stbi_image_free(texture_data);
+
+        return true;
     }
 
-    stbi_image_free(texture_data);
+    Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& texture_name, renderer::Renderer& renderer) {
+        ZoneScoped;
 
-    return true;
-}
+        Uint32 width, height;
+        Rx::Vector<Uint8> pixels;
+        const auto success = load_image(texture_name, width, height, pixels);
+        if(!success) {
+            return Rx::nullopt;
+        }
 
-Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& texture_name, renderer::Renderer& renderer) {
-    ZoneScoped;
+        const auto create_info = renderer::ImageCreateInfo{.name = texture_name,
+                                                           .usage = renderer::ImageUsage::SampledImage,
+                                                           .format = renderer::ImageFormat::Rgba8,
+                                                           .width = width,
+                                                           .height = height};
 
-    Uint32 width, height;
-    Rx::Vector<Uint8> pixels;
-    const auto success = load_image(texture_name, width, height, pixels);
-    if(!success) {
-        return Rx::nullopt;
+        auto& device = renderer.get_render_backend();
+        auto commands = device.create_command_list();
+
+        const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
+        renderer::set_object_name(commands.Get(), msg);
+
+        renderer::TextureHandle handle_out;
+
+        {
+            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());
+            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
+
+            handle_out = renderer.create_image(create_info, pixels.data(), commands);
+        }
+
+        device.submit_command_list(Rx::Utility::move(commands));
+
+        return handle_out;
     }
-
-    const auto create_info = renderer::ImageCreateInfo{.name = texture_name,
-                                                       .usage = renderer::ImageUsage::SampledImage,
-                                                       .format = renderer::ImageFormat::Rgba8,
-                                                       .width = width,
-                                                       .height = height};
-
-    auto& device = renderer.get_render_backend();
-    auto commands = device.create_command_list();
-
-    const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
-    renderer::set_object_name(commands.Get(), msg);
-
-    renderer::TextureHandle handle_out;
-
-    {
-        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
-
-        handle_out = renderer.create_image(create_info, pixels.data(), commands);
-    }
-
-    device.submit_command_list(Rx::Utility::move(commands));
-
-    return handle_out;
-}
+} // namespace sanity::engine

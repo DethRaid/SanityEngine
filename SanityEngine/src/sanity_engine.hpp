@@ -7,108 +7,120 @@
 #include "input/input_manager.hpp"
 #include "player/first_person_controller.hpp"
 #include "renderer/renderer.hpp"
+#include "rx/console/context.h"
 #include "rx/core/ptr.h"
 #include "rx/core/time/stop_watch.h"
 #include "settings.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
-#include "renderer/diagnostics/RenderingDiagnosticsController.hpp"
 
-/*!
- * \brief Main class for my glorious engine
- */
-class [[sanity::runtime_class]] SanityEngine {
-public:
-    static const char* executable_directory;
-
+namespace sanity::engine {
     /*!
-     * \brief Initializes the engine, including loading static data
+     * \brief Main class for my glorious engine
      */
-    explicit SanityEngine(const char* executable_directory_in);
+    class [[sanity::runtime_class]] SanityEngine {
+    public:
+        static const char* executable_directory;
 
-    /*!
-     * \brief De-initializes the engine
-     */
-    ~SanityEngine();
+        /*!
+         * \brief Initializes the engine, including loading static data
+         */
+        explicit SanityEngine(const char* executable_directory_in);
 
-    /*!
-     * \brief Executes a single frame, updating game logic and rendering the scene
-     */
-    void do_frame();
+        /*!
+         * \brief De-initializes the engine
+         */
+        ~SanityEngine();
 
-    [[nodiscard]] entt::entity get_player() const;
+        /*!
+         * \brief Executes a single frame, updating game logic and rendering the scene
+         */
+        void do_frame();
 
-    [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
+        [[nodiscard]] entt::entity get_player() const;
 
-    [[nodiscard]] World* get_world() const;
+        [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
 
-	[[nodiscard]] GLFWwindow* get_window() const;
+        [[nodiscard]] World* get_world() const;
 
-private:
-    rex::Wrapper rex;
+        [[nodiscard]] GLFWwindow* get_window() const;
 
-    Rx::Ptr<InputManager> input_manager;
+    private:
+        rex::Wrapper rex;
 
-    Rx::Ptr<renderer::Renderer> renderer;
+        Rx::Ptr<InputManager> input_manager;
 
-    Rx::Ptr<DearImguiAdapter> imgui_adapter;
+        Rx::Ptr<renderer::Renderer> renderer;
 
-    FramerateTracker framerate_tracker{1000};
+        Rx::Ptr<DearImguiAdapter> imgui_adapter;
 
-    // Rx::Ptr<BveWrapper> bve;
+        Rx::Console::Context console_context;
 
-    GLFWwindow* window;
+        FramerateTracker framerate_tracker{1000};
 
-    Rx::Ptr<World> world;
+        // Rx::Ptr<BveWrapper> bve;
 
-    SynchronizedResource<entt::registry> registry;
+        GLFWwindow* window;
 
-    /*!
-     * \brief Entity which represents the player
-     *
-     * SanityEngine is a singleplayer engine, end of story. Makes my life easier and increases my sanity :)
-     */
-    entt::entity player;
+        Rx::Ptr<World> world;
 
-    Rx::Ptr<FirstPersonController> player_controller;
+        SynchronizedResource<entt::registry> registry;
 
-    Rx::Ptr<AssetRegistry> asset_registry;
+        /*!
+         * \brief Entity which represents the player
+         *
+         * SanityEngine is a singleplayer engine, end of story. Makes my life easier and increases my sanity :)
+         */
+        entt::entity player;
 
-    Rx::Time::StopWatch frame_timer;
+        Rx::Ptr<FirstPersonController> player_controller;
 
-    /*!
-     * \brief Number of seconds since the engine started running
-     */
-    Float32 time_since_application_start = 0;
+        Rx::Ptr<AssetRegistry> asset_registry;
 
-    Float32 accumulator = 0;
-	
-    Uint64 frame_count = 0;
+        Rx::Time::StopWatch frame_timer;
 
-    #pragma region Spawning
-    void create_planetary_atmosphere();
+        /*!
+         * \brief Number of seconds since the engine started running
+         */
+        Float32 time_since_application_start = 0;
 
-    void create_first_person_player();
+        Float32 accumulator = 0;
 
-    void create_environment_object_editor();
+        Uint64 frame_count = 0;
 
-    void load_3d_object(const Rx::String& filename);
+        void register_cvar_change_listeners();
+
+#pragma region Spawning
+        void create_planetary_atmosphere();
+
+        void create_first_person_player();
+
+        void create_environment_object_editor();
+
+        void load_3d_object(const Rx::String& filename);
 #pragma endregion
 
 #pragma region Update loop
-    void render();
+        void render();
 #pragma endregion
 
-	#pragma region Diagnostics
-    Rx::Optional<entt::entity> frametime_display_entity;
-	
-    void make_frametime_display();
+#pragma region Diagnostics
+        Rx::Optional<entt::entity> frametime_display_entity;
 
-	void destroy_frametime_display();
-	#pragma endregion 
-};
+        Rx::Optional<entt::entity> console_window_entity;
 
-extern SanityEngine* g_engine;
+        void make_frametime_display();
 
-void initialize_g_engine(const char* executable_directory);
+        void destroy_frametime_display();
+
+        void make_console_window();
+
+        void destroy_console_window();
+#pragma endregion
+    };
+
+    extern SanityEngine* g_engine;
+
+    void initialize_g_engine(const char* executable_directory);
+} // namespace sanity::engine

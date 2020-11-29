@@ -8,100 +8,102 @@
 #include "rx/core/vector.h"
 #include "world/terrain.hpp"
 
-namespace renderer {
-    class Renderer;
-}
-
-/*!
- * \brief Parameters for generating SanityEngine's world
- */
-struct WorldParameters {
-    /*!
-     * \brief RNG seed to use for this world. The same seed will generate exactly the same world every time it's used
-     */
-    Uint32 seed;
+namespace sanity::engine {
+    namespace renderer {
+        class Renderer;
+    }
 
     /*!
-     * \brief Height of the world, in meters
-     *
-     * Height is the distance from the north end to the south end
+     * \brief Parameters for generating SanityEngine's world
      */
-    Uint32 height;
+    struct WorldParameters {
+        /*!
+         * \brief RNG seed to use for this world. The same seed will generate exactly the same world every time it's used
+         */
+        Uint32 seed;
 
-    /*!
-     * \brief Width of the world, in meters
-     */
-    Uint32 width;
+        /*!
+         * \brief Height of the world, in meters
+         *
+         * Height is the distance from the north end to the south end
+         */
+        Uint32 height;
 
-    /*!
-     * \brief Maximum depth of the ocean, in meters
-     */
-    Uint32 max_ocean_depth;
+        /*!
+         * \brief Width of the world, in meters
+         */
+        Uint32 width;
 
-    /*!
-     * \brief Distance from the lowest point in the ocean to the bedrock layer
-     */
-    Uint32 min_terrain_depth_under_ocean;
+        /*!
+         * \brief Maximum depth of the ocean, in meters
+         */
+        Uint32 max_ocean_depth;
 
-    /*
-     * \brief Height above sea level of the tallest possible mountain
-     *
-     * If this value is negative, no land will be above the ocean and you'll be playing in a world that's 100% water. This may or may not be
-     * interesting, so I'm leaving it here an an option
-     */
-    int32_t max_height_above_sea_level;
-};
+        /*!
+         * \brief Distance from the lowest point in the ocean to the bedrock layer
+         */
+        Uint32 min_terrain_depth_under_ocean;
 
-class World {
-public:
-    static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
+        /*
+         * \brief Height above sea level of the tallest possible mountain
+         *
+         * If this value is negative, no land will be above the ocean and you'll be playing in a world that's 100% water. This may or may
+         * not be interesting, so I'm leaving it here an an option
+         */
+        int32_t max_height_above_sea_level;
+    };
 
-    /*!
-     * \brief Created a world with the provided parameters
-     */
-    static Rx::Ptr<World> create(const WorldParameters& params,
-                                 entt::entity player,
-                                 SynchronizedResource<entt::registry>& registry,
-                                 renderer::Renderer& renderer);
+    class World {
+    public:
+        static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
 
-	/*!
-	 * \brief Constructs a new World
-	 *
-	 * Takes ownership of the noise generator. The callee should not destroy the pointed-to object, nor should they use
-	 * the pointer after this World object gets destructed
-	 */
-    explicit World(const glm::uvec2& size_in,
-                   FastNoiseSIMD* noise_generator_in,
-                   entt::entity player_in,
-                   SynchronizedResource<entt::registry>& registry_in,
-                   renderer::Renderer& renderer_in,
-                   Rx::Ptr<Terrain> terrain_in);
+        /*!
+         * \brief Created a world with the provided parameters
+         */
+        static Rx::Ptr<World> create(const WorldParameters& params,
+                                     entt::entity player,
+                                     SynchronizedResource<entt::registry>& registry,
+                                     renderer::Renderer& renderer);
 
-	~World();
+        /*!
+         * \brief Constructs a new World
+         *
+         * Takes ownership of the noise generator. The callee should not destroy the pointed-to object, nor should they use
+         * the pointer after this World object gets destructed
+         */
+        explicit World(const glm::uvec2& size_in,
+                       FastNoiseSIMD* noise_generator_in,
+                       entt::entity player_in,
+                       SynchronizedResource<entt::registry>& registry_in,
+                       renderer::Renderer& renderer_in,
+                       Rx::Ptr<Terrain> terrain_in);
 
-    void load_environment_objects(const Rx::String& environment_objects_folder);
+        ~World();
 
-    void tick(Float32 delta_time);
+        void load_environment_objects(const Rx::String& environment_objects_folder);
 
-    [[nodiscard]] Terrain& get_terrain() const;
+        void tick(Float32 delta_time);
 
-private:
-    /*!
-     * \brief Runs the Sanity Engine's climate model on the provided world data
-     */
-    static void generate_climate_data(TerrainData& heightmap, const WorldParameters& params, renderer::Renderer& renderer);
+        [[nodiscard]] Terrain& get_terrain() const;
 
-    glm::uvec2 size;
+    private:
+        /*!
+         * \brief Runs the Sanity Engine's climate model on the provided world data
+         */
+        static void generate_climate_data(TerrainData& heightmap, const WorldParameters& params, renderer::Renderer& renderer);
 
-    FastNoiseSIMD* noise_generator;
+        glm::uvec2 size;
 
-    entt::entity player;
+        FastNoiseSIMD* noise_generator;
 
-    SynchronizedResource<entt::registry>* registry;
+        entt::entity player;
 
-    entt::observer observer{};
+        SynchronizedResource<entt::registry>* registry;
 
-    renderer::Renderer* renderer;
+        entt::observer observer{};
 
-    Rx::Ptr<Terrain> terrain;
-};
+        renderer::Renderer* renderer;
+
+        Rx::Ptr<Terrain> terrain;
+    };
+} // namespace sanity::engine

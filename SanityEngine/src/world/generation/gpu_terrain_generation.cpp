@@ -8,7 +8,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "world/terrain.hpp"
 
-namespace terraingen {
+namespace sanity::engine::terraingen {
     RX_LOG("Terraingen", logger);
 
     RX_CONSOLE_IVAR(cvar_num_water_iterations,

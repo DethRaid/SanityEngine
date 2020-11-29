@@ -4,7 +4,7 @@
 #include "resources.hpp"
 #include "rx/core/ptr.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     constexpr Uint32 OPAQUE_OBJECT_BIT = 0x01;
     constexpr Uint32 TRANSPARENT_OBJECT_BIT = 0x02;
     constexpr Uint32 LIGHT_SOURCE_BIT = 0x10;

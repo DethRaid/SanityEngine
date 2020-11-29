@@ -5,7 +5,7 @@
 
 RX_LOG("RenderPass", logger);
 
-namespace renderer {
+namespace sanity::engine::renderer {
     const Rx::Map<TextureHandle, Rx::Pair<D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES>>& RenderPass::get_texture_states() const {
         return texture_states;
     }

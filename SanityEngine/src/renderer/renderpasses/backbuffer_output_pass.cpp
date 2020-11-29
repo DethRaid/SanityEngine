@@ -8,7 +8,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct BackbufferOutputMaterial {
         TextureHandle scene_output_image;
     };

@@ -15,7 +15,7 @@ struct StandardVertex {
     Vec2f texcoord{};
 };
 
-namespace renderer {
+namespace sanity::engine::renderer {
     class ResourceCommandList;
     class RenderBackend;
 

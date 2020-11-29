@@ -8,7 +8,7 @@
 #include "rx/core/string.h"
 #include "rx/core/vector.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct RaytracingScene;
     struct Buffer;
     struct Image;

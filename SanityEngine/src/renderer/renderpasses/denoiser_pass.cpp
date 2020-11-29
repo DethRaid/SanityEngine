@@ -9,7 +9,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
     constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
 
@@ -76,17 +76,7 @@ namespace renderer {
 
         const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
 
-        {
-            logger->verbose("Issuing a barrier to transition resource %s from %s to %s",
-                            accumulation_image.name,
-                            resource_state_to_string(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-                            resource_state_to_string(D3D12_RESOURCE_STATE_COPY_DEST));
-
-            logger->verbose("Issuing a barrier to transition resource %s from %s to %s",
-                            denoised_image.name,
-                            resource_state_to_string(D3D12_RESOURCE_STATE_RENDER_TARGET),
-                            resource_state_to_string(D3D12_RESOURCE_STATE_COPY_SOURCE));
-        	
+        {        	
             const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
                                                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                                                  D3D12_RESOURCE_STATE_COPY_DEST),

@@ -7,7 +7,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace renderer {
+namespace sanity::engine::renderer {
     class DescriptorAllocator {
     public:
         DescriptorAllocator(ComPtr<ID3D12DescriptorHeap> heap_in, UINT descriptor_size_in);

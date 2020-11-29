@@ -11,7 +11,7 @@ namespace renderer {
     class Renderer;
 } // namespace renderer
 
-namespace terraingen {
+namespace sanity::engine::terraingen {
     /*!
      * \brief Creates the PSOs that will be used for terrain generation
      */

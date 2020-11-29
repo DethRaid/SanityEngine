@@ -25,7 +25,7 @@
 #include "settings.hpp"
 #include "windows/windows_helpers.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     RX_LOG("\033[32mRenderDevice\033[0m", logger);
 
     RX_CONSOLE_BVAR(
@@ -1378,10 +1378,6 @@ namespace renderer {
         {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
             PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
-
-            logger->verbose("Transitioning swapchain image %d to state %s",
-                            cur_swapchain_idx,
-                            resource_state_to_string(D3D12_RESOURCE_STATE_RENDER_TARGET));
 
             auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,

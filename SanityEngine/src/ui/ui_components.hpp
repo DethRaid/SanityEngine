@@ -3,10 +3,10 @@
 #include "rx/core/ptr.h"
 #include "ui_panel.hpp"
 
-namespace ui {
+namespace sanity::engine::ui {
     struct UiComponent {
         RX_MARK_NO_COPY(UiComponent);
-    	
+
         Rx::Ptr<UiPanel> panel;
 
         UiComponent() = default;
@@ -19,4 +19,4 @@ namespace ui {
 
         explicit UiComponent(Rx::Ptr<UiPanel> panel_in);
     };
-} // namespace ui
+} // namespace sanity::engine::ui

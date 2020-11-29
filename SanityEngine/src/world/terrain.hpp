@@ -7,174 +7,176 @@
 #include "rx/core/map.h"
 #include "rx/core/vector.h"
 
-struct WorldParameters;
+namespace sanity::engine {
+    struct WorldParameters;
 
-struct TerrainSize {
-    Uint32 max_latitude;
-    Uint32 max_longitude;
-    Uint32 min_terrain_height;
-    Uint32 max_terrain_height;
-};
+    struct TerrainSize {
+        Uint32 max_latitude;
+        Uint32 max_longitude;
+        Uint32 min_terrain_height;
+        Uint32 max_terrain_height;
+    };
 
-struct TerrainSamplerParams {
-    double latitude{};
-    double longitude{};
-    Float32 spread{0.5};
-    Float32 spread_reduction_rate{spread};
-};
+    struct TerrainSamplerParams {
+        double latitude{};
+        double longitude{};
+        Float32 spread{0.5};
+        Float32 spread_reduction_rate{spread};
+    };
 
-struct TerrainTile {
-    enum class LoadingPhase { GeneratingHeightmap, GeneratingMesh, Complete };
+    struct TerrainTile {
+        enum class LoadingPhase { GeneratingHeightmap, GeneratingMesh, Complete };
 
-    LoadingPhase loading_phase{LoadingPhase::GeneratingHeightmap};
+        LoadingPhase loading_phase{LoadingPhase::GeneratingHeightmap};
 
-    Rx::Vector<Rx::Vector<Float32>> heightmap{};
+        Rx::Vector<Rx::Vector<Float32>> heightmap{};
 
-    Vec2i coord{};
+        Vec2i coord{};
 
-    entt::entity entity{};
-};
+        entt::entity entity{};
+    };
 
-struct TerrainTileMeshCreateInfo {
-    Vec2i tilecoord;
+    struct TerrainTileMeshCreateInfo {
+        Vec2i tilecoord;
 
-    entt::entity entity;
+        entt::entity entity;
 
-    Rx::Vector<StandardVertex> vertices;
+        Rx::Vector<StandardVertex> vertices;
 
-    Rx::Vector<Uint32> indices;
-};
+        Rx::Vector<Uint32> indices;
+    };
 
-class Terrain;
+    class Terrain;
 
-struct TerrainTileComponent {
-    Vec2i coords;
+    struct TerrainTileComponent {
+        Vec2i coords;
 
-    Terrain* terrain;
-};
+        Terrain* terrain;
+    };
 
-struct TerrainData {
-    TerrainSize size;
+    struct TerrainData {
+        TerrainSize size;
 
-    Rx::Vector<Float32> heightmap;
+        Rx::Vector<Float32> heightmap;
+
+        /*!
+         * \brief Handle to a texture that has the raw height values for the terrain
+         */
+        renderer::TextureHandle heightmap_handle;
+
+        /*!
+         * \brief Handle to a texture that stores information about water on the surface
+         *
+         * The depth of the water is in the red channel of this texture. This is the depth above the terrain - 0 means no water, something
+         * else means some water
+         *
+         * We don't need to store any directions - lakes don't flow, the ocean currents are well-defined, rivers get their flow direction
+         * from the slope of the terrain beneath them
+         */
+        renderer::TextureHandle water_depth_handle;
+
+        /*!
+         * \brief Handle to a texture that stores wind information
+         *
+         * The RGB of this channel is the direction of the wind, the length of that vector is the wind strength in kmph
+         */
+        renderer::TextureHandle wind_map_handle;
+
+        /*!
+         * \brief Handle to a texture that stores the absolute humidity on each part of the world
+         */
+        renderer::TextureHandle humidity_map_handle;
+
+        /*!
+         * \brief Handle to a texture that stores the soil moisture percentage
+         */
+        renderer::TextureHandle soil_moisture_handle;
+    };
 
     /*!
-     * \brief Handle to a texture that has the raw height values for the terrain
-     */
-    renderer::TextureHandle heightmap_handle;
-
-    /*!
-     * \brief Handle to a texture that stores information about water on the surface
+     * \brief Best terrain class in the entire multiverse
      *
-     * The depth of the water is in the red channel of this texture. This is the depth above the terrain - 0 means no water, something
-     * else means some water
-     *
-     * We don't need to store any directions - lakes don't flow, the ocean currents are well-defined, rivers get their flow direction
-     * from the slope of the terrain beneath them
+     * The terrain has a resolution of one meter. This terrain class is made for a game that uses voxels with a resolution of one meter, so
+     * everything should be groovy
      */
-    renderer::TextureHandle water_depth_handle;
+    class Terrain {
+    public:
+        // TODO: Make this configurable
+        static constexpr Uint32 TILE_SIZE = 64;
 
-    /*!
-     * \brief Handle to a texture that stores wind information
-     *
-     * The RGB of this channel is the direction of the wind, the length of that vector is the wind strength in kmph
-     */
-    renderer::TextureHandle wind_map_handle;
+        [[nodiscard]] static TerrainData generate_terrain(FastNoiseSIMD& noise_generator,
+                                                          const WorldParameters& params,
+                                                          renderer::Renderer& renderer);
 
-    /*!
-     * \brief Handle to a texture that stores the absolute humidity on each part of the world
-     */
-    renderer::TextureHandle humidity_map_handle;
+        [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Double3& position);
 
-    /*!
-     * \brief Handle to a texture that stores the soil moisture percentage
-     */
-    renderer::TextureHandle soil_moisture_handle;
-};
+        explicit Terrain(const TerrainData& data,
+                         renderer::Renderer& renderer_in,
+                         FastNoiseSIMD& noise_generator_in,
+                         SynchronizedResource<entt::registry>& registry_in);
 
-/*!
- * \brief Best terrain class in the entire multiverse
- *
- * The terrain has a resolution of one meter. This terrain class is made for a game that uses voxels with a resolution of one meter, so
- * everything should be groovy
- */
-class Terrain {
-public:
-    // TODO: Make this configurable
-    static constexpr Uint32 TILE_SIZE = 64;
+        void tick(Float64 delta_time);
 
-    [[nodiscard]] static TerrainData generate_terrain(FastNoiseSIMD& noise_generator,
-                                                      const WorldParameters& params,
-                                                      renderer::Renderer& renderer);
+        void load_terrain_around_player(const TransformComponent& player_transform);
 
-    [[nodiscard]] static Vec2i get_coords_of_tile_containing_position(const Double3& position);
+        [[nodiscard]] Float32 get_terrain_height(const Double2& location);
 
-    explicit Terrain(const TerrainData& data,
-                     renderer::Renderer& renderer_in,
-                     FastNoiseSIMD& noise_generator_in,
-                     SynchronizedResource<entt::registry>& registry_in);
+        [[nodiscard]] Vec3f get_normal_at_location(const Double2& location);
 
-    void tick(Float64 delta_time);
+        [[nodiscard]] Rx::Concurrency::Atomic<Uint32>& get_num_active_tilegen_tasks();
 
-    void load_terrain_around_player(const TransformComponent& player_transform);
+    private:
+        renderer::Renderer* renderer;
 
-    [[nodiscard]] Float32 get_terrain_height(const Double2& location);
+        Rx::Concurrency::Mutex noise_generator_mutex;
+        FastNoiseSIMD* noise_generator;
 
-    [[nodiscard]] Vec3f get_normal_at_location(const Double2& location);
+        SynchronizedResource<entt::registry>* registry;
 
-    [[nodiscard]] Rx::Concurrency::Atomic<Uint32>& get_num_active_tilegen_tasks();
+        Rx::Concurrency::Atomic<Uint32> num_active_tilegen_tasks;
 
-private:
-    renderer::Renderer* renderer;
+        Rx::Concurrency::Mutex loaded_terrain_tiles_mutex;
+        Rx::Map<Vec2i, TerrainTile> loaded_terrain_tiles;
 
-    Rx::Concurrency::Mutex noise_generator_mutex;
-    FastNoiseSIMD* noise_generator;
+        SynchronizedResource<Rx::Vector<TerrainTileMeshCreateInfo>> tile_mesh_create_infos;
 
-    SynchronizedResource<entt::registry>* registry;
+        renderer::StandardMaterialHandle terrain_material{1};
 
-    Rx::Concurrency::Atomic<Uint32> num_active_tilegen_tasks;
+        Uint32 max_latitude{};
 
-    Rx::Concurrency::Mutex loaded_terrain_tiles_mutex;
-    Rx::Map<Vec2i, TerrainTile> loaded_terrain_tiles;
+        Uint32 max_longitude{};
 
-    SynchronizedResource<Rx::Vector<TerrainTileMeshCreateInfo>> tile_mesh_create_infos;
+        Uint32 min_terrain_height;
 
-    renderer::StandardMaterialHandle terrain_material{1};
+        Uint32 max_terrain_height;
 
-    Uint32 max_latitude{};
+        static void generate_heightmap(FastNoiseSIMD& noise_generator,
+                                       const WorldParameters& params,
+                                       renderer::Renderer& renderer,
+                                       const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                       TerrainData& data,
+                                       unsigned total_pixels_in_maps);
 
-    Uint32 max_longitude{};
+        static void place_water_sources(const WorldParameters& params,
+                                        renderer::Renderer& renderer,
+                                        const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                        TerrainData& data,
+                                        unsigned total_pixels_in_maps);
 
-    Uint32 min_terrain_height;
+        static void compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
 
-    Uint32 max_terrain_height;
+        void load_terrain_textures_and_create_material();
 
-    static void generate_heightmap(FastNoiseSIMD& noise_generator,
-                                   const WorldParameters& params,
-                                   renderer::Renderer& renderer,
-                                   const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                   TerrainData& data,
-                                   unsigned total_pixels_in_maps);
+        void generate_tile(const Vec2i& tilecoord);
 
-    static void place_water_sources(const WorldParameters& params,
-                                    renderer::Renderer& renderer,
-                                    const ComPtr<ID3D12GraphicsCommandList4>& commands,
-                                    TerrainData& data,
-                                    unsigned total_pixels_in_maps);
+        /*!
+         * \brief Generates a terrain heightmap of a specific size
+         *
+         * \param top_left World x and y coordinates of the top left of this terrain heightmap
+         * \param size Size in world units of this terrain heightmap
+         */
+        [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const Vec2i& top_left, const Uint2& size);
 
-    static void compute_water_flow(renderer::Renderer& renderer, const ComPtr<ID3D12GraphicsCommandList4>& commands, TerrainData& data);
-
-    void load_terrain_textures_and_create_material();
-
-    void generate_tile(const Vec2i& tilecoord);
-
-    /*!
-     * \brief Generates a terrain heightmap of a specific size
-     *
-     * \param top_left World x and y coordinates of the top left of this terrain heightmap
-     * \param size Size in world units of this terrain heightmap
-     */
-    [[nodiscard]] Rx::Vector<Rx::Vector<Float32>> generate_terrain_heightmap(const Vec2i& top_left, const Uint2& size);
-
-    void upload_new_tile_meshes();
-};
+        void upload_new_tile_meshes();
+    };
+} // namespace sanity::engine

@@ -5,7 +5,7 @@
 #include "renderer/lights.hpp"
 #include "rhi/mesh_data_store.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     /*!
      * \brief Renders a static mesh with some material
      */

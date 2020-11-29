@@ -5,7 +5,7 @@
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     class Renderer;
     class DenoiserPass;
 

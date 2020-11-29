@@ -2,7 +2,7 @@
 
 #include "imgui/imgui.h"
 
-namespace ui {
+namespace sanity::engine::ui {
     Window::Window(const Rx::String& name_in) : name{Rx::Utility::move(name_in)} {}
 
     void Window::draw() {

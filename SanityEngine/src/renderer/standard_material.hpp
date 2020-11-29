@@ -2,7 +2,7 @@
 
 #include "handles.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct StandardMaterial {
         /*!
          * \brief Handle to the texture with albedo in the rgb and transparency in the a

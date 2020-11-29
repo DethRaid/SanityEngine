@@ -2,7 +2,7 @@
 
 #include "core/types.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct TextureHandle {
         Uint32 index{0};
 

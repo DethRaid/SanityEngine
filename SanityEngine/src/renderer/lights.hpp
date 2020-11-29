@@ -4,7 +4,7 @@
 #include "glm/trigonometric.hpp"
 #include "glm/vec3.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     constexpr Uint32 MAX_NUM_LIGHTS = 32;
 
     enum class LightType {

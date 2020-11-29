@@ -3,7 +3,7 @@
 #include "ui_panel.hpp"
 #include "rx/core/string.h"
 
-namespace ui {
+namespace sanity::engine::ui {
     /*!
      * \brief A floating window
      */

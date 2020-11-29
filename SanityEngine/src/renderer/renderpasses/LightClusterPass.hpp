@@ -2,7 +2,7 @@
 
 #include "renderer/renderpass.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     /*!
      * \brief Sorts lights into frustum-aligned clusters
      */

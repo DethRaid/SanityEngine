@@ -9,7 +9,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "renderer/rhi/resources.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     DearImGuiRenderPass::DearImGuiRenderPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 

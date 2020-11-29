@@ -10,11 +10,7 @@
 #include "rhi/resources.hpp"
 #include "rx/core/vector.h"
 
-namespace renderer {
-    class RenderBackend;
-}
-
-namespace renderer {
+namespace sanity::engine::renderer {
     struct CameraMatrices {
         glm::mat4 view_matrix{};
         glm::mat4 projection_matrix{};

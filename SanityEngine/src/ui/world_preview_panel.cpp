@@ -2,7 +2,7 @@
 
 #include "renderer/rhi/render_device.hpp"
 
-namespace ui {
+namespace sanity::engine::ui {
     WorldPreviewPane::WorldPreviewPane(const renderer::Renderer& renderer_in) : renderer{&renderer_in} {
         // TODO: Get the texture index for Scene output render texture
     }

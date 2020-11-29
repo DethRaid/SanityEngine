@@ -11,7 +11,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace renderer {
+namespace sanity::engine::renderer {
     enum class PrimitiveType { Points, Lines, Triangles };
 
     enum class BlendFactor {

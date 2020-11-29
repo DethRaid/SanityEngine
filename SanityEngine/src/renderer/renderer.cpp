@@ -25,7 +25,7 @@
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
 
     RX_LOG("Renderer", logger);
@@ -124,8 +124,6 @@ namespace renderer {
                                            const Rx::Ptr<RenderPass>& render_pass) {
         ZoneScoped;
 
-        logger->verbose("Issuing pre pass barriers for render pass index %d", render_pass_index);
-
         const auto& used_resources = render_pass->get_texture_states();
 
         auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
@@ -141,11 +139,6 @@ namespace renderer {
                 if(*previous_state == before_after_state.first) {
                     return;
                 }
-            	
-                logger->verbose("Issuing an end-only barrier to transition resource %s from %s to %s",
-                                image.name,
-                                resource_state_to_string(*previous_state),
-                                resource_state_to_string(before_after_state.first));
 
                 // Only issue a barrier if we need a state transition
                 auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *previous_state, before_after_state.first);
@@ -159,11 +152,6 @@ namespace renderer {
                 if(before_after_state.first != D3D12_RESOURCE_STATE_COMMON) {
                     // no previous usage so just barrier from COMMON
                     // No split barrier here, that'd be silly
-
-                    logger->verbose("Issuing a barrier to transition resource %s from %s to %s",
-                                    image.name,
-                                    resource_state_to_string(D3D12_RESOURCE_STATE_COMMON),
-                                    resource_state_to_string(before_after_state.first));
 
                     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
                                                                                D3D12_RESOURCE_STATE_COMMON,
@@ -184,8 +172,6 @@ namespace renderer {
                                             const Rx::Ptr<RenderPass>& render_pass) {
         ZoneScoped;
 
-        logger->verbose("Issuing post pass barriers for render pass index %d", render_pass_index);
-
         const auto& used_resources = render_pass->get_texture_states();
 
         auto barriers = Rx::Vector<D3D12_RESOURCE_BARRIER>{};
@@ -202,11 +188,6 @@ namespace renderer {
                     return;
                 }
 
-                logger->verbose("Issuing a begin-only barrier to transition resource %s from %s to %s",
-                                image.name,
-                                resource_state_to_string(before_after_state.second),
-                                resource_state_to_string(*next_state));
-
                 // Only issue a barrier if we need a state transition
                 auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, before_after_state.second, *next_state);
 
@@ -219,11 +200,6 @@ namespace renderer {
                 if(before_after_state.second != D3D12_RESOURCE_STATE_COMMON) {
                     // no next usage so just barrier to COMMON
                     // No split barrier here, that'd be silly
-
-                    logger->verbose("Issuing a barrier to transition resource %s from %s to %s",
-                                    image.name,
-                                    resource_state_to_string(before_after_state.second),
-                                    resource_state_to_string(D3D12_RESOURCE_STATE_COMMON));
 
                     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
                                                                                before_after_state.second,

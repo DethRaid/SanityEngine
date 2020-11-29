@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ui {
+namespace sanity::engine::ui {
     class UiPanel {
     public:
         UiPanel() = default;

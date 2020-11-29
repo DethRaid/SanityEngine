@@ -4,7 +4,7 @@
 #include "resources.hpp"
 #include "rx/core/optional.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     enum class RenderTargetBeginningAccessType {
         /*!
          * \brief Load the data that was previously rendered to this render target

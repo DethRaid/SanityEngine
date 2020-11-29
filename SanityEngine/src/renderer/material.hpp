@@ -2,7 +2,7 @@
 
 #include "rhi/resources.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     /*!
      * \brief Representation of a generic material
      */
@@ -15,6 +15,6 @@ namespace renderer {
         /*!
          * \brief Pointer to the 
          */
-        void* ptr;
+        void* ptr = nullptr;
     };
 }

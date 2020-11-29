@@ -25,7 +25,7 @@ using Microsoft::WRL::ComPtr;
 
 struct GLFWwindow;
 
-namespace renderer {
+namespace sanity::engine::renderer {
     class RenderCommandList;
 
 	using RenderpassHandle = VectorHandle<Rx::Ptr<RenderPass>>;

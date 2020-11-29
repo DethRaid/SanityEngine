@@ -9,7 +9,7 @@
 RX_LOG("SanityEditor", logger);
 
 int main(int argc, char** argv) {
-    initialize_g_engine(R"(E:\Documents\SanityEngine\x64\Debug)");
+	sanity::engine::initialize_g_engine(R"(E:\Documents\SanityEngine\x64\Debug)");
 
     auto editor = sanity::editor::SanityEditor{R"(E:\Documents\SanityEngine\x64\Debug)"};
 
@@ -22,19 +22,19 @@ namespace sanity::editor {
     SanityEditor::SanityEditor(const char* executable_directory) { create_application_gui(); }
 
     void SanityEditor::run_until_quit() {
-        auto* window = g_engine->get_window();
+        auto* window = engine::g_engine->get_window();
 
         while(glfwWindowShouldClose(window) == GLFW_FALSE) {
             glfwPollEvents();
 
-            g_engine->do_frame();
+            engine::g_engine->do_frame();
         }
     }
 
     void SanityEditor::create_application_gui() {
-        auto registry = g_engine->get_registry().lock();
+        auto registry = engine::g_engine->get_registry().lock();
 
         const auto application_gui_entity = registry->create();
-        registry->emplace<::ui::UiComponent>(application_gui_entity, Rx::make_ptr<ui::ApplicationGui>(RX_SYSTEM_ALLOCATOR, ui_controller));
+        registry->emplace<engine::ui::UiComponent>(application_gui_entity, Rx::make_ptr<ui::ApplicationGui>(RX_SYSTEM_ALLOCATOR, ui_controller));
     }
 } // namespace sanity::editor

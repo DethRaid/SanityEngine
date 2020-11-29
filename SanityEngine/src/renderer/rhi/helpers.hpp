@@ -9,7 +9,7 @@
 #include "render_pipeline_state.hpp"
 #include "resources.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct RenderTargetBeginningAccess;
     struct RenderTargetEndingAccess;
 

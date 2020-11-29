@@ -5,7 +5,7 @@
 namespace sanity::editor::ui {
     class EditorUiController;
 
-    class ApplicationGui final : public ::ui::Window{
+    class ApplicationGui final : public engine::ui::Window {
     public:
         explicit ApplicationGui(EditorUiController& ui_controller_in);
 

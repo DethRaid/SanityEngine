@@ -11,7 +11,7 @@ namespace D3D12MA {
     class Allocation;
 }
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct Buffer {
         Rx::String name;
 

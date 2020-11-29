@@ -32,7 +32,7 @@ namespace tracy {
 }
 #endif
 
-namespace renderer {
+namespace sanity::engine::renderer {
     struct CommandList;
     struct RenderPipelineStateCreateInfo;
 

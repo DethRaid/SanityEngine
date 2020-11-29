@@ -6,7 +6,7 @@
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     RX_LOG("MeshDataStore", logger);
 
     MeshDataStore::MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)

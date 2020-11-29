@@ -11,7 +11,7 @@
 #include "framebuffer.hpp"
 #include "render_device.hpp"
 
-namespace renderer {
+namespace sanity::engine::renderer {
     DXGI_FORMAT to_dxgi_format(const ImageFormat format) {
         switch(format) {
             case ImageFormat::Rgba32F:

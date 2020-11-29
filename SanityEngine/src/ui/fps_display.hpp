@@ -4,7 +4,7 @@
 
 class FramerateTracker;
 
-namespace ui {
+namespace sanity::engine::ui {
     class FramerateDisplay : public UiPanel {
     public:
         explicit FramerateDisplay(FramerateTracker& tracker_in);

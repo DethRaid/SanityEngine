@@ -445,9 +445,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\sanity_engine.hpp" />
     <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
+    <ClInclude Include="src\ui\ConsoleWindow.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
     <ClInclude Include="src\ui\fps_display.hpp" />
-    <ClInclude Include="src\ui\scripted_ui_panel.hpp" />
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\ui\Window.hpp" />
@@ -510,9 +510,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\rhi\resources.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
+    <ClCompile Include="src\ui\ConsoleWindow.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />
-    <ClCompile Include="src\ui\scripted_ui_panel.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\Window.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />

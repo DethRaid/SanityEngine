@@ -4,7 +4,7 @@
 #include "renderer/renderer.hpp"
 #include "ui_panel.hpp"
 
-namespace ui {
+namespace sanity::engine::ui {
     class WorldPreviewPane : public UiPanel {
     public:
         explicit WorldPreviewPane(const renderer::Renderer& renderer_in);
