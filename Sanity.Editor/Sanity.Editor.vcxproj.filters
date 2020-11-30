@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\ui">
+      <UniqueIdentifier>{cc2bde98-37ff-4b73-b326-b4e49192ab6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ui\windows">
+      <UniqueIdentifier>{b781d207-7ad2-47de-acc8-ff5768ec9bc0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\SanityEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\ApplicationGui.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\EditorUiController.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\windows\WorldgenParamsEditor.cpp">
+      <Filter>Source Files\ui\windows</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\SanityEditor.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\ApplicationGui.hpp">
+      <Filter>Source Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\EditorUiController.hpp">
+      <Filter>Source Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\windows\WorldgenParamsEditor.hpp">
+      <Filter>Source Files\ui\windows</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -85,12 +85,6 @@
     <Filter Include="src\core\concepts">
       <UniqueIdentifier>{7608827b-7147-4850-95a7-2747c83de2fd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="programs">
-      <UniqueIdentifier>{eca21a61-28ae-4fc1-9c85-2422f1b2ce64}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="programs\editor">
-      <UniqueIdentifier>{f078b971-e91c-4d0a-8f57-9d1bc5760b38}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{0e0342dd-1748-4193-9a06-efe3dade70ce}</UniqueIdentifier>
     </Filter>
@@ -99,12 +93,6 @@
     </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{6246b1f2-9456-4cb5-9ad4-8e9d906344e4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="programs\editor\ui">
-      <UniqueIdentifier>{45aa82d7-cf10-4a90-9217-81efc4419de8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="programs\editor\ui\windows">
-      <UniqueIdentifier>{649d5baf-d092-413f-9276-efee99e97754}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\renderer\diagnostics">
       <UniqueIdentifier>{2940a3a4-d7b0-4a78-8855-55f41a8de5f0}</UniqueIdentifier>
@@ -368,26 +356,14 @@
     <ClInclude Include="src\core\Prelude.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="programs\editor\SanityEditor.hpp">
-      <Filter>programs\editor</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\RaytracedLightingPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
-    <ClInclude Include="programs\editor\ui\EditorUiController.hpp">
-      <Filter>programs\editor\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="programs\editor\ui\ApplicationGui.hpp">
-      <Filter>programs\editor\ui</Filter>
-    </ClInclude>
     <ClInclude Include="src\ui\Window.hpp">
       <Filter>src\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="programs\editor\ui\windows\WorldgenParamsEditor.hpp">
-      <Filter>programs\editor\ui\windows</Filter>
     </ClInclude>
     <ClInclude Include="src\core\VectorHandle.hpp">
       <Filter>src\core</Filter>
@@ -559,9 +535,6 @@
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>
     </ClCompile>
-    <ClCompile Include="programs\editor\SanityEditor.cpp">
-      <Filter>programs\editor</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\RaytracedLightingPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
@@ -571,17 +544,8 @@
     <ClCompile Include="src\renderer\renderpass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
-    <ClCompile Include="programs\editor\ui\EditorUiController.cpp">
-      <Filter>programs\editor\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="programs\editor\ui\ApplicationGui.cpp">
-      <Filter>programs\editor\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\Window.cpp">
       <Filter>src\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="programs\editor\ui\windows\WorldgenParamsEditor.cpp">
-      <Filter>programs\editor\ui\windows</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\ConsoleWindow.cpp">
       <Filter>src\ui</Filter>

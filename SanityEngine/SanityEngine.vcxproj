@@ -33,7 +33,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
@@ -382,10 +382,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\tracy\imgui\imstb_truetype.h" />
     <ClInclude Include="extern\tracy\Tracy.hpp" />
     <ClInclude Include="extern\tracy\TracyD3D12.hpp" />
-    <ClInclude Include="programs\editor\SanityEditor.hpp" />
-    <ClInclude Include="programs\editor\ui\ApplicationGui.hpp" />
-    <ClInclude Include="programs\editor\ui\EditorUiController.hpp" />
-    <ClInclude Include="programs\editor\ui\windows\WorldgenParamsEditor.hpp" />
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\adapters\tracy.hpp" />
@@ -470,10 +466,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="extern\tracy\imgui\imgui_draw.cpp" />
     <ClCompile Include="extern\tracy\imgui\imgui_widgets.cpp" />
     <ClCompile Include="extern\tracy\TracyClient.cpp" />
-    <ClCompile Include="programs\editor\SanityEditor.cpp" />
-    <ClCompile Include="programs\editor\ui\ApplicationGui.cpp" />
-    <ClCompile Include="programs\editor\ui\EditorUiController.cpp" />
-    <ClCompile Include="programs\editor\ui\windows\WorldgenParamsEditor.cpp" />
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
