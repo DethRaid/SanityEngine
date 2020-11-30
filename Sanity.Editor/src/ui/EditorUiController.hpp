@@ -1,6 +1,6 @@
 #pragma once
 
-#include "windows/WorldgenParamsEditor.hpp"
+#include "entt/entity/registry.hpp"
 
 namespace sanity::editor::ui {
     class EditorUiController {
@@ -10,11 +10,11 @@ namespace sanity::editor::ui {
          */
         explicit EditorUiController();
 
-    	void draw();
-
     	void show_worldgen_params_editor();
 
     private:
-    	WorldgenParamsEditor worldgen_params_editor{};
+    	entt::entity worldgen_params_editor{};
+
+        void create_worldgen_params_editor();
     };
 } // namespace sanity::editor::ui

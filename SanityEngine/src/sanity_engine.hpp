@@ -40,7 +40,10 @@ namespace sanity::engine {
 
         [[nodiscard]] entt::entity get_player() const;
 
-        [[nodiscard]] SynchronizedResource<entt::registry>& get_registry();
+        /*!
+         * \brief Returns the engine-side registry of entities. This should be used for UI components mostly
+         */
+        [[nodiscard]] SynchronizedResource<entt::registry>& get_global_registry();
 
         [[nodiscard]] World* get_world() const;
 
@@ -65,7 +68,7 @@ namespace sanity::engine {
 
         Rx::Ptr<World> world;
 
-        SynchronizedResource<entt::registry> registry;
+        SynchronizedResource<entt::registry> global_registry;
 
         /*!
          * \brief Entity which represents the player

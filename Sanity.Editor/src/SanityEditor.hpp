@@ -1,5 +1,7 @@
 #pragma once
 
+#include "player/flycam_controller.hpp"
+
 #include "ui/EditorUiController.hpp"
 
 namespace sanity::editor {
@@ -11,7 +13,9 @@ namespace sanity::editor {
 
     private:
         ui::EditorUiController ui_controller;
+    	
+        FlycamController flycam;
 
-    	void create_application_gui();
+        void create_application_gui();
     };
 } // namespace sanity::editor

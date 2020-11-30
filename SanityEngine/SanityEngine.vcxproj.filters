@@ -97,6 +97,9 @@
     <Filter Include="src\renderer\diagnostics">
       <UniqueIdentifier>{2940a3a4-d7b0-4a78-8855-55f41a8de5f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\actor">
+      <UniqueIdentifier>{d48d1f67-c139-4c52-a2df-748153e37603}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -121,7 +121,7 @@ namespace sanity::engine {
                                    .min_terrain_depth_under_ocean = 8,
                                    .max_height_above_sea_level = 16},
                                   player,
-                                  registry,
+                                  global_registry,
                                   *renderer);
 
             if(player_controller) {
@@ -186,7 +186,7 @@ namespace sanity::engine {
 
     entt::entity SanityEngine::get_player() const { return player; }
 
-    SynchronizedResource<entt::registry>& SanityEngine::get_registry() { return registry; }
+    SynchronizedResource<entt::registry>& SanityEngine::get_global_registry() { return global_registry; }
 
     World* SanityEngine::get_world() const { return world.get(); }
 
@@ -211,7 +211,7 @@ namespace sanity::engine {
     }
 
     void SanityEngine::create_planetary_atmosphere() {
-        auto locked_registry = registry.lock();
+        auto locked_registry = global_registry.lock();
         const auto atmosphere = locked_registry->create();
 
         // No need to set parameters, the default light component represents the Earth's sun
@@ -228,7 +228,7 @@ namespace sanity::engine {
 
     void SanityEngine::make_frametime_display() {
         if(!frametime_display_entity) {
-            auto locked_registry = registry.lock();
+            auto locked_registry = global_registry.lock();
             frametime_display_entity = locked_registry->create();
             locked_registry->emplace<ui::UiComponent>(*frametime_display_entity,
                                                       Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
@@ -237,14 +237,14 @@ namespace sanity::engine {
 
     void SanityEngine::destroy_frametime_display() {
         if(frametime_display_entity) {
-            auto locked_registry = registry.lock();
+            auto locked_registry = global_registry.lock();
             locked_registry->destroy(*frametime_display_entity);
         }
     }
 
     void SanityEngine::make_console_window() {
         if(!console_window_entity) {
-            auto locked_registry = registry.lock();
+            auto locked_registry = global_registry.lock();
             console_window_entity = locked_registry->create();
             locked_registry->emplace<ui::UiComponent>(*console_window_entity,
                                                       Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
@@ -253,13 +253,13 @@ namespace sanity::engine {
 
     void SanityEngine::destroy_console_window() {
         if(console_window_entity) {
-            auto locked_registry = registry.lock();
+            auto locked_registry = global_registry.lock();
             locked_registry->destroy(*console_window_entity);
         }
     }
 
     void SanityEngine::create_first_person_player() {
-        auto locked_registry = registry.lock();
+        auto locked_registry = global_registry.lock();
         player = locked_registry->create();
 
         auto& transform = locked_registry->emplace<TransformComponent>(player);
@@ -285,11 +285,11 @@ namespace sanity::engine {
     void SanityEngine::load_3d_object(const Rx::String& filename) {
         const auto msg = Rx::String::format("load_3d_object(%s)", filename);
         ZoneScopedN(msg.data());
-        load_static_mesh(filename, registry, *renderer);
+        load_static_mesh(filename, global_registry, *renderer);
     }
 
     void SanityEngine::render() {
-        auto locked_registry = registry.lock();
+        auto locked_registry = global_registry.lock();
 
         imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
 
