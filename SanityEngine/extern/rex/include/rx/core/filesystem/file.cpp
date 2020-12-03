@@ -137,15 +137,15 @@ static void* open_file([[maybe_unused]] Memory::Allocator& _allocator, const cha
 
   if (*_mode == 'r') {
     // Read only if the file exists.
-    dwCreationDisposition |= OPEN_EXISTING;
+    dwCreationDisposition = OPEN_EXISTING;
   } else {
     // Write even if the file doesn't exist.
-    dwCreationDisposition |= OPEN_ALWAYS;
+    dwCreationDisposition = OPEN_ALWAYS;
   }
 
   if (*_mode == 'w') {
     // When writing, truncate to 0 bytes existing files.
-    dwCreationDisposition |= CREATE_ALWAYS;
+    dwCreationDisposition = CREATE_ALWAYS;
   } else if (*_mode == 'a') {
     // Appending.
     dwDesiredAccess |= FILE_APPEND_DATA;
