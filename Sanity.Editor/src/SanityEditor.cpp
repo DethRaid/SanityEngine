@@ -1,6 +1,7 @@
 #include "SanityEditor.hpp"
 
-#include <rex/include/rx/core/filesystem/file.h>
+#include <rx/core/filesystem/file.h>
+
 
 #include "entity/Components.hpp"
 #include "entt/entity/entity.hpp"
@@ -58,13 +59,13 @@ namespace sanity::editor {
 
         const auto& json_string = nlohmann::to_string(json_entity);
 
-        Rx::Filesystem::File file{R"(E:\Documents\SanityEngine\x64\Debug\entity.json)", "w"};
-        if(!file.is_valid()) {
-            logger->error("Could not save entity to file: %s", get_last_windows_error());
-            return;
-        }
-
+    	Rx::Filesystem::File file{R"(E:\Documents\SanityEngine\x64\Debug\entity.json)", "w"};
+    	
         file.print(json_string.c_str());
+
+    	const auto deserialized_entity = serialization::json_to_entity(json_entity, *registry);
+
+    	logger->info("Entity serialization test complete");
     }
 
     void SanityEditor::create_application_gui() {

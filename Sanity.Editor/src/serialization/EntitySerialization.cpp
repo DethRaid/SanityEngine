@@ -1,12 +1,12 @@
 #include "EntitySerialization.hpp"
 
-#include "GetJsonForComponent.hpp"
 #include "core/RexJsonConversion.hpp"
 #include "entity/Components.hpp"
 #include "entt/entity/entity.hpp"
 #include "entt/entity/registry.hpp"
 #include "nlohmann/json.hpp"
 #include "rex/include/rx/core/vector.h"
+#include "serialization/GetJsonForComponent.hpp"
 
 namespace sanity::editor::serialization {
     nlohmann::json entity_to_json(const entt::entity& entity, const entt::registry& registry) {
@@ -24,5 +24,18 @@ namespace sanity::editor::serialization {
         json["components"] = component_jsons;
 
         return json;
+    }
+
+    entt::entity json_to_entity(const nlohmann::json& json, entt::registry& registry) {
+        const auto entity = registry.create();
+
+        auto& component_list = registry.emplace<ComponentClassIdList>(entity);
+
+        const auto& components = json.at("components");
+        for(const auto& component : components) {
+            create_component_from_json(component, entity, registry);
+        }
+
+        return entity;
     }
 } // namespace sanity::editor::serialization
