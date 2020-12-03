@@ -21,7 +21,7 @@ namespace sanity::editor::ui {
 
         void draw_world_menu() const;
 
-        void draw_edit_menu();
+        void draw_entity_menu();
 #pragma endregion
     };
 } // namespace sanity::editor::ui

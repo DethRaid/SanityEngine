@@ -1,8 +1,20 @@
 #pragma once
 
+#include "core/async/synchronized_resource.hpp"
 #include "entt/entity/registry.hpp"
 
+namespace sanity {
+    namespace engine {
+        namespace ui {
+            class Window;
+        }
+    } // namespace engine
+} // namespace sanity
+
 namespace sanity::editor::ui {
+    class WorldgenParamsEditor;
+    class EntityEditorWindow;
+
     class EditorUiController {
     public:
         /*!
@@ -10,11 +22,13 @@ namespace sanity::editor::ui {
          */
         explicit EditorUiController();
 
-    	void show_worldgen_params_editor();
+        void show_worldgen_params_editor() const;
+
+        EntityEditorWindow* show_edit_entity_window(entt::entity& entity, entt::registry& registry) const;
 
     private:
-    	entt::entity worldgen_params_editor{};
+        WorldgenParamsEditor* worldgen_params_editor{nullptr};
 
-        void create_worldgen_params_editor();
+        void create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry);
     };
 } // namespace sanity::editor::ui

@@ -5,7 +5,7 @@
 #include "entt/entity/entity.hpp"
 #include "entt/entity/registry.hpp"
 #include "nlohmann/json.hpp"
-#include "rex/include/rx/core/vector.h"
+#include "rx/core/vector.h"
 #include "serialization/GetJsonForComponent.hpp"
 
 namespace sanity::editor::serialization {

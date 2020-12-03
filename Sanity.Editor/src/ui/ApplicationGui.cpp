@@ -4,13 +4,9 @@
 #include "imgui/imgui.h"
 
 namespace sanity::editor::ui {
-    ApplicationGui::ApplicationGui(EditorUiController& ui_controller_in)
-        : ui_controller{&ui_controller_in} {}
+    ApplicationGui::ApplicationGui(EditorUiController& ui_controller_in) : ui_controller{&ui_controller_in} {}
 
-    void ApplicationGui::draw()
-    {
-	    draw_application_menu();
-    }
+    void ApplicationGui::draw() { draw_application_menu(); }
 
     void ApplicationGui::draw_application_menu() {
         ImGui::BeginMainMenuBar();
@@ -20,8 +16,8 @@ namespace sanity::editor::ui {
             ImGui::EndMenu();
         }
 
-        if(ImGui::BeginMenu("Edit")) {
-            draw_edit_menu();
+        if(ImGui::BeginMenu("Entity")) {
+            draw_entity_menu();
 
             ImGui::EndMenu();
         }
@@ -31,11 +27,13 @@ namespace sanity::editor::ui {
 
     void ApplicationGui::draw_world_menu() const {
         if(ImGui::MenuItem("Edit worldgen params")) {
-            if(ui_controller != nullptr) {
-                ui_controller->show_worldgen_params_editor();
-            }
+            ui_controller->show_worldgen_params_editor();
         }
     }
 
-    void ApplicationGui::draw_edit_menu() {}
+    void ApplicationGui::draw_entity_menu() {
+        if(ImGui::MenuItem("New entity")) {
+            ui_controller->show_edit_entity_window();
+        }
+    }
 } // namespace sanity::editor::ui

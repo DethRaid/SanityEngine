@@ -40,6 +40,9 @@
     <ClCompile Include="src\serialization\GetJsonForComponent.cpp">
       <Filter>src\serialization</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\windows\EntityEditorWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SanityEditor.hpp">
@@ -61,5 +64,6 @@
     <ClInclude Include="src\serialization\GetJsonForComponent.hpp">
       <Filter>src\serialization</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp" />
   </ItemGroup>
 </Project>

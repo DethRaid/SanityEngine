@@ -1,13 +1,11 @@
 #include "SanityEditor.hpp"
 
-#include <rx/core/filesystem/file.h>
-
-
 #include "entity/Components.hpp"
 #include "entt/entity/entity.hpp"
 #include "entt/entity/registry.hpp"
 #include "nlohmann/json.hpp"
 #include "rx/core/abort.h"
+#include "rx/core/filesystem/file.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
 #include "serialization/EntitySerialization.hpp"
@@ -30,8 +28,6 @@ int main(int argc, char** argv) {
 namespace sanity::editor {
     SanityEditor::SanityEditor(const char* executable_directory)
         : flycam{engine::g_engine->get_window(), engine::g_engine->get_player(), engine::g_engine->get_global_registry()} {
-        test_saving_entity();
-
         create_application_gui();
     }
 
@@ -43,29 +39,6 @@ namespace sanity::editor {
 
             engine::g_engine->do_frame();
         }
-    }
-
-    void SanityEditor::test_saving_entity() {
-        auto registry = engine::g_engine->get_global_registry().lock();
-
-        const auto entity = registry->create();
-
-        auto& transform = registry->emplace<TransformComponent>(entity);
-
-        auto& component_list = registry->emplace<ComponentClassIdList>(entity);
-        component_list.class_ids.push_back(__uuidof(TransformComponent));
-
-        const auto& json_entity = serialization::entity_to_json(entity, *registry);
-
-        const auto& json_string = nlohmann::to_string(json_entity);
-
-    	Rx::Filesystem::File file{R"(E:\Documents\SanityEngine\x64\Debug\entity.json)", "w"};
-    	
-        file.print(json_string.c_str());
-
-    	const auto deserialized_entity = serialization::json_to_entity(json_entity, *registry);
-
-    	logger->info("Entity serialization test complete");
     }
 
     void SanityEditor::create_application_gui() {
