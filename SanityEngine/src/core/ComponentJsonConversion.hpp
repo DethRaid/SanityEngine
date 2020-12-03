@@ -1,8 +1,12 @@
 #pragma once
 
+#include "core/GlmJsonConversion.hpp"
 #include "core/JsonConversion.hpp"
+#include "core/RexJsonConversion.hpp"
+#include "core/WindowsJsonConversion.hpp"
 #include "core/components.hpp"
 
-void to_json(nlohmann::json& j, const TransformComponent& c);
-
-void from_json(const nlohmann::json& j, TransformComponent& c);
+namespace sanity::engine {
+    SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(TransformComponent, location, rotation, scale);
+    SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(SanityEngineEntity, name, tags);
+} // namespace sanity::engine

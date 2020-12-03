@@ -1,8 +1,8 @@
 #pragma once
 
 #include "imgui/imgui.h"
-#include "ui_panel.hpp"
 #include "rx/core/string.h"
+#include "ui_panel.hpp"
 
 namespace sanity::engine::ui {
     /*!
@@ -14,7 +14,7 @@ namespace sanity::engine::ui {
 
         explicit Window(const Rx::String& name_in, ImGuiWindowFlags flags_in = 0);
 
-    	~Window() override = default;
+        ~Window() override = default;
 
         void draw() override;
 
@@ -22,7 +22,12 @@ namespace sanity::engine::ui {
         Rx::String name{};
 
         ImGuiWindowFlags flags;
-    	
+
         virtual void draw_contents() = 0;
+
+        /*!
+         * \brief Destroys this window, along with the entity that owns it and all of the entity's components
+         */
+        void destroy_self();
     };
-} // namespace ui
+} // namespace sanity::engine::ui

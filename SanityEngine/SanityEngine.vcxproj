@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)x64\Debug;$(ProjectDir)extern\bve\lib;$(ProjectDir)extern\physx\lib\debug;$(ProjectDir)extern\pix\lib;$(LibraryPath)</LibraryPath>
-    <PublicIncludeDirectories>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;</PublicIncludeDirectories>
+    <PublicIncludeDirectories>$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\tracy;$(ProjectDir)extern\rex\src;$(ProjectDir)extern\pix\include;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\bve\include;$(ProjectDir)src;</PublicIncludeDirectories>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -93,7 +93,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)programs;$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\include;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)programs;$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\src;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -123,7 +123,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
       <Message>
@@ -146,7 +146,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>E:\Documents\SanityEngine\x64\Debug\Rex.Core.lib;dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\debug\lib\assimp-vc142-mtd.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\debug\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);$(ProjectDir)x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/src;E:/Documents/SanityEngine/SanityEngine/extern/rex/src/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);$(ProjectDir)x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -163,7 +163,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -187,7 +187,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
       <Message>
@@ -217,7 +217,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\lib\assimp-vc142-mt.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/src;E:/Documents/SanityEngine/SanityEngine/extern/rex/src/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -231,7 +231,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -252,7 +252,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
       <Message>
@@ -282,7 +282,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\lib\assimp-vc142-mt.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/src;E:/Documents/SanityEngine/SanityEngine/extern/rex/src/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -296,7 +296,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -316,7 +316,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\include;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\extern\physx\include;E:\Documents\SanityEngine\SanityEngine\extern\physx\include\physx;E:\Documents\SanityEngine\SanityEngine\extern\rex\src;E:\Documents\SanityEngine\SanityEngine\extern\tracy;E:\Documents\SanityEngine\SanityEngine\extern\tracy\imgui;E:\Documents\SanityEngine\SanityEngine\extern\json5\include;E:\Documents\SanityEngine\SanityEngine\extern\dotnet\include;E:\Documents\SanityEngine\SanityEngine\extern\D3D12MemoryAllocator;E:\Documents\SanityEngine\SanityEngine\extern\bve\include;E:\Documents\SanityEngine\SanityEngine\extern\pix\include;E:\Documents\SanityEngine\SanityEngine\src;E:\Documents\SanityEngine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
       <Message>
@@ -346,7 +346,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\lib\assimp-vc142-mt.lib;bve_native.dll.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;..\vcpkg_installed\x64-windows\lib\glfw3dll.lib;..\vcpkg_installed\x64-windows\debug\lib\nethost.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/include;E:/Documents/SanityEngine/SanityEngine/extern/rex/include/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:/Documents/SanityEngine/SanityEngine/extern/rex/src;E:/Documents/SanityEngine/SanityEngine/extern/rex/src/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug;E:/Documents/SanityEngine/SanityEngine/extern/physx/lib/debug/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/pix/lib;E:/Documents/SanityEngine/SanityEngine/extern/pix/lib/$(Configuration);E:/Documents/SanityEngine/SanityEngine/extern/bve/lib;E:/Documents/SanityEngine/SanityEngine/extern/bve/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -382,6 +382,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="extern\tracy\imgui\imstb_truetype.h" />
     <ClInclude Include="extern\tracy\Tracy.hpp" />
     <ClInclude Include="extern\tracy\TracyD3D12.hpp" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="src\adapters\rex\rex_wrapper.hpp" />
     <ClInclude Include="src\adapters\rex\stdout_stream.hpp" />
     <ClInclude Include="src\adapters\tracy.hpp" />
@@ -474,7 +475,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
-    <ClCompile Include="src\core\ComponentJsonConversion.cpp" />
+    <ClCompile Include="src\core\components.cpp" />
     <ClCompile Include="src\core\EntityJsonConversion.cpp" />
     <ClCompile Include="src\core\RexJsonConversion.cpp" />
     <ClCompile Include="src\core\WindowsJsonConversion.cpp" />
@@ -630,6 +631,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Sanity.Engine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

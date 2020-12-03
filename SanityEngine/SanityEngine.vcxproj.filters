@@ -390,6 +390,7 @@
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\EntityJsonConversion.hpp" />
+    <ClInclude Include="resource1.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -569,10 +570,10 @@
     <ClCompile Include="src\core\RexJsonConversion.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\ComponentJsonConversion.cpp">
+    <ClCompile Include="src\core\EntityJsonConversion.cpp" />
+    <ClCompile Include="src\core\components.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\EntityJsonConversion.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -645,5 +646,8 @@
     <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Sanity.Engine.rc" />
   </ItemGroup>
 </Project>

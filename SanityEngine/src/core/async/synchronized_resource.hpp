@@ -2,7 +2,7 @@
 
 #include "core/Prelude.hpp"
 #include "rx/core/concurrency/mutex.h"
-#include "rx/core/utility/rex_forward.h"
+#include "rx/core/utility/forward.h"
 
 template <typename T>
 concept Mutex = requires(T a) {
