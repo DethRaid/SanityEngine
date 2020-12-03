@@ -1,5 +1,7 @@
 #include "CompilationDatabase.hpp"
 
+#include "nlohmann/json.hpp"
+
 namespace Sanity::Codegen {
     // ReSharper disable CppInconsistentNaming
     void to_json(json& j, const CompilationDatabaseEntry& entry) {
@@ -9,11 +11,10 @@ namespace Sanity::Codegen {
     }
 
     void from_json(const json& j, CompilationDatabaseEntry& entry) {
-    	j["directory"].get_to(entry.directory);
+        j["directory"].get_to(entry.directory);
         j["file"].get_to(entry.file);
         j["arguments"].get_to(entry.arguments);
     }
-
 
     // ReSharper restore CppInconsistentNaming
 } // namespace Sanity::Codegen

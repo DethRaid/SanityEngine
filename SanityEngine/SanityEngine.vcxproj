@@ -389,18 +389,21 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\ansi_colors.hpp" />
     <ClInclude Include="src\core\asset_registry.hpp" />
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
+    <ClInclude Include="src\core\ComponentJsonConversion.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\concepts\EnumLike.hpp" />
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
-    <ClInclude Include="src\core\errors.hpp" />
+    <ClInclude Include="src\core\EntityJsonConversion.hpp" />
     <ClInclude Include="src\core\GlmJsonConversion.hpp" />
     <ClInclude Include="src\core\JsonConversion.hpp" />
+    <ClInclude Include="src\core\RexJsonConversion.hpp" />
     <ClInclude Include="src\core\VectorHandle.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />
     <ClInclude Include="src\core\Prelude.hpp" />
     <ClInclude Include="src\core\SmartEnum.hpp" />
     <ClInclude Include="src\core\types.hpp" />
+    <ClInclude Include="src\core\WindowsJsonConversion.hpp" />
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
     <ClInclude Include="src\input\PlatformInput.hpp" />
@@ -471,7 +474,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
-    <ClCompile Include="src\core\errors.cpp" />
+    <ClCompile Include="src\core\ComponentJsonConversion.cpp" />
+    <ClCompile Include="src\core\EntityJsonConversion.cpp" />
+    <ClCompile Include="src\core\RexJsonConversion.cpp" />
+    <ClCompile Include="src\core\WindowsJsonConversion.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />
     <ClCompile Include="src\input\PlatformInput.cpp" />
@@ -548,6 +554,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)data\shaders\fullscreen.vertex</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\atmospheric_scattering.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

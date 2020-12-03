@@ -143,9 +143,6 @@
     <ClInclude Include="src\core\defer.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\errors.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\pix_colors.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
@@ -383,6 +380,16 @@
     <ClInclude Include="src\core\GlmJsonConversion.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\RexJsonConversion.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\WindowsJsonConversion.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\ComponentJsonConversion.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\EntityJsonConversion.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -392,9 +399,6 @@
       <Filter>src\adapters\rex</Filter>
     </ClCompile>
     <ClCompile Include="src\core\asset_registry.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\errors.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
     <ClCompile Include="src\game\game.cpp">
@@ -559,6 +563,16 @@
     <ClCompile Include="src\ui\ConsoleWindow.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\WindowsJsonConversion.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\RexJsonConversion.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\ComponentJsonConversion.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\EntityJsonConversion.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

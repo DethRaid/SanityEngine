@@ -8,7 +8,6 @@
 #include "core/components.hpp"
 #include "core/constants.hpp"
 #include "core/defer.hpp"
-#include "core/errors.hpp"
 #include "entt/entity/registry.hpp"
 #include "imgui/imgui.h"
 #include "loading/image_loading.hpp"

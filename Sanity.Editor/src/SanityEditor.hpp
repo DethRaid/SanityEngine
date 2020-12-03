@@ -16,6 +16,8 @@ namespace sanity::editor {
     	
         FlycamController flycam;
 
+        void test_saving_entity();
+    	
         void create_application_gui();
     };
 } // namespace sanity::editor

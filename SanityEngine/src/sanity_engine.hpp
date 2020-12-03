@@ -19,7 +19,7 @@ namespace sanity::engine {
     /*!
      * \brief Main class for my glorious engine
      */
-    class [[sanity::runtime_class]] SanityEngine {
+    class SanityEngine {
     public:
         static const char* executable_directory;
 

@@ -14,7 +14,6 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "core/constants.hpp"
-#include "core/errors.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/helpers.hpp"

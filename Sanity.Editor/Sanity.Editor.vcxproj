@@ -122,7 +122,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Documents\SanityEngine\Sanity.Editor\src;$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,13 +147,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\entity\Components.cpp" />
     <ClCompile Include="src\SanityEditor.cpp" />
+    <ClCompile Include="src\serialization\EntitySerialization.cpp" />
+    <ClCompile Include="src\serialization\GetJsonForComponent.cpp" />
     <ClCompile Include="src\ui\ApplicationGui.cpp" />
     <ClCompile Include="src\ui\EditorUiController.cpp" />
     <ClCompile Include="src\ui\windows\WorldgenParamsEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\entity\Components.hpp" />
     <ClInclude Include="src\SanityEditor.hpp" />
+    <ClInclude Include="src\serialization\EntitySerialization.hpp" />
+    <ClInclude Include="src\serialization\GetJsonForComponent.hpp" />
     <ClInclude Include="src\ui\ApplicationGui.hpp" />
     <ClInclude Include="src\ui\EditorUiController.hpp" />
     <ClInclude Include="src\ui\windows\WorldgenParamsEditor.hpp" />
