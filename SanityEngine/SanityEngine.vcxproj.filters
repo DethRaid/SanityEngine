@@ -377,6 +377,12 @@
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\JsonConversion.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\GlmJsonConversion.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">

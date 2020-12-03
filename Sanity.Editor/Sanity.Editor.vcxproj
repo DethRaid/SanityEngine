@@ -122,6 +122,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

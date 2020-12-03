@@ -394,6 +394,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\constants.hpp" />
     <ClInclude Include="src\core\defer.hpp" />
     <ClInclude Include="src\core\errors.hpp" />
+    <ClInclude Include="src\core\GlmJsonConversion.hpp" />
+    <ClInclude Include="src\core\JsonConversion.hpp" />
     <ClInclude Include="src\core\VectorHandle.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />
     <ClInclude Include="src\core\Prelude.hpp" />
