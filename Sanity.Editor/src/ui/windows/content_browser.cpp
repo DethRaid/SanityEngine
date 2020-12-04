@@ -20,51 +20,36 @@ namespace sanity::editor::ui {
         // Current location we're drawing content items at
         glm::uvec2 cur_item_cursor_location{0, 0};
 
+        if(content_directory != selected_directory) {
+            draw_back_button();
+        	
+        } else {
+            ImGui::Text("Content root");
+        }
+
         dir.each([&](Rx::Filesystem::Directory::Item&& item) {
             if(item.is_directory()) {
-                draw_filesystem_item(item, [&] { selected_directory = Rx::String::format("%s/%s", selected_directory, item.name()); });
+                draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
+                    selected_directory = Rx::String::format("%s/%s", selected_directory, selected_item.name());
+                });
             }
         });
     }
 
-    void ContentBrowser::draw_filesystem_item(const Rx::Filesystem::Directory::Item& item, const Rx::Function<void()>& on_open) {
-        const auto& item_name = item.name();
-        if(ImGui::BeginChild(item_name.data())) {
-            if(item.is_file()) {
-                const auto dot_pos = item_name.find_last_of(".");
-                const auto file_extension = item_name.substring(dot_pos + 1);
-
-                if(const auto* icon_handle = file_icons.find(file_extension); icon_handle != nullptr) {
-                    ImGui::Image(reinterpret_cast<ImTextureID>(icon_handle->index), {50, 50});
-
-                } else {
-                    auto& asset_loader = g_editor->get_asset_loader();
-                    const auto& icon_filepath = Rx::String::format("%s/data/textures/%s.png",
-                                                                   engine::SanityEngine::executable_directory,
-                                                                   file_extension);
-                    auto handle = asset_loader.load_image(icon_filepath, [&](const engine::ImageLoadResult& result) {
-                        if(result.succeeded) {
-                            file_icons.insert(item_name, *result.asset);
-                        } else {
-                            logger->error("Could not load icon for file type .%s", file_extension);
-                        }
-                    });
-                    icon_handles.push_back(Rx::Utility::move(handle));
-                }
-            }
-
-            ImGui::Text("%s", item_name.data());
+    void ContentBrowser::draw_back_button() {
+        if(ImGui::Button("..")) {
+            const auto last_slash_pos = selected_directory.find_last_of("/");
+            const auto new_selected_directory = selected_directory.substring(0, last_slash_pos);
+            selected_directory = new_selected_directory;
         }
-        ImGui::EndChild();
-        const auto size = ImGui::GetItemRectSize();
-        const auto pos = ImGui::GetCursorPos();
+    }
 
-        ImGui::SetCursorPosY(pos.y - size.y);
+    void ContentBrowser::draw_filesystem_item(const Rx::Filesystem::Directory::Item& item,
+                                              const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open) {
+        const auto& item_name = item.name();
 
-        bool is_item_selected = false;
-        ImGui::Selectable(item.name().data(), &is_item_selected, 0, size);
-        if(is_item_selected) {
-            on_open();
+        if(ImGui::Button(item_name.data(), {100, 100})) {
+            on_open(item);
         }
     }
 } // namespace sanity::editor::ui

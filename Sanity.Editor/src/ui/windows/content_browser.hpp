@@ -25,8 +25,11 @@ namespace sanity::editor::ui {
 
         Rx::Map<Rx::String, engine::renderer::TextureHandle> file_icons;
 
-    	Rx::Vector<engine::ImageLoadResultHandle> icon_handles;
+        Rx::Vector<engine::ImageLoadResultHandle> icon_handles;
 
-        void draw_filesystem_item(const Rx::Filesystem::Directory::Item& item, const Rx::Function<void()>& on_open);
+        void draw_back_button();
+
+        void draw_filesystem_item(const Rx::Filesystem::Directory::Item& item,
+                                  const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open);
     };
 } // namespace sanity::editor::ui
