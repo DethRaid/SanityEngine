@@ -787,6 +787,8 @@ namespace sanity::engine::renderer {
     void RenderBackend::create_swapchain(HWND window_handle, const glm::uvec2& window_size) {
         ZoneScoped;
 
+    	logger->verbose("Creating swapchain with resolution %dx%d", window_size.x, window_size.y);
+
         const auto swapchain_desc = DXGI_SWAP_CHAIN_DESC1{
             .Width = static_cast<UINT>(window_size.x),
             .Height = static_cast<UINT>(window_size.y),
@@ -807,7 +809,7 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
 
-        swapchain1.As(&swapchain);
+        hr = swapchain1.As(&swapchain);
         if(FAILED(hr)) {
             Rx::abort("Could not get new swapchain interface, please update your drivers");
         }
@@ -1554,7 +1556,7 @@ namespace sanity::engine::renderer {
         glm::ivec2 framebuffer_size{};
         glfwGetFramebufferSize(window, &framebuffer_size.x, &framebuffer_size.y);
 
-        logger->info("Creating D3D12 backend");
+        logger->info("Creating D3D12 backend with framebuffer resolution %dx%d", framebuffer_size.x, framebuffer_size.y);
 
         return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size);
     }

@@ -37,8 +37,8 @@ namespace sanity::editor::ui {
         registry->emplace<engine::TransformComponent>(new_entity);
 
         auto& component_list = registry->emplace<ComponentClassIdList>(new_entity);
-        component_list.class_ids.push_back(_uuidof(engine::TransformComponent));
         component_list.class_ids.push_back(_uuidof(engine::SanityEngineEntity));
+        component_list.class_ids.push_back(_uuidof(engine::TransformComponent));
 
         auto* window = show_edit_entity_window(new_entity, *registry);
         window->is_visible = true;

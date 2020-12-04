@@ -18,6 +18,9 @@
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/console/variable.h"
 #include "rx/core/concurrency/mutex.h"
+#include "rx/core/map.h"
+#include "rx/core/optional.h"
+#include "rx/core/ptr.h"
 #include "settings.hpp"
 
 struct GLFWwindow;
@@ -362,7 +365,7 @@ namespace sanity::engine::renderer {
         void destroy_resources_for_frame(Uint32 frame_idx);
 
         void transition_swapchain_image_to_render_target();
-    	
+
         void transition_swapchain_image_to_presentable();
 
         void wait_for_frame(uint64_t frame_index);
@@ -379,4 +382,4 @@ namespace sanity::engine::renderer {
     };
 
     [[nodiscard]] Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window);
-} // namespace renderer
+} // namespace sanity::engine::renderer

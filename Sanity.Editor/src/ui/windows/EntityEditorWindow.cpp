@@ -23,22 +23,32 @@ namespace sanity::editor::ui {
         component_list.class_ids.each_fwd([&](const GUID class_id) { draw_component_editor(class_id, entity, registry); });
     }
 
+    void draw_component_editor(engine::SanityEngineEntity& entity);
     void draw_component_editor(engine::TransformComponent& transform);
 
     void draw_component_editor(const GUID& class_id, const entt::entity& entity, entt::registry& registry) {
         const auto class_name = engine::class_name_from_guid(class_id);
         if(ImGui::CollapsingHeader(class_name.data())) {
-            if(class_id == _uuidof(engine::TransformComponent)) {
+            if(class_id == _uuidof(engine::SanityEngineEntity)) {
+                auto& component = registry.get<engine::SanityEngineEntity>(entity);
+                draw_component_editor(component);
+            	
+            } else if(class_id == _uuidof(engine::TransformComponent)) {
                 auto& component = registry.get<engine::TransformComponent>(entity);
                 draw_component_editor(component);
             }
         }
     }
 
+    void draw_component_editor(engine::SanityEngineEntity& entity) {
+        draw_property_editor("name", entity.name);
+        draw_property_editor("tags", entity.tags);
+    }
+
     void draw_component_editor(engine::TransformComponent& transform) {
-        vec3_property("location", transform.location);
-        quat_property("rotation", transform.rotation);
-        vec3_property("scale", transform.scale);
+        draw_property_editor("location", transform.location);
+        draw_property_editor("rotation", transform.rotation);
+        draw_property_editor("scale", transform.scale);
     }
 
 } // namespace sanity::editor::ui

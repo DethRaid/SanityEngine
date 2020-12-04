@@ -44,9 +44,12 @@ namespace sanity::engine::renderer {
           denoiser_pass_handle{nullptr, 0},
           scene_output_pass_handle{nullptr, 0},
           imgui_pass_handle{nullptr, 0} {
+        ZoneScoped;
 
-        ZoneScoped int width, height;
+        int width, height;
         glfwGetFramebufferSize(window, &width, &height);
+
+        logger->verbose("Setting output framebuffer resolution to %dx%d", width, height);
 
         output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
 
@@ -194,7 +197,7 @@ namespace sanity::engine::renderer {
                 barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
 
                 barriers.push_back(barrier);
-            	
+
             } else {
                 if(before_after_state.second != D3D12_RESOURCE_STATE_COMMON) {
                     // no next usage so just barrier to COMMON
@@ -274,9 +277,8 @@ namespace sanity::engine::renderer {
 
         if(create_info.usage == ImageUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
-            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
-                                                                                 D3D12_RESOURCE_STATE_COMMON,
-                                                                                 D3D12_RESOURCE_STATE_COPY_DEST)};
+            const auto barriers = Rx::Array{
+                CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)};
 
             commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
@@ -778,4 +780,4 @@ namespace sanity::engine::renderer {
 
         return index;
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer
