@@ -10,6 +10,13 @@ namespace sanity::editor::ui {
 
     void ApplicationGui::draw_application_menu() {
         ImGui::BeginMainMenuBar();
+
+    	if(ImGui::BeginMenu("Window"))
+    	{
+            draw_window_menu();
+            ImGui::EndMenu();
+    	}
+    	
         if(ImGui::BeginMenu("World")) {
             draw_world_menu();
 
@@ -23,6 +30,13 @@ namespace sanity::editor::ui {
         }
 
         ImGui::EndMainMenuBar();
+    }
+
+    void ApplicationGui::draw_window_menu()
+    { if(ImGui::MenuItem("Content Browser"))
+    {
+            ui_controller->show_content_browser();
+    }
     }
 
     void ApplicationGui::draw_world_menu() const {

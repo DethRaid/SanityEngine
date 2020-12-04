@@ -535,3 +535,4 @@ vcpkg_installed/
 /target
 /sanity_editor/target/
 /SanityEngine/imgui.ini
+*.blend1

@@ -48,6 +48,8 @@ namespace sanity::engine {
         [[nodiscard]] World* get_world() const;
 
         [[nodiscard]] GLFWwindow* get_window() const;
+    	
+        [[nodiscard]] renderer::Renderer& get_renderer() const;
 
     private:
         rex::Wrapper rex;

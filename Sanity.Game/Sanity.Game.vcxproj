@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{58f00a44-26a2-432b-8602-482de22736eb}</ProjectGuid>
-    <RootNamespace>SanityEditor</RootNamespace>
+    <ProjectGuid>{ddc23a4f-8bb8-4ee1-b8a2-28064445b7ff}</ProjectGuid>
+    <RootNamespace>SanityGame</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -78,9 +78,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)SanityEngine\extern\rex\src;$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\tracy;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\SanityEngine/extern/rex/src;$(ProjectDir)..\SanityEngine/extern/physx/lib/debug;$(ProjectDir)..\SanityEngine/extern/pix/lib;$(ProjectDir)..\SanityEngine/extern/bve/lib;$(ProjectDir)..\SanityEngine\x64\Debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <IncludePath>$(SolutionDir)SanityEngine\extern\rex\src;$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\tracy;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)..\SanityEngine/extern/rex/src;$(ProjectDir)..\SanityEngine/extern/physx/lib/debug;$(ProjectDir)..\SanityEngine/extern/pix/lib;$(ProjectDir)..\SanityEngine/extern/bve/lib;$(ProjectDir)..\SanityEngine\x64\Debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -148,39 +148,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\entity\Components.cpp" />
-    <ClCompile Include="src\SanityEditor.cpp" />
-    <ClCompile Include="src\serialization\EntitySerialization.cpp" />
-    <ClCompile Include="src\serialization\GetJsonForComponent.cpp" />
-    <ClCompile Include="src\ui\ApplicationGui.cpp" />
-    <ClCompile Include="src\ui\EditorUiController.cpp" />
-    <ClCompile Include="src\ui\windows\content_browser.cpp" />
-    <ClCompile Include="src\ui\windows\EntityEditorWindow.cpp" />
-    <ClCompile Include="src\ui\windows\WorldgenParamsEditor.cpp" />
+    <ClCompile Include="Sanity.Game.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\entity\Components.hpp" />
-    <ClInclude Include="src\SanityEditor.hpp" />
-    <ClInclude Include="src\serialization\EntitySerialization.hpp" />
-    <ClInclude Include="src\serialization\GetJsonForComponent.hpp" />
-    <ClInclude Include="src\ui\ApplicationGui.hpp" />
-    <ClInclude Include="src\ui\EditorUiController.hpp" />
-    <ClInclude Include="src\ui\windows\content_browser.hpp" />
-    <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp" />
-    <ClInclude Include="src\ui\windows\WorldgenParamsEditor.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rex.Core\Rex.Core.vcxproj">
-      <Project>{6aacae55-e651-4560-b606-7c957c8e2786}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SanityEngine\SanityEngine.vcxproj">
-      <Project>{a6d26a06-5f0c-3136-9293-218915cc95c4}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="data\textures\icons\blend.png">
+    <None Include="content\settlements\buildings\complex_hut.glb">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-    </Image>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

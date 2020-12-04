@@ -16,9 +16,11 @@ namespace sanity::editor::ui {
     private:
         EditorUiController* ui_controller{nullptr};
 
-#pragma region Application menu bar
+#pragma region Application menu bar    	
         void draw_application_menu();
 
+        void draw_window_menu();
+    	
         void draw_world_menu() const;
 
         void draw_entity_menu();

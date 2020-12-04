@@ -10,5 +10,7 @@ namespace sanity::engine {
         } else if(class_id == _uuidof(SanityEngineEntity)) {
             return "SanityEngineEntity";
         }
+
+    	return "Unknown class";
     }
 } // namespace sanity::engine

@@ -453,7 +453,7 @@ namespace sanity::engine {
 
                 {
                     logger->verbose("Marking tile (%d, %d) as completely loaded", create_info.tilecoord.x, create_info.tilecoord.y);
-                    Rx::Log::flush();
+                    
                     Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
                     loaded_terrain_tiles.find(create_info.tilecoord)->loading_phase = TerrainTile::LoadingPhase::Complete;
                 }

@@ -389,10 +389,19 @@
     <ClInclude Include="src\core\ComponentJsonConversion.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\EntityJsonConversion.hpp" />
     <ClInclude Include="resource1.h" />
-    <ClInclude Include="src\core\class_id.hpp" />
-    <ClInclude Include="src\ui\property_drawers.hpp" />
+    <ClInclude Include="src\loading\asset_loader.hpp">
+      <Filter>src\loading</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\class_id.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\property_drawers.hpp">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\EntityJsonConversion.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -572,12 +581,21 @@
     <ClCompile Include="src\core\RexJsonConversion.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\EntityJsonConversion.cpp" />
     <ClCompile Include="src\core\components.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\class_id.cpp" />
-    <ClCompile Include="src\ui\property_drawers.cpp" />
+    <ClCompile Include="src\loading\asset_loader.cpp">
+      <Filter>src\loading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\class_id.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\property_drawers.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\EntityJsonConversion.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

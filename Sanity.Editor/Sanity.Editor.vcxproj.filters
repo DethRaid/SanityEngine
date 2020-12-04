@@ -17,6 +17,15 @@
     <Filter Include="src\entity">
       <UniqueIdentifier>{89c77e0a-4281-4404-965d-5f3f8059179f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="data">
+      <UniqueIdentifier>{90835a04-43ca-4700-9e23-f43e987899f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data\textures">
+      <UniqueIdentifier>{7ae52218-bda2-459f-bf36-3fcab2be7714}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data\textures\icons">
+      <UniqueIdentifier>{99d00109-5296-4e2f-93e2-838618e84b95}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SanityEditor.cpp">
@@ -41,6 +50,9 @@
       <Filter>src\serialization</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\windows\EntityEditorWindow.cpp">
+      <Filter>src\ui\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\windows\content_browser.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,6 +76,14 @@
     <ClInclude Include="src\serialization\GetJsonForComponent.hpp">
       <Filter>src\serialization</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp" />
+    <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp">
+      <Filter>src\ui\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\windows\content_browser.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="data\textures\icons\blend.png">
+      <Filter>data\textures\icons</Filter>
+    </Image>
   </ItemGroup>
 </Project>

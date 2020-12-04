@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/types.hpp"
 #include "rx/core/vector.h"
 
 template <typename ValueType>
@@ -9,6 +10,8 @@ public:
 
     ValueType* operator->();
 
+    [[nodiscard]] Size get_index() const;
+
 private:
     Rx::Vector<ValueType>* container{nullptr};
 
@@ -16,9 +19,15 @@ private:
 };
 
 template <typename ValueType>
-VectorHandle<ValueType>::VectorHandle(Rx::Vector<ValueType>* container_in, const Size index_in) : container{container_in}, index{index_in} {}
+VectorHandle<ValueType>::VectorHandle(Rx::Vector<ValueType>* container_in, const Size index_in)
+    : container{container_in}, index{index_in} {}
 
 template <typename ValueType>
 ValueType* VectorHandle<ValueType>::operator->() {
     return &(*container)[index];
+}
+
+template <typename ValueType>
+Size VectorHandle<ValueType>::get_index() const {
+    return index;
 }

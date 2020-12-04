@@ -409,6 +409,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
     <ClInclude Include="src\input\PlatformInput.hpp" />
+    <ClInclude Include="src\loading\asset_loader.hpp" />
     <ClInclude Include="src\loading\entity_loading.hpp" />
     <ClInclude Include="src\loading\image_loading.hpp" />
     <ClInclude Include="src\loading\mesh_loading.hpp" />
@@ -485,6 +486,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />
     <ClCompile Include="src\input\PlatformInput.cpp" />
+    <ClCompile Include="src\loading\asset_loader.cpp" />
     <ClCompile Include="src\loading\entity_loading.cpp" />
     <ClCompile Include="src\loading\image_loading.cpp" />
     <ClCompile Include="src\loading\mesh_loading.cpp" />

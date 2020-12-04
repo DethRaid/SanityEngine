@@ -2,6 +2,7 @@
 
 #include "core/async/synchronized_resource.hpp"
 #include "entt/entity/registry.hpp"
+#include "windows/content_browser.hpp"
 
 namespace sanity {
     namespace engine {
@@ -26,11 +27,17 @@ namespace sanity::editor::ui {
 
         EntityEditorWindow* show_edit_entity_window(entt::entity& entity, entt::registry& registry) const;
     	
-        void create_and_edit_new_entity();
+        void create_and_edit_new_entity() const;
+    	
+        void show_content_browser() const;
 
     private:
         WorldgenParamsEditor* worldgen_params_editor{nullptr};
+    	
+        ContentBrowser* content_browser{nullptr};
 
         void create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry);
+
+        void create_content_browser(entt::registry& registry);
     };
 } // namespace sanity::editor::ui

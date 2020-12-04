@@ -58,7 +58,9 @@ namespace sanity::engine {
 
         const auto cvar_ini_filepath = Rx::String::format("%s/%s", executable_directory, cvar_ini_file_name->get().data());
         if(!console_context.load(cvar_ini_filepath.data())) {
-            logger->warning("Could not load cvars from file %s (full path %s). Using default values", cvar_ini_file_name->get().data(), cvar_ini_filepath);
+            logger->warning("Could not load cvars from file %s (full path %s). Using default values",
+                            cvar_ini_file_name->get().data(),
+                            cvar_ini_filepath);
         }
 
         {
@@ -76,6 +78,7 @@ namespace sanity::engine {
             {
                 ZoneScopedN("glfwCreateWindow");
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+                glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
                 window = glfwCreateWindow(1920, 1090, "Sanity Engine", nullptr, nullptr);
                 if(window == nullptr) {
                     Rx::abort("Could not create GLFW window");
@@ -192,6 +195,8 @@ namespace sanity::engine {
 
     GLFWwindow* SanityEngine::get_window() const { return window; }
 
+    renderer::Renderer& SanityEngine::get_renderer() const { return *renderer.get(); }
+
     void SanityEngine::register_cvar_change_listeners() {
         show_frametime_display->on_change([&](Rx::Console::Variable<bool>& var) {
             if(var) {
@@ -246,8 +251,10 @@ namespace sanity::engine {
         if(!console_window_entity) {
             auto locked_registry = global_registry.lock();
             console_window_entity = locked_registry->create();
-            locked_registry->emplace<ui::UiComponent>(*console_window_entity,
-                                                      Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
+            auto& comp = locked_registry->emplace<ui::UiComponent>(*console_window_entity,
+                                                                   Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
+            auto* window = static_cast<ui::Window*>(comp.panel.get());
+            window->is_visible = true;
         }
     }
 
