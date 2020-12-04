@@ -248,6 +248,7 @@ namespace sanity::engine {
     }
 
     void Terrain::load_terrain_textures_and_create_material() {
+    	// TODO: Fix these paths
         const char* albedo_texture_name = "textures/block/grass_block_top.png";
         const char* normal_roughness_texture_name = "textures/block/grass_block_top_n.png";
 

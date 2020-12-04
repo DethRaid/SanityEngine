@@ -148,6 +148,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\asset_registry\asset_metadata_json_conversion.cpp" />
+    <ClCompile Include="src\asset_registry\asset_registry.cpp" />
     <ClCompile Include="src\entity\Components.cpp" />
     <ClCompile Include="src\SanityEditor.cpp" />
     <ClCompile Include="src\serialization\EntitySerialization.cpp" />
@@ -156,9 +158,13 @@
     <ClCompile Include="src\ui\EditorUiController.cpp" />
     <ClCompile Include="src\ui\windows\content_browser.cpp" />
     <ClCompile Include="src\ui\windows\EntityEditorWindow.cpp" />
+    <ClCompile Include="src\ui\windows\mesh_import_window.cpp" />
     <ClCompile Include="src\ui\windows\WorldgenParamsEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\asset_registry\asset_metadata_json_conversion.hpp" />
+    <ClInclude Include="src\asset_registry\asset_registry.hpp" />
+    <ClInclude Include="src\asset_registry\asset_registry_structs.hpp" />
     <ClInclude Include="src\entity\Components.hpp" />
     <ClInclude Include="src\SanityEditor.hpp" />
     <ClInclude Include="src\serialization\EntitySerialization.hpp" />
@@ -167,6 +173,7 @@
     <ClInclude Include="src\ui\EditorUiController.hpp" />
     <ClInclude Include="src\ui\windows\content_browser.hpp" />
     <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp" />
+    <ClInclude Include="src\ui\windows\mesh_import_window.hpp" />
     <ClInclude Include="src\ui\windows\WorldgenParamsEditor.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +188,8 @@
     <Image Include="data\textures\icons\blend.png">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </Image>
+    <Image Include="data\textures\icons\directory.png" />
+    <Image Include="data\textures\icons\glb.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

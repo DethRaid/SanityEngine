@@ -42,6 +42,10 @@ namespace sanity::editor {
 
     engine::AssetLoader& SanityEditor::get_asset_loader() const { return *asset_loader; }
 
+    ui::EditorUiController& SanityEditor::get_ui_controller() { return ui_controller; }
+
+    AssetRegistry& SanityEditor::get_asset_registry() { return asset_registry; }
+
     void SanityEditor::create_application_gui() {
         auto registry = engine::g_engine->get_global_registry().lock();
 

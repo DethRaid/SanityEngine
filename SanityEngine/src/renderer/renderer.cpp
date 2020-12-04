@@ -475,9 +475,9 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_builtin_images() {
-        ZoneScoped
+        ZoneScoped;
 
-            load_noise_texture("textures/LDR_RGBA_0.png");
+            load_noise_texture("data/textures/LDR_RGBA_0.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");
@@ -543,7 +543,7 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::load_noise_texture(const Rx::String& filepath) {
-        ZoneScoped
+        ZoneScoped;
 
             const auto handle = load_image_to_gpu(filepath, *this);
 

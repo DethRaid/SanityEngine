@@ -7,6 +7,8 @@
 #include "rx/core/string.h"
 
 namespace sanity::engine::ui {
+    void draw_property_editor(const Rx::String& label, bool& b) { ImGui::Checkbox(label.data(), &b); }
+
     void draw_property_editor(const Rx::String& label, glm::vec3& vec) {
         ImGui::PushID(label.data());
 
@@ -48,11 +50,11 @@ namespace sanity::engine::ui {
     void draw_property_editor(const Rx::String& label, Rx::String& string) {
         constexpr Size buffer_size = 1024;
         static char name_buffer[buffer_size];
-    	
+
         memcpy(name_buffer, string.data(), Rx::Algorithm::max(buffer_size, string.size()));
-       
+
         ImGui::InputText(label.data(), name_buffer, buffer_size / sizeof(char));
-    	
+
         string = name_buffer;
     }
 } // namespace sanity::engine::ui

@@ -8,6 +8,8 @@ namespace Rx {
 }
 
 namespace sanity::engine::ui {
+    void draw_property_editor(const Rx::String& label, bool& b);
+	
     void draw_property_editor(const Rx::String& label, glm::vec3& vec);
 
     void draw_property_editor(const Rx::String& label, glm::quat& quat);

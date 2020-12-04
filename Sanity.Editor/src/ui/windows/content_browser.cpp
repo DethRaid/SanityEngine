@@ -7,9 +7,12 @@
 #include "rx/core/string.h"
 #include "rx/core/utility/move.h"
 #include "sanity_engine.hpp"
+#include "asset_registry/asset_registry.hpp"
 
 namespace sanity::editor::ui {
     RX_LOG("ContentBrowser", logger);
+
+	constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
 
     ContentBrowser::ContentBrowser(Rx::String content_directory_in)
         : Window{"Content Browser"}, content_directory{Rx::Utility::move(content_directory_in)}, selected_directory{content_directory} {}
@@ -22,18 +25,34 @@ namespace sanity::editor::ui {
 
         if(content_directory != selected_directory) {
             draw_back_button();
-        	
+
         } else {
             ImGui::Text("Content root");
         }
+
+    	const auto width = ImGui::GetWindowWidth();
+        const auto num_columns = floor(width / DIRECTORY_ITEM_WIDTH);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
+        ImGui::Columns(static_cast<Uint32>(num_columns));
+        ImGui::Separator();
 
         dir.each([&](Rx::Filesystem::Directory::Item&& item) {
             if(item.is_directory()) {
                 draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
                     selected_directory = Rx::String::format("%s/%s", selected_directory, selected_item.name());
                 });
+            	
+            } else if(item.is_file()) {
+                draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
+                    g_editor->get_ui_controller().show_editor_for_asset(selected_item.name());
+                });
             }
         });
+
+        ImGui::Columns(1);
+        ImGui::Separator();
+        ImGui::PopStyleVar();
     }
 
     void ContentBrowser::draw_back_button() {
@@ -48,7 +67,13 @@ namespace sanity::editor::ui {
                                               const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open) {
         const auto& item_name = item.name();
 
-        if(ImGui::Button(item_name.data(), {100, 100})) {
+    	auto& asset_registry = g_editor->get_asset_registry();
+
+        const auto file_icon = asset_registry.get_icon_for_file(item_name);
+        ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
+        ImGui::SameLine();
+
+        if(ImGui::Button(item_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
             on_open(item);
         }
     }

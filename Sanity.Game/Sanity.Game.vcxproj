@@ -151,6 +151,9 @@
     <ClCompile Include="Sanity.Game.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="content\settlements\buildings\complex_hut.blend">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </None>
     <None Include="content\settlements\buildings\complex_hut.glb">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </None>

@@ -24,5 +24,8 @@
     <None Include="content\settlements\buildings\complex_hut.glb">
       <Filter>content\settlements\buildings</Filter>
     </None>
+    <None Include="content\settlements\buildings\complex_hut.blend">
+      <Filter>content\settlements\buildings</Filter>
+    </None>
   </ItemGroup>
 </Project>

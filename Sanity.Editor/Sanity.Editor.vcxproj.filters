@@ -26,6 +26,9 @@
     <Filter Include="data\textures\icons">
       <UniqueIdentifier>{99d00109-5296-4e2f-93e2-838618e84b95}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\asset_registry">
+      <UniqueIdentifier>{5f45c7f0-83b8-4501-aac2-3fe7da94ef98}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SanityEditor.cpp">
@@ -43,9 +46,6 @@
     <ClCompile Include="src\serialization\EntitySerialization.cpp">
       <Filter>src\serialization</Filter>
     </ClCompile>
-    <ClCompile Include="src\entity\Components.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\serialization\GetJsonForComponent.cpp">
       <Filter>src\serialization</Filter>
     </ClCompile>
@@ -53,7 +53,19 @@
       <Filter>src\ui\windows</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\windows\content_browser.cpp">
-      <Filter>src</Filter>
+      <Filter>src\ui\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\entity\Components.cpp">
+      <Filter>src\entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asset_registry\asset_registry.cpp">
+      <Filter>src\asset_registry</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asset_registry\asset_metadata_json_conversion.cpp">
+      <Filter>src\asset_registry</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\windows\mesh_import_window.cpp">
+      <Filter>src\ui\windows</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -72,17 +84,39 @@
     <ClInclude Include="src\serialization\EntitySerialization.hpp">
       <Filter>src\serialization</Filter>
     </ClInclude>
-    <ClInclude Include="src\entity\Components.hpp" />
     <ClInclude Include="src\serialization\GetJsonForComponent.hpp">
       <Filter>src\serialization</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp">
       <Filter>src\ui\windows</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\windows\content_browser.hpp" />
+    <ClInclude Include="src\ui\windows\content_browser.hpp">
+      <Filter>src\ui\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\entity\Components.hpp">
+      <Filter>src\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset_registry\asset_registry.hpp">
+      <Filter>src\asset_registry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset_registry\asset_metadata_json_conversion.hpp">
+      <Filter>src\asset_registry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset_registry\asset_registry_structs.hpp">
+      <Filter>src\asset_registry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\windows\mesh_import_window.hpp">
+      <Filter>src\ui\windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\textures\icons\blend.png">
+      <Filter>data\textures\icons</Filter>
+    </Image>
+    <Image Include="data\textures\icons\directory.png">
+      <Filter>data\textures\icons</Filter>
+    </Image>
+    <Image Include="data\textures\icons\glb.png">
       <Filter>data\textures\icons</Filter>
     </Image>
   </ItemGroup>

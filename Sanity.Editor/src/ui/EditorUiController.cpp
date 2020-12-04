@@ -1,6 +1,10 @@
 #include "EditorUiController.hpp"
 
+#include "asset_registry/asset_metadata_json_conversion.hpp"
+#include "asset_registry/asset_registry.hpp"
 #include "entity/Components.hpp"
+#include "nlohmann/json.hpp"
+#include "rx/core/filesystem/file.h"
 #include "rx/core/ptr.h"
 #include "rx/core/utility/move.h"
 #include "sanity_engine.hpp"
@@ -8,6 +12,7 @@
 #include "windows/EntityEditorWindow.hpp"
 #include "windows/WorldgenParamsEditor.hpp"
 #include "windows/content_browser.hpp"
+#include "windows/mesh_import_window.hpp"
 
 namespace sanity::editor::ui {
     EditorUiController::EditorUiController() {
@@ -53,6 +58,24 @@ namespace sanity::editor::ui {
         }
     }
 
+    void EditorUiController::show_editor_for_asset(const Rx::String& asset_path) const {
+        const auto dot_pos = asset_path.find_last_of(".");
+        const auto extension = asset_path.substring(dot_pos + 1);
+        if(extension == "blend") {
+            open_mesh_import_settings(asset_path);
+        }
+    }
+
+    void EditorUiController::open_mesh_import_settings(const Rx::String& mesh_path) const {
+        auto registry = engine::g_engine->get_global_registry().lock();
+        const auto entity = registry->create();
+        const auto& comp = registry->emplace<engine::ui::UiComponent>(entity,
+                                                                      Rx::make_ptr<MeshImportWindow>(RX_SYSTEM_ALLOCATOR, mesh_path));
+        auto* window = static_cast<MeshImportWindow*>(comp.panel.get());
+        window->is_visible = true;
+        // Load the file's meta file. If there is no meta file, use default settings
+    }
+
     void EditorUiController::create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry) {
         const auto entity = registry->create();
         const auto& comp = registry->emplace<engine::ui::UiComponent>(entity, Rx::make_ptr<WorldgenParamsEditor>(RX_SYSTEM_ALLOCATOR));
@@ -63,13 +86,13 @@ namespace sanity::editor::ui {
     void EditorUiController::create_content_browser(entt::registry& registry) {
         const auto entity = registry.create();
 
-    	// Totally hardcoded content directory. In theory we'll have a way to select a project to open, in practice I'm
-    	// not sure I care
-    	const auto& content_directory = Rx::String::format("%s/content", engine::SanityEngine::executable_directory);
+        // Totally hardcoded content directory. In theory we'll have a way to select a project to open, in practice I'm
+        // not sure I care
+        const auto& content_directory = Rx::String::format("%s/content", engine::SanityEngine::executable_directory);
         auto content_browser_ptr = Rx::make_ptr<ContentBrowser>(RX_SYSTEM_ALLOCATOR, content_directory);
-    	const auto& comp = registry.emplace<engine::ui::UiComponent>(entity, Rx::Utility::move(content_browser_ptr));
+        const auto& comp = registry.emplace<engine::ui::UiComponent>(entity, Rx::Utility::move(content_browser_ptr));
 
-    	content_browser = static_cast<ContentBrowser*>(comp.panel.get());
+        content_browser = static_cast<ContentBrowser*>(comp.panel.get());
         content_browser->is_visible = true;
     }
 } // namespace sanity::editor::ui

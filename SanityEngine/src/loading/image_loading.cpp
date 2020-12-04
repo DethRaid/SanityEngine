@@ -21,7 +21,7 @@ namespace sanity::engine {
         ZoneScoped;
 
         const auto& exe_directory = SanityEngine::executable_directory;
-        const auto full_image_path = Rx::String::format("%s/%s/%s", exe_directory, RESOURCES_DIRECTORY, image_name);
+        const auto full_image_path = Rx::String::format("%s/%s", exe_directory, image_name);
 
         int raw_width, raw_height, num_components;
 

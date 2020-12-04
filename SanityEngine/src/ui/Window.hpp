@@ -12,7 +12,7 @@ namespace sanity::engine::ui {
     public:
         bool is_visible = false;
 
-        explicit Window(const Rx::String& name_in, ImGuiWindowFlags flags_in = 0);
+        explicit Window(const Rx::String& name_in = "Window", ImGuiWindowFlags flags_in = 0);
 
         ~Window() override = default;
 
