@@ -1,9 +1,9 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "glm/ext/quaternion_float.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include "glm/ext/quaternion_float.hpp" // This include MUST be after glm/gtc/quaternion.hpp
 #include "rx/core/map.h"
 #include "rx/core/string.h"
 

@@ -25,6 +25,8 @@ namespace sanity::editor::ui {
         void show_worldgen_params_editor() const;
 
         EntityEditorWindow* show_edit_entity_window(entt::entity& entity, entt::registry& registry) const;
+    	
+        void create_and_edit_new_entity();
 
     private:
         WorldgenParamsEditor* worldgen_params_editor{nullptr};

@@ -390,6 +390,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\ansi_colors.hpp" />
     <ClInclude Include="src\core\asset_registry.hpp" />
     <ClInclude Include="src\core\async\synchronized_resource.hpp" />
+    <ClInclude Include="src\core\class_id.hpp" />
     <ClInclude Include="src\core\ComponentJsonConversion.hpp" />
     <ClInclude Include="src\core\components.hpp" />
     <ClInclude Include="src\core\concepts\EnumLike.hpp" />
@@ -450,6 +451,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\ui\ConsoleWindow.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
     <ClInclude Include="src\ui\fps_display.hpp" />
+    <ClInclude Include="src\ui\property_drawers.hpp" />
     <ClInclude Include="src\ui\ui_components.hpp" />
     <ClInclude Include="src\ui\ui_panel.hpp" />
     <ClInclude Include="src\ui\Window.hpp" />
@@ -475,6 +477,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp" />
     <ClCompile Include="src\adapters\rex\stdout_stream.cpp" />
     <ClCompile Include="src\core\asset_registry.cpp" />
+    <ClCompile Include="src\core\class_id.cpp" />
     <ClCompile Include="src\core\components.cpp" />
     <ClCompile Include="src\core\EntityJsonConversion.cpp" />
     <ClCompile Include="src\core\RexJsonConversion.cpp" />
@@ -514,6 +517,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\ui\ConsoleWindow.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />
+    <ClCompile Include="src\ui\property_drawers.cpp" />
     <ClCompile Include="src\ui\ui_components.cpp" />
     <ClCompile Include="src\ui\Window.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />

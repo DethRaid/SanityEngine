@@ -33,7 +33,7 @@ namespace sanity::editor::ui {
 
     void ApplicationGui::draw_entity_menu() {
         if(ImGui::MenuItem("New entity")) {
-            ui_controller->show_edit_entity_window();
+            ui_controller->create_and_edit_new_entity();
         }
     }
 } // namespace sanity::editor::ui

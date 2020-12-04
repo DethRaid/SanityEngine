@@ -391,6 +391,8 @@
     </ClInclude>
     <ClInclude Include="src\core\EntityJsonConversion.hpp" />
     <ClInclude Include="resource1.h" />
+    <ClInclude Include="src\core\class_id.hpp" />
+    <ClInclude Include="src\ui\property_drawers.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -574,6 +576,8 @@
     <ClCompile Include="src\core\components.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\class_id.cpp" />
+    <ClCompile Include="src\ui\property_drawers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

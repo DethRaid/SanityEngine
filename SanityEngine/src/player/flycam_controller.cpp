@@ -13,7 +13,7 @@ FlycamController::FlycamController(GLFWwindow* window_in,
     : window{window_in}, controlled_entity{controlled_entity_in}, registry_ptr{&registry_in} {
     // Quick validation
     auto registry = registry_ptr->lock();
-    RX_ASSERT(registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
+    RX_ASSERT(registry->has<sanity::engine::TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
@@ -23,7 +23,7 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
 
 	auto registry = registry_ptr->lock();
 	
-    auto& player_transform = registry->get<TransformComponent>(controlled_entity);
+    auto& player_transform = registry->get<sanity::engine::TransformComponent>(controlled_entity);
 
     const auto forward = player_transform.get_forward_vector();
     const auto right = player_transform.get_right_vector();

@@ -1,5 +1,6 @@
 #include "EditorUiController.hpp"
 
+#include "entity/Components.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/utility/move.h"
 #include "sanity_engine.hpp"
@@ -24,6 +25,23 @@ namespace sanity::editor::ui {
         auto* entity_editor_window = static_cast<EntityEditorWindow*>(comp.panel.get());
 
         return entity_editor_window;
+    }
+
+    void EditorUiController::create_and_edit_new_entity() {
+        auto registry = engine::g_engine->get_global_registry().lock();
+
+        auto new_entity = registry->create();
+
+        auto& entity_component = registry->emplace<engine::SanityEngineEntity>(new_entity);
+        entity_component.name = "New Entity";
+        registry->emplace<engine::TransformComponent>(new_entity);
+
+        auto& component_list = registry->emplace<ComponentClassIdList>(new_entity);
+        component_list.class_ids.push_back(_uuidof(engine::TransformComponent));
+        component_list.class_ids.push_back(_uuidof(engine::SanityEngineEntity));
+
+        auto* window = show_edit_entity_window(new_entity, *registry);
+        window->is_visible = true;
     }
 
     void EditorUiController::create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry) {

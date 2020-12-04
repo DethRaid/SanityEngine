@@ -13,7 +13,7 @@ namespace sanity::editor::ui {
         void draw_contents() override;
 
     private:
-        entt::entity& entity{};
-        entt::registry& registry{};
+        entt::entity entity;
+        entt::registry& registry;
     };
 } // namespace sanity::editor::ui

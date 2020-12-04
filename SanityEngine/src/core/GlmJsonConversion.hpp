@@ -2,6 +2,7 @@
 
 #include "core/JsonConversion.hpp"
 #include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 namespace glm {
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(vec2, x, y)
