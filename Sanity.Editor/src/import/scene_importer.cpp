@@ -11,8 +11,14 @@
 #include "rx/core/log.h"
 #include "rx/core/string.h"
 
+#define LOG_MISSING_ATTRIBUTE(attribute_name) logger->error("No attribute %s in primitive, aborting", (attribute_name))
+
 namespace sanity::editor::import {
     RX_LOG("SceneImporter", logger);
+
+    constexpr const char* POSITION_ATTRIBUTE_NAME = "POSITION";
+    constexpr const char* NORMAL_ATTRIBUTE_NAME = "NORMAL";
+    constexpr const char* TEXCOORD_ATTRIBUTE_NAME = "TEXCOORD_0";
 
     constexpr const char* BASE_COLOR_TEXTURE_PARAM_NAME = "baseColorTexture";
     constexpr const char* METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME = "metallicRoughnessTexture";
@@ -22,9 +28,9 @@ namespace sanity::editor::import {
 
     SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
 
-    Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const Rx::String& scene_path, entt::registry& registry) {
-        const auto meta_file_path = Rx::String::format("%s.meta", scene_path);
-        const auto metadata = AssetRegistry::get_meta_for_asset<SceneImportSettings>(meta_file_path);
+    Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const Rx::String& scene_path,
+                                                                const SceneImportSettings& import_settings,
+                                                                entt::registry& registry) {
 
         tinygltf::Model scene;
         std::string err;
@@ -43,19 +49,21 @@ namespace sanity::editor::import {
 
         // How to import a scene?
         // First, load all the meshes, textures, materials, and other primitives
-        //
-        // Rx::Vector<engine::renderer::MeshHandle> meshes;
+
+        Rx::Vector<engine::renderer::Mesh> meshes;
         Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
         // Rx::Vector<engine::renderer::AnimationHandle> animations;
         Rx::Vector<engine::renderer::LightHandle> lights;
 
-        auto& renderer = engine::g_engine->get_renderer();
-        auto& backend = renderer.get_render_backend();
+        auto& backend = renderer->get_render_backend();
         auto cmds = backend.create_command_list();
 
-        const auto& import_settings = metadata.import_settings;
+        if(import_settings.import_meshes) {
+            meshes = import_all_meshes(scene, cmds.Get());
+        }
+
         if(import_settings.import_materials) {
-            materials = import_all_materials(scene, cmds);
+            materials = import_all_materials(scene, cmds.Get());
         }
 
         backend.submit_command_list(Rx::Utility::move(cmds));
@@ -67,8 +75,8 @@ namespace sanity::editor::import {
         return {};
     }
 
-    Rx::Vector<engine::renderer::StandardMaterialHandle> SceneImporter::import_all_materials(
-        const tinygltf::Model& scene, const ComPtr<ID3D12GraphicsCommandList4>& cmds) {
+    Rx::Vector<engine::renderer::StandardMaterialHandle> SceneImporter::import_all_materials(const tinygltf::Model& scene,
+                                                                                             ID3D12GraphicsCommandList4* cmds) {
         ZoneScoped;
 
         Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
@@ -118,7 +126,8 @@ namespace sanity::editor::import {
                 continue;
             }
 
-        	// Load the textures
+            // Load the textures
+
             if(const auto handle = upload_texture_from_gltf(static_cast<Uint32>(base_color_texture_idx), scene, cmds); handle.has_value()) {
                 sanity_material.base_color = *handle;
             }
@@ -131,6 +140,8 @@ namespace sanity::editor::import {
                 sanity_material.normal = *handle;
             }
 
+            // Allocate material on GPU
+
             const auto handle = renderer->allocate_standard_material(sanity_material);
             materials.push_back(handle);
         }
@@ -139,8 +150,8 @@ namespace sanity::editor::import {
     }
 
     Rx::Optional<engine::renderer::TextureHandle> SceneImporter::upload_texture_from_gltf(const Uint32 texture_idx,
-                                                                                       const tinygltf::Model& scene,
-                                                                                       const ComPtr<ID3D12GraphicsCommandList4>& cmds) {
+                                                                                          const tinygltf::Model& scene,
+                                                                                          ID3D12GraphicsCommandList4* cmds) {
         static Byte* padding_buffer{nullptr};
 
         ZoneScoped;
@@ -199,4 +210,139 @@ namespace sanity::editor::import {
 
         return handle;
     }
+
+    Rx::Vector<SceneImporter::ImportedMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds) {
+
+        for(const auto& mesh : scene.meshes) {
+            logger->info("Importing mesh %s", mesh.name.c_str());
+
+            for(Uint32 primitive_idx = 0; primitive_idx < mesh.primitives.size(); primitive_idx++) {
+                logger->info("Importing primitive %d", primitive_idx);
+
+                const auto& primitive = mesh.primitives[primitive_idx];
+
+                const auto& primitive_data = get_data_from_primitive(primitive, scene);
+                if(!primitive_data) {
+                    logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name.c_str());
+                    continue;
+                }
+            }
+        }
+    }
+
+    template <typename DataType>
+    [[nodiscard]] const DataType* get_pointer_to_accessor_data(int accessor_idx, const tinygltf::Model& scene);
+
+    Rx::Optional<SceneImporter::PrimitiveData> SceneImporter::get_data_from_primitive(const tinygltf::Primitive& primitive,
+                                                                                      const tinygltf::Model& scene) {
+        PrimitiveData data;
+
+        data.indices = get_indices_from_primitive(primitive, scene);
+
+        data.vertices = get_vertices_from_primitive(primitive, scene);
+
+        return data;
+    }
+
+    Rx::Vector<Uint32> SceneImporter::get_indices_from_primitive(const tinygltf::Primitive& primitive, const tinygltf::Model& scene) {
+        const auto* index_read_ptr = get_pointer_to_accessor_data<Uint32>(primitive.indices, scene);
+
+        Rx::Vector<Uint32> indices;
+
+        const auto& index_accessor = scene.accessors[primitive.indices];
+        indices.reserve(index_accessor.count);
+        for(Uint32 i = 0; i < index_accessor.count; i++) {
+            indices.push_back(*index_read_ptr);
+            index_read_ptr++;
+        }
+
+        return indices;
+    }
+
+    Rx::Vector<StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
+                                                                          const tinygltf::Model& scene) {
+        const auto& positions_itr = primitive.attributes.find(POSITION_ATTRIBUTE_NAME);
+        if(positions_itr == primitive.attributes.end()) {
+            LOG_MISSING_ATTRIBUTE(POSITION_ATTRIBUTE_NAME);
+
+            return {};
+        }
+
+        const auto* position_read_ptr = get_pointer_to_accessor_data<Vec3f>(positions_itr->second, scene);
+        if(position_read_ptr == nullptr) {
+            logger->error("Could not get a pointer to the vertex positions");
+            return {};
+        }
+
+        const auto* normal_read_ptr = [&]() -> const Vec3f* {
+            const auto& normals_itr = primitive.attributes.find(NORMAL_ATTRIBUTE_NAME);
+            if(normals_itr == primitive.attributes.end()) {
+                LOG_MISSING_ATTRIBUTE(NORMAL_ATTRIBUTE_NAME);
+
+                return nullptr;
+            }
+
+            return get_pointer_to_accessor_data<Vec3f>(normals_itr->second, scene);
+        }();
+        if(normal_read_ptr == nullptr) {
+            logger->error("Could not get a pointer to the vertex normals");
+            return {};
+        }
+
+        const auto* texcoord_read_ptr = [&]() -> const Vec2f* {
+            const auto& texcoord_itr = primitive.attributes.find(TEXCOORD_ATTRIBUTE_NAME);
+            if(texcoord_itr == primitive.attributes.end()) {
+                LOG_MISSING_ATTRIBUTE(TEXCOORD_ATTRIBUTE_NAME);
+
+                return nullptr;
+            }
+
+            return get_pointer_to_accessor_data<Vec2f>(texcoord_itr->second, scene);
+        }();
+        if(texcoord_read_ptr == nullptr) {
+            logger->error("Could not get a pointer to the vertex texcoords");
+            return {};
+        }
+
+        const auto& positions_accessor = scene.accessors[positions_itr->second];
+
+        Rx::Vector<StandardVertex> vertices;
+        vertices.reserve(positions_accessor.count);
+
+        for(Uint32 i = 0; i < positions_accessor.count; i++) {
+            // Hope that all the buffers have the same size... They should...
+
+            vertices.push_back(StandardVertex{.position = *position_read_ptr, .normal = *normal_read_ptr, .texcoord = *texcoord_read_ptr});
+
+            position_read_ptr++;
+            normal_read_ptr++;
+            texcoord_read_ptr++;
+        }
+
+        return vertices;
+    }
+
+    template <typename DataType>
+    [[nodiscard]] const DataType* get_pointer_to_accessor_data(const int accessor_idx, const tinygltf::Model& scene) {
+        if(accessor_idx < 0) {
+            logger->error("Accessor index is less than 0, aborting");
+            return nullptr;
+        }
+
+        const auto& accessor = scene.accessors[accessor_idx];
+        if(accessor.bufferView < 0) {
+            logger->error("Buffer view index is less than zero, aborting");
+            return nullptr;
+        }
+
+        const auto& buffer_view = scene.bufferViews[accessor.bufferView];
+        if(buffer_view.target < 0) {
+            logger->error("Buffer index is less than zero, aborting");
+            return nullptr;
+        }
+
+        const auto& buffer = scene.buffers[buffer_view.target];
+        return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteStride);
+    }
+
 } // namespace sanity::editor::import

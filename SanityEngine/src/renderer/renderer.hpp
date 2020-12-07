@@ -4,6 +4,7 @@
 #include <queue>
 
 #include "core/Prelude.hpp"
+#include "core/VectorHandle.hpp"
 #include "core/async/synchronized_resource.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
@@ -19,7 +20,6 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
-#include "core/VectorHandle.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -28,8 +28,8 @@ struct GLFWwindow;
 namespace sanity::engine::renderer {
     class RenderCommandList;
 
-	using RenderpassHandle = VectorHandle<Rx::Ptr<RenderPass>>;
-	
+    using RenderpassHandle = VectorHandle<Rx::Ptr<RenderPass>>;
+
     /*!
      * \brief All the information needed to decide whether or not to issue a drawcall for an object
      */
@@ -73,8 +73,8 @@ namespace sanity::engine::renderer {
      */
     class Renderer {
     public:
-	    inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000};
-    	
+        inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000};
+
         explicit Renderer(GLFWwindow* window);
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,
-                                                 const ComPtr<ID3D12GraphicsCommandList4>& commands);
+                                                 ID3D12GraphicsCommandList4* commands);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
@@ -104,10 +104,10 @@ namespace sanity::engine::renderer {
 
         void schedule_texture_destruction(const TextureHandle& image_handle);
 
-    	/*!
-    	 * \brief Sets the image that the 3D scene will be rendered to
-    	 */
-    	void set_scene_output_image(TextureHandle output_image_handle);
+        /*!
+         * \brief Sets the image that the 3D scene will be rendered to
+         */
+        void set_scene_output_image(TextureHandle output_image_handle);
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
@@ -175,13 +175,13 @@ namespace sanity::engine::renderer {
         TextureHandle specular_emission_texture_handle;
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
-    	
+
         RenderpassHandle forward_pass_handle;
         RenderpassHandle denoiser_pass_handle;
         RenderpassHandle scene_output_pass_handle;
         RenderpassHandle imgui_pass_handle;
 
-        #pragma region Initialization
+#pragma region Initialization
         void create_static_mesh_storage();
 
         void create_per_frame_buffers();
@@ -212,8 +212,10 @@ namespace sanity::engine::renderer {
                                        SynchronizedResourceAccessor<entt::registry>& registry,
                                        const Uint32& frame_idx,
                                        const World& world);
-    	
-        void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list, Uint32 render_pass_index, const Rx::Ptr<RenderPass>& render_pass);
+
+        void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
+                                     Uint32 render_pass_index,
+                                     const Rx::Ptr<RenderPass>& render_pass);
 
         void issue_post_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                       Uint32 render_pass_index,
@@ -242,4 +244,4 @@ namespace sanity::engine::renderer {
         void update_lights(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

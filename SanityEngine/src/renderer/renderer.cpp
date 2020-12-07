@@ -263,14 +263,12 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
-                                         const void* image_data,
-                                         const ComPtr<ID3D12GraphicsCommandList4>& commands) {
+    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info, const void* image_data, ID3D12GraphicsCommandList4* commands) {
         ZoneScoped;
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
-        TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), scope_name.data());
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, scope_name.data());
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, scope_name.data());
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, scope_name.data());
 
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
@@ -293,7 +291,7 @@ namespace sanity::engine::renderer {
             .SlicePitch = create_info.width * create_info.height * 4,
         };
 
-        const auto result = UpdateSubresources(commands.Get(), image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
+        const auto result = UpdateSubresources(commands, image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
         if(result == 0) {
             logger->error("Could not upload texture data");
 
@@ -477,7 +475,7 @@ namespace sanity::engine::renderer {
     void Renderer::create_builtin_images() {
         ZoneScoped;
 
-            load_noise_texture("data/textures/LDR_RGBA_0.png");
+        load_noise_texture("data/textures/LDR_RGBA_0.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");
@@ -499,7 +497,7 @@ namespace sanity::engine::renderer {
                     pink_texture_pixel.push_back(0xFFFF00FF);
                 }
 
-                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands);
+                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands.Get());
             }
 
             {
@@ -517,7 +515,7 @@ namespace sanity::engine::renderer {
 
                 normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
                                                                normal_roughness_texture_pixel.data(),
-                                                               commands);
+                                                               commands.Get());
             }
 
             {
@@ -535,7 +533,7 @@ namespace sanity::engine::renderer {
 
                 specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
                                                                 specular_emission_texture_pixel.data(),
-                                                                commands);
+                                                                commands.Get());
             }
         }
 
@@ -545,7 +543,7 @@ namespace sanity::engine::renderer {
     void Renderer::load_noise_texture(const Rx::String& filepath) {
         ZoneScoped;
 
-            const auto handle = load_image_to_gpu(filepath, *this);
+        const auto handle = load_image_to_gpu(filepath, *this);
 
         if(!handle) {
             logger->error("Could not load noise texture %s", filepath);
