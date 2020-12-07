@@ -14,6 +14,12 @@
     <Filter Include="content\settlements\buildings">
       <UniqueIdentifier>{f4898be2-a3d4-42f4-a648-a20b335ea33e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="content\materials">
+      <UniqueIdentifier>{c7939ef5-337d-4849-a5b2-223d85722148}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="content\materials\stucco">
+      <UniqueIdentifier>{2e5a6430-c7f9-489e-9d4b-9489c6307d41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sanity.Game.cpp">
@@ -21,11 +27,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="content\settlements\buildings\complex_hut.glb">
+    <None Include="content\settlements\buildings\complex_hut.gltf">
       <Filter>content\settlements\buildings</Filter>
     </None>
-    <None Include="content\settlements\buildings\complex_hut.blend">
-      <Filter>content\settlements\buildings</Filter>
-    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="content\materials\stucco\plaster_diffuse.jpg">
+      <Filter>content\materials\stucco</Filter>
+    </Image>
+    <Image Include="content\materials\stucco\plaster_normals.jpg">
+      <Filter>content\materials\stucco</Filter>
+    </Image>
+    <Image Include="content\materials\stucco\plaster_roughness_metallic.jpg">
+      <Filter>content\materials\stucco</Filter>
+    </Image>
   </ItemGroup>
 </Project>

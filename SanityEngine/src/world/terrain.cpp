@@ -259,10 +259,10 @@ namespace sanity::engine {
 
         const auto albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
         if(albedo_image_handle) {
-            material.albedo = *albedo_image_handle;
+            material.base_color = *albedo_image_handle;
         } else {
             logger->error("Could not load terrain albedo texture %s", albedo_texture_name);
-            material.albedo = renderer->get_pink_texture();
+            material.base_color = renderer->get_pink_texture();
         }
 
         const auto normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);

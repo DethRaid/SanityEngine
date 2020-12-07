@@ -4,6 +4,7 @@
 #include "nlohmann/json.hpp"
 #include "renderer/handles.hpp"
 #include "rx/core/filesystem/file.h"
+#include "rx/core/log.h"
 #include "rx/core/map.h"
 
 namespace Rx {
@@ -11,10 +12,15 @@ namespace Rx {
 }
 
 namespace sanity::editor {
+    RX_LOG("AssetRegistry", ar_logger);
+
     class AssetRegistry {
     public:
-        template <typename AssetImportSettingsType>
-        static AssetMetadata<AssetImportSettingsType> get_meta_for_asset(const Rx::String& asset_path);
+        template <typename ImportSettingsType>
+        static AssetMetadata<ImportSettingsType> get_meta_for_asset(const Rx::String& asset_path);
+
+        template <typename ImportSettingsType>
+        static void save_metadata_for_asset(const Rx::String& asset_path, const AssetMetadata<ImportSettingsType>& metadata);
 
         explicit AssetRegistry();
 
@@ -28,9 +34,9 @@ namespace sanity::editor {
         void load_directory_icon();
     };
 
-    template <typename AssetImportSettingsType>
-    AssetMetadata<AssetImportSettingsType> AssetRegistry::get_meta_for_asset(const Rx::String& asset_path) {
-        AssetMetadata<MeshImportSettings> meta{};
+    template <typename ImportSettingsType>
+    AssetMetadata<ImportSettingsType> AssetRegistry::get_meta_for_asset(const Rx::String& asset_path) {
+        AssetMetadata<SceneImportSettings> meta{};
 
         const auto meta_path = Rx::String::format("%s.meta", asset_path);
         const auto meta_maybe = Rx::Filesystem::read_text_file(meta_path);
@@ -40,5 +46,20 @@ namespace sanity::editor {
         }
 
         return meta;
+    }
+
+    template <typename ImportSettingsType>
+    void AssetRegistry::save_metadata_for_asset(const Rx::String& asset_path, const AssetMetadata<ImportSettingsType>& metadata) {
+        const nlohmann::json json = metadata;
+        const auto json_string = nlohmann::to_string(json);
+
+        const auto meta_path = Rx::String::format("%s.meta", asset_path);
+        auto file = Rx::Filesystem::File{meta_path, "w"};
+        if(!file.is_valid()) {
+            ar_logger->error("Could not save metadata for asset '%s'", asset_path);
+            return;
+        }
+
+        file.print(json_string.c_str());
     }
 } // namespace sanity::editor

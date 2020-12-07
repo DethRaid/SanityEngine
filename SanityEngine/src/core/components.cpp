@@ -1,6 +1,10 @@
 #include "core/components.hpp"
 
 namespace sanity::engine {
+    static Rx::Concurrency::Atomic<Uint64> next_id = 0;
+
+    SanityEngineEntity::SanityEngineEntity() { id = next_id.fetch_add(1); }
+
     void SanityEngineEntity::add_tag(const Rx::String& tag) {
         if(auto* num_stacks = tags.find(tag); num_stacks != nullptr) {
             (*num_stacks)++;

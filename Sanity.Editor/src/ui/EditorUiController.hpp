@@ -2,15 +2,8 @@
 
 #include "core/async/synchronized_resource.hpp"
 #include "entt/entity/registry.hpp"
+#include "ui/ui_components.hpp"
 #include "windows/content_browser.hpp"
-
-namespace sanity {
-    namespace engine {
-        namespace ui {
-            class Window;
-        }
-    } // namespace engine
-} // namespace sanity
 
 namespace sanity::editor::ui {
     class WorldgenParamsEditor;
@@ -45,5 +38,19 @@ namespace sanity::editor::ui {
         void create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry);
 
         void create_content_browser(entt::registry& registry);
+
+        template <typename WindowType, typename... Args>
+        WindowType* create_window_entity(entt::registry& registry, Args&&... args) const;
     };
+
+    template <typename WindowType, typename... Args>
+    WindowType* EditorUiController::create_window_entity(entt::registry& registry, Args&&... args) const {
+        const auto window_entity = registry.create();
+
+        auto window_ptr = Rx::make_ptr<WindowType>(RX_SYSTEM_ALLOCATOR, Rx::Utility::forward<Args>(args)...);
+        auto& ui_component = registry.emplace<engine::ui::UiComponent>(window_entity, Rx::Utility::move(window_ptr));
+        auto* window = static_cast<WindowType*>(ui_component.panel.get());
+
+        return window;
+    }
 } // namespace sanity::editor::ui

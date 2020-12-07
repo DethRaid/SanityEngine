@@ -3,25 +3,32 @@
 #include "handles.hpp"
 
 namespace sanity::engine::renderer {
+    /*!
+     * \brief A standard SanityEngine physically-based material
+     *
+     * While this can not represent all the complexities of life, it can do a reasonable job at representing them
+     *
+     * If emission == 0 and metallic == 0, base color is the albedo
+     * If emission == 0 and metallic == 1, base color is the specular color
+     * If emission == 1, metallic no longer matters. Base color is the color of emitted light
+     */
     struct StandardMaterial {
-        /*!
-         * \brief Handle to the texture with albedo in the rgb and transparency in the a
-         */
-        TextureHandle albedo;
+        TextureHandle base_color;
 
-        /*!
-         * \brief Handle to a texture with normals in the rgb and roughness in the a
-         */
-        TextureHandle normal_roughness;
+        TextureHandle normal;
 
+    	/*!
+    	 * G = roughness
+    	 * B = metallic
+    	 */
+        TextureHandle metallic_roughness;
+    	
         /*!
-         * \brief Handle to a texture with specular color in the rgb and emission strength in the a
-         *
          * Emission is stored as the cube of the actual emission, scaled from 0 - 100 to 0 - 1
          *
-         * `emission = pow(specular_color_emission.a, 1 / 3) * 100;`
+         * `emission = pow(emission.r, 1 / 3) * 100;`
          */
-        TextureHandle specular_color_emission;
+    	TextureHandle emission;
 
         /*!
          * \brief Noise texture

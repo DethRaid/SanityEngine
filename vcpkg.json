@@ -4,7 +4,6 @@
     "description": "A D3D12 game engine made for fun and education",
     "supports": "windows",
     "dependencies": [
-        "assimp",
         "entt",
         "glfw3",
         "glm",
@@ -12,6 +11,7 @@
         "nethost",
         "nlohmann-json",
         "sqlite-orm",
+        "tinygltf",
         "stb"
     ]
 }

@@ -1,18 +1,18 @@
 #include "content_browser.hpp"
 
 #include "SanityEditor.hpp"
+#include "asset_registry/asset_registry.hpp"
 #include "glm/vec2.hpp"
 #include "rx/core/filesystem/directory.h"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
 #include "rx/core/utility/move.h"
 #include "sanity_engine.hpp"
-#include "asset_registry/asset_registry.hpp"
 
 namespace sanity::editor::ui {
     RX_LOG("ContentBrowser", logger);
 
-	constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
+    constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
 
     ContentBrowser::ContentBrowser(Rx::String content_directory_in)
         : Window{"Content Browser"}, content_directory{Rx::Utility::move(content_directory_in)}, selected_directory{content_directory} {}
@@ -30,7 +30,7 @@ namespace sanity::editor::ui {
             ImGui::Text("Content root");
         }
 
-    	const auto width = ImGui::GetWindowWidth();
+        const auto width = ImGui::GetWindowWidth();
         const auto num_columns = floor(width / DIRECTORY_ITEM_WIDTH);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
@@ -42,10 +42,16 @@ namespace sanity::editor::ui {
                 draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
                     selected_directory = Rx::String::format("%s/%s", selected_directory, selected_item.name());
                 });
-            	
+
             } else if(item.is_file()) {
+                if(item.name().ends_with(".meta")) {
+                	// Skip meta files
+                    return;
+                }
+
                 draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
-                    g_editor->get_ui_controller().show_editor_for_asset(selected_item.name());
+                    const auto filename = Rx::String::format("%s/%s", selected_directory, selected_item.name());
+                    g_editor->get_ui_controller().show_editor_for_asset(filename);
                 });
             }
         });
@@ -67,7 +73,7 @@ namespace sanity::editor::ui {
                                               const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open) {
         const auto& item_name = item.name();
 
-    	auto& asset_registry = g_editor->get_asset_registry();
+        auto& asset_registry = g_editor->get_asset_registry();
 
         const auto file_icon = asset_registry.get_icon_for_file(item_name);
         ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});

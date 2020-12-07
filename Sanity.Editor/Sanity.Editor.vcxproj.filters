@@ -29,6 +29,9 @@
     <Filter Include="src\asset_registry">
       <UniqueIdentifier>{5f45c7f0-83b8-4501-aac2-3fe7da94ef98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\import">
+      <UniqueIdentifier>{64c56961-33c3-4992-ac84-927063b047d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SanityEditor.cpp">
@@ -66,6 +69,12 @@
     </ClCompile>
     <ClCompile Include="src\ui\windows\mesh_import_window.cpp">
       <Filter>src\ui\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\entity\entity_operations.cpp">
+      <Filter>src\entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\import\scene_importer.cpp">
+      <Filter>src\import</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -107,6 +116,12 @@
     </ClInclude>
     <ClInclude Include="src\ui\windows\mesh_import_window.hpp">
       <Filter>src\ui\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\entity\entity_operations.hpp">
+      <Filter>src\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\import\scene_importer.hpp">
+      <Filter>src\import</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

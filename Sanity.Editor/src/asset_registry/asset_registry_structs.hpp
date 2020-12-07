@@ -3,8 +3,16 @@
 #include "core/types.hpp"
 
 namespace sanity::editor {
-    struct MeshImportSettings {
+    struct SceneImportSettings {
+        bool import_meshes{true};
+    	
         bool import_materials{true};
+
+    	bool import_lights{true};
+
+    	bool import_empties{true};
+
+    	bool generate_collision_geometry{true};
     };
 
     /*!

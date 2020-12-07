@@ -96,7 +96,7 @@ namespace sanity::engine {
             // Load texture into Sanity Engine and set on material
 
             if(const auto existing_image_handle = renderer.get_image_handle(ass_texture_path.C_Str())) {
-                material.albedo = *existing_image_handle;
+                material.base_color = *existing_image_handle;
 
             } else {
                 auto path = std::filesystem::path{filepath.data()};
@@ -108,7 +108,7 @@ namespace sanity::engine {
                 if(!was_image_loaded) {
                     logger->warning("Could not load texture %s", texture_path.string().c_str());
 
-                    material.albedo = renderer.get_pink_texture();
+                    material.base_color = renderer.get_pink_texture();
 
                 } else {
                     const auto create_info = renderer::ImageCreateInfo{.name = ass_texture_path.C_Str(),
@@ -117,7 +117,7 @@ namespace sanity::engine {
                                                                        .height = height};
 
                     const auto image_handle = renderer.create_image(create_info, pixels.data(), commands);
-                    material.albedo = image_handle;
+                    material.base_color = image_handle;
                 }
             }
         } else {

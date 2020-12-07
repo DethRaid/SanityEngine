@@ -8,5 +8,5 @@
 
 namespace sanity::engine {
     SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(TransformComponent, location, rotation, scale);
-    SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(SanityEngineEntity, name, tags);
+    SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(SanityEngineEntity, name, id, tags);
 } // namespace sanity::engine

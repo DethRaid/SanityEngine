@@ -75,7 +75,7 @@ namespace sanity::engine::renderer {
     };
 
     struct RenderTarget : Image {
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv;
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
     };
 
     struct ImageCreateInfo {

@@ -151,6 +151,8 @@
     <ClCompile Include="src\asset_registry\asset_metadata_json_conversion.cpp" />
     <ClCompile Include="src\asset_registry\asset_registry.cpp" />
     <ClCompile Include="src\entity\Components.cpp" />
+    <ClCompile Include="src\entity\entity_operations.cpp" />
+    <ClCompile Include="src\import\scene_importer.cpp" />
     <ClCompile Include="src\SanityEditor.cpp" />
     <ClCompile Include="src\serialization\EntitySerialization.cpp" />
     <ClCompile Include="src\serialization\GetJsonForComponent.cpp" />
@@ -166,6 +168,8 @@
     <ClInclude Include="src\asset_registry\asset_registry.hpp" />
     <ClInclude Include="src\asset_registry\asset_registry_structs.hpp" />
     <ClInclude Include="src\entity\Components.hpp" />
+    <ClInclude Include="src\entity\entity_operations.hpp" />
+    <ClInclude Include="src\import\scene_importer.hpp" />
     <ClInclude Include="src\SanityEditor.hpp" />
     <ClInclude Include="src\serialization\EntitySerialization.hpp" />
     <ClInclude Include="src\serialization\GetJsonForComponent.hpp" />
@@ -179,6 +183,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Rex.Core\Rex.Core.vcxproj">
       <Project>{6aacae55-e651-4560-b606-7c957c8e2786}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Sanity.Game\Sanity.Game.vcxproj">
+      <Project>{ddc23a4f-8bb8-4ee1-b8a2-28064445b7ff}</Project>
     </ProjectReference>
     <ProjectReference Include="..\SanityEngine\SanityEngine.vcxproj">
       <Project>{a6d26a06-5f0c-3136-9293-218915cc95c4}</Project>
