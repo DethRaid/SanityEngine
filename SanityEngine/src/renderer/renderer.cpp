@@ -758,7 +758,7 @@ namespace sanity::engine::renderer {
 
         // TODO: We may have to rethink raytracing if we start using multiple buffers for mesh data storage
         material_bind_group_builder.set_buffer("indices", static_mesh_storage->get_index_buffer());
-        material_bind_group_builder.set_buffer("vertices", *static_mesh_storage->get_vertex_bindings()[0].buffer);
+        material_bind_group_builder.set_buffer("vertices", static_mesh_storage->get_vertex_buffer());
         if(raytracing_scene.buffer) {
             material_bind_group_builder.set_raytracing_scene("raytracing_scene", raytracing_scene);
         }

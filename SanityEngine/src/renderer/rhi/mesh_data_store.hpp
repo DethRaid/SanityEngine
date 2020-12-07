@@ -16,6 +16,7 @@ struct StandardVertex {
 };
 
 namespace sanity::engine::renderer {
+    class MeshDataStore;
     class ResourceCommandList;
     class RenderBackend;
 
@@ -47,6 +48,27 @@ namespace sanity::engine::renderer {
         Uint32 vertex_size;
     };
 
+    class MeshUploader final {
+    public:
+        explicit MeshUploader(ID3D12GraphicsCommandList4* cmds_in, MeshDataStore* mesh_store_in);
+
+        MeshUploader(const MeshUploader& other) = delete;
+        MeshUploader& operator=(const MeshUploader& other) = delete;
+
+        MeshUploader(MeshUploader&& old) noexcept;
+        MeshUploader& operator=(MeshUploader&& old) noexcept;
+
+        ~MeshUploader();
+
+        [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices, const Rx::Vector<Uint32>& indices) const;
+
+    private:
+        bool has_moved{false};
+
+        ID3D12GraphicsCommandList4* cmds;
+        MeshDataStore* mesh_store;
+    };
+
     class MeshDataStore {
     public:
         MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
@@ -61,25 +83,14 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] const Rx::Vector<VertexBufferBinding>& get_vertex_bindings() const;
 
+        [[nodiscard]] const Buffer& get_vertex_buffer() const;
+
         [[nodiscard]] const Buffer& get_index_buffer() const;
 
         /*!
          * \brief Prepares the vertex and index buffers to receive new mesh data
          */
-        void begin_adding_meshes(ID3D12GraphicsCommandList4* commands) const;
-
-        /*!
-         * \brief Adds new mesh data to the vertex and index buffers. Must be called after `begin_mesh_data_upload` and before
-         * `end_mesh_data_upload`
-         */
-        [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices,
-                                    const Rx::Vector<Uint32>& indices,
-                                    ID3D12GraphicsCommandList4* commands);
-
-        /*!
-         * Prepares the vertex and index buffers to be rendered with
-         */
-        void end_adding_meshes(ID3D12GraphicsCommandList4* commands) const;
+        [[nodiscard]] MeshUploader begin_adding_meshes(ID3D12GraphicsCommandList4* commands);
 
         void bind_to_command_list(ID3D12GraphicsCommandList4* commands) const;
 
@@ -108,5 +119,15 @@ namespace sanity::engine::renderer {
          * \brief The offset in the index buffer where the next mesh's indices should start
          */
         Uint32 next_index_offset{0};
+
+        friend class MeshUploader;
+
+        /*!
+         * \brief Adds new mesh data to the vertex and index buffers. Must be called after `begin_mesh_data_upload` and before
+         * `end_mesh_data_upload`
+         */
+        [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices,
+                                    const Rx::Vector<Uint32>& indices,
+                                    ID3D12GraphicsCommandList4* commands);
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

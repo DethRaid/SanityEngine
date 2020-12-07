@@ -409,10 +409,10 @@ namespace sanity::engine {
 
                 auto& meshes = renderer->get_static_mesh_store();
 
-                meshes.begin_adding_meshes(commands.Get());
+                const auto mesh_uploader =  meshes.begin_adding_meshes(commands.Get());
 
-                const auto tile_mesh_ld = meshes.add_mesh(create_info.vertices, create_info.indices, commands.Get());
-                const auto& vertex_buffer = *meshes.get_vertex_bindings()[0].buffer;
+                const auto tile_mesh_ld = mesh_uploader.add_mesh(create_info.vertices, create_info.indices);
+                const auto& vertex_buffer = meshes.get_vertex_buffer();
 
                 float max_y = 0;
                 float min_y = 256;

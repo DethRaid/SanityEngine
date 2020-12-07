@@ -9,6 +9,58 @@
 namespace sanity::engine::renderer {
     RX_LOG("MeshDataStore", logger);
 
+    MeshUploader::MeshUploader(ID3D12GraphicsCommandList4* cmds_in, MeshDataStore* mesh_store_in)
+        : cmds{cmds_in}, mesh_store{mesh_store_in} {
+        const auto& index_buffer = mesh_store->get_index_buffer();
+        const auto& vertex_buffer = mesh_store->get_vertex_buffer();
+
+        auto* vertex_resource = vertex_buffer.resource.Get();
+        auto* index_resource = index_buffer.resource.Get();
+
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
+                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                                                           D3D12_RESOURCE_STATE_COPY_DEST);
+        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
+                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER,
+                                                           D3D12_RESOURCE_STATE_COPY_DEST);
+
+        cmds->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+    }
+
+    MeshUploader::MeshUploader(MeshUploader&& old) noexcept : cmds{old.cmds}, mesh_store{old.mesh_store} { old.has_moved = true; }
+
+    MeshUploader& MeshUploader::operator=(MeshUploader&& old) noexcept {
+        cmds = old.cmds;
+        mesh_store = old.mesh_store;
+        old.has_moved = true;
+        return *this;
+    }
+
+    MeshUploader::~MeshUploader() {
+        if(!has_moved) {
+            const auto& index_buffer = mesh_store->get_index_buffer();
+            const auto& vertex_buffer = mesh_store->get_vertex_buffer();
+
+            auto* vertex_resource = vertex_buffer.resource.Get();
+            auto* index_resource = index_buffer.resource.Get();
+
+            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
+                                                               D3D12_RESOURCE_STATE_COPY_DEST,
+                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
+                                                               D3D12_RESOURCE_STATE_COPY_DEST,
+                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+            cmds->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+    }
+
+    Mesh MeshUploader::add_mesh(const Rx::Vector<StandardVertex>& vertices, const Rx::Vector<Uint32>& indices) const {
+        return mesh_store->add_mesh(vertices, indices, cmds);
+    }
+
     MeshDataStore::MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)
         : device{&device_in}, vertex_buffer{Rx::Utility::move(vertex_buffer_in)}, index_buffer{Rx::Utility::move(index_buffer_in)} {
 
@@ -26,22 +78,11 @@ namespace sanity::engine::renderer {
 
     const Rx::Vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
 
+    const Buffer& MeshDataStore::get_vertex_buffer() const { return *vertex_buffer; }
+
     const Buffer& MeshDataStore::get_index_buffer() const { return *index_buffer; }
 
-    void MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) const {
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
-                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST);
-        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
-                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST);
-
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-    }
+    MeshUploader MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) { return MeshUploader{commands, this}; }
 
     Mesh MeshDataStore::add_mesh(const Rx::Vector<StandardVertex>& vertices,
                                  const Rx::Vector<Uint32>& indices,
@@ -91,24 +132,7 @@ namespace sanity::engine::renderer {
                 .num_indices = static_cast<Uint32>(indices.size())};
     }
 
-    void MeshDataStore::end_adding_meshes(ID3D12GraphicsCommandList4* commands) const {
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
-        barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST,
-                                                           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
-                                                           D3D12_RESOURCE_STATE_COPY_DEST,
-                                                           D3D12_RESOURCE_STATE_INDEX_BUFFER);
-
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-    }
-
     void MeshDataStore::bind_to_command_list(ID3D12GraphicsCommandList4* commands) const {
-        const auto& vertex_bindings = get_vertex_bindings();
-
         // If we have more than 16 vertex attributes, we probably have bigger problems
         Rx::Array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views{};
         for(Uint32 i = 0; i < vertex_bindings.size(); i++) {
@@ -125,15 +149,13 @@ namespace sanity::engine::renderer {
 
         commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
 
-        const auto& index_buffer = get_index_buffer();
-
         D3D12_INDEX_BUFFER_VIEW index_view{};
-        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
-        index_view.SizeInBytes = index_buffer.size;
+        index_view.BufferLocation = index_buffer->resource->GetGPUVirtualAddress();
+        index_view.SizeInBytes = index_buffer->size;
         index_view.Format = DXGI_FORMAT_R32_UINT;
 
         commands->IASetIndexBuffer(&index_view);
 
         commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer

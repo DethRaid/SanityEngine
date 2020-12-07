@@ -39,12 +39,7 @@ namespace sanity::editor::import {
                                                                    entt::registry& registry);
 
     private:
-        struct PrimitiveData {
-            Rx::Vector<StandardVertex> vertices;
-            Rx::Vector<Uint32> indices;
-        };
-
-        struct ImportedMesh {
+        struct GltfMesh {
             Rx::Vector<engine::renderer::Mesh> primitive_meshes;
         };
 
@@ -61,10 +56,11 @@ namespace sanity::editor::import {
                                                                                              const tinygltf::Model& scene,
                                                                                              ID3D12GraphicsCommandList4* cmds);
 
-        [[nodiscard]] Rx::Vector<ImportedMesh> import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds);
+        [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds) const;
 
-        [[nodiscard]] static Rx::Optional<PrimitiveData> get_data_from_primitive(const tinygltf::Primitive& primitive,
-                                                                                 const tinygltf::Model& scene);
+        [[nodiscard]] static Rx::Optional<engine::renderer::Mesh> get_data_from_primitive(const tinygltf::Primitive& primitive,
+                                                                                          const tinygltf::Model& scene,
+                                                                                          const engine::renderer::MeshUploader& uploader);
 
         [[nodiscard]] static Rx::Vector<Uint32> get_indices_from_primitive(const tinygltf::Primitive& primitive,
                                                                            const tinygltf::Model& scene);

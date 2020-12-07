@@ -50,7 +50,7 @@ namespace sanity::editor::import {
         // How to import a scene?
         // First, load all the meshes, textures, materials, and other primitives
 
-        Rx::Vector<engine::renderer::Mesh> meshes;
+        Rx::Vector<GltfMesh> meshes;
         Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
         // Rx::Vector<engine::renderer::AnimationHandle> animations;
         Rx::Vector<engine::renderer::LightHandle> lights;
@@ -211,37 +211,53 @@ namespace sanity::editor::import {
         return handle;
     }
 
-    Rx::Vector<SceneImporter::ImportedMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds) {
+    Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene,
+                                                                         ID3D12GraphicsCommandList4* cmds) const {
+        auto& mesh_store = renderer->get_static_mesh_store();
+        const auto uploader = mesh_store.begin_adding_meshes(cmds);
+
+        Rx::Vector<GltfMesh> meshes;
+        meshes.reserve(scene.meshes.size());
 
         for(const auto& mesh : scene.meshes) {
             logger->info("Importing mesh %s", mesh.name.c_str());
+
+            GltfMesh imported_mesh{};
+            imported_mesh.primitive_meshes.reserve(mesh.primitives.size());
 
             for(Uint32 primitive_idx = 0; primitive_idx < mesh.primitives.size(); primitive_idx++) {
                 logger->info("Importing primitive %d", primitive_idx);
 
                 const auto& primitive = mesh.primitives[primitive_idx];
 
-                const auto& primitive_data = get_data_from_primitive(primitive, scene);
-                if(!primitive_data) {
+                const auto& primitive_mesh = get_data_from_primitive(primitive, scene, uploader);
+                if(!primitive_mesh) {
                     logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name.c_str());
                     continue;
                 }
+
+                imported_mesh.primitive_meshes.push_back(*primitive_mesh);
             }
         }
+
+        return meshes;
     }
 
     template <typename DataType>
     [[nodiscard]] const DataType* get_pointer_to_accessor_data(int accessor_idx, const tinygltf::Model& scene);
 
-    Rx::Optional<SceneImporter::PrimitiveData> SceneImporter::get_data_from_primitive(const tinygltf::Primitive& primitive,
-                                                                                      const tinygltf::Model& scene) {
-        PrimitiveData data;
+    Rx::Optional<engine::renderer::Mesh> SceneImporter::get_data_from_primitive(const tinygltf::Primitive& primitive,
+                                                                                const tinygltf::Model& scene,
+                                                                                const engine::renderer::MeshUploader& uploader) {
+        const auto indices = get_indices_from_primitive(primitive, scene);
+        const auto vertices = get_vertices_from_primitive(primitive, scene);
 
-        data.indices = get_indices_from_primitive(primitive, scene);
+        if(indices.is_empty() || vertices.is_empty()) {
+            logger->error("Could not read primitive data");
+            return Rx::nullopt;
+        }
 
-        data.vertices = get_vertices_from_primitive(primitive, scene);
-
-        return data;
+        return uploader.add_mesh(vertices, indices);
     }
 
     Rx::Vector<Uint32> SceneImporter::get_indices_from_primitive(const tinygltf::Primitive& primitive, const tinygltf::Model& scene) {
