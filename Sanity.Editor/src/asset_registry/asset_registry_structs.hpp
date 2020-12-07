@@ -8,11 +8,11 @@ namespace sanity::editor {
     	
         bool import_materials{true};
 
+        bool generate_collision_geometry{true};
+
     	bool import_lights{true};
 
     	bool import_empties{true};
-
-    	bool generate_collision_geometry{true};
     };
 
     /*!

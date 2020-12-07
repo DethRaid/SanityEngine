@@ -11,19 +11,13 @@
 #include "rx/core/vector.h"
 #include "tiny_gltf.h"
 
-namespace sanity {
-    namespace editor {
-        struct SceneImportSettings;
-    }
-} // namespace sanity
+namespace sanity::editor {
+    struct SceneImportSettings;
+} // namespace sanity::editor
 
-namespace sanity {
-    namespace engine {
-        namespace renderer {
-            class Renderer;
-        }
-    } // namespace engine
-} // namespace sanity
+namespace sanity::engine::renderer {
+    class Renderer;
+} // namespace sanity::engine::renderer
 
 namespace Rx {
     struct String;

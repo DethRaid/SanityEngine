@@ -70,6 +70,8 @@ namespace sanity::editor::import {
 
         // Then, walk the node hierarchy, creating an hierarchy of entt::entities
 
+    	
+
         // Finally, return the root entity
 
         return {};

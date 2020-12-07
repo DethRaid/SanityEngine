@@ -34,7 +34,7 @@ namespace sanity::editor::ui {
 
     		entt::registry registry;
 
-            const auto scene_entity = import::import_scene_into_sanity_editor(mesh_path, registry);
+            const auto scene_entity = importer->import_gltf_scene(mesh_path, metadata.import_settings, registry);
             if(scene_entity) {
                 const auto all_jsons = serialization::entity_and_children_to_json(*scene_entity, registry);
             }
