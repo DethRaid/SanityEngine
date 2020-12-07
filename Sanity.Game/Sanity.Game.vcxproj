@@ -151,20 +151,15 @@
     <ClCompile Include="Sanity.Game.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="content\settlements\buildings\complex_hut.bin" />
     <None Include="content\settlements\buildings\complex_hut.gltf">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="content\materials\stucco\plaster_diffuse.jpg">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-    </Image>
-    <Image Include="content\materials\stucco\plaster_normals.jpg">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-    </Image>
-    <Image Include="content\materials\stucco\plaster_roughness_metallic.jpg">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-    </Image>
+    <Image Include="content\settlements\buildings\plaster_diffuse.png" />
+    <Image Include="content\settlements\buildings\plaster_normals.jpg" />
+    <Image Include="content\settlements\buildings\plaster_roughness_metallic.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

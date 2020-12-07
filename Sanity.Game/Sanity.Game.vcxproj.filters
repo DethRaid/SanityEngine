@@ -30,16 +30,19 @@
     <None Include="content\settlements\buildings\complex_hut.gltf">
       <Filter>content\settlements\buildings</Filter>
     </None>
+    <None Include="content\settlements\buildings\complex_hut.bin">
+      <Filter>content\settlements\buildings</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="content\materials\stucco\plaster_diffuse.jpg">
-      <Filter>content\materials\stucco</Filter>
+    <Image Include="content\settlements\buildings\plaster_diffuse.png">
+      <Filter>content\settlements\buildings</Filter>
     </Image>
-    <Image Include="content\materials\stucco\plaster_normals.jpg">
-      <Filter>content\materials\stucco</Filter>
+    <Image Include="content\settlements\buildings\plaster_normals.jpg">
+      <Filter>content\settlements\buildings</Filter>
     </Image>
-    <Image Include="content\materials\stucco\plaster_roughness_metallic.jpg">
-      <Filter>content\materials\stucco</Filter>
+    <Image Include="content\settlements\buildings\plaster_roughness_metallic.jpg">
+      <Filter>content\settlements\buildings</Filter>
     </Image>
   </ItemGroup>
 </Project>
