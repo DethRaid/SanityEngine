@@ -28,6 +28,7 @@ namespace sanity::editor::ui {
         draw_property_editor("Import materials", import_settings.import_materials);
         draw_property_editor("Import lights", import_settings.import_lights);
         draw_property_editor("Import entities", import_settings.import_empties);
+        draw_property_editor("Import object hierarchies", import_settings.import_object_hierarchy);
 
         if(ImGui::Button("Save")) {
             AssetRegistry::save_metadata_for_asset(mesh_path, metadata);

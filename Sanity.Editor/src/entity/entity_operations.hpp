@@ -9,7 +9,7 @@ namespace Rx {
 }
 
 namespace sanity::editor::entity {
-    [[nodiscard]] entt::entity create_base_scene_entity(const Rx::String& name, entt::registry& registry);
+    [[nodiscard]] entt::entity create_base_editor_entity(const Rx::String& name, entt::registry& registry);
 
     template <typename ComponentType, typename... Args>
     ComponentType& add_component(const entt::entity& entity, entt::registry& registry, Args&&... args);

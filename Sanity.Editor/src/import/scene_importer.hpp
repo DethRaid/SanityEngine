@@ -31,26 +31,38 @@ namespace sanity::editor::import {
                                                                    entt::registry& registry);
 
     private:
+        struct GltfPrimitive {
+            engine::renderer::Mesh mesh;
+
+            Int32 material_idx;
+        };
+
         struct GltfMesh {
-            Rx::Vector<engine::renderer::Mesh> primitive_meshes;
+            Rx::Vector<GltfPrimitive> primitives;
         };
 
         tinygltf::TinyGLTF importer;
 
         engine::renderer::Renderer* renderer;
 
+        // Textures, materials, and meshes that were loaded from the current GLTF file
+
         Rx::Map<Rx::String, engine::renderer::TextureHandle> loaded_textures;
+        Rx::Vector<GltfMesh> meshes;
+        Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
+        // Rx::Vector<engine::renderer::AnimationHandle> animations;
+        // Rx::Vector<engine::renderer::LightHandle> lights
 
         [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene,
                                                                                                 ID3D12GraphicsCommandList4* cmds);
 
-        [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> upload_texture_from_gltf(Uint32 texture_idx,
-                                                                                             const tinygltf::Model& scene,
-                                                                                             ID3D12GraphicsCommandList4* cmds);
+        [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> get_sanity_handle_to_texture_in_gltf(Uint32 texture_idx,
+                                                                                                         const tinygltf::Model& scene,
+                                                                                                         ID3D12GraphicsCommandList4* cmds);
 
         [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds) const;
 
-        [[nodiscard]] static Rx::Optional<engine::renderer::Mesh> get_data_from_primitive(const tinygltf::Primitive& primitive,
+        [[nodiscard]] static Rx::Optional<GltfPrimitive> get_data_from_primitive(const tinygltf::Primitive& primitive,
                                                                                           const tinygltf::Model& scene,
                                                                                           const engine::renderer::MeshUploader& uploader);
 
@@ -59,5 +71,11 @@ namespace sanity::editor::import {
 
         [[nodiscard]] static Rx::Vector<StandardVertex> get_vertices_from_primitive(const tinygltf::Primitive& primitive,
                                                                                     const tinygltf::Model& scene);
+
+        [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& scene, entt::registry& registry);
+
+        [[nodiscard]] entt::entity create_entity_for_node(const tinygltf::Node& node,
+                                                          const entt::entity& parent_entity,
+                                                          entt::registry& registry);
     };
 } // namespace sanity::editor::import

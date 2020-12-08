@@ -32,7 +32,7 @@ namespace sanity::editor::ui {
     void EditorUiController::create_and_edit_new_entity() const {
         auto registry = engine::g_engine->get_global_registry().lock();
 
-        auto new_entity = entity::create_base_scene_entity("New Entity", *registry);
+        auto new_entity = entity::create_base_editor_entity("New Entity", *registry);
 
         show_edit_entity_window(new_entity, *registry);
     }

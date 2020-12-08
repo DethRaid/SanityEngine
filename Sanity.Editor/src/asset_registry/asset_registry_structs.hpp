@@ -13,6 +13,8 @@ namespace sanity::editor {
     	bool import_lights{true};
 
     	bool import_empties{true};
+
+    	bool import_object_hierarchy{true};
     };
 
     /*!

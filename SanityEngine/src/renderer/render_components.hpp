@@ -9,7 +9,7 @@ namespace sanity::engine::renderer {
     /*!
      * \brief Renders a static mesh with some material
      */
-    struct StandardRenderableComponent {
+    struct __declspec(uuid("{74AA51B6-38C8-4D49-8A3C-C03BD56E2020}")) StandardRenderableComponent {
         /*!
          * \brief What type of object we're dealing with
          */
@@ -49,7 +49,7 @@ namespace sanity::engine::renderer {
     /*!
      * \brief Renders a postprocessing pass
      */
-    struct PostProcessingPassComponent {
+    struct __declspec(uuid("{3F869FC4-F339-4125-82F2-0A3775552112}")) PostProcessingPassComponent {
         Uint32 draw_idx{0};
         StandardMaterialHandle material{0};
     };
@@ -57,7 +57,7 @@ namespace sanity::engine::renderer {
     /*!
      * \brief Sets up a camera to render with
      */
-    struct CameraComponent {
+    struct __declspec(uuid("{23C1D6E0-B8E4-453A-8613-FE2EA86D2631}")) CameraComponent {
         Uint32 idx;
 
         double fov{90};
@@ -75,7 +75,7 @@ namespace sanity::engine::renderer {
     /*!
      * \brief A light that can illuminate the scene
      */
-    struct LightComponent {
+    struct __declspec(uuid("{C1299481-3F19-4068-9724-FD89FF59EA65}")) LightComponent {
         LightHandle handle;
 
         Light light;
@@ -86,5 +86,5 @@ namespace sanity::engine::renderer {
      *
      * NOTE: Only one allowed in the scene ever
      */
-    struct AtmosphericSkyComponent {};
-} // namespace renderer
+    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) AtmosphericSkyComponent {};
+} // namespace sanity::engine::renderer
