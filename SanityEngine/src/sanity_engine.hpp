@@ -33,10 +33,12 @@ namespace sanity::engine {
          */
         ~SanityEngine();
 
+    	void register_tick_function(Rx::Function<void(Float32)>&& tick_function);
+
         /*!
          * \brief Executes a single frame, updating game logic and rendering the scene
          */
-        void do_frame();
+        void tick();
 
         [[nodiscard]] entt::entity get_player() const;
 
@@ -93,6 +95,8 @@ namespace sanity::engine {
         Float32 accumulator = 0;
 
         Uint64 frame_count = 0;
+    	
+        Rx::Vector<Rx::Function<void(Float32)>> tick_functions;
 
         void register_cvar_change_listeners();
 

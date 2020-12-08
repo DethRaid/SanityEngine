@@ -145,7 +145,13 @@ namespace sanity::engine {
         logger->warning("REMAIN INDOORS");
     }
 
-    void SanityEngine::do_frame() {
+    void SanityEngine::register_tick_function(Rx::Function<void(Float32)>&& tick_function) {
+        tick_functions.emplace_back(Rx::Utility::move(tick_function));
+    }
+
+    void SanityEngine::tick() {
+        ZoneScoped;
+    	
         frame_timer.stop();
         const auto frame_duration = frame_timer.elapsed();
         frame_timer.start();
@@ -160,12 +166,19 @@ namespace sanity::engine {
         renderer->begin_frame(frame_count);
 
         while(accumulator >= delta_time) {
+            ZoneScopedN("Tick");
+        	
             if(player_controller) {
                 player_controller->update_player_transform(delta_time);
             }
 
             if(world) {
                 world->tick(delta_time);
+            }
+
+            {
+                ZoneScopedN("Tick functions");
+                tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(delta_time); });
             }
 
             accumulator -= delta_time;

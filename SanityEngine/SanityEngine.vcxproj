@@ -447,6 +447,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\sanity_engine.hpp" />
     <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />
+    <ClInclude Include="src\system\system.hpp" />
     <ClInclude Include="src\ui\ConsoleWindow.hpp" />
     <ClInclude Include="src\ui\dear_imgui_adapter.hpp" />
     <ClInclude Include="src\ui\fps_display.hpp" />
@@ -512,6 +513,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\rhi\resources.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
+    <ClCompile Include="src\system\system.cpp" />
     <ClCompile Include="src\ui\ConsoleWindow.cpp" />
     <ClCompile Include="src\ui\dear_imgui_adapter.cpp" />
     <ClCompile Include="src\ui\fps_display.cpp" />

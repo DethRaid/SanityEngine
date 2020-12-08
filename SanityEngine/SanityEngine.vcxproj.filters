@@ -100,6 +100,9 @@
     <Filter Include="src\actor">
       <UniqueIdentifier>{d48d1f67-c139-4c52-a2df-748153e37603}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\system">
+      <UniqueIdentifier>{b5436c69-1a82-4f2f-978b-2777195eaf08}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -394,6 +397,9 @@
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\JsonConversion.hpp" />
+    <ClInclude Include="src\system\system.hpp">
+      <Filter>src\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -581,6 +587,9 @@
     </ClCompile>
     <ClCompile Include="src\core\EntityJsonConversion.cpp">
       <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\system\system.cpp">
+      <Filter>src\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
