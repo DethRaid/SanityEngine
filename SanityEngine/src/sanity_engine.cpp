@@ -151,7 +151,7 @@ namespace sanity::engine {
 
     void SanityEngine::tick() {
         ZoneScoped;
-    	
+
         frame_timer.stop();
         const auto frame_duration = frame_timer.elapsed();
         frame_timer.start();
@@ -166,20 +166,17 @@ namespace sanity::engine {
         renderer->begin_frame(frame_count);
 
         while(accumulator >= delta_time) {
-            ZoneScopedN("Tick");
-        	
-            if(player_controller) {
-                player_controller->update_player_transform(delta_time);
-            }
+            ZoneScopedN("Simulation tick");
+
+            // if(player_controller) {
+            //     player_controller->update_player_transform(delta_time);
+            // }
 
             if(world) {
                 world->tick(delta_time);
             }
 
-            {
-                ZoneScopedN("Tick functions");
-                tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(delta_time); });
-            }
+            tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(delta_time); });
 
             accumulator -= delta_time;
             time_since_application_start += delta_time;
@@ -230,13 +227,7 @@ namespace sanity::engine {
         // No need to set parameters, the default light component represents the Earth's sun
         locked_registry->emplace<renderer::LightComponent>(atmosphere);
         locked_registry->emplace<renderer::AtmosphericSkyComponent>(atmosphere);
-        locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform
-
-        // Camera for the directional light's shadow
-        // TODO: Set this up as orthographic? Or maybe a separate component for shadow cameras?
-        auto& shadow_camera = locked_registry->emplace<renderer::CameraComponent>(atmosphere);
-        shadow_camera.aspect_ratio = 1;
-        shadow_camera.fov = 0;
+        locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform, atmosphere don't care about it
     }
 
     void SanityEngine::make_frametime_display() {

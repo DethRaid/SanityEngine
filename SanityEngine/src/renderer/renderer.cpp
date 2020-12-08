@@ -577,10 +577,9 @@ namespace sanity::engine::renderer {
     void Renderer::reload_renderpass_shaders() { throw std::runtime_error{"Not implemented"}; }
 
     Rx::Vector<const Image*> Renderer::get_texture_array() const {
-        ZoneScoped
+        ZoneScoped;
 
-            Rx::Vector<const Image*>
-                images;
+        Rx::Vector<const Image*> images;
         images.reserve(all_images.size());
 
         all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.get()); });
@@ -589,24 +588,38 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
-        ZoneScoped
+        ZoneScoped;
 
-            registry.view<TransformComponent, CameraComponent>()
-                .each([&](const TransformComponent& transform, const CameraComponent& camera) {
-                    auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
+        registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
+            // logger->verbose(
+            //     "[%d] Updating matrices for camera %d\nTransform:\n\tLocation = (%f, %f, %f)\n\tRotation = (%f, %f, %f, %f)\n\tScale = (%f, %f, %f)",
+            //     frame_idx,
+            //     camera.idx,
+            //     transform.location.x,
+            //     transform.location.y,
+            //     transform.location.z,
+            //     transform.rotation.x,
+            //     transform.rotation.y,
+            //     transform.rotation.z,
+            //     transform.rotation.w,
+            //     transform.scale.x,
+            //     transform.scale.y,
+            //     transform.scale.z);
 
-                    matrices.copy_matrices_to_previous();
-                    matrices.calculate_view_matrix(transform);
-                    matrices.calculate_projection_matrix(camera);
-                });
+            auto& matrices = camera_matrix_buffers->get_camera_matrices(camera.idx);
+
+            matrices.copy_matrices_to_previous();
+            matrices.calculate_view_matrix(transform);
+            matrices.calculate_projection_matrix(camera);
+        });
 
         camera_matrix_buffers->upload_data(frame_idx);
     }
 
     void Renderer::upload_material_data(const Uint32 frame_idx) {
-        ZoneScoped
+        ZoneScoped;
 
-            auto& buffer = *material_device_buffers[frame_idx];
+        auto& buffer = *material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
     }
 

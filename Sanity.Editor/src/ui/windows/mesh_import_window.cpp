@@ -39,11 +39,11 @@ namespace sanity::editor::ui {
     	if(ImGui::Button("Import")) {
             AssetRegistry::save_metadata_for_asset(mesh_path, metadata);
 
-    		entt::registry registry;
+    		auto registry = engine::g_engine->get_global_registry().lock();
 
-            const auto scene_entity = importer->import_gltf_scene(mesh_path, metadata.import_settings, registry);
+            const auto scene_entity = importer->import_gltf_scene(mesh_path, metadata.import_settings, *registry);
             if(scene_entity) {
-                const auto all_jsons = serialization::entity_and_children_to_json(*scene_entity, registry);
+                const auto all_jsons = serialization::entity_and_children_to_json(*scene_entity, *registry);
             }
     		
     	}

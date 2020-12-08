@@ -3,7 +3,7 @@
 #include "core/components.hpp"
 #include "entt/entity/registry.hpp"
 #include "glm/ext/quaternion_transform.hpp"
-#include "input\PlatformInput.hpp"
+#include "input/PlatformInput.hpp"
 #include "rx/core/log.h"
 #include "world/terrain.hpp"
 
@@ -27,6 +27,8 @@ namespace sanity::engine {
 
     void FirstPersonController::update_player_transform(const Float32 delta_time) {
         // TODO: I'll probably eventually want some kind of momentum, but that can happen later
+
+    	logger->verbose("Updating player transform");
 
         auto locked_registry = registry->lock();
         auto& player_transform = locked_registry->get<TransformComponent>(controlled_entity);

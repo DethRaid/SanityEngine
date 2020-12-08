@@ -7,6 +7,9 @@
 
 RX_LOG("FlycamController", logger);
 
+constexpr Float32 X_SENSITIVITY = 0.005f;
+constexpr Float32 Y_SENSITIVITY = 0.005f;
+
 FlycamController::FlycamController(GLFWwindow* window_in,
                                    const entt::entity controlled_entity_in,
                                    SynchronizedResource<entt::registry>& registry_in)
@@ -21,8 +24,8 @@ FlycamController::FlycamController(GLFWwindow* window_in,
 void FlycamController::update_player_transform(const Float32 delta_time) {
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
-	auto registry = registry_ptr->lock();
-	
+    auto registry = registry_ptr->lock();
+
     auto& player_transform = registry->get<sanity::engine::TransformComponent>(controlled_entity);
 
     const auto forward = player_transform.get_forward_vector();
@@ -65,9 +68,6 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
 
     last_mouse_pos = mouse_pos;
 
-    const auto pitch_delta = Rx::Math::atan2(mouse_delta.y * 0.0001, 1);
-    const auto yaw_delta = Rx::Math::atan2(mouse_delta.x * 0.0001, 1);
-
-    player_transform.rotation = rotate(player_transform.rotation, pitch_delta, right);
-    player_transform.rotation = rotate(player_transform.rotation, yaw_delta, up);
+    player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.y * X_SENSITIVITY), right);
+    player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.x * Y_SENSITIVITY), up);
 }

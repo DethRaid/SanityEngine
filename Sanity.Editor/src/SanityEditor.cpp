@@ -1,5 +1,6 @@
 #include "SanityEditor.hpp"
 
+#include "Tracy.hpp"
 #include "entity/Components.hpp"
 #include "entt/entity/registry.hpp"
 #include "nlohmann/json.hpp"
@@ -32,6 +33,8 @@ namespace sanity::editor {
 
         auto& renderer = g_engine->get_renderer();
         asset_loader = Rx::make_ptr<AssetLoader>(RX_SYSTEM_ALLOCATOR, &renderer);
+
+        g_engine->register_tick_function([&](const Float32 delta_time) { flycam.update_player_transform(delta_time); });
     }
 
     void SanityEditor::load_project(const Rx::String& project_file) {
@@ -52,11 +55,11 @@ namespace sanity::editor {
             if(slashpos == Rx::String::k_npos) {
                 slashpos = project_file.find_last_of(R"(\)");
             }
-        	
+
             const auto enclosing_directory = project_file.substring(0, slashpos);
             content_directory = Rx::String::format("%s/content", enclosing_directory);
 
-        	ui_controller.set_content_browser_directory(content_directory);
+            ui_controller.set_content_browser_directory(content_directory);
         }
         catch(const std::exception& ex) {
             logger->error("Could not deserialize project file %s: %s", project_file, ex.what());
@@ -69,7 +72,7 @@ namespace sanity::editor {
         while(glfwWindowShouldClose(window) == GLFW_FALSE) {
             glfwPollEvents();
 
-            g_engine->do_frame();
+            g_engine->tick();
         }
     }
 
