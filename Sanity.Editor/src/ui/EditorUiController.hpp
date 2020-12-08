@@ -22,7 +22,7 @@ namespace sanity::editor::ui {
 
         void create_and_edit_new_entity() const;
 
-        void show_content_browser() const;
+        void set_content_browser_directory(const Rx::String& content_directory) const;
 
 #pragma region Editors
         void show_editor_for_asset(const Rx::String& asset_path) const;
@@ -37,7 +37,7 @@ namespace sanity::editor::ui {
 
         void create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry);
 
-        void create_content_browser(entt::registry& registry);
+        void create_content_browser(entt::registry& registry, const Rx::String& content_directory = "");
 
         template <typename WindowType, typename... Args>
         WindowType* create_window_entity(entt::registry& registry, Args&&... args) const;

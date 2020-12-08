@@ -32,6 +32,9 @@
     <Filter Include="src\import">
       <UniqueIdentifier>{64c56961-33c3-4992-ac84-927063b047d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\project">
+      <UniqueIdentifier>{cf71696b-2b1a-4c1a-85fd-d4ae52c79f0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SanityEditor.cpp">
@@ -75,6 +78,12 @@
     </ClCompile>
     <ClCompile Include="src\import\scene_importer.cpp">
       <Filter>src\import</Filter>
+    </ClCompile>
+    <ClCompile Include="src\project\project_definition.cpp">
+      <Filter>src\project</Filter>
+    </ClCompile>
+    <ClCompile Include="src\serialization\project_serialization.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +132,10 @@
     <ClInclude Include="src\import\scene_importer.hpp">
       <Filter>src\import</Filter>
     </ClInclude>
+    <ClInclude Include="src\project\project_definition.hpp">
+      <Filter>src\project</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serialization\project_serialization.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\textures\icons\blend.png">

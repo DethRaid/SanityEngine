@@ -37,16 +37,16 @@ namespace sanity::editor::ui {
         show_edit_entity_window(new_entity, *registry);
     }
 
-    void EditorUiController::show_content_browser() const {
+    void EditorUiController::set_content_browser_directory(const Rx::String& content_directory) const {
         if(content_browser != nullptr) {
-            content_browser->is_visible = true;
+            content_browser->set_content_directory(content_directory);
         }
     }
 
     void EditorUiController::show_editor_for_asset(const Rx::String& asset_path) const {
         const auto dot_pos = asset_path.find_last_of(".");
         const auto extension = asset_path.substring(dot_pos + 1);
-        if(extension == "gltf") {
+        if(extension == "glb" || extension == "gltf") {
             open_mesh_import_settings(asset_path);
         }
     }
@@ -63,8 +63,7 @@ namespace sanity::editor::ui {
         worldgen_params_editor->is_visible = false;
     }
 
-    void EditorUiController::create_content_browser(entt::registry& registry) {
-        const auto& content_directory = Rx::String::format("%s/content", engine::SanityEngine::executable_directory);
+    void EditorUiController::create_content_browser(entt::registry& registry, const Rx::String& content_directory) {
         content_browser = create_window_entity<ContentBrowser>(registry, content_directory);
     	content_browser->is_visible = true;
     }

@@ -1,11 +1,9 @@
 #pragma once
 
-#include <loading/asset_loader.hpp>
-#include <renderer/rhi/mesh_data_store.hpp>
-
-#include "entt/entity/entity.hpp"
 #include "entt/entity/fwd.hpp"
+#include "loading/asset_loader.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/rhi/mesh_data_store.hpp"
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
 #include "rx/core/vector.h"

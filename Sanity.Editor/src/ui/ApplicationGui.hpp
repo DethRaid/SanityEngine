@@ -17,13 +17,13 @@ namespace sanity::editor::ui {
         EditorUiController* ui_controller{nullptr};
 
 #pragma region Application menu bar    	
-        void draw_application_menu();
+        void draw_application_menu() const;
 
-        void draw_window_menu();
+        void draw_window_menu() const;
     	
         void draw_world_menu() const;
 
-        void draw_entity_menu();
+        void draw_entity_menu() const;
 #pragma endregion
     };
 } // namespace sanity::editor::ui

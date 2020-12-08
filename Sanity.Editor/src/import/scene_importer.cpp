@@ -1,8 +1,7 @@
-#include "scene_importer.hpp"
-
 #define TINYGLTF_IMPLEMENTATION
-
-#include <sanity_engine.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "scene_importer.hpp"
 
 #include "Tracy.hpp"
 #include "asset_registry/asset_registry.hpp"
@@ -10,11 +9,13 @@
 #include "renderer/standard_material.hpp"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
+#include "sanity_engine.hpp"
 
 #define LOG_MISSING_ATTRIBUTE(attribute_name) logger->error("No attribute %s in primitive, aborting", (attribute_name))
 
 namespace sanity::editor::import {
     RX_LOG("SceneImporter", logger);
+    RX_LOG("GltfImporter", gltf_logger);
 
     constexpr const char* POSITION_ATTRIBUTE_NAME = "POSITION";
     constexpr const char* NORMAL_ATTRIBUTE_NAME = "NORMAL";
@@ -23,8 +24,6 @@ namespace sanity::editor::import {
     constexpr const char* BASE_COLOR_TEXTURE_PARAM_NAME = "baseColorTexture";
     constexpr const char* METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME = "metallicRoughnessTexture";
     constexpr const char* NORMAL_TEXTURE_PARAM_NAME = "normalTexture";
-
-    Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene);
 
     SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
 
@@ -35,15 +34,26 @@ namespace sanity::editor::import {
         tinygltf::Model scene;
         std::string err;
         std::string warn;
-        const auto success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.data());
+        bool success;
+        if(scene_path.ends_with(".glb")) {
+            success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.data());
+
+        } else if(scene_path.ends_with(".gltf")) {
+            success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.data());
+
+        } else {
+            gltf_logger->error("Invalid scene file %s", scene_path);
+            return Rx::nullopt;
+        }
+
         if(!warn.empty()) {
-            logger->warning("Warnings when importing %s: %s", scene_path, warn.c_str());
+            gltf_logger->warning("Warnings when reading %s: %s", scene_path, warn.c_str());
         }
         if(!err.empty()) {
-            logger->error("Errors when importing %s: %s", scene_path, err.c_str());
+            gltf_logger->error("Errors when reading %s: %s", scene_path, err.c_str());
         }
         if(!success) {
-            logger->error("Could not import scene %s", scene_path);
+            gltf_logger->error("Could not read scene %s", scene_path);
             return Rx::nullopt;
         }
 
@@ -70,8 +80,6 @@ namespace sanity::editor::import {
 
         // Then, walk the node hierarchy, creating an hierarchy of entt::entities
 
-    	
-
         // Finally, return the root entity
 
         return {};
@@ -84,7 +92,7 @@ namespace sanity::editor::import {
         Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
 
         for(const auto& material : scene.materials) {
-            logger->info("Importing material %s", material.name.c_str());
+            gltf_logger->info("Importing material %s", material.name.c_str());
 
             engine::renderer::StandardMaterial sanity_material{};
 
@@ -95,7 +103,7 @@ namespace sanity::editor::import {
             int normal_texture_idx{-1};
 
             for(const auto& [param_name, param] : material.values) {
-                logger->verbose("Value %s has texture index %d", param_name.c_str(), param.TextureIndex());
+                gltf_logger->verbose("Value %s has texture index %d", param_name.c_str(), param.TextureIndex());
                 if(param_name == BASE_COLOR_TEXTURE_PARAM_NAME) {
                     base_color_texture_idx = param.TextureIndex();
 
@@ -105,7 +113,7 @@ namespace sanity::editor::import {
             }
 
             for(const auto& [param_name, param] : material.additionalValues) {
-                logger->verbose("Additional value %s has texture index %d", param_name.c_str(), param.TextureIndex());
+                gltf_logger->verbose("Additional value %s has texture index %d", param_name.c_str(), param.TextureIndex());
                 if(param_name == NORMAL_TEXTURE_PARAM_NAME) {
                     normal_texture_idx = param.TextureIndex();
                 }
@@ -114,17 +122,19 @@ namespace sanity::editor::import {
             // Validate
 
             if(base_color_texture_idx == -1) {
-                logger->error("Parameter %s on material %s isn't a valid texture", BASE_COLOR_TEXTURE_PARAM_NAME, material.name.c_str());
+                gltf_logger->error("Parameter %s on material %s isn't a valid texture",
+                                   BASE_COLOR_TEXTURE_PARAM_NAME,
+                                   material.name.c_str());
                 continue;
             }
             if(metallic_roughness_texture_idx == -1) {
-                logger->error("Parameter %s on material %s is not a valid texture",
-                              METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME,
-                              material.name.c_str());
+                gltf_logger->error("Parameter %s on material %s is not a valid texture",
+                                   METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME,
+                                   material.name.c_str());
                 continue;
             }
             if(normal_texture_idx == -1) {
-                logger->error("Parameter %s on material %s is not a valid texture", NORMAL_TEXTURE_PARAM_NAME, material.name.c_str());
+                gltf_logger->error("Parameter %s on material %s is not a valid texture", NORMAL_TEXTURE_PARAM_NAME, material.name.c_str());
                 continue;
             }
 
@@ -166,18 +176,18 @@ namespace sanity::editor::import {
         }
 
         if(texture.source < 0) {
-            logger->error("Texture %s has an invalid source", texture.name.c_str());
+            gltf_logger->error("Texture %s has an invalid source", texture.name.c_str());
             return Rx::nullopt;
         }
 
         // We only support three- or four-channel textures, with eight bits per chanel
         const auto& source_image = scene.images[texture.source];
         if(source_image.component != 3 && source_image.component != 4) {
-            logger->error("Source image %s does not have either 3 or four components", source_image.name.c_str());
+            gltf_logger->error("Source image %s does not have either 3 or four components", source_image.name.c_str());
             return Rx::nullopt;
         }
         if(source_image.bits != 8) {
-            logger->error("Source image does not have eight bits per component. Unable to load");
+            gltf_logger->error("Source image does not have eight bits per component. Unable to load");
             return Rx::nullopt;
         }
 
@@ -190,7 +200,7 @@ namespace sanity::editor::import {
             std::size_t read_idx{0};
             Size write_idx{0};
 
-            for(Uint32 pixel_idx = 0; pixel_idx < source_image.width * source_image.height; pixel_idx++) {
+            for(Uint32 pixel_idx = 0; pixel_idx < static_cast<Uint32>(source_image.width * source_image.height); pixel_idx++) {
                 padding_buffer[write_idx] = source_image.image[read_idx];
                 padding_buffer[write_idx + 1] = source_image.image[read_idx + 3];
                 padding_buffer[write_idx + 2] = source_image.image[read_idx + 2];
@@ -222,19 +232,19 @@ namespace sanity::editor::import {
         meshes.reserve(scene.meshes.size());
 
         for(const auto& mesh : scene.meshes) {
-            logger->info("Importing mesh %s", mesh.name.c_str());
+            gltf_logger->info("Importing mesh %s", mesh.name.c_str());
 
             GltfMesh imported_mesh{};
             imported_mesh.primitive_meshes.reserve(mesh.primitives.size());
 
             for(Uint32 primitive_idx = 0; primitive_idx < mesh.primitives.size(); primitive_idx++) {
-                logger->info("Importing primitive %d", primitive_idx);
+                gltf_logger->info("Importing primitive %d", primitive_idx);
 
                 const auto& primitive = mesh.primitives[primitive_idx];
 
                 const auto& primitive_mesh = get_data_from_primitive(primitive, scene, uploader);
                 if(!primitive_mesh) {
-                    logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name.c_str());
+                    gltf_logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name.c_str());
                     continue;
                 }
 
@@ -255,7 +265,7 @@ namespace sanity::editor::import {
         const auto vertices = get_vertices_from_primitive(primitive, scene);
 
         if(indices.is_empty() || vertices.is_empty()) {
-            logger->error("Could not read primitive data");
+            gltf_logger->error("Could not read primitive data");
             return Rx::nullopt;
         }
 
@@ -343,23 +353,37 @@ namespace sanity::editor::import {
     template <typename DataType>
     [[nodiscard]] const DataType* get_pointer_to_accessor_data(const int accessor_idx, const tinygltf::Model& scene) {
         if(accessor_idx < 0) {
-            logger->error("Accessor index is less than 0, aborting");
+            gltf_logger->error("Accessor index %d is less than 0, aborting", accessor_idx);
+            return nullptr;
+
+        } else if(accessor_idx >= scene.accessors.size()) {
+            gltf_logger->error("Accessor index %d is greater than number of accessors %d, aborting", accessor_idx, scene.accessors.size());
             return nullptr;
         }
 
         const auto& accessor = scene.accessors[accessor_idx];
         if(accessor.bufferView < 0) {
-            logger->error("Buffer view index is less than zero, aborting");
+            gltf_logger->error("Buffer view index %d is less than zero, aborting", accessor.bufferView);
+            return nullptr;
+
+        } else if(accessor.bufferView >= scene.bufferViews.size()) {
+            gltf_logger->error("Buffer view index %d is greater than number of buffer views %d, aborting",
+                               accessor.bufferView,
+                               scene.bufferViews.size());
             return nullptr;
         }
 
         const auto& buffer_view = scene.bufferViews[accessor.bufferView];
-        if(buffer_view.target < 0) {
-            logger->error("Buffer index is less than zero, aborting");
+        if(buffer_view.buffer < 0) {
+            gltf_logger->error("Buffer index is less than zero, aborting");
+            return nullptr;
+
+        } else if(buffer_view.buffer > scene.buffers.size()) {
+            gltf_logger->error("Buffer index %d is greater than number of buffers %d, aborting", buffer_view.buffer, scene.buffers.size());
             return nullptr;
         }
 
-        const auto& buffer = scene.buffers[buffer_view.target];
+        const auto& buffer = scene.buffers[buffer_view.buffer];
         return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteStride);
     }
 

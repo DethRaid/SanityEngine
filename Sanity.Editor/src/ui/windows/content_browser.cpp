@@ -17,6 +17,11 @@ namespace sanity::editor::ui {
     ContentBrowser::ContentBrowser(Rx::String content_directory_in)
         : Window{"Content Browser"}, content_directory{Rx::Utility::move(content_directory_in)}, selected_directory{content_directory} {}
 
+    void ContentBrowser::set_content_directory(const Rx::String& content_directory_in) {
+        content_directory = content_directory_in;
+        selected_directory = content_directory;
+    }
+
     void ContentBrowser::draw_contents() {
         Rx::Filesystem::Directory dir{selected_directory};
 
@@ -45,7 +50,7 @@ namespace sanity::editor::ui {
 
             } else if(item.is_file()) {
                 if(item.name().ends_with(".meta")) {
-                	// Skip meta files
+                    // Skip meta files
                     return;
                 }
 

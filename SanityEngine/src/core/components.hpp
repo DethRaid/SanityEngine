@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "entt/entity/entity.hpp"
+#include "entt/entity/fwd.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/ext/quaternion_float.hpp" // This include MUST be after glm/gtc/quaternion.hpp

@@ -97,7 +97,7 @@ namespace sanity::engine {
             TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
 
-            handle_out = renderer.create_image(create_info, pixels.data(), commands);
+            handle_out = renderer.create_image(create_info, pixels.data(), commands.Get());
         }
 
         device.submit_command_list(Rx::Utility::move(commands));

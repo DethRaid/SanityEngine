@@ -1,7 +1,5 @@
 ﻿#include "sanity_engine.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-
 #include <filesystem>
 
 #include "GLFW/glfw3.h"
@@ -9,7 +7,6 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "glm/ext/quaternion_trigonometric.hpp"
-#include "loading/entity_loading.hpp"
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
@@ -130,8 +127,6 @@ namespace sanity::engine {
             if(player_controller) {
                 player_controller->set_current_terrain(world->get_terrain());
             }
-
-            create_environment_object_editor();
 
             frame_timer.start();
         }
@@ -278,21 +273,6 @@ namespace sanity::engine {
         // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
         logger->info("Created flycam");
-    }
-
-    void SanityEngine::create_environment_object_editor() {
-        // auto locked_registry = registry.lock();
-        // const auto entity = locked_registry->create();
-        // auto& ui_panel = locked_registry->assign<ui::UiComponent>(entity);
-        //
-        // auto* handle = scripting_runtime->instantiate_script_object("terraingen", "EnvironmentObjectEditor");
-        // ui_panel.panel = Rx::make_ptr<ui::ScriptedUiPanel>(RX_SYSTEM_ALLOCATOR, handle, *scripting_runtime);
-    }
-
-    void SanityEngine::load_3d_object(const Rx::String& filename) {
-        const auto msg = Rx::String::format("load_3d_object(%s)", filename);
-        ZoneScopedN(msg.data());
-        load_static_mesh(filename, global_registry, *renderer);
     }
 
     void SanityEngine::render() {

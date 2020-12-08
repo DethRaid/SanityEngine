@@ -62,8 +62,17 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices, const Rx::Vector<Uint32>& indices) const;
 
+    	void prepare_for_raytracing_geometry_build();
+
     private:
-        bool has_moved{false};
+        enum class State
+        {
+	        AddVerticesAndIndices,
+        	BuildRaytracingGeometry,
+        	Empty,
+        };
+    	
+        State state{State::AddVerticesAndIndices};
 
         ID3D12GraphicsCommandList4* cmds;
         MeshDataStore* mesh_store;

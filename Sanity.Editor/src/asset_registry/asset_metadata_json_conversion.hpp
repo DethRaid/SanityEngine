@@ -1,7 +1,7 @@
 #pragma once
 
 #include "asset_registry/asset_registry_structs.hpp"
-#include "core/JsonConversion.hpp"
+#include "nlohmann/json.hpp"
 
 namespace sanity::editor {
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(

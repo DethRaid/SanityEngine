@@ -6,7 +6,6 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/components.hpp"
 #include "core/types.hpp"
-#include "loading/mesh_loading.hpp"
 #include "renderer/rhi/render_device.hpp"
 #include "rx/core/filesystem/directory.h"
 #include "rx/core/log.h"
@@ -136,15 +135,6 @@ namespace sanity::engine {
                     // TODO: Define an asset format, and handle it reasonably
 
                     const auto filepath = Rx::String::format("%s/%s", environment_objects_absolute_directory.data(), item.name());
-
-                    // For not, just yeet FBXs into memory
-                    const auto filename = item.name();
-                    if(filename.ends_with(".fbx")) {
-                        const auto imported_mesh = import_mesh(filepath, commands, *renderer);
-                        if(imported_mesh) {
-                            loaded_anything = true;
-                        }
-                    }
                 }
             });
         }

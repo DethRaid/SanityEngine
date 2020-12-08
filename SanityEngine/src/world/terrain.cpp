@@ -56,7 +56,7 @@ namespace sanity::engine {
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_terrain");
 
             // Generate heightmap
-            generate_heightmap(noise_generator, params, renderer, commands, data, total_pixels_in_maps);
+            generate_heightmap(noise_generator, params, renderer, commands.Get(), data, total_pixels_in_maps);
             const auto heightmap_image = renderer.get_image(data.heightmap_handle);
 
             const auto heightmap_barrier = CD3DX12_RESOURCE_BARRIER::UAV(heightmap_image.resource.Get());
@@ -64,7 +64,7 @@ namespace sanity::engine {
             commands->ResourceBarrier(1, &heightmap_barrier);
 
             // Place water sources
-            place_water_sources(params, renderer, commands, data, total_pixels_in_maps);
+            place_water_sources(params, renderer, commands.Get(), data, total_pixels_in_maps);
             const auto water_depth_image = renderer.get_image(data.water_depth_handle);
 
             terraingen::place_oceans(commands, renderer, params.min_terrain_depth_under_ocean + params.max_ocean_depth, data);
@@ -172,13 +172,13 @@ namespace sanity::engine {
     void Terrain::generate_heightmap(FastNoiseSIMD& noise_generator,
                                      const WorldParameters& params,
                                      renderer::Renderer& renderer,
-                                     const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                     ID3D12GraphicsCommandList4* commands,
                                      TerrainData& data,
                                      const unsigned total_pixels_in_maps) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "Terrain::generate_heightmap");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::generate_heightmap");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands, "Terrain::generate_heightmap");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Terrain::generate_heightmap");
 
         auto* height_noise = noise_generator.GetNoiseSet(-static_cast<Int32>(params.width) / 2,
                                                          -static_cast<Int32>(params.height) / 2,
@@ -206,13 +206,13 @@ namespace sanity::engine {
 
     void Terrain::place_water_sources(const WorldParameters& params,
                                       renderer::Renderer& renderer,
-                                      const ComPtr<ID3D12GraphicsCommandList4>& commands,
+                                      ID3D12GraphicsCommandList4* commands,
                                       TerrainData& data,
                                       const unsigned total_pixels_in_maps) {
         ZoneScoped;
 
-        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "Terrain::place_water_sources");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Terrain::place_water_sources");
+        TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands, "Terrain::place_water_sources");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Terrain::place_water_sources");
 
         Rx::Vector<Float32> water_depth_map{total_pixels_in_maps};
 
@@ -248,7 +248,7 @@ namespace sanity::engine {
     }
 
     void Terrain::load_terrain_textures_and_create_material() {
-    	// TODO: Fix these paths
+        // TODO: Fix these paths
         const char* albedo_texture_name = "textures/block/grass_block_top.png";
         const char* normal_roughness_texture_name = "textures/block/grass_block_top_n.png";
 
@@ -267,10 +267,10 @@ namespace sanity::engine {
 
         const auto normal_roughness_image_handle = load_image_to_gpu(normal_roughness_texture_name, *renderer);
         if(normal_roughness_image_handle) {
-            material.normal_roughness = *normal_roughness_image_handle;
+            // material.normal_roughness = *normal_roughness_image_handle;
         } else {
             logger->error("Could not load terrain normal roughness texture %s", normal_roughness_texture_name);
-            material.normal_roughness = renderer->get_default_normal_roughness_texture();
+            // material.normal_roughness = renderer->get_default_normal_roughness_texture();
         }
 
         terrain_material = renderer->allocate_standard_material(material);
@@ -382,6 +382,11 @@ namespace sanity::engine {
     }
 
     void Terrain::upload_new_tile_meshes() {
+        // This method will loop through all tile meshes, uploading the tile mesh and then building that tile's
+    	// raytracing geometry. This is probably pretty inefficient. Better would be to upload all the meshes for all
+    	// the tiles, then build all the acceleration structures for all the tiles. That's a task for another day, when
+    	// I measure a performance problem with this method
+    	
         ZoneScoped;
         PIXScopedEvent(PIX_COLOR_DEFAULT, "Upload new terrain tile meshes");
 
@@ -409,9 +414,10 @@ namespace sanity::engine {
 
                 auto& meshes = renderer->get_static_mesh_store();
 
-                const auto mesh_uploader =  meshes.begin_adding_meshes(commands.Get());
+                auto mesh_uploader = meshes.begin_adding_meshes(commands.Get());
 
                 const auto tile_mesh_ld = mesh_uploader.add_mesh(create_info.vertices, create_info.indices);
+
                 const auto& vertex_buffer = meshes.get_vertex_buffer();
 
                 float max_y = 0;
@@ -427,14 +433,7 @@ namespace sanity::engine {
                     }
                 });
 
-                const Rx::Vector<D3D12_RESOURCE_BARRIER>
-                    barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.resource.Get(),
-                                                                              D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
-                                         CD3DX12_RESOURCE_BARRIER::Transition(meshes.get_index_buffer().resource.Get(),
-                                                                              D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)};
-                commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+                mesh_uploader.prepare_for_raytracing_geometry_build();
 
                 const auto ray_geo = renderer->create_raytracing_geometry(vertex_buffer,
                                                                           meshes.get_index_buffer(),
@@ -454,7 +453,7 @@ namespace sanity::engine {
 
                 {
                     logger->verbose("Marking tile (%d, %d) as completely loaded", create_info.tilecoord.x, create_info.tilecoord.y);
-                    
+
                     Rx::Concurrency::ScopeLock l{loaded_terrain_tiles_mutex};
                     loaded_terrain_tiles.find(create_info.tilecoord)->loading_phase = TerrainTile::LoadingPhase::Complete;
                 }

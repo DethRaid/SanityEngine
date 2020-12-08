@@ -100,10 +100,6 @@ namespace sanity::engine {
         void create_planetary_atmosphere();
 
         void create_first_person_player();
-
-        void create_environment_object_editor();
-
-        void load_3d_object(const Rx::String& filename);
 #pragma endregion
 
 #pragma region Update loop

@@ -28,17 +28,53 @@ namespace sanity::engine::renderer {
         cmds->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
     }
 
-    MeshUploader::MeshUploader(MeshUploader&& old) noexcept : cmds{old.cmds}, mesh_store{old.mesh_store} { old.has_moved = true; }
+    MeshUploader::MeshUploader(MeshUploader&& old) noexcept : cmds{old.cmds}, mesh_store{old.mesh_store} { old.state = State::Empty; }
 
     MeshUploader& MeshUploader::operator=(MeshUploader&& old) noexcept {
         cmds = old.cmds;
         mesh_store = old.mesh_store;
-        old.has_moved = true;
+        state = State::Empty;
+
         return *this;
     }
 
     MeshUploader::~MeshUploader() {
-        if(!has_moved) {
+        if(state != State::Empty) {
+            const auto& index_buffer = mesh_store->get_index_buffer();
+            const auto& vertex_buffer = mesh_store->get_vertex_buffer();
+
+            auto* vertex_resource = vertex_buffer.resource.Get();
+            auto* index_resource = index_buffer.resource.Get();
+
+            auto previous_resource_state = D3D12_RESOURCE_STATE_COPY_DEST;
+            if(state == State::BuildRaytracingGeometry) {
+                previous_resource_state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+            }
+
+            Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
+            barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
+                                                               previous_resource_state,
+                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+            barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource, previous_resource_state, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+            cmds->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+
+            state = State::Empty;
+        }
+    }
+
+    Mesh MeshUploader::add_mesh(const Rx::Vector<StandardVertex>& vertices, const Rx::Vector<Uint32>& indices) const {
+        if(state == State::AddVerticesAndIndices) {
+            return mesh_store->add_mesh(vertices, indices, cmds);
+
+        } else {
+            logger->error("MeshUploader not in the right state to add meshes");
+            return {};
+        }
+    }
+
+    void MeshUploader::prepare_for_raytracing_geometry_build() {
+        if(state == State::AddVerticesAndIndices) {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
@@ -48,17 +84,15 @@ namespace sanity::engine::renderer {
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
             barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
                                                                D3D12_RESOURCE_STATE_COPY_DEST,
-                                                               D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(index_resource,
                                                                D3D12_RESOURCE_STATE_COPY_DEST,
-                                                               D3D12_RESOURCE_STATE_INDEX_BUFFER);
+                                                               D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
             cmds->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-        }
-    }
 
-    Mesh MeshUploader::add_mesh(const Rx::Vector<StandardVertex>& vertices, const Rx::Vector<Uint32>& indices) const {
-        return mesh_store->add_mesh(vertices, indices, cmds);
+            state = State::BuildRaytracingGeometry;
+        }
     }
 
     MeshDataStore::MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in)

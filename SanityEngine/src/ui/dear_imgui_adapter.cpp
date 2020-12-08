@@ -288,7 +288,7 @@ namespace sanity::engine {
                                                                .width = static_cast<Uint32>(width),
                                                                .height = static_cast<Uint32>(height)};
 
-            font_atlas = renderer.create_image(create_info, pixels, commands);
+            font_atlas = renderer.create_image(create_info, pixels, commands.Get());
         }
 
         device.submit_command_list(Rx::Utility::move(commands));

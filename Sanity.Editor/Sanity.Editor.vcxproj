@@ -128,7 +128,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)Sanity.Engine.lib;$(OutDir)Rex.Core.lib;dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;..\vcpkg_installed\x64-windows\debug\lib\assimp-vc142-mtd.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)Sanity.Engine.lib;$(OutDir)Rex.Core.lib;dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -153,9 +153,11 @@
     <ClCompile Include="src\entity\Components.cpp" />
     <ClCompile Include="src\entity\entity_operations.cpp" />
     <ClCompile Include="src\import\scene_importer.cpp" />
+    <ClCompile Include="src\project\project_definition.cpp" />
     <ClCompile Include="src\SanityEditor.cpp" />
     <ClCompile Include="src\serialization\EntitySerialization.cpp" />
     <ClCompile Include="src\serialization\GetJsonForComponent.cpp" />
+    <ClCompile Include="src\serialization\project_serialization.cpp" />
     <ClCompile Include="src\ui\ApplicationGui.cpp" />
     <ClCompile Include="src\ui\EditorUiController.cpp" />
     <ClCompile Include="src\ui\windows\content_browser.cpp" />
@@ -170,9 +172,11 @@
     <ClInclude Include="src\entity\Components.hpp" />
     <ClInclude Include="src\entity\entity_operations.hpp" />
     <ClInclude Include="src\import\scene_importer.hpp" />
+    <ClInclude Include="src\project\project_definition.hpp" />
     <ClInclude Include="src\SanityEditor.hpp" />
     <ClInclude Include="src\serialization\EntitySerialization.hpp" />
     <ClInclude Include="src\serialization\GetJsonForComponent.hpp" />
+    <ClInclude Include="src\serialization\project_serialization.hpp" />
     <ClInclude Include="src\ui\ApplicationGui.hpp" />
     <ClInclude Include="src\ui\EditorUiController.hpp" />
     <ClInclude Include="src\ui\windows\content_browser.hpp" />

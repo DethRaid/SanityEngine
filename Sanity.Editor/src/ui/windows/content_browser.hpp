@@ -15,6 +15,8 @@ namespace sanity::editor::ui {
     public:
         explicit ContentBrowser(Rx::String content_directory_in);
 
+    	void set_content_directory(const Rx::String& content_directory_in);
+
     protected:
         void draw_contents() override;
 

@@ -93,7 +93,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)programs;$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\src;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\src;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -410,9 +410,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\input\input_manager.hpp" />
     <ClInclude Include="src\input\PlatformInput.hpp" />
     <ClInclude Include="src\loading\asset_loader.hpp" />
-    <ClInclude Include="src\loading\entity_loading.hpp" />
     <ClInclude Include="src\loading\image_loading.hpp" />
-    <ClInclude Include="src\loading\mesh_loading.hpp" />
     <ClInclude Include="src\loading\shader_loading.hpp" />
     <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.h" />
     <ClInclude Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_internal.h" />
@@ -487,9 +485,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\input\input_manager.cpp" />
     <ClCompile Include="src\input\PlatformInput.cpp" />
     <ClCompile Include="src\loading\asset_loader.cpp" />
-    <ClCompile Include="src\loading\entity_loading.cpp" />
     <ClCompile Include="src\loading\image_loading.cpp" />
-    <ClCompile Include="src\loading\mesh_loading.cpp" />
     <ClCompile Include="src\loading\shader_loading.cpp" />
     <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD.cpp" />
     <ClCompile Include="src\noise\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp" />

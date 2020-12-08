@@ -158,13 +158,7 @@
     <ClInclude Include="src\input\input_manager.hpp">
       <Filter>src\input</Filter>
     </ClInclude>
-    <ClInclude Include="src\loading\entity_loading.hpp">
-      <Filter>src\loading</Filter>
-    </ClInclude>
     <ClInclude Include="src\loading\image_loading.hpp">
-      <Filter>src\loading</Filter>
-    </ClInclude>
-    <ClInclude Include="src\loading\mesh_loading.hpp">
       <Filter>src\loading</Filter>
     </ClInclude>
     <ClInclude Include="src\loading\shader_loading.hpp">
@@ -374,9 +368,6 @@
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\JsonConversion.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\GlmJsonConversion.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
@@ -402,6 +393,7 @@
     <ClInclude Include="src\core\EntityJsonConversion.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\JsonConversion.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -419,13 +411,7 @@
     <ClCompile Include="src\input\input_manager.cpp">
       <Filter>src\input</Filter>
     </ClCompile>
-    <ClCompile Include="src\loading\entity_loading.cpp">
-      <Filter>src\loading</Filter>
-    </ClCompile>
     <ClCompile Include="src\loading\image_loading.cpp">
-      <Filter>src\loading</Filter>
-    </ClCompile>
-    <ClCompile Include="src\loading\mesh_loading.cpp">
       <Filter>src\loading</Filter>
     </ClCompile>
     <ClCompile Include="src\loading\shader_loading.cpp">

@@ -1,5 +1,8 @@
 #include "mesh_import_window.hpp"
 
+#include <sanity_engine.hpp>
+
+
 #include "SanityEditor.hpp"
 #include "import/scene_importer.hpp"
 #include "serialization/EntitySerialization.hpp"
@@ -13,6 +16,9 @@ namespace sanity::editor::ui {
         const auto slash_pos = mesh_path_in.find_last_of("/");
         const auto filename = mesh_path_in.substring(slash_pos + 1);
         name = Rx::String::format("Import %s", filename);
+
+    	auto& renderer = engine::g_engine->get_renderer();
+        importer = Rx::make_ptr<import::SceneImporter>(RX_SYSTEM_ALLOCATOR, renderer);
     }
 
     void SceneImportWindow::draw_contents() {

@@ -47,7 +47,7 @@ namespace sanity::editor {
                                                                                  .width = width,
                                                                                  .height = height},
                                                pixels.data(),
-                                               cmds);
+                                               cmds.Get());
 
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
     }
@@ -71,7 +71,7 @@ namespace sanity::editor {
                                                                    .width = width,
                                                                    .height = height};
         auto cmds = renderer.get_render_backend().create_command_list();
-        const auto icon_handle = renderer.create_image(create_info, pixels.data(), cmds);
+        const auto icon_handle = renderer.create_image(create_info, pixels.data(), cmds.Get());
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
 
         return icon_handle;

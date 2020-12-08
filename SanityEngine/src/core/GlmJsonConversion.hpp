@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/JsonConversion.hpp"
+
+#include "nlohmann/json.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
