@@ -301,7 +301,7 @@ namespace sanity::editor::import {
             imported_mesh.primitives.reserve(mesh.primitives.size());
 
             for(Uint32 primitive_idx = 0; primitive_idx < mesh.primitives.size(); primitive_idx++) {
-                gltf_logger->info("Importing primitive %d", primitive_idx);
+                gltf_logger->verbose("Importing primitive %d", primitive_idx);
 
                 const auto& primitive = mesh.primitives[primitive_idx];
 

@@ -70,7 +70,7 @@ namespace sanity::engine {
             }
         } else {
             // Gravity
-            velocity.y -= 9.8 * delta_time;
+            velocity.y -= 9.8f * delta_time;
         }
 
         player_transform.location += velocity * delta_time;
@@ -100,8 +100,8 @@ namespace sanity::engine {
 
         last_cursor_location = cursor_location;
 
-        const auto pitch_delta = Rx::Math::atan2(mouse_delta.y * 0.0001, 1);
-        const auto yaw_delta = Rx::Math::atan2(mouse_delta.x * 0.0001, 1);
+        const auto pitch_delta = Rx::Math::atan2(mouse_delta.y * 0.0001f, 1);
+        const auto yaw_delta = Rx::Math::atan2(mouse_delta.x * 0.0001f, 1);
 
         player_transform.rotation = rotate(player_transform.rotation, yaw_delta, glm::vec3{0, 1, 0});
         player_transform.rotation = rotate(player_transform.rotation, pitch_delta, right);

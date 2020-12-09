@@ -2,8 +2,6 @@
 
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
 #include "resources.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
@@ -62,16 +60,15 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Mesh add_mesh(const Rx::Vector<StandardVertex>& vertices, const Rx::Vector<Uint32>& indices) const;
 
-    	void prepare_for_raytracing_geometry_build();
+        void prepare_for_raytracing_geometry_build();
 
     private:
-        enum class State
-        {
-	        AddVerticesAndIndices,
-        	BuildRaytracingGeometry,
-        	Empty,
+        enum class State {
+            AddVerticesAndIndices,
+            BuildRaytracingGeometry,
+            Empty,
         };
-    	
+
         State state{State::AddVerticesAndIndices};
 
         ID3D12GraphicsCommandList4* cmds;

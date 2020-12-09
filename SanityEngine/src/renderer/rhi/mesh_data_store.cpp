@@ -135,6 +135,8 @@ namespace sanity::engine::renderer {
         Rx::Vector<Uint32> offset_indices;
         offset_indices.reserve(indices.size());
 
+    	logger->verbose("Offsetting indices by %d", next_vertex_offset);
+
         indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
         auto* vertex_resource = vertex_buffer->resource.Get();
@@ -175,7 +177,7 @@ namespace sanity::engine::renderer {
 
             D3D12_VERTEX_BUFFER_VIEW view{};
             view.BufferLocation = buffer->resource->GetGPUVirtualAddress() + binding.offset;
-            view.SizeInBytes = buffer->size - binding.offset;
+            view.SizeInBytes = static_cast<Uint32>(buffer->size - binding.offset);
             view.StrideInBytes = binding.vertex_size;
 
             vertex_buffer_views[i] = view;
@@ -185,7 +187,7 @@ namespace sanity::engine::renderer {
 
         D3D12_INDEX_BUFFER_VIEW index_view{};
         index_view.BufferLocation = index_buffer->resource->GetGPUVirtualAddress();
-        index_view.SizeInBytes = index_buffer->size;
+        index_view.SizeInBytes = static_cast<Uint32>(index_buffer->size);
         index_view.Format = DXGI_FORMAT_R32_UINT;
 
         commands->IASetIndexBuffer(&index_view);

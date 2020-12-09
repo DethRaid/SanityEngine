@@ -114,7 +114,7 @@ namespace sanity::engine::renderer {
 
                 {
                     const auto vb_view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = vertex_buffer.resource->GetGPUVirtualAddress(),
-                                                                  .SizeInBytes = vertex_buffer.size,
+                                                                  .SizeInBytes = static_cast<Uint32>(vertex_buffer.size),
                                                                   .StrideInBytes = sizeof(ImDrawVert)};
                     commands->IASetVertexBuffers(0, 1, &vb_view);
 
@@ -122,7 +122,7 @@ namespace sanity::engine::renderer {
                                                                                                  DXGI_FORMAT_R16_UINT;
                 	
                     const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer.resource->GetGPUVirtualAddress(),
-                                                                 .SizeInBytes = index_buffer.size,
+                                                                 .SizeInBytes = static_cast<Uint32>(index_buffer.size),
                                                                  .Format = index_buffer_format};
                     commands->IASetIndexBuffer(&ib_view);
 

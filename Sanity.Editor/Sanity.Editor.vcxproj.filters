@@ -35,6 +35,9 @@
     <Filter Include="src\project">
       <UniqueIdentifier>{cf71696b-2b1a-4c1a-85fd-d4ae52c79f0f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{6de77e49-1188-4410-8f9a-a011450b1d47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\SanityEditor.cpp">
@@ -83,7 +86,7 @@
       <Filter>src\project</Filter>
     </ClCompile>
     <ClCompile Include="src\serialization\project_serialization.cpp">
-      <Filter>src</Filter>
+      <Filter>src\serialization</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,7 +138,9 @@
     <ClInclude Include="src\project\project_definition.hpp">
       <Filter>src\project</Filter>
     </ClInclude>
-    <ClInclude Include="src\serialization\project_serialization.hpp" />
+    <ClInclude Include="src\serialization\project_serialization.hpp">
+      <Filter>src\serialization</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\textures\icons\blend.png">
@@ -147,5 +152,10 @@
     <Image Include="data\textures\icons\glb.png">
       <Filter>data\textures\icons</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\Rex.Core\tools\Rex.Core.natvis">
+      <Filter>tools</Filter>
+    </Natvis>
   </ItemGroup>
 </Project>

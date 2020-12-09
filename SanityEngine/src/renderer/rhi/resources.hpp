@@ -15,7 +15,7 @@ namespace sanity::engine::renderer {
     struct Buffer {
         Rx::String name;
 
-        Uint32 size{};
+        Uint64 size{};
 
         ComPtr<ID3D12Resource> resource;
 

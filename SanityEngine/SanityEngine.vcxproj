@@ -481,6 +481,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\core\components.cpp" />
     <ClCompile Include="src\core\EntityJsonConversion.cpp" />
     <ClCompile Include="src\core\RexJsonConversion.cpp" />
+    <ClCompile Include="src\core\types.ixx" />
     <ClCompile Include="src\core\WindowsJsonConversion.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />

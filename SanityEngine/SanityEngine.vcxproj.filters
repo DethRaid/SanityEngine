@@ -591,6 +591,9 @@
     <ClCompile Include="src\system\system.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\types.ixx">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
