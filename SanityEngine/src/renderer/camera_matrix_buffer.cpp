@@ -26,7 +26,7 @@ namespace sanity::engine::renderer {
         projection_matrix = {};
 
         if(camera.fov > 0) {
-            projection_matrix = glm::tweakedInfinitePerspective(camera.fov, camera.aspect_ratio, camera.near_clip_plane);
+            projection_matrix = glm::tweakedInfinitePerspective(glm::radians(camera.fov), camera.aspect_ratio, camera.near_clip_plane);
 
         } else {
             const auto half_width = camera.orthographic_size / 2.0;
