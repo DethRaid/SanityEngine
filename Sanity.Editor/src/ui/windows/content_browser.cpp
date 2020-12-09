@@ -13,6 +13,7 @@ namespace sanity::editor::ui {
     RX_LOG("ContentBrowser", logger);
 
     constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
+    constexpr Uint32 DIRECTORY_ITEM_HEIGHT = 30;
 
     ContentBrowser::ContentBrowser(Rx::String content_directory_in)
         : Window{"Content Browser"},
@@ -32,9 +33,6 @@ namespace sanity::editor::ui {
     void ContentBrowser::draw_contents() {
         Rx::Filesystem::Directory dir{selected_directory};
 
-        // Current location we're drawing content items at
-        glm::uvec2 cur_item_cursor_location{0, 0};
-
         if(content_directory != selected_directory) {
             draw_back_button();
 
@@ -43,11 +41,16 @@ namespace sanity::editor::ui {
         }
 
         const auto width = ImGui::GetWindowWidth();
-        const auto num_columns = floor(width / DIRECTORY_ITEM_WIDTH);
+        const auto num_columns = static_cast<Uint32>(floor(width / DIRECTORY_ITEM_WIDTH));
+
+    	const auto height = ImGui::GetWindowHeight();
+        const auto num_rows = static_cast<Uint32>(floor(height / DIRECTORY_ITEM_HEIGHT));
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
-        ImGui::Columns(static_cast<Uint32>(num_columns));
+        ImGui::Columns(num_columns);
         ImGui::Separator();
+
+    	auto cur_row = 0u;
 
         dir.each([&](Rx::Filesystem::Directory::Item&& item) {
             if(item.is_directory()) {
@@ -56,8 +59,7 @@ namespace sanity::editor::ui {
                 });
 
             } else if(item.is_file()) {
-                if(this->should_ignore_file(item)) {
-                    // Skip ignored files
+                if(should_ignore_file(item)) {
                     return;
                 }
 
@@ -65,6 +67,12 @@ namespace sanity::editor::ui {
                     const auto filename = Rx::String::format("%s/%s", selected_directory, selected_item.name());
                     g_editor->get_ui_controller().show_editor_for_asset(filename);
                 });
+            }
+
+        	cur_row++;
+            if(cur_row == num_rows) {
+                ImGui::NextColumn();
+                cur_row = 0;
             }
         });
 
