@@ -18,5 +18,7 @@ namespace sanity::editor::ui {
         AssetMetadata<SceneImportSettings> metadata{};
 
         Rx::String mesh_path;
+    	
+        void import_scene() const;
     };
 } // namespace sanity::editor::ui

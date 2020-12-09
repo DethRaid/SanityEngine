@@ -5,6 +5,7 @@
 
 #include "Tracy.hpp"
 #include "asset_registry/asset_registry.hpp"
+#include "core/types.hpp"
 #include "entity/entity_operations.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
@@ -25,6 +26,67 @@ namespace sanity::editor::import {
     constexpr const char* BASE_COLOR_TEXTURE_PARAM_NAME = "baseColorTexture";
     constexpr const char* METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME = "metallicRoughnessTexture";
     constexpr const char* NORMAL_TEXTURE_PARAM_NAME = "normalTexture";
+
+    namespace detail {
+        template <typename DataType>
+        [[nodiscard]] const DataType* get_pointer_to_accessor_data(const int accessor_idx, const tinygltf::Model& scene) {
+            if(accessor_idx < 0) {
+                gltf_logger->error("Accessor index %d is less than 0, aborting", accessor_idx);
+                return nullptr;
+
+            } else if(accessor_idx >= scene.accessors.size()) {
+                gltf_logger->error("Accessor index %d is greater than number of accessors %d, aborting",
+                                   accessor_idx,
+                                   scene.accessors.size());
+                return nullptr;
+            }
+
+            const auto& accessor = scene.accessors[accessor_idx];
+            if(accessor.bufferView < 0) {
+                gltf_logger->error("Buffer view index %d is less than zero, aborting", accessor.bufferView);
+                return nullptr;
+
+            } else if(accessor.bufferView >= scene.bufferViews.size()) {
+                gltf_logger->error("Buffer view index %d is greater than number of buffer views %d, aborting",
+                                   accessor.bufferView,
+                                   scene.bufferViews.size());
+                return nullptr;
+            }
+
+            const auto& buffer_view = scene.bufferViews[accessor.bufferView];
+            if(buffer_view.buffer < 0) {
+                gltf_logger->error("Buffer index is less than zero, aborting");
+                return nullptr;
+
+            } else if(buffer_view.buffer > scene.buffers.size()) {
+                gltf_logger->error("Buffer index %d is greater than number of buffers %d, aborting",
+                                   buffer_view.buffer,
+                                   scene.buffers.size());
+                return nullptr;
+            }
+
+            const auto& buffer = scene.buffers[buffer_view.buffer];
+            return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteLength);
+        }
+
+        template <typename IndexType>
+        Rx::Vector<Uint32> get_indices_from_primitive_impl(const Int32 indices_accessor_idx, const tinygltf::Model& scene) {
+            const auto* index_read_ptr = get_pointer_to_accessor_data<Byte>(indices_accessor_idx, scene);
+
+            Rx::Vector<Uint32> indices;
+
+            const auto& index_accessor = scene.accessors[indices_accessor_idx];
+            indices.reserve(index_accessor.count);
+            for(Uint32 i = 0; i < index_accessor.count; i++) {
+                const auto* index_read_ptr_typed = reinterpret_cast<const IndexType*>(index_read_ptr);
+                const auto index = *index_read_ptr_typed;
+                indices.push_back(static_cast<Uint32>(index));
+                index_read_ptr += sizeof(IndexType);
+            }
+
+            return indices;
+        }
+    } // namespace detail
 
     SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
 
@@ -229,8 +291,8 @@ namespace sanity::editor::import {
         auto& mesh_store = renderer->get_static_mesh_store();
         const auto uploader = mesh_store.begin_adding_meshes(cmds);
 
-        Rx::Vector<GltfMesh> meshes;
-        meshes.reserve(scene.meshes.size());
+        Rx::Vector<GltfMesh> imported_meshes;
+        imported_meshes.reserve(scene.meshes.size());
 
         for(const auto& mesh : scene.meshes) {
             gltf_logger->info("Importing mesh %s", mesh.name.c_str());
@@ -251,17 +313,16 @@ namespace sanity::editor::import {
 
                 imported_mesh.primitives.push_back(*primitive_mesh);
             }
+
+            imported_meshes.push_back(imported_mesh);
         }
 
-        return meshes;
+        return imported_meshes;
     }
 
-    template <typename DataType>
-    [[nodiscard]] const DataType* get_pointer_to_accessor_data(int accessor_idx, const tinygltf::Model& scene);
-
     Rx::Optional<SceneImporter::GltfPrimitive> SceneImporter::get_data_from_primitive(const tinygltf::Primitive& primitive,
-                                                                                const tinygltf::Model& scene,
-                                                                                const engine::renderer::MeshUploader& uploader) {
+                                                                                      const tinygltf::Model& scene,
+                                                                                      const engine::renderer::MeshUploader& uploader) {
         const auto indices = get_indices_from_primitive(primitive, scene);
         const auto vertices = get_vertices_from_primitive(primitive, scene);
 
@@ -275,18 +336,36 @@ namespace sanity::editor::import {
     }
 
     Rx::Vector<Uint32> SceneImporter::get_indices_from_primitive(const tinygltf::Primitive& primitive, const tinygltf::Model& scene) {
-        const auto* index_read_ptr = get_pointer_to_accessor_data<Uint32>(primitive.indices, scene);
-
-        Rx::Vector<Uint32> indices;
-
         const auto& index_accessor = scene.accessors[primitive.indices];
-        indices.reserve(index_accessor.count);
-        for(Uint32 i = 0; i < index_accessor.count; i++) {
-            indices.push_back(*index_read_ptr);
-            index_read_ptr++;
+
+        if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_BYTE) {
+            return detail::get_indices_from_primitive_impl<Int8>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE) {
+            return detail::get_indices_from_primitive_impl<Uint8>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_SHORT) {
+            return detail::get_indices_from_primitive_impl<Int16>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
+            return detail::get_indices_from_primitive_impl<Uint16>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_INT) {
+            return detail::get_indices_from_primitive_impl<Int32>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
+            return detail::get_indices_from_primitive_impl<Uint32>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) {
+            return detail::get_indices_from_primitive_impl<Float32>(primitive.indices, scene);
+
+        } else if(index_accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE) {
+            return detail::get_indices_from_primitive_impl<Float64>(primitive.indices, scene);
         }
 
-        return indices;
+        gltf_logger->error("Unrecognized component type %d in index accessor", index_accessor.componentType);
+
+        return {};
     }
 
     Rx::Vector<StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
@@ -298,7 +377,7 @@ namespace sanity::editor::import {
             return {};
         }
 
-        const auto* position_read_ptr = get_pointer_to_accessor_data<Vec3f>(positions_itr->second, scene);
+        const auto* position_read_ptr = detail::get_pointer_to_accessor_data<Vec3f>(positions_itr->second, scene);
         if(position_read_ptr == nullptr) {
             logger->error("Could not get a pointer to the vertex positions");
             return {};
@@ -312,7 +391,7 @@ namespace sanity::editor::import {
                 return nullptr;
             }
 
-            return get_pointer_to_accessor_data<Vec3f>(normals_itr->second, scene);
+            return detail::get_pointer_to_accessor_data<Vec3f>(normals_itr->second, scene);
         }();
         if(normal_read_ptr == nullptr) {
             logger->error("Could not get a pointer to the vertex normals");
@@ -327,7 +406,7 @@ namespace sanity::editor::import {
                 return nullptr;
             }
 
-            return get_pointer_to_accessor_data<Vec2f>(texcoord_itr->second, scene);
+            return detail::get_pointer_to_accessor_data<Vec2f>(texcoord_itr->second, scene);
         }();
         if(texcoord_read_ptr == nullptr) {
             logger->error("Could not get a pointer to the vertex texcoords");
@@ -368,7 +447,7 @@ namespace sanity::editor::import {
 
             const auto node_entity = create_entity_for_node(node, scene_entity, registry);
 
-        	// Get the component every loop so that we don't hold on to a bad reference 
+            // Get the component every loop so that we don't hold on to a bad reference
             auto& scene_hierarchy = registry.get<engine::HierarchyComponent>(scene_entity);
             scene_hierarchy.children.push_back(node_entity);
         }
@@ -410,63 +489,30 @@ namespace sanity::editor::import {
             Uint32 i{0};
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
-                const auto mesh_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
-                const auto mesh_entity = entity::create_base_editor_entity(mesh_node_name, registry);
+                const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
+                const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
 
-                entity::add_component<engine::TransformComponent>(mesh_entity, registry);
-            	
-            	auto& mesh_hierarchy = entity::add_component<engine::HierarchyComponent>(mesh_entity, registry);
-                mesh_hierarchy.parent = node_entity;
-                node_hierarchy.children.push_back(mesh_entity);
+                entity::add_component<engine::TransformComponent>(primitive_entity, registry);
 
-            	auto& renderable = entity::add_component<engine::renderer::StandardRenderableComponent>(mesh_entity, registry);
+                auto& primitive_hierarchy_component = entity::add_component<engine::HierarchyComponent>(primitive_entity, registry);
+                primitive_hierarchy_component.parent = node_entity;
+
+                auto& parent_hierarchy_component = registry.get<engine::HierarchyComponent>(node_entity);
+                parent_hierarchy_component.children.push_back(primitive_entity);
+
+                auto& renderable = entity::add_component<engine::renderer::StandardRenderableComponent>(primitive_entity, registry);
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
 
                 i++;
             });
+
+        } else {
+            logger->error("Node %s references invalid mesh %d", node.name.c_str(), node.mesh);
         }
 
-    	// TODO: Lights
+        // TODO: Lights
 
-    	return node_entity;
+        return node_entity;
     }
-
-    template <typename DataType>
-    [[nodiscard]] const DataType* get_pointer_to_accessor_data(const int accessor_idx, const tinygltf::Model& scene) {
-        if(accessor_idx < 0) {
-            gltf_logger->error("Accessor index %d is less than 0, aborting", accessor_idx);
-            return nullptr;
-
-        } else if(accessor_idx >= scene.accessors.size()) {
-            gltf_logger->error("Accessor index %d is greater than number of accessors %d, aborting", accessor_idx, scene.accessors.size());
-            return nullptr;
-        }
-
-        const auto& accessor = scene.accessors[accessor_idx];
-        if(accessor.bufferView < 0) {
-            gltf_logger->error("Buffer view index %d is less than zero, aborting", accessor.bufferView);
-            return nullptr;
-
-        } else if(accessor.bufferView >= scene.bufferViews.size()) {
-            gltf_logger->error("Buffer view index %d is greater than number of buffer views %d, aborting",
-                               accessor.bufferView,
-                               scene.bufferViews.size());
-            return nullptr;
-        }
-
-        const auto& buffer_view = scene.bufferViews[accessor.bufferView];
-        if(buffer_view.buffer < 0) {
-            gltf_logger->error("Buffer index is less than zero, aborting");
-            return nullptr;
-
-        } else if(buffer_view.buffer > scene.buffers.size()) {
-            gltf_logger->error("Buffer index %d is greater than number of buffers %d, aborting", buffer_view.buffer, scene.buffers.size());
-            return nullptr;
-        }
-
-        const auto& buffer = scene.buffers[buffer_view.buffer];
-        return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteLength);
-    }
-
 } // namespace sanity::editor::import

@@ -34,7 +34,13 @@ namespace sanity::editor {
         auto& renderer = g_engine->get_renderer();
         asset_loader = Rx::make_ptr<AssetLoader>(RX_SYSTEM_ALLOCATOR, &renderer);
 
-        g_engine->register_tick_function([&](const Float32 delta_time) { flycam.update_player_transform(delta_time); });
+        // g_engine->register_tick_function([&](const Float32 delta_time) { flycam.update_player_transform(delta_time); });
+
+    	// Stupid model viewing hack
+        const auto player_entity = g_engine->get_player();
+        auto registry = g_engine->get_global_registry().lock();
+        auto& player_transform = registry->get<TransformComponent>(player_entity);
+        player_transform.location = {0, 0, 10};
     }
 
     void SanityEditor::load_project(const Rx::String& project_file) {

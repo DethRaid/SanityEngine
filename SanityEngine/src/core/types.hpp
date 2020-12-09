@@ -18,10 +18,10 @@ using Rx::Uint16;
 using Rx::Uint32;
 using Rx::Uint64;
 
-using Rx::Sint32;
-using Rx::Sint64;
-using Int32 = Sint32;
-using Int64 = Sint64;
+using Int8 = Rx::Sint8;
+using Int16 = Rx::Sint16;
+using Int32 = Rx::Sint32;
+using Int64 = Rx::Sint64;
 
 using Rx::Float32;
 using Rx::Float64;
