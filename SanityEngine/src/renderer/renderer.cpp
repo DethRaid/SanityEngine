@@ -89,9 +89,9 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
-        ZoneScoped
+        ZoneScoped;
 
-            const auto frame_idx = device->get_cur_gpu_frame_idx();
+        const auto frame_idx = device->get_cur_gpu_frame_idx();
 
         auto command_list = device->create_command_list(frame_idx);
         command_list->SetName(L"Main Render Command List");
@@ -614,7 +614,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         auto& buffer = *material_device_buffers[frame_idx];
-        memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size());
+        memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size() * sizeof(StandardMaterial));
     }
 
     Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_previous_resource_states(const Uint32 cur_renderpass_index) const {

@@ -29,10 +29,5 @@ namespace sanity::engine::renderer {
          * `emission = pow(emission.r, 1 / 3) * 100;`
          */
     	TextureHandle emission;
-
-        /*!
-         * \brief Noise texture
-         */
-        TextureHandle noise;
     };
 } // namespace renderer

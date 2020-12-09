@@ -56,7 +56,7 @@ namespace sanity::editor::import {
         [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene,
                                                                                                 ID3D12GraphicsCommandList4* cmds);
 
-        [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> get_sanity_handle_to_texture_in_gltf(Uint32 texture_idx,
+        [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> get_sanity_handle_to_texture(Uint32 texture_idx,
                                                                                                          const tinygltf::Model& scene,
                                                                                                          ID3D12GraphicsCommandList4* cmds);
 

@@ -255,7 +255,6 @@ namespace sanity::engine {
         ZoneScoped;
 
         auto material = renderer::StandardMaterial{};
-        material.noise = renderer->get_noise_texture();
 
         const auto albedo_image_handle = load_image_to_gpu(albedo_texture_name, *renderer);
         if(albedo_image_handle) {

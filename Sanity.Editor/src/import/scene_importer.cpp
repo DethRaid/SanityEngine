@@ -218,17 +218,33 @@ namespace sanity::editor::import {
 
             // Load the textures
 
-            if(const auto handle = get_sanity_handle_to_texture_in_gltf(static_cast<Uint32>(base_color_texture_idx), scene, cmds);
+            if(const auto handle = get_sanity_handle_to_texture(static_cast<Uint32>(base_color_texture_idx), scene, cmds);
                handle.has_value()) {
                 sanity_material.base_color = *handle;
+            } else {
+                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                   base_color_texture_idx,
+                                   BASE_COLOR_TEXTURE_PARAM_NAME);
+                sanity_material.base_color = renderer->get_pink_texture();
             }
-            if(const auto handle = get_sanity_handle_to_texture_in_gltf(static_cast<Uint32>(metallic_roughness_texture_idx), scene, cmds);
+
+            if(const auto handle = get_sanity_handle_to_texture(static_cast<Uint32>(metallic_roughness_texture_idx), scene, cmds);
                handle.has_value()) {
                 sanity_material.metallic_roughness = *handle;
+            } else {
+                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                   metallic_roughness_texture_idx,
+                                   METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME);
+                sanity_material.metallic_roughness = renderer->get_pink_texture();
             }
-            if(const auto handle = get_sanity_handle_to_texture_in_gltf(static_cast<Uint32>(normal_texture_idx), scene, cmds);
-               handle.has_value()) {
+
+            if(const auto handle = get_sanity_handle_to_texture(static_cast<Uint32>(normal_texture_idx), scene, cmds); handle.has_value()) {
                 sanity_material.normal = *handle;
+            } else {
+                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                   normal_texture_idx,
+                                   NORMAL_TEXTURE_PARAM_NAME);
+                sanity_material.normal = renderer->get_pink_texture();
             }
 
             // Allocate material on GPU
@@ -240,9 +256,9 @@ namespace sanity::editor::import {
         return materials;
     }
 
-    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::get_sanity_handle_to_texture_in_gltf(const Uint32 texture_idx,
-                                                                                                      const tinygltf::Model& scene,
-                                                                                                      ID3D12GraphicsCommandList4* cmds) {
+    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::get_sanity_handle_to_texture(const Uint32 texture_idx,
+                                                                                              const tinygltf::Model& scene,
+                                                                                              ID3D12GraphicsCommandList4* cmds) {
         static Byte* padding_buffer{nullptr};
 
         ZoneScoped;
@@ -250,8 +266,10 @@ namespace sanity::editor::import {
         const auto& texture = scene.textures[texture_idx];
         const auto& texture_name = Rx::String{texture.name.c_str()};
 
-        if(const auto* texture_ptr = loaded_textures.find(texture_name); texture_ptr != nullptr) {
-            return *texture_ptr;
+    	if(!texture_name.is_empty()) {
+            if(const auto* texture_ptr = loaded_textures.find(texture_name); texture_ptr != nullptr) {
+                return *texture_ptr;
+            }
         }
 
         if(texture.source < 0) {
@@ -262,7 +280,7 @@ namespace sanity::editor::import {
         // We only support three- or four-channel textures, with eight bits per chanel
         const auto& source_image = scene.images[texture.source];
         if(source_image.component != 3 && source_image.component != 4) {
-            gltf_logger->error("Source image %s does not have either 3 or four components", source_image.name.c_str());
+            gltf_logger->error("Source image %s does not have either three or four components", source_image.name.c_str());
             return Rx::nullopt;
         }
         if(source_image.bits != 8) {
@@ -288,9 +306,13 @@ namespace sanity::editor::import {
                 read_idx++;
                 write_idx++;
             }
+
+            image_data = padding_buffer;
         }
 
-        const auto create_info = engine::renderer::ImageCreateInfo{.name = source_image.name.c_str(),
+    	const auto image_name = texture_name.is_empty() ? "Imported GLTF texture" : texture_name;
+
+        const auto create_info = engine::renderer::ImageCreateInfo{.name = image_name,
                                                                    .usage = engine::renderer::ImageUsage::SampledImage,
                                                                    .format = engine::renderer::ImageFormat::Rgba8,
                                                                    .width = static_cast<Uint32>(source_image.width),

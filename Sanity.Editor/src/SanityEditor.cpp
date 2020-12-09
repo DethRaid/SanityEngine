@@ -34,9 +34,15 @@ namespace sanity::editor {
         auto& renderer = g_engine->get_renderer();
         asset_loader = Rx::make_ptr<AssetLoader>(RX_SYSTEM_ALLOCATOR, &renderer);
 
-        g_engine->register_tick_function([&](const Float32 delta_time) { flycam.update_player_transform(delta_time); });
+        g_engine->register_tick_function([&](const Float32 delta_time) {
+            auto* window = g_engine->get_window();
+            // Only tick if we have focus
+            if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE) {
+                flycam.update_player_transform(delta_time);
+            }
+        });
 
-    	// Stupid model viewing hack
+        // Stupid model viewing hack
         const auto player_entity = g_engine->get_player();
         auto registry = g_engine->get_global_registry().lock();
         auto& player_transform = registry->get<TransformComponent>(player_entity);
