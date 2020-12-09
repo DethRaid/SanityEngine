@@ -86,6 +86,23 @@ namespace sanity::editor::import {
 
             return indices;
         }
+
+        Rx::Vector<Uint32> flip_triangle_winding_order(const Rx::Vector<Uint32>& indices) {
+            if(indices.size() % 3 != 0) {
+                logger->error("Cannot flip winding order: triangle index buffer must be a multiple of three");
+                return {};
+            }
+
+            Rx::Vector<Uint32> flipped_indices;
+            flipped_indices.reserve(indices.size());
+            for(Size i = 0; i < indices.size(); i += 3) {
+                flipped_indices.push_back(indices[i + 2]);
+                flipped_indices.push_back(indices[i + 1]);
+                flipped_indices.push_back(indices[i]);
+            }
+
+            return flipped_indices;
+        }
     } // namespace detail
 
     SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
@@ -330,7 +347,9 @@ namespace sanity::editor::import {
             return Rx::nullopt;
         }
 
-        const auto mesh = uploader.add_mesh(vertices, indices);
+        const auto fixed_indices = detail::flip_triangle_winding_order(indices);
+
+        const auto mesh = uploader.add_mesh(vertices, fixed_indices);
         return GltfPrimitive{.mesh = mesh, .material_idx = primitive.material};
     }
 
