@@ -181,7 +181,6 @@ namespace sanity::editor::import {
             int normal_texture_idx{-1};
 
             for(const auto& [param_name, param] : material.values) {
-                gltf_logger->verbose("Value %s has texture index %d", param_name.c_str(), param.TextureIndex());
                 if(param_name == BASE_COLOR_TEXTURE_PARAM_NAME) {
                     base_color_texture_idx = param.TextureIndex();
 
@@ -191,7 +190,6 @@ namespace sanity::editor::import {
             }
 
             for(const auto& [param_name, param] : material.additionalValues) {
-                gltf_logger->verbose("Additional value %s has texture index %d", param_name.c_str(), param.TextureIndex());
                 if(param_name == NORMAL_TEXTURE_PARAM_NAME) {
                     normal_texture_idx = param.TextureIndex();
                 }
@@ -203,22 +201,19 @@ namespace sanity::editor::import {
                 gltf_logger->error("Parameter %s on material %s isn't a valid texture",
                                    BASE_COLOR_TEXTURE_PARAM_NAME,
                                    material.name.c_str());
-                continue;
             }
             if(metallic_roughness_texture_idx == -1) {
                 gltf_logger->error("Parameter %s on material %s is not a valid texture",
                                    METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME,
                                    material.name.c_str());
-                continue;
             }
             if(normal_texture_idx == -1) {
                 gltf_logger->error("Parameter %s on material %s is not a valid texture", NORMAL_TEXTURE_PARAM_NAME, material.name.c_str());
-                continue;
             }
 
             // Load the textures
 
-            if(const auto handle = get_sanity_handle_to_texture(static_cast<Uint32>(base_color_texture_idx), scene, cmds);
+            if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds);
                handle.has_value()) {
                 sanity_material.base_color = *handle;
             } else {
@@ -228,23 +223,23 @@ namespace sanity::editor::import {
                 sanity_material.base_color = renderer->get_pink_texture();
             }
 
-            if(const auto handle = get_sanity_handle_to_texture(static_cast<Uint32>(metallic_roughness_texture_idx), scene, cmds);
+            if(const auto handle = get_sanity_handle_to_texture(metallic_roughness_texture_idx, scene, cmds);
                handle.has_value()) {
                 sanity_material.metallic_roughness = *handle;
             } else {
                 gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
                                    metallic_roughness_texture_idx,
                                    METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME);
-                sanity_material.metallic_roughness = renderer->get_pink_texture();
+                sanity_material.metallic_roughness = renderer->get_default_metallic_roughness_texture();
             }
 
-            if(const auto handle = get_sanity_handle_to_texture(static_cast<Uint32>(normal_texture_idx), scene, cmds); handle.has_value()) {
+            if(const auto handle = get_sanity_handle_to_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
                 sanity_material.normal = *handle;
             } else {
                 gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
                                    normal_texture_idx,
                                    NORMAL_TEXTURE_PARAM_NAME);
-                sanity_material.normal = renderer->get_pink_texture();
+                sanity_material.normal = renderer->get_default_normal_texture();
             }
 
             // Allocate material on GPU
@@ -256,17 +251,21 @@ namespace sanity::editor::import {
         return materials;
     }
 
-    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::get_sanity_handle_to_texture(const Uint32 texture_idx,
+    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::get_sanity_handle_to_texture(const Int32 texture_idx,
                                                                                               const tinygltf::Model& scene,
                                                                                               ID3D12GraphicsCommandList4* cmds) {
         static Byte* padding_buffer{nullptr};
 
         ZoneScoped;
 
+        if(texture_idx < 0) {
+            return Rx::nullopt;
+        }
+
         const auto& texture = scene.textures[texture_idx];
         const auto& texture_name = Rx::String{texture.name.c_str()};
 
-    	if(!texture_name.is_empty()) {
+        if(!texture_name.is_empty()) {
             if(const auto* texture_ptr = loaded_textures.find(texture_name); texture_ptr != nullptr) {
                 return *texture_ptr;
             }
@@ -310,7 +309,7 @@ namespace sanity::editor::import {
             image_data = padding_buffer;
         }
 
-    	const auto image_name = texture_name.is_empty() ? "Imported GLTF texture" : texture_name;
+        const auto image_name = texture_name.is_empty() ? "Imported GLTF texture" : texture_name;
 
         const auto create_info = engine::renderer::ImageCreateInfo{.name = image_name,
                                                                    .usage = engine::renderer::ImageUsage::SampledImage,

@@ -254,7 +254,7 @@ namespace sanity::engine::renderer {
             all_images.push_back(Rx::Utility::move(image));
             image_name_to_index.insert(create_info.name, idx);
 
-            logger->verbose("Created texture %s with index %u", create_info.name, idx);
+            // logger->verbose("Created texture %s with index %u", create_info.name, idx);
 
             return {idx};
 
@@ -376,9 +376,9 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_pink_texture() const { return pink_texture_handle; }
 
-    TextureHandle Renderer::get_default_normal_roughness_texture() const { return normal_roughness_texture_handle; }
+    TextureHandle Renderer::get_default_normal_texture() const { return normal_roughness_texture_handle; }
 
-    TextureHandle Renderer::get_default_specular_color_emission_texture() const { return specular_emission_texture_handle; }
+    TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
     RaytracableGeometryHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                                    const Buffer& index_buffer,

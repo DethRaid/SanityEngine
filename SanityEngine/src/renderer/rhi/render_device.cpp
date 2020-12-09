@@ -227,11 +227,11 @@ namespace sanity::engine::renderer {
             return {};
         }
 
-        logger->verbose("Created image %s (%dx%d) with initial state %s",
-                        create_info.name,
-                        create_info.width,
-                        create_info.height,
-                        resource_state_to_string(initial_state));
+        // logger->verbose("Created image %s (%dx%d) with initial state %s",
+        //                 create_info.name,
+        //                 create_info.width,
+        //                 create_info.height,
+        //                 resource_state_to_string(initial_state));
 
         image->name = create_info.name;
         image->width = static_cast<Uint32>(desc.Width);

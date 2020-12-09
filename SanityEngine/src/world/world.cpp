@@ -74,7 +74,7 @@ namespace sanity::engine {
         {
             auto locked_registry = registry->lock();
             const auto& player_transform = locked_registry->get<TransformComponent>(player);
-            terrain->load_terrain_around_player(player_transform);
+           // terrain->load_terrain_around_player(player_transform);
         }
 
         terrain->tick(delta_time);

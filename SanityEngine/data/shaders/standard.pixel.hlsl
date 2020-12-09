@@ -9,7 +9,7 @@ struct VertexOutput {
 struct MaterialData {
     uint albedo_idx;
     uint normal_idx;
-    uint specular_idx;
+    uint metallic_roughness_idx;
 
     uint emission_idx;
 };

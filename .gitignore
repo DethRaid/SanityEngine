@@ -536,3 +536,4 @@ vcpkg_installed/
 /sanity_editor/target/
 /SanityEngine/imgui.ini
 *.blend1
+/Sanity.Game/content/temp

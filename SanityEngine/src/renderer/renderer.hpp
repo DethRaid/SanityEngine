@@ -127,9 +127,9 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_pink_texture() const;
 
-        [[nodiscard]] TextureHandle get_default_normal_roughness_texture() const;
+        [[nodiscard]] TextureHandle get_default_normal_texture() const;
 
-        [[nodiscard]] TextureHandle get_default_specular_color_emission_texture() const;
+        [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
         [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const Buffer& vertex_buffer,
                                                                            const Buffer& index_buffer,
