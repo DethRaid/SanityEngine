@@ -281,14 +281,12 @@ namespace sanity::engine::renderer {
             commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
-        const auto num_bytes_in_texture = create_info.width * create_info.height * size_in_bytes(create_info.format);
-
-        const auto& staging_buffer = device->get_staging_buffer(num_bytes_in_texture);
+        const auto& staging_buffer = device->get_staging_buffer_for_texture(image.resource.Get());
 
         const auto subresource = D3D12_SUBRESOURCE_DATA{
             .pData = image_data,
-            .RowPitch = create_info.width * 4,
-            .SlicePitch = create_info.width * create_info.height * 4,
+            .RowPitch = static_cast<Uint64>(create_info.width) * 4,
+            .SlicePitch = static_cast<Uint64>(create_info.width) * create_info.height * 4,
         };
 
         const auto result = UpdateSubresources(commands, image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
@@ -592,12 +590,8 @@ namespace sanity::engine::renderer {
 
         registry.view<TransformComponent, CameraComponent>().each([&](const TransformComponent& transform, const CameraComponent& camera) {
             // logger->verbose(
-            //     "[%d] Updating matrices for camera %d\nTransform:\n\tLocation = (%f, %f, %f)\n\tRotation = (%f, %f, %f, %f)\n\tScale = (%f, %f, %f)",
-            //     frame_idx,
-            //     camera.idx,
-            //     transform.location.x,
-            //     transform.location.y,
-            //     transform.location.z,
+            //     "[%d] Updating matrices for camera %d\nTransform:\n\tLocation = (%f, %f, %f)\n\tRotation = (%f, %f, %f, %f)\n\tScale =
+            //     (%f, %f, %f)", frame_idx, camera.idx, transform.location.x, transform.location.y, transform.location.z,
             //     transform.rotation.x,
             //     transform.rotation.y,
             //     transform.rotation.z,

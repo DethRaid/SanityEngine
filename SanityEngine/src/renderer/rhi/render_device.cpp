@@ -527,7 +527,7 @@ namespace sanity::engine::renderer {
 
     bool RenderBackend::has_separate_device_memory() const { return !is_uma; }
 
-    Buffer RenderBackend::get_staging_buffer(const Uint32 num_bytes) {
+    Buffer RenderBackend::get_staging_buffer(const Uint64 num_bytes) {
         ZoneScoped;
 
         for(size_t i = 0; i < staging_buffers.size(); i++) {
@@ -544,6 +544,22 @@ namespace sanity::engine::renderer {
         return create_staging_buffer(num_bytes);
     }
 
+    Buffer RenderBackend::get_staging_buffer_for_texture(ID3D12Resource* texture)
+    {
+        auto desc = texture->GetDesc();
+        Uint64 required_size{0};
+        device->GetCopyableFootprints(&desc,
+                                       0,
+                                       1,
+                                       0,
+                                       nullptr,
+                                       nullptr,
+                                       nullptr,
+                                       &required_size);
+
+    	return get_staging_buffer(required_size);
+    }
+	
     void RenderBackend::return_staging_buffer(const Buffer& buffer) {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
@@ -1441,7 +1457,7 @@ namespace sanity::engine::renderer {
         wait_for_frame(frame_index);
     }
 
-    Buffer RenderBackend::create_staging_buffer(const Uint32 num_bytes) {
+    Buffer RenderBackend::create_staging_buffer(const Uint64 num_bytes) {
         const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
 
         const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
