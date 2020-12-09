@@ -15,12 +15,19 @@ namespace sanity::editor::ui {
     constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
 
     ContentBrowser::ContentBrowser(Rx::String content_directory_in)
-        : Window{"Content Browser"}, content_directory{Rx::Utility::move(content_directory_in)}, selected_directory{content_directory} {}
+        : Window{"Content Browser"},
+          content_directory{Rx::Utility::move(content_directory_in)},
+          selected_directory{content_directory},
+          file_extensions_to_ignore{Rx::Array{".meta", ".blend1", ".blend2", ".blend2"}} {}
 
     void ContentBrowser::set_content_directory(const Rx::String& content_directory_in) {
         content_directory = content_directory_in;
         selected_directory = content_directory;
     }
+
+    void ContentBrowser::add_ignored_file_extension(const Rx::String& extension) { file_extensions_to_ignore.insert(extension); }
+
+    void ContentBrowser::remove_ignored_file_extension(const Rx::String& extension) { file_extensions_to_ignore.erase(extension); }
 
     void ContentBrowser::draw_contents() {
         Rx::Filesystem::Directory dir{selected_directory};
@@ -49,8 +56,8 @@ namespace sanity::editor::ui {
                 });
 
             } else if(item.is_file()) {
-                if(item.name().ends_with(".meta")) {
-                    // Skip meta files
+                if(this->should_ignore_file(item)) {
+                    // Skip ignored files
                     return;
                 }
 
@@ -87,5 +94,18 @@ namespace sanity::editor::ui {
         if(ImGui::Button(item_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
             on_open(item);
         }
+    }
+
+    bool ContentBrowser::should_ignore_file(const Rx::Filesystem::Directory::Item& file) {
+        auto should_ignore = false;
+        file_extensions_to_ignore.each([&](const Rx::String& extension) {
+            if(file.name().ends_with(extension)) {
+                should_ignore = true;
+                return RX_ITERATION_STOP;
+            }
+
+            return RX_ITERATION_CONTINUE;
+        });
+        return should_ignore;
     }
 } // namespace sanity::editor::ui
