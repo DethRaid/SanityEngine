@@ -66,7 +66,7 @@ namespace sanity::editor::import {
             }
 
             const auto& buffer = scene.buffers[buffer_view.buffer];
-            return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteLength);
+            return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteOffset);
         }
 
         template <typename IndexType>
@@ -205,7 +205,6 @@ namespace sanity::editor::import {
                handle.has_value()) {
                 sanity_material.base_color = *handle;
             }
-
             if(const auto handle = get_sanity_handle_to_texture_in_gltf(static_cast<Uint32>(metallic_roughness_texture_idx), scene, cmds);
                handle.has_value()) {
                 sanity_material.metallic_roughness = *handle;
