@@ -30,7 +30,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
     Texture2D noise = textures[0];
 
-    float3 total_reflected_light = get_total_reflected_light(camera, input, albedo.rgb, STANDARD_ROUGHNESS, noise);
+    float3 total_reflected_light = get_total_reflected_light(camera, input, input.normal, albedo.rgb, STANDARD_ROUGHNESS, noise);
 
-    return float4(1, 0, 1, 1);//total_reflected_light, 1);
+    return float4(total_reflected_light, 1);
 }

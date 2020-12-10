@@ -317,7 +317,7 @@ namespace sanity::engine {
                 // While I _should_ use a designated initializer and construct everything inline, Visual Studio is an incredibly stupid
                 // buttface
                 auto vertex = StandardVertex{};
-                vertex.position = Double3{x_float, height, y_float}.cast<Float32>();
+                vertex.location = Double3{x_float, height, y_float}.cast<Float32>();
                 vertex.normal = normal.cast<Float32>();
                 vertex.texcoord = Double2{x_float, y_float}.cast<Float32>();
 
@@ -423,12 +423,12 @@ namespace sanity::engine {
                 float min_y = 256;
 
                 create_info.vertices.each_fwd([&](const StandardVertex& vertex) {
-                    if(vertex.position.y < min_y) {
-                        min_y = vertex.position.y;
+                    if(vertex.location.y < min_y) {
+                        min_y = vertex.location.y;
                     }
 
-                    if(vertex.position.y > max_y) {
-                        max_y = vertex.position.y;
+                    if(vertex.location.y > max_y) {
+                        max_y = vertex.location.y;
                     }
                 });
 

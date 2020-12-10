@@ -12,22 +12,22 @@ struct MaterialData {
 
 #include "inc/standard_root_signature.hlsl"
 
-const static float ACCUMULATION_POWER = 0.25;
+const static float ACCUMULATION_POWER = 1.0;
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     MaterialData material = material_buffer[constants.material_index];
 
     Texture2D scene_output_texture = textures[material.scene_output_texture_idx];
 
-    Texture2D depth_texture = textures[material.scene_depth_texture_idx];
-    float cur_depth = depth_texture.Sample(point_sampler, input.texcoord).r;
+    // Texture2D depth_texture = textures[material.scene_depth_texture_idx];
+    // float cur_depth = depth_texture.Sample(point_sampler, input.texcoord).r;
+    // 
+    // Camera camera = cameras[constants.camera_index];
     
-    Camera camera = cameras[constants.camera_index];
-    
-    float4 position_clipspace = float4(float3(input.texcoord, cur_depth) * 2.0 - 1.0, 1);
-    float4 position_viewspace = mul(camera.inverse_projection, position_clipspace);
-    float4 position_worldspace = mul(camera.inverse_view, position_viewspace);
-    position_worldspace /= position_worldspace.w;
+    // float4 position_clipspace = float4(float3(input.texcoord, cur_depth) * 2.0 - 1.0, 1);
+    // float4 position_viewspace = mul(camera.inverse_projection, position_clipspace);
+    // float4 position_worldspace = mul(camera.inverse_view, position_viewspace);
+    // position_worldspace /= position_worldspace.w;
     
     // float4 previous_position_viewspace = mul(camera.previous_view, position_worldspace);
     // float4 previous_position_clipspace = mul(camera.previous_projection, previous_position_viewspace);
