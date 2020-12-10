@@ -43,14 +43,14 @@ namespace sanity::editor::ui {
         const auto width = ImGui::GetWindowWidth();
         const auto num_columns = static_cast<Uint32>(floor(width / DIRECTORY_ITEM_WIDTH));
 
-    	const auto height = ImGui::GetWindowHeight();
+        const auto height = ImGui::GetWindowHeight();
         const auto num_rows = static_cast<Uint32>(floor(height / DIRECTORY_ITEM_HEIGHT));
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
         ImGui::Columns(num_columns);
         ImGui::Separator();
 
-    	auto cur_row = 0u;
+        auto cur_row = 0u;
 
         dir.each([&](Rx::Filesystem::Directory::Item&& item) {
             if(item.is_directory()) {
@@ -69,7 +69,7 @@ namespace sanity::editor::ui {
                 });
             }
 
-        	cur_row++;
+            cur_row++;
             if(cur_row == num_rows) {
                 ImGui::NextColumn();
                 cur_row = 0;
@@ -95,7 +95,8 @@ namespace sanity::editor::ui {
 
         auto& asset_registry = g_editor->get_asset_registry();
 
-        const auto file_icon = asset_registry.get_icon_for_file(item_name);
+        const auto file_icon = item.is_directory() ? asset_registry.get_directory_icon() : asset_registry.get_file_icon(item_name);
+
         ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
         ImGui::SameLine();
 

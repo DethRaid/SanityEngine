@@ -4,11 +4,17 @@
 #include "nlohmann/json.hpp"
 
 namespace sanity::editor {
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        SceneImportSettings, import_meshes, import_materials, import_lights, import_empties, generate_collision_geometry);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneImportSettings,
+                                       import_meshes,
+                                       scaling_factor,
+                                       import_materials,
+                                       generate_collision_geometry,
+                                       import_lights,
+                                       import_empties,
+                                       import_object_hierarchy);
 
     template <typename ImportSettingsType>
-    void from_json(const nlohmann::json& j, AssetMetadata<ImportSettingsType>& asset_metadata) {
+    void from_json(const nlohmann::json & j, AssetMetadata<ImportSettingsType>& asset_metadata) {
         j.at("last_import_date").get_to(asset_metadata.last_import_date);
         j.at("import_settings").get_to(asset_metadata.import_settings);
     }

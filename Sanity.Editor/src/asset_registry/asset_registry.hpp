@@ -24,9 +24,11 @@ namespace sanity::editor {
 
         explicit AssetRegistry();
 
-        engine::renderer::TextureHandle get_icon_for_file(const Rx::String& file_path);
+        [[nodiscard]] engine::renderer::TextureHandle get_file_icon(const Rx::String& file_path);
 
-    private:
+        [[nodiscard]] engine::renderer::TextureHandle get_directory_icon() const;
+
+      private:
         Rx::Map<Rx::String, engine::renderer::TextureHandle> known_file_icons;
 
         engine::renderer::TextureHandle directory_icon;

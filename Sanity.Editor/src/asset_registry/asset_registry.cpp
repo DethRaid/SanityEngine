@@ -11,7 +11,7 @@ namespace sanity::editor {
 
     AssetRegistry::AssetRegistry() { load_directory_icon(); }
 
-    engine::renderer::TextureHandle AssetRegistry::get_icon_for_file(const Rx::String& file_path) {
+    engine::renderer::TextureHandle AssetRegistry::get_file_icon(const Rx::String& file_path) {
         if(const auto dot_pos = file_path.find_last_of("."); dot_pos != Rx::String::k_npos) {
             const auto extension = file_path.substring(dot_pos + 1);
             if(const auto* icon_handle_ptr = known_file_icons.find(extension); icon_handle_ptr != nullptr) {
@@ -25,6 +25,9 @@ namespace sanity::editor {
         } else {
             return directory_icon;
         }
+    }
+
+    engine::renderer::TextureHandle AssetRegistry::get_directory_icon() const { return directory_icon;
     }
 
     void AssetRegistry::load_directory_icon() {
