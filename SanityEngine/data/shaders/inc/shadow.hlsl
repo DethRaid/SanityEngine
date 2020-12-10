@@ -45,7 +45,7 @@ float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texc
         ray.Origin = position_worldspace;
         ray.TMin = 0.01; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
         ray.Direction = ray_direction;
-        ray.TMax = 1000; // TODO: Pass this in with a CB
+        ray.TMax = 100000; // TODO: Pass this in with a CB
 
         // Set up work
         q.TraceRayInline(raytracing_scene,

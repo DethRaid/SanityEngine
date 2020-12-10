@@ -13,7 +13,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
     float4 position_clipspace = float4(input.position_clipspace, 1);
     float4 view_vector_worldspace = mul(mul(camera.inverse_view, camera.inverse_projection), position_clipspace);
-    view_vector_worldspace /= view_vector_worldspace.w;
+    // view_vector_worldspace /= view_vector_worldspace.w;
 
     Light sun = lights[0]; // Light 0 is always the sun
     float sun_strength = length(sun.color);

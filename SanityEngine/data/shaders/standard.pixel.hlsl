@@ -21,7 +21,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     input.normal = normalize(input.normal);
 
     MaterialData material = material_buffer[constants.material_index];
-	
+
     Texture2D albedo_texture = textures[material.albedo_idx];
     float4 base_color = albedo_texture.Sample(bilinear_sampler, input.texcoord) * input.color;
     if(base_color.a == 0) {
@@ -35,7 +35,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     float3x3 normal_matrix = cotangent_frame(input.normal, input.position_worldspace, input.texcoord);
     float3 surface_normal = mul(normal_matrix, texture_normal);
 
-	Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
+    Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
     float2 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, input.texcoord).gb;
 
     base_color.rgb = pow(base_color.rgb, 1.0 / 2.2);
