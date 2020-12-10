@@ -26,6 +26,7 @@ namespace sanity::editor::ui {
         auto& import_settings = metadata.import_settings;
 
         draw_property_editor("Import meshes", import_settings.import_meshes);
+        draw_property_editor("Scaling factor", import_settings.scaling_factor);
         draw_property_editor("Import materials", import_settings.import_materials);
         draw_property_editor("Import lights", import_settings.import_lights);
         draw_property_editor("Import entities", import_settings.import_empties);

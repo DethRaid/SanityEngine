@@ -666,6 +666,9 @@
     <FxCompile Include="data\shaders\inc\standard_root_signature.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\inc\normalmapping.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sanity.Engine.rc" />

@@ -9,6 +9,8 @@
 namespace sanity::engine::ui {
     void draw_property_editor(const Rx::String& label, bool& b) { ImGui::Checkbox(label.data(), &b); }
 
+    void draw_property_editor(const Rx::String& label, Float32& f) { ImGui::InputFloat(label.data(), &f); }
+
     void draw_property_editor(const Rx::String& label, glm::vec3& vec) {
         ImGui::PushID(label.data());
 

@@ -244,7 +244,7 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     return indirect_light / num_samples;
 }
 
-float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albedo, float roughness, Texture2D noise) {
+float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albedo, float3 normal, float roughness, Texture2D noise) {
     Light sun = lights[0]; // The sun is ALWAYS at index 0
 
     float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));

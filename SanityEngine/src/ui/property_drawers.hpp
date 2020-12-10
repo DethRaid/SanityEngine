@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/types.hpp"
 #include "glm/fwd.hpp"
 #include "rx/core/map.h"
 
@@ -9,6 +10,8 @@ namespace Rx {
 
 namespace sanity::engine::ui {
     void draw_property_editor(const Rx::String& label, bool& b);
+
+    void draw_property_editor(const Rx::String& label, Float32& f);
 	
     void draw_property_editor(const Rx::String& label, glm::vec3& vec);
 

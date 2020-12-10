@@ -6,6 +6,8 @@ namespace sanity::editor {
     struct SceneImportSettings {
         bool import_meshes{true};
     	
+        float scaling_factor{1.0};
+    	
         bool import_materials{true};
 
         bool generate_collision_geometry{true};
