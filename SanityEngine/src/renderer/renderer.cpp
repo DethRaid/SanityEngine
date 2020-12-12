@@ -88,7 +88,7 @@ namespace sanity::engine::renderer {
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
     }
 
-    void Renderer::render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
+    void Renderer::render_frame(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
         ZoneScoped;
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
@@ -380,7 +380,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
-    RaytracableGeometryHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
+    RaytracingASHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                                    const Buffer& index_buffer,
                                                                    const Rx::Vector<Mesh>& meshes,
                                                                    ID3D12GraphicsCommandList4* commands) {
@@ -639,7 +639,7 @@ namespace sanity::engine::renderer {
         return previous_states;
     }
 
-    Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_next_resource_states(Uint32 cur_renderpass_index) const {
+    Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_next_resource_states(const Uint32 cur_renderpass_index) const {
         const auto& used_resources = render_passes[cur_renderpass_index]->get_texture_states();
         auto next_states = Rx::Map<TextureHandle, D3D12_RESOURCE_STATES>{};
 
@@ -695,7 +695,7 @@ namespace sanity::engine::renderer {
 
                 desc.InstanceContributionToHitGroupIndex = object.material.handle;
 
-                const auto& ray_geo = raytracing_geometries[object.geometry_handle.index];
+                const auto& ray_geo = raytracing_geometries[object.as_handle.index];
 
                 const auto& buffer = static_cast<const Buffer&>(*ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
@@ -775,10 +775,10 @@ namespace sanity::engine::renderer {
 
     Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *model_matrix_buffers[frame_idx]; }
 
-    Uint32 Renderer::add_model_matrix_to_frame(const TransformComponent& transform, const Uint32 frame_idx) {
+    Uint32 Renderer::add_model_matrix_to_frame(const TransformComponent& transform_component, const Uint32 frame_idx) {
         const auto index = next_unused_model_matrix_per_frame[frame_idx]->fetch_add(1);
 
-        const auto matrix = transform.to_matrix();
+        const auto matrix = transform_component.transform.to_matrix();
 
         auto* dst = static_cast<glm::mat4*>(model_matrix_buffers[frame_idx]->mapped_ptr);
         memcpy(dst + index, &matrix, sizeof(glm::mat4));

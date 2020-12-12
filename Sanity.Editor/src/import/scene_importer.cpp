@@ -510,7 +510,8 @@ namespace sanity::editor::import {
         auto& node_hierarchy = entity::add_component<engine::HierarchyComponent>(node_entity, registry);
         node_hierarchy.parent = parent_entity;
 
-        auto& node_transform = entity::add_component<engine::TransformComponent>(node_entity, registry);
+        auto& node_transform_component = entity::add_component<engine::TransformComponent>(node_entity, registry);
+        auto& node_transform = node_transform_component.transform;
         if(node.translation.size() == 3) {
             node_transform.location.x = static_cast<Float32>(node.translation[0]);
             node_transform.location.y = static_cast<Float32>(node.translation[1]);
@@ -535,6 +536,8 @@ namespace sanity::editor::import {
         if(node.mesh > -1 && node.mesh < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
+            Rx::Vector<engine::renderer::Mesh> meshes_for_raytracing;
+            meshes_for_raytracing.reserve(mesh.primitives.size());
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
                 const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
@@ -551,6 +554,8 @@ namespace sanity::editor::import {
                 auto& renderable = entity::add_component<engine::renderer::StandardRenderableComponent>(primitive_entity, registry);
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
+
+            	meshes_for_raytracing.push_back(primitive.mesh);
 
                 i++;
             });

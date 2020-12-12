@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/transform.hpp"
 #include "renderer/handles.hpp"
 #include "resources.hpp"
 #include "rx/core/ptr.h"
@@ -9,12 +10,18 @@ namespace sanity::engine::renderer {
     constexpr Uint32 TRANSPARENT_OBJECT_BIT = 0x02;
     constexpr Uint32 LIGHT_SOURCE_BIT = 0x10;
 
+    struct PlacedMesh {
+        Mesh mesh{};
+
+        Transform transform{};
+    };
+
     /*!
      * \brief Represents an object that can be raytraced against
      *
      * In general, you should create one of these for each of the meshes in the scene
      */
-    struct RaytracableGeometry {
+    struct RaytracingAccelerationStructure {
         /*!
          * \brief Buffer that holds the bottom-level acceleration structure
          */
@@ -29,7 +36,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Buffer that holds the object's bottom-level acceleration structure
          */
-        RaytracableGeometryHandle geometry_handle{0};
+        RaytracingASHandle as_handle{0};
 
         /*!
          * \brief Material to render this RaytracingObject with
@@ -43,4 +50,4 @@ namespace sanity::engine::renderer {
     struct RaytracingScene {
         Rx::Ptr<Buffer> buffer;
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

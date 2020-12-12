@@ -268,10 +268,10 @@ namespace sanity::engine {
         auto locked_registry = global_registry.lock();
         player = locked_registry->create();
 
-        auto& transform = locked_registry->emplace<TransformComponent>(player);
-        transform.location.z = 5;
-        transform.location.y = 2;
-        transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
+        auto& transform_component = locked_registry->emplace<TransformComponent>(player);
+        transform_component.transform.location.z = 5;
+        transform_component.transform.location.y = 2;
+        transform_component.transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
         locked_registry->emplace<renderer::CameraComponent>(player);
 
         // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
@@ -284,7 +284,7 @@ namespace sanity::engine {
 
         imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
 
-        renderer->render_all(locked_registry, *world);
+        renderer->render_frame(locked_registry, *world);
 
         renderer->end_frame();
 

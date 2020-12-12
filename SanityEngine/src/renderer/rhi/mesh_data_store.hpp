@@ -2,6 +2,7 @@
 
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
+#include "renderer/mesh.hpp"
 #include "resources.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
@@ -17,14 +18,6 @@ namespace sanity::engine::renderer {
     class MeshDataStore;
     class ResourceCommandList;
     class RenderBackend;
-
-    struct Mesh {
-        Uint32 first_vertex{0};
-        Uint32 num_vertices{0};
-
-        Uint32 first_index{0};
-        Uint32 num_indices{0};
-    };
 
     /*!
      * \brief Binding for a vertex buffer

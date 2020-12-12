@@ -1,10 +1,8 @@
 #pragma once
 
+#include "core/transform.hpp"
 #include "core/types.hpp"
 #include "entt/entity/fwd.hpp"
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
-#include "glm/ext/quaternion_float.hpp" // This include MUST be after glm/gtc/quaternion.hpp
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
 #include "rx/core/string.h"
@@ -34,19 +32,7 @@ namespace sanity::engine {
     };
 
     struct _declspec(uuid("{DDC37FE8-B703-4132-BD17-0F03369A434A}")) [[sanity::component]] TransformComponent {
-        glm::vec3 location{0};
-
-        glm::quat rotation{};
-
-        glm::vec3 scale{1};
-
-        [[nodiscard]] RX_HINT_FORCE_INLINE glm::vec3 get_forward_vector() const;
-
-        [[nodiscard]] RX_HINT_FORCE_INLINE glm::vec3 get_right_vector() const;
-
-        [[nodiscard]] RX_HINT_FORCE_INLINE glm::vec3 get_up_vector() const;
-
-        [[nodiscard]] RX_HINT_FORCE_INLINE glm::mat4 to_matrix() const;
+        Transform transform;
     };
 
     struct __declspec(uuid("{BC22F5FC-A56D-481F-843E-49BD98A84ED4}")) [[sanity::component]] HierarchyComponent {
@@ -54,27 +40,4 @@ namespace sanity::engine {
 
         Rx::Vector<entt::entity> children;
     };
-
-    inline glm::vec3 TransformComponent::get_forward_vector() const {
-        constexpr auto global_forward = glm::vec3{0, 0, 1};
-        return global_forward * rotation;
-    }
-
-    inline glm::vec3 TransformComponent::get_right_vector() const {
-        constexpr auto global_right = glm::vec3{1, 0, 0};
-        return global_right * rotation;
-    }
-
-    inline glm::vec3 TransformComponent::get_up_vector() const {
-        constexpr auto global_up = glm::vec3{0, 1, 0};
-        return global_up * rotation;
-    }
-
-    inline glm::mat4 TransformComponent::to_matrix() const {
-        auto matrix = translate({}, location);
-        matrix = matrix * static_cast<glm::mat4>(rotation);
-        matrix = glm::scale(matrix, scale);
-
-        return matrix;
-    }
 } // namespace sanity::engine

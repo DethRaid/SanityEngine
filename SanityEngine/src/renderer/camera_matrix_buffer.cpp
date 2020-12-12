@@ -12,7 +12,8 @@ namespace sanity::engine::renderer {
         previous_inverse_projection_matrix = inverse_projection_matrix;
     }
 
-    void CameraMatrices::calculate_view_matrix(const TransformComponent& transform) {    	
+    void CameraMatrices::calculate_view_matrix(const TransformComponent& transform_component) {
+        const auto& transform = transform_component.transform;
         view_matrix = mat4_cast(transform.rotation);
 
         view_matrix = translate(view_matrix, -static_cast<glm::vec3>(transform.location));

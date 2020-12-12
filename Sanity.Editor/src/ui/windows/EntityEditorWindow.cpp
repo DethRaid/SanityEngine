@@ -47,9 +47,7 @@ namespace sanity::editor::ui {
     }
 
     void draw_component_editor(engine::TransformComponent& transform) {
-        draw_property_editor("location", transform.location);
-        draw_property_editor("rotation", transform.rotation);
-        draw_property_editor("scale", transform.scale);
+        draw_property_editor("transform", transform.transform);
     }
 
 } // namespace sanity::editor::ui

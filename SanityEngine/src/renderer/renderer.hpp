@@ -84,7 +84,7 @@ namespace sanity::engine::renderer {
 
         void begin_frame(uint64_t frame_count);
 
-        void render_all(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
+        void render_frame(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
 
         void end_frame() const;
 
@@ -131,7 +131,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
-        [[nodiscard]] RaytracableGeometryHandle create_raytracing_geometry(const Buffer& vertex_buffer,
+        [[nodiscard]] RaytracingASHandle create_raytracing_geometry(const Buffer& vertex_buffer,
                                                                            const Buffer& index_buffer,
                                                                            const Rx::Vector<Mesh>& meshes,
                                                                            ID3D12GraphicsCommandList4* commands);
@@ -140,7 +140,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
-        Uint32 add_model_matrix_to_frame(const TransformComponent& transform, Uint32 frame_idx);
+        Uint32 add_model_matrix_to_frame(const TransformComponent& transform_component, Uint32 frame_idx);
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -227,7 +227,7 @@ namespace sanity::engine::renderer {
 #pragma endregion
 
 #pragma region 3D Scene
-        Rx::Vector<RaytracableGeometry> raytracing_geometries;
+        Rx::Vector<RaytracingAccelerationStructure> raytracing_geometries;
 
         Rx::Vector<RaytracingObject> raytracing_objects;
 

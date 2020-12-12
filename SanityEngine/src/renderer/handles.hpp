@@ -17,7 +17,7 @@ namespace sanity::engine::renderer {
         Uint32 index{0};
     };
 
-    struct RaytracableGeometryHandle {
+    struct RaytracingASHandle {
         Uint32 index{0};
     };
 

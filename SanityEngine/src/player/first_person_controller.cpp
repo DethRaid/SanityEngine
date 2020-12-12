@@ -18,7 +18,7 @@ namespace sanity::engine {
         // Quick validation
         RX_ASSERT(locked_registry->has<TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
-        previous_location = locked_registry->get<TransformComponent>(controlled_entity).location;
+        previous_location = locked_registry->get<TransformComponent>(controlled_entity).transform.location;
 
         last_cursor_location = input.get_mouse_location();
     }
@@ -31,8 +31,9 @@ namespace sanity::engine {
     	logger->verbose("Updating player transform");
 
         auto locked_registry = registry->lock();
-        auto& player_transform = locked_registry->get<TransformComponent>(controlled_entity);
-
+        auto& player_transform_component = locked_registry->get<TransformComponent>(controlled_entity);
+        auto& player_transform = player_transform_component.transform;
+    	
         previous_location = player_transform.location;
 
         const auto forward = player_transform.get_forward_vector();
