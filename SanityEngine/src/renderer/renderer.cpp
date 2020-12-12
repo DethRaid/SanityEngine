@@ -381,9 +381,9 @@ namespace sanity::engine::renderer {
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
     RaytracingASHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
-                                                                   const Buffer& index_buffer,
-                                                                   const Rx::Vector<Mesh>& meshes,
-                                                                   ID3D12GraphicsCommandList4* commands) {
+                                                            const Buffer& index_buffer,
+                                                            const Rx::Vector<PlacedMesh>& meshes,
+                                                            ID3D12GraphicsCommandList4* commands) {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 

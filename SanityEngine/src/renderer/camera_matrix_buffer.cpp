@@ -91,4 +91,4 @@ namespace sanity::engine::renderer {
 
         memcpy(device_data[frame_idx]->mapped_ptr, host_data.data(), num_bytes_to_upload);
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer

@@ -2,6 +2,7 @@
 
 #include "core/transform.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/mesh.hpp"
 #include "resources.hpp"
 #include "rx/core/ptr.h"
 

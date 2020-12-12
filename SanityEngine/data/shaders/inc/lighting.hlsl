@@ -276,5 +276,5 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
                                                      sun,
                                                      noise);
 
-    return float4(sun_shadow.xxx, 1);   //indirect_light + direct_light;
+    return indirect_light + direct_light;
 }

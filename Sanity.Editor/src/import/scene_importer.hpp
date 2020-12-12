@@ -78,11 +78,15 @@ namespace sanity::editor::import {
                                                                                     float import_scale,
                                                                                     const tinygltf::Model& scene);
 
-        [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& scene, float import_scale, entt::registry& registry);
+        [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& scene,
+                                                           float import_scale,
+                                                           entt::registry& registry,
+                                                           ID3D12GraphicsCommandList4* cmds);
 
         [[nodiscard]] entt::entity create_entity_for_node(const tinygltf::Node& node,
                                                           const entt::entity& parent_entity,
                                                           float import_scale,
-                                                          entt::registry& registry);
+                                                          entt::registry& registry,
+                                                          ID3D12GraphicsCommandList4* cmds);
     };
 } // namespace sanity::editor::import

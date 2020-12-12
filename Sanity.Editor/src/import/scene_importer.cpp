@@ -151,12 +151,12 @@ namespace sanity::editor::import {
             materials = import_all_materials(scene, cmds.Get());
         }
 
-        backend.submit_command_list(Rx::Utility::move(cmds));
-
         // Then, walk the node hierarchy, creating an hierarchy of entt::entities
         if(import_settings.import_object_hierarchy) {
-            const auto scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry);
+            const auto scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry, cmds.Get());
         }
+
+        backend.submit_command_list(Rx::Utility::move(cmds));
 
         // Finally, return the root entity
 
@@ -476,7 +476,10 @@ namespace sanity::editor::import {
         return vertices;
     }
 
-    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& scene, const float import_scale, entt::registry& registry) {
+    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& scene,
+                                                        const float import_scale,
+                                                        entt::registry& registry,
+                                                        ID3D12GraphicsCommandList4* cmds) {
         // Assume that the files we'll be importing have a single scene
         const auto& default_scene = scene.scenes[scene.defaultScene];
 
@@ -490,7 +493,7 @@ namespace sanity::editor::import {
         for(const auto node_idx : default_scene.nodes) {
             const auto& node = scene.nodes[node_idx];
 
-            const auto node_entity = create_entity_for_node(node, scene_entity, import_scale, registry);
+            const auto node_entity = create_entity_for_node(node, scene_entity, import_scale, registry, cmds);
 
             // Get the component every loop so that we don't hold on to a bad reference
             auto& scene_hierarchy = registry.get<engine::HierarchyComponent>(scene_entity);
@@ -503,7 +506,8 @@ namespace sanity::editor::import {
     entt::entity SceneImporter::create_entity_for_node(const tinygltf::Node& node,
                                                        const entt::entity& parent_entity,
                                                        const float import_scale,
-                                                       entt::registry& registry) {
+                                                       entt::registry& registry,
+                                                       ID3D12GraphicsCommandList4* cmds) {
 
         const auto node_entity = entity::create_base_editor_entity(node.name.c_str(), registry);
 
@@ -536,8 +540,14 @@ namespace sanity::editor::import {
         if(node.mesh > -1 && node.mesh < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
-            Rx::Vector<engine::renderer::Mesh> meshes_for_raytracing;
-            meshes_for_raytracing.reserve(mesh.primitives.size());
+
+            auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
+            mesh_adder.prepare_for_raytracing_geometry_build();
+        	
+            const auto vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
+            const auto index_buffer = renderer->get_static_mesh_store().get_index_buffer();
+
+            Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
                 const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
@@ -555,10 +565,23 @@ namespace sanity::editor::import {
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
 
-            	meshes_for_raytracing.push_back(primitive.mesh);
+                Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
+            	
+                const auto& node_transform_component_ref = registry.get<engine::TransformComponent>(node_entity);
+                meshes_for_raytracing.emplace_back(primitive.mesh, node_transform_component_ref.transform);
+
+                const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
+
+            	auto& ray_object = entity::add_component<engine::renderer::RaytracingObjectComponent>(primitive_entity, registry);
+                ray_object.as_handle = as_handle;
+
+            	const auto ray_material = engine::renderer::RaytracingMaterial{.handle = renderable.material.index};
+                raytracing_objects.emplace_back(as_handle, ray_material);
 
                 i++;
             });
+
+        	renderer->add_raytracing_objects_to_scene(raytracing_objects);
 
         } else {
             logger->error("Node %s references invalid mesh %d", node.name.c_str(), node.mesh);

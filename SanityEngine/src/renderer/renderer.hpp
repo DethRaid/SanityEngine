@@ -132,9 +132,9 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
         [[nodiscard]] RaytracingASHandle create_raytracing_geometry(const Buffer& vertex_buffer,
-                                                                           const Buffer& index_buffer,
-                                                                           const Rx::Vector<Mesh>& meshes,
-                                                                           ID3D12GraphicsCommandList4* commands);
+                                                                    const Buffer& index_buffer,
+                                                                    const Rx::Vector<PlacedMesh>& meshes,
+                                                                    ID3D12GraphicsCommandList4* commands);
 
         [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 

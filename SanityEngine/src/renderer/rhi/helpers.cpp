@@ -461,7 +461,7 @@ namespace sanity::engine::renderer {
 
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
-                                                            .Triangles = {.Transform3x4 = transform_buffer.resource->GetGPUVirtualAddress(),
+                                                            .Triangles = {.Transform3x4 = 0,
                                                                           .IndexFormat = DXGI_FORMAT_R32_UINT,
                                                                           .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
                                                                           .IndexCount = num_indices,

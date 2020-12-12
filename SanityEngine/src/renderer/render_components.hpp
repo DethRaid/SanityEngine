@@ -3,7 +3,8 @@
 #include "core/types.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/lights.hpp"
-#include "rhi/mesh_data_store.hpp"
+#include "renderer/mesh.hpp"
+#include "rhi/raytracing_structs.hpp"
 
 namespace sanity::engine::renderer {
     /*!
@@ -54,11 +55,15 @@ namespace sanity::engine::renderer {
         StandardMaterialHandle material{0};
     };
 
+    struct __declspec(uuid("{BB1E8A88-79FE-4934-8335-E5226022F441}")) RaytracingObjectComponent {
+        RaytracingASHandle as_handle{0};
+    };
+
     /*!
      * \brief Sets up a camera to render with
      */
     struct __declspec(uuid("{23C1D6E0-B8E4-453A-8613-FE2EA86D2631}")) CameraComponent {
-        Uint32 idx;
+        Uint32 idx{};
 
         double fov{75};
         double aspect_ratio{16.0 / 9.0};
