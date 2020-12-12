@@ -13,6 +13,14 @@ namespace sanity::engine {
     };
 
     namespace renderer {
+        struct Mesh {
+            Uint32 first_vertex{0};
+            Uint32 num_vertices{0};
+
+            Uint32 first_index{0};
+            Uint32 num_indices{0};
+        };
+
         struct MeshObject {
             Mesh mesh;
 

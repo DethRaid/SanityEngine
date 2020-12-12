@@ -24,7 +24,7 @@ namespace sanity::engine::renderer {
 
         void copy_matrices_to_previous();
 
-        void calculate_view_matrix(const TransformComponent& transform);
+        void calculate_view_matrix(const TransformComponent& transform_component);
 
         void calculate_projection_matrix(const CameraComponent& camera);
     };

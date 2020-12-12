@@ -103,7 +103,7 @@ namespace sanity::engine {
     void Terrain::load_terrain_around_player(const TransformComponent& player_transform) {
         ZoneScoped;
         const auto coords_of_tile_containing_player = get_coords_of_tile_containing_position(
-            {player_transform.location.x, player_transform.location.y, player_transform.location.z});
+            {player_transform.transform.location.x, player_transform.transform.location.y, player_transform.transform.location.z});
 
         // V0: load the tile the player is in and nothing else
 
@@ -382,10 +382,10 @@ namespace sanity::engine {
 
     void Terrain::upload_new_tile_meshes() {
         // This method will loop through all tile meshes, uploading the tile mesh and then building that tile's
-    	// raytracing geometry. This is probably pretty inefficient. Better would be to upload all the meshes for all
-    	// the tiles, then build all the acceleration structures for all the tiles. That's a task for another day, when
-    	// I measure a performance problem with this method
-    	
+        // raytracing geometry. This is probably pretty inefficient. Better would be to upload all the meshes for all
+        // the tiles, then build all the acceleration structures for all the tiles. That's a task for another day, when
+        // I measure a performance problem with this method
+
         ZoneScoped;
         PIXScopedEvent(PIX_COLOR_DEFAULT, "Upload new terrain tile meshes");
 
@@ -440,8 +440,7 @@ namespace sanity::engine {
                                                                           commands.Get());
                 const auto tile_mesh = tile_mesh_ld;
 
-                renderer->add_raytracing_objects_to_scene(
-                    Rx::Array{renderer::RaytracingObject{.geometry_handle = ray_geo, .material = {0}}});
+                renderer->add_raytracing_objects_to_scene(Rx::Array{renderer::RaytracingObject{.as_handle = ray_geo, .material = {0}}});
 
                 {
                     auto locked_registry = registry->lock();

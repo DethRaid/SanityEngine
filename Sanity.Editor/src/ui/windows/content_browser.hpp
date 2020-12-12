@@ -38,6 +38,10 @@ namespace sanity::editor::ui {
 
         void draw_back_button();
 
+        void draw_directory(const Rx::String& directory_name, const Rx::Function<void(const Rx::String&)>& on_open);
+
+        void draw_file(const Rx::String& file_name, const Rx::Function<void(const Rx::String&)>& on_open);
+
         void draw_filesystem_item(const Rx::Filesystem::Directory::Item& item,
                                   const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open);
 

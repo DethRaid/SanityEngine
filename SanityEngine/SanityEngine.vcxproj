@@ -399,7 +399,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\EntityJsonConversion.hpp" />
     <ClInclude Include="src\core\GlmJsonConversion.hpp" />
     <ClInclude Include="src\core\JsonConversion.hpp" />
+    <ClInclude Include="src\core\json\transform_json_conversion.hpp" />
     <ClInclude Include="src\core\RexJsonConversion.hpp" />
+    <ClInclude Include="src\core\transform.hpp" />
     <ClInclude Include="src\core\VectorHandle.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />
     <ClInclude Include="src\core\Prelude.hpp" />
@@ -480,7 +482,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\core\class_id.cpp" />
     <ClCompile Include="src\core\components.cpp" />
     <ClCompile Include="src\core\EntityJsonConversion.cpp" />
+    <ClCompile Include="src\core\json\transform_json_conversion.cpp" />
     <ClCompile Include="src\core\RexJsonConversion.cpp" />
+    <ClCompile Include="src\core\transform.cpp" />
     <ClCompile Include="src\core\types.ixx" />
     <ClCompile Include="src\core\WindowsJsonConversion.cpp" />
     <ClCompile Include="src\game\game.cpp" />

@@ -48,7 +48,7 @@ namespace sanity::engine::renderer {
 
     Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
 
-    RaytracableGeometry build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
+    RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
                                                                 RenderBackend& device,
                                                                 const Buffer& vertex_buffer,
                                                                 const Buffer& index_buffer,

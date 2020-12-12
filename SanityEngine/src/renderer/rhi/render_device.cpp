@@ -1,6 +1,7 @@
 #include "render_device.hpp"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
+
 #include <algorithm>
 
 #include <combaseapi.h>
@@ -26,6 +27,8 @@
 
 namespace sanity::engine::renderer {
     RX_LOG("\033[32mRenderDevice\033[0m", logger);
+
+    RX_CONSOLE_BVAR(cvar_enable_debug_layers, "r.EnableDebugLayers", "Enable the D3D12 and DXGI debug layers", true);
 
     RX_CONSOLE_BVAR(
         cvar_enable_gpu_based_validation,
@@ -56,10 +59,12 @@ namespace sanity::engine::renderer {
           staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           scratch_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())} {
 #ifndef NDEBUG
-        // Only enable the debug layer if we're not running in PIX
-        const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
-        if(FAILED(result)) {
-            enable_debugging();
+        if(*cvar_enable_debug_layers) {
+            // Only enable the debug layer if we're not running in PIX
+            const auto result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&graphics_analysis));
+            if(FAILED(result)) {
+                enable_debugging();
+            }
         }
 #endif
 
@@ -213,8 +218,8 @@ namespace sanity::engine::renderer {
                 break;
         }
 
-    	// yolo
-    	initial_state = D3D12_RESOURCE_STATE_COMMON;
+        // yolo
+        initial_state = D3D12_RESOURCE_STATE_COMMON;
 
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
@@ -478,8 +483,8 @@ namespace sanity::engine::renderer {
     void RenderBackend::end_frame() {
         ZoneScoped;
 
-    	transition_swapchain_image_to_presentable();
-    	
+        transition_swapchain_image_to_presentable();
+
         flush_batched_command_lists();
 
         direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
@@ -544,22 +549,14 @@ namespace sanity::engine::renderer {
         return create_staging_buffer(num_bytes);
     }
 
-    Buffer RenderBackend::get_staging_buffer_for_texture(ID3D12Resource* texture)
-    {
+    Buffer RenderBackend::get_staging_buffer_for_texture(ID3D12Resource* texture) {
         auto desc = texture->GetDesc();
         Uint64 required_size{0};
-        device->GetCopyableFootprints(&desc,
-                                       0,
-                                       1,
-                                       0,
-                                       nullptr,
-                                       nullptr,
-                                       nullptr,
-                                       &required_size);
+        device->GetCopyableFootprints(&desc, 0, 1, 0, nullptr, nullptr, nullptr, &required_size);
 
-    	return get_staging_buffer(required_size);
+        return get_staging_buffer(required_size);
     }
-	
+
     void RenderBackend::return_staging_buffer(const Buffer& buffer) {
         staging_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
@@ -622,8 +619,13 @@ namespace sanity::engine::renderer {
     void RenderBackend::initialize_dxgi() {
         ZoneScoped;
 
-        ComPtr<IDXGIFactory> basic_factory;
-        auto result = CreateDXGIFactory(IID_PPV_ARGS(&basic_factory));
+        auto flags = 0;
+        if(*cvar_enable_debug_layers) {
+            flags = DXGI_CREATE_FACTORY_DEBUG;
+        }
+
+        ComPtr<IDXGIFactory2> basic_factory;
+        const auto result = CreateDXGIFactory2(flags, IID_PPV_ARGS(&basic_factory));
         if(FAILED(result)) {
             Rx::abort("Could not initialize DXGI");
         }
@@ -803,7 +805,7 @@ namespace sanity::engine::renderer {
     void RenderBackend::create_swapchain(HWND window_handle, const glm::uvec2& window_size) {
         ZoneScoped;
 
-    	logger->verbose("Creating swapchain with resolution %dx%d", window_size.x, window_size.y);
+        logger->verbose("Creating swapchain with resolution %dx%d", window_size.x, window_size.y);
 
         const auto swapchain_desc = DXGI_SWAP_CHAIN_DESC1{
             .Width = static_cast<UINT>(window_size.x),
@@ -1405,10 +1407,10 @@ namespace sanity::engine::renderer {
 
         submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
-	
+
     void RenderBackend::transition_swapchain_image_to_presentable() {
         ZoneScoped;
-    	
+
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
         swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
 
@@ -1576,4 +1578,4 @@ namespace sanity::engine::renderer {
 
         return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size);
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer

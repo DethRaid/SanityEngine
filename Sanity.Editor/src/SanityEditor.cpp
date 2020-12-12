@@ -46,7 +46,7 @@ namespace sanity::editor {
         const auto player_entity = g_engine->get_player();
         auto registry = g_engine->get_global_registry().lock();
         auto& player_transform = registry->get<TransformComponent>(player_entity);
-        player_transform.location = {0, 0, 20};
+        player_transform.transform.location = {0, 0, 10};
     }
 
     void SanityEditor::load_project(const Rx::String& project_file) {

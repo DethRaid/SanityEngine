@@ -32,9 +32,11 @@ namespace sanity::editor::import {
 
     private:
         struct GltfPrimitive {
-            engine::renderer::Mesh mesh;
+            engine::renderer::Mesh mesh{};
 
-            Int32 material_idx;
+            engine::renderer::RaytracingASHandle ray_geo_handle{};
+
+            Int32 material_idx{-1};
         };
 
         struct GltfMesh {

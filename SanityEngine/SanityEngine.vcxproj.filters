@@ -103,6 +103,9 @@
     <Filter Include="src\system">
       <UniqueIdentifier>{b5436c69-1a82-4f2f-978b-2777195eaf08}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\core\json">
+      <UniqueIdentifier>{19303a90-8c93-4bbf-a8a5-eb0e827ba84b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -371,18 +374,6 @@
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\GlmJsonConversion.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\RexJsonConversion.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\WindowsJsonConversion.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\ComponentJsonConversion.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
     <ClInclude Include="resource1.h" />
     <ClInclude Include="src\loading\asset_loader.hpp">
       <Filter>src\loading</Filter>
@@ -393,12 +384,32 @@
     <ClInclude Include="src\ui\property_drawers.hpp">
       <Filter>src\ui</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\EntityJsonConversion.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\JsonConversion.hpp" />
     <ClInclude Include="src\system\system.hpp">
       <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\ComponentJsonConversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\EntityJsonConversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\GlmJsonConversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\RexJsonConversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\WindowsJsonConversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\json\transform_json_conversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\JsonConversion.hpp">
+      <Filter>src\core\json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\transform.hpp">
+      <Filter>src\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -567,12 +578,6 @@
     <ClCompile Include="src\ui\ConsoleWindow.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\WindowsJsonConversion.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\RexJsonConversion.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\components.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
@@ -585,13 +590,25 @@
     <ClCompile Include="src\ui\property_drawers.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\EntityJsonConversion.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\system\system.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
     <ClCompile Include="src\core\types.ixx">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\EntityJsonConversion.cpp">
+      <Filter>src\core\json</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\RexJsonConversion.cpp">
+      <Filter>src\core\json</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\WindowsJsonConversion.cpp">
+      <Filter>src\core\json</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\json\transform_json_conversion.cpp">
+      <Filter>src\core\json</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\transform.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
   </ItemGroup>

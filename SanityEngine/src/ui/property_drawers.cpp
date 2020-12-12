@@ -1,5 +1,6 @@
 #include "property_drawers.hpp"
 
+#include "core/transform.hpp"
 #include "core/types.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
@@ -47,6 +48,14 @@ namespace sanity::engine::ui {
         ImGui::PopItemWidth();
 
         ImGui::PopID();
+    }
+
+    void draw_property_editor(const Rx::String& label, Transform& transform) {
+        if(ImGui::CollapsingHeader(label.data())) {
+            draw_property_editor("location", transform.location);
+            draw_property_editor("rotation", transform.rotation);
+            draw_property_editor("scale", transform.scale);
+        }
     }
 
     void draw_property_editor(const Rx::String& label, Rx::String& string) {

@@ -26,7 +26,8 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
 
     auto registry = registry_ptr->lock();
 
-    auto& player_transform = registry->get<sanity::engine::TransformComponent>(controlled_entity);
+    auto& player_transform_component = registry->get<sanity::engine::TransformComponent>(controlled_entity);
+    auto& player_transform = player_transform_component.transform;
 
     const auto forward = player_transform.get_forward_vector();
     const auto right = player_transform.get_right_vector();

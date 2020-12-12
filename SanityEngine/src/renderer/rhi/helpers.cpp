@@ -444,19 +444,24 @@ namespace sanity::engine::renderer {
         return ss.str().c_str();
     }
 
-    RaytracableGeometry build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
+    RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
                                                                 RenderBackend& device,
                                                                 const Buffer& vertex_buffer,
                                                                 const Buffer& index_buffer,
-                                                                const Rx::Vector<Mesh>& meshes) {
+                                                                            const Rx::Vector<PlacedMesh>& meshes) {
 
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
-        meshes.each_fwd([&](const Mesh& mesh) {
-            const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh;
+        meshes.each_fwd([&](const PlacedMesh& mesh) {
+            auto transform_buffer = device.get_staging_buffer(sizeof(Transform));
+        	const auto matrix = mesh.transform.to_matrix();
+            memcpy(transform_buffer.mapped_ptr, &matrix[0][0], sizeof(Transform));
+        	
+            const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh.mesh;
+
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
-                                                            .Triangles = {.Transform3x4 = 0,
+                                                            .Triangles = {.Transform3x4 = transform_buffer.resource->GetGPUVirtualAddress(),
                                                                           .IndexFormat = DXGI_FORMAT_R32_UINT,
                                                                           .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
                                                                           .IndexCount = num_indices,
@@ -468,6 +473,7 @@ namespace sanity::engine::renderer {
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(Rx::Utility::move(geom_desc));
+            device.return_staging_buffer(transform_buffer);
         });
 
         const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{

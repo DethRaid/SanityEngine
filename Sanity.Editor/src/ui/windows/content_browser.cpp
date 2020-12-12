@@ -52,22 +52,39 @@ namespace sanity::editor::ui {
 
         auto cur_row = 0u;
 
+        Rx::Vector<Rx::String> directory_names;
+        Rx::Vector<Rx::String> file_names;
+
         dir.each([&](Rx::Filesystem::Directory::Item&& item) {
             if(item.is_directory()) {
-                draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
-                    selected_directory = Rx::String::format("%s/%s", selected_directory, selected_item.name());
-                });
+                directory_names.push_back(item.name());
 
             } else if(item.is_file()) {
                 if(should_ignore_file(item)) {
                     return;
                 }
 
-                draw_filesystem_item(item, [&](const Rx::Filesystem::Directory::Item& selected_item) {
-                    const auto filename = Rx::String::format("%s/%s", selected_directory, selected_item.name());
-                    g_editor->get_ui_controller().show_editor_for_asset(filename);
-                });
+                file_names.push_back(item.name());
             }
+        });
+
+        directory_names.each_fwd([&](const Rx::String& dir_name) {
+            draw_directory(dir_name, [&](const Rx::String& selected_item) {
+                selected_directory = Rx::String::format("%s/%s", selected_directory, selected_item);
+            });
+
+            cur_row++;
+            if(cur_row == num_rows) {
+                ImGui::NextColumn();
+                cur_row = 0;
+            }
+        });
+
+        file_names.each_fwd([&](const Rx::String& file_name) {
+            draw_file(file_name, [&](const Rx::String& selected_item) {
+                const auto filename = Rx::String::format("%s/%s", selected_directory, selected_item);
+                g_editor->get_ui_controller().show_editor_for_asset(filename);
+            });
 
             cur_row++;
             if(cur_row == num_rows) {
@@ -86,6 +103,32 @@ namespace sanity::editor::ui {
             const auto last_slash_pos = selected_directory.find_last_of("/");
             const auto new_selected_directory = selected_directory.substring(0, last_slash_pos);
             selected_directory = new_selected_directory;
+        }
+    }
+
+    void ContentBrowser::draw_directory(const Rx::String& directory_name, const Rx::Function<void(const Rx::String&)>& on_open) {
+        auto& asset_registry = g_editor->get_asset_registry();
+
+        const auto file_icon = asset_registry.get_directory_icon();
+
+        ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
+        ImGui::SameLine();
+
+        if(ImGui::Button(directory_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
+            on_open(directory_name);
+        }
+    }
+
+    void ContentBrowser::draw_file(const Rx::String& file_name, const Rx::Function<void(const Rx::String&)>& on_open) {
+        auto& asset_registry = g_editor->get_asset_registry();
+
+        const auto file_icon = asset_registry.get_file_icon(file_name);
+
+        ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
+        ImGui::SameLine();
+
+        if(ImGui::Button(file_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
+            on_open(file_name);
         }
     }
 
@@ -115,6 +158,7 @@ namespace sanity::editor::ui {
 
             return RX_ITERATION_CONTINUE;
         });
+
         return should_ignore;
     }
 } // namespace sanity::editor::ui
