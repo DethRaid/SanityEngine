@@ -4,3 +4,6 @@
 [submodule "SanityEngine/extern/rex"]
 	path = SanityEngine/extern/rex
 	url = https://github.com/DethRaid/rex.git
+[submodule "SanityEngine/extern/imgui-node-editor"]
+	path = SanityEngine/extern/imgui-node-editor
+	url = https://github.com/thedmd/imgui-node-editor.git
