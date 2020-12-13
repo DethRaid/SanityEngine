@@ -541,6 +541,9 @@ namespace sanity::editor::import {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
 
+        	// Intentionally a copy
+        	const auto cached_transform = node_transform;
+
             auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
         	
@@ -572,11 +575,15 @@ namespace sanity::editor::import {
 
                 const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
 
-            	auto& ray_object = entity::add_component<engine::renderer::RaytracingObjectComponent>(primitive_entity, registry);
-                ray_object.as_handle = as_handle;
+            	auto& raytracing_object_component = entity::add_component<engine::renderer::RaytracingObjectComponent>(primitive_entity, registry);
+                raytracing_object_component.as_handle = as_handle;
 
             	const auto ray_material = engine::renderer::RaytracingMaterial{.handle = renderable.material.index};
-                raytracing_objects.emplace_back(as_handle, ray_material);
+            	
+                const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle,
+                                                                           .material = ray_material,
+                                                                           .transform = cached_transform};
+                raytracing_objects.push_back(ray_object);
 
                 i++;
             });

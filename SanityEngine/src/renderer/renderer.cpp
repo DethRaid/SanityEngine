@@ -685,8 +685,22 @@ namespace sanity::engine::renderer {
                 auto& desc = instance_buffer_array[i];
                 desc = {};
 
-                // TODO: Actually copy the matrix once we get real model matrices
-                desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+                const auto model_matrix = object.transform.to_matrix();
+            	
+                desc.Transform[0][0] = model_matrix[0][0];
+                desc.Transform[0][1] = model_matrix[0][1];
+                desc.Transform[0][2] = model_matrix[0][2];
+                desc.Transform[0][3] = model_matrix[0][3];
+
+                desc.Transform[1][0] = model_matrix[1][0];
+                desc.Transform[1][1] = model_matrix[1][1];
+                desc.Transform[1][2] = model_matrix[1][2];
+                desc.Transform[1][3] = model_matrix[1][3];
+
+                desc.Transform[2][0] = model_matrix[2][0];
+                desc.Transform[2][1] = model_matrix[2][1];
+                desc.Transform[2][2] = model_matrix[2][2];
+                desc.Transform[2][3] = model_matrix[2][3];
 
                 // TODO: Figure out if we want to use the mask to control which kind of rays can hit which objects
                 desc.InstanceMask = 0xFF;

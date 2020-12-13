@@ -43,6 +43,8 @@ namespace sanity::engine::renderer {
          * \brief Material to render this RaytracingObject with
          */
         RaytracingMaterial material{0};
+
+    	Transform transform{};
     };
 
     /*!
