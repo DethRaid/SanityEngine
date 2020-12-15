@@ -453,7 +453,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
         meshes.each_fwd([&](const PlacedMesh& mesh) {
-            auto transform_buffer = device.get_staging_buffer(sizeof(Transform));
+	        const auto transform_buffer = device.get_staging_buffer(sizeof(Transform));
             const auto matrix = mesh.transform.to_matrix();
             memcpy(transform_buffer.mapped_ptr, &matrix[0][0], sizeof(Transform));
 

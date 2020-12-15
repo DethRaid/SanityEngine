@@ -89,7 +89,7 @@ float4 get_incoming_light(in float3 ray_origin,
         float2 barycentrics = query.CommittedTriangleBarycentrics();
         vertex = get_vertex_attributes(triangle_index, barycentrics);
 
-        uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
+        uint material_id = 1;   // query.CommittedInstanceContributionToHitGroupIndex();
         material = material_buffer[material_id];
 
         Texture2D albedo_tex = textures[material.albedo_idx];
@@ -172,9 +172,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 1;
+    uint num_indirect_rays = 5;
 
-    uint num_bounces = 8;
+    uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
