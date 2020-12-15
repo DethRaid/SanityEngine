@@ -89,7 +89,7 @@ float4 get_incoming_light(in float3 ray_origin,
         float2 barycentrics = query.CommittedTriangleBarycentrics();
         vertex = get_vertex_attributes(triangle_index, barycentrics);
 
-        uint material_id = 1;   // query.CommittedInstanceContributionToHitGroupIndex();
+        uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
         material = material_buffer[material_id];
 
         Texture2D albedo_tex = textures[material.albedo_idx];
