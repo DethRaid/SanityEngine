@@ -202,6 +202,7 @@ namespace sanity::engine::renderer {
         ComPtr<IDXGIAdapter> adapter;
 
         ComPtr<ID3D12InfoQueue> info_queue;
+        DWORD debug_message_callback_cookie;
 
         ComPtr<ID3D12CommandQueue> direct_command_queue;
 

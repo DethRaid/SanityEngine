@@ -27,6 +27,7 @@
 
 namespace sanity::engine::renderer {
     RX_LOG("\033[32mRenderDevice\033[0m", logger);
+    RX_LOG("\033[32mD3D12 Debug\033[0m", d3d12_logger);
 
     RX_CONSOLE_BVAR(cvar_enable_debug_layers, "r.EnableDebugLayers", "Enable the D3D12 and DXGI debug layers", true);
 
@@ -50,6 +51,9 @@ namespace sanity::engine::renderer {
                     false);
 
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
+
+    void print_debug_message(
+        D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR description, void* context);
 
     RenderBackend::RenderBackend(HWND window_handle, const glm::uvec2& window_size)
         : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -724,13 +728,13 @@ namespace sanity::engine::renderer {
                 device.As(&device5);
 
                 // Save information about the device
-                D3D12_FEATURE_DATA_ARCHITECTURE arch;
+                D3D12_FEATURE_DATA_ARCHITECTURE arch{};
                 res = device->CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE, &arch, sizeof(D3D12_FEATURE_DATA_ARCHITECTURE));
                 if(SUCCEEDED(res)) {
                     is_uma = arch.CacheCoherentUMA;
                 }
 
-                D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5;
+                D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5{};
                 res = device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(D3D12_FEATURE_DATA_D3D12_OPTIONS5));
                 if(SUCCEEDED(res)) {
                     render_pass_tier = options5.RenderPassesTier;
@@ -744,6 +748,13 @@ namespace sanity::engine::renderer {
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
                 }
 
+                // TODO: Un-comment when I get Windows build 20236 or later
+                // ComPtr<ID3D12InfoQueue1> cool_queue;
+                // device.As(&cool_queue);
+                // if(cool_queue) {
+                //     cool_queue->RegisterMessageCallback(print_debug_message, D3D12_MESSAGE_CALLBACK_FLAG_NONE, d3d12_logger.data(),
+                //     &debug_message_callback_cookie);
+                // }
 #endif
 
                 return RX_ITERATION_STOP;
@@ -1577,5 +1588,80 @@ namespace sanity::engine::renderer {
         logger->info("Creating D3D12 backend with framebuffer resolution %dx%d", framebuffer_size.x, framebuffer_size.y);
 
         return Rx::make_ptr<RenderBackend>(RX_SYSTEM_ALLOCATOR, hwnd, framebuffer_size);
+    }
+
+    Rx::String message_category_to_string(const D3D12_MESSAGE_CATEGORY category) {
+        switch(category) {
+            case D3D12_MESSAGE_CATEGORY_APPLICATION_DEFINED:
+                return "application-defined";
+
+            case D3D12_MESSAGE_CATEGORY_MISCELLANEOUS:
+                return "miscellaneous";
+
+            case D3D12_MESSAGE_CATEGORY_INITIALIZATION:
+                return "initialization";
+
+            case D3D12_MESSAGE_CATEGORY_CLEANUP:
+                return "cleanup";
+
+            case D3D12_MESSAGE_CATEGORY_COMPILATION:
+                return "compilation";
+
+            case D3D12_MESSAGE_CATEGORY_STATE_CREATION:
+                return "state creation";
+
+            case D3D12_MESSAGE_CATEGORY_STATE_SETTING:
+                return "state setting";
+
+            case D3D12_MESSAGE_CATEGORY_STATE_GETTING:
+                return "state getting";
+
+            case D3D12_MESSAGE_CATEGORY_RESOURCE_MANIPULATION:
+                return "resource manipulation";
+
+            case D3D12_MESSAGE_CATEGORY_EXECUTION:
+                return "execution";
+
+            case D3D12_MESSAGE_CATEGORY_SHADER:
+                return "shader";
+
+            default:
+                return "unknown";
+        }
+    }
+
+    void print_debug_message(const D3D12_MESSAGE_CATEGORY category,
+                             const D3D12_MESSAGE_SEVERITY severity,
+                             const D3D12_MESSAGE_ID /* id */,
+                             const LPCSTR description,
+                             void* context) {
+        auto* message_logger = static_cast<Rx::Log*>(context);
+
+    	const auto category_string = message_category_to_string(category);
+        const auto description_wide_string = Rx::WideString{reinterpret_cast<const Uint16*>(description)};
+        const auto message = Rx::String::format("%s (Category: %s)", description_wide_string, category_string);
+    	
+        switch(severity) {
+            case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+                [[fallthrough]];
+        	case D3D12_MESSAGE_SEVERITY_ERROR:
+                message_logger->error("%s", message);
+                break;
+
+        	case D3D12_MESSAGE_SEVERITY_WARNING:
+                message_logger->warning("%s", message);
+                break;
+
+        	case D3D12_MESSAGE_SEVERITY_INFO:
+                message_logger->info("%s", message);
+                break;
+
+        	case D3D12_MESSAGE_SEVERITY_MESSAGE:
+                message_logger->verbose("%s", message);
+                break;
+
+        	default:
+                message_logger->info("%s", message);
+        }
     }
 } // namespace sanity::engine::renderer
