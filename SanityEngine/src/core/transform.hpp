@@ -38,7 +38,7 @@ namespace sanity::engine {
     }
 
     inline glm::mat4 Transform::to_matrix() const {
-        auto matrix = translate({}, location);
+        auto matrix = translate(glm::mat4{1}, location);
         matrix = matrix * static_cast<glm::mat4>(rotation);
         matrix = glm::scale(matrix, scale);
 
