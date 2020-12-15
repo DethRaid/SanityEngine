@@ -48,7 +48,7 @@ namespace sanity::editor::serialization {
                 // children :(
             });
 
-        	entity_json.at("components").push_back({{"children", child_ids}});
+            entity_json.at("components").push_back({{"children", child_ids}});
         }
 
         jsons.push_back(entity_json);
