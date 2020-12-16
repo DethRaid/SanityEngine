@@ -531,12 +531,12 @@ namespace sanity::editor::import {
             node_transform.rotation.w = static_cast<Float32>(node.rotation[3]);
         }
 
+        node_transform.scale = glm::vec3{import_scale};
+    	
         if(node.scale.size() == 3) {
-            node_transform.scale.x = static_cast<Float32>(node.scale[0]);
-            node_transform.scale.y = static_cast<Float32>(node.scale[1]);
-            node_transform.scale.z = static_cast<Float32>(node.scale[2]);
-
-        	node_transform.scale *= import_scale;
+            node_transform.scale.x *= static_cast<Float32>(node.scale[0]);
+            node_transform.scale.y *= static_cast<Float32>(node.scale[1]);
+            node_transform.scale.z *= static_cast<Float32>(node.scale[2]);
         }
 
         if(node.mesh > -1 && node.mesh < meshes.size()) {

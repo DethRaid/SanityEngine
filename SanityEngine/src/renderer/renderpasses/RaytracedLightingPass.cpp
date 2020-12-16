@@ -155,7 +155,7 @@ namespace sanity::engine::renderer {
     }
 
     void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
-        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_object_in_scene");
+        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_objects_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
