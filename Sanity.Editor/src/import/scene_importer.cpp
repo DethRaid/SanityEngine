@@ -548,10 +548,9 @@ namespace sanity::editor::import {
             Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
+            	// Create entity and components
                 const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
-                const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
-
-                
+                const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);                
 
                 auto& primitive_transform_component = entity::add_component<engine::TransformComponent>(primitive_entity, registry);
                 primitive_transform_component.parent = node_entity;
@@ -563,10 +562,12 @@ namespace sanity::editor::import {
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
 
+            	// Build raytracing acceleration structure. We make a separate BLAS for each primitive because they
+            	// might have separate materials. However, this will create too many BLASs if primitives share
+            	// materials. This will be addressed in a future revision
                 Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
 
-                const auto& node_transform_component_ref = registry.get<engine::TransformComponent>(node_entity);
-                meshes_for_raytracing.emplace_back(primitive.mesh, node_transform_component_ref.transform);
+                meshes_for_raytracing.emplace_back(primitive.mesh, engine::Transform{});
 
                 const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
 
@@ -576,9 +577,9 @@ namespace sanity::editor::import {
 
                 const auto ray_material = engine::renderer::RaytracingMaterial{.handle = renderable.material.index};
 
-                const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle,
-                                                                           .material = ray_material,
-                                                                           .transform = cached_transform};
+                const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle, .material = ray_material};
+                //,
+                                                                           //.transform = cached_transform.to_matrix()};
                 raytracing_objects.push_back(ray_object);
 
                 i++;

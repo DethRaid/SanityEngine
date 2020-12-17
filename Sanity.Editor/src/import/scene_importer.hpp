@@ -82,7 +82,7 @@ namespace sanity::editor::import {
 
         [[nodiscard]] entt::entity create_entity_for_node(const tinygltf::Node& node,
                                                           const entt::entity& parent_entity,
-                                                          float mesh_import_scale,
+                                                          float import_scale,
                                                           entt::registry& registry,
                                                           ID3D12GraphicsCommandList4* cmds);
     };
