@@ -140,7 +140,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
-        Uint32 add_model_matrix_to_frame(const TransformComponent& transform_component, Uint32 frame_idx);
+        Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;

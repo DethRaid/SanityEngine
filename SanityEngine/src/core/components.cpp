@@ -1,5 +1,7 @@
 #include "core/components.hpp"
 
+#include "entt/entity/registry.hpp"
+
 namespace sanity::engine {
     static Rx::Concurrency::Atomic<Uint64> next_id = 0;
 
@@ -30,6 +32,18 @@ namespace sanity::engine {
     void SanityEngineEntity::remove_num_tags(const Rx::String& tag, const Uint32 num_stacks) {
         if(auto* cur_num_stacks = tags.find(tag); cur_num_stacks != nullptr) {
             (*cur_num_stacks) -= num_stacks;
+        }
+    }
+
+    glm::mat4 TransformComponent::get_world_matrix(const entt::registry& registry) const {
+        const auto local_matrix = transform.to_matrix();
+
+        if(parent) {
+            const auto& parent_transform = registry.get<TransformComponent>(*parent);
+            return local_matrix * parent_transform.get_world_matrix(registry);
+
+        } else {
+            return local_matrix;
         }
     }
 } // namespace sanity::engine

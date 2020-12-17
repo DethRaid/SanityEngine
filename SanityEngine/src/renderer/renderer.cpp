@@ -789,13 +789,11 @@ namespace sanity::engine::renderer {
 
     Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *model_matrix_buffers[frame_idx]; }
 
-    Uint32 Renderer::add_model_matrix_to_frame(const TransformComponent& transform_component, const Uint32 frame_idx) {
+    Uint32 Renderer::add_model_matrix_to_frame(const glm::mat4& model_matrix, const Uint32 frame_idx) {
         const auto index = next_unused_model_matrix_per_frame[frame_idx]->fetch_add(1);
 
-        const auto matrix = transform_component.transform.to_matrix();
-
         auto* dst = static_cast<glm::mat4*>(model_matrix_buffers[frame_idx]->mapped_ptr);
-        memcpy(dst + index, &matrix, sizeof(glm::mat4));
+        memcpy(dst + index, &model_matrix, sizeof(glm::mat4));
 
         return index;
     }

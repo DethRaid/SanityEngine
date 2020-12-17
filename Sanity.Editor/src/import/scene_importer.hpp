@@ -63,19 +63,16 @@ namespace sanity::editor::import {
                                                                                                  ID3D12GraphicsCommandList4* cmds);
 
         [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene,
-                                                             float import_scale,
                                                              ID3D12GraphicsCommandList4* cmds) const;
 
         [[nodiscard]] static Rx::Optional<GltfPrimitive> get_data_from_primitive(const tinygltf::Primitive& primitive,
                                                                                  const tinygltf::Model& scene,
-                                                                                 float import_scale,
                                                                                  const engine::renderer::MeshUploader& uploader);
 
         [[nodiscard]] static Rx::Vector<Uint32> get_indices_from_primitive(const tinygltf::Primitive& primitive,
                                                                            const tinygltf::Model& scene);
 
         [[nodiscard]] static Rx::Vector<StandardVertex> get_vertices_from_primitive(const tinygltf::Primitive& primitive,
-                                                                                    float import_scale,
                                                                                     const tinygltf::Model& scene);
 
         [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& scene,
@@ -85,7 +82,7 @@ namespace sanity::editor::import {
 
         [[nodiscard]] entt::entity create_entity_for_node(const tinygltf::Node& node,
                                                           const entt::entity& parent_entity,
-                                                          float import_scale,
+                                                          float mesh_import_scale,
                                                           entt::registry& registry,
                                                           ID3D12GraphicsCommandList4* cmds);
     };

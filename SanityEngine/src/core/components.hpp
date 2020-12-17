@@ -33,11 +33,11 @@ namespace sanity::engine {
 
     struct _declspec(uuid("{DDC37FE8-B703-4132-BD17-0F03369A434A}")) [[sanity::component]] TransformComponent {
         Transform transform;
-    };
-
-    struct __declspec(uuid("{BC22F5FC-A56D-481F-843E-49BD98A84ED4}")) [[sanity::component]] HierarchyComponent {
+    	
         Rx::Optional<entt::entity> parent{Rx::nullopt};
 
         Rx::Vector<entt::entity> children;
+
+    	glm::mat4 get_world_matrix(const entt::registry& registry) const;
     };
 } // namespace sanity::engine

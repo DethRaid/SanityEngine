@@ -269,8 +269,7 @@ namespace sanity::engine {
         player = locked_registry->create();
 
         auto& transform_component = locked_registry->emplace<TransformComponent>(player);
-        transform_component.transform.location.z = 5;
-        transform_component.transform.location.y = 2;
+        transform_component.transform.location.y = 1.63f;
         transform_component.transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
         locked_registry->emplace<renderer::CameraComponent>(player);
 

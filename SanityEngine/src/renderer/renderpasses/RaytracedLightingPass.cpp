@@ -55,7 +55,7 @@ namespace sanity::engine::renderer {
 
         create_framebuffer(render_resolution);
 
-    	add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
         add_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
@@ -66,7 +66,10 @@ namespace sanity::engine::renderer {
         auto& device = renderer->get_render_backend();
     }
 
-    void RaytracedLightingPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
+    void RaytracedLightingPass::render(ID3D12GraphicsCommandList4* commands,
+                                       entt::registry& registry,
+                                       const Uint32 frame_idx,
+                                       const World& world) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "RaytracedLightingPass::execute");
@@ -154,7 +157,9 @@ namespace sanity::engine::renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
+                                                      entt::registry& registry,
+                                                      const Uint32 frame_idx) {
         PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_objects_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
@@ -175,14 +180,15 @@ namespace sanity::engine::renderer {
 
         {
             const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
-            renderable_view.each([&](const TransformComponent& transform, const StandardRenderableComponent& renderable) {
+            renderable_view.each([&](const TransformComponent& transform,
+                                     const StandardRenderableComponent& renderable) {
                 // TODO: Frustum culling, view distance calculations, etc
 
                 // TODO: Figure out the priority queues to put things in
 
                 commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 
-                const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform, frame_idx);
+                const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform.get_world_matrix(registry), frame_idx);
 
                 commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
 
@@ -207,4 +213,4 @@ namespace sanity::engine::renderer {
         }
     }
 
-} // namespace renderer
+} // namespace sanity::engine::renderer
