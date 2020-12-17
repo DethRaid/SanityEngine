@@ -685,7 +685,7 @@ namespace sanity::engine::renderer {
                 auto& desc = instance_buffer_array[i];
                 desc = {};
 
-                const auto model_matrix = object.transform.to_matrix();
+                const auto model_matrix = object.transform;
             	
                 desc.Transform[0][0] = model_matrix[0][0];
                 desc.Transform[0][1] = model_matrix[0][1];

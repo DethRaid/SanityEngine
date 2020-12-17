@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/transform.hpp"
+#include "glm/mat4x4.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/mesh.hpp"
 #include "resources.hpp"
@@ -44,7 +45,7 @@ namespace sanity::engine::renderer {
          */
         RaytracingMaterial material{0};
 
-    	Transform transform{};
+        glm::mat4 transform{};
     };
 
     /*!
