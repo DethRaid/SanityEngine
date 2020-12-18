@@ -134,9 +134,10 @@ namespace sanity::engine::renderer {
                 should_map = true;
                 break;
 
-            case BufferUsage::IndirectCommands: // NOLINT(bugprone-branch-clone)
-                [[fallthrough]];
             case BufferUsage::UnorderedAccess:
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+                [[fallthrough]];
+            case BufferUsage::IndirectCommands: // NOLINT(bugprone-branch-clone)
                 [[fallthrough]];
             case BufferUsage::IndexBuffer:
                 [[fallthrough]];

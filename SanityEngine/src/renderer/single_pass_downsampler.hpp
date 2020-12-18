@@ -21,11 +21,9 @@ namespace sanity::engine::renderer {
         static const Uint32 OFFSET_ROOT_CONSTANT_OFFSET = 2;
         static const Uint32 INVERSE_SIZE_ROOT_CONSTANT_OFFSET = 4;
 
-    	static const Uint32 ROOT_CONSTANTS_INDEX = 0;
+        static const Uint32 ROOT_CONSTANTS_INDEX = 0;
         static const Uint32 GLOBAL_COUNTER_BUFFER_INDEX = 1;
-        static const Uint32 OUTPUT_MIP_6_INDEX = 2;
-        static const Uint32 OUTPUT_MIPS_INDEX = 3;
-        static const Uint32 INPUT_MIP_0_INDEX = 4;
+        static const Uint32 DESCRIPTOR_TABLE_INDEX = 2;
 
         [[nodiscard]] static SinglePassDownsampler Create(RenderBackend& backend);
 
@@ -39,11 +37,11 @@ namespace sanity::engine::renderer {
         RenderBackend* backend;
 
         explicit SinglePassDownsampler(ComPtr<ID3D12RootSignature> root_signature_in,
-                                    ComPtr<ID3D12PipelineState> pipeline_in,
-                                    RenderBackend& backend_in);
+                                       ComPtr<ID3D12PipelineState> pipeline_in,
+                                       RenderBackend& backend_in);
 
-        [[nodiscard]] DescriptorTableHandle init_mip_output_descriptors(ID3D12Resource* texture,
-                                                                        const ComPtr<ID3D12Device>& device,
-                                                                        Uint32 num_mips) const;
+        [[nodiscard]] DescriptorTableHandle fill_descriptor_table(ID3D12Resource* texture,
+                                                                  const ComPtr<ID3D12Device>& device,
+                                                                  Uint32 num_mips) const;
     };
 } // namespace sanity::engine::renderer

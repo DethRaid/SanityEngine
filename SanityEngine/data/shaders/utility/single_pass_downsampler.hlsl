@@ -33,7 +33,7 @@ struct SpdConstants {
 //--------------------------------------------------------------------------------------
 // Texture definitions
 //--------------------------------------------------------------------------------------
-globallycoherent RWTexture2DArray<float4> imgDst5 : register(u2);
+globallycoherent RWTexture2D<float4> imgDst5 : register(u2);
 RWTexture2D<float4> imgDst[12] : register(u3); // do no access MIP [5]
 Texture2D<float4> imgSrc : register(t0);
 SamplerState srcSampler : register(s0);
@@ -62,26 +62,26 @@ groupshared AF1 spdIntermediateA[16][16];
 
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice) {
     AF2 textureCoord = p * spdConstants.invInputSize + spdConstants.invInputSize;
-    AF4 result = imgSrc.SampleLevel(srcSampler, float3(textureCoord, slice), 0);
+    AF4 result = imgSrc.SampleLevel(srcSampler, textureCoord, 0);
     result = AF4(AToSrgbF1(result.x), AToSrgbF1(result.y), AToSrgbF1(result.z), result.w);
     return result;
 }
 
-AF4 SpdLoad(ASU2 tex, AU1 slice) { return imgDst5[uint3(tex, slice)]; }
+AF4 SpdLoad(ASU2 tex, AU1 slice) { return imgDst5[tex]; }
 
 void SpdStore(ASU2 pix, AF4 outValue, AU1 index, AU1 slice) {
     if(index == 5) {
-        imgDst5[uint3(pix, slice)] = outValue;
+        imgDst5[pix] = outValue;
         return;
     }
-    imgDst[index][uint3(pix, slice)] = outValue;
+    imgDst[index][pix] = outValue;
 }
 
-void SpdIncreaseAtomicCounter(AU1 slice) { InterlockedAdd(spdGlobalAtomic[0].counter[slice], 1, spdCounter); }
+void SpdIncreaseAtomicCounter(AU1 slice) { InterlockedAdd(spdGlobalAtomic[0].counter, 1, spdCounter); }
 
 AU1 SpdGetAtomicCounter() { return spdCounter; }
 
-void SpdResetAtomicCounter(AU1 slice) { spdGlobalAtomic[0].counter[slice] = 0; }
+void SpdResetAtomicCounter(AU1 slice) { spdGlobalAtomic[0].counter = 0; }
 
 AF4 SpdLoadIntermediate(AU1 x, AU1 y) {
     return AF4(spdIntermediateR[x][y], spdIntermediateG[x][y], spdIntermediateB[x][y], spdIntermediateA[x][y]);
@@ -104,19 +104,19 @@ groupshared AH2 spdIntermediateBA[16][16];
 
 AH4 SpdLoadSourceImageH(ASU2 p, AU1 slice) {
     AF2 textureCoord = p * spdConstants.invInputSize + spdConstants.invInputSize;
-    AF4 result = imgSrc.SampleLevel(srcSampler, float3(textureCoord, slice), 0);
+    AF4 result = imgSrc.SampleLevel(srcSampler, textureCoord, 0);
     result = AF4(AToSrgbF1(result.x), AToSrgbF1(result.y), AToSrgbF1(result.z), result.w);
     return AH4(result);
 }
 
-AH4 SpdLoadH(ASU2 p, AU1 slice) { return AH4(imgDst5[uint3(p, slice)]); }
+AH4 SpdLoadH(ASU2 p, AU1 slice) { return AH4(imgDst5[p]); }
 
 void SpdStoreH(ASU2 p, AH4 value, AU1 mip, AU1 slice) {
     if(mip == 5) {
-        imgDst5[uint3(p, slice)] = AF4(value);
+        imgDst5[p] = AF4(value);
         return;
     }
-    imgDst[mip][uint3(p, slice)] = AF4(value);
+    imgDst[mip][p] = AF4(value);
 }
 
 AH4 SpdLoadIntermediateH(AU1 x, AU1 y) {

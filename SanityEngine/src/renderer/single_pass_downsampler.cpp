@@ -16,7 +16,7 @@ namespace sanity::engine::renderer {
 
     SinglePassDownsampler SinglePassDownsampler::Create(RenderBackend& backend) {
         Rx::Vector<CD3DX12_ROOT_PARAMETER> spd_params;
-        spd_params.resize(5);
+        spd_params.resize(3);
 
         // Shader parameter constants
         spd_params[ROOT_CONSTANTS_INDEX].InitAsConstants(6, 0);
@@ -24,17 +24,11 @@ namespace sanity::engine::renderer {
         // UAV table + global counter buffer
         spd_params[GLOBAL_COUNTER_BUFFER_INDEX].InitAsUnorderedAccessView(1);
 
-        // output mips
-        CD3DX12_DESCRIPTOR_RANGE output_mip_6_range;
-        output_mip_6_range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 2);
-        spd_params[OUTPUT_MIP_6_INDEX].InitAsDescriptorTable(2, &output_mip_6_range);
+        D3D12_DESCRIPTOR_RANGE ranges[3] = {CD3DX12_DESCRIPTOR_RANGE{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 2},
+                                            CD3DX12_DESCRIPTOR_RANGE{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, SPD_MAX_MIP_LEVELS + 1, 3},
+                                            CD3DX12_DESCRIPTOR_RANGE{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0}};
 
-        CD3DX12_DESCRIPTOR_RANGE output_mips_range;
-        output_mips_range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, SPD_MAX_MIP_LEVELS + 1, 3);
-        spd_params[OUTPUT_MIPS_INDEX].InitAsDescriptorTable(1, &output_mips_range);
-
-        // Input SRV
-        spd_params[INPUT_MIP_0_INDEX].InitAsShaderResourceView(0);
+        spd_params[DESCRIPTOR_TABLE_INDEX].InitAsDescriptorTable(3, ranges);
 
         auto static_sampler_desc = CD3DX12_STATIC_SAMPLER_DESC{0};
         static_sampler_desc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
@@ -52,7 +46,7 @@ namespace sanity::engine::renderer {
         const auto spd_root_sig = backend.compile_root_signature(desc);
         set_object_name(spd_root_sig.Get(), "SPD Root Signature");
 
-        const auto compute_instructions = load_shader("utility/single_pass_downsampler.hlsl");
+        const auto compute_instructions = load_shader("utility/single_pass_downsampler.compute");
 
         const auto spd_pipeline = backend.create_compute_pipeline_state(compute_instructions, spd_root_sig);
         set_object_name(spd_pipeline.Get(), "SPD Compute Pipeline");
@@ -78,13 +72,11 @@ namespace sanity::engine::renderer {
         const auto num_mips = num_work_groups_and_mips[1];
 
         // Set up descriptors
-        const auto mip_output_descriptors = init_mip_output_descriptors(texture, device, num_mips);
+        const auto descriptor_table_handle = fill_descriptor_table(texture, device, num_mips);
 
         auto global_counter_buffer = backend->create_buffer({.name = "SPD Global Counter",
-                                                             .usage = BufferUsage::ConstantBuffer,
-                                                             .size = sizeof(Uint32)},
-                                                            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        *(static_cast<Uint32*>(global_counter_buffer->mapped_ptr)) = 0;
+                                                             .usage = BufferUsage::UnorderedAccess,
+                                                             .size = sizeof(Uint32)});
 
         // Bind descriptor heap, root signature, and pipeline
         auto* descriptor_heap = backend->get_cbv_srv_uav_heap();
@@ -100,13 +92,7 @@ namespace sanity::engine::renderer {
 
         cmds->SetComputeRootUnorderedAccessView(GLOBAL_COUNTER_BUFFER_INDEX, global_counter_buffer->resource->GetGPUVirtualAddress());
 
-        cmds->SetComputeRootDescriptorTable(OUTPUT_MIP_6_INDEX,
-                                            CD3DX12_GPU_DESCRIPTOR_HANDLE{mip_output_descriptors.gpu_handle,
-                                                                          5,
-                                                                          backend->get_shader_resource_descriptor_size()});
-        cmds->SetComputeRootDescriptorTable(OUTPUT_MIPS_INDEX, mip_output_descriptors.gpu_handle);
-
-        cmds->SetComputeRootShaderResourceView(INPUT_MIP_0_INDEX, texture->GetGPUVirtualAddress());
+        cmds->SetComputeRootDescriptorTable(DESCRIPTOR_TABLE_INDEX, descriptor_table_handle.gpu_handle);
 
         // Set counter to 0
         {
@@ -124,7 +110,7 @@ namespace sanity::engine::renderer {
                                                       D3D12_RESOURCE_STATE_COPY_DEST,
                                                       D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                       0),
-                 CD3DX12_RESOURCE_BARRIER::Transition(texture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 0)};
+                 CD3DX12_RESOURCE_BARRIER::Transition(texture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
             cmds->ResourceBarrier(2, barriers);
         }
 
@@ -139,26 +125,45 @@ namespace sanity::engine::renderer {
     }
 
     SinglePassDownsampler::SinglePassDownsampler(ComPtr<ID3D12RootSignature> root_signature_in,
-                                           ComPtr<ID3D12PipelineState> pipeline_in,
-                                           RenderBackend& backend_in)
+                                                 ComPtr<ID3D12PipelineState> pipeline_in,
+                                                 RenderBackend& backend_in)
         : root_signature{Rx::Utility::move(root_signature_in)}, pipeline{Rx::Utility::move(pipeline_in)}, backend{&backend_in} {}
 
-    DescriptorTableHandle SinglePassDownsampler::init_mip_output_descriptors(ID3D12Resource* texture,
-                                                                          const ComPtr<ID3D12Device>& device,
-                                                                          const Uint32 num_mips) const {
+    DescriptorTableHandle SinglePassDownsampler::fill_descriptor_table(ID3D12Resource* texture,
+                                                                       const ComPtr<ID3D12Device>& device,
+                                                                       const Uint32 num_mips) const {
+        const auto desc = texture->GetDesc();
+        const auto descriptor_size = backend->get_shader_resource_descriptor_size();
         const auto output_mips_descriptors = backend->allocate_descriptor_table(num_mips - 1);
 
         auto descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{output_mips_descriptors.cpu_handle};
 
-        for(Uint32 i = 0; i < output_mips_descriptors.table_size; i++) {
-            auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+    	const auto mip_6_actual_slice = std::min(6u, num_mips);
+        const auto mip_6_uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
+                                                                     .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+                                                                     .Texture2D = {.MipSlice = mip_6_actual_slice, .PlaneSlice = 0}};
+        device->CreateUnorderedAccessView(texture, nullptr, &mip_6_uav_desc, descriptor);
+
+        descriptor = descriptor.Offset(1, descriptor_size);
+
+        for(Uint32 i = 0; i < num_mips; i++) {
+            auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
                                                              .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                              .Texture2D = {.MipSlice = i + 1, .PlaneSlice = 0}};
 
             device->CreateUnorderedAccessView(texture, nullptr, &uav_desc, descriptor);
 
-            descriptor = descriptor.Offset(1, backend->get_shader_resource_descriptor_size());
+            descriptor = descriptor.Offset(1, descriptor_size);
         }
+
+        const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = desc.Format,
+                                                              .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                                                              .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                                                              .Texture2D = {.MostDetailedMip = 0,
+                                                                            .MipLevels = 1,
+                                                                            .PlaneSlice = 0,
+                                                                            .ResourceMinLODClamp = 0}};
+        device->CreateShaderResourceView(texture, &srv_desc, descriptor);
 
         return output_mips_descriptors;
     }
