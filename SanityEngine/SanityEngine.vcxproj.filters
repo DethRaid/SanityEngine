@@ -414,6 +414,7 @@
     <ClInclude Include="src\core\transform.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\single_pass_downsampler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -614,6 +615,7 @@
     <ClCompile Include="src\core\transform.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\single_pass_downsampler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

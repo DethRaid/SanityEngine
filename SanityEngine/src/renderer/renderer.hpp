@@ -96,6 +96,8 @@ namespace sanity::engine::renderer {
                                                  const void* image_data,
                                                  ID3D12GraphicsCommandList4* commands);
 
+        void generate_mips_for_texture(const Image& image, ID3D12GraphicsCommandList4* commands);
+
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
         [[nodiscard]] Image get_image(const Rx::String& image_name) const;
@@ -180,8 +182,10 @@ namespace sanity::engine::renderer {
         RenderpassHandle denoiser_pass_handle;
         RenderpassHandle scene_output_pass_handle;
         RenderpassHandle imgui_pass_handle;
+    	
+        ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
 
-#pragma region Initialization
+        #pragma region Initialization
         void create_static_mesh_storage();
 
         void create_per_frame_buffers();
@@ -191,6 +195,8 @@ namespace sanity::engine::renderer {
         void create_light_buffers();
 
         void create_builtin_images();
+
+        void create_builtin_pipelines();
 
         void load_noise_texture(const Rx::String& filepath);
 

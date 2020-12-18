@@ -115,7 +115,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\src;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)extern\FidelityFX-SPD\ffx-spd;$(ProjectDir)..\vcpkg_installed\x64-windows\include;$(ProjectDir)extern\D3D12MemoryAllocator;$(ProjectDir)extern\imgui-node-editor;$(ProjectDir)extern\physx\include;$(ProjectDir)extern\physx\include\physx;$(ProjectDir)extern\rex\src;$(ProjectDir)extern\tracy;$(ProjectDir)extern\tracy\imgui;$(ProjectDir)extern\json5\include;$(ProjectDir)extern\dotnet\include;$(ProjectDir)extern\bve\include;$(ProjectDir)extern\pix\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -535,6 +535,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\rhi\render_device.hpp" />
     <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp" />
     <ClInclude Include="src\renderer\rhi\resources.hpp" />
+    <ClInclude Include="src\renderer\single_pass_downsampler.hpp" />
     <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
     <ClInclude Include="src\settings.hpp" />
@@ -606,6 +607,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp" />
     <ClCompile Include="src\renderer\rhi\render_device.cpp" />
     <ClCompile Include="src\renderer\rhi\resources.cpp" />
+    <ClCompile Include="src\renderer\single_pass_downsampler.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />
     <ClCompile Include="src\stats\framerate_tracker.cpp" />
     <ClCompile Include="src\system\system.cpp" />

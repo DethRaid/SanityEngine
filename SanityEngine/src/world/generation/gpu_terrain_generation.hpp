@@ -6,7 +6,7 @@
 
 struct TerrainData;
 
-namespace renderer {
+namespace sanity::engine::renderer {
     class RenderBackend;
     class Renderer;
 } // namespace renderer

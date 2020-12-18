@@ -63,6 +63,8 @@ namespace sanity::engine::renderer {
 
         create_builtin_images();
 
+        create_builtin_pipelines();
+
         create_render_passes();
     }
 
@@ -294,19 +296,22 @@ namespace sanity::engine::renderer {
             logger->error("Could not upload texture data");
 
             return pink_texture_handle;
-        } else {
-            if(create_info.usage == ImageUsage::UnorderedAccess) {
-                // Transition the image back to UNORDERED_ACCESS
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
-                                                                                     D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                     D3D12_RESOURCE_STATE_COMMON)};
+        }
 
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-            }
+        generate_mips_for_texture(image, commands);
+
+        if(create_info.usage == ImageUsage::UnorderedAccess) {
+            // Transition the image back to UNORDERED_ACCESS
+            const auto barriers = Rx::Array{
+                CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON)};
+
+            commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
         return handle;
     }
+
+    void Renderer::generate_mips_for_texture(const Image& image, ID3D12GraphicsCommandList4* commands) {}
 
     Rx::Optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
         if(const auto* idx = image_name_to_index.find(name)) { // NOLINT(bugprone-branch-clone)
@@ -686,7 +691,7 @@ namespace sanity::engine::renderer {
                 desc = {};
 
                 const auto model_matrix = object.transform;
-            	
+
                 desc.Transform[0][0] = model_matrix[0][0];
                 desc.Transform[0][1] = model_matrix[0][1];
                 desc.Transform[0][2] = model_matrix[0][2];
