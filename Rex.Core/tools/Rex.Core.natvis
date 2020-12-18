@@ -38,6 +38,14 @@
             <Item Name="[allocator]" ExcludeView="simple">m_allocator</Item>
         </Expand>
     </Type>
+	<Type Name="Rx::WideString">
+		<DisplayString>{{ {m_data} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]" ExcludeView="simple">m_size</Item>
+			<Item Name="[contents]" ExcludeView="simple">m_data</Item>
+			<Item Name="[allocator]" ExcludeView="simple">m_allocator</Item>
+		</Expand>
+	</Type>
     <Type Name="Rx::Filesystem::Directory">
         <DisplayString Condition="m_impl != nullptr">{{ {m_path} }}</DisplayString>
         <DisplayString Condition="m_impl == nullptr">{{ {m_path} (Invalid Directory) }}</DisplayString>
