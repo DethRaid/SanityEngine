@@ -39,6 +39,7 @@ namespace sanity::engine::renderer {
     Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
+          spd{Rx::make_ptr<SinglePassDownsampler>(RX_SYSTEM_ALLOCATOR, SinglePassDownsampler::Create(*device))},
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)},
           forward_pass_handle{nullptr, 0},
           denoiser_pass_handle{nullptr, 0},
@@ -62,8 +63,6 @@ namespace sanity::engine::renderer {
         create_light_buffers();
 
         create_builtin_images();
-
-        create_builtin_pipelines();
 
         create_render_passes();
     }
@@ -298,7 +297,7 @@ namespace sanity::engine::renderer {
             return pink_texture_handle;
         }
 
-        generate_mips_for_texture(image, commands);
+    	spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
 
         if(create_info.usage == ImageUsage::UnorderedAccess) {
             // Transition the image back to UNORDERED_ACCESS

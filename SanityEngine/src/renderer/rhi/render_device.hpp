@@ -46,6 +46,7 @@ namespace sanity::engine::renderer {
     struct __declspec(uuid("8FE90F37-09FE-4D01-8E3F-65A8ABC4349F")) DescriptorTableHandle {
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle;
         CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle;
+        Uint32 table_size;
     };
 
     /*
@@ -93,7 +94,8 @@ namespace sanity::engine::renderer {
 
         ~RenderBackend();
 
-        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info,
+                                                    D3D12_RESOURCE_FLAGS additional_flags = D3D12_RESOURCE_FLAG_NONE) const;
 
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 

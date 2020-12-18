@@ -111,9 +111,11 @@ namespace sanity::engine::renderer {
         device_allocator->Release();
     }
 
-    Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info) const {
+    Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info,
+                                                 D3D12_RESOURCE_FLAGS additional_flags) const {
         ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
+        desc.Flags = additional_flags;
 
         if(create_info.usage == BufferUsage::StagingBuffer) {
             // Try to get a staging buffer from the pool
@@ -1049,7 +1051,7 @@ namespace sanity::engine::renderer {
 
         next_free_cbv_srv_uav_descriptor += num_descriptors;
 
-        return {cpu_handle, gpu_handle};
+        return {cpu_handle, gpu_handle, num_descriptors};
     }
 
     ID3D12DescriptorHeap* RenderBackend::get_cbv_srv_uav_heap() const { return cbv_srv_uav_heap.Get(); }

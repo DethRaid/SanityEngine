@@ -20,6 +20,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
+#include "single_pass_downsampler.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -164,6 +165,7 @@ namespace sanity::engine::renderer {
 
         Rx::Map<Rx::String, Uint32> image_name_to_index;
         Rx::Vector<Rx::Ptr<Image>> all_images;
+        Rx::Ptr<SinglePassDownsampler> spd;
 
         Rx::Array<Light[MAX_NUM_LIGHTS]> lights;
         Rx::Vector<Rx::Ptr<Buffer>> light_device_buffers;
@@ -182,10 +184,10 @@ namespace sanity::engine::renderer {
         RenderpassHandle denoiser_pass_handle;
         RenderpassHandle scene_output_pass_handle;
         RenderpassHandle imgui_pass_handle;
-    	
+
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
 
-        #pragma region Initialization
+#pragma region Initialization
         void create_static_mesh_storage();
 
         void create_per_frame_buffers();
@@ -195,8 +197,6 @@ namespace sanity::engine::renderer {
         void create_light_buffers();
 
         void create_builtin_images();
-
-        void create_builtin_pipelines();
 
         void load_noise_texture(const Rx::String& filepath);
 

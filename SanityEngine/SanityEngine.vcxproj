@@ -802,6 +802,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Compute</ShaderType>
     </FxCompile>
+    <FxCompile Include="extern\FidelityFX-SPD\sample\src\DX12\SPDIntegration.hlsl" />
+    <FxCompile Include="extern\FidelityFX-SPD\sample\src\DX12\SPDIntegrationLinearSampler.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sanity.Engine.rc" />
