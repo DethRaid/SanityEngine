@@ -21,13 +21,13 @@
 // #include "ags_shader_intrinsics_dx12.h"
 
 //--------------------------------------------------------------------------------------
-// Constant Buffer
+// Per-dispatch params
 //--------------------------------------------------------------------------------------
-cbuffer spdConstants : register(b0) {
+struct SPDConstants {
     uint mips;
     uint numWorkGroups;
     uint2 workGroupOffset;
-}
+} spdConstants;
 
 //--------------------------------------------------------------------------------------
 // Texture definitions
