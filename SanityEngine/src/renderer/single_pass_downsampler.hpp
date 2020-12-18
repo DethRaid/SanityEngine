@@ -27,7 +27,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] static SinglePassDownsampler Create(RenderBackend& backend);
 
-        void generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds);
+        void generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds) const;
 
     private:
         ComPtr<ID3D12RootSignature> root_signature;
@@ -40,7 +40,7 @@ namespace sanity::engine::renderer {
                                        ComPtr<ID3D12PipelineState> pipeline_in,
                                        RenderBackend& backend_in);
 
-        [[nodiscard]] DescriptorTableHandle fill_descriptor_table(ID3D12Resource* texture,
+        [[nodiscard]] DescriptorRange fill_descriptor_table(ID3D12Resource* texture,
                                                                   const ComPtr<ID3D12Device>& device,
                                                                   Uint32 num_mips) const;
     };

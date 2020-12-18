@@ -4,6 +4,7 @@
 #include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
+#include "renderer/rhi/descriptor_allocator.hpp"
 #include "renderer/rhi/framebuffer.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
@@ -46,7 +47,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief RTV for the final denoised image
          */
-        D3D12_CPU_DESCRIPTOR_HANDLE denoised_rtv_handle;
+        DescriptorRange denoised_rtv_handle;
 
         Rx::Ptr<Buffer> denoiser_material_buffer;
 

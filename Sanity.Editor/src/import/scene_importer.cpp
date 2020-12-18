@@ -105,20 +105,25 @@ namespace sanity::editor::import {
         }
     } // namespace detail
 
-    SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
+    SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {
+        gltf_logger->set_level(Rx::Log::Level::k_warning);
+    }
 
     Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const Rx::String& scene_path,
                                                                 const SceneImportSettings& import_settings,
                                                                 entt::registry& registry) {
+        ZoneScoped;
 
         tinygltf::Model scene;
         std::string err;
         std::string warn;
         bool success;
         if(scene_path.ends_with(".glb")) {
+            ZoneScopedN("Load .glb");
             success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.data());
 
         } else if(scene_path.ends_with(".gltf")) {
+            ZoneScopedN("Load .gltf");
             success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.data());
 
         } else {
@@ -170,6 +175,8 @@ namespace sanity::editor::import {
         Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
 
         for(const auto& material : scene.materials) {
+            ZoneScopedN(material.name.c_str());
+        	
             gltf_logger->info("Importing material %s", material.name.c_str());
 
             engine::renderer::StandardMaterial sanity_material{};
@@ -323,6 +330,8 @@ namespace sanity::editor::import {
 
     Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene,
                                                                          ID3D12GraphicsCommandList4* cmds) const {
+        ZoneScoped;
+    	
         auto& mesh_store = renderer->get_static_mesh_store();
         const auto uploader = mesh_store.begin_adding_meshes(cmds);
 
@@ -330,6 +339,8 @@ namespace sanity::editor::import {
         imported_meshes.reserve(scene.meshes.size());
 
         for(const auto& mesh : scene.meshes) {
+            ZoneScopedN(mesh.name.c_str());
+        	
             gltf_logger->info("Importing mesh %s", mesh.name.c_str());
 
             GltfMesh imported_mesh{};
@@ -358,6 +369,8 @@ namespace sanity::editor::import {
     Rx::Optional<SceneImporter::GltfPrimitive> SceneImporter::get_data_from_primitive(const tinygltf::Primitive& primitive,
                                                                                       const tinygltf::Model& scene,
                                                                                       const engine::renderer::MeshUploader& uploader) {
+        ZoneScoped;
+    	
         const auto indices = get_indices_from_primitive(primitive, scene);
         const auto vertices = get_vertices_from_primitive(primitive, scene);
 
@@ -477,6 +490,8 @@ namespace sanity::editor::import {
                                                         const float import_scale,
                                                         entt::registry& registry,
                                                         ID3D12GraphicsCommandList4* cmds) {
+        ZoneScoped;
+    	
         // Assume that the files we'll be importing have a single scene
         const auto& default_scene = scene.scenes[scene.defaultScene];
 
@@ -503,6 +518,7 @@ namespace sanity::editor::import {
                                                        const float import_scale,
                                                        entt::registry& registry,
                                                        ID3D12GraphicsCommandList4* cmds) {
+        ZoneScopedN(node.name.c_str());
 
         const auto node_entity = entity::create_base_editor_entity(node.name.c_str(), registry);
 
@@ -548,9 +564,9 @@ namespace sanity::editor::import {
             Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
-            	// Create entity and components
+                // Create entity and components
                 const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
-                const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);                
+                const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
 
                 auto& primitive_transform_component = entity::add_component<engine::TransformComponent>(primitive_entity, registry);
                 primitive_transform_component.parent = node_entity;
@@ -562,9 +578,9 @@ namespace sanity::editor::import {
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
 
-            	// Build raytracing acceleration structure. We make a separate BLAS for each primitive because they
-            	// might have separate materials. However, this will create too many BLASs if primitives share
-            	// materials. This will be addressed in a future revision
+                // Build raytracing acceleration structure. We make a separate BLAS for each primitive because they
+                // might have separate materials. However, this will create too many BLASs if primitives share
+                // materials. This will be addressed in a future revision
                 Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
 
                 meshes_for_raytracing.emplace_back(primitive.mesh, engine::Transform{});
@@ -579,7 +595,7 @@ namespace sanity::editor::import {
 
                 const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle, .material = ray_material};
                 //,
-                                                                           //.transform = cached_transform.to_matrix()};
+                //.transform = cached_transform.to_matrix()};
                 raytracing_objects.push_back(ray_object);
 
                 i++;

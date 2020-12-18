@@ -1,5 +1,7 @@
 #include "single_pass_downsampler.hpp"
 
+#include "Tracy/Tracy.hpp"
+#include "Tracy/TracyD3D12.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/rhi/render_device.hpp"
 #include "rhi/d3d12_private_data.hpp"
@@ -15,6 +17,8 @@ namespace sanity::engine::renderer {
     constexpr auto SPD_MAX_MIP_LEVELS = 12;
 
     SinglePassDownsampler SinglePassDownsampler::Create(RenderBackend& backend) {
+        ZoneScoped;
+
         Rx::Vector<CD3DX12_ROOT_PARAMETER> spd_params;
         spd_params.resize(3);
 
@@ -54,7 +58,12 @@ namespace sanity::engine::renderer {
         return SinglePassDownsampler{spd_root_sig, spd_pipeline, backend};
     }
 
-    void SinglePassDownsampler::generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds) {
+    void SinglePassDownsampler::generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds) const {
+        const auto texture_name = get_object_name(texture);
+        ZoneScoped;
+
+        TracyD3D12Zone(RenderBackend::tracy_context, cmds, "SinglePassDownsampler::generate_mip_chain_for_texture");
+
         const auto device = backend->device;
 
         // Initialize SPD parameters
@@ -74,9 +83,8 @@ namespace sanity::engine::renderer {
         // Set up descriptors
         const auto descriptor_table_handle = fill_descriptor_table(texture, device, num_mips);
 
-        auto global_counter_buffer = backend->create_buffer({.name = "SPD Global Counter",
-                                                             .usage = BufferUsage::UnorderedAccess,
-                                                             .size = sizeof(Uint32)});
+        auto global_counter_buffer = backend->create_buffer(
+            {.name = "SPD Global Counter", .usage = BufferUsage::UnorderedAccess, .size = sizeof(Uint32)});
 
         // Bind descriptor heap, root signature, and pipeline
         auto* descriptor_heap = backend->get_cbv_srv_uav_heap();
@@ -105,12 +113,13 @@ namespace sanity::engine::renderer {
             D3D12_WRITEBUFFERIMMEDIATE_PARAMETER param{.Dest = global_counter_buffer->resource->GetGPUVirtualAddress(), .Value = 0};
             cmds->WriteBufferImmediate(1, &param, nullptr);
 
-            D3D12_RESOURCE_BARRIER barriers[2] =
-                {CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource.Get(),
-                                                      D3D12_RESOURCE_STATE_COPY_DEST,
-                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                      0),
-                 CD3DX12_RESOURCE_BARRIER::Transition(texture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
+            D3D12_RESOURCE_BARRIER barriers[2] = {CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource.Get(),
+                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                       D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                                       0),
+                                                  CD3DX12_RESOURCE_BARRIER::Transition(texture,
+                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                       D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
             cmds->ResourceBarrier(2, barriers);
         }
 
@@ -129,31 +138,34 @@ namespace sanity::engine::renderer {
                                                  RenderBackend& backend_in)
         : root_signature{Rx::Utility::move(root_signature_in)}, pipeline{Rx::Utility::move(pipeline_in)}, backend{&backend_in} {}
 
-    DescriptorTableHandle SinglePassDownsampler::fill_descriptor_table(ID3D12Resource* texture,
-                                                                       const ComPtr<ID3D12Device>& device,
-                                                                       const Uint32 num_mips) const {
+    DescriptorRange SinglePassDownsampler::fill_descriptor_table(ID3D12Resource* texture,
+                                                                 const ComPtr<ID3D12Device>& device,
+                                                                 const Uint32 num_mips) const {
         const auto desc = texture->GetDesc();
-        const auto descriptor_size = backend->get_shader_resource_descriptor_size();
-        const auto output_mips_descriptors = backend->allocate_descriptor_table(num_mips - 1);
 
-        auto descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{output_mips_descriptors.cpu_handle};
+        auto& descriptor_allocator = backend->get_cbv_srv_uav_allocator();
 
-    	const auto mip_6_actual_slice = std::min(6u, num_mips);
+        const auto descriptor_size = descriptor_allocator.get_descriptor_size();
+        const auto output_mips_descriptors = descriptor_allocator.allocate_descriptors(num_mips - 1);
+
+        auto cur_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{output_mips_descriptors.cpu_handle};
+
+        const auto mip_6_actual_slice = std::min(6u, num_mips);
         const auto mip_6_uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
                                                                      .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                                      .Texture2D = {.MipSlice = mip_6_actual_slice, .PlaneSlice = 0}};
-        device->CreateUnorderedAccessView(texture, nullptr, &mip_6_uav_desc, descriptor);
+        device->CreateUnorderedAccessView(texture, nullptr, &mip_6_uav_desc, cur_descriptor);
 
-        descriptor = descriptor.Offset(1, descriptor_size);
+        cur_descriptor = cur_descriptor.Offset(1, descriptor_size);
 
         for(Uint32 i = 0; i < num_mips; i++) {
             auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
                                                              .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                              .Texture2D = {.MipSlice = i + 1, .PlaneSlice = 0}};
 
-            device->CreateUnorderedAccessView(texture, nullptr, &uav_desc, descriptor);
+            device->CreateUnorderedAccessView(texture, nullptr, &uav_desc, cur_descriptor);
 
-            descriptor = descriptor.Offset(1, descriptor_size);
+            cur_descriptor = cur_descriptor.Offset(1, descriptor_size);
         }
 
         const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = desc.Format,
@@ -163,7 +175,7 @@ namespace sanity::engine::renderer {
                                                                             .MipLevels = 1,
                                                                             .PlaneSlice = 0,
                                                                             .ResourceMinLODClamp = 0}};
-        device->CreateShaderResourceView(texture, &srv_desc, descriptor);
+        device->CreateShaderResourceView(texture, &srv_desc, cur_descriptor);
 
         return output_mips_descriptors;
     }

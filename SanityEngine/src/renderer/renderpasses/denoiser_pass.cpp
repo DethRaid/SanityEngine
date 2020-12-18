@@ -55,7 +55,7 @@ namespace sanity::engine::renderer {
 
         {
             const auto
-                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_rtv_handle,
+                render_target_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = denoised_rtv_handle.cpu_handle,
                                                                             .BeginningAccess =
                                                                                 {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD},
                                                                             .EndingAccess = {

@@ -121,12 +121,14 @@ namespace sanity::engine::renderer {
         const auto& color_target = renderer->get_image(color_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
-        color_target_access = {.cpuDescriptor = device.create_rtv_handle(color_target),
+        color_target_descriptor = device.create_rtv_handle(color_target);
+        color_target_access = {.cpuDescriptor = color_target_descriptor.cpu_handle,
                                .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                    .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT, .Color = {0, 0, 0, 0}}}},
                                .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-        depth_target_access = {.cpuDescriptor = device.create_dsv_handle(depth_target),
+        depth_target_descriptor = device.create_dsv_handle(depth_target);
+        depth_target_access = {.cpuDescriptor = depth_target_descriptor.cpu_handle,
                                .DepthBeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                         .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
                                                                                  .DepthStencil = {.Depth = 1.0}}}},
@@ -180,8 +182,7 @@ namespace sanity::engine::renderer {
 
         {
             const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
-            renderable_view.each([&](const TransformComponent& transform,
-                                     const StandardRenderableComponent& renderable) {
+            renderable_view.each([&](const TransformComponent& transform, const StandardRenderableComponent& renderable) {
                 // TODO: Frustum culling, view distance calculations, etc
 
                 // TODO: Figure out the priority queues to put things in

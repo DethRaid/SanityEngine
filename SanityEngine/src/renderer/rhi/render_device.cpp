@@ -111,8 +111,7 @@ namespace sanity::engine::renderer {
         device_allocator->Release();
     }
 
-    Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info,
-                                                 D3D12_RESOURCE_FLAGS additional_flags) const {
+    Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info, D3D12_RESOURCE_FLAGS additional_flags) const {
         ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
         desc.Flags = additional_flags;
@@ -254,24 +253,24 @@ namespace sanity::engine::renderer {
         return image;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderBackend::create_rtv_handle(const Image& image) const {
-        const auto handle = rtv_allocator->get_next_free_descriptor();
+    DescriptorRange RenderBackend::create_rtv_handle(const Image& image) const {
+        const auto handle = rtv_allocator->allocate_descriptors(1);
 
-        device->CreateRenderTargetView(image.resource.Get(), nullptr, handle);
+        device->CreateRenderTargetView(image.resource.Get(), nullptr, handle.cpu_handle);
 
         return handle;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderBackend::create_dsv_handle(const Image& image) const {
+    DescriptorRange RenderBackend::create_dsv_handle(const Image& image) const {
         const auto desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
             .Format = to_dxgi_format(image.format),
             .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
             .Texture2D = {.MipSlice = 0},
         };
 
-        const auto handle = dsv_allocator->get_next_free_descriptor();
+        const auto handle = dsv_allocator->allocate_descriptors(1);
 
-        device->CreateDepthStencilView(image.resource.Get(), &desc, handle);
+        device->CreateDepthStencilView(image.resource.Get(), &desc, handle.cpu_handle);
 
         return handle;
     }
@@ -283,7 +282,7 @@ namespace sanity::engine::renderer {
                   "Not enough swapchain RTVs for current swapchain index %d",
                   cur_swapchain_index);
 
-        return swapchain_rtv_handles[cur_swapchain_index];
+        return swapchain_rtv_handles[cur_swapchain_index].cpu_handle;
     }
 
     Uint2 RenderBackend::get_backbuffer_size() const {
@@ -323,8 +322,8 @@ namespace sanity::engine::renderer {
 
         return Rx::make_ptr<BindGroupBuilder>(RX_SYSTEM_ALLOCATOR,
                                               *device.Get(),
-                                              *cbv_srv_uav_heap.Get(),
-                                              cbv_srv_uav_size,
+                                              *cbv_srv_uav_allocator->get_heap(),
+                                              cbv_srv_uav_allocator->get_descriptor_size(),
                                               root_descriptors,
                                               descriptor_table_descriptors,
                                               descriptor_table_handles);
@@ -594,8 +593,6 @@ namespace sanity::engine::renderer {
     void RenderBackend::return_scratch_buffer(const Buffer& buffer) {
         scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
-
-    UINT RenderBackend::get_shader_resource_descriptor_size() const { return cbv_srv_uav_size; }
 
     ID3D12Device* RenderBackend::get_d3d12_device() const { return device.Get(); }
 
@@ -872,8 +869,7 @@ namespace sanity::engine::renderer {
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                                    MAX_NUM_TEXTURES * 2 * cvar_max_in_flight_gpu_frames->get());
 
-        cbv_srv_uav_heap = new_cbv_srv_uav_heap;
-        cbv_srv_uav_size = new_cbv_srv_uav_size;
+        cbv_srv_uav_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, new_cbv_srv_uav_heap, new_cbv_srv_uav_size);
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
         rtv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, rtv_heap, rtv_size);
@@ -891,9 +887,9 @@ namespace sanity::engine::renderer {
         for(Uint32 i = 0; i < desc.BufferCount; i++) {
             swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_images[i]));
 
-            const auto rtv_handle = rtv_allocator->get_next_free_descriptor();
+            const auto rtv_handle = rtv_allocator->allocate_descriptors(1);
 
-            device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle);
+            device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle.cpu_handle);
 
             swapchain_rtv_handles.push_back(rtv_handle);
 
@@ -1042,20 +1038,9 @@ namespace sanity::engine::renderer {
         return sig;
     }
 
-    DescriptorTableHandle RenderBackend::allocate_descriptor_table(const Uint32 num_descriptors) {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
-                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
-                                                 cbv_srv_uav_size};
-        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
-                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
-                                                 cbv_srv_uav_size};
+    DescriptorAllocator& RenderBackend::get_cbv_srv_uav_allocator() const { return *cbv_srv_uav_allocator; }
 
-        next_free_cbv_srv_uav_descriptor += num_descriptors;
-
-        return {cpu_handle, gpu_handle, num_descriptors};
-    }
-
-    ID3D12DescriptorHeap* RenderBackend::get_cbv_srv_uav_heap() const { return cbv_srv_uav_heap.Get(); }
+    ID3D12DescriptorHeap* RenderBackend::get_cbv_srv_uav_heap() const { return cbv_srv_uav_allocator->get_heap(); }
 
     void RenderBackend::create_material_resource_binders() {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
@@ -1072,12 +1057,11 @@ namespace sanity::engine::renderer {
 
         material_bind_group_builder.reserve(num_gpu_frames);
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{cbv_srv_uav_heap->GetCPUDescriptorHandleForHeapStart(),
-                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
-                                                 cbv_srv_uav_size};
-        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{cbv_srv_uav_heap->GetGPUDescriptorHandleForHeapStart(),
-                                                 static_cast<INT>(next_free_cbv_srv_uav_descriptor),
-                                                 cbv_srv_uav_size};
+        auto range = cbv_srv_uav_allocator->allocate_descriptors(MAX_NUM_TEXTURES * 3);
+        const auto descriptor_size = cbv_srv_uav_allocator->get_descriptor_size();
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{range.cpu_handle};
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{range.gpu_handle};
 
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_tables;
@@ -1090,10 +1074,8 @@ namespace sanity::engine::renderer {
             material_bind_group_builder.push_back(
                 create_bind_group_builder(root_descriptors, descriptor_tables, descriptor_table_gpu_handles));
 
-            cpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
-            gpu_handle.Offset(MAX_NUM_TEXTURES, cbv_srv_uav_size);
-
-            next_free_cbv_srv_uav_descriptor += MAX_NUM_TEXTURES;
+            cpu_handle.Offset(MAX_NUM_TEXTURES, descriptor_size);
+            gpu_handle.Offset(MAX_NUM_TEXTURES, descriptor_size);
         }
     }
 
@@ -1631,30 +1613,30 @@ namespace sanity::engine::renderer {
                              void* context) {
         auto* message_logger = static_cast<Rx::Log*>(context);
 
-    	const auto category_string = message_category_to_string(category);
+        const auto category_string = message_category_to_string(category);
         const auto description_wide_string = Rx::WideString{reinterpret_cast<const Uint16*>(description)};
         const auto message = Rx::String::format("%s (Category: %s)", description_wide_string, category_string);
-    	
+
         switch(severity) {
             case D3D12_MESSAGE_SEVERITY_CORRUPTION:
                 [[fallthrough]];
-        	case D3D12_MESSAGE_SEVERITY_ERROR:
+            case D3D12_MESSAGE_SEVERITY_ERROR:
                 message_logger->error("%s", message);
                 break;
 
-        	case D3D12_MESSAGE_SEVERITY_WARNING:
+            case D3D12_MESSAGE_SEVERITY_WARNING:
                 message_logger->warning("%s", message);
                 break;
 
-        	case D3D12_MESSAGE_SEVERITY_INFO:
+            case D3D12_MESSAGE_SEVERITY_INFO:
                 message_logger->info("%s", message);
                 break;
 
-        	case D3D12_MESSAGE_SEVERITY_MESSAGE:
+            case D3D12_MESSAGE_SEVERITY_MESSAGE:
                 message_logger->verbose("%s", message);
                 break;
 
-        	default:
+            default:
                 message_logger->info("%s", message);
         }
     }
