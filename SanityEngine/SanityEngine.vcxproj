@@ -451,6 +451,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <None Include="..\README.md" />
     <None Include="..\vcpkg.json" />
+    <FxCompile Include="data\shaders\inc\filters.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </FxCompile>
     <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
@@ -630,6 +634,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis" />
+    <Natvis Include="tools\glm.natvis" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rex.Core\Rex.Core.vcxproj">

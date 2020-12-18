@@ -417,7 +417,9 @@
     <ClInclude Include="src\core\transform.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\single_pass_downsampler.hpp" />
+    <ClInclude Include="src\renderer\single_pass_downsampler.hpp">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -618,7 +620,9 @@
     <ClCompile Include="src\core\transform.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\single_pass_downsampler.cpp" />
+    <ClCompile Include="src\renderer\single_pass_downsampler.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -628,6 +632,9 @@
   <ItemGroup>
     <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis">
       <Filter>extern\imgui-node-editor</Filter>
+    </Natvis>
+    <Natvis Include="tools\glm.natvis">
+      <Filter>tools</Filter>
     </Natvis>
   </ItemGroup>
   <ItemGroup>
@@ -702,6 +709,9 @@
     </FxCompile>
     <FxCompile Include="extern\FidelityFX-SPD\sample\src\DX12\SPDIntegrationLinearSampler.hlsl">
       <Filter>shaders\examples</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\filters.hlsli">
+      <Filter>shaders\inc</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
