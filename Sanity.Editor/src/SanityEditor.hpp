@@ -36,8 +36,10 @@ namespace sanity::editor {
 
         Project project_data;
 
-        void load_project(const Rx::String& project_file);
+        void load_project(const Rx::String& project_file, bool should_scan_project_directory = true);
 
+        void scan_project_directory_async(const Rx::String& project_content_directory);
+    	
         void create_application_gui();
     };
 

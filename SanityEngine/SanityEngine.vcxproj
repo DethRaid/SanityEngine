@@ -159,6 +159,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <FxCompile>
       <ShaderModel>6.5</ShaderModel>
       <ObjectFileOutput>$(OutDir)data\shaders\%(Filename)</ObjectFileOutput>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

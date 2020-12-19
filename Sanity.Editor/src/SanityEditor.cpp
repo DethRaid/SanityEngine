@@ -4,6 +4,7 @@
 #include "entity/Components.hpp"
 #include "entt/entity/registry.hpp"
 #include "nlohmann/json.hpp"
+#include "rx/core/concurrency/thread.h"
 #include "rx/core/filesystem/file.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
@@ -41,15 +42,9 @@ namespace sanity::editor {
                 flycam.update_player_transform(delta_time);
             }
         });
-
-        // Stupid model viewing hack
-        const auto player_entity = g_engine->get_player();
-        auto registry = g_engine->get_global_registry().lock();
-        auto& player_transform = registry->get<TransformComponent>(player_entity);
-        player_transform.transform.location = {0, 0, 10};
     }
 
-    void SanityEditor::load_project(const Rx::String& project_file) {
+    void SanityEditor::load_project(const Rx::String& project_filec, const bool should_scan_project_directory) {
         const auto file_contents_opt = Rx::Filesystem::read_text_file(project_file);
         if(!file_contents_opt.has_value()) {
             logger->error("Could not load project file %s", project_file);
@@ -75,7 +70,19 @@ namespace sanity::editor {
         }
         catch(const std::exception& ex) {
             logger->error("Could not deserialize project file %s: %s", project_file, ex.what());
+            return;
         }
+
+        if(should_scan_project_directory) {
+            scan_project_directory_async(content_directory);
+        }
+    }
+
+    void SanityEditor::scan_project_directory_async(const Rx::String& project_content_directory) {
+        Rx::Concurrency::Thread project_dir_scan_thread{"Project dir scanner", [&]() {
+                                                            // Recursively iterate over all the files in the project dir, running the
+                                                            // importer for any that have changed
+                                                        }};
     }
 
     void SanityEditor::run_until_quit() {
