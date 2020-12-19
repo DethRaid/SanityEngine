@@ -39,6 +39,7 @@ namespace sanity::engine::renderer {
     Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
+          spd{Rx::make_ptr<SinglePassDownsampler>(RX_SYSTEM_ALLOCATOR, SinglePassDownsampler::Create(*device))},
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)},
           forward_pass_handle{nullptr, 0},
           denoiser_pass_handle{nullptr, 0},
@@ -294,19 +295,22 @@ namespace sanity::engine::renderer {
             logger->error("Could not upload texture data");
 
             return pink_texture_handle;
-        } else {
-            if(create_info.usage == ImageUsage::UnorderedAccess) {
-                // Transition the image back to UNORDERED_ACCESS
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
-                                                                                     D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                     D3D12_RESOURCE_STATE_COMMON)};
+        }
 
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-            }
+    	spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
+
+        if(create_info.usage == ImageUsage::UnorderedAccess) {
+            // Transition the image back to UNORDERED_ACCESS
+            const auto barriers = Rx::Array{
+                CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON)};
+
+            commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
         return handle;
     }
+
+    void Renderer::generate_mips_for_texture(const Image& image, ID3D12GraphicsCommandList4* commands) {}
 
     Rx::Optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
         if(const auto* idx = image_name_to_index.find(name)) { // NOLINT(bugprone-branch-clone)
@@ -381,9 +385,9 @@ namespace sanity::engine::renderer {
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
     RaytracingASHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
-                                                                   const Buffer& index_buffer,
-                                                                   const Rx::Vector<Mesh>& meshes,
-                                                                   ID3D12GraphicsCommandList4* commands) {
+                                                            const Buffer& index_buffer,
+                                                            const Rx::Vector<PlacedMesh>& meshes,
+                                                            ID3D12GraphicsCommandList4* commands) {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
@@ -685,8 +689,22 @@ namespace sanity::engine::renderer {
                 auto& desc = instance_buffer_array[i];
                 desc = {};
 
-                // TODO: Actually copy the matrix once we get real model matrices
-                desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+                const auto model_matrix = object.transform;
+
+                desc.Transform[0][0] = model_matrix[0][0];
+                desc.Transform[0][1] = model_matrix[0][1];
+                desc.Transform[0][2] = model_matrix[0][2];
+                desc.Transform[0][3] = model_matrix[0][3];
+
+                desc.Transform[1][0] = model_matrix[1][0];
+                desc.Transform[1][1] = model_matrix[1][1];
+                desc.Transform[1][2] = model_matrix[1][2];
+                desc.Transform[1][3] = model_matrix[1][3];
+
+                desc.Transform[2][0] = model_matrix[2][0];
+                desc.Transform[2][1] = model_matrix[2][1];
+                desc.Transform[2][2] = model_matrix[2][2];
+                desc.Transform[2][3] = model_matrix[2][3];
 
                 // TODO: Figure out if we want to use the mask to control which kind of rays can hit which objects
                 desc.InstanceMask = 0xFF;
@@ -775,13 +793,11 @@ namespace sanity::engine::renderer {
 
     Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *model_matrix_buffers[frame_idx]; }
 
-    Uint32 Renderer::add_model_matrix_to_frame(const TransformComponent& transform_component, const Uint32 frame_idx) {
+    Uint32 Renderer::add_model_matrix_to_frame(const glm::mat4& model_matrix, const Uint32 frame_idx) {
         const auto index = next_unused_model_matrix_per_frame[frame_idx]->fetch_add(1);
 
-        const auto matrix = transform_component.transform.to_matrix();
-
         auto* dst = static_cast<glm::mat4*>(model_matrix_buffers[frame_idx]->mapped_ptr);
-        memcpy(dst + index, &matrix, sizeof(glm::mat4));
+        memcpy(dst + index, &model_matrix, sizeof(glm::mat4));
 
         return index;
     }

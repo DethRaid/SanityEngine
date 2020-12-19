@@ -43,11 +43,6 @@ namespace sanity::engine::renderer {
         Uint32 idx;
     };
 
-    struct __declspec(uuid("8FE90F37-09FE-4D01-8E3F-65A8ABC4349F")) DescriptorTableHandle {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle;
-        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle;
-    };
-
     /*
      * \brief A device which can be used to render
      *
@@ -93,13 +88,14 @@ namespace sanity::engine::renderer {
 
         ~RenderBackend();
 
-        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info,
+                                                    D3D12_RESOURCE_FLAGS additional_flags = D3D12_RESOURCE_FLAG_NONE) const;
 
         [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
 
-        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE create_rtv_handle(const Image& image) const;
+        [[nodiscard]] DescriptorRange create_rtv_handle(const Image& image) const;
 
-        [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE create_dsv_handle(const Image& image) const;
+        [[nodiscard]] DescriptorRange create_dsv_handle(const Image& image) const;
 
         [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_backbuffer_rtv_handle();
 
@@ -171,15 +167,9 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] ID3D12Device* get_d3d12_device() const;
 
-        [[nodiscard]] UINT get_shader_resource_descriptor_size() const;
-
         [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
 
-        /*!
-         * \brief Allocated a descriptor table with the specified number of descriptors, returning both a CPU and GPU handle to the start of
-         * the table. All descriptors in the table are tightly packed
-         */
-        [[nodiscard]] DescriptorTableHandle allocate_descriptor_table(Uint32 num_descriptors);
+        [[nodiscard]] DescriptorAllocator& get_cbv_srv_uav_allocator() const;
 
         [[nodiscard]] ID3D12DescriptorHeap* get_cbv_srv_uav_heap() const;
 
@@ -202,6 +192,7 @@ namespace sanity::engine::renderer {
         ComPtr<IDXGIAdapter> adapter;
 
         ComPtr<ID3D12InfoQueue> info_queue;
+        DWORD debug_message_callback_cookie;
 
         ComPtr<ID3D12CommandQueue> direct_command_queue;
 
@@ -219,7 +210,7 @@ namespace sanity::engine::renderer {
 
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
-        Rx::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> swapchain_rtv_handles;
+        Rx::Vector<DescriptorRange> swapchain_rtv_handles;
 
         HANDLE frame_event;
         ComPtr<ID3D12Fence> frame_fences;
@@ -228,12 +219,8 @@ namespace sanity::engine::renderer {
         Rx::Vector<Rx::Vector<Rx::Ptr<Buffer>>> buffer_deletion_list;
         Rx::Vector<Rx::Vector<Rx::Ptr<Image>>> image_deletion_list;
 
-        ComPtr<ID3D12DescriptorHeap> cbv_srv_uav_heap;
-        UINT cbv_srv_uav_size{};
-        UINT next_free_cbv_srv_uav_descriptor{0};
-
+        Rx::Ptr<DescriptorAllocator> cbv_srv_uav_allocator;
         Rx::Ptr<DescriptorAllocator> rtv_allocator;
-
         Rx::Ptr<DescriptorAllocator> dsv_allocator;
 
         D3D12MA::Allocator* device_allocator;

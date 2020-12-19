@@ -30,15 +30,22 @@ namespace sanity::engine::renderer {
     }
 
     [[nodiscard]] RX_HINT_FORCE_INLINE Rx::String get_object_name(ID3D12Object* object) {
-        UINT data_size{sizeof(wchar_t*)};
-        wchar_t* name{nullptr};
-        const auto result = object->GetPrivateData(WKPDID_D3DDebugObjectName, &data_size, &name);
+        UINT data_size{0};
+        auto result = object->GetPrivateData(WKPDID_D3DDebugObjectNameW, &data_size, nullptr);
+        if(FAILED(result)) {
+            private_data_logger->error("Could not retrieve size of object name");
+            return "Unnamed object";
+        }
+    	
+        Rx::WideString name{};
+        name.resize(data_size);
+        result = object->GetPrivateData(WKPDID_D3DDebugObjectNameW, &data_size, name.data());
         if(FAILED(result)) {
             private_data_logger->error("Could not retrieve object name");
             return "Unnamed object";
         }
 
-        return Rx::WideString{reinterpret_cast<const Uint16*>(name)}.to_utf8();
+        return name.to_utf8();
     }
 
     template <typename ObjectType>

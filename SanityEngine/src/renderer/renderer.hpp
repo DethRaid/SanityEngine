@@ -20,6 +20,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
+#include "single_pass_downsampler.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -96,6 +97,8 @@ namespace sanity::engine::renderer {
                                                  const void* image_data,
                                                  ID3D12GraphicsCommandList4* commands);
 
+        void generate_mips_for_texture(const Image& image, ID3D12GraphicsCommandList4* commands);
+
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
         [[nodiscard]] Image get_image(const Rx::String& image_name) const;
@@ -132,15 +135,15 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
         [[nodiscard]] RaytracingASHandle create_raytracing_geometry(const Buffer& vertex_buffer,
-                                                                           const Buffer& index_buffer,
-                                                                           const Rx::Vector<Mesh>& meshes,
-                                                                           ID3D12GraphicsCommandList4* commands);
+                                                                    const Buffer& index_buffer,
+                                                                    const Rx::Vector<PlacedMesh>& meshes,
+                                                                    ID3D12GraphicsCommandList4* commands);
 
         [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
 
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
-        Uint32 add_model_matrix_to_frame(const TransformComponent& transform_component, Uint32 frame_idx);
+        Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -162,6 +165,7 @@ namespace sanity::engine::renderer {
 
         Rx::Map<Rx::String, Uint32> image_name_to_index;
         Rx::Vector<Rx::Ptr<Image>> all_images;
+        Rx::Ptr<SinglePassDownsampler> spd;
 
         Rx::Array<Light[MAX_NUM_LIGHTS]> lights;
         Rx::Vector<Rx::Ptr<Buffer>> light_device_buffers;
@@ -180,6 +184,8 @@ namespace sanity::engine::renderer {
         RenderpassHandle denoiser_pass_handle;
         RenderpassHandle scene_output_pass_handle;
         RenderpassHandle imgui_pass_handle;
+
+        ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
 
 #pragma region Initialization
         void create_static_mesh_storage();

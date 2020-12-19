@@ -7,3 +7,6 @@
 [submodule "SanityEngine/extern/imgui-node-editor"]
 	path = SanityEngine/extern/imgui-node-editor
 	url = https://github.com/thedmd/imgui-node-editor.git
+[submodule "SanityEngine/extern/FidelityFX-SPD"]
+	path = SanityEngine/extern/FidelityFX-SPD
+	url = https://github.com/GPUOpen-Effects/FidelityFX-SPD.git

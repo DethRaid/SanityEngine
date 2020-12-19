@@ -17,7 +17,7 @@ namespace sanity::engine::renderer {
     constexpr uint64_t CPU_FENCE_SIGNALED = 32;
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
     constexpr Uint32 FRAME_COMPLETE = 128;
-	
+
     DXGI_FORMAT to_dxgi_format(ImageFormat format);
 
     D3D12_BLEND to_d3d12_blend(BlendFactor factor);
@@ -38,7 +38,7 @@ namespace sanity::engine::renderer {
 
     D3D12_RENDER_PASS_ENDING_ACCESS to_d3d12_ending_access(const RenderTargetEndingAccess& access);
 
-	Rx::String resource_state_to_string(D3D12_RESOURCE_STATES state);
+    Rx::String resource_state_to_string(D3D12_RESOURCE_STATES state);
 
     Rx::String breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
 
@@ -49,10 +49,10 @@ namespace sanity::engine::renderer {
     Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
 
     RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                RenderBackend& device,
-                                                                const Buffer& vertex_buffer,
-                                                                const Buffer& index_buffer,
-                                                                const Rx::Vector<Mesh>& meshes);
+                                                                            RenderBackend& device,
+                                                                            const Buffer& vertex_buffer,
+                                                                            const Buffer& index_buffer,
+                                                                            const Rx::Vector<PlacedMesh>& meshes);
 
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,
                                          RenderBackend& device,
@@ -60,4 +60,4 @@ namespace sanity::engine::renderer {
                                          const void* src,
                                          Uint32 size,
                                          Uint32 dst_offset = 0);
-} // namespace renderer
+} // namespace sanity::engine::renderer

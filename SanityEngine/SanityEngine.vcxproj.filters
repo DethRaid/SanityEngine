@@ -106,6 +106,12 @@
     <Filter Include="src\core\json">
       <UniqueIdentifier>{19303a90-8c93-4bbf-a8a5-eb0e827ba84b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\utility">
+      <UniqueIdentifier>{0219c309-b7f3-43e4-b815-6541f8e3f722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\examples">
+      <UniqueIdentifier>{69092be9-bb52-4ae5-b2da-928b5df5b296}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -411,6 +417,9 @@
     <ClInclude Include="src\core\transform.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\single_pass_downsampler.hpp">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -611,6 +620,9 @@
     <ClCompile Include="src\core\transform.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\single_pass_downsampler.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -620,6 +632,9 @@
   <ItemGroup>
     <Natvis Include="extern\imgui-node-editor\misc\imgui_node_editor.natvis">
       <Filter>extern\imgui-node-editor</Filter>
+    </Natvis>
+    <Natvis Include="tools\glm.natvis">
+      <Filter>tools</Filter>
     </Natvis>
   </ItemGroup>
   <ItemGroup>
@@ -684,6 +699,18 @@
       <Filter>shaders\inc</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\normalmapping.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\utility\single_pass_downsampler.hlsl">
+      <Filter>shaders\utility</Filter>
+    </FxCompile>
+    <FxCompile Include="extern\FidelityFX-SPD\sample\src\DX12\SPDIntegration.hlsl">
+      <Filter>shaders\examples</Filter>
+    </FxCompile>
+    <FxCompile Include="extern\FidelityFX-SPD\sample\src\DX12\SPDIntegrationLinearSampler.hlsl">
+      <Filter>shaders\examples</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\filters.hlsli">
       <Filter>shaders\inc</Filter>
     </FxCompile>
   </ItemGroup>

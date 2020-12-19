@@ -4,13 +4,13 @@
 #include "Tracy.hpp"
 #include "client/tracy_concurrentqueue.h"
 #include "rx/core/profiler.h"
+
+using namespace tracy;
 #endif
 
 #include "rx/core/abort.h"
 #include "rx/core/global.h"
 #include "rx/core/log.h"
-
-using namespace tracy;
 
 namespace rex {    
 #if TRACY_ENABLE

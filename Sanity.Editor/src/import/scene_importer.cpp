@@ -105,20 +105,25 @@ namespace sanity::editor::import {
         }
     } // namespace detail
 
-    SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
+    SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {
+        gltf_logger->set_level(Rx::Log::Level::k_warning);
+    }
 
     Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const Rx::String& scene_path,
                                                                 const SceneImportSettings& import_settings,
                                                                 entt::registry& registry) {
+        ZoneScoped;
 
         tinygltf::Model scene;
         std::string err;
         std::string warn;
         bool success;
         if(scene_path.ends_with(".glb")) {
+            ZoneScopedN("Load .glb");
             success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.data());
 
         } else if(scene_path.ends_with(".gltf")) {
+            ZoneScopedN("Load .gltf");
             success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.data());
 
         } else {
@@ -144,23 +149,23 @@ namespace sanity::editor::import {
         auto cmds = backend.create_command_list();
 
         if(import_settings.import_meshes) {
-            meshes = import_all_meshes(scene, import_settings.scaling_factor, cmds.Get());
+            meshes = import_all_meshes(scene, cmds.Get());
         }
 
         if(import_settings.import_materials) {
             materials = import_all_materials(scene, cmds.Get());
         }
 
-        backend.submit_command_list(Rx::Utility::move(cmds));
-
         // Then, walk the node hierarchy, creating an hierarchy of entt::entities
+        Rx::Optional<entt::entity> scene_entity{Rx::nullopt};
         if(import_settings.import_object_hierarchy) {
-            const auto scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry);
+            scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry, cmds.Get());
         }
 
-        // Finally, return the root entity
+        backend.submit_command_list(Rx::Utility::move(cmds));
 
-        return {};
+        // Finally, return the root entity
+        return scene_entity;
     }
 
     Rx::Vector<engine::renderer::StandardMaterialHandle> SceneImporter::import_all_materials(const tinygltf::Model& scene,
@@ -170,6 +175,8 @@ namespace sanity::editor::import {
         Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
 
         for(const auto& material : scene.materials) {
+            ZoneScopedN(material.name.c_str());
+        	
             gltf_logger->info("Importing material %s", material.name.c_str());
 
             engine::renderer::StandardMaterial sanity_material{};
@@ -322,8 +329,9 @@ namespace sanity::editor::import {
     }
 
     Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene,
-                                                                         const float import_scale,
                                                                          ID3D12GraphicsCommandList4* cmds) const {
+        ZoneScoped;
+    	
         auto& mesh_store = renderer->get_static_mesh_store();
         const auto uploader = mesh_store.begin_adding_meshes(cmds);
 
@@ -331,6 +339,8 @@ namespace sanity::editor::import {
         imported_meshes.reserve(scene.meshes.size());
 
         for(const auto& mesh : scene.meshes) {
+            ZoneScopedN(mesh.name.c_str());
+        	
             gltf_logger->info("Importing mesh %s", mesh.name.c_str());
 
             GltfMesh imported_mesh{};
@@ -341,7 +351,7 @@ namespace sanity::editor::import {
 
                 const auto& primitive = mesh.primitives[primitive_idx];
 
-                const auto& primitive_mesh = get_data_from_primitive(primitive, scene, import_scale, uploader);
+                const auto& primitive_mesh = get_data_from_primitive(primitive, scene, uploader);
                 if(!primitive_mesh) {
                     gltf_logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name.c_str());
                     continue;
@@ -358,10 +368,11 @@ namespace sanity::editor::import {
 
     Rx::Optional<SceneImporter::GltfPrimitive> SceneImporter::get_data_from_primitive(const tinygltf::Primitive& primitive,
                                                                                       const tinygltf::Model& scene,
-                                                                                      const float import_scale,
                                                                                       const engine::renderer::MeshUploader& uploader) {
+        ZoneScoped;
+    	
         const auto indices = get_indices_from_primitive(primitive, scene);
-        const auto vertices = get_vertices_from_primitive(primitive, import_scale, scene);
+        const auto vertices = get_vertices_from_primitive(primitive, scene);
 
         if(indices.is_empty() || vertices.is_empty()) {
             gltf_logger->error("Could not read primitive data");
@@ -408,7 +419,6 @@ namespace sanity::editor::import {
     }
 
     Rx::Vector<StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
-                                                                          const float import_scale,
                                                                           const tinygltf::Model& scene) {
         const auto& positions_itr = primitive.attributes.find(POSITION_ATTRIBUTE_NAME);
         if(positions_itr == primitive.attributes.end()) {
@@ -461,7 +471,7 @@ namespace sanity::editor::import {
         for(Uint32 i = 0; i < positions_accessor.count; i++) {
             // Hope that all the buffers have the same size... They should...
 
-            const auto location = (*position_read_ptr) * import_scale;
+            const auto location = *position_read_ptr;
             const auto normal = *normal_read_ptr;
             auto texcoord = *texcoord_read_ptr;
             texcoord.y = 1.0 - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
@@ -476,7 +486,12 @@ namespace sanity::editor::import {
         return vertices;
     }
 
-    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& scene, const float import_scale, entt::registry& registry) {
+    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& scene,
+                                                        const float import_scale,
+                                                        entt::registry& registry,
+                                                        ID3D12GraphicsCommandList4* cmds) {
+        ZoneScoped;
+    	
         // Assume that the files we'll be importing have a single scene
         const auto& default_scene = scene.scenes[scene.defaultScene];
 
@@ -484,17 +499,15 @@ namespace sanity::editor::import {
         const auto& scene_entity = entity::create_base_editor_entity("Imported scene", registry);
         entity::add_component<engine::TransformComponent>(scene_entity, registry);
 
-        entity::add_component<engine::HierarchyComponent>(scene_entity, registry);
-
         // Add entities for all the nodes in the scene, and all their children
         for(const auto node_idx : default_scene.nodes) {
             const auto& node = scene.nodes[node_idx];
 
-            const auto node_entity = create_entity_for_node(node, scene_entity, import_scale, registry);
+            const auto node_entity = create_entity_for_node(node, scene_entity, import_scale, registry, cmds);
 
             // Get the component every loop so that we don't hold on to a bad reference
-            auto& scene_hierarchy = registry.get<engine::HierarchyComponent>(scene_entity);
-            scene_hierarchy.children.push_back(node_entity);
+            auto& scene_transform_component = registry.get<engine::TransformComponent>(scene_entity);
+            scene_transform_component.children.push_back(node_entity);
         }
 
         return scene_entity;
@@ -503,14 +516,14 @@ namespace sanity::editor::import {
     entt::entity SceneImporter::create_entity_for_node(const tinygltf::Node& node,
                                                        const entt::entity& parent_entity,
                                                        const float import_scale,
-                                                       entt::registry& registry) {
+                                                       entt::registry& registry,
+                                                       ID3D12GraphicsCommandList4* cmds) {
+        ZoneScopedN(node.name.c_str());
 
         const auto node_entity = entity::create_base_editor_entity(node.name.c_str(), registry);
 
-        auto& node_hierarchy = entity::add_component<engine::HierarchyComponent>(node_entity, registry);
-        node_hierarchy.parent = parent_entity;
-
         auto& node_transform_component = entity::add_component<engine::TransformComponent>(node_entity, registry);
+        node_transform_component.parent = parent_entity;
         auto& node_transform = node_transform_component.transform;
         if(node.translation.size() == 3) {
             node_transform.location.x = static_cast<Float32>(node.translation[0]);
@@ -527,38 +540,68 @@ namespace sanity::editor::import {
             node_transform.rotation.w = static_cast<Float32>(node.rotation[3]);
         }
 
+        node_transform.scale = glm::vec3{import_scale};
+
         if(node.scale.size() == 3) {
-            node_transform.scale.x = static_cast<Float32>(node.scale[0]);
-            node_transform.scale.y = static_cast<Float32>(node.scale[1]);
-            node_transform.scale.z = static_cast<Float32>(node.scale[2]);
+            node_transform.scale.x *= static_cast<Float32>(node.scale[0]);
+            node_transform.scale.y *= static_cast<Float32>(node.scale[1]);
+            node_transform.scale.z *= static_cast<Float32>(node.scale[2]);
         }
 
         if(node.mesh > -1 && node.mesh < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
-            Rx::Vector<engine::renderer::Mesh> meshes_for_raytracing;
-            meshes_for_raytracing.reserve(mesh.primitives.size());
+
+            // Intentionally a copy
+            const auto cached_transform = node_transform;
+
+            auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
+            mesh_adder.prepare_for_raytracing_geometry_build();
+
+            const auto vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
+            const auto index_buffer = renderer->get_static_mesh_store().get_index_buffer();
+
+            Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
+                // Create entity and components
                 const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
                 const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
 
-                entity::add_component<engine::TransformComponent>(primitive_entity, registry);
+                auto& primitive_transform_component = entity::add_component<engine::TransformComponent>(primitive_entity, registry);
+                primitive_transform_component.parent = node_entity;
 
-                auto& primitive_hierarchy_component = entity::add_component<engine::HierarchyComponent>(primitive_entity, registry);
-                primitive_hierarchy_component.parent = node_entity;
-
-                auto& parent_hierarchy_component = registry.get<engine::HierarchyComponent>(node_entity);
-                parent_hierarchy_component.children.push_back(primitive_entity);
+                auto& parent_transform_component = registry.get<engine::TransformComponent>(node_entity);
+                parent_transform_component.children.push_back(primitive_entity);
 
                 auto& renderable = entity::add_component<engine::renderer::StandardRenderableComponent>(primitive_entity, registry);
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
 
-            	meshes_for_raytracing.push_back(primitive.mesh);
+                // Build raytracing acceleration structure. We make a separate BLAS for each primitive because they
+                // might have separate materials. However, this will create too many BLASs if primitives share
+                // materials. This will be addressed in a future revision
+                Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
+
+                meshes_for_raytracing.emplace_back(primitive.mesh, engine::Transform{});
+
+                const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
+
+                auto& raytracing_object_component = entity::add_component<engine::renderer::RaytracingObjectComponent>(primitive_entity,
+                                                                                                                       registry);
+                raytracing_object_component.as_handle = as_handle;
+
+                const auto ray_material = engine::renderer::RaytracingMaterial{.handle = renderable.material.index};
+
+                const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle, .material = ray_material};
+                //,
+                //.transform = cached_transform.to_matrix()};
+                raytracing_objects.push_back(ray_object);
 
                 i++;
             });
+
+            renderer->add_raytracing_objects_to_scene(raytracing_objects);
 
         } else {
             logger->error("Node %s references invalid mesh %d", node.name.c_str(), node.mesh);

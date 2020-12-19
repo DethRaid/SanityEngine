@@ -32,11 +32,11 @@ namespace sanity::editor::serialization {
 
         auto entity_json = entity_to_json(entity, registry);
 
-        if(const auto* hierarchy = registry.try_get<engine::HierarchyComponent>(entity); hierarchy != nullptr) {
+        if(const auto* transform_component = registry.try_get<engine::TransformComponent>(entity); transform_component != nullptr) {
             Rx::Vector<Uint64> child_ids;
-            child_ids.reserve(hierarchy->children.size());
+            child_ids.reserve(transform_component->children.size());
 
-            hierarchy->children.each_fwd([&](const entt::entity& child_entity) {
+            transform_component->children.each_fwd([&](const entt::entity& child_entity) {
                 const auto child_jsons = entity_and_children_to_json(child_entity, registry);
                 jsons.append(child_jsons);
 
@@ -48,7 +48,7 @@ namespace sanity::editor::serialization {
                 // children :(
             });
 
-        	entity_json.at("components").push_back({{"children", child_ids}});
+            entity_json.at("components").push_back({{"children", child_ids}});
         }
 
         jsons.push_back(entity_json);

@@ -271,58 +271,58 @@ namespace sanity::engine::renderer {
         switch(state) {
             case D3D12_RESOURCE_STATE_COMMON:
                 return "COMMON";
-        	
+
             case D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER:
                 return "VERTEX_AND_CONSTANT_BUFFER";
-        	
+
             case D3D12_RESOURCE_STATE_INDEX_BUFFER:
                 return "INDEX_BUFFER";
-        	
+
             case D3D12_RESOURCE_STATE_RENDER_TARGET:
                 return "RENDER_TARGET";
-        	
+
             case D3D12_RESOURCE_STATE_UNORDERED_ACCESS:
                 return "UNORDERED_ACCESS";
-        	
+
             case D3D12_RESOURCE_STATE_DEPTH_WRITE:
                 return "DEPTH_WRITE";
-        	
+
             case D3D12_RESOURCE_STATE_DEPTH_READ:
                 return "DEPTH_READ";
-        	
+
             case D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE:
                 return "NON_PIXEL_SHADER_RESOURCE";
-        	
+
             case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE:
                 return "PIXEL_SHADER_RESOURCE";
-        	
+
             case D3D12_RESOURCE_STATE_STREAM_OUT:
                 return "STREAM_OUT";
-        	
+
             case D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT:
                 return "INDIRECT_ARGUMENT";
-        	
+
             case D3D12_RESOURCE_STATE_COPY_DEST:
                 return "COPY_DEST";
-        	
+
             case D3D12_RESOURCE_STATE_COPY_SOURCE:
                 return "COPY_SOURCE";
-        	
+
             case D3D12_RESOURCE_STATE_RESOLVE_DEST:
                 return "RESOLVE_DEST";
-        	
+
             case D3D12_RESOURCE_STATE_RESOLVE_SOURCE:
                 return "RESOLVE_SOURCE";
-        	
+
             case D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE:
                 return "RAYTRACING_ACCELERATION_STRUCTURE";
-        	
+
             case D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE:
                 return "SHADING_RATE_SOURCE";
-        	
+
             case D3D12_RESOURCE_STATE_GENERIC_READ:
                 return "GENERIC_READ";
-        	
+
             default:
                 return "<UNKNOWN>";
         }
@@ -445,23 +445,23 @@ namespace sanity::engine::renderer {
     }
 
     RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                RenderBackend& device,
-                                                                const Buffer& vertex_buffer,
-                                                                const Buffer& index_buffer,
+                                                                            RenderBackend& device,
+                                                                            const Buffer& vertex_buffer,
+                                                                            const Buffer& index_buffer,
                                                                             const Rx::Vector<PlacedMesh>& meshes) {
 
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
         meshes.each_fwd([&](const PlacedMesh& mesh) {
-            auto transform_buffer = device.get_staging_buffer(sizeof(Transform));
-        	const auto matrix = mesh.transform.to_matrix();
+            const auto transform_buffer = device.get_staging_buffer(sizeof(Transform));
+            const auto matrix = mesh.transform.to_matrix();
             memcpy(transform_buffer.mapped_ptr, &matrix[0][0], sizeof(Transform));
-        	
+
             const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh.mesh;
 
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
-                                                            .Triangles = {.Transform3x4 = transform_buffer.resource->GetGPUVirtualAddress(),
+                                                            .Triangles = {.Transform3x4 = 0,
                                                                           .IndexFormat = DXGI_FORMAT_R32_UINT,
                                                                           .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
                                                                           .IndexCount = num_indices,
@@ -469,7 +469,9 @@ namespace sanity::engine::renderer {
                                                                           .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
                                                                                          (first_index * sizeof(Uint32)),
                                                                           .VertexBuffer = {.StartAddress = vertex_buffer.resource
-                                                                                                               ->GetGPUVirtualAddress(),
+                                                                                                               ->GetGPUVirtualAddress() +
+                                                                                                           (first_vertex *
+                                                                                                            sizeof(StandardVertex)),
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(Rx::Utility::move(geom_desc));
@@ -751,4 +753,4 @@ namespace sanity::engine::renderer {
                 return "Unknown object type";
         }
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer

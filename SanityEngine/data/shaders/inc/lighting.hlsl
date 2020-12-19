@@ -172,9 +172,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                 in float2 noise_texcoord,
                                 in Light sun,
                                 in Texture2D noise) {
-    uint num_indirect_rays = 1;
+    uint num_indirect_rays = 5;
 
-    uint num_bounces = 8;
+    uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -276,5 +276,5 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
                                                      sun,
                                                      noise);
 
-    return float4(sun_shadow.xxx, 1);   //indirect_light + direct_light;
+    return direct_light; // indirect_light + direct_light;
 }

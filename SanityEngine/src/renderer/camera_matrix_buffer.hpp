@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include "core/Prelude.hpp"
 #include "core/components.hpp"
 #include "core/constants.hpp"
@@ -11,6 +9,8 @@
 #include "rx/core/vector.h"
 
 namespace sanity::engine::renderer {
+    class RenderBackend;
+	
     struct CameraMatrices {
         glm::mat4 view_matrix{};
         glm::mat4 projection_matrix{};

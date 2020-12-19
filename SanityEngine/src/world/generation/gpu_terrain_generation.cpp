@@ -44,8 +44,9 @@ namespace sanity::engine::terraingen {
             {.NumParameters = static_cast<UINT>(root_parameters.size()), .pParameters = root_parameters.data()});
         place_oceans_pso = device.create_compute_pipeline_state(place_oceans_shader_source, root_signature);
 
-        const auto table = device.allocate_descriptor_table(static_cast<UINT>(descriptor_ranges.size()));
-        place_oceans_pso->SetPrivateData(PRIVATE_DATA_ATTRIBS(renderer::DescriptorTableHandle), &table);
+        auto& descriptor_allocator = device.get_cbv_srv_uav_allocator();
+        const auto table = descriptor_allocator.allocate_descriptors(static_cast<UINT>(descriptor_ranges.size()));
+        place_oceans_pso->SetPrivateData(PRIVATE_DATA_ATTRIBS(renderer::DescriptorRange), &table);
     }
 
     static void create_water_flow_pipeline(renderer::RenderBackend& device) {
@@ -67,8 +68,9 @@ namespace sanity::engine::terraingen {
 
         water_flow_pso = device.create_compute_pipeline_state(water_flow_shader_source, root_signature);
 
-        const auto table = device.allocate_descriptor_table(static_cast<UINT>(descriptor_ranges.size()));
-        water_flow_pso->SetPrivateData(PRIVATE_DATA_ATTRIBS(renderer::DescriptorTableHandle), &table);
+        auto& descriptor_allocator = device.get_cbv_srv_uav_allocator();
+        const auto table = descriptor_allocator.allocate_descriptors(static_cast<UINT>(descriptor_ranges.size()));
+        water_flow_pso->SetPrivateData(PRIVATE_DATA_ATTRIBS(renderer::DescriptorRange), &table);
     }
 
     void initialize(renderer::RenderBackend& device) {
@@ -100,9 +102,9 @@ namespace sanity::engine::terraingen {
 
         auto& device = renderer.get_render_backend();
         auto d3d12_device = device.device;
-        const auto descriptor_size = device.get_shader_resource_descriptor_size();
+        const auto descriptor_size = device.get_cbv_srv_uav_allocator().get_descriptor_size();
 
-        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorTableHandle>(place_oceans_pso.Get());
+        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorRange>(place_oceans_pso.Get());
 
         const auto heightmap_desc = land_heightmap.resource->GetDesc();
         const auto heightmap_uav_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = heightmap_desc.Format,
@@ -154,9 +156,9 @@ namespace sanity::engine::terraingen {
         const auto water_heightmap = renderer.get_image(data.water_depth_handle);
         auto& device = renderer.get_render_backend();
         auto d3d12_device = device.device;
-        const auto descriptor_size = device.get_shader_resource_descriptor_size();
+        const auto descriptor_size = device.get_cbv_srv_uav_allocator().get_descriptor_size();
 
-        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorTableHandle>(place_oceans_pso.Get());
+        auto descriptor_table = renderer::retrieve_object<renderer::DescriptorRange>(place_oceans_pso.Get());
 
         const auto heightmap_desc = land_heightmap.resource->GetDesc();
         const auto heightmap_uav_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = heightmap_desc.Format,
@@ -197,4 +199,4 @@ namespace sanity::engine::terraingen {
 
         logger->info("Recorded water flow compute shader dispatches");
     }
-} // namespace terraingen
+} // namespace sanity::engine::terraingen

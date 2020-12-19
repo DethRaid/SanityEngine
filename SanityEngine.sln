@@ -12,6 +12,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sanity.Game", "Sanity.Game\
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Heap Corruption|Any CPU = Debug Heap Corruption|Any CPU
+		Debug Heap Corruption|ARM = Debug Heap Corruption|ARM
+		Debug Heap Corruption|ARM64 = Debug Heap Corruption|ARM64
+		Debug Heap Corruption|x64 = Debug Heap Corruption|x64
+		Debug Heap Corruption|x86 = Debug Heap Corruption|x86
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM
 		Debug|ARM64 = Debug|ARM64
@@ -34,6 +39,12 @@ Global
 		RelWithDebInfo|x86 = RelWithDebInfo|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug Heap Corruption|Any CPU.ActiveCfg = Debug Heap Corruption|x64
+		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug Heap Corruption|ARM.ActiveCfg = Debug Heap Corruption|x64
+		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug Heap Corruption|ARM64.ActiveCfg = Debug Heap Corruption|x64
+		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug Heap Corruption|x64.ActiveCfg = Debug Heap Corruption|x64
+		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug Heap Corruption|x64.Build.0 = Debug Heap Corruption|x64
+		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug Heap Corruption|x86.ActiveCfg = Debug Heap Corruption|x64
 		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug|ARM.ActiveCfg = Debug|x64
 		{A6D26A06-5F0C-3136-9293-218915CC95C4}.Debug|ARM64.ActiveCfg = Debug|x64
@@ -58,6 +69,13 @@ Global
 		{A6D26A06-5F0C-3136-9293-218915CC95C4}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
 		{A6D26A06-5F0C-3136-9293-218915CC95C4}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
 		{A6D26A06-5F0C-3136-9293-218915CC95C4}.RelWithDebInfo|x86.ActiveCfg = RelWithDebInfo|x64
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|Any CPU.ActiveCfg = Debug Heap Corruption|Win32
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|ARM.ActiveCfg = Debug Heap Corruption|Win32
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|ARM64.ActiveCfg = Debug Heap Corruption|Win32
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|x64.ActiveCfg = Debug Heap Corruption|x64
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|x64.Build.0 = Debug Heap Corruption|x64
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|x86.ActiveCfg = Debug Heap Corruption|Win32
+		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug Heap Corruption|x86.Build.0 = Debug Heap Corruption|Win32
 		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug|ARM.ActiveCfg = Debug|Win32
 		{6AACAE55-E651-4560-B606-7C957C8E2786}.Debug|ARM64.ActiveCfg = Debug|Win32
@@ -92,6 +110,13 @@ Global
 		{6AACAE55-E651-4560-B606-7C957C8E2786}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{6AACAE55-E651-4560-B606-7C957C8E2786}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
 		{6AACAE55-E651-4560-B606-7C957C8E2786}.RelWithDebInfo|x86.Build.0 = Release|Win32
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|Any CPU.ActiveCfg = Debug Heap Corruption|Win32
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|ARM.ActiveCfg = Debug Heap Corruption|Win32
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|ARM64.ActiveCfg = Debug Heap Corruption|Win32
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|x64.ActiveCfg = Debug Heap Corruption|x64
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|x64.Build.0 = Debug Heap Corruption|x64
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|x86.ActiveCfg = Debug Heap Corruption|Win32
+		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug Heap Corruption|x86.Build.0 = Debug Heap Corruption|Win32
 		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug|ARM.ActiveCfg = Debug|Win32
 		{58F00A44-26A2-432B-8602-482DE22736EB}.Debug|ARM64.ActiveCfg = Debug|Win32
@@ -126,6 +151,13 @@ Global
 		{58F00A44-26A2-432B-8602-482DE22736EB}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{58F00A44-26A2-432B-8602-482DE22736EB}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
 		{58F00A44-26A2-432B-8602-482DE22736EB}.RelWithDebInfo|x86.Build.0 = Release|Win32
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|Any CPU.ActiveCfg = Debug Heap Corruption|Win32
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|ARM.ActiveCfg = Debug Heap Corruption|Win32
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|ARM64.ActiveCfg = Debug Heap Corruption|Win32
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|x64.ActiveCfg = Debug Heap Corruption|x64
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|x64.Build.0 = Debug Heap Corruption|x64
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|x86.ActiveCfg = Debug Heap Corruption|Win32
+		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug Heap Corruption|x86.Build.0 = Debug Heap Corruption|Win32
 		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug|ARM.ActiveCfg = Debug|Win32
 		{DDC23A4F-8BB8-4EE1-B8A2-28064445B7FF}.Debug|ARM64.ActiveCfg = Debug|Win32

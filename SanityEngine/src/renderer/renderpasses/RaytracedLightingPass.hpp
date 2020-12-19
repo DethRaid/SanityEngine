@@ -6,6 +6,7 @@
 #include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderpass.hpp"
+#include "renderer/rhi/descriptor_allocator.hpp"
 #include "renderer/rhi/framebuffer.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
@@ -47,6 +48,9 @@ namespace sanity::engine::renderer {
         D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_target_access;
 
         glm::uvec2 render_target_size;
+    	
+        DescriptorRange color_target_descriptor;
+        DescriptorRange depth_target_descriptor;
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 

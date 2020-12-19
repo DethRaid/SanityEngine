@@ -55,7 +55,7 @@ namespace sanity::engine::renderer {
 
         create_framebuffer(render_resolution);
 
-    	add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
         add_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
@@ -66,7 +66,10 @@ namespace sanity::engine::renderer {
         auto& device = renderer->get_render_backend();
     }
 
-    void RaytracedLightingPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx, const World& world) {
+    void RaytracedLightingPass::render(ID3D12GraphicsCommandList4* commands,
+                                       entt::registry& registry,
+                                       const Uint32 frame_idx,
+                                       const World& world) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "RaytracedLightingPass::execute");
@@ -118,12 +121,14 @@ namespace sanity::engine::renderer {
         const auto& color_target = renderer->get_image(color_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
-        color_target_access = {.cpuDescriptor = device.create_rtv_handle(color_target),
+        color_target_descriptor = device.create_rtv_handle(color_target);
+        color_target_access = {.cpuDescriptor = color_target_descriptor.cpu_handle,
                                .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                    .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT, .Color = {0, 0, 0, 0}}}},
                                .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-        depth_target_access = {.cpuDescriptor = device.create_dsv_handle(depth_target),
+        depth_target_descriptor = device.create_dsv_handle(depth_target);
+        depth_target_access = {.cpuDescriptor = depth_target_descriptor.cpu_handle,
                                .DepthBeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                         .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT,
                                                                                  .DepthStencil = {.Depth = 1.0}}}},
@@ -154,8 +159,10 @@ namespace sanity::engine::renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
-        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_object_in_scene");
+    void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
+                                                      entt::registry& registry,
+                                                      const Uint32 frame_idx) {
+        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_objects_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -182,7 +189,7 @@ namespace sanity::engine::renderer {
 
                 commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 
-                const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform, frame_idx);
+                const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform.get_world_matrix(registry), frame_idx);
 
                 commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
 
@@ -207,4 +214,4 @@ namespace sanity::engine::renderer {
         }
     }
 
-} // namespace renderer
+} // namespace sanity::engine::renderer
