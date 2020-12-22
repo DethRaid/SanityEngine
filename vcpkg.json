@@ -1,17 +1,16 @@
 {
-    "name": "sanityengine",
-    "version-string": "0.5.0",
-    "description": "A D3D12 game engine made for fun and education",
-    "supports": "windows",
-    "dependencies": [
-        "entt",
-        "glfw3",
-        "glm",
-        "magic-enum",
-        "nethost",
-        "nlohmann-json",
-        "sqlite-orm",
-        "tinygltf",
-        "stb"
-    ]
+  "name": "sanityengine",
+  "version-string": "0.5.0",
+  "description": "A D3D12 game engine made for fun and education",
+  "supports": "windows",
+  "dependencies": [
+    "entt",
+    "glfw3",
+    "glm",
+    "nlohmann-json",
+    "sqlite-orm",
+    "tinygltf",
+    "tinyxml2",
+    "stb"
+  ]
 }
