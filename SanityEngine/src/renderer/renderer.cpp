@@ -477,7 +477,7 @@ namespace sanity::engine::renderer {
     void Renderer::create_builtin_images() {
         ZoneScoped;
 
-        load_noise_texture("data/textures/LDR_RGBA_0.png");
+        load_noise_texture("data/textures/noise/LDR_RGBA_0.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");

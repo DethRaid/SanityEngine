@@ -14,9 +14,9 @@ namespace sanity::editor::ui {
     EditorUiController::EditorUiController() {
         auto registry = engine::g_engine->get_global_registry().lock();
 
-        create_worldgen_params_editor(registry);
+        create_worldgen_params_editor(*registry);
 
-        create_content_browser(*registry);
+    	create_content_browser(*registry);
     }
 
     void EditorUiController::show_worldgen_params_editor() const { worldgen_params_editor->is_visible = true; }
@@ -57,13 +57,12 @@ namespace sanity::editor::ui {
         window->is_visible = true;
     }
 
-    void EditorUiController::create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry) {
-        worldgen_params_editor = create_window_entity<WorldgenParamsEditor>(*registry);
+    void EditorUiController::create_worldgen_params_editor(entt::registry& registry) {
+        worldgen_params_editor = create_window_entity<WorldgenParamsEditor>(registry);
         worldgen_params_editor->is_visible = false;
     }
 
-    void EditorUiController::create_content_browser(entt::registry& registry, const std::filesystem::path& content_directory) {
-        content_browser = create_window_entity<ContentBrowser>(registry, content_directory);
-    	content_browser->is_visible = true;
+    void EditorUiController::create_content_browser(entt::registry& registry) {
+        content_browser = create_window_entity<ContentBrowser>(registry);
     }
 } // namespace sanity::editor::ui

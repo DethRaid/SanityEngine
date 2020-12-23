@@ -15,15 +15,12 @@ namespace sanity::editor::ui {
     constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
     constexpr Uint32 DIRECTORY_ITEM_HEIGHT = 30;
 
-    ContentBrowser::ContentBrowser(std::filesystem::path content_directory_in)
-        : Window{"Content Browser"},
-          content_directory{Rx::Utility::move(content_directory_in)},
-          selected_directory{content_directory},
-          file_extensions_to_ignore{Rx::Array{".meta", ".blend1", ".blend2", ".blend2"}} {}
+    ContentBrowser::ContentBrowser() : Window{"Content Browser"} {}
 
     void ContentBrowser::set_content_directory(const std::filesystem::path& content_directory_in) {
         content_directory = content_directory_in;
-        selected_directory = content_directory;
+        selected_directory = *content_directory;
+        is_visible = true;
     }
 
     void ContentBrowser::add_ignored_file_extension(const std::filesystem::path& extension) { file_extensions_to_ignore.insert(extension); }
@@ -33,36 +30,42 @@ namespace sanity::editor::ui {
     }
 
     void ContentBrowser::draw_contents() {
+        if(!content_directory.has_value()) {
+            return;
+        }
+
         Rx::Vector<std::filesystem::path> directories;
         Rx::Vector<std::filesystem::path> files;
 
-        for(const auto& item : std::filesystem::directory_iterator{selected_directory}) {
+        const auto directory_to_draw = engine::SanityEngine::executable_directory / *content_directory / selected_directory;
+
+        for(const auto& item : std::filesystem::directory_iterator{directory_to_draw}) {
             if(item.is_directory()) {
-                directories.push_back(item);
+                directories.push_back(item.path().stem());
 
             } else if(item.is_regular_file()) {
-                files.push_back(item);
+                files.push_back(item.path().filename());
             }
         }
 
-        if(content_directory != selected_directory) {
-            draw_back_button();
-
-        } else {
-            ImGui::Text("Content root");
-        }
-
         const auto width = ImGui::GetWindowWidth();
-        const auto num_columns = static_cast<Uint32>(ceil(width / DIRECTORY_ITEM_WIDTH));
+        const auto num_columns = static_cast<Uint32>(floor(width / DIRECTORY_ITEM_WIDTH));
 
         const auto num_items = directories.size() + files.size();
-        const auto num_rows = static_cast<Uint32>(ceil(num_items / num_columns));
+        const auto num_rows = static_cast<Uint32>(floor(num_items / num_columns));
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
         ImGui::Columns(num_columns);
         ImGui::Separator();
 
-        auto cur_row = 0u;
+        if(*content_directory != selected_directory) {
+            draw_back_button();
+
+        } else {
+            ImGui::Text("Content root");
+        }
+    	
+        auto cur_row = 1u;  // Start at 1 because we count `..`
 
         directories.each_fwd([&](const std::filesystem::path& directory) {
             draw_directory(directory, [&](const std::filesystem::path& selected_item) { selected_directory /= selected_item; });

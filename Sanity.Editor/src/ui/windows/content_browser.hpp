@@ -16,7 +16,7 @@ namespace Rx {
 namespace sanity::editor::ui {
     class ContentBrowser : public engine::ui::Window {
     public:
-        explicit ContentBrowser(std::filesystem::path content_directory_in);
+        explicit ContentBrowser();
 
         void set_content_directory(const std::filesystem::path& content_directory_in);
 
@@ -28,12 +28,11 @@ namespace sanity::editor::ui {
         void draw_contents() override;
 
     private:
-        static void draw_directory(const std::filesystem::path& directory,
-                                   const Rx::Function<void(const std::filesystem::path&)>& on_open);
+        static void draw_directory(const std::filesystem::path& directory, const Rx::Function<void(const std::filesystem::path&)>& on_open);
 
         static void draw_file(const std::filesystem::path& file, const Rx::Function<void(const std::filesystem::path&)>& on_open);
 
-        std::filesystem::path content_directory;
+        Rx::Optional<std::filesystem::path> content_directory;
 
         std::filesystem::path selected_directory;
 
@@ -41,7 +40,7 @@ namespace sanity::editor::ui {
 
         Rx::Vector<engine::ImageLoadResultHandle> icon_handles;
 
-        Rx::Set<std::filesystem::path> file_extensions_to_ignore;
+        Rx::Set<std::filesystem::path> file_extensions_to_ignore{Rx::Array{".meta", ".blend1", ".blend2", ".blend2"}};
 
         void draw_back_button();
 

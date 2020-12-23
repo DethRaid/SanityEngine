@@ -41,9 +41,9 @@ namespace sanity::editor::ui {
 
         ContentBrowser* content_browser{nullptr};
 
-        void create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry);
+        void create_worldgen_params_editor(entt::registry& registry);
 
-        void create_content_browser(entt::registry& registry, const std::filesystem::path& content_directory = "");
+        void create_content_browser(entt::registry& registry);
 
         template <typename WindowType, typename... Args>
         WindowType* create_window_entity(entt::registry& registry, Args&&... args) const;
