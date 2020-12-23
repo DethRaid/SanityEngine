@@ -503,7 +503,7 @@ namespace sanity::engine::renderer {
             }
 
             {
-                const auto normal_roughness_texture_create_info = ImageCreateInfo{.name = "Default Normal/Roughness",
+                const auto normal_roughness_texture_create_info = ImageCreateInfo{.name = "Default Normal",
                                                                                   .usage = ImageUsage::SampledImage,
                                                                                   .format = ImageFormat::Rgba8,
                                                                                   .width = 8,
@@ -521,7 +521,7 @@ namespace sanity::engine::renderer {
             }
 
             {
-                const auto specular_emission_texture_create_info = ImageCreateInfo{.name = "Default Specular Color/Emission",
+                const auto specular_emission_texture_create_info = ImageCreateInfo{.name = "Default Metallic/Roughness",
                                                                                    .usage = ImageUsage::SampledImage,
                                                                                    .format = ImageFormat::Rgba8,
                                                                                    .width = 8,
@@ -530,7 +530,7 @@ namespace sanity::engine::renderer {
                 auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
                 specular_emission_texture_pixel.reserve(64);
                 for(Uint32 i = 0; i < 64; i++) {
-                    specular_emission_texture_pixel.push_back(0x00373737);
+                    specular_emission_texture_pixel.push_back(0x00A00000);
                 }
 
                 specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
