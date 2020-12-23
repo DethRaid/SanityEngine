@@ -37,7 +37,7 @@ namespace sanity::engine {
             prev_scroll_callback(window, x_offset, y_offset);
         }
 
-        ImGuiIO& io = ImGui::GetIO();
+        auto& io = ImGui::GetIO();
         io.MouseWheelH += static_cast<Float32>(x_offset);
         io.MouseWheel += static_cast<Float32>(y_offset);
     }
@@ -79,7 +79,7 @@ namespace sanity::engine {
             prev_char_callback(window, c);
         }
 
-        ImGuiIO& io = ImGui::GetIO();
+        auto& io = ImGui::GetIO();
         io.AddInputCharacter(c);
     }
 
@@ -144,7 +144,7 @@ namespace sanity::engine {
     void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
         ZoneScoped;
 
-        ImGuiIO& io = ImGui::GetIO();
+        auto& io = ImGui::GetIO();
         IM_ASSERT(
             io.Fonts->IsBuilt() &&
             "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
@@ -161,7 +161,7 @@ namespace sanity::engine {
         }
 
         // Setup time step
-        const double current_time = glfwGetTime();
+        const auto current_time = glfwGetTime();
         io.DeltaTime = last_start_time > 0.0 ? static_cast<Float32>(current_time - last_start_time) : static_cast<Float32>(1.0f / 60.0f);
         last_start_time = current_time;
 
@@ -177,12 +177,12 @@ namespace sanity::engine {
 
     void DearImguiAdapter::initialize_style() {
         // from https://github.com/ocornut/imgui/issues/707#issuecomment-468798935
-        ImGuiStyle& style = ImGui::GetStyle();
-        ImVec4* colors = style.Colors;
+        auto& style = ImGui::GetStyle();
+        auto* colors = style.Colors;
 
         /// 0 = FLAT APPEARENCE
         /// 1 = MORE "3D" LOOK
-        int is_3d = 1;
+        const auto is_3d = 1;
 
         colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
         colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -302,8 +302,8 @@ namespace sanity::engine {
         ZoneScoped;
 
         // Update buttons
-        ImGuiIO& io = ImGui::GetIO();
-        for(int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) {
+        auto& io = ImGui::GetIO();
+        for(auto i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) {
             // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are
             // shorter than 1 frame.
             io.MouseDown[i] = g_MouseJustPressed[i] || glfwGetMouseButton(window, i) != 0;
@@ -311,10 +311,10 @@ namespace sanity::engine {
         }
 
         // Update mouse position
-        const ImVec2 mouse_pos_backup = io.MousePos;
+        const auto mouse_pos_backup = io.MousePos;
         io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
 
-        const bool focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0;
+        const auto focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0;
         if(focused) {
             if(io.WantSetMousePos) {
                 glfwSetCursorPos(window, static_cast<double>(mouse_pos_backup.x), static_cast<double>(mouse_pos_backup.y));
@@ -329,7 +329,7 @@ namespace sanity::engine {
     void DearImguiAdapter::update_mouse_cursor() const {
         ZoneScoped;
 
-        ImGuiIO& io = ImGui::GetIO();
+        auto& io = ImGui::GetIO();
         if((io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) || glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
             return;
         }

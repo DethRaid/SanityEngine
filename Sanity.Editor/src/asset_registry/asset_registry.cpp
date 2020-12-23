@@ -3,32 +3,27 @@
 #include "loading/image_loading.hpp"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
+#include "core/fs/path_ops.hpp"
 
 namespace sanity::editor {
     RX_LOG("AssetRegistry", logger);
 
-    engine::renderer::TextureHandle load_icon_for_extension(const Rx::String& extension);
+    engine::renderer::TextureHandle load_icon_for_extension(const std::filesystem::path& extension);
 
     AssetRegistry::AssetRegistry() { load_directory_icon(); }
 
-    engine::renderer::TextureHandle AssetRegistry::get_file_icon(const Rx::String& file_path) {
-        if(const auto dot_pos = file_path.find_last_of("."); dot_pos != Rx::String::k_npos) {
-            const auto extension = file_path.substring(dot_pos + 1);
-            if(const auto* icon_handle_ptr = known_file_icons.find(extension); icon_handle_ptr != nullptr) {
-                return *icon_handle_ptr;
+    engine::renderer::TextureHandle AssetRegistry::get_icon_for_extension(const std::filesystem::path& extension) {
+        if(const auto* icon_handle_ptr = known_file_icons.find(extension); icon_handle_ptr != nullptr) {
+            return *icon_handle_ptr;
 
-            } else {
-                const auto icon_handle = load_icon_for_extension(extension);
-                known_file_icons.insert(extension, icon_handle);
-                return icon_handle;
-            }
         } else {
-            return directory_icon;
+            const auto icon_handle = load_icon_for_extension(extension);
+            known_file_icons.insert(extension, icon_handle);
+            return icon_handle;
         }
     }
 
-    engine::renderer::TextureHandle AssetRegistry::get_directory_icon() const { return directory_icon;
-    }
+    engine::renderer::TextureHandle AssetRegistry::get_directory_icon() const { return directory_icon; }
 
     void AssetRegistry::load_directory_icon() {
         auto& renderer = engine::g_engine->get_renderer();
@@ -55,8 +50,8 @@ namespace sanity::editor {
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
     }
 
-    engine::renderer::TextureHandle load_icon_for_extension(const Rx::String& extension) {
-        const auto path = Rx::String::format("data/textures/icons/%s.png", extension);
+    engine::renderer::TextureHandle load_icon_for_extension(const std::filesystem::path& extension) {
+        const auto path = std::filesystem::path{"data/textures/icons"} / engine::append_extension(extension , ".png");
 
         auto& renderer = engine::g_engine->get_renderer();
 
@@ -68,7 +63,8 @@ namespace sanity::editor {
             return renderer.get_pink_texture();
         }
 
-        const auto create_info = engine::renderer::ImageCreateInfo{.name = Rx::String::format(".%s icon", extension),
+        const auto extension_string = extension.string();
+        const auto create_info = engine::renderer::ImageCreateInfo{.name = Rx::String::format(".%s icon", extension_string.c_str()),
                                                                    .usage = engine::renderer::ImageUsage::SampledImage,
                                                                    .format = engine::renderer::ImageFormat::Rgba8,
                                                                    .width = width,

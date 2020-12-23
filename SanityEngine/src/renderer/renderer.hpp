@@ -22,6 +22,12 @@
 #include "settings.hpp"
 #include "single_pass_downsampler.hpp"
 
+namespace std {
+    namespace filesystem {
+        class path;
+    }
+} // namespace std
+
 using Microsoft::WRL::ComPtr;
 
 struct GLFWwindow;
@@ -198,7 +204,7 @@ namespace sanity::engine::renderer {
 
         void create_builtin_images();
 
-        void load_noise_texture(const Rx::String& filepath);
+        void load_noise_texture(const std::filesystem::path& filepath);
 
         void create_render_passes();
 

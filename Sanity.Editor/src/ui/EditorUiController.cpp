@@ -37,21 +37,20 @@ namespace sanity::editor::ui {
         show_edit_entity_window(new_entity, *registry);
     }
 
-    void EditorUiController::set_content_browser_directory(const Rx::String& content_directory) const {
+    void EditorUiController::set_content_browser_directory(const std::filesystem::path& content_directory) const {
         if(content_browser != nullptr) {
             content_browser->set_content_directory(content_directory);
         }
     }
 
-    void EditorUiController::show_editor_for_asset(const Rx::String& asset_path) const {
-        const auto dot_pos = asset_path.find_last_of(".");
-        const auto extension = asset_path.substring(dot_pos + 1);
+    void EditorUiController::show_editor_for_asset(const std::filesystem::path& asset_path) const {
+        const auto extension = asset_path.extension();
         if(extension == "glb" || extension == "gltf") {
             open_mesh_import_settings(asset_path);
         }
     }
 
-    void EditorUiController::open_mesh_import_settings(const Rx::String& mesh_path) const {
+    void EditorUiController::open_mesh_import_settings(const std::filesystem::path& mesh_path) const {
         auto registry = engine::g_engine->get_global_registry().lock();
 
     	auto* window = create_window_entity<SceneImportWindow>(*registry, mesh_path);
@@ -63,7 +62,7 @@ namespace sanity::editor::ui {
         worldgen_params_editor->is_visible = false;
     }
 
-    void EditorUiController::create_content_browser(entt::registry& registry, const Rx::String& content_directory) {
+    void EditorUiController::create_content_browser(entt::registry& registry, const std::filesystem::path& content_directory) {
         content_browser = create_window_entity<ContentBrowser>(registry, content_directory);
     	content_browser->is_visible = true;
     }

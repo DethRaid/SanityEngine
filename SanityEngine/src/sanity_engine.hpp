@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <filesystem>
+
 #include "adapters/rex/rex_wrapper.hpp"
 #include "core/Prelude.hpp"
 #include "core/asset_registry.hpp"
@@ -21,19 +23,19 @@ namespace sanity::engine {
      */
     class SanityEngine {
     public:
-        static const char* executable_directory;
+        static std::filesystem::path executable_directory;
 
         /*!
          * \brief Initializes the engine, including loading static data
          */
-        explicit SanityEngine(const char* executable_directory_in);
+        explicit SanityEngine(const std::filesystem::path& executable_directory_in);
 
         /*!
          * \brief De-initializes the engine
          */
         ~SanityEngine();
 
-    	void register_tick_function(Rx::Function<void(Float32)>&& tick_function);
+        void register_tick_function(Rx::Function<void(Float32)>&& tick_function);
 
         /*!
          * \brief Executes a single frame, updating game logic and rendering the scene
@@ -50,7 +52,7 @@ namespace sanity::engine {
         [[nodiscard]] World* get_world() const;
 
         [[nodiscard]] GLFWwindow* get_window() const;
-    	
+
         [[nodiscard]] renderer::Renderer& get_renderer() const;
 
     private:
@@ -95,7 +97,7 @@ namespace sanity::engine {
         Float32 accumulator = 0;
 
         Uint64 frame_count = 0;
-    	
+
         Rx::Vector<Rx::Function<void(Float32)>> tick_functions;
 
         void register_cvar_change_listeners();
@@ -127,5 +129,5 @@ namespace sanity::engine {
 
     extern SanityEngine* g_engine;
 
-    void initialize_g_engine(const char* executable_directory);
+    void initialize_g_engine(const std::filesystem::path& executable_directory);
 } // namespace sanity::engine

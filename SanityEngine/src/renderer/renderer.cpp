@@ -297,7 +297,7 @@ namespace sanity::engine::renderer {
             return pink_texture_handle;
         }
 
-    	spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
+        spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
 
         if(create_info.usage == ImageUsage::UnorderedAccess) {
             // Transition the image back to UNORDERED_ACCESS
@@ -542,7 +542,7 @@ namespace sanity::engine::renderer {
         device->submit_command_list(Rx::Utility::move(commands));
     }
 
-    void Renderer::load_noise_texture(const Rx::String& filepath) {
+    void Renderer::load_noise_texture(const std::filesystem::path& filepath) {
         ZoneScoped;
 
         const auto handle = load_image_to_gpu(filepath, *this);

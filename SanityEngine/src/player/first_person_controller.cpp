@@ -101,8 +101,8 @@ namespace sanity::engine {
 
         last_cursor_location = cursor_location;
 
-        const auto pitch_delta = Rx::Math::atan2(mouse_delta.y * 0.0001f, 1);
-        const auto yaw_delta = Rx::Math::atan2(mouse_delta.x * 0.0001f, 1);
+        const auto pitch_delta = atan2(static_cast<float>(mouse_delta.y) * 0.0001f, 1.f);
+        const auto yaw_delta = atan2(static_cast<float>(mouse_delta.x) * 0.0001f, 1.f);
 
         player_transform.rotation = rotate(player_transform.rotation, yaw_delta, glm::vec3{0, 1, 0});
         player_transform.rotation = rotate(player_transform.rotation, pitch_delta, right);

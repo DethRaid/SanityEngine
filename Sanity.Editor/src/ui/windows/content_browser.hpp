@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "loading/asset_loader.hpp"
 #include "renderer/handles.hpp"
 #include "rx/core/filesystem/directory.h"
@@ -14,37 +16,35 @@ namespace Rx {
 namespace sanity::editor::ui {
     class ContentBrowser : public engine::ui::Window {
     public:
-        explicit ContentBrowser(Rx::String content_directory_in);
+        explicit ContentBrowser(std::filesystem::path content_directory_in);
 
-        void set_content_directory(const Rx::String& content_directory_in);
+        void set_content_directory(const std::filesystem::path& content_directory_in);
 
-        void add_ignored_file_extension(const Rx::String& extension);
+        void add_ignored_file_extension(const std::filesystem::path& extension);
 
-        void remove_ignored_file_extension(const Rx::String& extension);
+        void remove_ignored_file_extension(const std::filesystem::path& extension);
 
     protected:
         void draw_contents() override;
 
     private:
-        Rx::String content_directory;
+        static void draw_directory(const std::filesystem::path& directory,
+                                   const Rx::Function<void(const std::filesystem::path&)>& on_open);
 
-        Rx::String selected_directory;
+        static void draw_file(const std::filesystem::path& file, const Rx::Function<void(const std::filesystem::path&)>& on_open);
 
-        Rx::Map<Rx::String, engine::renderer::TextureHandle> file_icons;
+        std::filesystem::path content_directory;
+
+        std::filesystem::path selected_directory;
+
+        Rx::Map<std::filesystem::path, engine::renderer::TextureHandle> file_icons;
 
         Rx::Vector<engine::ImageLoadResultHandle> icon_handles;
 
-        Rx::Set<Rx::String> file_extensions_to_ignore;
+        Rx::Set<std::filesystem::path> file_extensions_to_ignore;
 
         void draw_back_button();
 
-        void draw_directory(const Rx::String& directory_name, const Rx::Function<void(const Rx::String&)>& on_open);
-
-        void draw_file(const Rx::String& file_name, const Rx::Function<void(const Rx::String&)>& on_open);
-
-        void draw_filesystem_item(const Rx::Filesystem::Directory::Item& item,
-                                  const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open);
-
-        bool should_ignore_file(const Rx::Filesystem::Directory::Item& file);
+        bool should_ignore_file(const std::filesystem::path& file);
     };
 } // namespace sanity::editor::ui

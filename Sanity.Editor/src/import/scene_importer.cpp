@@ -109,7 +109,7 @@ namespace sanity::editor::import {
         gltf_logger->set_level(Rx::Log::Level::k_warning);
     }
 
-    Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const Rx::String& scene_path,
+    Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const std::filesystem::path& scene_path,
                                                                 const SceneImportSettings& import_settings,
                                                                 entt::registry& registry) {
         ZoneScoped;
@@ -118,13 +118,13 @@ namespace sanity::editor::import {
         std::string err;
         std::string warn;
         bool success;
-        if(scene_path.ends_with(".glb")) {
+        if(scene_path.extension() == ".glb") {
             ZoneScopedN("Load .glb");
-            success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.data());
+            success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.string());
 
-        } else if(scene_path.ends_with(".gltf")) {
+        } else if(scene_path.extension() == ".gltf") {
             ZoneScopedN("Load .gltf");
-            success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.data());
+            success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.string());
 
         } else {
             gltf_logger->error("Invalid scene file %s", scene_path);
@@ -132,10 +132,10 @@ namespace sanity::editor::import {
         }
 
         if(!warn.empty()) {
-            gltf_logger->warning("Warnings when reading %s: %s", scene_path, warn.c_str());
+            gltf_logger->warning("Warnings when reading %s: %s", scene_path, warn);
         }
         if(!err.empty()) {
-            gltf_logger->error("Errors when reading %s: %s", scene_path, err.c_str());
+            gltf_logger->error("Errors when reading %s: %s", scene_path, err);
         }
         if(!success) {
             gltf_logger->error("Could not read scene %s", scene_path);
@@ -474,7 +474,7 @@ namespace sanity::editor::import {
             const auto location = *position_read_ptr;
             const auto normal = *normal_read_ptr;
             auto texcoord = *texcoord_read_ptr;
-            texcoord.y = 1.0 - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
+            texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
 
             vertices.push_back(StandardVertex{.location = location, .normal = normal, .texcoord = texcoord});
 

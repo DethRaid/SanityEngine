@@ -1,5 +1,7 @@
 #include "SanityEditor.hpp"
 
+#include <filesystem>
+
 #include "Tracy.hpp"
 #include "entity/Components.hpp"
 #include "entt/entity/registry.hpp"
@@ -17,9 +19,12 @@ using namespace sanity::engine;
 RX_LOG("SanityEditor", logger);
 
 int main(int argc, char** argv) {
-    initialize_g_engine(R"(E:\Documents\SanityEngine\x64\Debug)");
+    const std::filesystem::path executable_path{argv[0]};
+    const auto executable_directory = executable_path.parent_path();
 
-    auto* editor = sanity::editor::initialize_editor(R"(E:\Documents\SanityEngine\Sanity.Game\SumerianGame.json)");
+    initialize_g_engine(executable_directory);
+
+    auto* editor = sanity::editor::initialize_editor(R"(C:\Users\gold\Documents\SanityEngine\SanityEngine\Sanity.Game\SumerianGame.json)");
 
     editor->run_until_quit();
 
@@ -27,7 +32,7 @@ int main(int argc, char** argv) {
 }
 
 namespace sanity::editor {
-    SanityEditor::SanityEditor(const Rx::String& initial_project_file)
+    SanityEditor::SanityEditor(const std::filesystem::path& initial_project_file)
         : flycam{g_engine->get_window(), g_engine->get_player(), g_engine->get_global_registry()} {
         load_project(initial_project_file);
         create_application_gui();
@@ -44,8 +49,9 @@ namespace sanity::editor {
         });
     }
 
-    void SanityEditor::load_project(const Rx::String& project_filec, const bool should_scan_project_directory) {
-        const auto file_contents_opt = Rx::Filesystem::read_text_file(project_file);
+    void SanityEditor::load_project(const std::filesystem::path& project_file, const bool should_scan_project_directory) {
+        const auto project_file_string = project_file.string();
+        const auto file_contents_opt = Rx::Filesystem::read_text_file(project_file_string.c_str());
         if(!file_contents_opt.has_value()) {
             logger->error("Could not load project file %s", project_file);
             return;
@@ -58,13 +64,8 @@ namespace sanity::editor {
 
             json_contents.get_to(project_data);
 
-            auto slashpos = project_file.find_last_of("/");
-            if(slashpos == Rx::String::k_npos) {
-                slashpos = project_file.find_last_of(R"(\)");
-            }
-
-            const auto enclosing_directory = project_file.substring(0, slashpos);
-            content_directory = Rx::String::format("%s/content", enclosing_directory);
+            const auto enclosing_directory = project_file.parent_path();
+            content_directory = enclosing_directory / "content";
 
             ui_controller.set_content_browser_directory(content_directory);
         }
@@ -78,8 +79,8 @@ namespace sanity::editor {
         }
     }
 
-    void SanityEditor::scan_project_directory_async(const Rx::String& project_content_directory) {
-        Rx::Concurrency::Thread project_dir_scan_thread{"Project dir scanner", [&]() {
+    void SanityEditor::scan_project_directory_async(const std::filesystem::path& project_content_directory) {
+        Rx::Concurrency::Thread project_dir_scan_thread{"Project dir scanner", [&](const Int32 num) {
                                                             // Recursively iterate over all the files in the project dir, running the
                                                             // importer for any that have changed
                                                         }};
@@ -101,7 +102,7 @@ namespace sanity::editor {
 
     AssetRegistry& SanityEditor::get_asset_registry() { return asset_registry; }
 
-    const Rx::String& SanityEditor::get_content_directory() const { return content_directory; }
+    const std::filesystem::path& SanityEditor::get_content_directory() const { return content_directory; }
 
     void SanityEditor::create_application_gui() {
         auto registry = g_engine->get_global_registry().lock();
@@ -111,7 +112,7 @@ namespace sanity::editor {
                                                    Rx::make_ptr<ui::ApplicationGui>(RX_SYSTEM_ALLOCATOR, ui_controller));
     }
 
-    SanityEditor* initialize_editor(const Rx::String& initial_project_directory) {
+    SanityEditor* initialize_editor(const std::filesystem::path& initial_project_directory) {
         g_editor = new SanityEditor{initial_project_directory};
         return g_editor;
     }

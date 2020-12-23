@@ -46,18 +46,20 @@ namespace sanity::engine {
         input_manager->on_key(key, action, mods);
     }
 
-    const char* SanityEngine::executable_directory;
+    std::filesystem::path SanityEngine::executable_directory;
 
-    SanityEngine::SanityEngine(const char* executable_directory_in) : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
+    SanityEngine::SanityEngine(const std::filesystem::path& executable_directory_in)
+        : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
         logger->info("HELLO HUMAN");
 
         executable_directory = executable_directory_in;
 
-        const auto cvar_ini_filepath = Rx::String::format("%s/%s", executable_directory, cvar_ini_file_name->get().data());
-        if(!console_context.load(cvar_ini_filepath.data())) {
+        const auto cvar_ini_filepath = executable_directory / cvar_ini_file_name->get().data();
+        const auto cvar_init_filepath_string = cvar_ini_filepath.string();
+        if(!console_context.load(cvar_init_filepath_string.c_str())) {
             logger->warning("Could not load cvars from file %s (full path %s). Using default values",
                             cvar_ini_file_name->get().data(),
-                            cvar_ini_filepath);
+                            cvar_init_filepath_string.c_str());
         }
 
         {
@@ -295,5 +297,5 @@ namespace sanity::engine {
         TracyD3D12Collect(renderer::RenderBackend::tracy_context);
     }
 
-    void initialize_g_engine(const char* executable_directory) { g_engine = new SanityEngine{executable_directory}; }
+    void initialize_g_engine(const std::filesystem::path& executable_directory) { g_engine = new SanityEngine{executable_directory}; }
 } // namespace sanity::engine

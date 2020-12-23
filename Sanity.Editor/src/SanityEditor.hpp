@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "asset_registry/asset_registry.hpp"
 #include "player/flycam_controller.hpp"
 #include "project/project_definition.hpp"
@@ -8,7 +10,7 @@
 namespace sanity::editor {
     class SanityEditor {
     public:
-        explicit SanityEditor(const Rx::String& initial_project_file);
+        explicit SanityEditor(const std::filesystem::path& initial_project_file);
 
         void run_until_quit();
 
@@ -18,7 +20,7 @@ namespace sanity::editor {
 
         [[nodiscard]] AssetRegistry& get_asset_registry();
 
-        [[nodiscard]] const Rx::String& get_content_directory() const;
+        [[nodiscard]] const std::filesystem::path& get_content_directory() const;
 
     private:
         ui::EditorUiController ui_controller;
@@ -32,18 +34,18 @@ namespace sanity::editor {
         /*!
          * \brief Content directory for the currently selected project
          */
-        Rx::String content_directory;
+        std::filesystem::path content_directory;
 
         Project project_data;
 
-        void load_project(const Rx::String& project_file, bool should_scan_project_directory = true);
+        void load_project(const std::filesystem::path& project_file, bool should_scan_project_directory = true);
 
-        void scan_project_directory_async(const Rx::String& project_content_directory);
-    	
+        void scan_project_directory_async(const std::filesystem::path& project_content_directory);
+
         void create_application_gui();
     };
 
     inline SanityEditor* g_editor{nullptr};
 
-    SanityEditor* initialize_editor(const Rx::String& initial_project_directory);
+    SanityEditor* initialize_editor(const std::filesystem::path& initial_project_directory);
 } // namespace sanity::editor

@@ -15,23 +15,22 @@
 namespace sanity::engine {
     RX_LOG("ImageLoading", logger);
 
-    constexpr const char* RESOURCES_DIRECTORY = "data/resourcepacks/polyterra/assets/minecraft";
-
-    bool load_image(const Rx::String& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
+    bool load_image(const std::filesystem::path& image_name, Uint32& width, Uint32& height, Rx::Vector<Uint8>& pixels) {
         ZoneScoped;
 
         const auto& exe_directory = SanityEngine::executable_directory;
-        const auto full_image_path = Rx::String::format("%s/%s", exe_directory, image_name);
+        const auto full_image_path = exe_directory / image_name;
 
         int raw_width, raw_height, num_components;
 
         stbi_uc* texture_data;
         {
             ZoneScopedN("load_image::stbi_load");
-            texture_data = stbi_load(full_image_path.data(), &raw_width, &raw_height, &num_components, 0);
+            const auto full_image_name = full_image_path.string();
+            texture_data = stbi_load(full_image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
             if(texture_data == nullptr) {
                 const auto* failure_reason = stbi_failure_reason();
-                logger->error("Could not load image %s: %s", full_image_path, failure_reason);
+                logger->error("Could not load image %s: %s", full_image_name.c_str(), failure_reason);
                 return false;
             }
         }
@@ -39,7 +38,7 @@ namespace sanity::engine {
         width = static_cast<Uint32>(raw_width);
         height = static_cast<Uint32>(raw_height);
 
-        const auto num_pixels = static_cast<Size>(width * height);
+        const auto num_pixels = static_cast<Size>(width) * height;
         pixels.resize(num_pixels * 4);
 
         if(num_components == 4) {
@@ -49,7 +48,7 @@ namespace sanity::engine {
             ZoneScopedN("load_image::alpha_padding");
             for(Uint32 i = 0; i < num_pixels; i++) {
                 const auto read_idx = i * num_components;
-                const auto write_idx = i * 4;
+                const Uint64 write_idx = i * 4;
 
                 pixels[write_idx] = texture_data[read_idx];
                 pixels[write_idx + 1] = texture_data[read_idx + 1];
@@ -69,7 +68,7 @@ namespace sanity::engine {
         return true;
     }
 
-    Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const Rx::String& texture_name, renderer::Renderer& renderer) {
+    Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const std::filesystem::path& texture_name, renderer::Renderer& renderer) {
         ZoneScoped;
 
         Uint32 width, height;
@@ -79,7 +78,8 @@ namespace sanity::engine {
             return Rx::nullopt;
         }
 
-        const auto create_info = renderer::ImageCreateInfo{.name = texture_name,
+    	const auto texture_name_string = texture_name.string();
+        const auto create_info = renderer::ImageCreateInfo{.name = texture_name_string.c_str(),
                                                            .usage = renderer::ImageUsage::SampledImage,
                                                            .format = renderer::ImageFormat::Rgba8,
                                                            .width = width,
