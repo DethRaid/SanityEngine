@@ -35,7 +35,6 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
 
     const auto forward = player_transform.get_forward_vector();
     const auto right = player_transform.get_right_vector();
-    const auto up = player_transform.get_up_vector();
 
     // Translation
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -74,6 +73,7 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
     last_mouse_pos = mouse_pos;
 
     player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.y * X_SENSITIVITY), right);
+    const auto up = player_transform.get_up_vector();
     player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.x * Y_SENSITIVITY), up);
 }
 

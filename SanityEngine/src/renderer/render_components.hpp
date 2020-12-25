@@ -65,7 +65,7 @@ namespace sanity::engine::renderer {
     struct __declspec(uuid("{23C1D6E0-B8E4-453A-8613-FE2EA86D2631}")) CameraComponent {
         Uint32 idx{};
 
-        double fov{75};
+        double fov{60};
         double aspect_ratio{16.0 / 9.0};
         double near_clip_plane{0.01};
 
