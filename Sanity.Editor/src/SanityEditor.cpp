@@ -43,9 +43,7 @@ namespace sanity::editor {
 
         g_engine->register_tick_function([&](const Float32 delta_time) {
             auto* window = g_engine->get_window();
-
-            const auto right_mouse_button_state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-            if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE && right_mouse_button_state == GLFW_PRESS) {
+            if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE) {
                 editor_camera.update_player_transform(delta_time);
             }
         });

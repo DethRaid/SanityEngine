@@ -22,7 +22,7 @@ FlycamController::FlycamController(GLFWwindow* window_in,
 }
 
 void FlycamController::update_player_transform(const Float32 delta_time) {
-    if(RX_HINT_UNLIKELY(!enabled)) {
+    if(!enabled) {
         return;
     }
 
@@ -70,11 +70,17 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
     glfwGetCursorPos(window, &mouse_pos.x, &mouse_pos.y);
 
     const auto mouse_delta = mouse_pos - last_mouse_pos;
-
+	
     last_mouse_pos = mouse_pos;
 
     player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.y * X_SENSITIVITY), right);
     player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.x * Y_SENSITIVITY), up);
 }
 
-void FlycamController::set_enabled(bool enabled_in) { enabled = enabled_in; }
+void FlycamController::set_enabled(const bool enabled_in) {
+    if(!enabled && enabled_in) {
+        glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
+    }
+	
+    enabled = enabled_in;
+}
