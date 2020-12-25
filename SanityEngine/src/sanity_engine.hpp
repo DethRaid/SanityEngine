@@ -49,8 +49,6 @@ namespace sanity::engine {
          */
         [[nodiscard]] SynchronizedResource<entt::registry>& get_global_registry();
 
-        [[nodiscard]] World* get_world() const;
-
         [[nodiscard]] GLFWwindow* get_window() const;
 
         [[nodiscard]] renderer::Renderer& get_renderer() const;
@@ -73,8 +71,6 @@ namespace sanity::engine {
         // Rx::Ptr<BveWrapper> bve;
 
         GLFWwindow* window;
-
-        Rx::Ptr<World> world;
 
         SynchronizedResource<entt::registry> global_registry;
 

@@ -54,8 +54,7 @@ namespace sanity::engine::renderer {
 
     void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands,
                         entt::registry& /* registry */,
-                        Uint32 /* frame_idx */,
-                        const World& /* world */) {
+                        Uint32 /* frame_idx */) {
         ZoneScoped;
 
         ImDrawData* draw_data = ImGui::GetDrawData();

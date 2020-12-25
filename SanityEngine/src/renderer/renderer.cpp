@@ -23,6 +23,7 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
+#include "rhi/d3d12_private_data.hpp"
 
 namespace sanity::engine::renderer {
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
@@ -65,6 +66,8 @@ namespace sanity::engine::renderer {
         create_builtin_images();
 
         create_render_passes();
+
+    	logger->info("Constructed Renderer");
     }
 
     void Renderer::reload_shaders() {
@@ -89,7 +92,7 @@ namespace sanity::engine::renderer {
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
     }
 
-    void Renderer::render_frame(SynchronizedResourceAccessor<entt::registry>& registry, const World& world) {
+    void Renderer::render_frame(SynchronizedResourceAccessor<entt::registry>& registry) {
         ZoneScoped;
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
@@ -116,7 +119,7 @@ namespace sanity::engine::renderer {
                 memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
             }
 
-            execute_all_render_passes(command_list, registry, frame_idx, world);
+            execute_all_render_passes(command_list, registry, frame_idx);
         }
 
         device->submit_command_list(Rx::Utility::move(command_list));
@@ -220,8 +223,7 @@ namespace sanity::engine::renderer {
 
     void Renderer::execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                              SynchronizedResourceAccessor<entt::registry>& registry,
-                                             const Uint32& frame_idx,
-                                             const World& world) {
+                                             const Uint32& frame_idx) {
         {
             ZoneScopedN("Renderer::render_passes");
 
@@ -233,7 +235,7 @@ namespace sanity::engine::renderer {
 
                 issue_pre_pass_barriers(command_list.Get(), i, render_pass);
 
-                render_pass->render(command_list.Get(), *registry, frame_idx, world);
+                render_pass->render(command_list.Get(), *registry, frame_idx);
 
                 issue_post_pass_barriers(command_list.Get(), i, render_pass);
             }
@@ -682,6 +684,7 @@ namespace sanity::engine::renderer {
 
             const auto instance_buffer_size = static_cast<Uint32>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
             auto instance_buffer = device->get_staging_buffer(instance_buffer_size);
+            set_object_name(instance_buffer.resource.Get(), "Raytracing instance description buffer");
             auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.mapped_ptr);
 
             for(Uint32 i = 0; i < raytracing_objects.size(); i++) {
@@ -715,7 +718,7 @@ namespace sanity::engine::renderer {
 
                 const auto& ray_geo = raytracing_geometries[object.as_handle.index];
 
-                const auto& buffer = static_cast<const Buffer&>(*ray_geo.blas_buffer);
+                const auto& buffer = *ray_geo.blas_buffer;
                 desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
             }
 

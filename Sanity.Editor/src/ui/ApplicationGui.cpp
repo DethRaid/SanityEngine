@@ -5,7 +5,7 @@
 #include "imgui/imgui.h"
 
 namespace sanity::editor::ui {
-    ApplicationGui::ApplicationGui(EditorUiController& ui_controller_in) : ui_controller{&ui_controller_in} {}
+    ApplicationGui::ApplicationGui(EditorUiController& ui_controller_in) : UiPanel{"Editor UI"}, ui_controller{&ui_controller_in} {}
 
     void ApplicationGui::draw() { draw_application_menu(); }
 

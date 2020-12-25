@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <Type Name="Rx::Vector&lt;*&gt;">
+	<Type Name="Rx::Ptr&lt;*&gt;">
+		<DisplayString Condition="m_data == nullptr">empty</DisplayString>
+		<DisplayString>{{ {*m_data} }}</DisplayString>
+	</Type>
+	<Type Name="Rx::Optional&lt;*&gt;">
+		<DisplayString Condition="m_init == false">empty</DisplayString>
+	</Type>
+
+	<Type Name="Rx::Vector&lt;*&gt;">
         <DisplayString Condition="m_size == 0">empty</DisplayString>
         <DisplayString>{{ size={m_size} }}</DisplayString>
         <Expand>

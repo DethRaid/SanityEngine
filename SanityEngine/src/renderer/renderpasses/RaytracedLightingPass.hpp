@@ -23,7 +23,7 @@ namespace sanity::engine::renderer {
         ~RaytracedLightingPass() override;
 
 #pragma region RenderPass
-        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
+        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 #pragma endregion
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;

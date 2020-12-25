@@ -17,7 +17,7 @@
 
 namespace sanity::editor::import {
     RX_LOG("SceneImporter", logger);
-    RX_LOG("GltfImporter", gltf_logger);
+    RX_LOG("\033[91mGltfImporter\033[0m", gltf_logger);
 
     constexpr const char* POSITION_ATTRIBUTE_NAME = "POSITION";
     constexpr const char* NORMAL_ATTRIBUTE_NAME = "NORMAL";
@@ -109,7 +109,6 @@ namespace sanity::editor::import {
     } // namespace detail
 
     SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {
-        gltf_logger->set_level(Rx::Log::Level::k_warning);
     }
 
     Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const std::filesystem::path& scene_path,
@@ -577,7 +576,7 @@ namespace sanity::editor::import {
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
                 // Create entity and components
-                const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
+                const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name, i);
                 const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
 
                 auto& primitive_transform_component = entity::add_component<engine::TransformComponent>(primitive_entity, registry);
@@ -595,7 +594,7 @@ namespace sanity::editor::import {
                 // materials. This will be addressed in a future revision
                 Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
 
-                meshes_for_raytracing.emplace_back(primitive.mesh, engine::Transform{});
+                meshes_for_raytracing.emplace_back(primitive.mesh, parent_transform_component.transform);
 
                 const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
 

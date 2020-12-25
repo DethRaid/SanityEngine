@@ -59,6 +59,8 @@ namespace sanity::engine {
         : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
         logger->info("HELLO HUMAN");
 
+    	logger->set_level(Rx::Log::Level::k_info);
+
         executable_directory = executable_directory_in;
 
         const auto cvar_ini_filepath = executable_directory / cvar_ini_file_name->get().data();
@@ -85,7 +87,7 @@ namespace sanity::engine {
                 ZoneScopedN("glfwCreateWindow");
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
                 glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-                window = glfwCreateWindow(1920, 1090, "Sanity Engine", nullptr, nullptr);
+                window = glfwCreateWindow(1280, 720, "Sanity Engine", nullptr, nullptr);
                 if(window == nullptr) {
                     Rx::abort("Could not create GLFW window");
                 }
@@ -122,23 +124,9 @@ namespace sanity::engine {
 
             imgui_adapter = Rx::make_ptr<DearImguiAdapter>(RX_SYSTEM_ALLOCATOR, window, *renderer);
 
-            terraingen::initialize(renderer->get_render_backend());
-
-            world = World::create({.seed = 666,
-                                   .height = 128,
-                                   .width = 128,
-                                   .max_ocean_depth = 8,
-                                   .min_terrain_depth_under_ocean = 8,
-                                   .max_height_above_sea_level = 16},
-                                  player,
-                                  global_registry,
-                                  *renderer);
-
-            if(player_controller) {
-                player_controller->set_current_terrain(world->get_terrain());
-            }
-
             frame_timer.start();
+
+        	logger->info("Constructed SanityEngine");
         }
     }
 
@@ -178,13 +166,11 @@ namespace sanity::engine {
         while(accumulator >= delta_time) {
             ZoneScopedN("Simulation tick");
 
+        	logger->verbose("Ticking simulation");
+
             // if(player_controller) {
             //     player_controller->update_player_transform(delta_time);
             // }
-
-            if(world) {
-                world->tick(delta_time);
-            }
 
             tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(delta_time); });
 
@@ -194,19 +180,24 @@ namespace sanity::engine {
 
         // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/
 
+#ifdef NDEBUG
         if(glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE) {
+#endif
+            logger->verbose("Rendering a frame");
             // Only render when the window is visible
             render();
+#ifdef NDEBUG
         }
+#endif
 
         framerate_tracker.add_frame_time(frame_duration_seconds);
+
+    	logger->verbose("Engine tick complete");
     }
 
     entt::entity SanityEngine::get_player() const { return player; }
 
     SynchronizedResource<entt::registry>& SanityEngine::get_global_registry() { return global_registry; }
-
-    World* SanityEngine::get_world() const { return world.get(); }
 
     GLFWwindow* SanityEngine::get_window() const { return window; }
 
@@ -240,6 +231,8 @@ namespace sanity::engine {
         locked_registry->emplace<renderer::LightComponent>(atmosphere);
         locked_registry->emplace<renderer::AtmosphericSkyComponent>(atmosphere);
         locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform, atmosphere don't care about it
+
+    	logger->info("Created planetary atmosphere entity");
     }
 
     void SanityEngine::make_frametime_display() {
@@ -294,10 +287,13 @@ namespace sanity::engine {
         auto locked_registry = global_registry.lock();
 
         imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
+        logger->verbose("Drew UI");
 
-        renderer->render_frame(locked_registry, *world);
-
+        renderer->render_frame(locked_registry);
+        logger->verbose("Renderer rendered a frame");
+    	
         renderer->end_frame();
+        logger->verbose("Frame ended");
 
         FrameMark;
 #ifdef TRACY_ENABLE

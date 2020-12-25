@@ -13,9 +13,8 @@ namespace sanity::editor::ui {
     RX_LOG("ContentBrowser", logger);
 
     constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
-    constexpr Uint32 DIRECTORY_ITEM_HEIGHT = 30;
 
-    ContentBrowser::ContentBrowser() : Window{"Content Browser"} {}
+    ContentBrowser::ContentBrowser() : Window{"Content Browser"} { logger->set_level(Rx::Log::Level::k_info); }
 
     void ContentBrowser::set_content_directory(const std::filesystem::path& content_directory_in) {
         content_directory = content_directory_in;
@@ -31,6 +30,7 @@ namespace sanity::editor::ui {
 
     void ContentBrowser::draw_contents() {
         if(!content_directory.has_value()) {
+            logger->verbose("No content directory set, aborting");
             return;
         }
 
@@ -38,8 +38,10 @@ namespace sanity::editor::ui {
         Rx::Vector<std::filesystem::path> files;
 
         const auto directory_to_draw = engine::SanityEngine::executable_directory / *content_directory / selected_directory;
+        logger->verbose("Drawing all items in directory %s", directory_to_draw);
 
         for(const auto& item : std::filesystem::directory_iterator{directory_to_draw}) {
+            logger->verbose("Categorizing item %s", item.path());
             if(item.is_directory()) {
                 directories.push_back(item.path().stem());
 
@@ -48,11 +50,17 @@ namespace sanity::editor::ui {
             }
         }
 
+        logger->verbose("Categorized all directory items");
+
         const auto width = ImGui::GetWindowWidth();
-        const auto num_columns = static_cast<Uint32>(floor(width / DIRECTORY_ITEM_WIDTH));
+        logger->verbose("ImGUI window width: %f", width);
+        const auto num_columns = static_cast<Uint32>(ceil(width / DIRECTORY_ITEM_WIDTH));
+        logger->verbose("num_columns: %d", num_columns);
 
         const auto num_items = directories.size() + files.size();
         const auto num_rows = static_cast<Uint32>(floor(num_items / num_columns));
+
+        logger->verbose("Fitting content into %d columns and %d rows", num_columns, num_rows);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
         ImGui::Columns(num_columns);
@@ -64,10 +72,11 @@ namespace sanity::editor::ui {
         } else {
             ImGui::Text("Content root");
         }
-    	
-        auto cur_row = 1u;  // Start at 1 because we count `..`
+
+        auto cur_row = 1u; // Start at 1 because we count `..`
 
         directories.each_fwd([&](const std::filesystem::path& directory) {
+            logger->verbose("Drawing directory %s", directory);
             draw_directory(directory, [&](const std::filesystem::path& selected_item) { selected_directory /= selected_item; });
 
             cur_row++;
@@ -78,6 +87,7 @@ namespace sanity::editor::ui {
         });
 
         files.each_fwd([&](const std::filesystem::path& file) {
+            logger->verbose("Drawing file %s", file);
             draw_file(file, [&](const std::filesystem::path& selected_item) {
                 const auto filename = selected_directory / selected_item;
                 g_editor->get_ui_controller().show_editor_for_asset(filename);
@@ -109,7 +119,7 @@ namespace sanity::editor::ui {
         ImGui::SameLine();
 
         const auto directory_string = directory.string();
-        if(ImGui::Button(directory_string.c_str(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
+        if(ImGui::Button(directory_string.c_str(), {0, 20})) {
             on_open(directory);
         }
     }
@@ -123,7 +133,7 @@ namespace sanity::editor::ui {
         ImGui::SameLine();
 
         const auto file_name = file.string();
-        if(ImGui::Button(file_name.c_str(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
+        if(ImGui::Button(file_name.c_str(), {0, 20})) {
             on_open(file);
         }
     }

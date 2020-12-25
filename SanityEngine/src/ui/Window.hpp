@@ -19,8 +19,6 @@ namespace sanity::engine::ui {
         void draw() override;
 
     protected:
-        Rx::String name{};
-
         ImGuiWindowFlags flags;
 
         virtual void draw_contents() = 0;
