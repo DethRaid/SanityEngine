@@ -24,7 +24,10 @@ namespace sanity::editor::import {
     constexpr const char* TEXCOORD_ATTRIBUTE_NAME = "TEXCOORD_0";
 
     constexpr const char* BASE_COLOR_TEXTURE_PARAM_NAME = "baseColorTexture";
+    constexpr const char* BASE_COLOR_FACTOR_PARAM_NAME = "baseColorFactor";
     constexpr const char* METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME = "metallicRoughnessTexture";
+    constexpr const char* METALLIC_FACTOR_PARAM_NAME = "metallicFactor";
+    constexpr const char* ROUGHNESS_FACTOR_PARAM_NAME = "roughnessFactor";
     constexpr const char* NORMAL_TEXTURE_PARAM_NAME = "normalTexture";
 
     namespace detail {
@@ -142,6 +145,8 @@ namespace sanity::editor::import {
             return Rx::nullopt;
         }
 
+        gltf_logger->info("Loaded scene %s", scene_path);
+
         // How to import a scene?
         // First, load all the meshes, textures, materials, and other primitives;
 
@@ -176,7 +181,7 @@ namespace sanity::editor::import {
 
         for(const auto& material : scene.materials) {
             ZoneScopedN(material.name.c_str());
-        	
+
             gltf_logger->info("Importing material %s", material.name.c_str());
 
             engine::renderer::StandardMaterial sanity_material{};
@@ -202,13 +207,29 @@ namespace sanity::editor::import {
                 }
             }
 
-            // Validate
-
-            if(base_color_texture_idx == -1) {
-                gltf_logger->error("Parameter %s on material %s isn't a valid texture",
-                                   BASE_COLOR_TEXTURE_PARAM_NAME,
-                                   material.name.c_str());
+        	Vec4f base_color_factor{1, 1, 1, 1};
+            if(const auto& base_color_factor_value = material.values.find(BASE_COLOR_FACTOR_PARAM_NAME);
+               base_color_factor_value != material.values.end()) {
+                const auto color = base_color_factor_value->second.ColorFactor();
+                memcpy(&base_color_factor, &color, sizeof(float) * 4);
             }
+
+            if(const auto& base_color_texture_value = material.values.find(BASE_COLOR_TEXTURE_PARAM_NAME);
+               base_color_texture_value != material.values.end() && base_color_texture_value->second.TextureIndex() != -1) {
+                if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
+                    sanity_material.base_color = *handle;
+
+                } else {
+                    gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                       base_color_texture_idx,
+                                       BASE_COLOR_TEXTURE_PARAM_NAME);
+                    sanity_material.base_color = renderer->get_pink_texture();
+                }
+
+            } else {
+                gltf_logger->warning("No base color texture on material %s. Falling back to the base color factor", material.name);
+            }
+
             if(metallic_roughness_texture_idx == -1) {
                 gltf_logger->error("Parameter %s on material %s is not a valid texture",
                                    METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME,
@@ -219,15 +240,6 @@ namespace sanity::editor::import {
             }
 
             // Load the textures
-
-            if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
-                sanity_material.base_color = *handle;
-            } else {
-                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
-                                   base_color_texture_idx,
-                                   BASE_COLOR_TEXTURE_PARAM_NAME);
-                sanity_material.base_color = renderer->get_pink_texture();
-            }
 
             if(const auto handle = get_sanity_handle_to_texture(metallic_roughness_texture_idx, scene, cmds); handle.has_value()) {
                 sanity_material.metallic_roughness = *handle;
@@ -331,7 +343,7 @@ namespace sanity::editor::import {
     Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene,
                                                                          ID3D12GraphicsCommandList4* cmds) const {
         ZoneScoped;
-    	
+
         auto& mesh_store = renderer->get_static_mesh_store();
         const auto uploader = mesh_store.begin_adding_meshes(cmds);
 
@@ -340,7 +352,7 @@ namespace sanity::editor::import {
 
         for(const auto& mesh : scene.meshes) {
             ZoneScopedN(mesh.name.c_str());
-        	
+
             gltf_logger->info("Importing mesh %s", mesh.name.c_str());
 
             GltfMesh imported_mesh{};
@@ -370,7 +382,7 @@ namespace sanity::editor::import {
                                                                                       const tinygltf::Model& scene,
                                                                                       const engine::renderer::MeshUploader& uploader) {
         ZoneScoped;
-    	
+
         const auto indices = get_indices_from_primitive(primitive, scene);
         const auto vertices = get_vertices_from_primitive(primitive, scene);
 
@@ -491,7 +503,7 @@ namespace sanity::editor::import {
                                                         entt::registry& registry,
                                                         ID3D12GraphicsCommandList4* cmds) {
         ZoneScoped;
-    	
+
         // Assume that the files we'll be importing have a single scene
         const auto& default_scene = scene.scenes[scene.defaultScene];
 

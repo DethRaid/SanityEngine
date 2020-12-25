@@ -45,7 +45,7 @@ namespace sanity::editor::ui {
 
     void EditorUiController::show_editor_for_asset(const std::filesystem::path& asset_path) const {
         const auto extension = asset_path.extension();
-        if(extension == "glb" || extension == "gltf") {
+        if(extension == ".glb" || extension == ".gltf") {
             open_mesh_import_settings(asset_path);
         }
     }

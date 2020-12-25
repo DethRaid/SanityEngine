@@ -46,6 +46,13 @@ namespace sanity::engine {
         input_manager->on_key(key, action, mods);
     }
 
+	static void mouse_button_func(GLFWwindow* window, const int button, const int action, const int mods)
+    {
+        auto* input_manager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+
+        input_manager->on_mouse_button(button, action, mods);
+    }
+
     std::filesystem::path SanityEngine::executable_directory;
 
     SanityEngine::SanityEngine(const std::filesystem::path& executable_directory_in)
@@ -92,6 +99,7 @@ namespace sanity::engine {
             // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
             glfwSetKeyCallback(window, key_func);
+            glfwSetMouseButtonCallback(window, mouse_button_func);
 
             renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window);
             logger->info("Initialized renderer");
@@ -202,7 +210,9 @@ namespace sanity::engine {
 
     GLFWwindow* SanityEngine::get_window() const { return window; }
 
-    renderer::Renderer& SanityEngine::get_renderer() const { return *renderer.get(); }
+    renderer::Renderer& SanityEngine::get_renderer() const { return *renderer; }
+
+    InputManager& SanityEngine::get_input_manager() const { return *input_manager; }
 
     void SanityEngine::register_cvar_change_listeners() {
         show_frametime_display->on_change([&](Rx::Console::Variable<bool>& var) {

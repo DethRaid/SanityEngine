@@ -55,6 +55,8 @@ namespace sanity::engine {
 
         [[nodiscard]] renderer::Renderer& get_renderer() const;
 
+    	[[nodiscard]] InputManager& get_input_manager() const;
+
     private:
         rex::Wrapper rex;
 

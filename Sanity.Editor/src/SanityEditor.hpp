@@ -25,7 +25,7 @@ namespace sanity::editor {
     private:
         ui::EditorUiController ui_controller;
 
-        FlycamController flycam;
+        FlycamController editor_camera;
 
         AssetRegistry asset_registry;
 

@@ -22,6 +22,10 @@ FlycamController::FlycamController(GLFWwindow* window_in,
 }
 
 void FlycamController::update_player_transform(const Float32 delta_time) {
+    if(RX_HINT_UNLIKELY(!enabled)) {
+        return;
+    }
+
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
 
     auto registry = registry_ptr->lock();
@@ -72,3 +76,5 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
     player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.y * X_SENSITIVITY), right);
     player_transform.rotation = rotate(player_transform.rotation, static_cast<Float32>(mouse_delta.x * Y_SENSITIVITY), up);
 }
+
+void FlycamController::set_enabled(bool enabled_in) { enabled = enabled_in; }

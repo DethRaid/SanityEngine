@@ -33,8 +33,9 @@ int main(int argc, char** argv) {
 
 namespace sanity::editor {
     SanityEditor::SanityEditor(const std::filesystem::path& initial_project_file)
-        : flycam{g_engine->get_window(), g_engine->get_player(), g_engine->get_global_registry()} {
+        : editor_camera{g_engine->get_window(), g_engine->get_player(), g_engine->get_global_registry()} {
         load_project(initial_project_file);
+
         create_application_gui();
 
         auto& renderer = g_engine->get_renderer();
@@ -42,9 +43,17 @@ namespace sanity::editor {
 
         g_engine->register_tick_function([&](const Float32 delta_time) {
             auto* window = g_engine->get_window();
-            // Only tick if we have focus
-            if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE) {
-                flycam.update_player_transform(delta_time);
+
+            const auto right_mouse_button_state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+            if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE && right_mouse_button_state == GLFW_PRESS) {
+                editor_camera.update_player_transform(delta_time);
+            }
+        });
+
+        auto& input = g_engine->get_input_manager();
+        input.register_mouse_button_callback([&](const int button, const int action, const int mods) {
+            if(button == GLFW_MOUSE_BUTTON_RIGHT) {
+                editor_camera.set_enabled(action == GLFW_PRESS);
             }
         });
     }
