@@ -17,14 +17,17 @@
 
 namespace sanity::editor::import {
     RX_LOG("SceneImporter", logger);
-    RX_LOG("GltfImporter", gltf_logger);
+    RX_LOG("\033[91mGltfImporter\033[0m", gltf_logger);
 
     constexpr const char* POSITION_ATTRIBUTE_NAME = "POSITION";
     constexpr const char* NORMAL_ATTRIBUTE_NAME = "NORMAL";
     constexpr const char* TEXCOORD_ATTRIBUTE_NAME = "TEXCOORD_0";
 
     constexpr const char* BASE_COLOR_TEXTURE_PARAM_NAME = "baseColorTexture";
+    constexpr const char* BASE_COLOR_FACTOR_PARAM_NAME = "baseColorFactor";
     constexpr const char* METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME = "metallicRoughnessTexture";
+    constexpr const char* METALLIC_FACTOR_PARAM_NAME = "metallicFactor";
+    constexpr const char* ROUGHNESS_FACTOR_PARAM_NAME = "roughnessFactor";
     constexpr const char* NORMAL_TEXTURE_PARAM_NAME = "normalTexture";
 
     namespace detail {
@@ -106,10 +109,9 @@ namespace sanity::editor::import {
     } // namespace detail
 
     SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {
-        gltf_logger->set_level(Rx::Log::Level::k_warning);
     }
 
-    Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const Rx::String& scene_path,
+    Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const std::filesystem::path& scene_path,
                                                                 const SceneImportSettings& import_settings,
                                                                 entt::registry& registry) {
         ZoneScoped;
@@ -118,13 +120,13 @@ namespace sanity::editor::import {
         std::string err;
         std::string warn;
         bool success;
-        if(scene_path.ends_with(".glb")) {
+        if(scene_path.extension() == ".glb") {
             ZoneScopedN("Load .glb");
-            success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.data());
+            success = importer.LoadBinaryFromFile(&scene, &err, &warn, scene_path.string());
 
-        } else if(scene_path.ends_with(".gltf")) {
+        } else if(scene_path.extension() == ".gltf") {
             ZoneScopedN("Load .gltf");
-            success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.data());
+            success = importer.LoadASCIIFromFile(&scene, &err, &warn, scene_path.string());
 
         } else {
             gltf_logger->error("Invalid scene file %s", scene_path);
@@ -132,15 +134,17 @@ namespace sanity::editor::import {
         }
 
         if(!warn.empty()) {
-            gltf_logger->warning("Warnings when reading %s: %s", scene_path, warn.c_str());
+            gltf_logger->warning("Warnings when reading %s: %s", scene_path, warn);
         }
         if(!err.empty()) {
-            gltf_logger->error("Errors when reading %s: %s", scene_path, err.c_str());
+            gltf_logger->error("Errors when reading %s: %s", scene_path, err);
         }
         if(!success) {
             gltf_logger->error("Could not read scene %s", scene_path);
             return Rx::nullopt;
         }
+
+        gltf_logger->info("Loaded scene %s", scene_path);
 
         // How to import a scene?
         // First, load all the meshes, textures, materials, and other primitives;
@@ -202,13 +206,29 @@ namespace sanity::editor::import {
                 }
             }
 
-            // Validate
-
-            if(base_color_texture_idx == -1) {
-                gltf_logger->error("Parameter %s on material %s isn't a valid texture",
-                                   BASE_COLOR_TEXTURE_PARAM_NAME,
-                                   material.name.c_str());
+        	Vec4f base_color_factor{1, 1, 1, 1};
+            if(const auto& base_color_factor_value = material.values.find(BASE_COLOR_FACTOR_PARAM_NAME);
+               base_color_factor_value != material.values.end()) {
+                const auto color = base_color_factor_value->second.ColorFactor();
+                memcpy(&base_color_factor, &color, sizeof(float) * 4);
             }
+
+            if(const auto& base_color_texture_value = material.values.find(BASE_COLOR_TEXTURE_PARAM_NAME);
+               base_color_texture_value != material.values.end() && base_color_texture_value->second.TextureIndex() != -1) {
+                if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
+                    sanity_material.base_color = *handle;
+
+                } else {
+                    gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                       base_color_texture_idx,
+                                       BASE_COLOR_TEXTURE_PARAM_NAME);
+                    sanity_material.base_color = renderer->get_pink_texture();
+                }
+
+            } else {
+                gltf_logger->warning("No base color texture on material %s. Falling back to the base color factor", material.name);
+            }
+
             if(metallic_roughness_texture_idx == -1) {
                 gltf_logger->error("Parameter %s on material %s is not a valid texture",
                                    METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME,
@@ -219,15 +239,6 @@ namespace sanity::editor::import {
             }
 
             // Load the textures
-
-            if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
-                sanity_material.base_color = *handle;
-            } else {
-                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
-                                   base_color_texture_idx,
-                                   BASE_COLOR_TEXTURE_PARAM_NAME);
-                sanity_material.base_color = renderer->get_pink_texture();
-            }
 
             if(const auto handle = get_sanity_handle_to_texture(metallic_roughness_texture_idx, scene, cmds); handle.has_value()) {
                 sanity_material.metallic_roughness = *handle;
@@ -570,7 +581,7 @@ namespace sanity::editor::import {
 
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
                 // Create entity and components
-                const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name.c_str(), i);
+                const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name, i);
                 const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
 
                 auto& primitive_transform_component = entity::add_component<engine::TransformComponent>(primitive_entity, registry);
@@ -588,7 +599,7 @@ namespace sanity::editor::import {
                 // materials. This will be addressed in a future revision
                 Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
 
-                meshes_for_raytracing.emplace_back(primitive.mesh, engine::Transform{});
+                meshes_for_raytracing.emplace_back(primitive.mesh, parent_transform_component.transform);
 
                 const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
 

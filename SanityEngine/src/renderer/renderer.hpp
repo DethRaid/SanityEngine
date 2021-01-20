@@ -22,6 +22,12 @@
 #include "settings.hpp"
 #include "single_pass_downsampler.hpp"
 
+namespace std {
+    namespace filesystem {
+        class path;
+    }
+} // namespace std
+
 using Microsoft::WRL::ComPtr;
 
 struct GLFWwindow;
@@ -85,7 +91,7 @@ namespace sanity::engine::renderer {
 
         void begin_frame(uint64_t frame_count);
 
-        void render_frame(SynchronizedResourceAccessor<entt::registry>& registry, const World& world);
+        void render_frame(SynchronizedResourceAccessor<entt::registry>& registryd);
 
         void end_frame() const;
 
@@ -198,7 +204,7 @@ namespace sanity::engine::renderer {
 
         void create_builtin_images();
 
-        void load_noise_texture(const Rx::String& filepath);
+        void load_noise_texture(const std::filesystem::path& filepath);
 
         void create_render_passes();
 
@@ -216,8 +222,7 @@ namespace sanity::engine::renderer {
 #pragma region Renderpasses
         void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                        SynchronizedResourceAccessor<entt::registry>& registry,
-                                       const Uint32& frame_idx,
-                                       const World& world);
+                                       const Uint32& frame_idx);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                      Uint32 render_pass_index,

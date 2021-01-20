@@ -24,7 +24,7 @@ namespace sanity::engine {
         public:
             virtual ~RenderPass() = default;
 
-            virtual void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) = 0;
+            virtual void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
 
             [[nodiscard]] const Rx::Map<TextureHandle, BeginEndState>& get_texture_states() const;
 

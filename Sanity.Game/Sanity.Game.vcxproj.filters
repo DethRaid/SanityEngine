@@ -14,6 +14,9 @@
     <Filter Include="content\settlements\buildings">
       <UniqueIdentifier>{f4898be2-a3d4-42f4-a648-a20b335ea33e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{cd5ba707-45c9-40c7-aa4e-360b2161dde9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sanity.Game.cpp">

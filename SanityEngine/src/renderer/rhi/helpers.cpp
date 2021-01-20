@@ -506,7 +506,7 @@ namespace sanity::engine::renderer {
             .Inputs = build_as_inputs,
             .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
 
-        DEFER(a, [&]() { device.return_scratch_buffer(Rx::Utility::move(scratch_buffer)); });
+       device.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 

@@ -8,10 +8,6 @@
 #include "rx/core/function.h"
 #include "rx/core/ptr.h"
 
-namespace Rx {
-    struct String;
-}
-
 namespace sanity::engine {
     namespace renderer {
         class Renderer;
@@ -55,7 +51,7 @@ namespace sanity::engine {
     public:
         explicit AssetLoader(renderer::Renderer* renderer_in);
 
-        [[nodiscard]] ImageLoadResultHandle load_image(const Rx::String& path,
+        [[nodiscard]] ImageLoadResultHandle load_image(const std::filesystem::path& path,
                                                        const Rx::Function<void(const ImageLoadResult&)>& on_complete);
 
         void release_image_at_idx(Size idx);

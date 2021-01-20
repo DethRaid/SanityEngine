@@ -11,6 +11,9 @@ namespace rex {
     public:
         StdoutStream();
 
+    	StdoutStream(const StdoutStream& other) = default;
+        StdoutStream& operator=(const StdoutStream& other) = default;
+    	
         ~StdoutStream() override;
 
         [[nodiscard]] Uint64 on_write(const Byte* data, Uint64 size, Uint64 offset) override;

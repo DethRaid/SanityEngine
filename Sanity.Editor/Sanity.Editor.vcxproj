@@ -109,7 +109,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)SanityEngine\extern\rex\src;$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\tracy;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)src;$(SolutionDir)SanityEngine\extern\rex\src;$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\tracy;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)..\SanityEngine/extern/rex/src;$(ProjectDir)..\SanityEngine/extern/physx/lib/debug;$(ProjectDir)..\SanityEngine/extern/pix/lib;$(ProjectDir)..\SanityEngine/extern/bve/lib;$(ProjectDir)..\SanityEngine\x64\Debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
   </PropertyGroup>
@@ -176,11 +176,12 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)SanityEngine\extern\rex\src;E:\Documents\SanityEngine\Sanity.Editor\src;$(SolutionDir)SanityEngine\extern\imgui-node-editor;$(SolutionDir)SanityEngine\extern;$(SolutionDir)SanityEngine\extern\pix\include;$(SolutionDir)SanityEngine\extern\physx\include;$(SolutionDir)SanityEngine\extern\json5\include;$(SolutionDir)SanityEngine\extern\D3D12MemoryAllocator;$(SolutionDir)SanityEngine\extern\bve\include;$(SolutionDir)SanityEngine\src</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4291;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)Sanity.Engine.lib;$(OutDir)Rex.Core.lib;dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;WinPixEventRuntime.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)Sanity.Engine.lib;$(OutDir)Rex.Core.lib;dxguid.lib;WindowsApp.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;WinPixEventRuntime.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">

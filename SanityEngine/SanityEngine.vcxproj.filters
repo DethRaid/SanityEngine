@@ -112,6 +112,9 @@
     <Filter Include="shaders\examples">
       <UniqueIdentifier>{69092be9-bb52-4ae5-b2da-928b5df5b296}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\core\fs">
+      <UniqueIdentifier>{63d7439c-912a-4f86-a1c5-d70e9fbc23ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -420,6 +423,9 @@
     <ClInclude Include="src\renderer\single_pass_downsampler.hpp">
       <Filter>src\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\fs\path_ops.hpp">
+      <Filter>src\core\fs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -622,6 +628,9 @@
     </ClCompile>
     <ClCompile Include="src\renderer\single_pass_downsampler.cpp">
       <Filter>src\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\fs\path_ops.cpp">
+      <Filter>src\core\fs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -197,7 +197,7 @@ namespace sanity::engine::renderer {
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
                         D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};
-                        cbv_desc.SizeInBytes = buffer->size;
+                        cbv_desc.SizeInBytes = static_cast<UINT>(buffer->size);
                         cbv_desc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
 
                         device->CreateConstantBufferView(&cbv_desc, desc.handle);

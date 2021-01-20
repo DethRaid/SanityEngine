@@ -5,6 +5,12 @@
 #include "ui/ui_components.hpp"
 #include "windows/content_browser.hpp"
 
+namespace std {
+	namespace filesystem {
+		class path;
+	}
+}
+
 namespace sanity::editor::ui {
     class WorldgenParamsEditor;
     class EntityEditorWindow;
@@ -22,12 +28,12 @@ namespace sanity::editor::ui {
 
         void create_and_edit_new_entity() const;
 
-        void set_content_browser_directory(const Rx::String& content_directory) const;
+        void set_content_browser_directory(const std::filesystem::path& content_directory) const;
 
 #pragma region Editors
-        void show_editor_for_asset(const Rx::String& asset_path) const;
+        void show_editor_for_asset(const std::filesystem::path& asset_path) const;
 
-        void open_mesh_import_settings(const Rx::String& mesh_path) const;
+        void open_mesh_import_settings(const std::filesystem::path& mesh_path) const;
 #pragma endregion
 
     private:
@@ -35,9 +41,9 @@ namespace sanity::editor::ui {
 
         ContentBrowser* content_browser{nullptr};
 
-        void create_worldgen_params_editor(SynchronizedResourceAccessor<entt::registry, Rx::Concurrency::Mutex>& registry);
+        void create_worldgen_params_editor(entt::registry& registry);
 
-        void create_content_browser(entt::registry& registry, const Rx::String& content_directory = "");
+        void create_content_browser(entt::registry& registry);
 
         template <typename WindowType, typename... Args>
         WindowType* create_window_entity(entt::registry& registry, Args&&... args) const;

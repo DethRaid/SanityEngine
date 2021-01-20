@@ -1,9 +1,13 @@
 #pragma once
 
+#include "rx/core/string.h"
+
 namespace sanity::engine::ui {
     class UiPanel {
     public:
-        UiPanel() = default;
+        Rx::String name;
+
+        explicit UiPanel(const Rx::String& name_in = "UI Panel");
 
         UiPanel(const UiPanel& other) = default;
         UiPanel& operator=(const UiPanel& other) = default;
@@ -15,4 +19,6 @@ namespace sanity::engine::ui {
 
         virtual void draw() = 0;
     };
-}
+
+    inline UiPanel::UiPanel(const Rx::String& name_in) : name{name_in} {}
+} // namespace sanity::engine::ui

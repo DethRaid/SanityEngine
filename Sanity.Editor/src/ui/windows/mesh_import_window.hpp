@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "asset_registry/asset_registry.hpp"
 #include "import/scene_importer.hpp"
 #include "ui/Window.hpp"
@@ -7,7 +9,7 @@
 namespace sanity::editor::ui {
     class SceneImportWindow : public engine::ui::Window {
     public:
-        explicit SceneImportWindow(const Rx::String& mesh_path_in);
+        explicit SceneImportWindow(const std::filesystem::path& mesh_path_in);
 
     protected:
         void draw_contents() override;
@@ -17,8 +19,8 @@ namespace sanity::editor::ui {
 
         AssetMetadata<SceneImportSettings> metadata{};
 
-        Rx::String mesh_path;
-    	
+        std::filesystem::path mesh_path;
+
         void import_scene() const;
     };
 } // namespace sanity::editor::ui

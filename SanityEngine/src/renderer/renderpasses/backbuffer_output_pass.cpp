@@ -42,8 +42,7 @@ namespace sanity::engine::renderer {
 
     void CopySceneOutputToTexturePass::render(ID3D12GraphicsCommandList4* commands,
                                       entt::registry& /* registry */,
-                                      Uint32 /* frame_idx */,
-                                      const World& /* world */) {
+                                      Uint32 /* frame_idx */) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "BackbufferOutputPassExecute");
         PIXScopedEvent(commands, denoiser_pass_color, "Execute Backbuffer output pass");

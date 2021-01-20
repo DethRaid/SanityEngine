@@ -20,7 +20,7 @@ namespace sanity::engine {
 
     AssetLoader::AssetLoader(renderer::Renderer* renderer_in) : renderer{renderer_in} {}
 
-    ImageLoadResultHandle AssetLoader::load_image(const Rx::String& path, const Rx::Function<void(const ImageLoadResult&)>& on_complete) {
+    ImageLoadResultHandle AssetLoader::load_image(const std::filesystem::path& path, const Rx::Function<void(const ImageLoadResult&)>& on_complete) {
         ZoneScoped;
         auto idx = Size{0};
 

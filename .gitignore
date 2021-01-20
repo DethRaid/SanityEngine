@@ -537,3 +537,5 @@ vcpkg_installed/
 /SanityEngine/imgui.ini
 *.blend1
 /Sanity.Game/content/temp
+/Sanity.Game/content/tests/polygon
+/Sanity.Game/content/tests/swamp

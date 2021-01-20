@@ -262,7 +262,7 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
     noise_texcoord *= offset;
 
     // Only cast shadow rays if the pixel faces the light source
-    if(length(light_from_sun) > 0) {
+    if(length(light_from_sun) > 0 || true) {
         sun_shadow = raytrace_shadow(sun, input.position_worldspace, noise_texcoord, noise);
     }
 
@@ -276,5 +276,5 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
                                                      sun,
                                                      noise);
 
-    return direct_light; // indirect_light + direct_light;
+    return indirect_light + direct_light;
 }

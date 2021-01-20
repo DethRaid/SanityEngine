@@ -16,7 +16,7 @@ namespace sanity::engine::renderer {
 
         ~DearImGuiRenderPass() override = default;
 
-        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world) override;
+        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
     private:
         Renderer* renderer;

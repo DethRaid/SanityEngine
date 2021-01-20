@@ -10,3 +10,6 @@
 [submodule "SanityEngine/extern/FidelityFX-SPD"]
 	path = SanityEngine/extern/FidelityFX-SPD
 	url = https://github.com/GPUOpen-Effects/FidelityFX-SPD.git
+[submodule "tools/vcpkg"]
+	path = tools/vcpkg
+	url = https://github.com/DethRaid/vcpkg.git

@@ -13,65 +13,71 @@ namespace sanity::editor::ui {
     RX_LOG("ContentBrowser", logger);
 
     constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
-    constexpr Uint32 DIRECTORY_ITEM_HEIGHT = 30;
 
-    ContentBrowser::ContentBrowser(Rx::String content_directory_in)
-        : Window{"Content Browser"},
-          content_directory{Rx::Utility::move(content_directory_in)},
-          selected_directory{content_directory},
-          file_extensions_to_ignore{Rx::Array{".meta", ".blend1", ".blend2", ".blend2"}} {}
+    ContentBrowser::ContentBrowser() : Window{"Content Browser"} { logger->set_level(Rx::Log::Level::k_info); }
 
-    void ContentBrowser::set_content_directory(const Rx::String& content_directory_in) {
+    void ContentBrowser::set_content_directory(const std::filesystem::path& content_directory_in) {
         content_directory = content_directory_in;
-        selected_directory = content_directory;
+        selected_directory = *content_directory;
+        is_visible = true;
     }
 
-    void ContentBrowser::add_ignored_file_extension(const Rx::String& extension) { file_extensions_to_ignore.insert(extension); }
+    void ContentBrowser::add_ignored_file_extension(const std::filesystem::path& extension) { file_extensions_to_ignore.insert(extension); }
 
-    void ContentBrowser::remove_ignored_file_extension(const Rx::String& extension) { file_extensions_to_ignore.erase(extension); }
+    void ContentBrowser::remove_ignored_file_extension(const std::filesystem::path& extension) {
+        file_extensions_to_ignore.erase(extension);
+    }
 
     void ContentBrowser::draw_contents() {
-        Rx::Filesystem::Directory dir{selected_directory};
+        if(!content_directory.has_value()) {
+            logger->verbose("No content directory set, aborting");
+            return;
+        }
 
-        if(content_directory != selected_directory) {
+        Rx::Vector<std::filesystem::path> directories;
+        Rx::Vector<std::filesystem::path> files;
+
+        const auto directory_to_draw = engine::SanityEngine::executable_directory / *content_directory / selected_directory;
+        logger->verbose("Drawing all items in directory %s", directory_to_draw);
+
+        for(const auto& item : std::filesystem::directory_iterator{directory_to_draw}) {
+            logger->verbose("Categorizing item %s", item.path());
+            if(item.is_directory()) {
+                directories.push_back(item.path().stem());
+
+            } else if(item.is_regular_file()) {
+                files.push_back(item.path().filename());
+            }
+        }
+
+        logger->verbose("Categorized all directory items");
+
+        const auto width = ImGui::GetWindowWidth();
+        logger->verbose("ImGUI window width: %f", width);
+        const auto num_columns = static_cast<Uint32>(ceil(width / DIRECTORY_ITEM_WIDTH));
+        logger->verbose("num_columns: %d", num_columns);
+
+        const auto num_items = directories.size() + files.size();
+        const auto num_rows = static_cast<Uint32>(floor(num_items / num_columns));
+
+        logger->verbose("Fitting content into %d columns and %d rows", num_columns, num_rows);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
+        ImGui::Columns(num_columns);
+        ImGui::Separator();
+
+        if(*content_directory != selected_directory) {
             draw_back_button();
 
         } else {
             ImGui::Text("Content root");
         }
 
-        const auto width = ImGui::GetWindowWidth();
-        const auto num_columns = static_cast<Uint32>(floor(width / DIRECTORY_ITEM_WIDTH));
+        auto cur_row = 1u; // Start at 1 because we count `..`
 
-        const auto height = ImGui::GetWindowHeight();
-        const auto num_rows = static_cast<Uint32>(floor(height / DIRECTORY_ITEM_HEIGHT));
-
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
-        ImGui::Columns(num_columns);
-        ImGui::Separator();
-
-        auto cur_row = 0u;
-
-        Rx::Vector<Rx::String> directory_names;
-        Rx::Vector<Rx::String> file_names;
-
-        dir.each([&](Rx::Filesystem::Directory::Item&& item) {
-            if(item.is_directory()) {
-                directory_names.push_back(item.name());
-
-            } else if(item.is_file()) {
-                if(should_ignore_file(item)) {
-                    return;
-                }
-
-                file_names.push_back(item.name());
-            }
-        });
-
-        directory_names.each_fwd([&](const Rx::String& dir_name) {
-            draw_directory(dir_name, [&](const Rx::String& selected_item) {
-                selected_directory = Rx::String::format("%s/%s", selected_directory, selected_item);
-            });
+        directories.each_fwd([&](const std::filesystem::path& directory) {
+            logger->verbose("Drawing directory %s", directory);
+            draw_directory(directory, [&](const std::filesystem::path& selected_item) { selected_directory /= selected_item; });
 
             cur_row++;
             if(cur_row == num_rows) {
@@ -80,9 +86,10 @@ namespace sanity::editor::ui {
             }
         });
 
-        file_names.each_fwd([&](const Rx::String& file_name) {
-            draw_file(file_name, [&](const Rx::String& selected_item) {
-                const auto filename = Rx::String::format("%s/%s", selected_directory, selected_item);
+        files.each_fwd([&](const std::filesystem::path& file) {
+            logger->verbose("Drawing file %s", file);
+            draw_file(file, [&](const std::filesystem::path& selected_item) {
+                const auto filename = selected_directory / selected_item;
                 g_editor->get_ui_controller().show_editor_for_asset(filename);
             });
 
@@ -99,59 +106,42 @@ namespace sanity::editor::ui {
     }
 
     void ContentBrowser::draw_back_button() {
-        if(ImGui::Button("..")) {
-            const auto last_slash_pos = selected_directory.find_last_of("/");
-            const auto new_selected_directory = selected_directory.substring(0, last_slash_pos);
-            selected_directory = new_selected_directory;
-        }
+        draw_directory("..", [&](const std::filesystem::path&) { selected_directory = selected_directory.parent_path(); });
     }
 
-    void ContentBrowser::draw_directory(const Rx::String& directory_name, const Rx::Function<void(const Rx::String&)>& on_open) {
+    void ContentBrowser::draw_directory(const std::filesystem::path& directory,
+                                        const Rx::Function<void(const std::filesystem::path&)>& on_open) {
         auto& asset_registry = g_editor->get_asset_registry();
 
         const auto file_icon = asset_registry.get_directory_icon();
 
-        ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
+        ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<Uint64>(file_icon.index)), {20, 20});
         ImGui::SameLine();
 
-        if(ImGui::Button(directory_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
-            on_open(directory_name);
+        const auto directory_string = directory.string();
+        if(ImGui::Button(directory_string.c_str(), {0, 20})) {
+            on_open(directory);
         }
     }
 
-    void ContentBrowser::draw_file(const Rx::String& file_name, const Rx::Function<void(const Rx::String&)>& on_open) {
+    void ContentBrowser::draw_file(const std::filesystem::path& file, const Rx::Function<void(const std::filesystem::path&)>& on_open) {
         auto& asset_registry = g_editor->get_asset_registry();
 
-        const auto file_icon = asset_registry.get_file_icon(file_name);
+        const auto file_icon = asset_registry.get_icon_for_extension(file.extension());
 
-        ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
+        ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<Uint64>(file_icon.index)), {20, 20});
         ImGui::SameLine();
 
-        if(ImGui::Button(file_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
-            on_open(file_name);
+        const auto file_name = file.string();
+        if(ImGui::Button(file_name.c_str(), {0, 20})) {
+            on_open(file);
         }
     }
 
-    void ContentBrowser::draw_filesystem_item(const Rx::Filesystem::Directory::Item& item,
-                                              const Rx::Function<void(const Rx::Filesystem::Directory::Item&)>& on_open) {
-        const auto& item_name = item.name();
-
-        auto& asset_registry = g_editor->get_asset_registry();
-
-        const auto file_icon = item.is_directory() ? asset_registry.get_directory_icon() : asset_registry.get_file_icon(item_name);
-
-        ImGui::Image(reinterpret_cast<ImTextureID>(file_icon.index), {20, 20});
-        ImGui::SameLine();
-
-        if(ImGui::Button(item_name.data(), {DIRECTORY_ITEM_WIDTH - 20, 20})) {
-            on_open(item);
-        }
-    }
-
-    bool ContentBrowser::should_ignore_file(const Rx::Filesystem::Directory::Item& file) {
+    bool ContentBrowser::should_ignore_file(const std::filesystem::path& file) {
         auto should_ignore = false;
-        file_extensions_to_ignore.each([&](const Rx::String& extension) {
-            if(file.name().ends_with(extension)) {
+        file_extensions_to_ignore.each([&](const std::filesystem::path& extension) {
+            if(file.extension() == extension) {
                 should_ignore = true;
                 return RX_ITERATION_STOP;
             }

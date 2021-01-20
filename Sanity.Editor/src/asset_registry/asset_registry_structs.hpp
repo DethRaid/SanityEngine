@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "rx/core/string.h"
 
 namespace sanity::editor {
     struct SceneImportSettings {
@@ -17,6 +18,13 @@ namespace sanity::editor {
     	bool import_empties{true};
 
     	bool import_object_hierarchy{true};
+
+       /*!
+        * \brief Source file for this mesh asset
+        *
+        * Tells SanityEditor where to import this mesh from, if it needs reimporting
+        */
+        Rx::String source_file{};
     };
 
     /*!
