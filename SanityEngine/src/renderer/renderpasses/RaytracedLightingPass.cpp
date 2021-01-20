@@ -92,6 +92,9 @@ namespace sanity::engine::renderer {
         draw_objects_in_scene(commands, registry, frame_idx);
 
         commands->EndRenderPass();
+
+    	const auto& depth_image = renderer->get_image(depth_target_handle);
+        renderer->get_spd().generate_mip_chain_for_texture(depth_image.resource.Get(), commands);
     }
 
     void RaytracedLightingPass::create_framebuffer(const glm::uvec2& render_resolution) {

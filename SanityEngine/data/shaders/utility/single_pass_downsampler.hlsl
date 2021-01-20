@@ -17,6 +17,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// Slightly modified by Dethraid to use root constants instead of a constant
+// buffer, and to fix up the include paths for my build environment
+
 // when using amd shader intrinscs
 // #include "ags_shader_intrinsics_dx12.h"
 

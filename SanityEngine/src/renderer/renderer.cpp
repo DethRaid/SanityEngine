@@ -297,7 +297,7 @@ namespace sanity::engine::renderer {
             return pink_texture_handle;
         }
 
-    	spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
+        spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
 
         if(create_info.usage == ImageUsage::UnorderedAccess) {
             // Transition the image back to UNORDERED_ACCESS
@@ -309,8 +309,6 @@ namespace sanity::engine::renderer {
 
         return handle;
     }
-
-    void Renderer::generate_mips_for_texture(const Image& image, ID3D12GraphicsCommandList4* commands) {}
 
     Rx::Optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
         if(const auto* idx = image_name_to_index.find(name)) { // NOLINT(bugprone-branch-clone)
@@ -801,4 +799,6 @@ namespace sanity::engine::renderer {
 
         return index;
     }
+
+    SinglePassDownsampler& Renderer::get_spd() { return *spd; }
 } // namespace sanity::engine::renderer

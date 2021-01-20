@@ -176,7 +176,7 @@ namespace sanity::editor::import {
 
         for(const auto& material : scene.materials) {
             ZoneScopedN(material.name.c_str());
-        	
+
             gltf_logger->info("Importing material %s", material.name.c_str());
 
             engine::renderer::StandardMaterial sanity_material{};
@@ -331,7 +331,7 @@ namespace sanity::editor::import {
     Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene,
                                                                          ID3D12GraphicsCommandList4* cmds) const {
         ZoneScoped;
-    	
+
         auto& mesh_store = renderer->get_static_mesh_store();
         const auto uploader = mesh_store.begin_adding_meshes(cmds);
 
@@ -340,7 +340,7 @@ namespace sanity::editor::import {
 
         for(const auto& mesh : scene.meshes) {
             ZoneScopedN(mesh.name.c_str());
-        	
+
             gltf_logger->info("Importing mesh %s", mesh.name.c_str());
 
             GltfMesh imported_mesh{};
@@ -370,7 +370,7 @@ namespace sanity::editor::import {
                                                                                       const tinygltf::Model& scene,
                                                                                       const engine::renderer::MeshUploader& uploader) {
         ZoneScoped;
-    	
+
         const auto indices = get_indices_from_primitive(primitive, scene);
         const auto vertices = get_vertices_from_primitive(primitive, scene);
 
@@ -420,6 +420,12 @@ namespace sanity::editor::import {
 
     Rx::Vector<StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
                                                                           const tinygltf::Model& scene) {
+        Rx::String all_attributes;
+        for(const auto& [attribute_name, attribute] : primitive.attributes) {
+            all_attributes = Rx::String::format("%s, %s", all_attributes, attribute_name.c_str());
+        }
+        gltf_logger->verbose("Primitive has attributes %s", all_attributes);
+
         const auto& positions_itr = primitive.attributes.find(POSITION_ATTRIBUTE_NAME);
         if(positions_itr == primitive.attributes.end()) {
             LOG_MISSING_ATTRIBUTE(POSITION_ATTRIBUTE_NAME);
@@ -458,10 +464,6 @@ namespace sanity::editor::import {
 
             return detail::get_pointer_to_accessor_data<Vec2f>(texcoord_itr->second, scene);
         }();
-        if(texcoord_read_ptr == nullptr) {
-            logger->error("Could not get a pointer to the vertex texcoords");
-            return {};
-        }
 
         const auto& positions_accessor = scene.accessors[positions_itr->second];
 
@@ -473,8 +475,11 @@ namespace sanity::editor::import {
 
             const auto location = *position_read_ptr;
             const auto normal = *normal_read_ptr;
-            auto texcoord = *texcoord_read_ptr;
-            texcoord.y = 1.0 - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
+            Vec2f texcoord;
+            if(texcoord_read_ptr != nullptr) {
+                texcoord = *texcoord_read_ptr;
+                texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
+            }
 
             vertices.push_back(StandardVertex{.location = location, .normal = normal, .texcoord = texcoord});
 
@@ -491,7 +496,7 @@ namespace sanity::editor::import {
                                                         entt::registry& registry,
                                                         ID3D12GraphicsCommandList4* cmds) {
         ZoneScoped;
-    	
+
         // Assume that the files we'll be importing have a single scene
         const auto& default_scene = scene.scenes[scene.defaultScene];
 

@@ -96,9 +96,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,
                                                  ID3D12GraphicsCommandList4* commands);
-
-        void generate_mips_for_texture(const Image& image, ID3D12GraphicsCommandList4* commands);
-
+        
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
         [[nodiscard]] Image get_image(const Rx::String& image_name) const;
@@ -144,6 +142,8 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
         Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
+    	
+        [[nodiscard]] SinglePassDownsampler& get_spd();
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
