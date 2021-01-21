@@ -101,6 +101,7 @@ namespace sanity::engine::renderer {
         cmds->SetComputeRootUnorderedAccessView(GLOBAL_COUNTER_BUFFER_INDEX, global_counter_buffer->resource->GetGPUVirtualAddress());
 
         cmds->SetComputeRootDescriptorTable(DESCRIPTOR_TABLE_INDEX, descriptor_table_handle.gpu_handle);
+        logger->verbose("SetComputeRootDescriptorTable(%#010x)", descriptor_table_handle.gpu_handle.ptr);
 
         // Set counter to 0
         {
@@ -120,10 +121,25 @@ namespace sanity::engine::renderer {
             cmds->ResourceBarrier(1, barriers);
         }
 
+        // Transition mip 0 to SRV
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(texture,
+                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                      0);
+            cmds->ResourceBarrier(1, &barrier);
+        }
+
         cmds->Dispatch(dispatch_thread_group_count_xy[0], dispatch_thread_group_count_xy[1], 1);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(texture);
-        cmds->ResourceBarrier(1, &barrier);
+        // And back to UAV
+        {
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(texture,
+                                                                      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                      0);
+            cmds->ResourceBarrier(1, &barrier);
+        }
 
         backend->schedule_buffer_destruction(Rx::Utility::move(global_counter_buffer));
     }

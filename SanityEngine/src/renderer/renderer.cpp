@@ -16,6 +16,7 @@
 #include "renderer/render_components.hpp"
 #include "renderpasses/backbuffer_output_pass.hpp"
 #include "renderpasses/ui_render_pass.hpp"
+#include "rhi/d3d12_private_data.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
 #include "rhi/render_device.hpp"
@@ -23,7 +24,6 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
-#include "rhi/d3d12_private_data.hpp"
 
 namespace sanity::engine::renderer {
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
@@ -67,7 +67,7 @@ namespace sanity::engine::renderer {
 
         create_render_passes();
 
-    	logger->info("Constructed Renderer");
+        logger->info("Constructed Renderer");
     }
 
     void Renderer::reload_shaders() {
@@ -302,7 +302,7 @@ namespace sanity::engine::renderer {
             return pink_texture_handle;
         }
 
-    	if(generate_mipmaps) {
+        if(generate_mipmaps) {
             {
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
                                                                                      D3D12_RESOURCE_STATE_COPY_DEST,

@@ -37,7 +37,7 @@ struct SpdConstants {
 // Texture definitions
 //--------------------------------------------------------------------------------------
 globallycoherent RWTexture2D<float4> imgDst5 : register(u2);
-RWTexture2D<float4> imgDst[12] : register(u3); // do no access MIP [5]
+RWTexture2D<float4> imgDst[12] : register(u3); // do not access MIP [5]
 Texture2D<float4> imgSrc : register(t0);
 SamplerState srcSampler : register(s0);
 

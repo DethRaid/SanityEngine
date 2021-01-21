@@ -35,7 +35,7 @@ namespace sanity::engine::renderer {
         cvar_enable_gpu_based_validation,
         "r.EnableGpuBasedValidation",
         "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        false);
+        true);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 0, 8, 3);
@@ -482,6 +482,9 @@ namespace sanity::engine::renderer {
 
     void RenderBackend::end_frame() {
         ZoneScoped;
+
+    	// Flush our logs before the debug layer issues any breakpoints
+    	Rx::Log::flush();
 
         transition_swapchain_image_to_presentable();
 
