@@ -108,8 +108,7 @@ namespace sanity::editor::import {
         }
     } // namespace detail
 
-    SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {
-    }
+    SceneImporter::SceneImporter(engine::renderer::Renderer& renderer_in) : renderer{&renderer_in} {}
 
     Rx::Optional<entt::entity> SceneImporter::import_gltf_scene(const std::filesystem::path& scene_path,
                                                                 const SceneImportSettings& import_settings,
@@ -150,6 +149,7 @@ namespace sanity::editor::import {
         // First, load all the meshes, textures, materials, and other primitives;
 
         auto& backend = renderer->get_render_backend();
+        backend.begin_frame_capture();
         auto cmds = backend.create_command_list();
 
         if(import_settings.import_meshes) {
@@ -206,7 +206,7 @@ namespace sanity::editor::import {
                 }
             }
 
-        	Vec4f base_color_factor{1, 1, 1, 1};
+            Vec4f base_color_factor{1, 1, 1, 1};
             if(const auto& base_color_factor_value = material.values.find(BASE_COLOR_FACTOR_PARAM_NAME);
                base_color_factor_value != material.values.end()) {
                 const auto color = base_color_factor_value->second.ColorFactor();
@@ -609,7 +609,10 @@ namespace sanity::editor::import {
 
                 const auto ray_material = engine::renderer::RaytracingMaterial{.handle = renderable.material.index};
 
-                const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle, .material = ray_material};
+                const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle,
+                                                                           .material = ray_material,
+                                                                           .transform = primitive_transform_component.get_world_matrix(
+                                                                               registry)};
                 //,
                 //.transform = cached_transform.to_matrix()};
                 raytracing_objects.push_back(ray_object);

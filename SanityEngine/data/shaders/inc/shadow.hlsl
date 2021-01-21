@@ -26,7 +26,7 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
                     t * z * z + c);
 }
 
-float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texcoord, Texture2D noise) {
+float raytrace_shadow(const Light light, const float3 position_worldspace, const float2 noise_texcoord, Texture2D noise) {
     // Shadow ray query
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
 
@@ -34,24 +34,21 @@ float raytrace_shadow(Light light, float3 position_worldspace, float2 noise_texc
 
     for(uint i = 1; i <= NUM_SHADOW_RAYS; i++) {
         // Random cone with the same angular size as the sun
-        float3 random_vector = float3(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
+        const float3 random_vector = float3(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
 
-        float3 projected_vector = random_vector - (-light.direction * dot(-light.direction, random_vector));
-        float random_angle = random_vector.z * i * light.angular_size;
-        float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
-        float3 ray_direction = mul(rotation_matrix, -light.direction);
+        const float3 projected_vector = random_vector - (-light.direction * dot(-light.direction, random_vector));
+        const float random_angle = random_vector.z * i * light.angular_size;
+        const float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
+        const float3 ray_direction = mul(rotation_matrix, -light.direction);
 
         RayDesc ray;
         ray.Origin = position_worldspace;
         ray.TMin = 0.01; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
         ray.Direction = ray_direction;
-        ray.TMax = 100000; // TODO: Pass this in with a CB
+        ray.TMax = 1000; // TODO: Pass this in with a CB
 
         // Set up work
-        q.TraceRayInline(raytracing_scene,
-                         RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES,
-                         0xFF,
-                         ray);
+        q.TraceRayInline(raytracing_scene, RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES, 0xFF, ray);
 
         // Actually perform the trace
         q.Proceed();

@@ -118,7 +118,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Rx::Ptr<BindGroupBuilder> create_bind_group_builder(
             const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
             const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
-            const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {});
+            const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {}) const;
 
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
                                                                                 const ComPtr<ID3D12RootSignature>& root_signature) const;
@@ -145,7 +145,15 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Uint32 get_cur_gpu_frame_idx() const;
 
+        /*!
+         * @brief Begins a programmatic capture which must be manually ended
+         */
         void begin_capture() const;
+
+        /*!
+         * @brief Begins a programmatic capture that will end after the frame has been presented
+         */
+        void begin_frame_capture();
 
         void end_capture() const;
 
@@ -157,7 +165,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Buffer get_staging_buffer(Uint64 num_bytes);
 
-    	[[nodiscard]] Buffer get_staging_buffer_for_texture(ID3D12Resource* texture);
+        [[nodiscard]] Buffer get_staging_buffer_for_texture(ID3D12Resource* texture);
 
         void return_staging_buffer(const Buffer& buffer);
 
@@ -186,6 +194,8 @@ namespace sanity::engine::renderer {
         ComPtr<ID3D12Debug1> debug_controller;
         ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> dred_settings;
         ComPtr<IDXGraphicsAnalysis> graphics_analysis;
+
+        bool is_frame_capture_active{false};
 
         ComPtr<IDXGIFactory4> factory;
 

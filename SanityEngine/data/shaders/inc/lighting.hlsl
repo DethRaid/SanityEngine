@@ -245,36 +245,37 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
 }
 
 float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albedo, float3 normal, float roughness, Texture2D noise) {
-    Light sun = lights[0]; // The sun is ALWAYS at index 0
+    const Light sun = lights[0]; // The sun is ALWAYS at index 0
 
-    float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
+    const float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
     float3 view_vector_viewspace = normalize(position_viewspace.xyz);
-    float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
+    const float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
 
-    float3 light_from_sun = brdf(albedo.rgb, 0.02, roughness, input.normal, -sun.direction, view_vector_worldspace);
+    const float3 light_from_sun = brdf(albedo.rgb, 0.02, roughness, input.normal, -sun.direction, view_vector_worldspace);
 
     float sun_shadow = 0;
 
     uint2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
     float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
-    float2 offset = noise.Sample(bilinear_sampler, noise_texcoord * per_frame_data[0].time_since_start).rg;
+    const float2 offset = noise.Sample(bilinear_sampler, noise_texcoord * per_frame_data[0].time_since_start).rg;
     noise_texcoord *= offset;
 
     // Only cast shadow rays if the pixel faces the light source
-    if(length(light_from_sun) > 0 || true) {
+    if(length(light_from_sun) > 0) {
         sun_shadow = raytrace_shadow(sun, input.position_worldspace, noise_texcoord, noise);
     }
 
-    float3 direct_light = light_from_sun * sun_shadow;
+    const float3 direct_light = light_from_sun * sun_shadow;
 
-    float3 indirect_light = raytraced_indirect_light(input.position_worldspace,
-                                                     input.normal,
-                                                     view_vector_worldspace,
-                                                     albedo,
-                                                     noise_texcoord,
-                                                     sun,
-                                                     noise);
+    const float3 indirect_light = raytraced_indirect_light(input.position_worldspace,
+                                                           input.normal,
+                                                           view_vector_worldspace,
+                                                           albedo,
+                                                           noise_texcoord,
+                                                           sun,
+                                                           noise);
 
-    return indirect_light + direct_light;
+    return indirect_light;
+    //indirect_light + direct_light;
 }

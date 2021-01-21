@@ -38,7 +38,7 @@ namespace sanity::engine::renderer {
         true);
 
     RX_CONSOLE_IVAR(
-        cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 0, 8, 3);
+        cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 1, 8, 3);
 
     RX_CONSOLE_BVAR(cvar_break_on_validation_error,
                     "r.BreakOnValidationError",
@@ -309,7 +309,7 @@ namespace sanity::engine::renderer {
     Rx::Ptr<BindGroupBuilder> RenderBackend::create_bind_group_builder(
         const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors,
         const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
-        const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) {
+        const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) const {
 
         RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
                   "If you specify descriptor table descriptors, you must also specify descriptor table handles");
@@ -483,8 +483,8 @@ namespace sanity::engine::renderer {
     void RenderBackend::end_frame() {
         ZoneScoped;
 
-    	// Flush our logs before the debug layer issues any breakpoints
-    	Rx::Log::flush();
+        // Flush our logs before the debug layer issues any breakpoints
+        Rx::Log::flush();
 
         transition_swapchain_image_to_presentable();
 
@@ -504,6 +504,11 @@ namespace sanity::engine::renderer {
             }
         }
 
+        if(is_frame_capture_active) {
+            end_capture();
+            is_frame_capture_active = false;
+        }
+
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % cvar_max_in_flight_gpu_frames->get();
     }
 
@@ -513,6 +518,14 @@ namespace sanity::engine::renderer {
         if(graphics_analysis) {
             graphics_analysis->BeginCapture();
         }
+    }
+
+    void RenderBackend::begin_frame_capture() {
+        if(!is_frame_capture_active) {
+            begin_capture();
+        }
+
+        is_frame_capture_active = true;
     }
 
     void RenderBackend::end_capture() const {

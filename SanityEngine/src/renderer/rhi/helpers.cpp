@@ -506,12 +506,12 @@ namespace sanity::engine::renderer {
             .Inputs = build_as_inputs,
             .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
 
-       device.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
-
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
         const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
+
+        device.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
 
         return {Rx::Utility::move(result_buffer)};
     }

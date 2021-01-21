@@ -90,48 +90,48 @@ namespace sanity::engine::renderer {
 
         commands->EndRenderPass();
 
-        const auto& depth_image = renderer->get_image(depth_target_handle);
-        const auto& downsampled_depth_image = renderer->get_image(downsampled_depth_target_handle);
-
-        {
-            const auto barriers = std::array{
-                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
-                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                                                     D3D12_RESOURCE_STATE_COPY_SOURCE),
-                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
-                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                     D3D12_RESOURCE_STATE_COPY_DEST),
-            };
-            commands->ResourceBarrier(barriers.size(), barriers.data());
-        }
-
-        const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = depth_image.resource.Get(),
-                                                                   .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                   .SubresourceIndex = 0};
-        const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = downsampled_depth_image.resource.Get(),
-                                                                   .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                                                                   .SubresourceIndex = 0};
-        const auto src_box = D3D12_BOX{.left = 0,
-                                       .top = 0,
-                                       .front = 0,
-                                       .right = depth_image.width,
-                                       .bottom = depth_image.height,
-                                       .back = depth_image.depth};
-        commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &src_box);
-
-        {
-            const auto barriers = std::array{
-                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
-                                                     D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE),
-                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
-                                                     D3D12_RESOURCE_STATE_COPY_DEST,
-                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-            };
-            commands->ResourceBarrier(barriers.size(), barriers.data());
-        }
-
-        renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
+        // const auto& depth_image = renderer->get_image(depth_target_handle);
+        // const auto& downsampled_depth_image = renderer->get_image(downsampled_depth_target_handle);
+        // 
+        // {
+        //     const auto barriers = std::array{
+        //         CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
+        //                                              D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        //                                              D3D12_RESOURCE_STATE_COPY_SOURCE),
+        //         CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
+        //                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        //                                              D3D12_RESOURCE_STATE_COPY_DEST),
+        //     };
+        //     commands->ResourceBarrier(barriers.size(), barriers.data());
+        // }
+        // 
+        // const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = depth_image.resource.Get(),
+        //                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+        //                                                            .SubresourceIndex = 0};
+        // const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = downsampled_depth_image.resource.Get(),
+        //                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+        //                                                            .SubresourceIndex = 0};
+        // const auto src_box = D3D12_BOX{.left = 0,
+        //                                .top = 0,
+        //                                .front = 0,
+        //                                .right = depth_image.width,
+        //                                .bottom = depth_image.height,
+        //                                .back = depth_image.depth};
+        // commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &src_box);
+        // 
+        // {
+        //     const auto barriers = std::array{
+        //         CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
+        //                                              D3D12_RESOURCE_STATE_COPY_SOURCE,
+        //                                              D3D12_RESOURCE_STATE_DEPTH_WRITE),
+        //         CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
+        //                                              D3D12_RESOURCE_STATE_COPY_DEST,
+        //                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        //     };
+        //     commands->ResourceBarrier(barriers.size(), barriers.data());
+        // }
+        // 
+        // renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
     }
 
     void RaytracedLightingPass::create_framebuffer(const glm::uvec2& render_resolution) {
@@ -178,11 +178,11 @@ namespace sanity::engine::renderer {
 
         render_target_size = render_resolution;
 
-        auto downsampled_depth_create_info = depth_target_create_info;
-        downsampled_depth_create_info.name = "Depth buffer with mips";
-        downsampled_depth_create_info.usage = ImageUsage::UnorderedAccess;
-
-        downsampled_depth_target_handle = renderer->create_image(downsampled_depth_create_info);
+        // auto downsampled_depth_create_info = depth_target_create_info;
+        // downsampled_depth_create_info.name = "Depth buffer with mips";
+        // downsampled_depth_create_info.usage = ImageUsage::UnorderedAccess;
+        // 
+        // downsampled_depth_target_handle = renderer->create_image(downsampled_depth_create_info);
     }
 
     TextureHandle RaytracedLightingPass::get_color_target_handle() const { return color_target_handle; }

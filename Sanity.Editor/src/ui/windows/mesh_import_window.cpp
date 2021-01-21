@@ -39,7 +39,7 @@ namespace sanity::editor::ui {
 
         ImGui::SameLine();
 
-        if(ImGui::Button("Import")) {
+        if(ImGui::Button("Import")) {        	
             import_scene();
         }
     }
