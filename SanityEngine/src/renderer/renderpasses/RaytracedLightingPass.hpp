@@ -41,6 +41,8 @@ namespace sanity::engine::renderer {
         TextureHandle color_target_handle;
         TextureHandle depth_target_handle;
 
+        TextureHandle downsampled_depth_target_handle;
+
         Uint64 forward_pass_color{PIX_COLOR(224, 96, 54)};
 
         D3D12_RENDER_PASS_RENDER_TARGET_DESC color_target_access;

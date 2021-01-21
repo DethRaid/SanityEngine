@@ -35,7 +35,7 @@ namespace sanity::engine::renderer {
         cvar_enable_gpu_based_validation,
         "r.EnableGpuBasedValidation",
         "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        false);
+        true);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 0, 8, 3);
@@ -199,21 +199,18 @@ namespace sanity::engine::renderer {
         auto image = Rx::make_ptr<Image>(RX_SYSTEM_ALLOCATOR);
         image->format = create_info.format;
 
-        D3D12_RESOURCE_STATES initial_state{};
+        D3D12_RESOURCE_STATES initial_state{D3D12_RESOURCE_STATE_COMMON};
         switch(create_info.usage) {
             case ImageUsage::RenderTarget:
-                initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
-                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+                desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Render targets are always committed resources
                 break;
 
             case ImageUsage::SampledImage:
-                initial_state = D3D12_RESOURCE_STATE_COMMON;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
 
             case ImageUsage::DepthStencil:
-                initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
                 alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Depth/Stencil targets are always committed resources
                 break;
@@ -223,9 +220,6 @@ namespace sanity::engine::renderer {
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
         }
-
-        // yolo
-        initial_state = D3D12_RESOURCE_STATE_COMMON;
 
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
@@ -1327,15 +1321,17 @@ namespace sanity::engine::renderer {
 
                 // ReSharper disable once CppLocalVariableMayBeConst
                 HANDLE event = CreateEvent(nullptr, false, false, nullptr);
-                command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
+                if(event != nullptr) {
+                    command_list_done_fence->SetEventOnCompletion(CPU_FENCE_SIGNALED, event);
 
-                WaitForSingleObject(event, INFINITE);
+                    WaitForSingleObject(event, INFINITE);
 
-                log_dred_report();
+                    log_dred_report();
 
-                command_list_done_fences.push_back(command_list_done_fence);
+                    command_list_done_fences.push_back(command_list_done_fence);
 
-                CloseHandle(event);
+                    CloseHandle(event);
+                }
             }
 
             auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands.Get());

@@ -266,7 +266,10 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info, const void* image_data, ID3D12GraphicsCommandList4* commands) {
+    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
+                                         const void* image_data,
+                                         ID3D12GraphicsCommandList4* commands,
+                                         bool generate_mipmaps) {
         ZoneScoped;
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
@@ -299,14 +302,25 @@ namespace sanity::engine::renderer {
             return pink_texture_handle;
         }
 
-        spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
+    	if(generate_mipmaps) {
+            {
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                                                                                     D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
 
-        if(create_info.usage == ImageUsage::UnorderedAccess) {
-            // Transition the image back to UNORDERED_ACCESS
-            const auto barriers = Rx::Array{
-                CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON)};
+                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            }
 
-            commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
+
+            if(create_info.usage == ImageUsage::UnorderedAccess) {
+                // Transition the image back to UNORDERED_ACCESS
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                                     D3D12_RESOURCE_STATE_COPY_DEST)};
+
+                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            }
         }
 
         return handle;

@@ -27,6 +27,16 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] static SinglePassDownsampler Create(RenderBackend& backend);
 
+        /*!
+         * @brief Generates the full mip chain for the given texture
+         *
+         * Texture must be in the UNORDERED_ACCESS state
+         *
+         * Texture mip 0 must have useful data
+         *
+         * @param texture Texture to generate mips for
+         * @param cmds Command list ot use
+         */
         void generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds) const;
 
     private:
@@ -41,7 +51,7 @@ namespace sanity::engine::renderer {
                                        RenderBackend& backend_in);
 
         [[nodiscard]] DescriptorRange fill_descriptor_table(ID3D12Resource* texture,
-                                                                  const ComPtr<ID3D12Device>& device,
-                                                                  Uint32 num_mips) const;
+                                                            const ComPtr<ID3D12Device>& device,
+                                                            Uint32 num_mips) const;
     };
 } // namespace sanity::engine::renderer

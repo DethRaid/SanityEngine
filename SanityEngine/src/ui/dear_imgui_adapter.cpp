@@ -147,7 +147,7 @@ namespace sanity::engine {
     void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
         ZoneScoped;
 
-        logger->info("Drawing UI to ImGUI - %d components to render", view.size());
+        logger->verbose("Drawing UI to ImGUI - %d components to render", view.size());
         
         auto& io = ImGui::GetIO();
         IM_ASSERT(

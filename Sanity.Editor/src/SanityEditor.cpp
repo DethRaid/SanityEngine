@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
     initialize_g_engine(executable_directory);
 
-    auto* editor = sanity::editor::initialize_editor(R"(C:\Users\gold1\Documents\SanityEngine\SanityEngine\Sanity.Game\SumerianGame.json)");
+    auto* editor = sanity::editor::initialize_editor(R"(E:\Documents\SanityEngine\Sanity.Game\SumerianGame.json)");
 
     editor->run_until_quit();
 

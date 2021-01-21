@@ -113,21 +113,16 @@ namespace sanity::engine::renderer {
             D3D12_WRITEBUFFERIMMEDIATE_PARAMETER param{.Dest = global_counter_buffer->resource->GetGPUVirtualAddress(), .Value = 0};
             cmds->WriteBufferImmediate(1, &param, nullptr);
 
-            D3D12_RESOURCE_BARRIER barriers[2] = {CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource.Get(),
+            D3D12_RESOURCE_BARRIER barriers[1] = {CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource.Get(),
                                                                                        D3D12_RESOURCE_STATE_COPY_DEST,
                                                                                        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                       0),
-                                                  CD3DX12_RESOURCE_BARRIER::Transition(texture,
-                                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                       D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
-            cmds->ResourceBarrier(2, barriers);
+                                                                                       0)};
+            cmds->ResourceBarrier(1, barriers);
         }
 
         cmds->Dispatch(dispatch_thread_group_count_xy[0], dispatch_thread_group_count_xy[1], 1);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(texture,
-                                                                  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                  D3D12_RESOURCE_STATE_COPY_DEST);
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(texture);
         cmds->ResourceBarrier(1, &barrier);
 
         backend->schedule_buffer_destruction(Rx::Utility::move(global_counter_buffer));
@@ -141,20 +136,31 @@ namespace sanity::engine::renderer {
     DescriptorRange SinglePassDownsampler::fill_descriptor_table(ID3D12Resource* texture,
                                                                  const ComPtr<ID3D12Device>& device,
                                                                  const Uint32 num_mips) const {
-        const auto desc = texture->GetDesc();
+        const auto& desc = texture->GetDesc();
 
         auto& descriptor_allocator = backend->get_cbv_srv_uav_allocator();
 
         const auto descriptor_size = descriptor_allocator.get_descriptor_size();
         const auto output_mips_descriptors = descriptor_allocator.allocate_descriptors(num_mips - 1);
+        const auto first_cpu_descriptor_ptr = output_mips_descriptors.cpu_handle.ptr;
+
+        logger->info("Starting descriptor table at CPU pointer %#010x, heap index %d",
+                     first_cpu_descriptor_ptr,
+                     (first_cpu_descriptor_ptr - descriptor_allocator.get_heap()->GetCPUDescriptorHandleForHeapStart().ptr) /
+                         descriptor_size);
 
         auto cur_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{output_mips_descriptors.cpu_handle};
 
         const auto mip_6_actual_slice = std::min(6u, num_mips);
-        const auto mip_6_uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
-                                                                     .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
-                                                                     .Texture2D = {.MipSlice = mip_6_actual_slice, .PlaneSlice = 0}};
+        auto mip_6_uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
+                                                               .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+                                                               .Texture2D = {.MipSlice = mip_6_actual_slice, .PlaneSlice = 0}};
+        if(mip_6_uav_desc.Format == DXGI_FORMAT_R32_TYPELESS) {
+            mip_6_uav_desc.Format = DXGI_FORMAT_R32_FLOAT;
+        }
+
         device->CreateUnorderedAccessView(texture, nullptr, &mip_6_uav_desc, cur_descriptor);
+        logger->info("Created UAV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
 
         cur_descriptor = cur_descriptor.Offset(1, descriptor_size);
 
@@ -162,20 +168,30 @@ namespace sanity::engine::renderer {
             auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = desc.Format,
                                                              .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                              .Texture2D = {.MipSlice = i + 1, .PlaneSlice = 0}};
+            if(uav_desc.Format == DXGI_FORMAT_R32_TYPELESS) {
+                uav_desc.Format = DXGI_FORMAT_R32_FLOAT;
+            }
 
             device->CreateUnorderedAccessView(texture, nullptr, &uav_desc, cur_descriptor);
+            logger->info("Created UAV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
 
             cur_descriptor = cur_descriptor.Offset(1, descriptor_size);
         }
 
-        const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = desc.Format,
-                                                              .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-                                                              .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-                                                              .Texture2D = {.MostDetailedMip = 0,
-                                                                            .MipLevels = 1,
-                                                                            .PlaneSlice = 0,
-                                                                            .ResourceMinLODClamp = 0}};
+        cur_descriptor = cur_descriptor.Offset(SPD_MAX_MIP_LEVELS + 1 - num_mips, descriptor_size);
+
+        auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = desc.Format,
+                                                        .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                                                        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                                                        .Texture2D = {.MostDetailedMip = 0,
+                                                                      .MipLevels = 1,
+                                                                      .PlaneSlice = 0,
+                                                                      .ResourceMinLODClamp = 0}};
+        if(srv_desc.Format == DXGI_FORMAT_R32_TYPELESS) {
+            srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
+        }
         device->CreateShaderResourceView(texture, &srv_desc, cur_descriptor);
+        logger->info("Created SRV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
 
         return output_mips_descriptors;
     }

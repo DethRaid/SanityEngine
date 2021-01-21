@@ -101,7 +101,8 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
                                                  const void* image_data,
-                                                 ID3D12GraphicsCommandList4* commands);
+                                                 ID3D12GraphicsCommandList4* commands,
+                                                 bool generate_mipmaps = true);
         
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
