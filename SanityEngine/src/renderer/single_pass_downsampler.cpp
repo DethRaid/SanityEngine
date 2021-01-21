@@ -141,13 +141,13 @@ namespace sanity::engine::renderer {
         auto& descriptor_allocator = backend->get_cbv_srv_uav_allocator();
 
         const auto descriptor_size = descriptor_allocator.get_descriptor_size();
-        const auto output_mips_descriptors = descriptor_allocator.allocate_descriptors(num_mips - 1);
+        const auto output_mips_descriptors = descriptor_allocator.allocate_descriptors(16);
         const auto first_cpu_descriptor_ptr = output_mips_descriptors.cpu_handle.ptr;
 
-        logger->info("Starting descriptor table at CPU pointer %#010x, heap index %d",
-                     first_cpu_descriptor_ptr,
-                     (first_cpu_descriptor_ptr - descriptor_allocator.get_heap()->GetCPUDescriptorHandleForHeapStart().ptr) /
-                         descriptor_size);
+        logger->verbose("Starting descriptor table at CPU pointer %#010x, heap index %d",
+                        first_cpu_descriptor_ptr,
+                        (first_cpu_descriptor_ptr - descriptor_allocator.get_heap()->GetCPUDescriptorHandleForHeapStart().ptr) /
+                            descriptor_size);
 
         auto cur_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{output_mips_descriptors.cpu_handle};
 
@@ -160,7 +160,7 @@ namespace sanity::engine::renderer {
         }
 
         device->CreateUnorderedAccessView(texture, nullptr, &mip_6_uav_desc, cur_descriptor);
-        logger->info("Created UAV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
+        logger->verbose("Created UAV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
 
         cur_descriptor = cur_descriptor.Offset(1, descriptor_size);
 
@@ -173,7 +173,7 @@ namespace sanity::engine::renderer {
             }
 
             device->CreateUnorderedAccessView(texture, nullptr, &uav_desc, cur_descriptor);
-            logger->info("Created UAV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
+            logger->verbose("Created UAV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
 
             cur_descriptor = cur_descriptor.Offset(1, descriptor_size);
         }
@@ -191,7 +191,7 @@ namespace sanity::engine::renderer {
             srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
         }
         device->CreateShaderResourceView(texture, &srv_desc, cur_descriptor);
-        logger->info("Created SRV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
+        logger->verbose("Created SRV descriptor at index %d", (cur_descriptor.ptr - first_cpu_descriptor_ptr) / descriptor_size);
 
         return output_mips_descriptors;
     }
