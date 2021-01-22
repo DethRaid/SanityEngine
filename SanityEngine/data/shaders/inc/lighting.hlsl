@@ -165,16 +165,16 @@ float2 wang_hash(uint2 seed) {
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
  */
-float3 raytraced_indirect_light(in float3 position_worldspace,
-                                in float3 normal,
-                                in float3 eye_vector,
-                                in float3 albedo,
-                                in float2 noise_texcoord,
-                                in Light sun,
-                                in Texture2D noise) {
-    uint num_indirect_rays = 5;
+float3 raytraced_indirect_light(const in float3 position_worldspace,
+                                const in float3 normal,
+                                const in float3 eye_vector,
+                                const in float3 albedo,
+                                const in float2 noise_texcoord,
+                                const in Light sun,
+                                const in Texture2D noise) {
+    const uint num_indirect_rays = 3;
 
-    uint num_bounces = 2;
+    const uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -190,17 +190,15 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
     float3 surface_albedo = albedo;
     float3 view_vector = eye_vector;
 
-    float num_samples = 0;
-
     for(uint ray_idx = 1; ray_idx <= num_indirect_rays; ray_idx++) {
         float3 reflection_factor = 1;
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
+            const float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
             float3 ray_direction = CosineSampleHemisphere(nums);
-            float pdf = ray_direction.y;
-            float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
+            const float pdf = ray_direction.y;
+            const float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
             ray_direction = normalize(mul(onb, ray_direction));
 
             if(dot(surface_normal, ray_direction) < 0) {
@@ -221,9 +219,9 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                                                        hit_vertex,
                                                        hit_material) /
                                     (2.0f * PI);
-            light_sample += reflection_factor * incoming_light.rgb;
-            if(incoming_light.a > 0.05) {
+            light_sample += reflection_factor*incoming_light.rgb;
 
+            if(incoming_light.a > 0.05) {
                 // set up next ray
                 ray_origin = hit_vertex.position;
                 surface_normal = hit_vertex.normal;
@@ -232,16 +230,15 @@ float3 raytraced_indirect_light(in float3 position_worldspace,
                 view_vector = ray_direction;
 
             } else {
-                // Ray hit the sky, nothing to bounce through
+                // Ray escaped into the sky
                 break;
             }
         }
 
-        indirect_light += light_sample;
-        num_samples += 1.0f;
+        indirect_light += light_sample / (float) num_bounces;
     }
 
-    return indirect_light / num_samples;
+    return indirect_light / (float) num_indirect_rays;
 }
 
 float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albedo, float3 normal, float roughness, Texture2D noise) {
@@ -255,9 +252,8 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
 
     float sun_shadow = 0;
 
-    uint2 noise_tex_size;
-    noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
-    float2 noise_texcoord = input.position.xy / float2(noise_tex_size);
+    float2 noise_tex_size = float2(1024.f, 1024.f);
+    float2 noise_texcoord = input.position.xy / noise_tex_size;
     const float2 offset = noise.Sample(bilinear_sampler, noise_texcoord * per_frame_data[0].time_since_start).rg;
     noise_texcoord *= offset;
 
@@ -276,6 +272,5 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
                                                            sun,
                                                            noise);
 
-    return indirect_light;
-    //indirect_light + direct_light;
+    return indirect_light + direct_light;
 }

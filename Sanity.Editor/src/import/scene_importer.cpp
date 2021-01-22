@@ -485,7 +485,7 @@ namespace sanity::editor::import {
             // Hope that all the buffers have the same size... They should...
 
             const auto location = *position_read_ptr;
-            const auto normal = *normal_read_ptr;
+            const auto normal = *normal_read_ptr * Vec3f{1.f, 1.f, -1.f};   // glTF to DirectX coordinate space
             Vec2f texcoord;
             if(texcoord_read_ptr != nullptr) {
                 texcoord = *texcoord_read_ptr;
