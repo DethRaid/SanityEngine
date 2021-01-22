@@ -11,7 +11,7 @@
  */
 class FlycamController {
 public:
-    explicit FlycamController(GLFWwindow* window_in, entt::entity controlled_entity_in, SynchronizedResource<entt::registry>& registry_in);
+    explicit FlycamController(GLFWwindow* window_in, entt::entity controlled_entity_in, entt::registry& registry_in);
 
     void update_player_transform(Float32 delta_time);
 
@@ -31,7 +31,7 @@ private:
     /*!
      * \brief Registry where all the player's components are stored
      */
-    SynchronizedResource<entt::registry>* registry_ptr;
+    entt::registry* registry_ptr;
 
     glm::dvec2 last_mouse_pos{};
 	

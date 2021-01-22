@@ -14,7 +14,7 @@ namespace sanity::editor::ui {
 
     constexpr Uint32 DIRECTORY_ITEM_WIDTH = 200;
 
-    ContentBrowser::ContentBrowser() : Window{"Content Browser"} { logger->set_level(Rx::Log::Level::k_info); }
+    ContentBrowser::ContentBrowser() : Window{"Content Browser"} { }
 
     void ContentBrowser::set_content_directory(const std::filesystem::path& content_directory_in) {
         content_directory = content_directory_in;

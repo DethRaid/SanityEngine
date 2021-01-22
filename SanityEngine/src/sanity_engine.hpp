@@ -13,6 +13,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/time/stop_watch.h"
 #include "settings.hpp"
+#include "core/reflection/type_reflection.hpp"
 #include "stats/framerate_tracker.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
@@ -42,12 +43,14 @@ namespace sanity::engine {
          */
         void tick();
 
+        [[nodiscard]] TypeReflection& get_type_reflector();
+    	
         [[nodiscard]] entt::entity get_player() const;
 
         /*!
          * \brief Returns the engine-side registry of entities. This should be used for UI components mostly
          */
-        [[nodiscard]] SynchronizedResource<entt::registry>& get_global_registry();
+        [[nodiscard]] entt::registry& get_global_registry();
 
         [[nodiscard]] GLFWwindow* get_window() const;
 
@@ -58,6 +61,8 @@ namespace sanity::engine {
     private:
         rex::Wrapper rex;
 
+        TypeReflection type_reflector;
+    	
         Rx::Ptr<InputManager> input_manager;
 
         Rx::Ptr<renderer::Renderer> renderer;
@@ -72,7 +77,7 @@ namespace sanity::engine {
 
         GLFWwindow* window;
 
-        SynchronizedResource<entt::registry> global_registry;
+        entt::registry global_registry;
 
         /*!
          * \brief Entity which represents the player
@@ -100,6 +105,8 @@ namespace sanity::engine {
 
         void register_cvar_change_listeners();
 
+        void register_engine_component_type_reflection();
+    	
 #pragma region Spawning
         void create_planetary_atmosphere();
 

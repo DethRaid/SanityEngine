@@ -232,6 +232,7 @@
     <ClCompile Include="src\ui\windows\content_browser.cpp" />
     <ClCompile Include="src\ui\windows\EntityEditorWindow.cpp" />
     <ClCompile Include="src\ui\windows\mesh_import_window.cpp" />
+    <ClCompile Include="src\ui\windows\scene_hierarchy.cpp" />
     <ClCompile Include="src\ui\windows\WorldgenParamsEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -251,6 +252,7 @@
     <ClInclude Include="src\ui\windows\content_browser.hpp" />
     <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp" />
     <ClInclude Include="src\ui\windows\mesh_import_window.hpp" />
+    <ClInclude Include="src\ui\windows\scene_hierarchy.hpp" />
     <ClInclude Include="src\ui\windows\WorldgenParamsEditor.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -88,6 +88,9 @@
     <ClCompile Include="src\serialization\project_serialization.cpp">
       <Filter>src\serialization</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\windows\scene_hierarchy.cpp">
+      <Filter>src\ui\windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SanityEditor.hpp">
@@ -140,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="src\serialization\project_serialization.hpp">
       <Filter>src\serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\windows\scene_hierarchy.hpp">
+      <Filter>src\ui\windows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

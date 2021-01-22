@@ -92,7 +92,7 @@ namespace sanity::engine::renderer {
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
     }
 
-    void Renderer::render_frame(SynchronizedResourceAccessor<entt::registry>& registry) {
+    void Renderer::render_frame(entt::registry& registry) {
         ZoneScoped;
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
@@ -108,11 +108,11 @@ namespace sanity::engine::renderer {
                 raytracing_scene_dirty = false;
             }
 
-            update_cameras(*registry, frame_idx);
+            update_cameras(registry, frame_idx);
 
             upload_material_data(frame_idx);
 
-            update_lights(*registry, frame_idx);
+            update_lights(registry, frame_idx);
 
             {
                 ZoneScopedN("Renderer::update_per_frame_data");
@@ -222,7 +222,7 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
-                                             SynchronizedResourceAccessor<entt::registry>& registry,
+                                             entt::registry& registry,
                                              const Uint32& frame_idx) {
         {
             ZoneScopedN("Renderer::render_passes");
@@ -235,7 +235,7 @@ namespace sanity::engine::renderer {
 
                 issue_pre_pass_barriers(command_list.Get(), i, render_pass);
 
-                render_pass->render(command_list.Get(), *registry, frame_idx);
+                render_pass->render(command_list.Get(), registry, frame_idx);
 
                 issue_post_pass_barriers(command_list.Get(), i, render_pass);
             }

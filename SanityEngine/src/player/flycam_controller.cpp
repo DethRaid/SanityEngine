@@ -12,11 +12,10 @@ constexpr Float32 Y_SENSITIVITY = 0.005f;
 
 FlycamController::FlycamController(GLFWwindow* window_in,
                                    const entt::entity controlled_entity_in,
-                                   SynchronizedResource<entt::registry>& registry_in)
+                                   entt::registry& registry_in)
     : window{window_in}, controlled_entity{controlled_entity_in}, registry_ptr{&registry_in} {
     // Quick validation
-    auto registry = registry_ptr->lock();
-    RX_ASSERT(registry->has<sanity::engine::TransformComponent>(controlled_entity), "Controlled entity must have a transform");
+    RX_ASSERT(registry_ptr->has<sanity::engine::TransformComponent>(controlled_entity), "Controlled entity must have a transform");
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
@@ -27,10 +26,8 @@ void FlycamController::update_player_transform(const Float32 delta_time) {
     }
 
     // TODO: I'll probably eventually want some kind of momentum, but that can happen later
-
-    auto registry = registry_ptr->lock();
-
-    auto& player_transform_component = registry->get<sanity::engine::TransformComponent>(controlled_entity);
+    
+    auto& player_transform_component = registry_ptr->get<sanity::engine::TransformComponent>(controlled_entity);
     auto& player_transform = player_transform_component.transform;
 
     const auto forward = player_transform.get_forward_vector();

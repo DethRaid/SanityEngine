@@ -91,7 +91,7 @@ namespace sanity::engine::renderer {
 
         void begin_frame(uint64_t frame_count);
 
-        void render_frame(SynchronizedResourceAccessor<entt::registry>& registryd);
+        void render_frame(entt::registry& registry);
 
         void end_frame() const;
 
@@ -103,7 +103,7 @@ namespace sanity::engine::renderer {
                                                  const void* image_data,
                                                  ID3D12GraphicsCommandList4* commands,
                                                  bool generate_mipmaps = true);
-        
+
         [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
 
         [[nodiscard]] Image get_image(const Rx::String& image_name) const;
@@ -149,7 +149,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
         Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
-    	
+
         [[nodiscard]] SinglePassDownsampler& get_spd();
 
     private:
@@ -221,9 +221,7 @@ namespace sanity::engine::renderer {
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
-        void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
-                                       SynchronizedResourceAccessor<entt::registry>& registry,
-                                       const Uint32& frame_idx);
+        void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                      Uint32 render_pass_index,

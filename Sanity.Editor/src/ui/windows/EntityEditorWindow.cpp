@@ -1,53 +1,64 @@
 #include "EntityEditorWindow.hpp"
 
-#include "core/class_id.hpp"
+#include <sanity_engine.hpp>
+
 #include "core/components.hpp"
 #include "entity/Components.hpp"
-#include "ui/property_drawers.hpp"
+#include "renderer/render_components.hpp"
 
 using namespace sanity::engine::ui;
 
 namespace sanity::editor::ui {
-    void draw_component_editor(const GUID& class_id, const entt::entity& entity, entt::registry& registry);
+    void draw_component_editor(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry);
 
-    EntityEditorWindow::EntityEditorWindow(entt::entity& entity_in, entt::registry& registry_in)
-        : Window{"Entity Editor"}, entity{entity_in}, registry{registry_in} {
-        const auto& sanity_component = registry.get<engine::SanityEngineEntity>(entity);
+    EntityEditorWindow::EntityEditorWindow(const entt::entity entity_in, entt::registry& registry_in)
+        : Window{"Entity Editor"}, entity{entity_in}, registry{&registry_in} {
+        const auto& sanity_component = registry->get<engine::SanityEngineEntity>(entity);
         if(!sanity_component.name.is_empty()) {
             name = sanity_component.name;
         }
     }
 
-    void EntityEditorWindow::draw_contents() {
-        const auto component_list = registry.get<ComponentClassIdList>(entity);
-        component_list.class_ids.each_fwd([&](const GUID class_id) { draw_component_editor(class_id, entity, registry); });
+    void EntityEditorWindow::set_entity(const entt::entity new_entity, entt::registry& new_registry) {
+        if(entity != new_entity || registry != &new_registry) {
+            entity = new_entity;
+            registry = &new_registry;
+
+            const auto& sanity_component = registry->get<engine::SanityEngineEntity>(entity);
+            if(!sanity_component.name.is_empty()) {
+                name = sanity_component.name;
+            }
+        }
     }
 
-    void draw_component_editor(engine::SanityEngineEntity& entity);
-    void draw_component_editor(engine::TransformComponent& transform);
+    void EntityEditorWindow::draw_contents() {
+        const auto component_list = registry->get<ComponentClassIdList>(entity);
+        component_list.class_ids.each_fwd([&](const GUID class_id) { draw_component_editor(class_id, entity, *registry); });
+    }
 
 #define DRAW_COMPONENT_EDITOR(Type)                                                                                                        \
-    if(class_id == _uuidof(Type)) {                                                                                                        \
+    if(component_type_id == _uuidof(Type)) {                                                                                               \
         auto& component = registry.get<Type>(entity);                                                                                      \
         draw_component_editor(component);                                                                                                  \
     }
 
-    void draw_component_editor(const GUID& class_id, const entt::entity& entity, entt::registry& registry) {
-        const auto class_name = engine::class_name_from_guid(class_id);
+    void draw_component_editor(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry) {
+        const auto class_name = engine::g_engine->get_type_reflector().get_name_of_type(component_type_id);
         if(ImGui::CollapsingHeader(class_name.data())) {
+            ImGui::Indent();
+        	
+            // @formatter:off
             DRAW_COMPONENT_EDITOR(engine::SanityEngineEntity)
             else DRAW_COMPONENT_EDITOR(engine::TransformComponent)
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::StandardRenderableComponent)
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::PostProcessingPassComponent)
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::AtmosphericSkyComponent);
+            // @formatter:on
+
+            ImGui::Unindent();
         }
     }
-
-    void draw_component_editor(engine::SanityEngineEntity& entity) {
-        ImGui::LabelText("ID", "%ld", entity.id);
-        draw_property_editor("name", entity.name);
-        draw_property_editor("tags", entity.tags);
-    }
-
-    void draw_component_editor(engine::TransformComponent& transform) {
-        draw_property_editor("transform", transform.transform);
-    }
-
 } // namespace sanity::editor::ui

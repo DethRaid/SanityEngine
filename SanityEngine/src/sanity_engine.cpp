@@ -46,8 +46,7 @@ namespace sanity::engine {
         input_manager->on_key(key, action, mods);
     }
 
-	static void mouse_button_func(GLFWwindow* window, const int button, const int action, const int mods)
-    {
+    static void mouse_button_func(GLFWwindow* window, const int button, const int action, const int mods) {
         auto* input_manager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
 
         input_manager->on_mouse_button(button, action, mods);
@@ -58,8 +57,6 @@ namespace sanity::engine {
     SanityEngine::SanityEngine(const std::filesystem::path& executable_directory_in)
         : input_manager{Rx::make_ptr<InputManager>(RX_SYSTEM_ALLOCATOR)} {
         logger->info("HELLO HUMAN");
-
-    	logger->set_level(Rx::Log::Level::k_info);
 
         executable_directory = executable_directory_in;
 
@@ -103,6 +100,8 @@ namespace sanity::engine {
             glfwSetKeyCallback(window, key_func);
             glfwSetMouseButtonCallback(window, mouse_button_func);
 
+            register_engine_component_type_reflection();
+
             renderer = Rx::make_ptr<renderer::Renderer>(RX_SYSTEM_ALLOCATOR, window);
             logger->info("Initialized renderer");
 
@@ -126,7 +125,7 @@ namespace sanity::engine {
 
             frame_timer.start();
 
-        	logger->info("Constructed SanityEngine");
+            logger->info("Constructed SanityEngine");
         }
     }
 
@@ -166,7 +165,7 @@ namespace sanity::engine {
         while(accumulator >= delta_time) {
             ZoneScopedN("Simulation tick");
 
-        	logger->verbose("Ticking simulation");
+            logger->verbose("Ticking simulation");
 
             // if(player_controller) {
             //     player_controller->update_player_transform(delta_time);
@@ -192,12 +191,14 @@ namespace sanity::engine {
 
         framerate_tracker.add_frame_time(frame_duration_seconds);
 
-    	logger->verbose("Engine tick complete");
+        logger->verbose("Engine tick complete");
     }
+
+    TypeReflection& SanityEngine::get_type_reflector() { return type_reflector; }
 
     entt::entity SanityEngine::get_player() const { return player; }
 
-    SynchronizedResource<entt::registry>& SanityEngine::get_global_registry() { return global_registry; }
+    entt::registry& SanityEngine::get_global_registry() { return global_registry; }
 
     GLFWwindow* SanityEngine::get_window() const { return window; }
 
@@ -223,40 +224,48 @@ namespace sanity::engine {
         });
     }
 
+    void SanityEngine::register_engine_component_type_reflection() {
+        type_reflector.register_type_name<SanityEngineEntity>("Sanity Engine Entity");
+        type_reflector.register_type_name<TransformComponent>("Transform");
+
+        type_reflector.register_type_name<renderer::StandardRenderableComponent>("Standard Renderable");
+        type_reflector.register_type_name<renderer::PostProcessingPassComponent>("Post Processing Class");
+        type_reflector.register_type_name<renderer::RaytracingObjectComponent>("Raytracing Object");
+        type_reflector.register_type_name<renderer::CameraComponent>("Camera");
+        type_reflector.register_type_name<renderer::LightComponent>("Light");
+        type_reflector.register_type_name<renderer::AtmosphericSkyComponent>("Atmospheric Sky");
+    }
+
     void SanityEngine::create_planetary_atmosphere() {
-        auto locked_registry = global_registry.lock();
-        const auto atmosphere = locked_registry->create();
+        const auto atmosphere = global_registry.create();
 
         // No need to set parameters, the default light component represents the Earth's sun
-        locked_registry->emplace<renderer::LightComponent>(atmosphere);
-        locked_registry->emplace<renderer::AtmosphericSkyComponent>(atmosphere);
-        locked_registry->emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform, atmosphere don't care about it
+        global_registry.emplace<renderer::LightComponent>(atmosphere);
+        global_registry.emplace<renderer::AtmosphericSkyComponent>(atmosphere);
+        global_registry.emplace<TransformComponent>(atmosphere); // Light rotations come from a Transform, atmosphere don't care about it
 
-    	logger->info("Created planetary atmosphere entity");
+        logger->info("Created planetary atmosphere entity");
     }
 
     void SanityEngine::make_frametime_display() {
         if(!frametime_display_entity) {
-            auto locked_registry = global_registry.lock();
-            frametime_display_entity = locked_registry->create();
-            locked_registry->emplace<ui::UiComponent>(*frametime_display_entity,
-                                                      Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+            frametime_display_entity = global_registry.create();
+            global_registry.emplace<ui::UiComponent>(*frametime_display_entity,
+                                                     Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
         }
     }
 
     void SanityEngine::destroy_frametime_display() {
         if(frametime_display_entity) {
-            auto locked_registry = global_registry.lock();
-            locked_registry->destroy(*frametime_display_entity);
+            global_registry.destroy(*frametime_display_entity);
         }
     }
 
     void SanityEngine::make_console_window() {
         if(!console_window_entity) {
-            auto locked_registry = global_registry.lock();
-            console_window_entity = locked_registry->create();
-            auto& comp = locked_registry->emplace<ui::UiComponent>(*console_window_entity,
-                                                                   Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
+            console_window_entity = global_registry.create();
+            auto& comp = global_registry.emplace<ui::UiComponent>(*console_window_entity,
+                                                                  Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
             auto* window = static_cast<ui::Window*>(comp.panel.get());
             window->is_visible = true;
         }
@@ -264,19 +273,17 @@ namespace sanity::engine {
 
     void SanityEngine::destroy_console_window() {
         if(console_window_entity) {
-            auto locked_registry = global_registry.lock();
-            locked_registry->destroy(*console_window_entity);
+            global_registry.destroy(*console_window_entity);
         }
     }
 
     void SanityEngine::create_first_person_player() {
-        auto locked_registry = global_registry.lock();
-        player = locked_registry->create();
+        player = global_registry.create();
 
-        auto& transform_component = locked_registry->emplace<TransformComponent>(player);
+        auto& transform_component = global_registry.emplace<TransformComponent>(player);
         transform_component.transform.location.y = 1.63f;
         transform_component.transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-        locked_registry->emplace<renderer::CameraComponent>(player);
+        global_registry.emplace<renderer::CameraComponent>(player);
 
         // player_controller = Rx::make_ptr<FirstPersonController>(RX_SYSTEM_ALLOCATOR, window, player, registry);
 
@@ -284,14 +291,12 @@ namespace sanity::engine {
     }
 
     void SanityEngine::render() {
-        auto locked_registry = global_registry.lock();
-
-        imgui_adapter->draw_ui(locked_registry->view<ui::UiComponent>());
+        imgui_adapter->draw_ui(global_registry.view<ui::UiComponent>());
         logger->verbose("Drew UI");
 
-        renderer->render_frame(locked_registry);
+        renderer->render_frame(global_registry);
         logger->verbose("Renderer rendered a frame");
-    	
+
         renderer->end_frame();
         logger->verbose("Frame ended");
 

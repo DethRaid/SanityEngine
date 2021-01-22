@@ -42,6 +42,8 @@ namespace sanity::editor {
 
         void scan_project_directory_async(const std::filesystem::path& project_content_directory);
 
+        void register_editor_component_type_reflection();
+    	
         void create_application_gui();
     };
 

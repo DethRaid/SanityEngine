@@ -40,4 +40,8 @@ namespace sanity::engine {
 
     	glm::mat4 get_world_matrix(const entt::registry& registry) const;
     };
+
+    void draw_component_editor(SanityEngineEntity& entity);
+
+    void draw_component_editor(TransformComponent& transform);
 } // namespace sanity::engine

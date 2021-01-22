@@ -1,6 +1,9 @@
 #include "core/components.hpp"
 
+
+#include "imgui.h"
 #include "entt/entity/registry.hpp"
+#include "ui/property_drawers.hpp"
 
 namespace sanity::engine {
     static Rx::Concurrency::Atomic<Uint64> next_id = 0;
@@ -46,4 +49,13 @@ namespace sanity::engine {
             return local_matrix;
         }
     }
+
+    void draw_component_editor(SanityEngineEntity& entity) {
+        ImGui::LabelText("ID", "%lld", entity.id);
+        ui::draw_property_editor("name", entity.name);
+        ui::draw_property_editor("tags", entity.tags);
+    }
+
+    void draw_component_editor(TransformComponent& transform) { ui::draw_property_editor("transform", transform.transform); }
+
 } // namespace sanity::engine

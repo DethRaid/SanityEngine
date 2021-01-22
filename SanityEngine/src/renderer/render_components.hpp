@@ -91,5 +91,19 @@ namespace sanity::engine::renderer {
      *
      * NOTE: Only one allowed in the scene ever
      */
-    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) AtmosphericSkyComponent {};
+    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) AtmosphericSkyComponent {
+        Uint32 padding;
+    };
+
+	void draw_component_editor(StandardRenderableComponent& renderable);
+
+	void draw_component_editor(PostProcessingPassComponent& post_processing);
+
+	void draw_component_editor(RaytracingObjectComponent& raytracing_object);
+
+	void draw_component_editor(CameraComponent& camera);
+
+	void draw_component_editor(LightComponent& light);
+
+	void draw_component_editor(AtmosphericSkyComponent& sky);
 } // namespace sanity::engine::renderer

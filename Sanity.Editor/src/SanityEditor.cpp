@@ -36,6 +36,8 @@ namespace sanity::editor {
         : editor_camera{g_engine->get_window(), g_engine->get_player(), g_engine->get_global_registry()} {
         load_project(initial_project_file);
 
+    	register_editor_component_type_reflection();
+
         create_application_gui();
 
         auto& renderer = g_engine->get_renderer();
@@ -93,6 +95,8 @@ namespace sanity::editor {
                                                         }};
     }
 
+    void SanityEditor::register_editor_component_type_reflection() {}
+
     void SanityEditor::run_until_quit() {
         auto* window = g_engine->get_window();
 
@@ -112,10 +116,10 @@ namespace sanity::editor {
     const std::filesystem::path& SanityEditor::get_content_directory() const { return content_directory; }
 
     void SanityEditor::create_application_gui() {
-        auto registry = g_engine->get_global_registry().lock();
+        auto& registry = g_engine->get_global_registry();
 
-        const auto application_gui_entity = registry->create();
-        registry->emplace<engine::ui::UiComponent>(application_gui_entity,
+        const auto application_gui_entity = registry.create();
+        registry.emplace<engine::ui::UiComponent>(application_gui_entity,
                                                    Rx::make_ptr<ui::ApplicationGui>(RX_SYSTEM_ALLOCATOR, ui_controller));
     }
 

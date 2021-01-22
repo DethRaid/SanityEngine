@@ -37,6 +37,11 @@ namespace sanity::editor::ui {
             const auto& content_dir = g_editor->get_content_directory();
             ui_controller->set_content_browser_directory(content_dir);
         }
+
+    	if(ImGui::MenuItem("Scene Hierarchy"))
+    	{
+            ui_controller->show_scene_hierarchy_window();
+    	}
     }
 
     void ApplicationGui::draw_world_menu() const {

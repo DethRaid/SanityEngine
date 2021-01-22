@@ -115,6 +115,9 @@
     <Filter Include="src\core\fs">
       <UniqueIdentifier>{63d7439c-912a-4f86-a1c5-d70e9fbc23ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\core\reflection">
+      <UniqueIdentifier>{f9c66dd5-1245-44a9-813c-ecea89c5ca18}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -387,9 +390,6 @@
     <ClInclude Include="src\loading\asset_loader.hpp">
       <Filter>src\loading</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\class_id.hpp">
-      <Filter>src\core</Filter>
-    </ClInclude>
     <ClInclude Include="src\ui\property_drawers.hpp">
       <Filter>src\ui</Filter>
     </ClInclude>
@@ -426,6 +426,7 @@
     <ClInclude Include="src\core\fs\path_ops.hpp">
       <Filter>src\core\fs</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\reflection\type_reflection.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -599,9 +600,6 @@
     <ClCompile Include="src\loading\asset_loader.cpp">
       <Filter>src\loading</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\class_id.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\property_drawers.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
@@ -632,6 +630,10 @@
     <ClCompile Include="src\core\fs\path_ops.cpp">
       <Filter>src\core\fs</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\render_components.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\reflection\type_reflection.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

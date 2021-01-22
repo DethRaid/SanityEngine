@@ -7,13 +7,16 @@
 namespace sanity::editor::ui {
     class EntityEditorWindow : public engine::ui::Window {
     public:
-        explicit EntityEditorWindow(entt::entity& entity_in, entt::registry& registry_in);
+        explicit EntityEditorWindow(entt::entity entity_in, entt::registry& registry_in);
+
+    	void set_entity(entt::entity new_entity, entt::registry& new_registry);
 
     protected:
         void draw_contents() override;
 
     private:
         entt::entity entity;
-        entt::registry& registry;
+    	
+        entt::registry* registry;
     };
 } // namespace sanity::editor::ui
