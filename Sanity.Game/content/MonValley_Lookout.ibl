@@ -1,0 +1,47 @@
+[Header]
+ICOfile = "MonValley_A_LookoutPoint_Thumb.jpg"
+PREVIEWfile = "MonValley_A_LookoutPoint_preview.jpg"
+Name = "MonValley Lookout"
+Author = "Blochi"
+Location = "Monument Valley"
+Comment = "Evening sun in the desert, scenic overlook, cloudy sky"
+GEOlat = 36.98472884854737
+GEOlong = -110.11167526245117
+Link = "http://www.hdrlabs.com/sibl/archive.html"
+Date = "2008:11:28"
+Time = "19:17:00"
+Height = 1.6
+North = 0.21
+
+[Background]
+; heavily tonemapped for maximum detail
+BGfile = "MonValley_A_LookoutPoint_8k.jpg"
+BGmap = 1
+BGu = 0.000000
+BGv = 0.000000
+BGheight = 4000
+
+[Enviroment]
+EVfile = "MonValley_A_LookoutPoint_Env.hdr"
+EVmap = 1
+EVu = 0.000000
+EVv = 0.000000
+EVheight = 180
+EVmulti = 1.000000
+EVgamma = 1.600000
+
+[Reflection]
+REFfile = "MonValley_A_LookoutPoint_2k.hdr"
+REFmap = 1
+REFu = 0.000000
+REFv = 0.000000
+REFheight = 1024
+REFmulti = 1.000000
+REFgamma = 1.600000
+
+[Sun]
+SUNcolor = 254,238,224
+SUNmulti = 1.000000
+SUNu = 0.872000
+SUNv = 0.456000
+
