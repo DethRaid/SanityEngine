@@ -58,8 +58,6 @@ namespace sanity::engine::renderer {
 
         void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx);
 
-        void draw_chunks(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, const World& world);
-
         void draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const;
     };
 } // namespace renderer

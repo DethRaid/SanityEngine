@@ -35,7 +35,7 @@ namespace sanity::engine::renderer {
     { ui::draw_property_editor("Light", light.light);
     }
 
-    void draw_component_editor(AtmosphericSkyComponent& sky)
+    void draw_component_editor(SkyboxComponent& sky)
     {
 	    // Fill in when the component has things
     }

@@ -87,12 +87,12 @@ namespace sanity::engine::renderer {
     };
 
     /*!
-     * \brief Renders at atmospheric sky
+     * \brief Renders a skybox
      *
      * NOTE: Only one allowed in the scene ever
      */
-    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) AtmosphericSkyComponent {
-        Uint32 padding;
+    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) SkyboxComponent {
+    	TextureHandle skybox_texture{};
     };
 
 	void draw_component_editor(StandardRenderableComponent& renderable);
@@ -105,5 +105,5 @@ namespace sanity::engine::renderer {
 
 	void draw_component_editor(LightComponent& light);
 
-	void draw_component_editor(AtmosphericSkyComponent& sky);
+	void draw_component_editor(SkyboxComponent& sky);
 } // namespace sanity::engine::renderer

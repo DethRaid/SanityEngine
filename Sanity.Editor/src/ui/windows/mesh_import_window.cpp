@@ -47,7 +47,7 @@ namespace sanity::editor::ui {
     void SceneImportWindow::import_scene() const {
         AssetRegistry::save_meta_for_asset(mesh_path, metadata);
 
-        auto& registry = engine::g_engine->get_global_registry();
+        auto& registry = engine::g_engine->get_entity_registry();
 
         const auto scene_entity = importer->import_gltf_scene(mesh_path, metadata.import_settings, registry);
         if(scene_entity) {

@@ -67,15 +67,6 @@
     <Filter Include="src\windows">
       <UniqueIdentifier>{030167c5-acce-4e05-a490-458149b2b6de}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\world">
-      <UniqueIdentifier>{761115de-e7c9-46eb-af25-68a10cf09a80}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\world\environment">
-      <UniqueIdentifier>{604d985b-aacd-4506-b5b3-0fb9776d505f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\world\generation">
-      <UniqueIdentifier>{d32cd7dd-277d-404f-a1c7-f9e136f0278e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\ui">
       <UniqueIdentifier>{426e5eef-4c0b-4b2c-a019-cb83331e4409}</UniqueIdentifier>
     </Filter>
@@ -97,9 +88,6 @@
     <Filter Include="src\renderer\diagnostics">
       <UniqueIdentifier>{2940a3a4-d7b0-4a78-8855-55f41a8de5f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\actor">
-      <UniqueIdentifier>{d48d1f67-c139-4c52-a2df-748153e37603}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\system">
       <UniqueIdentifier>{b5436c69-1a82-4f2f-978b-2777195eaf08}</UniqueIdentifier>
     </Filter>
@@ -117,6 +105,15 @@
     </Filter>
     <Filter Include="src\core\reflection">
       <UniqueIdentifier>{f9c66dd5-1245-44a9-813c-ecea89c5ca18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\entity">
+      <UniqueIdentifier>{26273737-df13-45c8-b805-fec52948e2fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\world">
+      <UniqueIdentifier>{58d6a1f2-98a7-4a81-bf98-dc8e682cd6d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\NewFilter1">
+      <UniqueIdentifier>{41a0e397-0a7a-4469-a9b6-bc56104fb5f6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -411,7 +408,15 @@
     <ClInclude Include="src\core\fs\path_ops.hpp">
       <Filter>src\core\fs</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\reflection\type_reflection.hpp" />
+    <ClInclude Include="src\entity\creation.hpp">
+      <Filter>src\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\reflection\type_reflection.hpp">
+      <Filter>src\core\reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\world.hpp">
+      <Filter>src\world</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -603,7 +608,15 @@
     <ClCompile Include="src\renderer\render_components.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\reflection\type_reflection.cpp" />
+    <ClCompile Include="src\entity\creation.cpp">
+      <Filter>src\entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\reflection\type_reflection.cpp">
+      <Filter>src\core\reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\world.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -686,6 +699,9 @@
       <Filter>shaders\inc</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\brdf_diffuse.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\skybox.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
   </ItemGroup>

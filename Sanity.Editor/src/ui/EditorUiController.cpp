@@ -1,5 +1,7 @@
 #include "EditorUiController.hpp"
 
+#include <entity/creation.hpp>
+
 #include "entity/entity_operations.hpp"
 #include "sanity_engine.hpp"
 #include "ui/Window.hpp"
@@ -8,10 +10,11 @@
 #include "windows/content_browser.hpp"
 #include "windows/mesh_import_window.hpp"
 #include "windows/scene_hierarchy.hpp"
+#include "world/world.hpp"
 
 namespace sanity::editor::ui {
     EditorUiController::EditorUiController() {
-        auto& registry = engine::g_engine->get_global_registry();
+        auto& registry = engine::g_engine->get_entity_registry();
 
         worldgen_params_editor = create_window_entity<WorldgenParamsEditor>(registry);
         worldgen_params_editor->is_visible = false;
@@ -33,9 +36,9 @@ namespace sanity::editor::ui {
     }
 
     void EditorUiController::create_and_edit_new_entity() const {
-        auto& registry = engine::g_engine->get_global_registry();
+        auto& registry = engine::g_engine->get_entity_registry();
 
-        const auto new_entity = entity::create_base_editor_entity("New Entity", registry);
+        const auto new_entity = engine::create_entity(registry, "New Entity");
 
         show_edit_entity_window(new_entity, registry);
     }
@@ -60,7 +63,7 @@ namespace sanity::editor::ui {
     }
 
     void EditorUiController::open_mesh_import_settings(const std::filesystem::path& mesh_path) const {
-        auto& registry = engine::g_engine->get_global_registry();
+        auto& registry = engine::g_engine->get_entity_registry();
 
         auto* window = create_window_entity<SceneImportWindow>(registry, mesh_path);
         window->is_visible = true;

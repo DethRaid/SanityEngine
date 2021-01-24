@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
 namespace sanity::editor {
     SanityEditor::SanityEditor(const std::filesystem::path& initial_project_file)
-        : editor_camera{g_engine->get_window(), g_engine->get_player(), g_engine->get_global_registry()} {
+        : editor_camera{g_engine->get_window(), g_engine->get_player(), g_engine->get_entity_registry()} {
         load_project(initial_project_file);
 
     	register_editor_component_type_reflection();
@@ -116,7 +116,7 @@ namespace sanity::editor {
     const std::filesystem::path& SanityEditor::get_content_directory() const { return content_directory; }
 
     void SanityEditor::create_application_gui() {
-        auto& registry = g_engine->get_global_registry();
+        auto& registry = g_engine->get_entity_registry();
 
         const auto application_gui_entity = registry.create();
         registry.emplace<engine::ui::UiComponent>(application_gui_entity,

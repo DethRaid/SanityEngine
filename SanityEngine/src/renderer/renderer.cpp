@@ -77,7 +77,7 @@ namespace sanity::engine::renderer {
 
         reload_renderpass_shaders();
     }
-
+    
     void Renderer::begin_frame(const uint64_t frame_count) {
         device->begin_frame(frame_count);
 
@@ -87,6 +87,7 @@ namespace sanity::engine::renderer {
         const auto time_since_start = static_cast<double>(ns_since_start) / 1000000000.0;
 
         per_frame_data.time_since_start = static_cast<Float32>(time_since_start);
+        per_frame_data.frame_count = static_cast<Uint32>(frame_count);
 
         const auto frame_idx = device->get_cur_gpu_frame_idx();
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
@@ -112,10 +113,18 @@ namespace sanity::engine::renderer {
 
             upload_material_data(frame_idx);
 
-            update_lights(registry, frame_idx);
+            update_light_data_buffer(registry, frame_idx);
 
             {
                 ZoneScopedN("Renderer::update_per_frame_data");
+
+            	const auto view = registry.view<SkyboxComponent>();
+                if(view.size() == 1) {
+                    const auto skybox_entity = view.front();
+                    const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
+                    per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
+                }
+            	
                 memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
             }
 
@@ -435,9 +444,9 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_per_frame_buffers() {
-        ZoneScoped
+        ZoneScoped;
 
-            const auto num_gpu_frames = device->get_max_num_gpu_frames();
+        const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         per_frame_data_buffers.reserve(num_gpu_frames);
         model_matrix_buffers.reserve(num_gpu_frames);
@@ -775,11 +784,10 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void Renderer::update_lights(entt::registry& registry, const Uint32 frame_idx) {
-        ZoneScoped
+    void Renderer::update_light_data_buffer(entt::registry& registry, const Uint32 frame_idx) {
+        ZoneScoped;
 
-            registry.view<LightComponent>()
-                .each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
+        registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         memcpy(dst, lights.data(), lights.size() * sizeof(Light));
@@ -817,5 +825,5 @@ namespace sanity::engine::renderer {
         return index;
     }
 
-    SinglePassDownsampler& Renderer::get_spd() { return *spd; }
+    SinglePassDownsampler& Renderer::get_spd() const { return *spd; }
 } // namespace sanity::engine::renderer

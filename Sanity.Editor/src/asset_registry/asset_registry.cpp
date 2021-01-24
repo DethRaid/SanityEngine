@@ -1,9 +1,9 @@
 #include "asset_registry.hpp"
 
+#include "core/fs/path_ops.hpp"
 #include "loading/image_loading.hpp"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
-#include "core/fs/path_ops.hpp"
 
 namespace sanity::editor {
     RX_LOG("AssetRegistry", logger);
@@ -30,8 +30,9 @@ namespace sanity::editor {
 
         Uint32 width;
         Uint32 height;
-        Rx::Vector<Uint8> pixels;
-        if(!engine::load_image("data/textures/icons/directory.png", width, height, pixels)) {
+        engine::renderer::ImageFormat format;
+        const auto* pixels = engine::load_image("data/textures/icons/directory.png", width, height, format);
+        if(pixels == nullptr) {
             logger->error("Could not load directory icon at path data/textures/icons/directory.png");
             directory_icon = renderer.get_pink_texture();
             return;
@@ -41,24 +42,25 @@ namespace sanity::editor {
 
         directory_icon = renderer.create_image(engine::renderer::ImageCreateInfo{.name = "Directory icon",
                                                                                  .usage = engine::renderer::ImageUsage::SampledImage,
-                                                                                 .format = engine::renderer::ImageFormat::Rgba8,
+                                                                                 .format = format,
                                                                                  .width = width,
                                                                                  .height = height},
-                                               pixels.data(),
+                                               pixels,
                                                cmds.Get());
 
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
     }
 
     engine::renderer::TextureHandle load_icon_for_extension(const std::filesystem::path& extension) {
-        const auto path = std::filesystem::path{"data/textures/icons"} / engine::append_extension(extension , ".png");
+        const auto path = std::filesystem::path{"data/textures/icons"} / engine::append_extension(extension, ".png");
 
         auto& renderer = engine::g_engine->get_renderer();
 
         Uint32 width;
         Uint32 height;
-        Rx::Vector<Uint8> pixels;
-        if(!engine::load_image(path, width, height, pixels)) {
+        engine::renderer::ImageFormat format;
+        const auto* pixels = engine::load_image(path, width, height, format);
+        if(pixels == nullptr) {
             logger->error("Could not load icon at path '%s'", path);
             return renderer.get_pink_texture();
         }
@@ -66,11 +68,11 @@ namespace sanity::editor {
         const auto extension_string = extension.string();
         const auto create_info = engine::renderer::ImageCreateInfo{.name = Rx::String::format(".%s icon", extension_string.c_str()),
                                                                    .usage = engine::renderer::ImageUsage::SampledImage,
-                                                                   .format = engine::renderer::ImageFormat::Rgba8,
+                                                                   .format = format,
                                                                    .width = width,
                                                                    .height = height};
         auto cmds = renderer.get_render_backend().create_command_list();
-        const auto icon_handle = renderer.create_image(create_info, pixels.data(), cmds.Get());
+        const auto icon_handle = renderer.create_image(create_info, pixels, cmds.Get());
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
 
         return icon_handle;

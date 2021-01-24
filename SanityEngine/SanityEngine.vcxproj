@@ -455,6 +455,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </FxCompile>
+    <FxCompile Include="data\shaders\inc\skybox.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </FxCompile>
     <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
@@ -503,6 +507,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\SmartEnum.hpp" />
     <ClInclude Include="src\core\types.hpp" />
     <ClInclude Include="src\core\WindowsJsonConversion.hpp" />
+    <ClInclude Include="src\entity\creation.hpp" />
     <ClInclude Include="src\game\game.hpp" />
     <ClInclude Include="src\input\input_manager.hpp" />
     <ClInclude Include="src\input\PlatformInput.hpp" />
@@ -555,6 +560,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\ui\Window.hpp" />
     <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
+    <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
@@ -579,6 +585,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\core\transform.cpp" />
     <ClCompile Include="src\core\types.ixx" />
     <ClCompile Include="src\core\WindowsJsonConversion.cpp" />
+    <ClCompile Include="src\entity\creation.cpp" />
     <ClCompile Include="src\game\game.cpp" />
     <ClCompile Include="src\input\input_manager.cpp" />
     <ClCompile Include="src\input\PlatformInput.cpp" />
@@ -621,6 +628,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\ui\Window.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
+    <ClCompile Include="src\world\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt" />

@@ -83,7 +83,7 @@ namespace sanity::engine::renderer {
 
         // const auto& depth_image = renderer->get_image(depth_target_handle);
         // const auto& downsampled_depth_image = renderer->get_image(downsampled_depth_target_handle);
-        // 
+        //
         // {
         //     const auto barriers = std::array{
         //         CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
@@ -95,7 +95,7 @@ namespace sanity::engine::renderer {
         //     };
         //     commands->ResourceBarrier(barriers.size(), barriers.data());
         // }
-        // 
+        //
         // const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = depth_image.resource.Get(),
         //                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
         //                                                            .SubresourceIndex = 0};
@@ -109,7 +109,7 @@ namespace sanity::engine::renderer {
         //                                .bottom = depth_image.height,
         //                                .back = depth_image.depth};
         // commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &src_box);
-        // 
+        //
         // {
         //     const auto barriers = std::array{
         //         CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
@@ -121,7 +121,7 @@ namespace sanity::engine::renderer {
         //     };
         //     commands->ResourceBarrier(barriers.size(), barriers.data());
         // }
-        // 
+        //
         // renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
     }
 
@@ -172,7 +172,7 @@ namespace sanity::engine::renderer {
         // auto downsampled_depth_create_info = depth_target_create_info;
         // downsampled_depth_create_info.name = "Depth buffer with mips";
         // downsampled_depth_create_info.usage = ImageUsage::UnorderedAccess;
-        // 
+        //
         // downsampled_depth_target_handle = renderer->create_image(downsampled_depth_create_info);
     }
 
@@ -236,13 +236,13 @@ namespace sanity::engine::renderer {
     }
 
     void RaytracedLightingPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
-        const auto atmosphere_view = registry.view<AtmosphericSkyComponent>();
+        const auto atmosphere_view = registry.view<SkyboxComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
             PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_atmosphere");
-
+            
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
 
             commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

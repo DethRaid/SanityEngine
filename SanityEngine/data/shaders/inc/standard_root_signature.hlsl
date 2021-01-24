@@ -21,6 +21,9 @@ struct Light {
 
 struct PerFrameData {
     float time_since_start;
+    uint frame_count;
+
+	uint sky_texture_idx;
 };
 
 /*!

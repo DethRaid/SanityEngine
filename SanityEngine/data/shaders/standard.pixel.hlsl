@@ -50,7 +50,7 @@ float4 main(VertexOutput input) : SV_TARGET {
                                                              base_color.rgb,
                                                              surface_normal,
                                                              metallic_roughness.g,
-                                                             metallic_roughness.b,
+                                                             pow(metallic_roughness.b, 0.5),
                                                              noise);
 
     return float4(total_reflected_light, 1);

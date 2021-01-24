@@ -55,7 +55,7 @@ namespace sanity::editor::ui {
         	else DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
         	else DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
         	else DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::AtmosphericSkyComponent);
+        	else DRAW_COMPONENT_EDITOR(engine::renderer::SkyboxComponent);
             // @formatter:on
 
             ImGui::Unindent();

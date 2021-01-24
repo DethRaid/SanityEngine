@@ -71,6 +71,10 @@ namespace sanity::engine::renderer {
          * \brief Number of seconds since the program started
          */
         Float32 time_since_start{0};
+    	
+        Uint32 frame_count;
+
+        Uint32 sky_texture_idx;
     };
 
     /*!
@@ -88,7 +92,7 @@ namespace sanity::engine::renderer {
         /// Reloads all the shaders from disk
         /// </summary>
         void reload_shaders();
-
+        
         void begin_frame(uint64_t frame_count);
 
         void render_frame(entt::registry& registry);
@@ -150,7 +154,7 @@ namespace sanity::engine::renderer {
 
         Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
 
-        [[nodiscard]] SinglePassDownsampler& get_spd();
+        [[nodiscard]] SinglePassDownsampler& get_spd() const;
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -251,7 +255,7 @@ namespace sanity::engine::renderer {
 
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
-        void update_lights(entt::registry& registry, Uint32 frame_idx);
+        void update_light_data_buffer(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
 } // namespace sanity::engine::renderer

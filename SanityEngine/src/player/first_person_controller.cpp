@@ -5,7 +5,6 @@
 #include "glm/ext/quaternion_transform.hpp"
 #include "input/PlatformInput.hpp"
 #include "rx/core/log.h"
-#include "world/terrain.hpp"
 
 namespace sanity::engine {
     RX_LOG("FirstPersonController", logger);
@@ -23,7 +22,7 @@ namespace sanity::engine {
         last_cursor_location = input.get_mouse_location();
     }
 
-    void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }
+    // void FirstPersonController::set_current_terrain(Terrain& terrain_in) { terrain = &terrain_in; }
 
     void FirstPersonController::update_player_transform(const Float32 delta_time) {
         // TODO: I'll probably eventually want some kind of momentum, but that can happen later
@@ -77,22 +76,22 @@ namespace sanity::engine {
         player_transform.location += velocity * delta_time;
 
         // Make sure they're on the terrain
-        if(terrain) {
-            const auto height = terrain->get_terrain_height(Double2{player_transform.location.x, player_transform.location.z});
-            if(player_transform.location.y < height + 1.51f) {
-                player_transform.location.y = height + 1.5f;
-
-                if(!is_grounded) {
-                    // If the player has just landed on the ground, reset their vertical velocity
-                    velocity.y = 0;
-                }
-
-                is_grounded = true;
-
-            } else {
-                is_grounded = false;
-            }
-        }
+        // if(terrain) {
+        //     const auto height = terrain->get_terrain_height(Double2{player_transform.location.x, player_transform.location.z});
+        //     if(player_transform.location.y < height + 1.51f) {
+        //         player_transform.location.y = height + 1.5f;
+        // 
+        //         if(!is_grounded) {
+        //             // If the player has just landed on the ground, reset their vertical velocity
+        //             velocity.y = 0;
+        //         }
+        // 
+        //         is_grounded = true;
+        // 
+        //     } else {
+        //         is_grounded = false;
+        //     }
+        // }
 
         // Rotation
         const auto cursor_location = input.get_mouse_location();

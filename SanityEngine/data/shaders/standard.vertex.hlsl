@@ -20,10 +20,10 @@ struct MaterialData {};
 VertexOutput main(StandardVertex input) {
     VertexOutput output;
 
-	float4x4 model_matrix = model_matrices[constants.model_matrix_index];
-    output.position_worldspace = mul(model_matrix, input.position).xyz;
+	const float4x4 model_matrix = model_matrices[constants.model_matrix_index];
+    output.position_worldspace = mul(model_matrix, float4(input.position, 1.0f)).xyz;
 	
-    Camera camera = cameras[constants.camera_index];
+    const Camera camera = cameras[constants.camera_index];
     output.position = mul(camera.projection, mul(camera.view, float4(output.position_worldspace, 1)));
 	
     output.normal = input.normal;

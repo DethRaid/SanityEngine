@@ -1,109 +1,37 @@
 #pragma once
 
-#include "core/Prelude.hpp"
-#include "core/types.hpp"
-#include "entt/entity/fwd.hpp"
-#include "entt/entity/observer.hpp"
-#include "rx/core/types.h"
-#include "rx/core/vector.h"
-#include "world/terrain.hpp"
+#include <filesystem>
+
+#include <rx/core/map.h>
+
+#include "entt/fwd.hpp"
+#include "renderer/handles.hpp"
 
 namespace sanity::engine {
-    namespace renderer {
-        class Renderer;
-    }
-
     /*!
-     * \brief Parameters for generating SanityEngine's world
+     * @brief Abstraction over the world
+     *
+     * Initial version: Manages the sun, moon, stars, and atmosphere
+     *
+     * Next version: Terrain, probably
      */
-    struct WorldParameters {
-        /*!
-         * \brief RNG seed to use for this world. The same seed will generate exactly the same world every time it's used
-         */
-        Uint32 seed;
-
-        /*!
-         * \brief Height of the world, in meters
-         *
-         * Height is the distance from the north end to the south end
-         */
-        Uint32 height;
-
-        /*!
-         * \brief Width of the world, in meters
-         */
-        Uint32 width;
-
-        /*!
-         * \brief Maximum depth of the ocean, in meters
-         */
-        Uint32 max_ocean_depth;
-
-        /*!
-         * \brief Distance from the lowest point in the ocean to the bedrock layer
-         */
-        Uint32 min_terrain_depth_under_ocean;
-
-        /*
-         * \brief Height above sea level of the tallest possible mountain
-         *
-         * If this value is negative, no land will be above the ocean and you'll be playing in a world that's 100% water. This may or may
-         * not be interesting, so I'm leaving it here an an option
-         */
-        int32_t max_height_above_sea_level;
-    };
-
     class World {
     public:
-        static constexpr Uint32 MAX_NUM_CHUNKS = 1 << 8;
+        explicit World(entt::registry& registry_in);
 
-        /*!
-         * \brief Created a world with the provided parameters
-         */
-        static Rx::Ptr<World> create(const WorldParameters& params,
-                                     entt::entity player,
-                                     SynchronizedResource<entt::registry>& registry,
-                                     renderer::Renderer& renderer);
-
-        /*!
-         * \brief Constructs a new World
-         *
-         * Takes ownership of the noise generator. The callee should not destroy the pointed-to object, nor should they use
-         * the pointer after this World object gets destructed
-         */
-        explicit World(const glm::uvec2& size_in,
-                       FastNoiseSIMD* noise_generator_in,
-                       entt::entity player_in,
-                       SynchronizedResource<entt::registry>& registry_in,
-                       renderer::Renderer& renderer_in,
-                       Rx::Ptr<Terrain> terrain_in);
-
-        ~World();
-
-        void load_environment_objects(const Rx::String& environment_objects_folder);
-
-        void tick(Float32 delta_time);
-
-        [[nodiscard]] Terrain& get_terrain() const;
+        void set_skybox(const std::filesystem::path& skybox_image_path);
 
     private:
+        entt::registry* registry;
+
+        entt::entity sky;
+
         /*!
-         * \brief Runs the Sanity Engine's climate model on the provided world data
+         * @brief All the skybox images currently on the GPU
+         *
+         * TODO: Some kind of "max allotted skybox memory" variable. If all the skyboxes together use up more than that much memory, the
+         * least recently used one gets booted from VRAM
          */
-        static void generate_climate_data(TerrainData& heightmap, const WorldParameters& params, renderer::Renderer& renderer);
-
-        glm::uvec2 size;
-
-        FastNoiseSIMD* noise_generator;
-
-        entt::entity player;
-
-        SynchronizedResource<entt::registry>* registry;
-
-        entt::observer observer{};
-
-        renderer::Renderer* renderer;
-
-        Rx::Ptr<Terrain> terrain;
+        Rx::Map<std::filesystem::path, renderer::TextureHandle> cached_skybox_handles;
     };
 } // namespace sanity::engine

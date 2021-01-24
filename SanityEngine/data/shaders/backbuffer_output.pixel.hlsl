@@ -70,7 +70,7 @@ float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
     Texture2D scene_output = textures[material.texture_idx];
     float4 color = scene_output.Sample(bilinear_sampler, vertex.texcoord);
 
-    float3 luma = LUMA(color.rgb);
+    float luma = LUMA(color.rgb);
     float tonemap_factor = 1.0 / (1.0 + luma);
     float3 correct_color = color.rgb * tonemap_factor;
     

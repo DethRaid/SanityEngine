@@ -3,6 +3,7 @@
 #include "atmospheric_scattering.hlsl"
 #include "brdf_diffuse.hlsl"
 #include "shadow.hlsl"
+#include "skybox.hlsl"
 #include "standard_root_signature.hlsl"
 
 struct StandardVertex {
@@ -16,6 +17,8 @@ struct StandardVertex {
 #define BYTES_PER_VERTEX 9
 
 #define STANDARD_ROUGHNESS 0.01
+
+#define RAY_START_OFFSET_ALONG_NORMAL 0.01f
 
 uint3 get_indices(uint triangle_index) {
     uint base_index = (triangle_index * 3);
@@ -110,21 +113,13 @@ float4 get_incoming_light(in float3 ray_origin,
 
     } else {
         // Sample the atmosphere
-        float3 atmosphere_sample = atmosphere(6471e3,
-                                              direction,
-                                              float3(0, 6371e3, 0),
-                                              -sun.direction,                   // direction of the sun
-                                              length(sun.color),                // intensity of the sun
-                                              6371e3,                           // radius of the planet in meters
-                                              6471e3,                           // radius of the atmosphere in meters
-                                              float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
-                                              21e-6,                            // Mie scattering coefficient
-                                              8e3,                              // Rayleigh scale height
-                                              1.2e3,                            // Mie scale height
-                                              0.758                             // Mie preferred scattering direction
-        );
 
-        return float4(atmosphere_sample, 0);
+        Texture2D skybox = textures[per_frame_data[0].sky_texture_idx];
+        const float2 skybox_uv = equi_uvs(direction);
+
+        float3 skybox_sample = skybox.Sample(bilinear_sampler, skybox_uv).rgb;
+
+        return float4(skybox_sample, 0);
     }
 }
 
@@ -172,7 +167,7 @@ float3 raytrace_reflections(float3 position_worldspace,
                             Texture2D noise) {
     const uint num_specular_rays = 1;
 
-    const uint num_bounces = 2;
+    const uint num_bounces = 1;
 
     RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
 
@@ -192,13 +187,18 @@ float3 raytrace_reflections(float3 position_worldspace,
             const float pdf = ray_direction.y;
             const float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
             ray_direction = normalize(mul(onb, ray_direction));
-            ray_direction = lerp(normal, ray_direction, roughness);
+            ray_direction = lerp(surface_normal, ray_direction, roughness);
 
             if(dot(surface_normal, ray_direction) < 0) {
                 ray_direction *= -1;
             }
 
-            specular_reflection_factor *= brdf_specular(f0, roughness, normal, ray_direction, view_vector) / pdf;
+            float3 noise_float3 = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rgb;
+            noise_float3 = normalize(noise_float3) * roughness;
+            const float3 reflection_normal = normalize(surface_normal + noise_float3);
+            ray_direction = reflect(view_vector, reflection_normal);
+
+            specular_reflection_factor *= brdf_specular(f0, roughness, reflection_normal, -ray_direction, view_vector);
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -222,7 +222,7 @@ float3 raytrace_reflections(float3 position_worldspace,
                 Texture2D metallic_roughness = textures[hit_material.metallic_roughness_idx];
                 float4 tex_sample = metallic_roughness.Sample(bilinear_sampler, hit_vertex.texcoord);
                 f0 = tex_sample.g > 0.5 ? 0.8 : 0.02;
-                roughness = tex_sample.b;
+                roughness = pow(tex_sample.b, 0.5);
                 view_vector = ray_direction;
 
             } else {
@@ -249,7 +249,7 @@ float3 raytrace_global_illumination(const in float3 position_worldspace,
                                     const in Texture2D noise) {
     const uint num_indirect_rays = 1;
 
-    const uint num_bounces = 2;
+    const uint num_bounces = 1;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -257,7 +257,6 @@ float3 raytrace_global_illumination(const in float3 position_worldspace,
 
     float3 indirect_light = 0;
 
-    // TODO: Wait for Visual Studio to support Shader Model 6.5 smh
     RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
 
     float3 ray_origin = position_worldspace;
@@ -356,15 +355,14 @@ float3 get_total_reflected_light(
                                                                sun,
                                                                noise);
 
-    // const float3 reflection = raytrace_reflections(input.position_worldspace,
-    //                                               input.normal,
-    //                                               view_vector_worldspace,
-    //                                               f0,
-    //                                               roughness,
-    //                                               noise_texcoord,
-    //                                               sun,
-    //                                               noise);
+    const float3 reflection = raytrace_reflections(input.position_worldspace,
+                                                   input.normal,
+                                                   view_vector_worldspace,
+                                                   f0,
+                                                   roughness,
+                                                   noise_texcoord,
+                                                   sun,
+                                                   noise);
 
-    return direct_light + indirect_light;
-    //+reflection;
+    return direct_light + indirect_light + reflection;
 }

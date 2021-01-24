@@ -20,7 +20,7 @@ namespace sanity::engine {
 
         void update_player_transform(Float32 delta_time);
 
-        void set_current_terrain(Terrain& terrain_in);
+        // void set_current_terrain(Terrain& terrain_in);
 
     private:
         Float32 normal_move_speed = 5;
@@ -44,7 +44,7 @@ namespace sanity::engine {
         glm::vec3 previous_location{};
         glm::vec3 velocity{0};
 
-        Terrain* terrain{nullptr};
+        // Terrain* terrain{nullptr};
         bool is_grounded{true};
     };
 } // namespace sanity::engine
