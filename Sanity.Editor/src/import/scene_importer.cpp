@@ -489,14 +489,14 @@ namespace sanity::editor::import {
             // Hope that all the buffers have the same size... They should...
 
             const auto location = *position_read_ptr;
-            const auto normal = *normal_read_ptr * Vec3f{1.f, 1.f, -1.f}; // glTF to DirectX coordinate space
+            const auto normal = *normal_read_ptr;
             Vec2f texcoord;
             if(texcoord_read_ptr != nullptr) {
                 texcoord = *texcoord_read_ptr;
                 texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
             }
 
-            vertices.push_back(StandardVertex{.location = location, .normal = normal, .texcoord = texcoord});
+            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, normal.z, normal.y}, .texcoord = texcoord});
 
             position_read_ptr++;
             normal_read_ptr++;

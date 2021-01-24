@@ -165,9 +165,9 @@ float3 raytrace_reflections(float3 position_worldspace,
                             const in float2 noise_texcoord,
                             const Light sun,
                             Texture2D noise) {
-    const uint num_specular_rays = 1;
+    const uint num_specular_rays = 2;
 
-    const uint num_bounces = 1;
+    const uint num_bounces = 2;
 
     RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
 
@@ -244,12 +244,14 @@ float3 raytrace_global_illumination(const in float3 position_worldspace,
                                     const in float3 normal,
                                     const in float3 eye_vector,
                                     const in float3 albedo,
+                                    const in float f0,
+                                    const in float roughness,
                                     const in float2 noise_texcoord,
                                     const in Light sun,
                                     const in Texture2D noise) {
-    const uint num_indirect_rays = 1;
+    const uint num_indirect_rays = 2;
 
-    const uint num_bounces = 1;
+    const uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -279,13 +281,7 @@ float3 raytrace_global_illumination(const in float3 position_worldspace,
                 ray_direction *= -1;
             }
 
-            diffuse_reflection_factor *= brdf_diffuse(surface_albedo,
-                                                      0.02,
-                                                      STANDARD_ROUGHNESS,
-                                                      surface_normal,
-                                                      ray_direction,
-                                                      view_vector) /
-                                         pdf;
+            diffuse_reflection_factor *= brdf_diffuse(surface_albedo, f0, roughness, surface_normal, ray_direction, view_vector) / pdf;
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -327,16 +323,22 @@ float3 get_total_reflected_light(
     Camera camera, VertexOutput input, float3 albedo, float3 normal, float f0, float roughness, Texture2D noise) {
     const Light sun = lights[0]; // The sun is ALWAYS at index 0
 
+	// Transform worldspace position into viewspace position
     const float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
+
+	// Treat viewspace position as the view vector
     float3 view_vector_viewspace = normalize(position_viewspace.xyz);
+
+	// Transform view vector into worldspace
     const float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
 
-    const float3 light_from_sun = brdf_diffuse(albedo.rgb, 0.02, roughness, input.normal, -sun.direction, view_vector_worldspace);
+    const float3 light_from_sun = brdf_diffuse(albedo.rgb, 0.02, roughness, input.normal_worldspace, -sun.direction, view_vector_worldspace);
+    return light_from_sun;
 
     float sun_shadow = 0;
 
     float2 noise_tex_size = float2(1024.f, 1024.f);
-    float2 noise_texcoord = input.position.xy / noise_tex_size;
+    float2 noise_texcoord = input.location_ndc.xy / noise_tex_size;
     const float2 offset = noise.Sample(bilinear_sampler, noise_texcoord * per_frame_data[0].time_since_start).rg;
     noise_texcoord *= offset;
 
@@ -346,17 +348,20 @@ float3 get_total_reflected_light(
     }
 
     const float3 direct_light = light_from_sun * sun_shadow;
+    // return direct_light;
 
     const float3 indirect_light = raytrace_global_illumination(input.position_worldspace,
-                                                               input.normal,
+                                                               input.normal_worldspace,
                                                                view_vector_worldspace,
                                                                albedo,
+                                                               f0,
+                                                               roughness,
                                                                noise_texcoord,
                                                                sun,
                                                                noise);
 
     const float3 reflection = raytrace_reflections(input.position_worldspace,
-                                                   input.normal,
+                                                   input.normal_worldspace,
                                                    view_vector_worldspace,
                                                    f0,
                                                    roughness,

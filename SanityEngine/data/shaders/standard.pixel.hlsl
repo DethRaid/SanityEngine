@@ -1,7 +1,7 @@
 struct VertexOutput {
-    float4 position : SV_POSITION;
+    float4 location_ndc : SV_POSITION;
     float3 position_worldspace : WORLDPOS;
-    float3 normal : NORMAL;
+    float3 normal_worldspace : NORMAL;
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
 };
@@ -18,7 +18,7 @@ struct MaterialData {
 #include "inc/normalmapping.hlsl"
 
 float4 main(VertexOutput input) : SV_TARGET {
-    input.normal = normalize(input.normal);
+    input.normal_worldspace = normalize(input.normal_worldspace);
 
     MaterialData material = material_buffer[constants.material_index];
 
@@ -34,7 +34,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     Texture2D normal_texture = textures[material.normal_idx];
     const float3 texture_normal = normal_texture.Sample(bilinear_sampler, input.texcoord).xyz * 2.0 - 1.0;
 
-    const float3x3 normal_matrix = cotangent_frame(input.normal, input.position_worldspace, input.texcoord);
+    const float3x3 normal_matrix = cotangent_frame(input.normal_worldspace, input.position_worldspace, input.texcoord);
     const float3 surface_normal = mul(normal_matrix, texture_normal);
 
     Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
@@ -53,5 +53,5 @@ float4 main(VertexOutput input) : SV_TARGET {
                                                              pow(metallic_roughness.b, 0.5),
                                                              noise);
 
-    return float4(total_reflected_light, 1);
+    return float4(input.normal_worldspace, 1);
 }

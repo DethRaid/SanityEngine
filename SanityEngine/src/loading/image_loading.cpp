@@ -116,7 +116,7 @@ namespace sanity::engine {
         } else {
             for(Uint32 i = 0; i < num_pixels; i++) {
                 const auto read_idx = i * original_num_components;
-                const Uint64 write_idx = static_cast<Uint64>(i) * DESIRED_NUM_COMPONENTS;
+                const auto write_idx = i * DESIRED_NUM_COMPONENTS;
 
                 pixels[write_idx] = original_data[read_idx];
                 pixels[write_idx + 1] = original_data[read_idx + 1];

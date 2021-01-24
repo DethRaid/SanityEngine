@@ -298,10 +298,12 @@ namespace sanity::engine::renderer {
 
         const auto& staging_buffer = device->get_staging_buffer_for_texture(image.resource.Get());
 
+    	const auto pixel_size = size_in_bytes(create_info.format);
+
         const auto subresource = D3D12_SUBRESOURCE_DATA{
             .pData = image_data,
-            .RowPitch = static_cast<Uint64>(create_info.width) * 4,
-            .SlicePitch = static_cast<Uint64>(create_info.width) * create_info.height * 4,
+            .RowPitch = static_cast<LONG_PTR>(create_info.width) * pixel_size,
+            .SlicePitch = static_cast<LONG_PTR>(create_info.width) * create_info.height * pixel_size,
         };
 
         const auto result = UpdateSubresources(commands, image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);

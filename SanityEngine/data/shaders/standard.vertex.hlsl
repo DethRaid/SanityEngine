@@ -1,14 +1,14 @@
 struct StandardVertex {
-    float3 position : Position;
-    float3 normal : Normal;
+    float3 location_modelspace : Position;
+    float3 normal_modelspace : Normal;
     float4 color : Color;
     float2 texcoord : Texcoord;
 };
 
 struct VertexOutput {
-    float4 position : SV_POSITION;
-    float3 position_worldspace : WORLDPOS;
-    float3 normal : NORMAL;
+    float4 location_ndc : SV_POSITION;
+    float3 location_worldspace : WORLDPOS;
+    float3 normal_worldspace : NORMAL;
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
 };
@@ -21,12 +21,14 @@ VertexOutput main(StandardVertex input) {
     VertexOutput output;
 
 	const float4x4 model_matrix = model_matrices[constants.model_matrix_index];
-    output.position_worldspace = mul(model_matrix, float4(input.position, 1.0f)).xyz;
+    output.location_worldspace = mul(model_matrix, float4(input.location_modelspace, 1.0f)).xyz;
 	
     const Camera camera = cameras[constants.camera_index];
-    output.position = mul(camera.projection, mul(camera.view, float4(output.position_worldspace, 1)));
+    output.location_ndc = mul(camera.projection, mul(camera.view, float4(output.location_worldspace, 1)));
+    
+    const float4 normal_worldspace = mul(model_matrix, float4(input.normal_modelspace, 0));
 	
-    output.normal = input.normal;
+    output.normal_worldspace = normal_worldspace;
     output.color = input.color;
     output.texcoord = input.texcoord;
 

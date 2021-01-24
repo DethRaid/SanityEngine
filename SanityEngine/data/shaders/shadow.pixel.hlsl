@@ -1,7 +1,7 @@
 struct VertexOutput {
     float4 position : SV_POSITION;
     float3 position_worldspace : WORLDPOS;
-    float3 normal : NORMAL;
+    float3 normal_worldspace : NORMAL;
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
 };

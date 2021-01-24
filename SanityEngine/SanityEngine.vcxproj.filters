@@ -112,9 +112,6 @@
     <Filter Include="src\world">
       <UniqueIdentifier>{58d6a1f2-98a7-4a81-bf98-dc8e682cd6d3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\NewFilter1">
-      <UniqueIdentifier>{41a0e397-0a7a-4469-a9b6-bc56104fb5f6}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

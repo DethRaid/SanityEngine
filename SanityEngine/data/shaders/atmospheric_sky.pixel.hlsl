@@ -7,19 +7,26 @@
 struct MaterialData {};
 
 #include "inc/atmospheric_scattering.hlsl"
+#include "inc/skybox.hlsl"
 #include "inc/standard_root_signature.hlsl"
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
     Camera camera = cameras[constants.camera_index];
-    float4 position_clipspace = float4(input.position_clipspace, 1);
-    float4 view_vector_worldspace = mul(mul(camera.inverse_view, camera.inverse_projection), position_clipspace);
-    // view_vector_worldspace /= view_vector_worldspace.w;
+    float4 location_clipspace = float4(input.position_clipspace, 1);
+    float4 location_viewspace = mul(camera.inverse_projection, location_clipspace);
+    location_viewspace /= location_viewspace.w; 
+    float4 location_worldspace = mul(camera.inverse_view, float4(location_viewspace.xyz, 0));
+    
+    uint skybox_index = per_frame_data[0].sky_texture_idx;
+    Texture2D skybox = textures[skybox_index];
+    float2 uvs = equi_uvs(normalize(location_worldspace.xyz));
+    return skybox.Sample(bilinear_sampler, uvs);
 
     Light sun = lights[0]; // Light 0 is always the sun
     float sun_strength = length(sun.color);
 
     float3 color = atmosphere(6471e3,
-                              normalize(view_vector_worldspace.xyz),
+                              normalize(location_worldspace.xyz),
                               float3(0, 6371e3, 0),
                               -sun.direction,                   // direction of the sun
                               sun_strength,                     // intensity of the sun
@@ -32,7 +39,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
                               0.758                             // Mie preferred scattering direction
     );
 
-    float mu = dot(normalize(view_vector_worldspace.xyz), -sun.direction);
+    float mu = dot(normalize(location_worldspace.xyz), -sun.direction);
     float mumu = mu * mu;
     float g = 0.9995;
     float gg = g * g;
