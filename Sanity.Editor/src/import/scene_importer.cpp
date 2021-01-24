@@ -153,7 +153,7 @@ namespace sanity::editor::import {
         // First, load all the meshes, textures, materials, and other primitives;
 
         auto& backend = renderer->get_render_backend();
-        backend.begin_frame_capture();
+        // backend.begin_frame_capture();
         auto cmds = backend.create_command_list();
 
         if(import_settings.import_meshes) {
@@ -496,7 +496,7 @@ namespace sanity::editor::import {
                 texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
             }
 
-            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, normal.z, normal.y}, .texcoord = texcoord});
+            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, -normal.y, normal.z}, .texcoord = texcoord});
 
             position_read_ptr++;
             normal_read_ptr++;
