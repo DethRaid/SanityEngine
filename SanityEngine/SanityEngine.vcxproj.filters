@@ -676,12 +676,6 @@
     <FxCompile Include="data\shaders\standard.vertex.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\terrain.pixel.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="data\shaders\terrain.vertex.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
     <FxCompile Include="data\shaders\ui.pixel.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
@@ -692,9 +686,6 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\atmospheric_scattering.hlsl">
-      <Filter>shaders\inc</Filter>
-    </FxCompile>
-    <FxCompile Include="data\shaders\inc\brdf.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\lighting.hlsl">
@@ -722,6 +713,9 @@
       <Filter>shaders\examples</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\filters.hlsli">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\brdf_diffuse.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
   </ItemGroup>

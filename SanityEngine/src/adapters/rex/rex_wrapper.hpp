@@ -1,10 +1,15 @@
 #pragma once
 
-// This include is necessary, even though VS doesn't realize it
 #include <filesystem>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "adapters/rex/stdout_stream.hpp"
 #include "core/Prelude.hpp"
+
+// This include is necessary, even though VS doesn't realize it
 #include "rx/core/memory/system_allocator.h"
 
 namespace rex {
@@ -29,23 +34,27 @@ constexpr bool RX_ITERATION_STOP = false;
 namespace Rx {
     template <>
     struct FormatNormalize<std::string> {
-        const char* operator()(const std::string& data) const { return data.c_str(); }
+        const char* operator()(const std::string& data) const;
     };
 
     template <>
     struct FormatNormalize<std::filesystem::path> {
-        static inline const size_t max_path_size = 260;
-    	
-    	char scratch[max_path_size]; // haha WIndows path
-        const char* operator()(const std::filesystem::path& data) {
-            const auto path_string = data.string();
-            const auto result = memcpy_s(scratch, max_path_size * sizeof(char), path_string.c_str(), path_string.size() * sizeof(char));
-            if(result != 0) {
-                fprintf(stderr, "Could not format std::filesystem::path %s: error code %d", path_string.c_str(), result);
-                memset(scratch, 0, 260 * sizeof(char));
-            }
-        	
-            return scratch;
-        }
+        static inline const size_t MAX_PATH_SIZE = 260;
+
+        char scratch[MAX_PATH_SIZE];
+
+        const char* operator()(const std::filesystem::path& data);
+    };
+
+    template <>
+    struct FormatNormalize<glm::vec3> {
+        char scratch[FormatSize<Float32>::size * 3 + sizeof "{, , }" - 1];
+        const char* operator()(const glm::vec3& data);
+    };
+
+    template <>
+    struct FormatNormalize<glm::quat> {
+        char scratch[FormatSize<Float32>::size * 4 + sizeof "{, , , }" - 1];
+        const char* operator()(const glm::quat& data);
     };
 } // namespace Rx

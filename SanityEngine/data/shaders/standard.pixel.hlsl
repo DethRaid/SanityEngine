@@ -25,7 +25,7 @@ float4 main(VertexOutput input) : SV_TARGET {
     Texture2D albedo_texture = textures[material.albedo_idx];
     float4 base_color = albedo_texture.Sample(bilinear_sampler, input.texcoord) * input.color;
 
-	// TODO: Separate shader (or a shader variant) for alpha-tested objects
+    // TODO: Separate shader (or a shader variant) for alpha-tested objects
     // if(base_color.a == 0) {
     //     // Early-out to avoid the expensive raytrace on completely transparent surfaces
     //     discard;
@@ -38,14 +38,20 @@ float4 main(VertexOutput input) : SV_TARGET {
     const float3 surface_normal = mul(normal_matrix, texture_normal);
 
     Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
-    const float2 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, input.texcoord).gb;
+    const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, input.texcoord);
 
     base_color.rgb = pow(base_color.rgb, 1.0 / 2.2);
 
     const Camera camera = cameras[constants.camera_index];
     const Texture2D noise = textures[0];
 
-    float3 total_reflected_light = get_total_reflected_light(camera, input, base_color.rgb, surface_normal, metallic_roughness.y, noise);
+    float3 total_reflected_light = get_total_reflected_light(camera,
+                                                             input,
+                                                             base_color.rgb,
+                                                             surface_normal,
+                                                             metallic_roughness.g,
+                                                             metallic_roughness.b,
+                                                             noise);
 
     return float4(total_reflected_light, 1);
 }

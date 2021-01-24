@@ -1,8 +1,6 @@
 #include "EditorUiController.hpp"
 
-#include "entity/Components.hpp"
 #include "entity/entity_operations.hpp"
-#include "rx/core/filesystem/file.h"
 #include "sanity_engine.hpp"
 #include "ui/Window.hpp"
 #include "windows/EntityEditorWindow.hpp"
@@ -37,7 +35,7 @@ namespace sanity::editor::ui {
     void EditorUiController::create_and_edit_new_entity() const {
         auto& registry = engine::g_engine->get_global_registry();
 
-        auto new_entity = entity::create_base_editor_entity("New Entity", registry);
+        const auto new_entity = entity::create_base_editor_entity("New Entity", registry);
 
         show_edit_entity_window(new_entity, registry);
     }

@@ -52,16 +52,20 @@ float GGX(float3 V, float3 L, float3 N, float roughness, float NoH_offset) {
     return 0;
 }
 
-float3 brdf(float3 albedo, float3 f0, float roughness, float3 normal, float3 light_vector, float3 eye_vector) {
-    float3 h = normalize(-eye_vector + light_vector);
-    float ldoth = saturate(dot(light_vector, h));
-    float3 f = fresnel(f0, ldoth);
-
-    float3 specular = GGX(eye_vector, light_vector, normal, roughness, 0);
-
-    float3 diffuse = lambert(normal, light_vector) * albedo;
+float3 brdf_diffuse(float3 albedo, float3 f0, float roughness, float3 normal, float3 light_vector, float3 eye_vector) {
+    const float3 diffuse = lambert(normal, light_vector) * albedo;
 
     // TODO: Figure out specular
-    // float normalization = (1 - pow(1 - ldoth, 5));
-    return diffuse; // lerp(diffuse * normalization, specular, f);
+    return diffuse;
 }
+
+float3 brdf_specular(float3 f0, float roughness, float3 normal, float3 light_vector, float3 eye_vector) {
+    const float3 h = normalize(-eye_vector + light_vector);
+    const float ldoth = saturate(dot(light_vector, h));
+    const float3 f = fresnel(f0, ldoth);
+    
+    const float3 specular = GGX(eye_vector, light_vector, normal, roughness, 0);
+    
+    return specular;
+}
+

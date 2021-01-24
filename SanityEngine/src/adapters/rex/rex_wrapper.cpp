@@ -12,7 +12,7 @@ using namespace tracy;
 #include "rx/core/global.h"
 #include "rx/core/log.h"
 
-namespace rex {    
+namespace rex {
 #if TRACY_ENABLE
     void SetThreadName(void* /*_context*/, const char* _name) { tracy::SetThreadName(_name); }
 
@@ -62,3 +62,30 @@ namespace rex {
         Rx::Globals::fini();
     }
 } // namespace rex
+
+namespace Rx {
+    const char* FormatNormalize<std::string>::operator()(const std::string& data) const { return data.c_str(); }
+
+    const char* FormatNormalize<std::filesystem::path>::operator()(const std::filesystem::path& data) {
+        const auto path_string = data.string();
+        const auto result = memcpy_s(scratch, MAX_PATH_SIZE * sizeof(char), path_string.c_str(), path_string.size() * sizeof(char));
+        if(result != 0) {
+            fprintf(stderr, "Could not format std::filesystem::path %s: error code %d", path_string.c_str(), result);
+            memset(scratch, 0, 260 * sizeof(char));
+        }
+
+        return scratch;
+    }
+
+    const char* FormatNormalize<glm::vec3>::operator()(const glm::vec3& data) {
+        sprintf_s(scratch, "(%f, %f, %f)", data.x, data.y, data.z);
+
+        return scratch;
+    }
+
+    const char* FormatNormalize<glm::qua<float, glm::defaultp>>::operator()(const glm::quat& data) {
+        sprintf_s(scratch, "(%f, %f, %f, %f)", data.x, data.y, data.z, data.w);
+
+        return scratch;
+    }
+} // namespace Rx

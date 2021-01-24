@@ -70,16 +70,17 @@ namespace sanity {
                 [[nodiscard]] static Rx::Vector<StandardVertex> get_vertices_from_primitive(const tinygltf::Primitive& primitive,
                                                                                             const tinygltf::Model& scene);
 
-                [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& scene,
+                [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& model,
                                                                    float import_scale,
                                                                    entt::registry& registry,
                                                                    ID3D12GraphicsCommandList4* cmds);
 
-                [[nodiscard]] entt::entity create_entity_for_node(const tinygltf::Node& node,
-                                                                  const entt::entity& parent_entity,
-                                                                  float import_scale,
-                                                                  entt::registry& registry,
-                                                                  ID3D12GraphicsCommandList4* cmds);
+                entt::entity create_entity_for_node(const tinygltf::Node& node,
+                                                    const entt::entity& parent_entity,
+                                                    float import_scale,
+                                                    const tinygltf::Model& model,
+                                                    entt::registry& registry,
+                                                    ID3D12GraphicsCommandList4* cmds);
             };
         } // namespace import
     }     // namespace editor

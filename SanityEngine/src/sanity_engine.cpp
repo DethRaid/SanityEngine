@@ -164,9 +164,7 @@ namespace sanity::engine {
 
         while(accumulator >= delta_time) {
             ZoneScopedN("Simulation tick");
-
-            logger->verbose("Ticking simulation");
-
+            
             // if(player_controller) {
             //     player_controller->update_player_transform(delta_time);
             // }
@@ -182,7 +180,6 @@ namespace sanity::engine {
 #ifdef NDEBUG
         if(glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE) {
 #endif
-            logger->verbose("Rendering a frame");
             // Only render when the window is visible
             render();
 #ifdef NDEBUG
@@ -190,8 +187,6 @@ namespace sanity::engine {
 #endif
 
         framerate_tracker.add_frame_time(frame_duration_seconds);
-
-        logger->verbose("Engine tick complete");
     }
 
     TypeReflection& SanityEngine::get_type_reflector() { return type_reflector; }
@@ -292,14 +287,11 @@ namespace sanity::engine {
 
     void SanityEngine::render() {
         imgui_adapter->draw_ui(global_registry.view<ui::UiComponent>());
-        logger->verbose("Drew UI");
-
+        
         renderer->render_frame(global_registry);
-        logger->verbose("Renderer rendered a frame");
-
+        
         renderer->end_frame();
-        logger->verbose("Frame ended");
-
+        
         FrameMark;
 #ifdef TRACY_ENABLE
         TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);

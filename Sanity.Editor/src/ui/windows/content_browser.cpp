@@ -38,10 +38,8 @@ namespace sanity::editor::ui {
         Rx::Vector<std::filesystem::path> files;
 
         const auto directory_to_draw = engine::SanityEngine::executable_directory / *content_directory / selected_directory;
-        logger->verbose("Drawing all items in directory %s", directory_to_draw);
 
         for(const auto& item : std::filesystem::directory_iterator{directory_to_draw}) {
-            logger->verbose("Categorizing item %s", item.path());
             if(item.is_directory()) {
                 directories.push_back(item.path().stem());
 
@@ -49,18 +47,13 @@ namespace sanity::editor::ui {
                 files.push_back(item.path().filename());
             }
         }
-
-        logger->verbose("Categorized all directory items");
-
+        
         const auto width = ImGui::GetWindowWidth();
-        logger->verbose("ImGUI window width: %f", width);
         const auto num_columns = static_cast<Uint32>(ceil(width / DIRECTORY_ITEM_WIDTH));
-        logger->verbose("num_columns: %d", num_columns);
 
         const auto num_items = directories.size() + files.size();
         const auto num_rows = static_cast<Uint32>(floor(num_items / num_columns));
 
-        logger->verbose("Fitting content into %d columns and %d rows", num_columns, num_rows);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {2, 2});
         ImGui::Columns(num_columns);
@@ -76,7 +69,6 @@ namespace sanity::editor::ui {
         auto cur_row = 1u; // Start at 1 because we count `..`
 
         directories.each_fwd([&](const std::filesystem::path& directory) {
-            logger->verbose("Drawing directory %s", directory);
             draw_directory(directory, [&](const std::filesystem::path& selected_item) { selected_directory /= selected_item; });
 
             cur_row++;
@@ -87,7 +79,6 @@ namespace sanity::editor::ui {
         });
 
         files.each_fwd([&](const std::filesystem::path& file) {
-            logger->verbose("Drawing file %s", file);
             draw_file(file, [&](const std::filesystem::path& selected_item) {
                 const auto filename = selected_directory / selected_item;
                 g_editor->get_ui_controller().show_editor_for_asset(filename);

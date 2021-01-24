@@ -3,6 +3,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "scene_importer.hpp"
 
+#include <ranges>
+
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Tracy.hpp"
 #include "asset_registry/asset_registry.hpp"
 #include "core/types.hpp"
@@ -69,7 +73,7 @@ namespace sanity::editor::import {
             }
 
             const auto& buffer = scene.buffers[buffer_view.buffer];
-            return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteOffset);
+            return reinterpret_cast<const DataType*>(buffer.data.data() + buffer_view.byteOffset + accessor.byteOffset);
         }
 
         template <typename IndexType>
@@ -432,7 +436,7 @@ namespace sanity::editor::import {
     Rx::Vector<StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
                                                                           const tinygltf::Model& scene) {
         Rx::String all_attributes;
-        for(const auto& [attribute_name, attribute] : primitive.attributes) {
+        for(const auto& attribute_name : primitive.attributes | std::views::keys) {
             all_attributes = Rx::String::format("%s, %s", all_attributes, attribute_name.c_str());
         }
         gltf_logger->verbose("Primitive has attributes %s", all_attributes);
@@ -485,7 +489,7 @@ namespace sanity::editor::import {
             // Hope that all the buffers have the same size... They should...
 
             const auto location = *position_read_ptr;
-            const auto normal = *normal_read_ptr * Vec3f{1.f, 1.f, -1.f};   // glTF to DirectX coordinate space
+            const auto normal = *normal_read_ptr * Vec3f{1.f, 1.f, -1.f}; // glTF to DirectX coordinate space
             Vec2f texcoord;
             if(texcoord_read_ptr != nullptr) {
                 texcoord = *texcoord_read_ptr;
@@ -502,14 +506,14 @@ namespace sanity::editor::import {
         return vertices;
     }
 
-    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& scene,
+    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& model,
                                                         const float import_scale,
                                                         entt::registry& registry,
                                                         ID3D12GraphicsCommandList4* cmds) {
         ZoneScoped;
 
         // Assume that the files we'll be importing have a single scene
-        const auto& default_scene = scene.scenes[scene.defaultScene];
+        const auto& default_scene = model.scenes[model.defaultScene];
 
         // Create an entity for the scene and reference one of its components
         const auto& scene_entity = entity::create_base_editor_entity("Imported scene", registry);
@@ -517,13 +521,8 @@ namespace sanity::editor::import {
 
         // Add entities for all the nodes in the scene, and all their children
         for(const auto node_idx : default_scene.nodes) {
-            const auto& node = scene.nodes[node_idx];
-
-            const auto node_entity = create_entity_for_node(node, scene_entity, import_scale, registry, cmds);
-
-            // Get the component every loop so that we don't hold on to a bad reference
-            auto& scene_transform_component = registry.get<engine::TransformComponent>(scene_entity);
-            scene_transform_component.children.push_back(node_entity);
+            const auto& node = model.nodes[node_idx];
+            create_entity_for_node(node, scene_entity, import_scale, model, registry, cmds);
         }
 
         return scene_entity;
@@ -532,44 +531,67 @@ namespace sanity::editor::import {
     entt::entity SceneImporter::create_entity_for_node(const tinygltf::Node& node,
                                                        const entt::entity& parent_entity,
                                                        const float import_scale,
+                                                       const tinygltf::Model& model,
                                                        entt::registry& registry,
                                                        ID3D12GraphicsCommandList4* cmds) {
-        ZoneScopedN(node.name.c_str());
+        ZoneScoped;
 
         const auto node_entity = entity::create_base_editor_entity(node.name.c_str(), registry);
 
         auto& node_transform_component = entity::add_component<engine::TransformComponent>(node_entity, registry);
-        node_transform_component.parent = parent_entity;
         auto& node_transform = node_transform_component.transform;
-        if(node.translation.size() == 3) {
-            node_transform.location.x = static_cast<Float32>(node.translation[0]);
-            node_transform.location.y = static_cast<Float32>(node.translation[1]);
-            node_transform.location.z = static_cast<Float32>(node.translation[2]);
 
-            node_transform.location *= import_scale;
+        if(!node.matrix.empty()) {
+            const auto matrix_idx = [](const auto y, const auto x) { return y * 4 + x; };
+
+            node_transform.location = glm::make_vec3(&node.matrix[matrix_idx(3, 0)]);
+
+            const auto transform_matrix = glm::make_mat4(node.matrix.data());
+            node_transform.rotation = glm::toQuat(transform_matrix);
+
+            node_transform.scale.x = glm::length(transform_matrix[0]);
+            node_transform.scale.y = glm::length(transform_matrix[1]);
+            node_transform.scale.z = static_cast<float>(glm::sign(glm::determinant(transform_matrix)) * glm::length(transform_matrix[2]));
+
+        } else {
+            if(node.translation.size() == 3) {
+                node_transform.location.x = static_cast<Float32>(node.translation[0]);
+                node_transform.location.y = static_cast<Float32>(node.translation[1]);
+                node_transform.location.z = static_cast<Float32>(node.translation[2]);
+            }
+
+            if(node.rotation.size() == 4) {
+                node_transform.rotation.x = static_cast<Float32>(node.rotation[0]);
+                node_transform.rotation.y = static_cast<Float32>(node.rotation[1]);
+                node_transform.rotation.z = static_cast<Float32>(node.rotation[2]);
+                node_transform.rotation.w = static_cast<Float32>(node.rotation[3]);
+            }
+
+            node_transform.scale = glm::vec3{import_scale};
+
+            if(node.scale.size() == 3) {
+                node_transform.scale.x *= static_cast<Float32>(node.scale[0]);
+                node_transform.scale.y *= static_cast<Float32>(node.scale[1]);
+                node_transform.scale.z *= static_cast<Float32>(node.scale[2]);
+            }
         }
 
-        if(node.rotation.size() == 4) {
-            node_transform.rotation.x = static_cast<Float32>(node.rotation[0]);
-            node_transform.rotation.y = static_cast<Float32>(node.rotation[1]);
-            node_transform.rotation.z = static_cast<Float32>(node.rotation[2]);
-            node_transform.rotation.w = static_cast<Float32>(node.rotation[3]);
+        logger->verbose("Created node %s with transform translation=%s rotation=%s scale=%s",
+                        node.name.empty() ? "New Entity" : node.name,
+                        node_transform.location,
+                        node_transform.rotation,
+                        node_transform.scale);
+
+        if(registry.valid(parent_entity)) {
+            node_transform_component.parent = parent_entity;
+
+            auto& parent_transform = registry.get<engine::TransformComponent>(parent_entity);
+            parent_transform.children.push_back(node_entity);
         }
 
-        node_transform.scale = glm::vec3{import_scale};
-
-        if(node.scale.size() == 3) {
-            node_transform.scale.x *= static_cast<Float32>(node.scale[0]);
-            node_transform.scale.y *= static_cast<Float32>(node.scale[1]);
-            node_transform.scale.z *= static_cast<Float32>(node.scale[2]);
-        }
-
-        if(node.mesh > -1 && node.mesh < meshes.size()) {
+        if(node.mesh > -1 && static_cast<Size>(node.mesh) < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
-
-            // Intentionally a copy
-            const auto cached_transform = node_transform;
 
             auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
@@ -627,6 +649,17 @@ namespace sanity::editor::import {
         }
 
         // TODO: Lights
+
+        // Child nodes
+        for(const auto child_node_idx : node.children) {
+            if(child_node_idx < 0 || static_cast<Size>(child_node_idx) > model.nodes.size()) {
+                // Invalid node index
+                continue;
+            }
+
+            const auto& child_node = model.nodes.at(child_node_idx);
+            create_entity_for_node(child_node, node_entity, import_scale, model, registry, cmds);
+        }
 
         return node_entity;
     }

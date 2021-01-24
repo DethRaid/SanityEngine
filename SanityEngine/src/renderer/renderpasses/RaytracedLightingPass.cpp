@@ -30,15 +30,6 @@ namespace sanity::engine::renderer {
         });
         logger->verbose("Created standard pipeline");
 
-        terrain_pipeline = device.create_render_pipeline_state({
-            .name = "Opaque chunk geometry pipeline",
-            .vertex_shader = load_shader("terrain.vertex"),
-            .pixel_shader = load_shader("terrain.pixel"),
-            .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
-            .depth_stencil_format = ImageFormat::Depth32,
-        });
-        logger->verbose("Created opaque chunk geometry pipeline");
-
         atmospheric_sky_pipeline = device.create_render_pipeline_state({
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("fullscreen.vertex"),

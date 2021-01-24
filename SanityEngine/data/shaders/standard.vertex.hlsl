@@ -21,8 +21,8 @@ VertexOutput main(StandardVertex input) {
     VertexOutput output;
 
 	float4x4 model_matrix = model_matrices[constants.model_matrix_index];
-    output.position_worldspace = mul(model_matrix, input.position);
-
+    output.position_worldspace = mul(model_matrix, input.position).xyz;
+	
     Camera camera = cameras[constants.camera_index];
     output.position = mul(camera.projection, mul(camera.view, float4(output.position_worldspace, 1)));
 	

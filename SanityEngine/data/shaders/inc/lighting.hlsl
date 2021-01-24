@@ -1,7 +1,7 @@
 #pragma once
 
 #include "atmospheric_scattering.hlsl"
-#include "brdf.hlsl"
+#include "brdf_diffuse.hlsl"
 #include "shadow.hlsl"
 #include "standard_root_signature.hlsl"
 
@@ -104,7 +104,7 @@ float4 get_incoming_light(in float3 ray_origin,
         float shadow = saturate(raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise));
 
         // Calculate the diffuse light reflected by the hit point along the ray
-        float3 reflected_direct_diffuse = brdf(hit_albedo, 0.02, STANDARD_ROUGHNESS, vertex.normal, -sun.direction, ray.Direction) *
+        float3 reflected_direct_diffuse = brdf_diffuse(hit_albedo, 0.02, STANDARD_ROUGHNESS, vertex.normal, -sun.direction, ray.Direction) *
                                           sun.color * shadow;
         return float4(reflected_direct_diffuse, 1.0);
 
@@ -162,17 +162,92 @@ float2 wang_hash(uint2 seed) {
     return float2(seed) / (int((uint(1) << 31)) - 1);
 }
 
+float3 raytrace_reflections(float3 position_worldspace,
+                            float3 normal,
+                            const float3 eye_vector,
+                            float f0,
+                            float roughness,
+                            const in float2 noise_texcoord,
+                            const Light sun,
+                            Texture2D noise) {
+    const uint num_specular_rays = 1;
+
+    const uint num_bounces = 2;
+
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
+
+    float3 ray_origin = position_worldspace;
+    float3 surface_normal = normal;
+    float3 view_vector = eye_vector;
+
+    float3 reflection = 0;
+
+    for(uint ray_idx = 1; ray_idx <= num_specular_rays; ray_idx++) {
+        float3 specular_reflection_factor = 1;
+        float3 light_sample = 0;
+
+        for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
+            const float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
+            float3 ray_direction = CosineSampleHemisphere(nums);
+            const float pdf = ray_direction.y;
+            const float3x3 onb = transpose(construct_ONB_frisvad(surface_normal));
+            ray_direction = normalize(mul(onb, ray_direction));
+            ray_direction = lerp(normal, ray_direction, roughness);
+
+            if(dot(surface_normal, ray_direction) < 0) {
+                ray_direction *= -1;
+            }
+
+            specular_reflection_factor *= brdf_specular(f0, roughness, normal, ray_direction, view_vector) / pdf;
+
+            StandardVertex hit_vertex;
+            MaterialData hit_material;
+
+            float4 incoming_light = get_incoming_light(ray_origin,
+                                                       ray_direction,
+                                                       sun,
+                                                       query,
+                                                       noise_texcoord * ray_idx * bounce_idx,
+                                                       noise,
+                                                       hit_vertex,
+                                                       hit_material) /
+                                    (2.0f * PI);
+
+            light_sample += specular_reflection_factor * incoming_light.rgb;
+
+            if(incoming_light.a > 0.05) {
+                // set up next ray
+                ray_origin = hit_vertex.position;
+                surface_normal = hit_vertex.normal;
+                Texture2D metallic_roughness = textures[hit_material.metallic_roughness_idx];
+                float4 tex_sample = metallic_roughness.Sample(bilinear_sampler, hit_vertex.texcoord);
+                f0 = tex_sample.g > 0.5 ? 0.8 : 0.02;
+                roughness = tex_sample.b;
+                view_vector = ray_direction;
+
+            } else {
+                // Ray escaped into the sky
+                break;
+            }
+        }
+
+        reflection += light_sample / (float) num_bounces;
+    }
+
+    return reflection / (float) num_specular_rays;
+}
+
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
  */
-float3 raytraced_indirect_light(const in float3 position_worldspace,
-                                const in float3 normal,
-                                const in float3 eye_vector,
-                                const in float3 albedo,
-                                const in float2 noise_texcoord,
-                                const in Light sun,
-                                const in Texture2D noise) {
-    const uint num_indirect_rays = 3;
+float3 raytrace_global_illumination(const in float3 position_worldspace,
+                                    const in float3 normal,
+                                    const in float3 eye_vector,
+                                    const in float3 albedo,
+                                    const in float2 noise_texcoord,
+                                    const in Light sun,
+                                    const in Texture2D noise) {
+    const uint num_indirect_rays = 1;
 
     const uint num_bounces = 2;
 
@@ -191,7 +266,7 @@ float3 raytraced_indirect_light(const in float3 position_worldspace,
     float3 view_vector = eye_vector;
 
     for(uint ray_idx = 1; ray_idx <= num_indirect_rays; ray_idx++) {
-        float3 reflection_factor = 1;
+        float3 diffuse_reflection_factor = 1;
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
@@ -205,7 +280,13 @@ float3 raytraced_indirect_light(const in float3 position_worldspace,
                 ray_direction *= -1;
             }
 
-            reflection_factor *= brdf(surface_albedo, 0.02, STANDARD_ROUGHNESS, surface_normal, ray_direction, view_vector) / pdf;
+            diffuse_reflection_factor *= brdf_diffuse(surface_albedo,
+                                                      0.02,
+                                                      STANDARD_ROUGHNESS,
+                                                      surface_normal,
+                                                      ray_direction,
+                                                      view_vector) /
+                                         pdf;
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -219,7 +300,7 @@ float3 raytraced_indirect_light(const in float3 position_worldspace,
                                                        hit_vertex,
                                                        hit_material) /
                                     (2.0f * PI);
-            light_sample += reflection_factor*incoming_light.rgb;
+            light_sample += diffuse_reflection_factor * incoming_light.rgb;
 
             if(incoming_light.a > 0.05) {
                 // set up next ray
@@ -238,17 +319,20 @@ float3 raytraced_indirect_light(const in float3 position_worldspace,
         indirect_light += light_sample / (float) num_bounces;
     }
 
-    return indirect_light / (float) num_indirect_rays;
+    float3 indirect_diffuse = indirect_light / (float) num_indirect_rays;
+
+    return indirect_diffuse;
 }
 
-float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albedo, float3 normal, float roughness, Texture2D noise) {
+float3 get_total_reflected_light(
+    Camera camera, VertexOutput input, float3 albedo, float3 normal, float f0, float roughness, Texture2D noise) {
     const Light sun = lights[0]; // The sun is ALWAYS at index 0
 
     const float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
     float3 view_vector_viewspace = normalize(position_viewspace.xyz);
     const float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
 
-    const float3 light_from_sun = brdf(albedo.rgb, 0.02, roughness, input.normal, -sun.direction, view_vector_worldspace);
+    const float3 light_from_sun = brdf_diffuse(albedo.rgb, 0.02, roughness, input.normal, -sun.direction, view_vector_worldspace);
 
     float sun_shadow = 0;
 
@@ -264,13 +348,23 @@ float3 get_total_reflected_light(Camera camera, VertexOutput input, float3 albed
 
     const float3 direct_light = light_from_sun * sun_shadow;
 
-    const float3 indirect_light = raytraced_indirect_light(input.position_worldspace,
-                                                           input.normal,
-                                                           view_vector_worldspace,
-                                                           albedo,
-                                                           noise_texcoord,
-                                                           sun,
-                                                           noise);
+    const float3 indirect_light = raytrace_global_illumination(input.position_worldspace,
+                                                               input.normal,
+                                                               view_vector_worldspace,
+                                                               albedo,
+                                                               noise_texcoord,
+                                                               sun,
+                                                               noise);
 
-    return indirect_light + direct_light;
+    // const float3 reflection = raytrace_reflections(input.position_worldspace,
+    //                                               input.normal,
+    //                                               view_vector_worldspace,
+    //                                               f0,
+    //                                               roughness,
+    //                                               noise_texcoord,
+    //                                               sun,
+    //                                               noise);
+
+    return direct_light + indirect_light;
+    //+reflection;
 }

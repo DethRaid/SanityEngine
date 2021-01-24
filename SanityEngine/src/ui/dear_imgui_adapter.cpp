@@ -146,8 +146,6 @@ namespace sanity::engine {
 
     void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
         ZoneScoped;
-
-        logger->verbose("Drawing UI to ImGUI - %d components to render", view.size());
         
         auto& io = ImGui::GetIO();
         IM_ASSERT(
@@ -164,34 +162,25 @@ namespace sanity::engine {
             io.DisplayFramebufferScale = ImVec2(static_cast<Float32>(display_w) / static_cast<Float32>(w),
                                                 static_cast<Float32>(display_h) / static_cast<Float32>(h));
         }
-
-    	logger->verbose("GLFW window size: %dx%d. GLFW Framebuffer size: %dx%d", w, h, display_w, display_h);
-
+        
         // Setup time step
         const auto current_time = glfwGetTime();
         io.DeltaTime = last_start_time > 0.0 ? static_cast<Float32>(current_time - last_start_time) : static_cast<Float32>(1.0f / 60.0f);
         last_start_time = current_time;
 
-    	logger->verbose("ImGUI delta time: %f", io.DeltaTime);
-
         update_mouse_pos_and_buttons();
         update_mouse_cursor();
-        logger->verbose("Retrieved mouse position");
 
         ImGui::NewFrame();
-        logger->verbose("Began ImGUI frame");
 
         view.each([](const ui::UiComponent& component)
         {
             if(component.panel) {
-                logger->verbose("Drawing UI panel %s", component.panel->name);
                 component.panel->draw();
             }
         });
-        logger->verbose("Drew UI components to ImGUI");
 
         ImGui::Render();
-        logger->verbose("Rendered ImGUI UI to vertex buffers");
     }
 
     void DearImguiAdapter::initialize_style() {
