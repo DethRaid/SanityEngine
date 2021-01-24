@@ -544,14 +544,21 @@ namespace sanity::editor::import {
         if(!node.matrix.empty()) {
             const auto matrix_idx = [](const auto y, const auto x) { return y * 4 + x; };
 
-            node_transform.location = glm::make_vec3(&node.matrix[matrix_idx(3, 0)]);
-
             const auto transform_matrix = glm::make_mat4(node.matrix.data());
-            node_transform.rotation = glm::toQuat(transform_matrix);
+        	
+            node_transform.location = transform_matrix[3];
 
-            node_transform.scale.x = glm::length(transform_matrix[0]);
-            node_transform.scale.y = glm::length(transform_matrix[1]);
-            node_transform.scale.z = static_cast<float>(glm::sign(glm::determinant(transform_matrix)) * glm::length(transform_matrix[2]));
+        	auto i = glm::mat3{transform_matrix}; 
+            
+            node_transform.scale.x = static_cast<float>(glm::length(i[0]));
+            node_transform.scale.y = static_cast<float>(glm::length(i[1]));
+            node_transform.scale.z = static_cast<float>(glm::sign(glm::determinant(i)) * glm::length(i[2]));
+
+        	i[0] /= node_transform.scale.x;
+            i[1] /= node_transform.scale.y;
+            i[2] /= node_transform.scale.z;
+        	
+            node_transform.rotation = glm::toQuat(i);
 
         } else {
             if(node.translation.size() == 3) {
