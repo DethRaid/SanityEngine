@@ -182,18 +182,6 @@
     <ClInclude Include="src\loading\shader_loading.hpp">
       <Filter>src\loading</Filter>
     </ClInclude>
-    <ClInclude Include="src\world\terrain.hpp">
-      <Filter>src\world</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\world.hpp">
-      <Filter>src\world</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\environment\environment_object.hpp">
-      <Filter>src\world\environment</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp">
-      <Filter>src\world\generation</Filter>
-    </ClInclude>
     <ClInclude Include="src\windows\windows_helpers.hpp">
       <Filter>src\windows</Filter>
     </ClInclude>
@@ -353,9 +341,6 @@
     <ClInclude Include="extern\imgui-node-editor\imgui_node_editor_internal.h">
       <Filter>extern\imgui-node-editor</Filter>
     </ClInclude>
-    <ClInclude Include="src\world\environment\Environment.hpp">
-      <Filter>src\world\environment</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\concepts\EnumLike.hpp">
       <Filter>src\core\concepts</Filter>
     </ClInclude>
@@ -449,18 +434,6 @@
     </ClCompile>
     <ClCompile Include="src\loading\shader_loading.cpp">
       <Filter>src\loading</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\terrain.cpp">
-      <Filter>src\world</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\world.cpp">
-      <Filter>src\world</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\environment\environment_object.cpp">
-      <Filter>src\world\environment</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp">
-      <Filter>src\world\generation</Filter>
     </ClCompile>
     <ClCompile Include="src\windows\windows_helpers.cpp">
       <Filter>src\windows</Filter>
@@ -572,9 +545,6 @@
     </ClCompile>
     <ClCompile Include="extern\imgui-node-editor\imgui_node_editor_api.cpp">
       <Filter>extern\imgui-node-editor</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world\environment\Environment.cpp">
-      <Filter>src\world\environment</Filter>
     </ClCompile>
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>

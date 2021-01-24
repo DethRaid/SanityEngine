@@ -555,11 +555,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\ui\Window.hpp" />
     <ClInclude Include="src\ui\world_preview_panel.hpp" />
     <ClInclude Include="src\windows\windows_helpers.hpp" />
-    <ClInclude Include="src\world\environment\Environment.hpp" />
-    <ClInclude Include="src\world\environment\environment_object.hpp" />
-    <ClInclude Include="src\world\generation\gpu_terrain_generation.hpp" />
-    <ClInclude Include="src\world\terrain.hpp" />
-    <ClInclude Include="src\world\world.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extern\D3D12MemoryAllocator\D3D12MemAlloc.cpp" />
@@ -626,11 +621,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\ui\Window.cpp" />
     <ClCompile Include="src\ui\world_preview_panel.cpp" />
     <ClCompile Include="src\windows\windows_helpers.cpp" />
-    <ClCompile Include="src\world\environment\Environment.cpp" />
-    <ClCompile Include="src\world\environment\environment_object.cpp" />
-    <ClCompile Include="src\world\generation\gpu_terrain_generation.cpp" />
-    <ClCompile Include="src\world\terrain.cpp" />
-    <ClCompile Include="src\world\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt" />
