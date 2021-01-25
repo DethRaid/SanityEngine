@@ -29,9 +29,14 @@ namespace sanity::editor::import {
 
     constexpr const char* BASE_COLOR_TEXTURE_PARAM_NAME = "baseColorTexture";
     constexpr const char* BASE_COLOR_FACTOR_PARAM_NAME = "baseColorFactor";
+
+    constexpr const char* EMISSIVE_TEXTURE_PARAM_NAME = "emissiveTexture";
+    constexpr const char* EMISSIVE_FACTOR_PARAM_NAME = "emissiveFactor";
+
     constexpr const char* METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME = "metallicRoughnessTexture";
     constexpr const char* METALLIC_FACTOR_PARAM_NAME = "metallicFactor";
     constexpr const char* ROUGHNESS_FACTOR_PARAM_NAME = "roughnessFactor";
+
     constexpr const char* NORMAL_TEXTURE_PARAM_NAME = "normalTexture";
 
     namespace detail {
@@ -180,7 +185,7 @@ namespace sanity::editor::import {
                                                                                              ID3D12GraphicsCommandList4* cmds) {
         ZoneScoped;
 
-        Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
+        Rx::Vector<engine::renderer::StandardMaterialHandle> imported_materials;
 
         for(const auto& material : scene.materials) {
             ZoneScopedN(material.name.c_str());
@@ -189,86 +194,133 @@ namespace sanity::editor::import {
 
             engine::renderer::StandardMaterial sanity_material{};
 
+            auto has_base_color_value{false};
+            auto has_normal_value{false};
+            auto has_metallic_value{false};
+            auto has_roughness_value{false};
+            auto has_emission_value{false};
+
             // Extract the texture indices
 
             int base_color_texture_idx{-1};
-            int metallic_roughness_texture_idx{-1};
+            int metalness_roughness_texture_idx{-1};
             int normal_texture_idx{-1};
+            int emission_texture_idx{-1};
 
             for(const auto& [param_name, param] : material.values) {
                 if(param_name == BASE_COLOR_TEXTURE_PARAM_NAME) {
                     base_color_texture_idx = param.TextureIndex();
 
                 } else if(param_name == METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME) {
-                    metallic_roughness_texture_idx = param.TextureIndex();
+                    metalness_roughness_texture_idx = param.TextureIndex();
+
+                } else if(param_name == BASE_COLOR_FACTOR_PARAM_NAME) {
+                    const auto color = param.ColorFactor();
+                    sanity_material.base_color_value = glm::make_vec4(color.data());
+                    has_base_color_value = true;
+
+                } else if(param_name == METALLIC_FACTOR_PARAM_NAME) {
+                    sanity_material.metallic_roughness_value.g = static_cast<float>(param.Factor());
+                    has_metallic_value = true;
+
+                } else if(param_name == ROUGHNESS_FACTOR_PARAM_NAME) {
+                    sanity_material.metallic_roughness_value.b = static_cast<float>(param.Factor());
+                    has_roughness_value = true;
                 }
             }
 
             for(const auto& [param_name, param] : material.additionalValues) {
                 if(param_name == NORMAL_TEXTURE_PARAM_NAME) {
                     normal_texture_idx = param.TextureIndex();
+
+                } else if(param_name == EMISSIVE_TEXTURE_PARAM_NAME) {
+                    emission_texture_idx = param.TextureIndex();
+
+                } else if(param_name == EMISSIVE_FACTOR_PARAM_NAME) {
+                    const auto color = param.ColorFactor();
+                    sanity_material.emission_value = {glm::make_vec3(color.data()), sanity_material.emission_value.w};
                 }
             }
 
-            Vec4f base_color_factor{1, 1, 1, 1};
-            if(const auto& base_color_factor_value = material.values.find(BASE_COLOR_FACTOR_PARAM_NAME);
-               base_color_factor_value != material.values.end()) {
-                const auto color = base_color_factor_value->second.ColorFactor();
-                memcpy(&base_color_factor, &color, sizeof(float) * 4);
-            }
-
-            if(const auto& base_color_texture_value = material.values.find(BASE_COLOR_TEXTURE_PARAM_NAME);
-               base_color_texture_value != material.values.end() && base_color_texture_value->second.TextureIndex() != -1) {
+            if(base_color_texture_idx == -1) {
+                if(has_base_color_value) {
+                    logger->verbose("No base color texture. Falling back to base color value");
+                } else {
+                    logger->warning("No base color property on material %s", material.name);
+                }
+            	
+            } else {
                 if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
-                    sanity_material.base_color = *handle;
+                    sanity_material.base_color_texture = *handle;
 
                 } else {
                     gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
                                        base_color_texture_idx,
                                        BASE_COLOR_TEXTURE_PARAM_NAME);
-                    sanity_material.base_color = renderer->get_pink_texture();
+                    sanity_material.base_color_texture = renderer->get_pink_texture();
                 }
+            }
 
+            if(metalness_roughness_texture_idx == -1) {
+                if(has_metallic_value && has_roughness_value) {
+                    logger->verbose("No metalness/roughness texture. Falling back to metalness/roughness value");
+                } else {
+                    logger->warning("No metalness/roughness property on material %s", material.name);
+                }
+            	
             } else {
-                gltf_logger->warning("No base color texture on material %s. Falling back to the base color factor", material.name);
+                if(const auto handle = get_sanity_handle_to_texture(metalness_roughness_texture_idx, scene, cmds); handle.has_value()) {
+                    sanity_material.metallic_roughness_texture = *handle;
+
+                } else {
+                    gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                       metalness_roughness_texture_idx,
+                                       METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME);
+                    sanity_material.metallic_roughness_texture = renderer->get_pink_texture();
+                }
             }
 
-            if(metallic_roughness_texture_idx == -1) {
-                gltf_logger->error("Parameter %s on material %s is not a valid texture",
-                                   METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME,
-                                   material.name.c_str());
-            }
             if(normal_texture_idx == -1) {
-                gltf_logger->error("Parameter %s on material %s is not a valid texture", NORMAL_TEXTURE_PARAM_NAME, material.name.c_str());
-            }
+                logger->verbose("No normal texture. Falling back to mesh normals");
 
-            // Load the textures
-
-            if(const auto handle = get_sanity_handle_to_texture(metallic_roughness_texture_idx, scene, cmds); handle.has_value()) {
-                sanity_material.metallic_roughness = *handle;
             } else {
-                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
-                                   metallic_roughness_texture_idx,
-                                   METALLIC_ROUGHNESS_TEXTURE_PARAM_NAME);
-                sanity_material.metallic_roughness = renderer->get_default_metallic_roughness_texture();
+                if(const auto handle = get_sanity_handle_to_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
+                    sanity_material.normal_texture = *handle;
+
+                } else {
+                    gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                       normal_texture_idx,
+                                       NORMAL_TEXTURE_PARAM_NAME);
+                    sanity_material.normal_texture = renderer->get_pink_texture();
+                }
             }
 
-            if(const auto handle = get_sanity_handle_to_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
-                sanity_material.normal = *handle;
+            if(emission_texture_idx == -1) {
+                if(has_emission_value) {
+                    logger->verbose("No emission texture. Falling back to emission value");
+                } else {
+                    logger->info("No emission property on material %s", material.name);
+                }
+            	
             } else {
-                gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
-                                   normal_texture_idx,
-                                   NORMAL_TEXTURE_PARAM_NAME);
-                sanity_material.normal = renderer->get_default_normal_texture();
-            }
+                if(const auto handle = get_sanity_handle_to_texture(emission_texture_idx, scene, cmds); handle.has_value()) {
+                    sanity_material.emission_texture = *handle;
 
+                } else {
+                    gltf_logger->error("Could not import texture %d (from material parameter %s) into SanityEngine",
+                                       emission_texture_idx,
+                                       EMISSIVE_TEXTURE_PARAM_NAME);
+                    sanity_material.normal_texture = renderer->get_pink_texture();
+                }
+            }
+            
             // Allocate material on GPU
 
             const auto handle = renderer->allocate_standard_material(sanity_material);
-            materials.push_back(handle);
+            imported_materials.push_back(handle);
         }
 
-        return materials;
+        return imported_materials;
     }
 
     Rx::Optional<engine::renderer::TextureHandle> SceneImporter::get_sanity_handle_to_texture(const Int32 texture_idx,
@@ -542,23 +594,21 @@ namespace sanity::editor::import {
         auto& node_transform = node_transform_component.transform;
 
         if(!node.matrix.empty()) {
-            const auto matrix_idx = [](const auto y, const auto x) { return y * 4 + x; };
-
             const auto transform_matrix = glm::make_mat4(node.matrix.data());
-        	
+
             node_transform.location = transform_matrix[3];
 
-        	auto i = glm::mat3{transform_matrix}; 
-            
-            node_transform.scale.x = static_cast<float>(glm::length(i[0]));
-            node_transform.scale.y = static_cast<float>(glm::length(i[1]));
-            node_transform.scale.z = static_cast<float>(glm::sign(glm::determinant(i)) * glm::length(i[2]));
+            auto i = glm::mat3{transform_matrix};
 
-        	i[0] /= node_transform.scale.x;
+            node_transform.scale.x = static_cast<float>(length(i[0]));
+            node_transform.scale.y = static_cast<float>(length(i[1]));
+            node_transform.scale.z = static_cast<float>(glm::sign(determinant(i)) * length(i[2]));
+
+            i[0] /= node_transform.scale.x;
             i[1] /= node_transform.scale.y;
             i[2] /= node_transform.scale.z;
-        	
-            node_transform.rotation = glm::toQuat(i);
+
+            node_transform.rotation = toQuat(i);
 
         } else {
             if(node.translation.size() == 3) {

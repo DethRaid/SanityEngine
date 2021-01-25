@@ -43,7 +43,7 @@ namespace sanity::editor::ui {
             if(item.is_directory()) {
                 directory_names.push_back(item.path().stem());
 
-            } else if(item.is_regular_file()) {
+            } else if(item.is_regular_file() && !should_ignore_file(item.path())) {
                 file_names.push_back(item.path().filename());
             }
         }
@@ -126,7 +126,7 @@ namespace sanity::editor::ui {
 
     void ContentBrowser::draw_file(const std::filesystem::path& file, const Rx::Function<void(const std::filesystem::path&)>& on_open) {
         const auto file_name = file.string();
-        
+
         ImGui::PushID(file_name.c_str());
 
         auto& asset_registry = g_editor->get_asset_registry();
@@ -150,17 +150,7 @@ namespace sanity::editor::ui {
         ImGui::PopID();
     }
 
-    bool ContentBrowser::should_ignore_file(const std::filesystem::path& file) {
-        auto should_ignore = false;
-        file_extensions_to_ignore.each([&](const std::filesystem::path& extension) {
-            if(file.extension() == extension) {
-                should_ignore = true;
-                return RX_ITERATION_STOP;
-            }
-
-            return RX_ITERATION_CONTINUE;
-        });
-
-        return should_ignore;
+    bool ContentBrowser::should_ignore_file(const std::filesystem::path& file) const {
+        return file_extensions_to_ignore.find(file.extension()) != nullptr;
     }
 } // namespace sanity::editor::ui

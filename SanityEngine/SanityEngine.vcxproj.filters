@@ -126,6 +126,9 @@
     </None>
     <None Include="..\vcpkg.json" />
     <None Include="..\README.md" />
+    <None Include="data\shaders\inc\StandardMaterial.hlsli">
+      <Filter>shaders\inc</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\adapters\tracy.hpp">
@@ -695,10 +698,10 @@
     <FxCompile Include="data\shaders\inc\filters.hlsli">
       <Filter>shaders\inc</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\inc\brdf_diffuse.hlsl">
+    <FxCompile Include="data\shaders\inc\skybox.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\inc\skybox.hlsl">
+    <FxCompile Include="data\shaders\inc\brdf.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
   </ItemGroup>

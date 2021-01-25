@@ -13,21 +13,27 @@ namespace sanity::engine::renderer {
      * If emission == 1, metallic no longer matters. Base color is the color of emitted light
      */
     struct StandardMaterial {
-        TextureHandle base_color;
+	    glm::vec4 base_color_value{0.8f, 0.8f, 0.8f, 0.f};
+        
+        glm::vec4 metallic_roughness_value{0.f, 0.f, 0.5f, 0.f};
 
-        TextureHandle normal;
+    	glm::vec4 emission_value{0.f};
+    	
+        TextureHandle base_color_texture;
+
+        TextureHandle normal_texture;
 
     	/*!
     	 * G = roughness
     	 * B = metallic
     	 */
-        TextureHandle metallic_roughness;
+        TextureHandle metallic_roughness_texture;
     	
         /*!
          * Emission is stored as the cube of the actual emission, scaled from 0 - 100 to 0 - 1
          *
          * `emission = pow(emission.r, 1 / 3) * 100;`
          */
-    	TextureHandle emission;
+    	TextureHandle emission_texture;
     };
 } // namespace renderer

@@ -461,6 +461,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </FxCompile>
+    <None Include="data\shaders\inc\StandardMaterial.hlsli" />
     <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
@@ -677,7 +678,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</DeploymentContent>
     </FxCompile>
-    <FxCompile Include="data\shaders\inc\brdf_diffuse.hlsl">
+    <FxCompile Include="data\shaders\inc\brdf.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>

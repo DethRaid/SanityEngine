@@ -48,6 +48,6 @@ namespace sanity::editor::ui {
 
         void draw_back_button();
 
-        bool should_ignore_file(const std::filesystem::path& file);
+        bool should_ignore_file(const std::filesystem::path& file) const;
     };
 } // namespace sanity::editor::ui

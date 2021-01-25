@@ -28,7 +28,7 @@ VertexOutput main(StandardVertex input) {
     
     const float4 normal_worldspace = mul(model_matrix, float4(input.normal_modelspace, 0));
 	
-    output.normal_worldspace = normal_worldspace;
+    output.normal_worldspace = normal_worldspace.xyz;
     output.color = input.color;
     output.texcoord = input.texcoord;
 

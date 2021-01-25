@@ -35,7 +35,7 @@ namespace sanity::engine::renderer {
         cvar_enable_gpu_based_validation,
         "r.EnableGpuBasedValidation",
         "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        true);
+        false);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 1, 8, 3);
@@ -299,6 +299,8 @@ namespace sanity::engine::renderer {
     }
 
     void RenderBackend::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
+        ZoneScoped;
+    	
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
     }
 
@@ -1050,7 +1052,10 @@ namespace sanity::engine::renderer {
 
     DescriptorAllocator& RenderBackend::get_cbv_srv_uav_allocator() const { return *cbv_srv_uav_allocator; }
 
-    ID3D12DescriptorHeap* RenderBackend::get_cbv_srv_uav_heap() const { return cbv_srv_uav_allocator->get_heap(); }
+    ID3D12DescriptorHeap* RenderBackend::get_cbv_srv_uav_heap() const {
+        ZoneScoped;
+        return cbv_srv_uav_allocator->get_heap();
+    }
 
     void RenderBackend::create_material_resource_binders() {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
