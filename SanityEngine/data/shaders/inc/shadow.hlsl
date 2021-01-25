@@ -4,6 +4,8 @@
 
 #define NUM_SHADOW_RAYS 2
 
+#define SHADOW_RAY_BIAS 0.1
+
 // from https://gist.github.com/keijiro/ee439d5e7388f3aafc5296005c8c3f33
 // Rotation with angle (in radians) and axis
 float3x3 AngleAxis3x3(float angle, float3 axis) {
@@ -26,24 +28,44 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
                     t * z * z + c);
 }
 
-float raytrace_shadow(const Light light, const float3 position_worldspace, const float2 noise_texcoord, Texture2D noise) {
+float raytrace_shadow(const Light light,
+                      const float3 position_worldspace,
+                      const float3 mesh_normal_worldspace,
+                      const float2 noise_texcoord,
+                      Texture2D noise) {
     // Shadow ray query
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
+
+    const float3 direction_to_light = normalize(-light.direction);
 
     float shadow_strength = 1.0;
 
     for(uint i = 1; i <= NUM_SHADOW_RAYS; i++) {
         // Random cone with the same angular size as the sun
-        const float3 random_vector = float3(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
+        // const float3 random_vector = noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0;
+        //
+        // const float3 projected_vector = random_vector - (direction_to_light * dot(direction_to_light, random_vector));
+        // const float random_angle = random_vector.z * i * light.angular_size;
+        // const float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
+        // const float3 ray_direction = mul(rotation_matrix, direction_to_light);
 
-        const float3 projected_vector = random_vector - (-light.direction * dot(-light.direction, random_vector));
-        const float random_angle = random_vector.z * i * light.angular_size;
-        const float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
-        const float3 ray_direction = mul(rotation_matrix, -light.direction);
+        float3 ray_direction;
+
+        const float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
+        const float noise_scale = tan(light.angular_size);
+    	
+        if(abs(light.angular_size) <= PI / 2) {
+            ray_direction = normalize(direction_to_light + random_vector * noise_scale);
+
+        } else {
+            ray_direction = normalize(direction_to_light / noise_scale + random_vector);
+        }
+
+        const float cos_theta = dot(ray_direction, mesh_normal_worldspace);
 
         RayDesc ray;
         ray.Origin = position_worldspace;
-        ray.TMin = 0.01; // Slight offset so we don't self-intersect. TODO: Make this slope-scaled
+        ray.TMin = SHADOW_RAY_BIAS * (1.0 - cos_theta); // Slight offset so we don't self-intersect
         ray.Direction = ray_direction;
         ray.TMax = 1000; // TODO: Pass this in with a CB
 
@@ -59,4 +81,4 @@ float raytrace_shadow(const Light light, const float3 position_worldspace, const
     }
 
     return shadow_strength;
-}
+} 

@@ -98,18 +98,22 @@ float4 get_incoming_light(in float3 ray_origin,
         Texture2D albedo_tex = textures[material.albedo_idx];
         float3 hit_albedo = pow(albedo_tex.Sample(bilinear_sampler, vertex.texcoord).rgb, 1.0 / 2.2);
 
+        Texture2D metalness_rougness_tex = textures[material.metallic_roughness_idx];
+        float2 hit_f0_roughness = metalness_rougness_tex.Sample(bilinear_sampler, vertex.texcoord).gb;
+
         float t = query.CommittedRayT();
         if(t <= 0) {
             // Ray is stuck
             return 0;
         }
 
-        float shadow = saturate(raytrace_shadow(sun, direction * t + ray_origin, noise_texcoord, noise));
+        float shadow = saturate(raytrace_shadow(sun, direction * t + ray_origin, vertex.normal, noise_texcoord, noise));
 
         // Calculate the diffuse light reflected by the hit point along the ray
-        float3 reflected_direct_diffuse = brdf_diffuse(hit_albedo, 0.02, STANDARD_ROUGHNESS, vertex.normal, -sun.direction, ray.Direction) *
-                                          sun.color * shadow;
-        return float4(reflected_direct_diffuse, 1.0);
+        float3 lit_hit_surface = brdf(hit_albedo, hit_f0_roughness.x, vertex.normal, hit_f0_roughness.y, -sun.direction, ray.Direction) *
+                                 sun.color * shadow;
+
+        return float4(lit_hit_surface, 1.0);
 
     } else {
         // Sample the atmosphere
@@ -160,7 +164,7 @@ float2 wang_hash(uint2 seed) {
 float3 raytrace_reflections(float3 position_worldspace,
                             float3 normal,
                             const float3 eye_vector,
-                            float f0,
+                            float metalness,
                             float roughness,
                             const in float2 noise_texcoord,
                             const Light sun,
@@ -198,7 +202,7 @@ float3 raytrace_reflections(float3 position_worldspace,
             const float3 reflection_normal = normalize(surface_normal + noise_float3);
             ray_direction = reflect(view_vector, reflection_normal);
 
-            specular_reflection_factor *= brdf_specular(f0, roughness, reflection_normal, -ray_direction, view_vector);
+            specular_reflection_factor *= Fr_CookTorance(normal, roughness, metalness, ray_direction, view_vector);
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -221,8 +225,8 @@ float3 raytrace_reflections(float3 position_worldspace,
                 surface_normal = hit_vertex.normal;
                 Texture2D metallic_roughness = textures[hit_material.metallic_roughness_idx];
                 float4 tex_sample = metallic_roughness.Sample(bilinear_sampler, hit_vertex.texcoord);
-                f0 = tex_sample.g > 0.5 ? 0.8 : 0.02;
-                roughness = pow(tex_sample.b, 0.5);
+                metalness = tex_sample.g > 0.5 ? 0.8 : 0.02;
+                roughness = tex_sample.b;
                 view_vector = ray_direction;
 
             } else {
@@ -281,7 +285,7 @@ float3 raytrace_global_illumination(const in float3 position_worldspace,
                 ray_direction *= -1;
             }
 
-            diffuse_reflection_factor *= brdf_diffuse(surface_albedo, f0, roughness, surface_normal, ray_direction, view_vector) / pdf;
+            diffuse_reflection_factor *= Fd_Lambert(surface_normal, ray_direction) * surface_albedo / pdf;
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -320,20 +324,27 @@ float3 raytrace_global_illumination(const in float3 position_worldspace,
 }
 
 float3 get_total_reflected_light(
-    Camera camera, VertexOutput input, float3 albedo, float3 normal, float f0, float roughness, Texture2D noise) {
+    Camera camera, VertexOutput input, float3 base_color, float3 normal, float metalness, float roughness, Texture2D noise) {
     const Light sun = lights[0]; // The sun is ALWAYS at index 0
 
-	// Transform worldspace position into viewspace position
+	float3 light_vector_worldspace = normalize(-sun.direction);
+    light_vector_worldspace.y *= -1;    // uhhhhhhhhhhhhhhhhhhh
+
+    // Transform worldspace position into viewspace position
     const float4 position_viewspace = mul(camera.view, float4(input.position_worldspace, 1));
 
-	// Treat viewspace position as the view vector
+    // Treat viewspace position as the view vector
     float3 view_vector_viewspace = normalize(position_viewspace.xyz);
 
-	// Transform view vector into worldspace
-    const float3 view_vector_worldspace = mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz;
+    // Transform view vector into worldspace
+    const float3 view_vector_worldspace = normalize(mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz);
 
-    const float3 light_from_sun = brdf_diffuse(albedo.rgb, 0.02, roughness, input.normal_worldspace, -sun.direction, view_vector_worldspace);
-    return light_from_sun;
+    const float3 light_from_sun = brdf(base_color.rgb,
+                                       input.normal_worldspace,
+                                       metalness,
+                                       roughness,
+                                       light_vector_worldspace,
+                                       view_vector_worldspace);
 
     float sun_shadow = 0;
 
@@ -344,30 +355,32 @@ float3 get_total_reflected_light(
 
     // Only cast shadow rays if the pixel faces the light source
     if(length(light_from_sun) > 0) {
-        sun_shadow = raytrace_shadow(sun, input.position_worldspace, noise_texcoord, noise);
+        sun_shadow = raytrace_shadow(sun, input.position_worldspace, input.normal_worldspace, noise_texcoord, noise);
     }
 
     const float3 direct_light = light_from_sun * sun_shadow;
-    // return direct_light;
+    return direct_light;
 
     const float3 indirect_light = raytrace_global_illumination(input.position_worldspace,
                                                                input.normal_worldspace,
                                                                view_vector_worldspace,
-                                                               albedo,
-                                                               f0,
+                                                               base_color,
+                                                               metalness,
                                                                roughness,
                                                                noise_texcoord,
                                                                sun,
                                                                noise);
+    return indirect_light;
 
     const float3 reflection = raytrace_reflections(input.position_worldspace,
                                                    input.normal_worldspace,
                                                    view_vector_worldspace,
-                                                   f0,
+                                                   metalness,
                                                    roughness,
                                                    noise_texcoord,
                                                    sun,
                                                    noise);
+    return reflection;
 
     return direct_light + indirect_light + reflection;
 }

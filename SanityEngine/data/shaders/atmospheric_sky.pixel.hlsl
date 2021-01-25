@@ -15,17 +15,19 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
     float4 location_clipspace = float4(input.position_clipspace, 1);
     float4 location_viewspace = mul(camera.inverse_projection, location_clipspace);
     location_viewspace /= location_viewspace.w;
-    float4 location_worldspace = mul(camera.inverse_view, float4(location_viewspace.xyz, 0));
+    float4 view_vector_worldspace = mul(camera.inverse_view, float4(location_viewspace.xyz, 0));
 
     uint skybox_index = per_frame_data[0].sky_texture_idx;
     if(skybox_index == 0) {
         Light sun = lights[0]; // Light 0 is always the sun
         float sun_strength = length(sun.color);
 
+    	float3 light_direction = normalize(-sun.direction);
+
         float3 color = atmosphere(6471e3,
-                                  normalize(location_worldspace.xyz),
+                                  normalize(view_vector_worldspace.xyz),
                                   float3(0, 6371e3, 0),
-                                  -sun.direction,                   // direction of the sun
+                                  light_direction,                  // direction of the sun
                                   sun_strength,                     // intensity of the sun
                                   6371e3,                           // radius of the planet in meters
                                   6471e3,                           // radius of the atmosphere in meters
@@ -36,7 +38,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
                                   0.758                             // Mie preferred scattering direction
         );
 
-        float mu = dot(normalize(location_worldspace.xyz), -sun.direction);
+        float mu = dot(normalize(view_vector_worldspace.xyz), light_direction);
         float mumu = mu * mu;
         float g = 0.9995;
         float gg = g * g;
@@ -47,7 +49,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
 
     } else {
         Texture2D skybox = textures[skybox_index];
-        float2 uvs = equi_uvs(normalize(location_worldspace.xyz));
+        float2 uvs = equi_uvs(normalize(view_vector_worldspace.xyz));
         return skybox.Sample(bilinear_sampler, uvs);
     }
 }

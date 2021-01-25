@@ -17,7 +17,7 @@ struct MaterialData {
 #include "inc/lighting.hlsl"
 #include "inc/normalmapping.hlsl"
 
-float4 main(VertexOutput input) : SV_TARGET {
+float4 main(VertexOutput input) : SV_TARGET {	
     input.normal_worldspace = normalize(input.normal_worldspace);
 
     MaterialData material = material_buffer[constants.material_index];
@@ -31,11 +31,12 @@ float4 main(VertexOutput input) : SV_TARGET {
     //     discard;
     // }
 
-    Texture2D normal_texture = textures[material.normal_idx];
-    const float3 texture_normal = normal_texture.Sample(bilinear_sampler, input.texcoord).xyz * 2.0 - 1.0;
-
-    const float3x3 normal_matrix = cotangent_frame(input.normal_worldspace, input.position_worldspace, input.texcoord);
-    const float3 surface_normal = mul(normal_matrix, texture_normal);
+    // TODO: generate normal matrix in fragment shader like a cool kid
+    // Texture2D normal_texture = textures[material.normal_idx];
+    // const float3 texture_normal = normal_texture.Sample(bilinear_sampler, input.texcoord).xyz * 2.0 - 1.0;
+    // 
+    // const float3x3 normal_matrix = cotangent_frame(input.normal_worldspace, input.position_worldspace, input.texcoord);
+    // const float3 surface_normal = mul(normal_matrix, texture_normal);
 
     Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
     const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, input.texcoord);
@@ -48,10 +49,10 @@ float4 main(VertexOutput input) : SV_TARGET {
     float3 total_reflected_light = get_total_reflected_light(camera,
                                                              input,
                                                              base_color.rgb,
-                                                             surface_normal,
+                                                             input.normal_worldspace,
                                                              metallic_roughness.g,
-                                                             pow(metallic_roughness.b, 0.5),
+                                                             metallic_roughness.b,
                                                              noise);
 
-    return float4(input.normal_worldspace, 1);
+    return float4(total_reflected_light, 1);
 }

@@ -180,6 +180,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ShaderModel>6.5</ShaderModel>
       <ObjectFileOutput>$(OutDir)data\shaders\%(Filename)</ObjectFileOutput>
       <AdditionalIncludeDirectories>$(ProjectDir)extern\FidelityFX-SPD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+      <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">

@@ -1,96 +1,53 @@
 #pragma once
 
-float3 lambert_diffuse(float3 n, float3 l) {
-    const float ndotl = saturate(dot(n, l));
-    return ndotl * 1.05;
+// BRDF from https://google.github.io/filament/Filament.html#listing_glslbrdf
+
+float D_GGX(float NoH, float a) {
+    float a2 = a * a;
+    float f = (NoH * a2 - NoH) * NoH + 1.0;
+    return a2 / (PI * f * f);
 }
 
-float sqr(float x) { return x * x; }
+float3 F_Schlick(float u, float3 f0, float3 f90) { return f0 + (f90 - f0) * pow(1.0 - u, 5.0); }
 
-// Burley Diffuse from https://github.com/wdas/brdf/blob/main/src/brdfs/disney.brdf
-
-float SchlickFresnel(float u) {
-    float m = clamp(1 - u, 0, 1);
-    float m2 = m * m;
-    return m2 * m2 * m; // pow(m,5)
+float V_SmithGGXCorrelated(float NoV, float NoL, float a) {
+    float a2 = a * a;
+    float GGXL = NoV * sqrt((-NoL * a2 + NoL) * NoL + a2);
+    float GGXV = NoL * sqrt((-NoV * a2 + NoV) * NoV + a2);
+    return 0.5 / (GGXV + GGXL);
 }
 
-float3 mon2lin(float3 x) { return float3(pow(x[0], 2.2), pow(x[1], 2.2), pow(x[2], 2.2)); }
+float3 Fr_CookTorance(float3 n, float roughness, float f0, float3 l, float3 v) {
+    float3 h = normalize(v + l);
 
-float3 burley_diffuse(float3 N, float3 L, float3 V, float3 albedo, float roughness) {
-    float NdotL = dot(N, L);
-    float NdotV = dot(N, V);
-    if(NdotL < 0 || NdotV < 0) {
-        return float3(0, 0, 0);
-    }
+    float NoV = abs(dot(n, v)) + 1e-5;
+    float NoL = clamp(dot(n, l), 0.0, 1.0);
+    float NoH = clamp(dot(n, h), 0.0, 1.0);
+    float LoH = clamp(dot(l, h), 0.0, 1.0);
+	
+    float D = D_GGX(NoH, roughness);
+    float3 F = F_Schlick(LoH, f0, 1);
+    float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
 
-    float3 H = normalize(L + V);
-    float LdotH = dot(L, H);
-
-    float3 Cdlin = mon2lin(albedo);
-
-    // Diffuse fresnel - go from 1 at normal incidence to .5 at grazing
-    // and mix in diffuse retro-reflection based on roughness
-    float FL = SchlickFresnel(NdotL), FV = SchlickFresnel(NdotV);
-    float Fd90 = 0.5 + 2 * LdotH * LdotH * roughness;
-    float Fd = lerp(1.0, Fd90, FL) * lerp(1.0, Fd90, FV);
-
-    return (1 / PI) * Fd * Cdlin;
+	return (D * V) * F;
 }
 
-// Unoptimized GGX specular term from http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/
+float Fd_Lambert(float3 n, float3 l) { return saturate(dot(n, l)); }
 
-float3 fresnel(float3 f0, float ldoth) { return f0 + (1.0 - f0) * pow(1.0f - ldoth, 5); }
+float3 brdf(float3 base_color, float3 n, float metalness, float perceptualRoughness, float3 l, float3 v) {
+	// Remapping from https://google.github.io/filament/Filament.html#materialsystem/parameterization/remapping
+    const float3 albedo = (1.0 - metalness) * base_color;
+    float roughness = perceptualRoughness * perceptualRoughness;
+	
+    const float dielectric_f0 = 0.035;
+    const float3 f0 = lerp(float3(dielectric_f0, dielectric_f0, dielectric_f0), base_color, metalness);
+    
+    // specular BRDF
+    float3 Fr = Fr_CookTorance(n, roughness, f0, l, v);
 
-float G1V(float dotNV, float k) { return 1.0f / (dotNV * (1.0f - k) + k); }
+    // diffuse BRDF
+    float3 Fd = albedo * Fd_Lambert(n, l);
 
-float GGX(float3 V, float3 L, float3 N, float roughness, float F0) {
-    float alpha = roughness * roughness;
-
-    float3 H = normalize(V + L);
-
-    float dotNL = saturate(dot(N, L));
-    float dotNV = saturate(dot(N, V));
-    float dotNH = saturate(dot(N, H));
-    float dotLH = saturate(dot(L, H));
-
-    float F, D, vis;
-
-    // D
-    float alphaSqr = alpha * alpha;
-    float pi = 3.14159f;
-    float denom = dotNH * dotNH * (alphaSqr - 1.0) + 1.0f;
-    D = alphaSqr / (pi * denom * denom);
-
-    // F
-    float dotLH5 = pow(1.0f - dotLH, 5);
-    F = F0 + (1.0 - F0) * (dotLH5);
-
-    // V
-    float k = alpha / 2.0f;
-    vis = G1V(dotNL, k) * G1V(dotNV, k);
-
-    float specular = dotNL * D * F * vis;
-    return specular;
-}
-
-float3 brdf_diffuse(float3 albedo, float3 f0, float roughness, float3 normal, float3 light_vector, float3 eye_vector) {
-    // const float3 h = normalize(-eye_vector + light_vector);
-    // const float ldoth = saturate(dot(light_vector, h));
-    // const float3 f = fresnel(f0, ldoth);
-    // const float3 diffuse = lambert_diffuse(normal, light_vector) * albedo * (float3(1.0f, 1.0f, 1.0f) - f);
-
-    const float3 diffuse = burley_diffuse(normal, light_vector, eye_vector, albedo, roughness);
-
-    return diffuse;
-}
-
-float3 brdf_specular(float3 f0, float roughness, float3 normal, float3 light_vector, float3 eye_vector) {
-    const float3 h = normalize(-eye_vector + light_vector);
-    const float ldoth = saturate(dot(light_vector, h));
-    const float3 f = fresnel(f0, ldoth);
-
-    const float3 specular = GGX(eye_vector, light_vector, normal, roughness, 0);
-
-    return specular * f;
+    return Fd;
+    //Fr + Fd;
 }
