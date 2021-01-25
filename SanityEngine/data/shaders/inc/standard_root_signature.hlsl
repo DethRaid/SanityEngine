@@ -12,10 +12,17 @@ struct Camera {
     float4x4 previous_inverse_projection;
 };
 
+#define LIGHT_TYPE_DIRECTIONAL 0
+#define LIGHT_TYPE_SPHERE 1
+#define LIGHT_TYPE_RECTANGLE 2
+#define LIGHT_TYPE_CYLINDER 3
+
+#define SUN_LIGHT_INDEX 0
+
 struct Light {
     uint type;
     float3 color;
-    float3 direction;
+    float3 direction_or_location;
     float angular_size;
 };
 
@@ -23,7 +30,7 @@ struct PerFrameData {
     float time_since_start;
     uint frame_count;
 
-	uint sky_texture_idx;
+    uint sky_texture_idx;
 };
 
 /*!

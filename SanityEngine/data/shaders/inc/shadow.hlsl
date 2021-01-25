@@ -28,15 +28,17 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
                     t * z * z + c);
 }
 
-float raytrace_shadow(const Light light,
+float raytrace_shadow(const float3 light_vector,
+                      const float angular_size,
                       const float3 position_worldspace,
-                      const float3 mesh_normal_worldspace,
-                      const float2 noise_texcoord,
-                      Texture2D noise) {
+                      const float3 mesh_normal_worldspace) {
+    Texture2D noise = textures[0];
+    const float2 noise_texcoord = position_worldspace.xy * light_vector.x * light_vector.z + position_worldspace.yz * angular_size;
+
+    const float noise_scale = tan(angular_size);
+
     // Shadow ray query
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
-
-    const float3 direction_to_light = normalize(-light.direction);
 
     float shadow_strength = 1.0;
 
@@ -52,13 +54,12 @@ float raytrace_shadow(const Light light,
         float3 ray_direction;
 
         const float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
-        const float noise_scale = tan(light.angular_size);
-    	
-        if(abs(light.angular_size) <= PI / 2) {
-            ray_direction = normalize(direction_to_light + random_vector * noise_scale);
+
+        if(abs(angular_size) <= PI / 2) {
+            ray_direction = normalize(light_vector + random_vector * noise_scale);
 
         } else {
-            ray_direction = normalize(direction_to_light / noise_scale + random_vector);
+            ray_direction = normalize(light_vector / noise_scale + random_vector);
         }
 
         const float cos_theta = dot(ray_direction, mesh_normal_worldspace);
@@ -81,4 +82,4 @@ float raytrace_shadow(const Light light,
     }
 
     return shadow_strength;
-} 
+}

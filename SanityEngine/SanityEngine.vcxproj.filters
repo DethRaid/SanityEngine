@@ -106,11 +106,11 @@
     <Filter Include="src\core\reflection">
       <UniqueIdentifier>{f9c66dd5-1245-44a9-813c-ecea89c5ca18}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\entity">
-      <UniqueIdentifier>{26273737-df13-45c8-b805-fec52948e2fb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\world">
       <UniqueIdentifier>{58d6a1f2-98a7-4a81-bf98-dc8e682cd6d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\actor">
+      <UniqueIdentifier>{fd7335b3-acb6-484f-bddb-28994f728571}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -408,15 +408,13 @@
     <ClInclude Include="src\core\fs\path_ops.hpp">
       <Filter>src\core\fs</Filter>
     </ClInclude>
-    <ClInclude Include="src\entity\creation.hpp">
-      <Filter>src\entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\reflection\type_reflection.hpp">
       <Filter>src\core\reflection</Filter>
     </ClInclude>
     <ClInclude Include="src\world\world.hpp">
       <Filter>src\world</Filter>
     </ClInclude>
+    <ClInclude Include="src\actor\actor.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -608,15 +606,13 @@
     <ClCompile Include="src\renderer\render_components.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\entity\creation.cpp">
-      <Filter>src\entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\reflection\type_reflection.cpp">
       <Filter>src\core\reflection</Filter>
     </ClCompile>
     <ClCompile Include="src\world\world.cpp">
       <Filter>src\world</Filter>
     </ClCompile>
+    <ClCompile Include="src\actor\actor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

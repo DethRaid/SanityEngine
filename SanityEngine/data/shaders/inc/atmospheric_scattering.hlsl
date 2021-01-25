@@ -20,7 +20,7 @@ float2 rsi(float3 r0, float3 rd, float sr) {
 }
 
 float3 atmosphere(float maxDepth,
-                  float3 r,
+                  float3 v,
                   float3 r0,
                   float3 pSun,
                   float iSun,
@@ -33,14 +33,14 @@ float3 atmosphere(float maxDepth,
                   float g) {
     // Normalize the sun and view directions.
     pSun = normalize(pSun);
-    r = normalize(r);
+    v = normalize(v);
 
     // Calculate the step size of the primary ray.
-    float2 p = rsi(r0, r, rAtmos);
+    float2 p = rsi(r0, v, rAtmos);
 
     if(p.x > p.y)
         return float3(0, 0, 0);
-    p.y = min(p.y, rsi(r0, r, rPlanet).x);
+    p.y = min(p.y, rsi(r0, v, rPlanet).x);
 
     float rayLength = p.y - p.x;
     rayLength = min(rayLength, maxDepth); // limit marching to scene depth in order to avoid "transparent" geometry
@@ -58,7 +58,7 @@ float3 atmosphere(float maxDepth,
     float iOdMie = 0.0;
 
     // Calculate the Rayleigh and Mie phases.
-    float mu = dot(r, pSun);
+    float mu = dot(v, pSun);
     float mumu = mu * mu;
     float gg = g * g;
     float pRlh = 3.0 / (16.0 * PI) * (1.0 + mumu);
@@ -69,7 +69,7 @@ float3 atmosphere(float maxDepth,
     for(int i = 0; i < iSteps; i++) {
 
         // Calculate the primary ray sample position.
-        float3 iPos = r0 + r * (iTime + iStepSize * 0.5);
+        float3 iPos = r0 + v * (iTime + iStepSize * 0.5);
 
         // Increment the primary ray time.
         iTime += iStepSize;
@@ -135,4 +135,34 @@ float3 atmosphere(float maxDepth,
     }
 
     return 0.0;
+}
+
+float3 sun_and_atmosphere(const in float3 direction_to_sun, const in float sun_strength, const in float3 view_vector_worldspace) {
+    const float3 color = atmosphere(6471e3,
+                                    view_vector_worldspace.xyz,
+                                    float3(0, 6371e3, 0),
+                                    direction_to_sun,                    // direction of the sun
+                                    sun_strength,                     // intensity of the sun
+                                    6371e3,                           // radius of the planet in meters
+                                    6471e3,                           // radius of the atmosphere in meters
+                                    float3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
+                                    21e-6,                            // Mie scattering coefficient
+                                    8e3,                              // Rayleigh scale height
+                                    1.2e3,                            // Mie scale height
+                                    0.758                             // Mie preferred scattering direction
+    );
+
+    const float mu = dot(normalize(view_vector_worldspace.xyz), direction_to_sun);
+    const float mumu = mu * mu;
+    const float g = 0.9995;
+    const float gg = g * g;
+    const float phase_sun = 3.0 / (8.0 * PI) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * g, 1.5) * (2.0 + gg));
+    const float spot = smoothstep(0.0, 15.0, phase_sun) * sun_strength;
+
+    const float3 atmosphere = color + spot;
+    if(any(isnan(atmosphere))) {
+        return 0.f;
+    }
+
+    return atmosphere;
 }
