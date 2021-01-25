@@ -1,10 +1,10 @@
 #include "EntityEditorWindow.hpp"
 
-#include <sanity_engine.hpp>
-
+#include "actor/actor.hpp"
 #include "core/components.hpp"
 #include "entity/Components.hpp"
 #include "renderer/render_components.hpp"
+#include "sanity_engine.hpp"
 
 using namespace sanity::engine::ui;
 
@@ -13,7 +13,7 @@ namespace sanity::editor::ui {
 
     EntityEditorWindow::EntityEditorWindow(const entt::entity entity_in, entt::registry& registry_in)
         : Window{"Entity Editor"}, entity{entity_in}, registry{&registry_in} {
-        const auto& sanity_component = registry->get<engine::SanityEngineEntity>(entity);
+        const auto& sanity_component = registry->get<engine::Actor>(entity);
         if(!sanity_component.name.is_empty()) {
             name = sanity_component.name;
         }
@@ -24,7 +24,7 @@ namespace sanity::editor::ui {
             entity = new_entity;
             registry = &new_registry;
 
-            const auto& sanity_component = registry->get<engine::SanityEngineEntity>(entity);
+            const auto& sanity_component = registry->get<engine::Actor>(entity);
             if(!sanity_component.name.is_empty()) {
                 name = sanity_component.name;
             }
@@ -32,8 +32,8 @@ namespace sanity::editor::ui {
     }
 
     void EntityEditorWindow::draw_contents() {
-        const auto component_list = registry->get<ComponentClassIdList>(entity);
-        component_list.class_ids.each_fwd([&](const GUID class_id) { draw_component_editor(class_id, entity, *registry); });
+        const auto sanity_entity = registry->get<engine::Actor>(entity);
+        sanity_entity.component_class_ids.each_fwd([&](const GUID class_id) { draw_component_editor(class_id, entity, *registry); });
     }
 
 #define DRAW_COMPONENT_EDITOR(Type)                                                                                                        \
@@ -46,9 +46,9 @@ namespace sanity::editor::ui {
         const auto class_name = engine::g_engine->get_type_reflector().get_name_of_type(component_type_id);
         if(ImGui::CollapsingHeader(class_name.data())) {
             ImGui::Indent();
-        	
+
             // @formatter:off
-            DRAW_COMPONENT_EDITOR(engine::SanityEngineEntity)
+            DRAW_COMPONENT_EDITOR(engine::Actor)
             else DRAW_COMPONENT_EDITOR(engine::TransformComponent)
         	else DRAW_COMPONENT_EDITOR(engine::renderer::StandardRenderableComponent)
         	else DRAW_COMPONENT_EDITOR(engine::renderer::PostProcessingPassComponent)

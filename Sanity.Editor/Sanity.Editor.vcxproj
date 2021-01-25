@@ -228,6 +228,7 @@
     <ClCompile Include="src\serialization\GetJsonForComponent.cpp" />
     <ClCompile Include="src\serialization\project_serialization.cpp" />
     <ClCompile Include="src\ui\ApplicationGui.cpp" />
+    <ClCompile Include="src\ui\component_editors.cpp" />
     <ClCompile Include="src\ui\EditorUiController.cpp" />
     <ClCompile Include="src\ui\windows\content_browser.cpp" />
     <ClCompile Include="src\ui\windows\EntityEditorWindow.cpp" />
@@ -248,6 +249,7 @@
     <ClInclude Include="src\serialization\GetJsonForComponent.hpp" />
     <ClInclude Include="src\serialization\project_serialization.hpp" />
     <ClInclude Include="src\ui\ApplicationGui.hpp" />
+    <ClInclude Include="src\ui\component_editors.hpp" />
     <ClInclude Include="src\ui\EditorUiController.hpp" />
     <ClInclude Include="src\ui\windows\content_browser.hpp" />
     <ClInclude Include="src\ui\windows\EntityEditorWindow.hpp" />

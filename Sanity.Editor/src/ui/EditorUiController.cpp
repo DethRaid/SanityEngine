@@ -1,7 +1,6 @@
 #include "EditorUiController.hpp"
 
-#include <entity/creation.hpp>
-
+#include "actor/actor.hpp"
 #include "entity/entity_operations.hpp"
 #include "sanity_engine.hpp"
 #include "ui/Window.hpp"
@@ -38,9 +37,9 @@ namespace sanity::editor::ui {
     void EditorUiController::create_and_edit_new_entity() const {
         auto& registry = engine::g_engine->get_entity_registry();
 
-        const auto new_entity = engine::create_entity(registry, "New Entity");
+        const auto& new_entity = engine::create_actor(registry, "New Entity");
 
-        show_edit_entity_window(new_entity, registry);
+        show_edit_entity_window(new_entity.entity, registry);
     }
 
     void EditorUiController::set_content_browser_directory(const std::filesystem::path& content_directory) const {

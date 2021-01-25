@@ -5,12 +5,12 @@
 
 #include <ranges>
 
-#include <glm/gtc/type_ptr.hpp>
-
 #include "Tracy.hpp"
+#include "actor/actor.hpp"
 #include "asset_registry/asset_registry.hpp"
 #include "core/types.hpp"
 #include "entity/entity_operations.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/standard_material.hpp"
 #include "rx/core/log.h"
@@ -248,7 +248,7 @@ namespace sanity::editor::import {
                 } else {
                     logger->warning("No base color property on material %s", material.name);
                 }
-            	
+
             } else {
                 if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.base_color_texture = *handle;
@@ -267,7 +267,7 @@ namespace sanity::editor::import {
                 } else {
                     logger->warning("No metalness/roughness property on material %s", material.name);
                 }
-            	
+
             } else {
                 if(const auto handle = get_sanity_handle_to_texture(metalness_roughness_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.metallic_roughness_texture = *handle;
@@ -301,7 +301,7 @@ namespace sanity::editor::import {
                 } else {
                     logger->info("No emission property on material %s", material.name);
                 }
-            	
+
             } else {
                 if(const auto handle = get_sanity_handle_to_texture(emission_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.emission_texture = *handle;
@@ -313,7 +313,7 @@ namespace sanity::editor::import {
                     sanity_material.normal_texture = renderer->get_pink_texture();
                 }
             }
-            
+
             // Allocate material on GPU
 
             const auto handle = renderer->allocate_standard_material(sanity_material);
@@ -548,7 +548,7 @@ namespace sanity::editor::import {
                 texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
             }
 
-            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, normal.y, -normal.z}, .texcoord = texcoord});
+            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, -normal.y, normal.z}, .texcoord = texcoord});
 
             position_read_ptr++;
             normal_read_ptr++;
@@ -568,16 +568,15 @@ namespace sanity::editor::import {
         const auto& default_scene = model.scenes[model.defaultScene];
 
         // Create an entity for the scene and reference one of its components
-        const auto& scene_entity = entity::create_base_editor_entity("Imported scene", registry);
-        entity::add_component<engine::TransformComponent>(scene_entity, registry);
+        const auto& scene_entity = engine::create_actor(registry, "Imported scene");
 
         // Add entities for all the nodes in the scene, and all their children
         for(const auto node_idx : default_scene.nodes) {
             const auto& node = model.nodes[node_idx];
-            create_entity_for_node(node, scene_entity, import_scale, model, registry, cmds);
+            create_entity_for_node(node, scene_entity.entity, import_scale, model, registry, cmds);
         }
 
-        return scene_entity;
+        return scene_entity.entity;
     }
 
     entt::entity SceneImporter::create_entity_for_node(const tinygltf::Node& node,
@@ -588,9 +587,10 @@ namespace sanity::editor::import {
                                                        ID3D12GraphicsCommandList4* cmds) {
         ZoneScoped;
 
-        const auto node_entity = entity::create_base_editor_entity(node.name.c_str(), registry);
+        auto& node_actor = engine::create_actor(registry, node.name.empty() ? "New Node" : node.name.c_str());
+        auto node_entity = node_actor.entity;
 
-        auto& node_transform_component = entity::add_component<engine::TransformComponent>(node_entity, registry);
+        auto& node_transform_component = node_actor.get_component<engine::TransformComponent>();
         auto& node_transform = node_transform_component.transform;
 
         if(!node.matrix.empty()) {
@@ -643,7 +643,7 @@ namespace sanity::editor::import {
             node_transform_component.parent = parent_entity;
 
             auto& parent_transform = registry.get<engine::TransformComponent>(parent_entity);
-            parent_transform.children.push_back(node_entity);
+            parent_transform.children.push_back(node_actor.entity);
         }
 
         if(node.mesh > -1 && static_cast<Size>(node.mesh) < meshes.size()) {
@@ -661,15 +661,15 @@ namespace sanity::editor::import {
             mesh.primitives.each_fwd([&](const GltfPrimitive& primitive) {
                 // Create entity and components
                 const auto primitive_node_name = Rx::String::format("%s primitive %d", node.name, i);
-                const auto primitive_entity = entity::create_base_editor_entity(primitive_node_name, registry);
+                auto& primitive_actor = engine::create_actor(registry, primitive_node_name);
 
-                auto& primitive_transform_component = entity::add_component<engine::TransformComponent>(primitive_entity, registry);
+                auto& primitive_transform_component = primitive_actor.get_component<engine::TransformComponent>();
                 primitive_transform_component.parent = node_entity;
 
                 auto& parent_transform_component = registry.get<engine::TransformComponent>(node_entity);
-                parent_transform_component.children.push_back(primitive_entity);
+                parent_transform_component.children.push_back(primitive_actor.entity);
 
-                auto& renderable = entity::add_component<engine::renderer::StandardRenderableComponent>(primitive_entity, registry);
+                auto& renderable = primitive_actor.add_component<engine::renderer::StandardRenderableComponent>();
                 renderable.mesh = primitive.mesh;
                 renderable.material = materials[primitive.material_idx];
 
@@ -682,8 +682,7 @@ namespace sanity::editor::import {
 
                 const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
 
-                auto& raytracing_object_component = entity::add_component<engine::renderer::RaytracingObjectComponent>(primitive_entity,
-                                                                                                                       registry);
+                auto& raytracing_object_component = primitive_actor.add_component<engine::renderer::RaytracingObjectComponent>();
                 raytracing_object_component.as_handle = as_handle;
 
                 const auto ray_material = engine::renderer::RaytracingMaterial{.handle = renderable.material.index};

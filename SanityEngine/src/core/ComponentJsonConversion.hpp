@@ -9,5 +9,5 @@
 
 namespace sanity::engine {
     SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(TransformComponent, transform);
-    SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(SanityEngineEntity, name, id, tags);
+    SANITY_DEFINE_COMPONENT_JSON_CONVERSIONS(Actor, name, tags, entity);
 } // namespace sanity::engine

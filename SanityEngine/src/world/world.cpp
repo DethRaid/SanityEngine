@@ -1,19 +1,19 @@
 #include "world.hpp"
 
-#include "entity/creation.hpp"
+#include "actor/actor.hpp"
 #include "entt/entity/registry.hpp"
 #include "loading/image_loading.hpp"
 #include "renderer/render_components.hpp"
-#include "sanity_engine.hpp"
 #include "rx/core/log.h"
+#include "sanity_engine.hpp"
 
 namespace sanity::engine {
     RX_LOG("World", logger);
-	
+
     World::World(entt::registry& registry_in) : registry{&registry_in} {
-        sky = create_entity(*registry, "Sky");
-        registry->emplace<renderer::SkyboxComponent>(sky);
-        registry->emplace<renderer::LightComponent>(sky);
+        auto& sky_actor = create_actor(*registry, "Sky");
+        sky_actor.add_component<renderer::SkyboxComponent>();
+        sky_actor.add_component<renderer::LightComponent>();
     }
 
     void World::set_skybox(const std::filesystem::path& skybox_image_path) {
@@ -21,7 +21,6 @@ namespace sanity::engine {
 
         // TODO: AssetStreamingManager that handles loading the asset if needed
 
-    	
         if(const auto* skybox_handle = cached_skybox_handles.find(skybox_image_path); skybox_handle != nullptr) {
             atmosphere.skybox_texture = *skybox_handle;
             logger->verbose("Using existing texture %d for skybox image %s", skybox_handle->index, skybox_image_path);
@@ -34,7 +33,7 @@ namespace sanity::engine {
             }
 
             logger->verbose("Uploaded texture %d for skybox image %s", handle->index, skybox_image_path);
-        	cached_skybox_handles.insert(skybox_image_path, *handle);
+            cached_skybox_handles.insert(skybox_image_path, *handle);
 
             atmosphere.skybox_texture = *handle;
         }

@@ -1,22 +1,23 @@
 #include "EntitySerialization.hpp"
 
-#include "core/RexJsonConversion.hpp"
+#include "actor/actor.hpp"
 #include "core/components.hpp"
-#include "entity/Components.hpp"
-#include "entt/entity/entity.hpp"
 #include "entt/entity/registry.hpp"
 #include "nlohmann/json.hpp"
 #include "rx/core/vector.h"
 #include "serialization/GetJsonForComponent.hpp"
 
+// VS thinks this include is unused. VS is wrong
+#include "core/RexJsonConversion.hpp"
+
 namespace sanity::editor::serialization {
     nlohmann::json entity_to_json(const entt::entity& entity, const entt::registry& registry) {
-        const auto& component_list = registry.get<ComponentClassIdList>(entity);
+        const auto& actor = registry.get<engine::Actor>(entity);
 
         // JSON representation of all the component on the entity
         Rx::Vector<nlohmann::json> component_jsons;
 
-        component_list.class_ids.each_fwd([&](const GUID& guid) {
+        actor.component_class_ids.each_fwd([&](const GUID& guid) {
             const auto& component_json = get_json_for_component(guid, entity, registry);
             component_jsons.push_back(component_json);
         });
@@ -33,22 +34,20 @@ namespace sanity::editor::serialization {
         auto entity_json = entity_to_json(entity, registry);
 
         if(const auto* transform_component = registry.try_get<engine::TransformComponent>(entity); transform_component != nullptr) {
-            Rx::Vector<Uint64> child_ids;
-            child_ids.reserve(transform_component->children.size());
+            Rx::Vector<ENTT_ID_TYPE> child_entities;
+            child_entities.reserve(transform_component->children.size());
 
             transform_component->children.each_fwd([&](const entt::entity& child_entity) {
                 const auto child_jsons = entity_and_children_to_json(child_entity, registry);
                 jsons.append(child_jsons);
 
-                if(const auto* entity_component = registry.try_get<engine::SanityEngineEntity>(child_entity); entity_component != nullptr) {
-                    child_ids.push_back(entity_component->id);
-                }
+                child_entities.push_back(static_cast<ENTT_ID_TYPE>(child_entity));
 
                 // If the child entity doesn't have a SanityEngineEntity component for whatever reason, we can't save that it's one of our
                 // children :(
             });
 
-            entity_json.at("components").push_back({{"children", child_ids}});
+            entity_json.at("components").push_back(nlohmann::json{{"children", child_entities}});
         }
 
         jsons.push_back(entity_json);

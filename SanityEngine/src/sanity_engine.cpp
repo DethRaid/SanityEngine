@@ -11,7 +11,7 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "stb_image.h"
-#include "entity/creation.hpp"
+#include "actor/actor.hpp"
 #include "ui/ConsoleWindow.hpp"
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
@@ -220,7 +220,7 @@ namespace sanity::engine {
     }
 
     void SanityEngine::register_engine_component_type_reflection() {
-        type_reflector.register_type_name<SanityEngineEntity>("Sanity Engine Entity");
+        type_reflector.register_type_name<Actor>("Sanity Actor");
         type_reflector.register_type_name<TransformComponent>("Transform");
 
         type_reflector.register_type_name<renderer::StandardRenderableComponent>("Standard Renderable");
@@ -250,8 +250,8 @@ namespace sanity::engine {
             console_window_entity = global_registry.create();
             auto& comp = global_registry.emplace<ui::UiComponent>(*console_window_entity,
                                                               Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
-            auto* window = static_cast<ui::Window*>(comp.panel.get());
-            window->is_visible = true;
+            auto* console_window = static_cast<ui::Window*>(comp.panel.get());
+            console_window->is_visible = true;
         }
     }
 
@@ -262,12 +262,14 @@ namespace sanity::engine {
     }
 
     void SanityEngine::create_first_person_player() {
-        player = create_entity(global_registry, "First Person Player");
+        auto& player_actor = create_actor(global_registry , "First Person Player");
+        player = player_actor.entity;
         
-        auto& transform_component = global_registry.get<TransformComponent>(player);
+        auto& transform_component = player_actor.get_component<TransformComponent>();
         transform_component.transform.location.y = 1.63f;
         transform_component.transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-        global_registry.emplace<renderer::CameraComponent>(player);
+    	
+        player_actor.add_component<renderer::CameraComponent>();
 
         logger->info("Created flycam");
     }
@@ -278,13 +280,6 @@ namespace sanity::engine {
         renderer->render_frame(global_registry);
 
         renderer->end_frame();
-
-        FrameMark;
-#ifdef TRACY_ENABLE
-        TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
-#endif
-
-        TracyD3D12Collect(renderer::RenderBackend::tracy_context);
     }
 
     void initialize_g_engine(const std::filesystem::path& executable_directory) { g_engine = new SanityEngine{executable_directory}; }

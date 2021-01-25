@@ -100,7 +100,7 @@ namespace sanity::engine::ui {
     void draw_property_editor(const Rx::String& label, renderer::Light& light) {
         ui::draw_property_editor("Type", light.type);
         ui::draw_property_editor("Color", light.color);
-        ui::draw_property_editor("Direction", light.direction);
+        ui::draw_property_editor("Direction", light.direction_or_location);
         ui::draw_property_editor("Angular size", light.angular_size);
     }
 } // namespace sanity::engine::ui

@@ -1,7 +1,7 @@
 #include "scene_hierarchy.hpp"
 
-#include <core/components.hpp>
-
+#include "actor/actor.hpp"
+#include "core/components.hpp"
 #include "entity/Components.hpp"
 #include "ui/EditorUiController.hpp"
 
@@ -10,7 +10,7 @@ namespace sanity::editor::ui {
         : Window{"Scene Hierarchy"}, registry(&registry_in), controller{&controller_in} {}
 
     void SceneHierarchy::draw_contents() {
-        auto entities = registry->view<engine::SanityEngineEntity>();
+        auto entities = registry->view<engine::Actor>();
 
         // Collect entities in the root of the scene
         std::vector<entt::entity> root_entities{};
@@ -30,26 +30,26 @@ namespace sanity::editor::ui {
     }
 
     void SceneHierarchy::draw_entity(const entt::entity entity) {
-        const auto& sanity_entity = registry->get<engine::SanityEngineEntity>(entity);
+        const auto& sanity_entity = registry->get<engine::Actor>(entity);
         const auto& transform = registry->get<engine::TransformComponent>(entity);
 
         ImGui::PushID(sanity_entity.name.data());
-    	
+
         ImGui::Text("%s", sanity_entity.name.data());
         ImGui::SameLine();
         if(ImGui::Button("Inspect")) {
             show_entity_editor(entity);
         }
-    	
+
         if(!transform.children.is_empty()) {
             if(ImGui::CollapsingHeader("Children")) {
                 ImGui::Indent();
                 transform.children.each_fwd([&](const entt::entity& child) { draw_entity(child); });
                 ImGui::Unindent();
-            } 
+            }
         }
 
-    	ImGui::PopID();
+        ImGui::PopID();
     }
 
     void SceneHierarchy::show_entity_editor(const entt::entity entity) {
@@ -60,6 +60,6 @@ namespace sanity::editor::ui {
             entity_editor->set_entity(entity, *registry);
         }
 
-    	entity_editor->is_visible = true;
+        entity_editor->is_visible = true;
     }
 } // namespace sanity::editor::ui

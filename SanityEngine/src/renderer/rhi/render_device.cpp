@@ -510,6 +510,13 @@ namespace sanity::engine::renderer {
             end_capture();
             is_frame_capture_active = false;
         }
+        
+        FrameMark;
+
+#ifdef TRACY_ENABLE
+        TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
+        TracyD3D12Collect(renderer::RenderBackend::tracy_context);
+#endif
 
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % cvar_max_in_flight_gpu_frames->get();
     }

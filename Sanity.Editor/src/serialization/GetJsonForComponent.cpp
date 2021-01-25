@@ -1,5 +1,6 @@
 #include "GetJsonForComponent.hpp"
 
+#include "actor/actor.hpp"
 #include "core/ComponentJsonConversion.hpp"
 #include "core/WindowsJsonConversion.hpp"
 #include "entt/entity/registry.hpp"
@@ -12,8 +13,8 @@ namespace sanity::editor::serialization {
             const auto& component = registry.get<engine::TransformComponent>(entity);
             to_json(json, component);
 
-        } else if(guid == _uuidof(engine::SanityEngineEntity)) {
-            const auto& component = registry.get<engine::SanityEngineEntity>(entity);
+        } else if(guid == _uuidof(engine::Actor)) {
+            const auto& component = registry.get<engine::Actor>(entity);
             to_json(json, component);
         }
 
@@ -26,9 +27,9 @@ namespace sanity::editor::serialization {
         if(class_id == __uuidof(engine::TransformComponent)) {
             auto& component = registry.emplace<engine::TransformComponent>(entity);
             component_json.get_to(component);
-        	
-        } else if(class_id == __uuidof(engine::SanityEngineEntity)) {
-            auto& component = registry.emplace<engine::SanityEngineEntity>(entity);
+
+        } else if(class_id == __uuidof(engine::Actor)) {
+            auto& component = registry.emplace<engine::Actor>(entity);
             component_json.get_to(component);
         }
     }

@@ -91,6 +91,9 @@
     <ClCompile Include="src\ui\windows\scene_hierarchy.cpp">
       <Filter>src\ui\windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\component_editors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SanityEditor.hpp">
@@ -147,6 +150,7 @@
     <ClInclude Include="src\ui\windows\scene_hierarchy.hpp">
       <Filter>src\ui\windows</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\component_editors.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\textures\icons\blend.png">

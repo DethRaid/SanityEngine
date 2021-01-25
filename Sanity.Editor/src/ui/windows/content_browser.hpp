@@ -42,12 +42,12 @@ namespace sanity::editor::ui {
 
         Rx::Vector<engine::ImageLoadResultHandle> icon_handles;
 
-        Rx::Set<std::filesystem::path> file_extensions_to_ignore{Rx::Array{".meta", ".blend1", ".blend2", ".blend2"}};
+        Rx::Set<std::filesystem::path> file_extensions_to_ignore{Rx::Array{".meta", ".bin", ".blend1", ".blend2", ".blend2"}};
 
         Rx::Map<std::filesystem::path, Rx::Function<void(const std::filesystem::path&)>> file_extension_context_menus;
 
         void draw_back_button();
 
-        bool should_ignore_file(const std::filesystem::path& file) const;
+        [[nodiscard]] bool should_ignore_file(const std::filesystem::path& file) const;
     };
 } // namespace sanity::editor::ui
