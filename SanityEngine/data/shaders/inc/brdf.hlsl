@@ -40,18 +40,18 @@ float3 cook_torrance(const float3 n, const float roughness, const float3 f0, con
 
 float lambert(const float3 n, const float3 l) { return saturate(dot(n, l)); }
 
-float3 brdf(
-    const SurfaceInfo surface, const float3 l, const float3 v) {
+float3 brdf(const SurfaceInfo surface, const float3 l, const float3 v) {
     // Remapping from https://google.github.io/filament/Filament.html#materialsystem/parameterization/remapping
-    const float3 albedo = (1.0 - surface.metalness) * surface.base_color;
-    const float roughness = surface.roughness*surface.roughness;
+    const float3 albedo = (1.0 - surface.metalness) * surface.base_color.rgb;
+    const float roughness = surface.roughness * surface.roughness;
 
     const float dielectric_f0 = 0.035; // TODO: Get this from a texture
-    const float3 f0 = lerp(dielectric_f0.xxx, surface.base_color, surface.metalness);
+    const float3 f0 = lerp(dielectric_f0.xxx, surface.base_color.rgb, surface.metalness);
 
     const float3 specular = cook_torrance(surface.normal, roughness, f0, l, v);
 
     const float3 diffuse = albedo * lambert(surface.normal, l);
+    return diffuse;
 
     return specular + diffuse;
 }

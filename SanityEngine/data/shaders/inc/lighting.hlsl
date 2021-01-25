@@ -4,7 +4,7 @@
 #include "atmospheric_scattering.hlsl"
 #include "brdf.hlsl"
 #include "shadow.hlsl"
-#include "skybox.hlsl"
+#include "sky.hlsl"
 #include "standard_root_signature.hlsl"
 
 #define BYTES_PER_VERTEX 9
@@ -105,12 +105,8 @@ float4 get_incoming_light(in float3 ray_origin,
 
     } else {
         // Sample the atmosphere
-        Texture2D skybox = textures[per_frame_data[0].sky_texture_idx];
-        const float2 skybox_uv = equi_uvs(direction);
-
-        float3 skybox_sample = skybox.Sample(bilinear_sampler, skybox_uv).rgb;
-
-        return float4(skybox_sample, 0);
+        const float3 sky = get_sky_in_direction(direction);
+        return float4(sky, 0);
     }
 }
 
@@ -333,8 +329,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     // return direct_light;
 
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun, noise);
-    // return indirect_light;
-    return direct_light + indirect_light;
+    return indirect_light;
 
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun, noise);
     // return reflection;
