@@ -13,7 +13,7 @@
 
 #define RAY_START_OFFSET_ALONG_NORMAL 0.01f
 
-#define GI_BOOST 2.f
+#define GI_BOOST 10.f
 
 uint3 get_indices(uint triangle_index) {
     const uint base_index = (triangle_index * 3);
@@ -182,11 +182,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            const float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).rg;
-            float3 ray_direction = CosineSampleHemisphere(nums);
-            const float pdf = abs(ray_direction.y);
-            const float3x3 onb = transpose(construct_ONB_frisvad(surface.normal));
-            ray_direction = normalize(mul(onb, ray_direction));
+            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).zxy) * 2.0 - 1.0;
             ray_direction = lerp(surface.normal, ray_direction, surface.roughness);
 
             if(dot(surface.normal, ray_direction) < 0) {
@@ -198,7 +194,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
             const float3 reflection_normal = normalize(surface.normal + noise_float3);
             ray_direction = reflect(view_vector, reflection_normal);
 
-            brdf_accumulator *= brdf(surface, ray_direction, view_vector) / pdf;
+            brdf_accumulator *= brdf(surface, ray_direction, view_vector);
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -260,17 +256,12 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
         float3 light_sample = 0;
 
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            const float2 nums = noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).gb;
-            float3 ray_direction = CosineSampleHemisphere(nums);
-            const float pdf = ray_direction.y;
-            const float3x3 onb = transpose(construct_ONB_frisvad(surface.normal));
-            ray_direction = normalize(mul(onb, ray_direction));
-
+            float3 ray_direction = normalize(noise.Sample(bilinear_sampler, noise_texcoord * ray_idx * bounce_idx).yzx) * 2.0 - 1.0;
             if(dot(surface.normal, ray_direction) < 0) {
                 ray_direction *= -1;
             }
 
-            brdf_accumulator *= brdf(surface, ray_direction, view_vector) / pdf;
+            brdf_accumulator *= brdf(surface, ray_direction, view_vector);
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -314,7 +305,8 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     const float3 view_vector_viewspace = normalize(position_viewspace.xyz);
 
     // Transform view vector into worldspace
-    const float3 view_vector_worldspace = normalize(mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz);
+    float3 view_vector_worldspace = normalize(mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz);
+    view_vector_worldspace.z *= -1;
 
     Light sun = lights[SUN_LIGHT_INDEX];
 
@@ -328,6 +320,10 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
 
     const float4 location_ndc = mul(camera.projection, position_viewspace);
 
+	const float3 reflected_sky_vector = reflect(-view_vector_worldspace, surface.normal);
+    const float3 sky = get_sky_in_direction(reflected_sky_vector);
+    return sky;
+
     float2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
     float2 noise_texcoord = location_ndc.xy; // / noise_tex_size;
@@ -336,7 +332,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
 
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun, noise);
     // return indirect_light;
-    return direct_light + indirect_light;
+    // return direct_light + indirect_light;
 
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun, noise);
     // return reflection;
