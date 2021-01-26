@@ -70,7 +70,7 @@ float3 direct_analytical_light(const in SurfaceInfo surface, const in Light ligh
 
     float shadow = 1.0;
     if(length(outgoing_light) > 0) {
-        shadow = saturate(raytrace_shadow(light_vector, light.angular_size, surface.location, surface.normal));
+        // shadow = saturate(raytrace_shadow(light_vector, light.angular_size, surface.location, surface.normal));
     }
 
     return outgoing_light * shadow;
@@ -140,11 +140,10 @@ float2 wang_hash(uint2 seed) {
 float3 raytrace_reflections(const in SurfaceInfo original_surface,
                             const in float3 eye_vector,
                             const in float2 noise_texcoord,
-                            const in Light sun,
-                            const in Texture2D noise) {
-    const uint num_specular_rays = 2;
+                            const in Light sun) {
+    const uint num_specular_rays = 1;
 
-    const uint num_bounces = 2;
+    const uint num_bounces = 1;
 
     RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
 
@@ -158,14 +157,17 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
         float3 brdf_accumulator = 1;
         float3 light_sample = 0;
 
-        uint num_light_samples = 1;
-        for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-            float3 ray_direction = get_random_vector_aligned_to_normal(surface.normal,
-                                                                       noise_texcoord,
-                                                                       bounce_idx + ray_idx * num_bounces,
-                                                                       num_bounces * num_specular_rays);
+        uint bounce_idx = 0;
+        for(bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
 
-            ray_direction = normalize(lerp(surface.normal, ray_direction, surface.roughness));
+            float3 normal_of_reflection = get_random_vector_aligned_to_normal(surface.normal,
+                                                                              noise_texcoord,
+                                                                              bounce_idx + ray_idx * num_bounces,
+                                                                              num_bounces * num_specular_rays);
+
+            normal_of_reflection = normalize(lerp(surface.normal, normal_of_reflection, surface.roughness));
+
+            const float3 ray_direction = normalize(reflect(eye_vector, normal_of_reflection));
 
             brdf_accumulator *= brdf(surface, ray_direction, view_vector);
 
@@ -188,14 +190,16 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
                 view_vector = ray_direction;
 
             } else {
+                bounce_idx++;
+            	
                 // Ray escaped into the sky
                 break;
             }
-
-            num_light_samples++;
         }
 
-        reflection += light_sample / (float) num_light_samples;
+    	bounce_idx++;
+
+        reflection += light_sample / (float) bounce_idx;
     }
 
     return reflection / (float) num_specular_rays;
@@ -207,8 +211,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
 float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                     const in float3 eye_vector,
                                     const in float2 noise_texcoord,
-                                    const in Light sun,
-                                    const in Texture2D noise) {
+                                    const in Light sun) {
     const uint num_indirect_rays = 19;
 
     const uint num_bounces = 3;
@@ -304,11 +307,11 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     // const float2 offset = noise.Sample(bilinear_sampler, noise_texcoord * per_frame_data[0].time_since_start).rg;
     // noise_texcoord *= offset;
 
-    const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun, noise);
+    const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     // return indirect_light;
     // return direct_light + abs(indirect_light);
 
-    const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun, noise);
+    const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
     // return reflection;
 
     return direct_light + indirect_light + reflection;
