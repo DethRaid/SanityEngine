@@ -548,7 +548,7 @@ namespace sanity::editor::import {
                 texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
             }
 
-            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, -normal.y, normal.z}, .texcoord = texcoord});
+            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, normal.y, -normal.z}, .texcoord = texcoord});
 
             position_read_ptr++;
             normal_read_ptr++;
