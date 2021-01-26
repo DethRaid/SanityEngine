@@ -51,5 +51,10 @@ float3 brdf(const SurfaceInfo surface, const float3 l, const float3 v) {
     // diffuse BRDF
     float3 Fd = NoL * Fd_Lambert() * albedo;
 
-    return Fd + Fr;
+    const float3 result = Fd + Fr;
+    if(any(isnan(result))) {
+        return 0;
+    }
+
+    return result;
 }

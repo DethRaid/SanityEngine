@@ -20,7 +20,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief HDR color of this light
          */
-        glm::vec3 color = glm::vec3{254.f / 255.f, 238.f / 255.f, 244.f / 255.f} * 22.f;
+        glm::vec3 color = glm::vec3{254.f / 255.f, 238.f / 255.f, 244.f / 255.f} * 17.f;
 
         // const float verticalAngle = 5.4789
     	// const float horizontalAngle = 2.8651

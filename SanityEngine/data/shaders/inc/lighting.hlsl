@@ -158,6 +158,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
         float3 brdf_accumulator = 1;
         float3 light_sample = 0;
 
+        uint num_light_samples = 1;
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
             float3 ray_direction = get_random_vector_aligned_to_normal(surface.normal,
                                                                        noise_texcoord,
@@ -172,8 +173,13 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
             MaterialData hit_material;
 
             float4 incoming_light = get_incoming_light(surface.location, ray_direction, sun, query, hit_vertex, hit_material);
+            const float3 reflected_light = brdf_accumulator * incoming_light.rgb;
+            if(any(isnan(reflected_light))) {
+                // Something went wrong. Abort this ray and try the next one
+                break;
+            }
 
-            light_sample += brdf_accumulator * incoming_light.rgb;
+            light_sample += reflected_light;
 
             if(incoming_light.a > 0.05) {
                 // set up next ray
@@ -185,9 +191,11 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
                 // Ray escaped into the sky
                 break;
             }
+
+            num_light_samples++;
         }
 
-        reflection += light_sample / (float) num_bounces;
+        reflection += light_sample / (float) num_light_samples;
     }
 
     return reflection / (float) num_specular_rays;
@@ -221,7 +229,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
         float3 brdf_accumulator = 1;
         float3 light_sample = 0;
 
-    	uint num_light_samples = 1;
+        uint num_light_samples = 1;
         for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
             const float3 ray_direction = get_random_vector_aligned_to_normal(surface.normal,
                                                                              noise_texcoord,
@@ -234,8 +242,13 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
             MaterialData hit_material;
 
             const float4 incoming_light = get_incoming_light(surface.location, ray_direction, sun, query, hit_vertex, hit_material);
+            const float3 reflected_light = brdf_accumulator * incoming_light.rgb;
+            if(any(isnan(reflected_light))) {
+                // Something went wrong. Abort this ray and try the next one
+                break;
+            }
 
-            light_sample += brdf_accumulator * incoming_light.rgb;
+            light_sample += reflected_light;
 
             if(incoming_light.a > 0.05) {
                 // set up next ray
@@ -249,7 +262,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                 break;
             }
 
-        	num_light_samples++;
+            num_light_samples++;
         }
 
         indirect_light += light_sample / (float) num_light_samples;
@@ -283,7 +296,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
 
     const float4 location_ndc = mul(camera.projection, position_viewspace) + 4196.f;
 
-	const PerFrameData frame_data = per_frame_data[0];
+    const PerFrameData frame_data = per_frame_data[0];
 
     float2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
@@ -292,8 +305,8 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     // noise_texcoord *= offset;
 
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun, noise);
-     return indirect_light;
-    return direct_light + indirect_light;
+    // return indirect_light;
+    // return direct_light + abs(indirect_light);
 
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun, noise);
     // return reflection;
