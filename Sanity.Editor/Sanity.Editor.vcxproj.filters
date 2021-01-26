@@ -92,7 +92,7 @@
       <Filter>src\ui\windows</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\component_editors.cpp">
-      <Filter>src</Filter>
+      <Filter>src\ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -150,7 +150,9 @@
     <ClInclude Include="src\ui\windows\scene_hierarchy.hpp">
       <Filter>src\ui\windows</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\component_editors.hpp" />
+    <ClInclude Include="src\ui\component_editors.hpp">
+      <Filter>src\ui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\textures\icons\blend.png">

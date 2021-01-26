@@ -19,6 +19,8 @@ namespace sanity::engine {
     struct __declspec(uuid("{6A611962-D937-4FC8-AF7D-7FFE4CD43749}")) Actor {
         Rx::String name;
 
+    	GUID id;
+
         Rx::Map<Rx::String, Int32> tags;
 
         entt::entity entity;

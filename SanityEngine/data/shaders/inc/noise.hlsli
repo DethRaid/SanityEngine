@@ -55,7 +55,7 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
 	const float offset = total * NUM_TEMPORAL_SAMPLES;
 
     const float2 noise_sample_location = base_noise_texcoord +
-                                         fermatsSpiralGoldenS(index + frame_index * total + offset,
+                                         fermatsSpiralGoldenS(index + frame_index * total,
                                                               total * NUM_TEMPORAL_SAMPLES);
 
     Texture2D noise = textures[0];

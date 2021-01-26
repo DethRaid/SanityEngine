@@ -2,12 +2,16 @@
 
 #include <filesystem>
 
-#include <rx/core/map.h>
-
 #include "entt/fwd.hpp"
 #include "renderer/handles.hpp"
+#include "rx/core/map.h"
+
+namespace Rx {
+    struct String;
+}
 
 namespace sanity::engine {
+    struct Actor;
     /*!
      * @brief Abstraction over the world
      *
@@ -20,6 +24,8 @@ namespace sanity::engine {
         explicit World(entt::registry& registry_in);
 
         void set_skybox(const std::filesystem::path& skybox_image_path);
+
+        Actor& create_actor(const Rx::String& name) const;
 
     private:
         entt::registry* registry;

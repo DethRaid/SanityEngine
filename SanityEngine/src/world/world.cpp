@@ -11,7 +11,7 @@ namespace sanity::engine {
     RX_LOG("World", logger);
 
     World::World(entt::registry& registry_in) : registry{&registry_in} {
-        auto& sky_actor = create_actor(*registry, "Sky");
+        auto& sky_actor = engine::create_actor(*registry, "Sky");
         sky_actor.add_component<renderer::SkyboxComponent>();
         sky_actor.add_component<renderer::LightComponent>();
         sky = sky_actor.entity;
@@ -38,5 +38,11 @@ namespace sanity::engine {
 
             atmosphere.skybox_texture = *handle;
         }
+    }
+
+    Actor& World::create_actor(const Rx::String& name) const {
+        auto& actor = engine::create_actor(*registry, name);
+
+        return actor;
     }
 } // namespace sanity::engine
