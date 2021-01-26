@@ -700,6 +700,9 @@
     <FxCompile Include="data\shaders\inc\sky.hlsl">
       <Filter>shaders\inc</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\inc\noise.hlsli">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sanity.Engine.rc" />

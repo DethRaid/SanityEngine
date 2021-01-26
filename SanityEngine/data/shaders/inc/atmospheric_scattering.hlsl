@@ -137,11 +137,12 @@ float3 atmosphere(float maxDepth,
     return 0.0;
 }
 
-float3 sun_and_atmosphere(const in float3 direction_to_sun, const in float sun_strength, const in float3 view_vector_worldspace) {
+float3 sun_and_atmosphere(in float3 direction_to_sun, const in float sun_strength, const in float3 view_vector_worldspace) {
+	
     const float3 color = atmosphere(6471e3,
                                     view_vector_worldspace.xyz,
                                     float3(0, 6371e3, 0),
-                                    direction_to_sun,                    // direction of the sun
+                                    direction_to_sun,                 // direction of the sun
                                     sun_strength,                     // intensity of the sun
                                     6371e3,                           // radius of the planet in meters
                                     6471e3,                           // radius of the atmosphere in meters
@@ -161,6 +162,10 @@ float3 sun_and_atmosphere(const in float3 direction_to_sun, const in float sun_s
 
     const float3 atmosphere = color + spot;
     if(any(isnan(atmosphere))) {
+        return 0.f;
+    }
+
+    if(any(atmosphere < 0.f)) {
         return 0.f;
     }
 

@@ -27,6 +27,8 @@ struct Light {
 };
 
 struct PerFrameData {
+    uint2 render_size;
+	
     float time_since_start;
     uint frame_count;
 

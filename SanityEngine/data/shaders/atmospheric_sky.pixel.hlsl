@@ -17,6 +17,6 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
     location_viewspace /= location_viewspace.w;
     const float3 view_vector_worldspace = mul(camera.inverse_view, float4(location_viewspace.xyz, 0)).xyz;
 
-    const float3 sky = get_sky_in_direction(view_vector_worldspace);
+    const float3 sky = get_sky_in_direction(view_vector_worldspace * float3(1, -1, 1));
     return float4(sky, 1);
 }

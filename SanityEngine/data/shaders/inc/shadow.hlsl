@@ -44,17 +44,10 @@ float raytrace_shadow(const float3 light_vector,
 
     for(uint i = 1; i <= NUM_SHADOW_RAYS; i++) {
         // Random cone with the same angular size as the sun
-        // const float3 random_vector = noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0;
-        //
-        // const float3 projected_vector = random_vector - (direction_to_light * dot(direction_to_light, random_vector));
-        // const float random_angle = random_vector.z * i * light.angular_size;
-        // const float3x3 rotation_matrix = AngleAxis3x3(random_angle, projected_vector);
-        // const float3 ray_direction = mul(rotation_matrix, direction_to_light);
 
+        const float3 random_vector = get_random_vector_aligned_to_normal(mesh_normal_worldspace, noise_texcoord, 1, NUM_SHADOW_RAYS);
+    	
         float3 ray_direction;
-
-        const float3 random_vector = normalize(noise.Sample(bilinear_sampler, noise_texcoord * i).rgb * 2.0 - 1.0);
-
         if(abs(angular_size) <= PI / 2) {
             ray_direction = normalize(light_vector + random_vector * noise_scale);
 

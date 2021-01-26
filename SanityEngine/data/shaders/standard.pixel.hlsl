@@ -25,6 +25,6 @@ float4 main(VertexOutput input) : SV_TARGET {
     const Texture2D noise = textures[0];
 
     float3 total_reflected_light = get_total_reflected_light(camera, surface, noise);
-
+	
     return float4(total_reflected_light, 1);
 }

@@ -461,6 +461,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </FxCompile>
+    <FxCompile Include="data\shaders\inc\noise.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </FxCompile>
     <None Include="data\shaders\inc\StandardMaterial.hlsli" />
     <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />

@@ -14,6 +14,7 @@ namespace sanity::engine {
         auto& sky_actor = create_actor(*registry, "Sky");
         sky_actor.add_component<renderer::SkyboxComponent>();
         sky_actor.add_component<renderer::LightComponent>();
+        sky = sky_actor.entity;
     }
 
     void World::set_skybox(const std::filesystem::path& skybox_image_path) {

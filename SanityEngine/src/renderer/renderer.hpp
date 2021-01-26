@@ -67,6 +67,8 @@ namespace sanity::engine::renderer {
      * \brief Data that remains constant for the entire frame
      */
     struct PerFrameData {
+        glm::uvec2 render_size{};
+    	
         /*!
          * \brief Number of seconds since the program started
          */

@@ -52,7 +52,7 @@ namespace sanity::engine::renderer {
         glfwGetFramebufferSize(window, &width, &height);
 
         logger->verbose("Setting output framebuffer resolution to %dx%d", width, height);
-
+        
         output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
 
         create_static_mesh_storage();
@@ -124,6 +124,8 @@ namespace sanity::engine::renderer {
                     const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
                     per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
                 }
+            	
+                per_frame_data.render_size = output_framebuffer_size;
             	
                 memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
             }
@@ -502,7 +504,8 @@ namespace sanity::engine::renderer {
     void Renderer::create_builtin_images() {
         ZoneScoped;
 
-        load_noise_texture("data/textures/noise/LDR_RGBA_0.png");
+        // load_noise_texture("data/textures/noise/LDR_RGBA_0.png");
+        load_noise_texture("data/textures/noise/RuthNoise.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");
