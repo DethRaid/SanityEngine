@@ -138,7 +138,6 @@ float3 atmosphere(float maxDepth,
 }
 
 float3 sun_and_atmosphere(in float3 direction_to_sun, const in float sun_strength, const in float3 view_vector_worldspace) {
-	
     const float3 color = atmosphere(6471e3,
                                     view_vector_worldspace.xyz,
                                     float3(0, 6371e3, 0),

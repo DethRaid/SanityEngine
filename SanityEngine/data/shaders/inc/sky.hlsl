@@ -22,7 +22,7 @@ float3 get_sky_in_direction(const in float3 view_vector_worldspace) {
         const Light sun = lights[SUN_LIGHT_INDEX];
         const float sun_strength = length(sun.color);
 
-        float3 direction_to_sun = normalize(-sun.direction_or_location);
+        float3 direction_to_sun = normalize(sun.direction_or_location);
         direction_to_sun.y *= -1;
 
         return sun_and_atmosphere(direction_to_sun, sun_strength, sky_view_vector);

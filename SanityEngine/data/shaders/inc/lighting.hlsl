@@ -134,22 +134,13 @@ float4 get_incoming_light(in float3 ray_origin,
     }
 }
 
-float2 wang_hash(uint2 seed) {
-    seed = (seed ^ 61) ^ (seed >> 16);
-    seed *= 9;
-    seed = seed ^ (seed >> 4);
-    seed *= 0x27d4eb2d;
-    seed = seed ^ (seed >> 15);
-    return float2(seed) / (int((uint(1) << 31)) - 1);
-}
-
 float3 raytrace_reflections(const in SurfaceInfo original_surface,
                             const in float3 eye_vector,
                             const in float2 noise_texcoord,
                             const in Light sun) {
-    const uint num_specular_rays = 2;
+    const uint num_specular_rays = 1;
 
-    const uint num_bounces = 3;
+    const uint num_bounces = 2;
 
     RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
 
@@ -178,7 +169,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
             const float3 ideal_ray_direction = normalize(reflect(eye_vector, surface.normal));
         	const float pdf = saturate(dot(ideal_ray_direction, ray_direction));
 
-            brdf_accumulator *= brdf(surface, ray_direction, view_vector) / pdf;
+            brdf_accumulator *= brdf(surface, ray_direction, view_vector);
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -301,7 +292,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     Light sun = lights[SUN_LIGHT_INDEX];
 
     // Calculate how much of the sun's light gets through the atmosphere
-    const float3 direction_to_sun = normalize(sun.direction_or_location * float3(-1, 1, -1));
+    const float3 direction_to_sun = normalize(sun.direction_or_location * float3(1, -1, 1));
     const float sun_strength = length(sun.color);
     sun.color = sun_and_atmosphere(direction_to_sun, sun_strength, direction_to_sun);
     
@@ -314,9 +305,11 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
     const float2 noise_texcoord = location_ndc.xy * 4.f * frame_data.render_size / noise_tex_size;
 
-    const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace);
+    const float3 direct_light = direct_analytical_light(surface, sun, view_vector_worldspace);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
-    	
+
+    return direct_light;
+	
     return direct_light + indirect_light + reflection;
 }
