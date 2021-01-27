@@ -72,8 +72,8 @@ float3 direct_analytical_light(const in SurfaceInfo surface, const in Light ligh
         light_color = light.color / (distance_to_light * distance_to_light);
     }
 
-    const float ndotl = saturate(dot(surface.normal, light_vector));
-    const float3 outgoing_light = ndotl * brdf(surface, light_vector, -view_vector) * light_color;
+	const float ndotl = dot(surface.normal, light_vector);
+    const float3 outgoing_light =ndotl * brdf(surface, light_vector, view_vector) * light_color;
 
     float shadow = 1.0;
     if(length(outgoing_light) > 0) {
@@ -123,7 +123,7 @@ float4 get_incoming_light(in float3 ray_origin,
 
         const SurfaceInfo surface = get_surface_info(vertex, material);
 
-        const float3 lit_hit_surface = direct_analytical_light(surface, sun, ray.Direction);
+        const float3 lit_hit_surface = direct_analytical_light(surface, sun, -ray.Direction);
 
         return float4(lit_hit_surface, 1.0);
 
@@ -166,7 +166,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
             normal_of_reflection = normalize(lerp(surface.normal, normal_of_reflection, surface.roughness));
 
             const float3 ray_direction = normalize(reflect(eye_vector, normal_of_reflection));
-            
+
             const float pdf = PDF_GGX(eye_vector, -sun.direction_or_location);
 
             brdf_accumulator *= brdf(surface, ray_direction, -view_vector) / pdf;
@@ -305,11 +305,11 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
     const float2 noise_texcoord = location_ndc.xy * 4.f * frame_data.render_size / noise_tex_size;
 
-    const float3 direct_light = direct_analytical_light(surface, sun, view_vector_worldspace);
+    const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
 
     return direct_light;
-	
+
     return direct_light + indirect_light + reflection;
 }
