@@ -25,14 +25,20 @@ float Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
     return lightScatter * viewScatter * (1.0 / PI);
 }
 
-float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {
-    surface.normal *= -1;
+float PDF_GGX(const in float3 v, const in float3 l) {
+    float3 h = normalize(v + l);
+    
+    float VoH = saturate(dot(v, h));
 	
-    // Remapping from https://google.github.io/filament/Filament.html#materialsystem/parameterization/remapping
-    const float3 albedo = (1.0 - surface.metalness) * surface.base_color.rgb;
+    return 1 / (4 * VoH);
+}
 
-    const float dielectric_f0 = 0.035; // TODO: Get this from a texture
+float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {	
+    // Remapping from https://google.github.io/filament/Filament.html#materialsystem/parameterization/remapping
+    const float dielectric_f0 = 0.04; // TODO: Get this from a texture
     const float3 f0 = lerp(dielectric_f0.xxx, surface.base_color.rgb, surface.metalness);
+
+	const float3 diffuse_color = surface.base_color.rgb * (1 - dielectric_f0) * (1 - surface.metalness);
 
     float3 h = normalize(v + l);
 
@@ -44,16 +50,15 @@ float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {
     // perceptually linear roughness to roughness (see parameterization)
     float roughness = surface.roughness * surface.roughness;
 
-    float D = D_GGX(NoH, roughness);
+	const float D = D_GGX(NoH, roughness);
     float3 F = F_Schlick(VoH, f0, 1.f);
     float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
 
     // specular BRDF
     float3 Fr = (D * V) * F;
-    return Fr;
 
     // diffuse BRDF
-    float3 Fd = NoL * Fd_Lambert() /* Fd_Burley(NoV, NoL, LoH, roughness) */ * albedo;
+    float3 Fd = diffuse_color * Fd_Lambert() /* Fd_Burley(NoV, NoL, LoH, roughness) */;
 
     return Fd + Fr;
 }

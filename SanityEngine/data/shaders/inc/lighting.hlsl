@@ -68,11 +68,12 @@ float3 direct_analytical_light(const in SurfaceInfo surface, const in Light ligh
         const float3 vector_from_light = surface.location - light.direction_or_location;
         light_vector = normalize(vector_from_light);
 
-    	const float distance_to_light = length(vector_from_light);
+        const float distance_to_light = length(vector_from_light);
         light_color = light.color / (distance_to_light * distance_to_light);
     }
 
-    const float3 outgoing_light = brdf(surface, light_vector, view_vector) * light_color;
+    const float ndotl = saturate(dot(surface.normal, light_vector));
+    const float3 outgoing_light = ndotl * brdf(surface, light_vector, -view_vector) * light_color;
 
     float shadow = 1.0;
     if(length(outgoing_light) > 0) {
@@ -146,7 +147,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
 
     SurfaceInfo surface = original_surface;
 
-    float3 view_vector = -eye_vector;
+    float3 view_vector = eye_vector;
 
     float3 reflection = 0;
 
@@ -163,13 +164,12 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
                                                                               num_bounces * num_specular_rays);
 
             normal_of_reflection = normalize(lerp(surface.normal, normal_of_reflection, surface.roughness));
-            
+
             const float3 ray_direction = normalize(reflect(eye_vector, normal_of_reflection));
+            
+            const float pdf = PDF_GGX(eye_vector, -sun.direction_or_location);
 
-            const float3 ideal_ray_direction = normalize(reflect(eye_vector, surface.normal));
-        	const float pdf = saturate(dot(ideal_ray_direction, ray_direction));
-
-            brdf_accumulator *= brdf(surface, ray_direction, view_vector);
+            brdf_accumulator *= brdf(surface, ray_direction, -view_vector) / pdf;
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
@@ -187,17 +187,17 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
                 // set up next ray
                 surface = get_surface_info(hit_vertex, hit_material);
 
-                view_vector = -ray_direction;
+                view_vector = ray_direction;
 
             } else {
                 bounce_idx++;
-            	
+
                 // Ray escaped into the sky
                 break;
             }
         }
 
-    	bounce_idx++;
+        bounce_idx++;
 
         reflection += light_sample / (float) bounce_idx;
     }
@@ -212,7 +212,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                     const in float3 eye_vector,
                                     const in float2 noise_texcoord,
                                     const in Light sun) {
-    const uint num_indirect_rays = 1;
+    const uint num_indirect_rays = 19;
 
     const uint num_bounces = 3;
 
@@ -239,7 +239,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                                                              bounce_idx + ray_idx * num_bounces,
                                                                              num_bounces * num_indirect_rays);
 
-        	const float pdf = saturate(dot(ray_direction, surface.normal));
+            const float pdf = saturate(dot(ray_direction, surface.normal));
 
             brdf_accumulator *= brdf(surface, ray_direction, view_vector) / pdf;
 
@@ -295,7 +295,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     const float3 direction_to_sun = normalize(sun.direction_or_location * float3(1, -1, 1));
     const float sun_strength = length(sun.color);
     sun.color = sun_and_atmosphere(direction_to_sun, sun_strength, direction_to_sun);
-    
+
     float4 location_ndc = mul(camera.projection, position_viewspace);
     location_ndc /= location_ndc.w;
 
