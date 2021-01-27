@@ -1,8 +1,7 @@
 #pragma once
 
 float D_GGX(float NoH, float roughness) {
-    float a = NoH * roughness;
-    float k = roughness / (1.0 - NoH * NoH + a * a);
+    float k = roughness / (1.0 - NoH * NoH + roughness * roughness);
     return k * k * (1.0 / PI);
 }
 
