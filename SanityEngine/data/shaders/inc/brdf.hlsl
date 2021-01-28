@@ -25,10 +25,13 @@ float Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
     return lightScatter * viewScatter * (1.0 / PI);
 }
 
-float PDF_GGX(const in float3 v, const in float3 l) {
+float PDF_GGX(const in float roughness, const in float3 n, const in float3 l, const in float3 v) {
     float3 h = normalize(v + l);
 
-    float VoH = saturate(dot(v, h));
+    const float VoH = saturate(dot(v, h));
+    const float NoH = saturate(dot(n, h));
+
+    D_GGX(NoH, roughness) * NoH / (4.0 + VoH);
 
     return 1 / (4 * VoH);
 }
@@ -53,7 +56,7 @@ float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {
 
     NoV = abs(NoV);
     NoL = saturate(NoL);
-	
+
     // perceptually linear roughness to roughness (see parameterization)
     float roughness = surface.roughness * surface.roughness;
 
@@ -63,6 +66,42 @@ float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {
 
     // specular BRDF
     float3 Fr = (D * V) * F;
+
+    // diffuse BRDF
+    float3 Fd = diffuse_color * Fd_Lambert() /* Fd_Burley(NoV, NoL, LoH, roughness) */;
+
+    return Fd + Fr;
+}
+
+float3 brdf_single_ray(in SurfaceInfo surface, const float3 l, const float3 v) {
+    // Remapping from https://google.github.io/filament/Filament.html#materialsystem/parameterization/remapping
+    const float dielectric_f0 = 0.04; // TODO: Get this from a texture
+    const float3 f0 = lerp(dielectric_f0.xxx, surface.base_color.rgb, surface.metalness);
+
+    const float3 diffuse_color = surface.base_color.rgb * (1 - dielectric_f0) * (1 - surface.metalness);
+
+    float3 h = normalize(v + l);
+
+    float NoV = dot(surface.normal, v) + 1e-5;
+    float NoL = dot(surface.normal, l);
+    float NoH = saturate(dot(surface.normal, h));
+    float VoH = saturate(dot(v, h));
+
+    if(NoV < 0 || NoL < 0) {
+        return 0;
+    }
+
+    NoV = abs(NoV);
+    NoL = saturate(NoL);
+
+    // perceptually linear roughness to roughness (see parameterization)
+    float roughness = surface.roughness * surface.roughness;
+
+    float3 F = F_Schlick(VoH, f0, 1.f);
+    float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
+
+    // specular BRDF
+    float3 Fr = V * F;
 
     // diffuse BRDF
     float3 Fd = diffuse_color * Fd_Lambert() /* Fd_Burley(NoV, NoL, LoH, roughness) */;
