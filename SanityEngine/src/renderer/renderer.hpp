@@ -68,12 +68,12 @@ namespace sanity::engine::renderer {
      */
     struct PerFrameData {
         glm::uvec2 render_size{};
-    	
+
         /*!
          * \brief Number of seconds since the program started
          */
         Float32 time_since_start{0};
-    	
+
         Uint32 frame_count;
 
         Uint32 sky_texture_idx;
@@ -94,7 +94,7 @@ namespace sanity::engine::renderer {
         /// Reloads all the shaders from disk
         /// </summary>
         void reload_shaders();
-        
+
         void begin_frame(uint64_t frame_count);
 
         void render_frame(entt::registry& registry);
@@ -128,6 +128,10 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
 
         void deallocate_standard_material(StandardMaterialHandle handle);
+
+        [[nodiscard]] LightHandle next_next_free_light_handle();
+
+        void return_light_handle(LightHandle handle);
 
         [[nodiscard]] RenderBackend& get_render_backend() const;
 
@@ -180,7 +184,9 @@ namespace sanity::engine::renderer {
         Rx::Vector<Rx::Ptr<Image>> all_images;
         Rx::Ptr<SinglePassDownsampler> spd;
 
-        Rx::Array<Light[MAX_NUM_LIGHTS]> lights;
+        Uint32 next_free_light_index{1}; // Index 0 is the sun, its hardcoded and timing-dependent and all the things we hate
+        Rx::Vector<LightHandle> available_light_handles;
+        Rx::Array<GpuLight[MAX_NUM_LIGHTS]> lights;
         Rx::Vector<Rx::Ptr<Buffer>> light_device_buffers;
 
         std::queue<Mesh> pending_raytracing_upload_meshes;

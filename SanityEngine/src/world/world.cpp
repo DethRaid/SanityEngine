@@ -13,7 +13,7 @@ namespace sanity::engine {
     World::World(entt::registry& registry_in) : registry{&registry_in} {
         auto& sky_actor = engine::create_actor(*registry, "Sky");
         sky_actor.add_component<renderer::SkyboxComponent>();
-        sky_actor.add_component<renderer::LightComponent>();
+    	sky_actor.add_component<renderer::LightComponent>();    	
         sky = sky_actor.entity;
     }
 

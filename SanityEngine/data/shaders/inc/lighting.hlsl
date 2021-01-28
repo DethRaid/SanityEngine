@@ -301,7 +301,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
 
     float2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
-    const float2 noise_texcoord = location_ndc.xy * 4.f * frame_data.render_size / noise_tex_size;
+    const float2 noise_texcoord = location_ndc.xy * 0.5 * PI * frame_data.render_size / noise_tex_size;
 
     const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);

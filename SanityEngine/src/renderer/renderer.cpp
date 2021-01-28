@@ -52,7 +52,7 @@ namespace sanity::engine::renderer {
         glfwGetFramebufferSize(window, &width, &height);
 
         logger->verbose("Setting output framebuffer resolution to %dx%d", width, height);
-        
+
         output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
 
         create_static_mesh_storage();
@@ -77,7 +77,7 @@ namespace sanity::engine::renderer {
 
         reload_renderpass_shaders();
     }
-    
+
     void Renderer::begin_frame(const uint64_t frame_count) {
         device->begin_frame(frame_count);
 
@@ -118,15 +118,15 @@ namespace sanity::engine::renderer {
             {
                 ZoneScopedN("Renderer::update_per_frame_data");
 
-            	const auto view = registry.view<SkyboxComponent>();
+                const auto view = registry.view<SkyboxComponent>();
                 if(view.size() == 1) {
                     const auto skybox_entity = view.front();
                     const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
                     per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
                 }
-            	
+
                 per_frame_data.render_size = output_framebuffer_size;
-            	
+
                 memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
             }
 
@@ -300,7 +300,7 @@ namespace sanity::engine::renderer {
 
         const auto& staging_buffer = device->get_staging_buffer_for_texture(image.resource.Get());
 
-    	const auto pixel_size = size_in_bytes(create_info.format);
+        const auto pixel_size = size_in_bytes(create_info.format);
 
         const auto subresource = D3D12_SUBRESOURCE_DATA{
             .pData = image_data,
@@ -394,6 +394,27 @@ namespace sanity::engine::renderer {
     Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const { return *material_device_buffers[frame_idx]; }
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
+
+    LightHandle Renderer::next_next_free_light_handle() {
+        if(available_light_handles.is_empty()) {
+            if(next_free_light_index >= MAX_NUM_LIGHTS) {
+                Rx::abort("Maximum number of lights already in use! Unable to upload any more");
+            }
+
+            const auto handle = LightHandle{next_free_light_index};
+            next_free_light_index++;
+
+            return handle;
+
+        } else {
+            const auto handle = available_light_handles.last();
+            available_light_handles.pop_back();
+
+            return handle;
+        }
+    }
+
+    void Renderer::return_light_handle(const LightHandle handle) { available_light_handles.push_back(handle); }
 
     RenderBackend& Renderer::get_render_backend() const { return *device; }
 
@@ -493,7 +514,7 @@ namespace sanity::engine::renderer {
 
             const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
-        auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(Light)};
+        auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(GpuLight)};
 
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             create_info.name = Rx::String::format("Light Buffer %d", i);
@@ -792,10 +813,24 @@ namespace sanity::engine::renderer {
     void Renderer::update_light_data_buffer(entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
-        registry.view<LightComponent>().each([&](const LightComponent& light) { lights[light.handle.index] = light.light; });
+        const auto& view = registry.view<LightComponent, TransformComponent>();
+        view.each([&](const LightComponent& light_component, const TransformComponent& transform) {
+            auto& light = lights[light_component.handle.index];
+
+            light.type = light_component.type;
+            light.color = light_component.color;
+            light.size = light_component.size;
+
+            if(light_component.type == LightType::directional) {
+                light.direction_or_location = transform->get_forward_vector();
+
+            } else {
+                light.direction_or_location = transform->location;
+            }
+        });
 
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
-        memcpy(dst, lights.data(), lights.size() * sizeof(Light));
+        memcpy(dst, lights.data(), lights.size() * sizeof(GpuLight));
     }
 
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {

@@ -14,6 +14,10 @@ namespace sanity::engine {
         Rx::Vector<entt::entity> children;
 
     	[[nodiscard]] glm::mat4 get_world_matrix(const entt::registry& registry) const;
+
+    	[[nodiscard]] Transform* operator->();
+
+        [[nodiscard]] const Transform* operator->() const;
     };
     
     void draw_component_editor(TransformComponent& transform);

@@ -7,9 +7,12 @@
 namespace sanity::engine::renderer {
     constexpr Uint32 MAX_NUM_LIGHTS = 32;
 
-    enum class LightType { directional = 0, sphere, rectangle, cylinder };
+    enum class LightType { directional = 0, sphere = 1 };
 
-    struct Light {
+    /*!
+     * @brief Struct for a light on the GPU
+    */
+    struct GpuLight {
         LightType type{LightType::directional};
 
         /*!
@@ -29,7 +32,7 @@ namespace sanity::engine::renderer {
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights
          */
-        Float32 angular_size{glm::radians(0.53f)};
+        Float32 size{glm::radians(0.53f)};
         // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 

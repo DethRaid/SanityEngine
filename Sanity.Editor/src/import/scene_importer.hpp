@@ -1,5 +1,7 @@
 #pragma once
 
+#include <actor/actor.hpp>
+
 #include "entt/entity/fwd.hpp"
 #include "loading/asset_loader.hpp"
 #include "renderer/handles.hpp"
@@ -48,8 +50,8 @@ namespace sanity {
                 Rx::Map<Rx::String, engine::renderer::TextureHandle> loaded_textures;
                 Rx::Vector<GltfMesh> meshes;
                 Rx::Vector<engine::renderer::StandardMaterialHandle> materials;
+
                 // Rx::Vector<engine::renderer::AnimationHandle> animations;
-                // Rx::Vector<engine::renderer::LightHandle> lights
 
                 [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene,
                                                                                                         ID3D12GraphicsCommandList4* cmds);
@@ -74,6 +76,21 @@ namespace sanity {
                                                                    float import_scale,
                                                                    entt::registry& registry,
                                                                    ID3D12GraphicsCommandList4* cmds);
+                void import_node_mesh(const tinygltf::Node& node,
+                                      entt::registry& registry,
+                                      ID3D12GraphicsCommandList4* cmds,
+                                      entt::entity node_entity);
+
+                void import_node_transform(const tinygltf::Node& node,
+                                           const entt::entity& parent_entity,
+                                           float import_scale,
+                                           entt::registry& registry,
+                                           engine::Actor& node_actor) const;
+
+                void import_node_light(const tinygltf::Node& node,
+                                       const tinygltf::Model& model,
+                                       entt::registry& registry,
+                                       entt::entity node_entity) const;
 
                 entt::entity create_entity_for_node(const tinygltf::Node& node,
                                                     const entt::entity& parent_entity,

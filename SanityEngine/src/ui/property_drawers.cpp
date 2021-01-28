@@ -97,10 +97,10 @@ namespace sanity::engine::ui {
         ImGui::ListBox(label.data(), reinterpret_cast<int*>(&type), type_names, 1);
     }
 
-    void draw_property_editor(const Rx::String& label, renderer::Light& light) {
+    void draw_property_editor(const Rx::String& label, renderer::GpuLight& light) {
         ui::draw_property_editor("Type", light.type);
         ui::draw_property_editor("Color", light.color);
         ui::draw_property_editor("Direction", light.direction_or_location);
-        ui::draw_property_editor("Angular size", light.angular_size);
+        ui::draw_property_editor("Angular size", light.size);
     }
 } // namespace sanity::engine::ui

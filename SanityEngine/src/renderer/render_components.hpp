@@ -83,7 +83,18 @@ namespace sanity::engine::renderer {
     struct __declspec(uuid("{C1299481-3F19-4068-9724-FD89FF59EA65}")) LightComponent {
         LightHandle handle;
 
-        Light light;
+        LightType type{LightType::directional};
+
+        /*!
+         * \brief HDR color of this light
+         */
+        glm::vec3 color = glm::vec3{254.f / 255.f, 238.f / 255.f, 244.f / 255.f} * 17.f;
+
+        /*!
+         * @brief If the light is directional, this is the angular size of the light. If it's a sphere light, this is the radius of the
+         * sphere
+         */
+        Float32 size{glm::radians(0.53f)};
     };
 
     /*!
@@ -92,18 +103,18 @@ namespace sanity::engine::renderer {
      * NOTE: Only one allowed in the scene ever
      */
     struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) SkyboxComponent {
-    	TextureHandle skybox_texture{};
+        TextureHandle skybox_texture{};
     };
 
-	void draw_component_editor(StandardRenderableComponent& renderable);
+    void draw_component_editor(StandardRenderableComponent& renderable);
 
-	void draw_component_editor(PostProcessingPassComponent& post_processing);
+    void draw_component_editor(PostProcessingPassComponent& post_processing);
 
-	void draw_component_editor(RaytracingObjectComponent& raytracing_object);
+    void draw_component_editor(RaytracingObjectComponent& raytracing_object);
 
-	void draw_component_editor(CameraComponent& camera);
+    void draw_component_editor(CameraComponent& camera);
 
-	void draw_component_editor(LightComponent& light);
+    void draw_component_editor(LightComponent& light);
 
-	void draw_component_editor(SkyboxComponent& sky);
+    void draw_component_editor(SkyboxComponent& sky);
 } // namespace sanity::engine::renderer

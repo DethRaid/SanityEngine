@@ -8,7 +8,7 @@ namespace sanity {
 	namespace engine {
 		namespace renderer {
 			enum class LightType;
-			struct Light;
+			struct GpuLight;
 			struct StandardMaterialHandle;
 			struct Mesh;
 		}
@@ -44,7 +44,7 @@ namespace sanity::engine::ui {
 
     void draw_property_editor(const Rx::String& label, renderer::LightType& type);
 	
-	void draw_property_editor(const Rx::String& label, renderer::Light& light);
+	void draw_property_editor(const Rx::String& label, renderer::GpuLight& light);
 
     template <typename KeyType, typename ValueType>
     void draw_property_editor(const Rx::String& label, Rx::Map<KeyType, ValueType>& map);

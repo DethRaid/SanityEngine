@@ -39,6 +39,8 @@ namespace sanity::editor::import {
 
     constexpr const char* NORMAL_TEXTURE_PARAM_NAME = "normalTexture";
 
+    constexpr const char* PUNCTUAL_LIGHTS_EXTENSION_NAME = "KHR_lights_punctual";
+
     namespace detail {
         template <typename DataType>
         [[nodiscard]] const DataType* get_pointer_to_accessor_data(const int accessor_idx, const tinygltf::Model& scene) {
@@ -580,73 +582,10 @@ namespace sanity::editor::import {
         return scene_entity.entity;
     }
 
-    entt::entity SceneImporter::create_entity_for_node(const tinygltf::Node& node,
-                                                       const entt::entity& parent_entity,
-                                                       const float import_scale,
-                                                       const tinygltf::Model& model,
-                                                       entt::registry& registry,
-                                                       ID3D12GraphicsCommandList4* cmds) {
-        ZoneScoped;
-
-        auto& node_actor = engine::create_actor(registry, node.name.empty() ? "New Node" : node.name.c_str());
-        auto node_entity = node_actor.entity;
-
-        auto& node_transform_component = node_actor.get_component<engine::TransformComponent>();
-        auto& node_transform = node_transform_component.transform;
-
-        if(!node.matrix.empty()) {
-            const auto transform_matrix = glm::make_mat4(node.matrix.data());
-
-            node_transform.location = transform_matrix[3];
-
-            auto i = glm::mat3{transform_matrix};
-
-            node_transform.scale.x = static_cast<float>(length(i[0]));
-            node_transform.scale.y = static_cast<float>(length(i[1]));
-            node_transform.scale.z = static_cast<float>(glm::sign(determinant(i)) * length(i[2]));
-
-            i[0] /= node_transform.scale.x;
-            i[1] /= node_transform.scale.y;
-            i[2] /= node_transform.scale.z;
-
-            node_transform.rotation = toQuat(i);
-
-        } else {
-            if(node.translation.size() == 3) {
-                node_transform.location.x = static_cast<Float32>(node.translation[0]);
-                node_transform.location.y = static_cast<Float32>(node.translation[1]);
-                node_transform.location.z = static_cast<Float32>(node.translation[2]);
-            }
-
-            if(node.rotation.size() == 4) {
-                node_transform.rotation.x = static_cast<Float32>(node.rotation[0]);
-                node_transform.rotation.y = static_cast<Float32>(node.rotation[1]);
-                node_transform.rotation.z = static_cast<Float32>(node.rotation[2]);
-                node_transform.rotation.w = static_cast<Float32>(node.rotation[3]);
-            }
-
-            node_transform.scale = glm::vec3{import_scale};
-
-            if(node.scale.size() == 3) {
-                node_transform.scale.x *= static_cast<Float32>(node.scale[0]);
-                node_transform.scale.y *= static_cast<Float32>(node.scale[1]);
-                node_transform.scale.z *= static_cast<Float32>(node.scale[2]);
-            }
-        }
-
-        logger->verbose("Created node %s with transform translation=%s rotation=%s scale=%s",
-                        node.name.empty() ? "New Entity" : node.name,
-                        node_transform.location,
-                        node_transform.rotation,
-                        node_transform.scale);
-
-        if(registry.valid(parent_entity)) {
-            node_transform_component.parent = parent_entity;
-
-            auto& parent_transform = registry.get<engine::TransformComponent>(parent_entity);
-            parent_transform.children.push_back(node_actor.entity);
-        }
-
+    void SceneImporter::import_node_mesh(const tinygltf::Node& node,
+                                         entt::registry& registry,
+                                         ID3D12GraphicsCommandList4* cmds,
+                                         entt::entity node_entity) {
         if(node.mesh > -1 && static_cast<Size>(node.mesh) < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
@@ -704,10 +643,139 @@ namespace sanity::editor::import {
         } else {
             logger->error("Node %s references invalid mesh %d", node.name.c_str(), node.mesh);
         }
+    }
 
-        // TODO: Lights
+    void SceneImporter::import_node_transform(const tinygltf::Node& node,
+                                              const entt::entity& parent_entity,
+                                              const float import_scale,
+                                              entt::registry& registry,
+                                              engine::Actor& node_actor) const {
+        auto& node_transform_component = node_actor.get_component<engine::TransformComponent>();
+        auto& node_transform = node_transform_component.transform;
 
-        // Child nodes
+        if(!node.matrix.empty()) {
+            const auto transform_matrix = glm::make_mat4(node.matrix.data());
+
+            node_transform.location = transform_matrix[3];
+
+            auto i = glm::mat3{transform_matrix};
+
+            node_transform.scale.x = static_cast<float>(length(i[0]));
+            node_transform.scale.y = static_cast<float>(length(i[1]));
+            node_transform.scale.z = static_cast<float>(glm::sign(determinant(i)) * length(i[2]));
+
+            i[0] /= node_transform.scale.x;
+            i[1] /= node_transform.scale.y;
+            i[2] /= node_transform.scale.z;
+
+            node_transform.rotation = toQuat(i);
+
+        } else {
+            if(node.translation.size() == 3) {
+                node_transform.location.x = static_cast<Float32>(node.translation[0]);
+                node_transform.location.y = static_cast<Float32>(node.translation[1]);
+                node_transform.location.z = static_cast<Float32>(node.translation[2]);
+            }
+
+            if(node.rotation.size() == 4) {
+                node_transform.rotation.x = static_cast<Float32>(node.rotation[0]);
+                node_transform.rotation.y = static_cast<Float32>(node.rotation[1]);
+                node_transform.rotation.z = static_cast<Float32>(node.rotation[2]);
+                node_transform.rotation.w = static_cast<Float32>(node.rotation[3]);
+            }
+
+            node_transform.scale = glm::vec3{import_scale};
+
+            if(node.scale.size() == 3) {
+                node_transform.scale.x *= static_cast<Float32>(node.scale[0]);
+                node_transform.scale.y *= static_cast<Float32>(node.scale[1]);
+                node_transform.scale.z *= static_cast<Float32>(node.scale[2]);
+            }
+        }
+
+        if(registry.valid(parent_entity)) {
+            node_transform_component.parent = parent_entity;
+
+            auto& parent_transform = registry.get<engine::TransformComponent>(parent_entity);
+            parent_transform.children.push_back(node_actor.entity);
+        }
+
+        logger->verbose("Created node %s with transform translation=%s rotation=%s scale=%s",
+                        node.name.empty() ? "New Entity" : node.name,
+                        node_transform.location,
+                        node_transform.rotation,
+                        node_transform.scale);
+    }
+
+    void SceneImporter::import_node_light(const tinygltf::Node& node,
+                                          const tinygltf::Model& model,
+                                          entt::registry& registry,
+                                          const entt::entity node_entity) const {
+        const auto light_extension_itr = node.extensions.find(PUNCTUAL_LIGHTS_EXTENSION_NAME);
+        if(light_extension_itr == node.extensions.end()) {
+            // No lights :(
+            return;
+        }
+
+        if(model.lights.empty()) {
+            gltf_logger->warning("Node %s has light information, but the scene doesn't include any lights!", node.name);
+            return;
+        }
+
+        // Should only have one member: light index
+        const auto& extension = light_extension_itr->second;
+        if(!extension.Has("light")) {
+            // Light extension was misimported?
+            gltf_logger->warning("Light on node %s is not valid", node.name);
+            return;
+        }
+
+        const auto light_index = extension.Get("light").Get<size_t>();
+        if(light_index < 0 || light_index >= model.lights.size()) {
+            logger->error("Node %s has an invalid light index!", node.name);
+            return;
+        }
+
+        const auto gltf_light = model.lights.at(light_index);
+
+        auto& light_component = registry.emplace<engine::renderer::LightComponent>(node_entity);
+        light_component.handle = renderer->next_next_free_light_handle();
+
+        if(gltf_light.type == "directional") {
+            light_component.type = engine::renderer::LightType::directional;
+
+        } else if(gltf_light.type == "point" || gltf_light.type == "spot") {
+            light_component.type = engine::renderer::LightType::sphere;
+            light_component.size = 0.01; // 1 cm radius because it feels fine
+
+        } else {
+            gltf_logger->error("Invalid light type %s", gltf_light.type);
+        }
+
+        light_component.color = glm::vec3{gltf_light.color[0], gltf_light.color[1], gltf_light.color[2]} *
+                                static_cast<float>(gltf_light.intensity);
+    }
+
+    entt::entity SceneImporter::create_entity_for_node(const tinygltf::Node& node,
+                                                       const entt::entity& parent_entity,
+                                                       const float import_scale,
+                                                       const tinygltf::Model& model,
+                                                       entt::registry& registry,
+                                                       ID3D12GraphicsCommandList4* cmds) {
+        ZoneScoped;
+
+        auto& node_actor = engine::create_actor(registry, node.name.empty() ? "New Node" : node.name.c_str());
+        const auto node_entity = node_actor.entity;
+
+        // Transform
+        import_node_transform(node, parent_entity, import_scale, registry, node_actor);
+
+        import_node_mesh(node, registry, cmds, node_entity);
+
+        // Light
+        import_node_light(node, model, registry, node_entity);
+
+        // Children
         for(const auto child_node_idx : node.children) {
             if(child_node_idx < 0 || static_cast<Size>(child_node_idx) > model.nodes.size()) {
                 // Invalid node index
