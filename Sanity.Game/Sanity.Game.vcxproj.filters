@@ -17,6 +17,9 @@
     <Filter Include="docs">
       <UniqueIdentifier>{cd5ba707-45c9-40c7-aa4e-360b2161dde9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs\lore">
+      <UniqueIdentifier>{982c8a83-b75f-412c-8b36-d01ad52dfbbd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sanity.Game.cpp">
