@@ -13,7 +13,9 @@ namespace sanity::engine {
     World::World(entt::registry& registry_in) : registry{&registry_in} {
         auto& sky_actor = engine::create_actor(*registry, "Sky");
         sky_actor.add_component<renderer::SkyboxComponent>();
-    	sky_actor.add_component<renderer::LightComponent>();    	
+        sky_actor.add_component<renderer::LightComponent>();
+        auto& transform = sky_actor.get_transform();
+        transform.rotation = quatLookAtLH(normalize(glm::vec3{0.049756793f, 0.59547983f, -0.994187036f}), glm::vec3{0, 1, 0});
         sky = sky_actor.entity;
     }
 
@@ -45,4 +47,6 @@ namespace sanity::engine {
 
         return actor;
     }
+
+    Actor World::get_actor(const entt::entity& entity) { return registry->get<Actor>(entity); }
 } // namespace sanity::engine

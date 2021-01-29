@@ -11,7 +11,8 @@ namespace Rx {
 }
 
 namespace sanity::engine {
-    /*!
+	struct Transform;
+	/*!
      * \brief Component type for any entity within SanityEngine
      *
      * Entities have a system for sending and receiving events. Other components may subscribe to that system and react to events
@@ -36,6 +37,8 @@ namespace sanity::engine {
         void remove_tag(const Rx::String& tag);
 
         void remove_num_tags(const Rx::String& tag, Uint32 num_stacks);
+
+    	[[nodiscard]] Transform& get_transform() const;
 
         /*!
          * @brief Creates a component of the specified type in this actor

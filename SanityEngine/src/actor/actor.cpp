@@ -32,6 +32,11 @@ namespace sanity::engine {
         }
     }
 
+    Transform& Actor::get_transform() const {
+        auto& transform_component = registry->get<TransformComponent>(entity);
+        return transform_component.transform;
+    }
+
     Actor& create_actor(entt::registry& registry, const Rx::String& name) {
         const auto entity = registry.create();
 

@@ -25,7 +25,9 @@ namespace sanity::engine {
 
         void set_skybox(const std::filesystem::path& skybox_image_path);
 
-        Actor& create_actor(const Rx::String& name) const;
+        Actor& create_actor(const Rx::String& name) const;  // NOLINT(modernize-use-nodiscard)
+
+    	[[nodiscard]] Actor get_actor(const entt::entity& entity);
 
     private:
         entt::registry* registry;
