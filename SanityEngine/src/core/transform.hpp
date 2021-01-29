@@ -9,7 +9,7 @@ namespace sanity::engine {
     struct Transform {
         glm::vec3 location{0};
 
-        glm::quat rotation{};
+        glm::quat rotation{glm::vec3{0, 0, 0}};
 
         glm::vec3 scale{1};
 

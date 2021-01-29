@@ -53,7 +53,7 @@ namespace sanity::engine::renderer {
 
         logger->verbose("Setting output framebuffer resolution to %dx%d", width, height);
 
-        output_framebuffer_size = {static_cast<Uint32>(width * 1.0f), static_cast<Uint32>(height * 1.0f)};
+        output_framebuffer_size = {width, height};
 
         create_static_mesh_storage();
 
