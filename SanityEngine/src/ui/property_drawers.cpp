@@ -1,5 +1,7 @@
 #include "property_drawers.hpp"
 
+#include <vector>
+
 #include "core/transform.hpp"
 #include "core/types.hpp"
 #include "glm/glm.hpp"
@@ -92,9 +94,9 @@ namespace sanity::engine::ui {
     }
 
     void draw_property_editor(const Rx::String& label, renderer::LightType& type) {
-        const auto type_names = new const char*[]{"Directional"};
+        const static std::vector<const char*> TYPE_NAMES = {"Directional", "Sphere"};
 
-        ImGui::ListBox(label.data(), reinterpret_cast<int*>(&type), type_names, 1);
+        ImGui::ListBox(label.data(), reinterpret_cast<int*>(&type), TYPE_NAMES.data(), static_cast<int>(TYPE_NAMES.size()));
     }
 
     void draw_property_editor(const Rx::String& label, renderer::GpuLight& light) {

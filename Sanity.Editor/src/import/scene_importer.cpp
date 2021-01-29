@@ -206,7 +206,7 @@ namespace sanity::editor::import {
                 sanity_material.emission_value.r = material.emissiveFactor[0];
                 sanity_material.emission_value.g = material.emissiveFactor[1];
                 sanity_material.emission_value.b = material.emissiveFactor[2];
-                sanity_material.emission_value.a = material.emissiveFactor[3];
+                sanity_material.emission_value.a = 0;
             }
 
             const auto normal_texture_idx{material.normalTexture.index};
@@ -673,7 +673,7 @@ namespace sanity::editor::import {
             return;
         }
 
-        const auto light_index = extension.Get("light").Get<size_t>();
+        const auto light_index = extension.Get("light").Get<int>();
         if(light_index < 0 || light_index >= model.lights.size()) {
             logger->error("Node %s has an invalid light index!", node.name);
             return;
@@ -689,7 +689,7 @@ namespace sanity::editor::import {
 
         } else if(gltf_light.type == "point" || gltf_light.type == "spot") {
             light_component.type = engine::renderer::LightType::sphere;
-            light_component.size = 0.01; // 1 cm radius because it feels fine
+            light_component.size = 0.01f; // 1 cm radius because it feels fine
 
         } else {
             gltf_logger->error("Invalid light type %s", gltf_light.type);

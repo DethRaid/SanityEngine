@@ -31,12 +31,13 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void draw_component_editor(LightComponent& light)
-    { ui::draw_property_editor("Light", light.light);
+    void draw_component_editor(LightComponent& light) {
+        ui::draw_property_editor("Type", light.type);
+        ui::draw_property_editor("Color", light.color);
+        ui::draw_property_editor("Size", light.size);
     }
 
-    void draw_component_editor(SkyboxComponent& sky)
-    {
-	    // Fill in when the component has things
+    void draw_component_editor(SkyboxComponent& sky) {
+        // Fill in when the component has things
     }
 } // namespace sanity::engine::renderer
