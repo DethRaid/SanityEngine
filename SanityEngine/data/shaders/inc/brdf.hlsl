@@ -1,3 +1,4 @@
+// ReSharper disable CppInconsistentNaming
 #pragma once
 
 float D_GGX(float NoH, float roughness) {
@@ -43,12 +44,12 @@ float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {
 
     const float3 diffuse_color = surface.base_color.rgb * (1 - dielectric_f0) * (1 - surface.metalness);
 
-    float3 h = normalize(v + l);
+    const float3 h = normalize(v + l);
 
     float NoV = dot(surface.normal, v) + 1e-5;
     float NoL = dot(surface.normal, l);
-    float NoH = saturate(dot(surface.normal, h));
-    float VoH = saturate(dot(v, h));
+    const float NoH = saturate(dot(surface.normal, h));
+    const float VoH = saturate(dot(v, h));
 
     if(NoV < 0 || NoL < 0) {
         return 0;
@@ -58,17 +59,18 @@ float3 brdf(in SurfaceInfo surface, const float3 l, const float3 v) {
     NoL = saturate(NoL);
 
     // perceptually linear roughness to roughness (see parameterization)
-    float roughness = surface.roughness * surface.roughness;
+    const float roughness = surface.roughness * surface.roughness;
 
     const float D = D_GGX(NoH, roughness);
-    float3 F = F_Schlick(VoH, f0, 1.f);
-    float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
+    const float3 F = F_Schlick(VoH, f0, 1.f);
+    const float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
 
     // specular BRDF
-    float3 Fr = (D * V) * F;
+    const float3 Fr = (D * V) * F;
 
     // diffuse BRDF
-    float3 Fd = diffuse_color * Fd_Lambert() /* Fd_Burley(NoV, NoL, LoH, roughness) */;
+    const float LoH = saturate(dot(l, h));
+    const float3 Fd = diffuse_color * Fd_Burley(NoV, NoL, LoH, roughness);
 
     return Fd + Fr;
 }
@@ -104,7 +106,8 @@ float3 brdf_single_ray(in SurfaceInfo surface, const float3 l, const float3 v) {
     float3 Fr = V * F;
 
     // diffuse BRDF
-    float3 Fd = diffuse_color * Fd_Lambert() /* Fd_Burley(NoV, NoL, LoH, roughness) */;
+    const float LoH = saturate(dot(l, h));
+    float3 Fd = diffuse_color * Fd_Burley(NoV, NoL, LoH, roughness);
 
     return Fd + Fr;
 }
