@@ -350,9 +350,6 @@
     <ClInclude Include="src\core\Prelude.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\RaytracedLightingPass.hpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
@@ -415,6 +412,9 @@
       <Filter>src\world</Filter>
     </ClInclude>
     <ClInclude Include="src\actor\actor.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -552,9 +552,6 @@
     <ClCompile Include="src\input\PlatformInput.cpp">
       <Filter>src\input</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\RaytracedLightingPass.cpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
@@ -613,6 +610,9 @@
       <Filter>src\world</Filter>
     </ClCompile>
     <ClCompile Include="src\actor\actor.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

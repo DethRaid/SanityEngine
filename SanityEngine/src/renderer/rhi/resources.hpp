@@ -54,6 +54,7 @@ namespace sanity::engine::renderer {
     enum class ImageFormat {
         Rgba8,
         R32F,
+    	R32UInt,
         Rg16F,
         Rgba32F,
         Depth32,

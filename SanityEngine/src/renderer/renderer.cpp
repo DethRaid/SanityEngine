@@ -605,14 +605,14 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_render_passes() {
-        render_passes.reserve(4);
-        render_passes.push_back(Rx::make_ptr<RaytracedLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        render_passes.reserve(4);    	
+        render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         forward_pass_handle = RenderpassHandle{&render_passes, 0};
 
         render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
                                                            *this,
                                                            output_framebuffer_size,
-                                                           static_cast<RaytracedLightingPass&>(*render_passes[0])));
+                                                           static_cast<ObjectsPass&>(*render_passes[0])));
         denoiser_pass_handle = RenderpassHandle{&render_passes, 1};
 
         render_passes.push_back(

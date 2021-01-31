@@ -9,7 +9,7 @@
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/render_components.hpp"
-#include "renderer/renderpasses/RaytracedLightingPass.hpp"
+#include "renderer/renderpasses/ObjectsPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "renderer/standard_material.hpp"
 #include "rhi/bind_group.hpp"

@@ -21,7 +21,7 @@ namespace sanity::engine::renderer {
 
     RX_LOG("DenoiserPass", logger);
 
-    DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const RaytracedLightingPass& forward_pass)
+    DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ObjectsPass& forward_pass)
         : renderer{&renderer_in} {
         ZoneScoped;
 
@@ -133,7 +133,7 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void DenoiserPass::create_material(const RaytracedLightingPass& forward_pass) {
+    void DenoiserPass::create_material(const ObjectsPass& forward_pass) {
         auto& device = renderer->get_render_backend();
 
         const auto scene_color_target_handle = forward_pass.get_color_target_handle();

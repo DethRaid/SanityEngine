@@ -26,6 +26,9 @@ namespace sanity::engine::renderer {
             case ImageFormat::R32F:
                 return DXGI_FORMAT_R32_FLOAT;
 
+            case ImageFormat::R32UInt:
+                return DXGI_FORMAT_R32_UINT;
+
             case ImageFormat::Rg16F:
                 return DXGI_FORMAT_R16G16_FLOAT;
 

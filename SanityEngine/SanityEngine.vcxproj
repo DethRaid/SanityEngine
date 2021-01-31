@@ -537,7 +537,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\RaytracedLightingPass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\rhi\bind_group.hpp" />
@@ -614,7 +614,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\RaytracedLightingPass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
     <ClCompile Include="src\renderer\render_components.cpp" />
     <ClCompile Include="src\renderer\rhi\bind_group.cpp" />

@@ -16,17 +16,19 @@ namespace sanity::engine::renderer {
     class RenderBackend;
     class Renderer;
 
-    class RaytracedLightingPass final : public RenderPass {
+    class ObjectsPass final : public RenderPass {
     public:
-        explicit RaytracedLightingPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
+        explicit ObjectsPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 
-        ~RaytracedLightingPass() override;
+        ~ObjectsPass() override;
 
 #pragma region RenderPass
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 #pragma endregion
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;
+
+    	[[nodiscard]] TextureHandle get_object_id_texture() const;
 
         [[nodiscard]] TextureHandle get_depth_target_handle() const;
 
@@ -37,6 +39,7 @@ namespace sanity::engine::renderer {
         Rx::Ptr<RenderPipelineState> atmospheric_sky_pipeline;
 
         TextureHandle color_target_handle;
+        TextureHandle object_id_target_handle;
         TextureHandle depth_target_handle;
 
         TextureHandle downsampled_depth_target_handle;
@@ -45,11 +48,14 @@ namespace sanity::engine::renderer {
 
         D3D12_RENDER_PASS_RENDER_TARGET_DESC color_target_access;
 
+    	D3D12_RENDER_PASS_RENDER_TARGET_DESC object_id_target_access;
+
         D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_target_access;
 
         glm::uvec2 render_target_size;
     	
         DescriptorRange color_target_descriptor;
+        DescriptorRange object_id_target_descriptor; 
         DescriptorRange depth_target_descriptor;
 
         void create_framebuffer(const glm::uvec2& render_resolution);

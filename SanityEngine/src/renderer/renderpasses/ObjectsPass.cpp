@@ -1,4 +1,4 @@
-#include "RaytracedLightingPass.hpp"
+#include "ObjectsPass.hpp"
 
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
@@ -13,11 +13,12 @@
 
 namespace sanity::engine::renderer {
     constexpr const char* SCENE_COLOR_RENDER_TARGET = "Scene color target";
+    constexpr const char* OBJECT_ID_TARGET = "Object ID";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 
     RX_LOG("RaytracedLightingPass", logger);
 
-    RaytracedLightingPass::RaytracedLightingPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
+    ObjectsPass::ObjectsPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         ZoneScoped;
         auto& device = renderer_in.get_render_backend();
 
@@ -50,14 +51,14 @@ namespace sanity::engine::renderer {
         add_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
-    RaytracedLightingPass::~RaytracedLightingPass() {
+    ObjectsPass::~ObjectsPass() {
         ZoneScoped;
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
 
         auto& device = renderer->get_render_backend();
     }
 
-    void RaytracedLightingPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void ObjectsPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "RaytracedLightingPass::execute");
@@ -125,7 +126,7 @@ namespace sanity::engine::renderer {
         // renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
     }
 
-    void RaytracedLightingPass::create_framebuffer(const glm::uvec2& render_resolution) {
+    void ObjectsPass::create_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_backend();
 
         const auto color_target_create_info = ImageCreateInfo{
@@ -139,6 +140,17 @@ namespace sanity::engine::renderer {
 
         color_target_handle = renderer->create_image(color_target_create_info);
 
+        const auto object_id_create_info = ImageCreateInfo{
+            .name = OBJECT_ID_TARGET,
+            .usage = ImageUsage::RenderTarget,
+            .format = ImageFormat::R32UInt,
+            .width = render_resolution.x,
+            .height = render_resolution.y,
+            .enable_resource_sharing = true,
+        };
+
+        object_id_target_handle = renderer->create_image(object_id_create_info);
+
         const auto depth_target_create_info = ImageCreateInfo{
             .name = SCENE_DEPTH_TARGET,
             .usage = ImageUsage::DepthStencil,
@@ -150,6 +162,7 @@ namespace sanity::engine::renderer {
         depth_target_handle = renderer->create_image(depth_target_create_info);
 
         const auto& color_target = renderer->get_image(color_target_handle);
+        const auto& object_id_target = renderer->get_image(object_id_target_handle);
         const auto& depth_target = renderer->get_image(depth_target_handle);
 
         color_target_descriptor = device.create_rtv_handle(color_target);
@@ -157,6 +170,12 @@ namespace sanity::engine::renderer {
                                .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
                                                    .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT, .Color = {0, 0, 0, 0}}}},
                                .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+
+        object_id_target_descriptor = device.create_rtv_handle(object_id_target);
+        object_id_target_access = {.cpuDescriptor = object_id_target_descriptor.cpu_handle,
+                                   .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                       .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_UINT, .Color = {0, 0, 0, 0}}}},
+                                   .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
         depth_target_descriptor = device.create_dsv_handle(depth_target);
         depth_target_access = {.cpuDescriptor = depth_target_descriptor.cpu_handle,
@@ -176,12 +195,18 @@ namespace sanity::engine::renderer {
         // downsampled_depth_target_handle = renderer->create_image(downsampled_depth_create_info);
     }
 
-    TextureHandle RaytracedLightingPass::get_color_target_handle() const { return color_target_handle; }
+    TextureHandle ObjectsPass::get_color_target_handle() const { return color_target_handle; }
 
-    TextureHandle RaytracedLightingPass::get_depth_target_handle() const { return depth_target_handle; }
+    TextureHandle ObjectsPass::get_object_id_texture() const { return object_id_target_handle; }
 
-    void RaytracedLightingPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
-        commands->BeginRenderPass(1, &color_target_access, &depth_target_access, D3D12_RENDER_PASS_FLAG_NONE);
+    TextureHandle ObjectsPass::get_depth_target_handle() const { return depth_target_handle; }
+
+    void ObjectsPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
+        const auto color_targets = std::array{color_target_access, object_id_target_access};
+        commands->BeginRenderPass(static_cast<UINT>(color_targets.size()),
+                                  color_targets.data(),
+                                  &depth_target_access,
+                                  D3D12_RENDER_PASS_FLAG_NONE);
 
         D3D12_VIEWPORT viewport{};
         viewport.MinDepth = 0;
@@ -196,9 +221,7 @@ namespace sanity::engine::renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void RaytracedLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands,
-                                                      entt::registry& registry,
-                                                      const Uint32 frame_idx) {
+    void ObjectsPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_objects_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
@@ -235,14 +258,14 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void RaytracedLightingPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
+    void ObjectsPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
         const auto atmosphere_view = registry.view<SkyboxComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
             PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_atmosphere");
-            
+
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
 
             commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
