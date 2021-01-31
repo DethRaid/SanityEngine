@@ -55,6 +55,7 @@ namespace sanity::engine::renderer {
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
         static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 1;
         static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 2;
+        static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = 3;
 
         static constexpr Uint32 ROOT_CONSTANTS_ROOT_PARAMETER_INDEX = 0;
         static constexpr Uint32 MATERIAL_BUFFER_ROOT_PARAMETER_INDEX = 2;

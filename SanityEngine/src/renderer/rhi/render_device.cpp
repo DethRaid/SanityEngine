@@ -956,8 +956,8 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{10};
 
-        // Root constants for material index and camera index
-        root_parameters[0].InitAsConstants(3, 0);
+        // Root constants for indices and IDs
+        root_parameters[0].InitAsConstants(4, 0);
 
         // Camera data buffer
         root_parameters[1].InitAsShaderResourceView(0);

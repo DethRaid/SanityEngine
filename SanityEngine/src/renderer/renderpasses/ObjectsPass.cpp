@@ -26,7 +26,7 @@ namespace sanity::engine::renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
-            .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
+            .render_target_formats = Rx::Array{ImageFormat::Rgba32F, ImageFormat::R32UInt},
             .depth_stencil_format = ImageFormat::Depth32,
         });
         logger->verbose("Created standard pipeline");
@@ -40,7 +40,7 @@ namespace sanity::engine::renderer {
                     .enable_depth_write = false,
                     .depth_func = CompareOp::Always,
                 },
-            .render_target_formats = Rx::Array{ImageFormat::Rgba32F},
+            .render_target_formats = Rx::Array{ImageFormat::Rgba32F, ImageFormat::R32UInt},
             .depth_stencil_format = ImageFormat::Depth32,
         });
         logger->verbose("Created atmospheric pipeline");
@@ -48,6 +48,7 @@ namespace sanity::engine::renderer {
         create_framebuffer(render_resolution);
 
         add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        add_resource_usage(object_id_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
         add_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
@@ -242,15 +243,17 @@ namespace sanity::engine::renderer {
 
         {
             const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
-            renderable_view.each([&](const TransformComponent& transform, const StandardRenderableComponent& renderable) {
+            renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable) {
                 // TODO: Frustum culling, view distance calculations, etc
 
                 // TODO: Figure out the priority queues to put things in
 
+                const auto entity_id = static_cast<uint32_t>(entity);
+                commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+
                 commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 
                 const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform.get_world_matrix(registry), frame_idx);
-
                 commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
 
                 commands->DrawIndexedInstanced(renderable.mesh.num_indices, 1, renderable.mesh.first_index, 0, 0);
@@ -265,6 +268,10 @@ namespace sanity::engine::renderer {
 
         } else {
             PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_atmosphere");
+
+            const auto atmosphere_entity = atmosphere_view.front();
+            const auto atmosphere_id = static_cast<uint32_t>(atmosphere_entity);
+            commands->SetGraphicsRoot32BitConstant(0, atmosphere_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
 

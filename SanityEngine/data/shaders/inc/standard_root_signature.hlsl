@@ -65,6 +65,11 @@ struct StandardPushConstants {
      * \brief Index of our model matrix within the currently bound buffer
      */
     uint model_matrix_index;
+
+	/*!
+	 * \brief Identifier for the object currently being rendered. Guaranteed to be unique for each object
+	 */
+	uint object_id;
 } constants;
 
 /*!
