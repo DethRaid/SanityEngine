@@ -26,7 +26,7 @@ namespace sanity::engine::renderer {
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
-        [[nodiscard]] TextureHandle get_output_image() const;
+        [[nodiscard]] TextureHandle get_output_texture() const;
 
     private:
         Uint64 denoiser_pass_color{PIX_COLOR(91, 133, 170)};
@@ -51,7 +51,7 @@ namespace sanity::engine::renderer {
 
         Rx::Ptr<Buffer> denoiser_material_buffer;
 
-        void create_images_and_framebuffer(const glm::uvec2& render_resolution);
+        void create_textures_and_framebuffer(const glm::uvec2& render_resolution);
 
         void create_material(const ObjectsPass& forward_pass);
     };

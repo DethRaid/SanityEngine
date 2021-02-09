@@ -19,7 +19,7 @@ namespace sanity::engine::renderer {
         TextureHandle scene_depth_texture;
     };
 
-    RX_LOG("DenoiserPass", logger);
+    RX_LOG("Postprocessing Pass", logger);
 
     DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ObjectsPass& forward_pass)
         : renderer{&renderer_in} {
@@ -34,7 +34,7 @@ namespace sanity::engine::renderer {
              .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
              .render_target_formats = Rx::Array{TextureFormat::Rgba32F}});
 
-        create_images_and_framebuffer(render_resolution);
+        create_textures_and_framebuffer(render_resolution);
 
         create_material(forward_pass);
 
@@ -100,9 +100,9 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle DenoiserPass::get_output_image() const { return denoised_color_target_handle; }
+    TextureHandle DenoiserPass::get_output_texture() const { return denoised_color_target_handle; }
 
-    void DenoiserPass::create_images_and_framebuffer(const glm::uvec2& render_resolution) {
+    void DenoiserPass::create_textures_and_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_backend();
 
         {
