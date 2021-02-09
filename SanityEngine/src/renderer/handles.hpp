@@ -6,9 +6,11 @@ namespace sanity::engine::renderer {
     struct TextureHandle {
         Uint32 index{0};
 
-    	bool operator==(const TextureHandle& other) const = default;
-    };
+    	[[nodiscard]] bool operator==(const TextureHandle& other) const = default;
 
+    	[[nodiscard]] bool is_valid() const;
+    };
+    
     struct StandardMaterialHandle {
         Uint32 index{0};
     };
@@ -24,5 +26,7 @@ namespace sanity::engine::renderer {
     struct ModelMatrixHandle {
         Uint32 index{0};
     };
+
+    inline bool TextureHandle::is_valid() const { return index != 0; }
 } // namespace renderer
 

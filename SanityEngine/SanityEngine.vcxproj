@@ -534,7 +534,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\mesh.hpp" />
     <ClInclude Include="src\renderer\renderer.hpp" />
     <ClInclude Include="src\renderer\renderpass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\postprocessing_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp" />
@@ -611,7 +611,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\renderpass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\postprocessing_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp" />
@@ -656,7 +656,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
+    <FxCompile Include="data\shaders\postprocessing.pixel.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</DeploymentContent>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

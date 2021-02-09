@@ -248,12 +248,6 @@
     <ClInclude Include="src\renderer\rhi\resources.hpp">
       <Filter>src\renderer\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\backbuffer_output_pass.hpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClInclude>
     <ClInclude Include="src\player\components.hpp">
       <Filter>src\player</Filter>
     </ClInclude>
@@ -415,6 +409,12 @@
     <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\postprocessing_pass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -464,12 +464,6 @@
     </ClCompile>
     <ClCompile Include="src\renderer\rhi\resources.cpp">
       <Filter>src\renderer\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\backbuffer_output_pass.cpp">
-      <Filter>src\renderer\renderpasses</Filter>
-    </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp">
-      <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
@@ -613,6 +607,12 @@
     <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\postprocessing_pass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -629,9 +629,6 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="data\shaders\backbuffer_output.pixel.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\FillOcean.compute.hlsl">
@@ -702,6 +699,9 @@
     </FxCompile>
     <FxCompile Include="data\shaders\inc\brdf.hlsl">
       <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\postprocessing.pixel.hlsl">
+      <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
