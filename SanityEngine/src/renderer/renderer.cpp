@@ -15,6 +15,7 @@
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/render_components.hpp"
 #include "renderpasses/backbuffer_output_pass.hpp"
+#include "renderpasses/postprocessing_pass.hpp"
 #include "renderpasses/ui_render_pass.hpp"
 #include "rhi/d3d12_private_data.hpp"
 #include "rhi/d3dx12.hpp"
@@ -44,7 +45,7 @@ namespace sanity::engine::renderer {
           spd{Rx::make_ptr<SinglePassDownsampler>(RX_SYSTEM_ALLOCATOR, SinglePassDownsampler::Create(*device))},
           forward_pass_handle{nullptr, 0},
           denoiser_pass_handle{nullptr, 0},
-          scene_output_pass_handle{nullptr, 0},
+          postprocessing_pass_handle{nullptr, 0},
           imgui_pass_handle{nullptr, 0} {
         ZoneScoped;
 
@@ -54,6 +55,9 @@ namespace sanity::engine::renderer {
         logger->verbose("Setting output framebuffer resolution to %dx%d", width, height);
 
         output_framebuffer_size = {width, height};
+
+        // Ensure that the texture at index 0 is a dummy texture. This allows us to use 0 as a value for invalid texture handles
+        all_textures.resize(1);
 
         create_static_mesh_storage();
 
@@ -278,9 +282,9 @@ namespace sanity::engine::renderer {
     }
 
     TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info,
-                                         const void* image_data,
-                                         ID3D12GraphicsCommandList4* commands,
-                                         bool generate_mipmaps) {
+                                           const void* image_data,
+                                           ID3D12GraphicsCommandList4* commands,
+                                           bool generate_mipmaps) {
         ZoneScoped;
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
@@ -375,7 +379,15 @@ namespace sanity::engine::renderer {
         device->schedule_texture_destruction(Rx::Utility::move(texture));
     }
 
-    void Renderer::set_scene_output_texture(TextureHandle output_texture_handle) {}
+    void Renderer::set_scene_output_texture(const TextureHandle output_texture_handle) {
+        auto* postprocessing_pass = static_cast<PostprocessingPass*>(postprocessing_pass_handle->get());
+        postprocessing_pass->set_output_texture(output_texture_handle);
+    }
+
+    TextureHandle Renderer::get_scene_output_texture() const {
+        const auto* postprocessing_pass = static_cast<const PostprocessingPass*>(postprocessing_pass_handle->get());
+        return postprocessing_pass->get_output_texture();
+    }
 
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
         if(!free_material_handles.is_empty()) {
@@ -537,10 +549,10 @@ namespace sanity::engine::renderer {
 
             {
                 const auto pink_texture_create_info = TextureCreateInfo{.name = "Pink",
-                                                                      .usage = TextureUsage::SampledTexture,
-                                                                      .format = TextureFormat::Rgba8,
-                                                                      .width = 8,
-                                                                      .height = 8};
+                                                                        .usage = TextureUsage::SampledTexture,
+                                                                        .format = TextureFormat::Rgba8,
+                                                                        .width = 8,
+                                                                        .height = 8};
 
                 auto pink_texture_pixel = Rx::Vector<Uint32>{};
                 pink_texture_pixel.reserve(64);
@@ -553,10 +565,10 @@ namespace sanity::engine::renderer {
 
             {
                 const auto normal_roughness_texture_create_info = TextureCreateInfo{.name = "Default Normal",
-                                                                                  .usage = TextureUsage::SampledTexture,
-                                                                                  .format = TextureFormat::Rgba8,
-                                                                                  .width = 8,
-                                                                                  .height = 8};
+                                                                                    .usage = TextureUsage::SampledTexture,
+                                                                                    .format = TextureFormat::Rgba8,
+                                                                                    .width = 8,
+                                                                                    .height = 8};
 
                 auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
                 normal_roughness_texture_pixel.reserve(64);
@@ -565,16 +577,16 @@ namespace sanity::engine::renderer {
                 }
 
                 normal_roughness_texture_handle = create_texture(normal_roughness_texture_create_info,
-                                                               normal_roughness_texture_pixel.data(),
-                                                               commands.Get());
+                                                                 normal_roughness_texture_pixel.data(),
+                                                                 commands.Get());
             }
 
             {
                 const auto specular_emission_texture_create_info = TextureCreateInfo{.name = "Default Metallic/Roughness",
-                                                                                   .usage = TextureUsage::SampledTexture,
-                                                                                   .format = TextureFormat::Rgba8,
-                                                                                   .width = 8,
-                                                                                   .height = 8};
+                                                                                     .usage = TextureUsage::SampledTexture,
+                                                                                     .format = TextureFormat::Rgba8,
+                                                                                     .width = 8,
+                                                                                     .height = 8};
 
                 auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
                 specular_emission_texture_pixel.reserve(64);
@@ -583,8 +595,8 @@ namespace sanity::engine::renderer {
                 }
 
                 specular_emission_texture_handle = create_texture(specular_emission_texture_create_info,
-                                                                specular_emission_texture_pixel.data(),
-                                                                commands.Get());
+                                                                  specular_emission_texture_pixel.data(),
+                                                                  commands.Get());
             }
         }
 
@@ -605,19 +617,17 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_render_passes() {
-        render_passes.reserve(4);    	
+        render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         forward_pass_handle = RenderpassHandle{&render_passes, 0};
 
-        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
-                                                           *this,
-                                                           output_framebuffer_size,
-                                                           static_cast<ObjectsPass&>(*render_passes[0])));
+        render_passes.push_back(
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ObjectsPass&>(*render_passes[0])));
         denoiser_pass_handle = RenderpassHandle{&render_passes, 1};
 
         render_passes.push_back(
-            Rx::make_ptr<CopySceneOutputToTexturePass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
-        scene_output_pass_handle = RenderpassHandle{&render_passes, 2};
+            Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
+        postprocessing_pass_handle = RenderpassHandle{&render_passes, 2};
 
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
         imgui_pass_handle = RenderpassHandle{&render_passes, 3};

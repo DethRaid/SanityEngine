@@ -22,4 +22,6 @@ namespace sanity::engine::renderer {
 
         texture_states.insert(handle, {begin_states, end_states});
     }
-} // namespace renderer
+
+    void RenderPass::remove_resource_usage(const TextureHandle handle) { texture_states.erase(handle); }
+} // namespace sanity::engine::renderer

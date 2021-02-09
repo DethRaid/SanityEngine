@@ -123,6 +123,11 @@ namespace sanity::engine::renderer {
          */
         void set_scene_output_texture(TextureHandle output_texture_handle);
 
+    	/*!
+    	 * \brief Gets the handle to the texture that the main scene view is rendered to
+    	 */
+    	[[nodiscard]] TextureHandle get_scene_output_texture() const;
+
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
         [[nodiscard]] Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
@@ -132,22 +137,6 @@ namespace sanity::engine::renderer {
         [[nodiscard]] LightHandle next_next_free_light_handle();
 
         void return_light_handle(LightHandle handle);
-
-        [[nodiscard]] RenderBackend& get_render_backend() const;
-
-        [[nodiscard]] MeshDataStore& get_static_mesh_store() const;
-
-        void begin_device_capture() const;
-
-        void end_device_capture() const;
-
-        [[nodiscard]] TextureHandle get_noise_texture() const;
-
-        [[nodiscard]] TextureHandle get_pink_texture() const;
-
-        [[nodiscard]] TextureHandle get_default_normal_texture() const;
-
-        [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
         [[nodiscard]] RaytracingASHandle create_raytracing_geometry(const Buffer& vertex_buffer,
                                                                     const Buffer& index_buffer,
@@ -160,7 +149,23 @@ namespace sanity::engine::renderer {
 
         Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
 
+        void begin_device_capture() const;
+
+        void end_device_capture() const;
+
+        [[nodiscard]] RenderBackend& get_render_backend() const;
+
+        [[nodiscard]] MeshDataStore& get_static_mesh_store() const;
+
         [[nodiscard]] SinglePassDownsampler& get_spd() const;
+
+        [[nodiscard]] TextureHandle get_noise_texture() const;
+
+        [[nodiscard]] TextureHandle get_pink_texture() const;
+
+        [[nodiscard]] TextureHandle get_default_normal_texture() const;
+
+        [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -201,7 +206,7 @@ namespace sanity::engine::renderer {
 
         RenderpassHandle forward_pass_handle;
         RenderpassHandle denoiser_pass_handle;
-        RenderpassHandle scene_output_pass_handle;
+        RenderpassHandle postprocessing_pass_handle;
         RenderpassHandle imgui_pass_handle;
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;

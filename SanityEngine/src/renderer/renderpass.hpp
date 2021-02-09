@@ -49,6 +49,13 @@ namespace sanity::engine {
              */
             void add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states);
 
+        	/**
+        	 * @brief Removes the usage information for this resources
+        	 * 
+        	 * @param handle A handle to the texture to remove the usage information for
+        	*/
+        	void remove_resource_usage(TextureHandle handle);
+
         private:
             Rx::Map<TextureHandle, Rx::Pair<D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES>> texture_states;
         };

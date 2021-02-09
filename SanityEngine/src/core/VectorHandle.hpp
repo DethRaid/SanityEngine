@@ -10,21 +10,28 @@ public:
 
     ValueType* operator->();
 
+    const ValueType* operator->() const;
+
     [[nodiscard]] Size get_index() const;
 
 private:
-    Rx::Vector<ValueType>* container{nullptr};
+    Rx::Vector<ValueType>* vector{nullptr};
 
     Size index{};
 };
 
 template <typename ValueType>
 VectorHandle<ValueType>::VectorHandle(Rx::Vector<ValueType>* container_in, const Size index_in)
-    : container{container_in}, index{index_in} {}
+    : vector{container_in}, index{index_in} {}
 
 template <typename ValueType>
 ValueType* VectorHandle<ValueType>::operator->() {
-    return &(*container)[index];
+    return &(*vector)[index];
+}
+
+template <typename ValueType>
+const ValueType* VectorHandle<ValueType>::operator->() const {
+    return &(*vector)[index];
 }
 
 template <typename ValueType>
