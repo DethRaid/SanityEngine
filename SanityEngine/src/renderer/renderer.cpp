@@ -260,13 +260,13 @@ namespace sanity::engine::renderer {
         raytracing_scene_dirty = true;
     }
 
-    TextureHandle Renderer::create_image(const TextureCreateInfo& create_info) {
-        const auto idx = static_cast<Uint32>(all_images.size());
+    TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info) {
+        const auto idx = static_cast<Uint32>(all_textures.size());
 
-        auto image = device->create_image(create_info);
+        auto image = device->create_texture(create_info);
         if(image) {
-            all_images.push_back(Rx::Utility::move(image));
-            image_name_to_index.insert(create_info.name, idx);
+            all_textures.push_back(Rx::Utility::move(image));
+            texture_name_to_index.insert(create_info.name, idx);
 
             // logger->verbose("Created texture %s with index %u", create_info.name, idx);
 
@@ -277,7 +277,7 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle Renderer::create_image(const TextureCreateInfo& create_info,
+    TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info,
                                          const void* image_data,
                                          ID3D12GraphicsCommandList4* commands,
                                          bool generate_mipmaps) {
@@ -287,8 +287,8 @@ namespace sanity::engine::renderer {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, scope_name.data());
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, scope_name.data());
 
-        const auto handle = create_image(create_info);
-        auto& image = *all_images[handle.index];
+        const auto handle = create_texture(create_info);
+        auto& image = *all_textures[handle.index];
 
         if(create_info.usage == TextureUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
@@ -340,7 +340,7 @@ namespace sanity::engine::renderer {
     }
 
     Rx::Optional<TextureHandle> Renderer::get_texture_handle(const Rx::String& name) {
-        if(const auto* idx = image_name_to_index.find(name)) { // NOLINT(bugprone-branch-clone)
+        if(const auto* idx = texture_name_to_index.find(name)) { // NOLINT(bugprone-branch-clone)
             return TextureHandle{*idx};
 
         } else {
@@ -349,11 +349,11 @@ namespace sanity::engine::renderer {
     }
 
     Texture Renderer::get_texture(const Rx::String& name) const {
-        if(const auto* idx = image_name_to_index.find(name)) {
-            return *all_images[*idx];
+        if(const auto* idx = texture_name_to_index.find(name)) {
+            return *all_textures[*idx];
 
         } else {
-            Rx::abort("Image '%s' does not exist", name);
+            Rx::abort("Texture '%s' does not exist", name);
         }
     }
 
@@ -366,13 +366,13 @@ namespace sanity::engine::renderer {
             // get_render_backend()->get_back
 
         } else {
-            return *all_images[handle.index];
+            return *all_textures[handle.index];
         }
     }
 
     void Renderer::schedule_texture_destruction(const TextureHandle& texture_handle) {
-        auto image = Rx::Utility::move(all_images[texture_handle.index]);
-        device->schedule_image_destruction(Rx::Utility::move(image));
+        auto texture = Rx::Utility::move(all_textures[texture_handle.index]);
+        device->schedule_texture_destruction(Rx::Utility::move(texture));
     }
 
     void Renderer::set_scene_output_texture(TextureHandle output_texture_handle) {}
@@ -537,7 +537,7 @@ namespace sanity::engine::renderer {
 
             {
                 const auto pink_texture_create_info = TextureCreateInfo{.name = "Pink",
-                                                                      .usage = TextureUsage::SampledImage,
+                                                                      .usage = TextureUsage::SampledTexture,
                                                                       .format = TextureFormat::Rgba8,
                                                                       .width = 8,
                                                                       .height = 8};
@@ -548,12 +548,12 @@ namespace sanity::engine::renderer {
                     pink_texture_pixel.push_back(0xFFFF00FF);
                 }
 
-                pink_texture_handle = create_image(pink_texture_create_info, pink_texture_pixel.data(), commands.Get());
+                pink_texture_handle = create_texture(pink_texture_create_info, pink_texture_pixel.data(), commands.Get());
             }
 
             {
                 const auto normal_roughness_texture_create_info = TextureCreateInfo{.name = "Default Normal",
-                                                                                  .usage = TextureUsage::SampledImage,
+                                                                                  .usage = TextureUsage::SampledTexture,
                                                                                   .format = TextureFormat::Rgba8,
                                                                                   .width = 8,
                                                                                   .height = 8};
@@ -564,14 +564,14 @@ namespace sanity::engine::renderer {
                     normal_roughness_texture_pixel.push_back(0x80FF8080);
                 }
 
-                normal_roughness_texture_handle = create_image(normal_roughness_texture_create_info,
+                normal_roughness_texture_handle = create_texture(normal_roughness_texture_create_info,
                                                                normal_roughness_texture_pixel.data(),
                                                                commands.Get());
             }
 
             {
                 const auto specular_emission_texture_create_info = TextureCreateInfo{.name = "Default Metallic/Roughness",
-                                                                                   .usage = TextureUsage::SampledImage,
+                                                                                   .usage = TextureUsage::SampledTexture,
                                                                                    .format = TextureFormat::Rgba8,
                                                                                    .width = 8,
                                                                                    .height = 8};
@@ -582,7 +582,7 @@ namespace sanity::engine::renderer {
                     specular_emission_texture_pixel.push_back(0x00A00000);
                 }
 
-                specular_emission_texture_handle = create_image(specular_emission_texture_create_info,
+                specular_emission_texture_handle = create_texture(specular_emission_texture_create_info,
                                                                 specular_emission_texture_pixel.data(),
                                                                 commands.Get());
             }
@@ -631,9 +631,9 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         Rx::Vector<const Texture*> images;
-        images.reserve(all_images.size());
+        images.reserve(all_textures.size());
 
-        all_images.each_fwd([&](const Rx::Ptr<Texture>& image) { images.push_back(image.get()); });
+        all_textures.each_fwd([&](const Rx::Ptr<Texture>& image) { images.push_back(image.get()); });
 
         return images;
     }

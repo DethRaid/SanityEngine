@@ -72,7 +72,7 @@ namespace sanity::engine {
 
         const auto texture_name_string = texture_name.string();
         const auto create_info = renderer::TextureCreateInfo{.name = texture_name_string.c_str(),
-                                                           .usage = renderer::TextureUsage::SampledImage,
+                                                           .usage = renderer::TextureUsage::SampledTexture,
                                                            .format = format,
                                                            .width = width,
                                                            .height = height};
@@ -89,7 +89,7 @@ namespace sanity::engine {
             TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
 
-            handle_out = renderer.create_image(create_info, pixels, commands.Get());
+            handle_out = renderer.create_texture(create_info, pixels, commands.Get());
         }
 
         device.submit_command_list(Rx::Utility::move(commands));

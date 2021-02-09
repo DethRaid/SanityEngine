@@ -49,7 +49,7 @@ namespace sanity::engine::renderer {
         Uint32 size{0};
     };
 
-    enum class TextureUsage { RenderTarget, DepthStencil, SampledImage, UnorderedAccess };
+    enum class TextureUsage { RenderTarget, DepthStencil, SampledTexture, UnorderedAccess };
 
     enum class TextureFormat {
         Rgba8,

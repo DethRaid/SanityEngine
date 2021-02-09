@@ -59,7 +59,7 @@ namespace sanity::engine::renderer {
         : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           command_allocators_to_reset_on_begin_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
-          image_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          texture_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           scratch_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())} {
 #ifndef NDEBUG
@@ -181,7 +181,7 @@ namespace sanity::engine::renderer {
         return Rx::Utility::move(buffer);
     }
 
-    Rx::Ptr<Texture> RenderBackend::create_image(const TextureCreateInfo& create_info) const {
+    Rx::Ptr<Texture> RenderBackend::create_texture(const TextureCreateInfo& create_info) const {
         auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
@@ -196,8 +196,8 @@ namespace sanity::engine::renderer {
             alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
         }
 
-        auto image = Rx::make_ptr<Texture>(RX_SYSTEM_ALLOCATOR);
-        image->format = create_info.format;
+        auto texture = Rx::make_ptr<Texture>(RX_SYSTEM_ALLOCATOR);
+        texture->format = create_info.format;
 
         D3D12_RESOURCE_STATES initial_state{D3D12_RESOURCE_STATE_COMMON};
         switch(create_info.usage) {
@@ -206,7 +206,7 @@ namespace sanity::engine::renderer {
                 alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Render targets are always committed resources
                 break;
 
-            case TextureUsage::SampledImage:
+            case TextureUsage::SampledTexture:
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
 
@@ -225,46 +225,46 @@ namespace sanity::engine::renderer {
                                                              &desc,
                                                              initial_state,
                                                              nullptr,
-                                                             &image->allocation,
-                                                             IID_PPV_ARGS(&image->resource));
+                                                             &texture->allocation,
+                                                             IID_PPV_ARGS(&texture->resource));
         if(FAILED(result)) {
-            logger->error("Could not create image %s", create_info.name);
+            logger->error("Could not create texture %s", create_info.name);
             return {};
         }
 
-        // logger->verbose("Created image %s (%dx%d) with initial state %s",
+        // logger->verbose("Created texture %s (%dx%d) with initial state %s",
         //                 create_info.name,
         //                 create_info.width,
         //                 create_info.height,
         //                 resource_state_to_string(initial_state));
 
-        image->name = create_info.name;
-        image->width = static_cast<Uint32>(desc.Width);
-        image->height = desc.Height;
+        texture->name = create_info.name;
+        texture->width = static_cast<Uint32>(desc.Width);
+        texture->height = desc.Height;
 
-        set_object_name(image->resource.Get(), create_info.name);
+        set_object_name(texture->resource.Get(), create_info.name);
 
-        return image;
+        return texture;
     }
 
-    DescriptorRange RenderBackend::create_rtv_handle(const Texture& image) const {
+    DescriptorRange RenderBackend::create_rtv_handle(const Texture& texture) const {
         const auto handle = rtv_allocator->allocate_descriptors(1);
 
-        device->CreateRenderTargetView(image.resource.Get(), nullptr, handle.cpu_handle);
+        device->CreateRenderTargetView(texture.resource.Get(), nullptr, handle.cpu_handle);
 
         return handle;
     }
 
-    DescriptorRange RenderBackend::create_dsv_handle(const Texture& image) const {
+    DescriptorRange RenderBackend::create_dsv_handle(const Texture& texture) const {
         const auto desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
-            .Format = to_dxgi_format(image.format),
+            .Format = to_dxgi_format(texture.format),
             .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
             .Texture2D = {.MipSlice = 0},
         };
 
         const auto handle = dsv_allocator->allocate_descriptors(1);
 
-        device->CreateDepthStencilView(image.resource.Get(), &desc, handle.cpu_handle);
+        device->CreateDepthStencilView(texture.resource.Get(), &desc, handle.cpu_handle);
 
         return handle;
     }
@@ -304,8 +304,8 @@ namespace sanity::engine::renderer {
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
     }
 
-    void RenderBackend::schedule_image_destruction(Rx::Ptr<Texture> image) {
-        image_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Texture*>(image.release()));
+    void RenderBackend::schedule_texture_destruction(Rx::Ptr<Texture> texture) {
+        texture_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Texture*>(texture.release()));
     }
 
     Rx::Ptr<BindGroupBuilder> RenderBackend::create_bind_group_builder(
@@ -455,7 +455,7 @@ namespace sanity::engine::renderer {
     }
 
     BindGroupBuilder& RenderBackend::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
-        RX_ASSERT(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain image");
+        RX_ASSERT(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain texture");
 
         return *material_bind_group_builder[frame_idx];
     }
@@ -477,7 +477,7 @@ namespace sanity::engine::renderer {
             destroy_resources_for_frame(cur_gpu_frame_idx);
         }
 
-        transition_swapchain_image_to_render_target();
+        transition_swapchain_texture_to_render_target();
 
         in_init_phase = false;
     }
@@ -488,7 +488,7 @@ namespace sanity::engine::renderer {
         // Flush our logs before the debug layer issues any breakpoints
         Rx::Log::flush();
 
-        transition_swapchain_image_to_presentable();
+        transition_swapchain_texture_to_presentable();
 
         flush_batched_command_lists();
 
@@ -898,19 +898,19 @@ namespace sanity::engine::renderer {
     void RenderBackend::initialize_swapchain_descriptors() {
         DXGI_SWAP_CHAIN_DESC1 desc;
         swapchain->GetDesc1(&desc);
-        swapchain_images.resize(desc.BufferCount);
+        swapchain_textures.resize(desc.BufferCount);
         swapchain_rtv_handles.reserve(desc.BufferCount);
 
         for(Uint32 i = 0; i < desc.BufferCount; i++) {
-            swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_images[i]));
+            swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchain_textures[i]));
 
             const auto rtv_handle = rtv_allocator->allocate_descriptors(1);
 
-            device->CreateRenderTargetView(swapchain_images[i].Get(), nullptr, rtv_handle.cpu_handle);
+            device->CreateRenderTargetView(swapchain_textures[i].Get(), nullptr, rtv_handle.cpu_handle);
 
             swapchain_rtv_handles.push_back(rtv_handle);
 
-            set_object_name(swapchain_images[i].Get(), Rx::String::format("Swapchain image %d", i));
+            set_object_name(swapchain_textures[i].Get(), Rx::String::format("Swapchain texture %d", i));
         }
     }
 
@@ -1394,21 +1394,21 @@ namespace sanity::engine::renderer {
         auto& buffers = buffer_deletion_list[frame_idx];
         buffers.clear();
 
-        auto& images = image_deletion_list[cur_gpu_frame_idx];
-        images.clear();
+        auto& textures = texture_deletion_list[cur_gpu_frame_idx];
+        textures.clear();
     }
 
-    void RenderBackend::transition_swapchain_image_to_render_target() {
+    void RenderBackend::transition_swapchain_texture_to_render_target() {
         ZoneScoped;
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
-        swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_render_target");
+        swapchain_cmds->SetName(L"RenderBackend::transition_swapchain_texture_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_render_target");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_render_target");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_render_target");
+            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_render_target");
 
-            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
-            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx].Get();
+            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_texture,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
@@ -1417,18 +1417,18 @@ namespace sanity::engine::renderer {
         submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
 
-    void RenderBackend::transition_swapchain_image_to_presentable() {
+    void RenderBackend::transition_swapchain_texture_to_presentable() {
         ZoneScoped;
 
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
-        swapchain_cmds->SetName(L"RenderDevice::transition_swapchain_image_to_presentable");
+        swapchain_cmds->SetName(L"RenderBackend::transition_swapchain_texture_to_presentable");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderDevice::transition_swapchain_image_to_presentable");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderDevice::transition_swapchain_image_to_presentable");
+            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_presentable");
+            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
 
-            auto* cur_swapchain_image = swapchain_images[cur_swapchain_idx].Get();
-            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_image,
+            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx].Get();
+            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_texture,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT);
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);

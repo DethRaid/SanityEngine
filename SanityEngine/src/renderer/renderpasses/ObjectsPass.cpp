@@ -139,7 +139,7 @@ namespace sanity::engine::renderer {
             .enable_resource_sharing = true,
         };
 
-        color_target_handle = renderer->create_image(color_target_create_info);
+        color_target_handle = renderer->create_texture(color_target_create_info);
 
         const auto object_id_create_info = TextureCreateInfo{
             .name = OBJECT_ID_TARGET,
@@ -150,7 +150,7 @@ namespace sanity::engine::renderer {
             .enable_resource_sharing = true,
         };
 
-        object_id_target_handle = renderer->create_image(object_id_create_info);
+        object_id_target_handle = renderer->create_texture(object_id_create_info);
 
         const auto depth_target_create_info = TextureCreateInfo{
             .name = SCENE_DEPTH_TARGET,
@@ -160,7 +160,7 @@ namespace sanity::engine::renderer {
             .height = render_resolution.y,
         };
 
-        depth_target_handle = renderer->create_image(depth_target_create_info);
+        depth_target_handle = renderer->create_texture(depth_target_create_info);
 
         const auto& color_target = renderer->get_texture(color_target_handle);
         const auto& object_id_target = renderer->get_texture(object_id_target_handle);

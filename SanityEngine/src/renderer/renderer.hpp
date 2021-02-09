@@ -103,9 +103,9 @@ namespace sanity::engine::renderer {
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
-        TextureHandle create_image(const TextureCreateInfo& create_info);
+        TextureHandle create_texture(const TextureCreateInfo& create_info);
 
-        [[nodiscard]] TextureHandle create_image(const TextureCreateInfo& create_info,
+        [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
                                                  const void* image_data,
                                                  ID3D12GraphicsCommandList4* commands,
                                                  bool generate_mipmaps = true);
@@ -180,8 +180,8 @@ namespace sanity::engine::renderer {
         Rx::Vector<StandardMaterialHandle> free_material_handles;
         Rx::Vector<Rx::Ptr<Buffer>> material_device_buffers;
 
-        Rx::Map<Rx::String, Uint32> image_name_to_index;
-        Rx::Vector<Rx::Ptr<Texture>> all_images;
+        Rx::Map<Rx::String, Uint32> texture_name_to_index;
+        Rx::Vector<Rx::Ptr<Texture>> all_textures;
         Rx::Ptr<SinglePassDownsampler> spd;
 
         Uint32 next_free_light_index{1}; // Index 0 is the sun, its hardcoded and timing-dependent and all the things we hate

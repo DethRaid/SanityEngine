@@ -114,7 +114,7 @@ namespace sanity::engine::renderer {
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
             };
-            denoised_color_target_handle = renderer->create_image(color_target_create_info);
+            denoised_color_target_handle = renderer->create_texture(color_target_create_info);
 
             const auto& denoised_color_target = renderer->get_texture(denoised_color_target_handle);
             denoised_rtv_handle = device.create_rtv_handle(denoised_color_target);
@@ -123,13 +123,13 @@ namespace sanity::engine::renderer {
         {
             const auto accumulation_target_create_info = TextureCreateInfo{
                 .name = ACCUMULATION_RENDER_TARGET,
-                .usage = TextureUsage::SampledImage,
+                .usage = TextureUsage::SampledTexture,
                 .format = TextureFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
             };
-            accumulation_target_handle = renderer->create_image(accumulation_target_create_info);
+            accumulation_target_handle = renderer->create_texture(accumulation_target_create_info);
         }
     }
 

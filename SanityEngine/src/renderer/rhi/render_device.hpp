@@ -92,11 +92,11 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info,
                                                     D3D12_RESOURCE_FLAGS additional_flags = D3D12_RESOURCE_FLAG_NONE) const;
 
-        [[nodiscard]] Rx::Ptr<Texture> create_image(const TextureCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Texture> create_texture(const TextureCreateInfo& create_info) const;
 
-        [[nodiscard]] DescriptorRange create_rtv_handle(const Texture& image) const;
+        [[nodiscard]] DescriptorRange create_rtv_handle(const Texture& texture) const;
 
-        [[nodiscard]] DescriptorRange create_dsv_handle(const Texture& image) const;
+        [[nodiscard]] DescriptorRange create_dsv_handle(const Texture& texture) const;
 
         [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_backbuffer_rtv_handle();
 
@@ -106,7 +106,7 @@ namespace sanity::engine::renderer {
 
         void schedule_buffer_destruction(Rx::Ptr<Buffer> buffer);
 
-        void schedule_image_destruction(Rx::Ptr<Texture> image);
+        void schedule_texture_destruction(Rx::Ptr<Texture> texture);
 
         /*!
          * \brief Creates a bind group builder with the provided descriptors
@@ -220,7 +220,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> command_allocators_to_reset_on_begin_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
-        Rx::Vector<ComPtr<ID3D12Resource>> swapchain_images;
+        Rx::Vector<ComPtr<ID3D12Resource>> swapchain_textures;
         Rx::Vector<DescriptorRange> swapchain_rtv_handles;
 
         HANDLE frame_event;
@@ -228,7 +228,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<uint64_t> frame_fence_values;
 
         Rx::Vector<Rx::Vector<Rx::Ptr<Buffer>>> buffer_deletion_list;
-        Rx::Vector<Rx::Vector<Rx::Ptr<Texture>>> image_deletion_list;
+        Rx::Vector<Rx::Vector<Rx::Ptr<Texture>>> texture_deletion_list;
 
         Rx::Ptr<DescriptorAllocator> cbv_srv_uav_allocator;
         Rx::Ptr<DescriptorAllocator> rtv_allocator;
@@ -364,9 +364,9 @@ namespace sanity::engine::renderer {
 
         void destroy_resources_for_frame(Uint32 frame_idx);
 
-        void transition_swapchain_image_to_render_target();
+        void transition_swapchain_texture_to_render_target();
 
-        void transition_swapchain_image_to_presentable();
+        void transition_swapchain_texture_to_presentable();
 
         void wait_for_frame(uint64_t frame_index);
 

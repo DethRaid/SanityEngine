@@ -291,12 +291,12 @@ namespace sanity::engine {
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
             const auto create_info = renderer::TextureCreateInfo{.name = "Dear ImGUI Font Atlas",
-                                                               .usage = renderer::TextureUsage::SampledImage,
+                                                               .usage = renderer::TextureUsage::SampledTexture,
                                                                .format = renderer::TextureFormat::Rgba8,
                                                                .width = static_cast<Uint32>(width),
                                                                .height = static_cast<Uint32>(height)};
 
-            font_atlas = renderer.create_image(create_info, pixels, commands.Get());
+            font_atlas = renderer.create_texture(create_info, pixels, commands.Get());
         }
 
         device.submit_command_list(Rx::Utility::move(commands));
