@@ -33,7 +33,7 @@ namespace sanity::engine::renderer {
          */
         glm::vec4 clear_color{};
 
-        ImageFormat format{};
+        TextureFormat format{};
     };
 
     enum class RenderTargetEndingAccessType {
@@ -60,7 +60,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Image to resolve to
          */
-        Image* resolve_target;
+        Texture* resolve_target;
 
         /*!
          * \brief Whether to preserve the image you're resolving

@@ -18,7 +18,7 @@ namespace sanity::engine::renderer {
     constexpr uint64_t GPU_FENCE_SIGNALED = 64;
     constexpr Uint32 FRAME_COMPLETE = 128;
 
-    DXGI_FORMAT to_dxgi_format(ImageFormat format);
+    DXGI_FORMAT to_dxgi_format(TextureFormat format);
 
     D3D12_BLEND to_d3d12_blend(BlendFactor factor);
 

@@ -145,12 +145,12 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Formats of any render target this render pipeline outputs to
          */
-        Rx::Vector<ImageFormat> render_target_formats;
+        Rx::Vector<TextureFormat> render_target_formats;
 
         /*!
          * \brief Format of the depth/stencil target that this render pipeline outputs to
          */
-        Rx::Optional<ImageFormat> depth_stencil_format;
+        Rx::Optional<TextureFormat> depth_stencil_format;
     };
 
     struct RenderPipelineState {

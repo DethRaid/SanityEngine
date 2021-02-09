@@ -48,7 +48,7 @@ namespace sanity::engine::renderer {
                     .enable_depth_write = false,
                 },
 
-            .render_target_formats = Rx::Array{ImageFormat::Rgba8},
+            .render_target_formats = Rx::Array{TextureFormat::Rgba8},
         });
     }
 

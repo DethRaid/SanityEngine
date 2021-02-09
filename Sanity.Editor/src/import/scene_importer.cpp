@@ -328,9 +328,9 @@ namespace sanity::editor::import {
 
         const auto image_name = texture_name.is_empty() ? "Imported GLTF texture" : texture_name;
 
-        const auto create_info = engine::renderer::ImageCreateInfo{.name = image_name,
-                                                                   .usage = engine::renderer::ImageUsage::SampledImage,
-                                                                   .format = engine::renderer::ImageFormat::Rgba8,
+        const auto create_info = engine::renderer::TextureCreateInfo{.name = image_name,
+                                                                   .usage = engine::renderer::TextureUsage::SampledImage,
+                                                                   .format = engine::renderer::TextureFormat::Rgba8,
                                                                    .width = static_cast<Uint32>(source_image.width),
                                                                    .height = static_cast<Uint32>(source_image.height)};
 

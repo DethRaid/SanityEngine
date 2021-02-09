@@ -12,27 +12,27 @@
 #include "render_device.hpp"
 
 namespace sanity::engine::renderer {
-    DXGI_FORMAT to_dxgi_format(const ImageFormat format) {
+    DXGI_FORMAT to_dxgi_format(const TextureFormat format) {
         switch(format) {
-            case ImageFormat::Rgba32F:
+            case TextureFormat::Rgba32F:
                 return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-            case ImageFormat::Depth32:
+            case TextureFormat::Depth32:
                 return DXGI_FORMAT_D32_FLOAT;
 
-            case ImageFormat::Depth24Stencil8:
+            case TextureFormat::Depth24Stencil8:
                 return DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-            case ImageFormat::R32F:
+            case TextureFormat::R32F:
                 return DXGI_FORMAT_R32_FLOAT;
 
-            case ImageFormat::R32UInt:
+            case TextureFormat::R32UInt:
                 return DXGI_FORMAT_R32_UINT;
 
-            case ImageFormat::Rg16F:
+            case TextureFormat::Rg16F:
                 return DXGI_FORMAT_R16G16_FLOAT;
 
-            case ImageFormat::Rgba8:
+            case TextureFormat::Rgba8:
                 [[fallthrough]];
             default:
                 return DXGI_FORMAT_R8G8B8A8_UNORM;

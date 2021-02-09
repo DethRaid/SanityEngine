@@ -290,9 +290,9 @@ namespace sanity::engine {
             TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "DearImguiAdapter::create_font_texture");
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
-            const auto create_info = renderer::ImageCreateInfo{.name = "Dear ImGUI Font Atlas",
-                                                               .usage = renderer::ImageUsage::SampledImage,
-                                                               .format = renderer::ImageFormat::Rgba8,
+            const auto create_info = renderer::TextureCreateInfo{.name = "Dear ImGUI Font Atlas",
+                                                               .usage = renderer::TextureUsage::SampledImage,
+                                                               .format = renderer::TextureFormat::Rgba8,
                                                                .width = static_cast<Uint32>(width),
                                                                .height = static_cast<Uint32>(height)};
 

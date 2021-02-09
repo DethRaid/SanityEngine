@@ -92,11 +92,11 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info,
                                                     D3D12_RESOURCE_FLAGS additional_flags = D3D12_RESOURCE_FLAG_NONE) const;
 
-        [[nodiscard]] Rx::Ptr<Image> create_image(const ImageCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Ptr<Texture> create_image(const TextureCreateInfo& create_info) const;
 
-        [[nodiscard]] DescriptorRange create_rtv_handle(const Image& image) const;
+        [[nodiscard]] DescriptorRange create_rtv_handle(const Texture& image) const;
 
-        [[nodiscard]] DescriptorRange create_dsv_handle(const Image& image) const;
+        [[nodiscard]] DescriptorRange create_dsv_handle(const Texture& image) const;
 
         [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE get_backbuffer_rtv_handle();
 
@@ -106,7 +106,7 @@ namespace sanity::engine::renderer {
 
         void schedule_buffer_destruction(Rx::Ptr<Buffer> buffer);
 
-        void schedule_image_destruction(Rx::Ptr<Image> image);
+        void schedule_image_destruction(Rx::Ptr<Texture> image);
 
         /*!
          * \brief Creates a bind group builder with the provided descriptors
@@ -228,7 +228,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<uint64_t> frame_fence_values;
 
         Rx::Vector<Rx::Vector<Rx::Ptr<Buffer>>> buffer_deletion_list;
-        Rx::Vector<Rx::Vector<Rx::Ptr<Image>>> image_deletion_list;
+        Rx::Vector<Rx::Vector<Rx::Ptr<Texture>>> image_deletion_list;
 
         Rx::Ptr<DescriptorAllocator> cbv_srv_uav_allocator;
         Rx::Ptr<DescriptorAllocator> rtv_allocator;

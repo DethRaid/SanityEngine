@@ -15,6 +15,7 @@
 #include "rx/core/time/stop_watch.h"
 #include "settings.hpp"
 #include "stats/framerate_tracker.hpp"
+#include "system/system.hpp"
 #include "ui/dear_imgui_adapter.hpp"
 #include "world/world.hpp"
 
@@ -37,6 +38,8 @@ namespace sanity::engine {
         ~SanityEngine();
 
         void register_tick_function(Rx::Function<void(Float32)>&& tick_function);
+
+    	void register_system(const std::string& name, std::unique_ptr<System>&& system);
 
         /*!
          * \brief Executes a single frame, updating game logic and rendering the scene
@@ -116,6 +119,8 @@ namespace sanity::engine {
 #pragma endregion
 
 #pragma region Update loop
+        std::unordered_map<std::string, std::unique_ptr<System>> systems;
+    	
         void render();
 #pragma endregion
 

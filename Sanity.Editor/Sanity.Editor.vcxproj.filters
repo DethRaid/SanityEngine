@@ -94,6 +94,9 @@
     <ClCompile Include="src\ui\component_editors.cpp">
       <Filter>src\ui</Filter>
     </ClCompile>
+    <ClCompile Include="scene_viewport.cpp">
+      <Filter>src\ui\windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SanityEditor.hpp">
@@ -152,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="src\ui\component_editors.hpp">
       <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="scene_viewport.hpp">
+      <Filter>src\ui\windows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

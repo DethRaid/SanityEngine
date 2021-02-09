@@ -32,7 +32,7 @@ namespace sanity::engine::renderer {
              .vertex_shader = load_shader("fullscreen.vertex"),
              .pixel_shader = load_shader("raytracing_accumulation.pixel"),
              .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
-             .render_target_formats = Rx::Array{ImageFormat::Rgba32F}});
+             .render_target_formats = Rx::Array{TextureFormat::Rgba32F}});
 
         create_images_and_framebuffer(render_resolution);
 
@@ -50,7 +50,7 @@ namespace sanity::engine::renderer {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "DenoiserPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DenoiserPass::render");
 
-        const auto& accumulation_image = renderer->get_image(accumulation_target_handle);
+        const auto& accumulation_image = renderer->get_texture(accumulation_target_handle);
 
         {
             const auto
@@ -73,7 +73,7 @@ namespace sanity::engine::renderer {
 
         commands->EndRenderPass();
 
-        const auto& denoised_image = renderer->get_image(denoised_color_target_handle);
+        const auto& denoised_image = renderer->get_texture(denoised_color_target_handle);
 
         {        	
             const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
@@ -106,25 +106,25 @@ namespace sanity::engine::renderer {
         auto& device = renderer->get_render_backend();
 
         {
-            const auto color_target_create_info = ImageCreateInfo{
+            const auto color_target_create_info = TextureCreateInfo{
                 .name = DENOISED_SCENE_RENDER_TARGET,
-                .usage = ImageUsage::RenderTarget,
-                .format = ImageFormat::Rgba32F,
+                .usage = TextureUsage::RenderTarget,
+                .format = TextureFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
             };
             denoised_color_target_handle = renderer->create_image(color_target_create_info);
 
-            const auto& denoised_color_target = renderer->get_image(denoised_color_target_handle);
+            const auto& denoised_color_target = renderer->get_texture(denoised_color_target_handle);
             denoised_rtv_handle = device.create_rtv_handle(denoised_color_target);
         }
 
         {
-            const auto accumulation_target_create_info = ImageCreateInfo{
+            const auto accumulation_target_create_info = TextureCreateInfo{
                 .name = ACCUMULATION_RENDER_TARGET,
-                .usage = ImageUsage::SampledImage,
-                .format = ImageFormat::Rgba32F,
+                .usage = TextureUsage::SampledImage,
+                .format = TextureFormat::Rgba32F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,

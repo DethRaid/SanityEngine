@@ -13,7 +13,7 @@ namespace sanity::engine::renderer {
 
     BindGroup::BindGroup(ID3D12DescriptorHeap& heap_in,
                          Rx::Vector<RootParameter> root_parameters_in,
-                         Rx::Vector<BoundResource<Image>> used_images_in,
+                         Rx::Vector<BoundResource<Texture>> used_images_in,
                          Rx::Vector<BoundResource<Buffer>> used_buffers_in)
         : heap{&heap_in},
           root_parameters{Rx::Utility::move(root_parameters_in)},
@@ -100,11 +100,11 @@ namespace sanity::engine::renderer {
         return *this;
     }
 
-    BindGroupBuilder& BindGroupBuilder::set_image(const Rx::String& name, const Image& image) {
+    BindGroupBuilder& BindGroupBuilder::set_image(const Rx::String& name, const Texture& image) {
         return set_image_array(name, Rx::Array{&image});
     }
 
-    BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<const Image*>& images) {
+    BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<const Texture*>& images) {
         ZoneScoped;
 
         bound_image_arrays.insert(name, images);
@@ -133,7 +133,7 @@ namespace sanity::engine::renderer {
             root_parameters[idx].table.handle = handle;
         });
 
-        Rx::Vector<BoundResource<Image>> used_images;
+        Rx::Vector<BoundResource<Texture>> used_images;
         Rx::Vector<BoundResource<Buffer>> used_buffers;
 
         // Save root descriptor information
@@ -159,7 +159,7 @@ namespace sanity::engine::renderer {
 
                 used_buffers.emplace_back(*bound_buffer, states);
 
-            } else if(const Rx::Vector<const Image*>* bound_image = bound_image_arrays.find(name)) {
+            } else if(const Rx::Vector<const Texture*>* bound_image = bound_image_arrays.find(name)) {
                 RX_ASSERT(bound_image->size() == 1, "May only bind a single image to a root descriptor");
                 root_parameters[idx].descriptor.address = (*bound_image)[0]->resource->GetGPUVirtualAddress();
 
@@ -247,7 +247,7 @@ namespace sanity::engine::renderer {
 
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
-                        images->each_fwd([&](const Image* image) {
+                        images->each_fwd([&](const Texture* image) {
                             if(image != nullptr) {
                                 D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
                                 srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -271,7 +271,7 @@ namespace sanity::engine::renderer {
                     case DescriptorType::UnorderedAccess: {
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
-                        images->each_fwd([&](const Image* image) {
+                        images->each_fwd([&](const Texture* image) {
                             const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = to_dxgi_format(image->format),
                                                                                    .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                                                    .Texture2D = {

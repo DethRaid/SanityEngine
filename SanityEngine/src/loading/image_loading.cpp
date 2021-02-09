@@ -18,7 +18,7 @@ namespace sanity::engine {
     template <typename ComponentDataType>
     ComponentDataType* copy_and_pad_image_data(ComponentDataType* original_data, Uint32 width, Uint32 height, Uint32 original_num_components);
 
-    void* load_image(const std::filesystem::path& image_name, Uint32& width, Uint32& height, renderer::ImageFormat& format) {
+    void* load_image(const std::filesystem::path& image_name, Uint32& width, Uint32& height, renderer::TextureFormat& format) {
         ZoneScoped;
 
         const auto& exe_directory = SanityEngine::executable_directory;
@@ -33,7 +33,7 @@ namespace sanity::engine {
             logger->verbose("Loading image %s as RGBA32f HDR", image_name);
             auto* data = stbi_loadf(full_image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
             if(data != nullptr) {
-                format = renderer::ImageFormat::Rgba32F;
+                format = renderer::TextureFormat::Rgba32F;
                 texture_data = copy_and_pad_image_data(data, raw_width, raw_height, num_components);
                 stbi_image_free(data);
             }
@@ -42,7 +42,7 @@ namespace sanity::engine {
             logger->verbose("Loading image %s as RGBA8 LDR", image_name);
             auto* data = stbi_load(full_image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
             if(data != nullptr) {
-                format = renderer::ImageFormat::Rgba8;
+                format = renderer::TextureFormat::Rgba8;
                 texture_data = copy_and_pad_image_data(data, raw_width, raw_height, num_components);
                 stbi_image_free(data);
             }
@@ -64,15 +64,15 @@ namespace sanity::engine {
         ZoneScoped;
 
         Uint32 width, height;
-        renderer::ImageFormat format;
+        renderer::TextureFormat format;
         const auto* pixels = load_image(texture_name, width, height, format);
         if(pixels == nullptr) {
             return Rx::nullopt;
         }
 
         const auto texture_name_string = texture_name.string();
-        const auto create_info = renderer::ImageCreateInfo{.name = texture_name_string.c_str(),
-                                                           .usage = renderer::ImageUsage::SampledImage,
+        const auto create_info = renderer::TextureCreateInfo{.name = texture_name_string.c_str(),
+                                                           .usage = renderer::TextureUsage::SampledImage,
                                                            .format = format,
                                                            .width = width,
                                                            .height = height};

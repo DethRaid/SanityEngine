@@ -20,7 +20,7 @@ namespace sanity::engine {
     /*!
      * \brief Loads an image from disk
      */
-    void* load_image(const std::filesystem::path& image_name, Uint32& width, Uint32& height, renderer::ImageFormat& format);
+    void* load_image(const std::filesystem::path& image_name, Uint32& width, Uint32& height, renderer::TextureFormat& format);
 
     Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const std::filesystem::path& texture_name, renderer::Renderer& renderer);
 } // namespace sanity::engine

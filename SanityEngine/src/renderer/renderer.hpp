@@ -103,25 +103,25 @@ namespace sanity::engine::renderer {
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
-        TextureHandle create_image(const ImageCreateInfo& create_info);
+        TextureHandle create_image(const TextureCreateInfo& create_info);
 
-        [[nodiscard]] TextureHandle create_image(const ImageCreateInfo& create_info,
+        [[nodiscard]] TextureHandle create_image(const TextureCreateInfo& create_info,
                                                  const void* image_data,
                                                  ID3D12GraphicsCommandList4* commands,
                                                  bool generate_mipmaps = true);
 
-        [[nodiscard]] Rx::Optional<TextureHandle> get_image_handle(const Rx::String& name);
+        [[nodiscard]] Rx::Optional<TextureHandle> get_texture_handle(const Rx::String& name);
 
-        [[nodiscard]] Image get_image(const Rx::String& image_name) const;
+        [[nodiscard]] Texture get_texture(const Rx::String& name) const;
 
-        [[nodiscard]] Image get_image(TextureHandle handle) const;
+        [[nodiscard]] Texture get_texture(TextureHandle handle) const;
 
-        void schedule_texture_destruction(const TextureHandle& image_handle);
+        void schedule_texture_destruction(const TextureHandle& texture_handle);
 
         /*!
          * \brief Sets the image that the 3D scene will be rendered to
          */
-        void set_scene_output_image(TextureHandle output_image_handle);
+        void set_scene_output_texture(TextureHandle output_texture_handle);
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
@@ -181,7 +181,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<Rx::Ptr<Buffer>> material_device_buffers;
 
         Rx::Map<Rx::String, Uint32> image_name_to_index;
-        Rx::Vector<Rx::Ptr<Image>> all_images;
+        Rx::Vector<Rx::Ptr<Texture>> all_images;
         Rx::Ptr<SinglePassDownsampler> spd;
 
         Uint32 next_free_light_index{1}; // Index 0 is the sun, its hardcoded and timing-dependent and all the things we hate
@@ -226,7 +226,7 @@ namespace sanity::engine::renderer {
         void reload_renderpass_shaders();
 #pragma endregion
 
-        [[nodiscard]] Rx::Vector<const Image*> get_texture_array() const;
+        [[nodiscard]] Rx::Vector<const Texture*> get_texture_array() const;
 
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 

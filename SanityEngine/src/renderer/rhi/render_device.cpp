@@ -181,7 +181,7 @@ namespace sanity::engine::renderer {
         return Rx::Utility::move(buffer);
     }
 
-    Rx::Ptr<Image> RenderBackend::create_image(const ImageCreateInfo& create_info) const {
+    Rx::Ptr<Texture> RenderBackend::create_image(const TextureCreateInfo& create_info) const {
         auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
@@ -196,26 +196,26 @@ namespace sanity::engine::renderer {
             alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
         }
 
-        auto image = Rx::make_ptr<Image>(RX_SYSTEM_ALLOCATOR);
+        auto image = Rx::make_ptr<Texture>(RX_SYSTEM_ALLOCATOR);
         image->format = create_info.format;
 
         D3D12_RESOURCE_STATES initial_state{D3D12_RESOURCE_STATE_COMMON};
         switch(create_info.usage) {
-            case ImageUsage::RenderTarget:
+            case TextureUsage::RenderTarget:
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Render targets are always committed resources
                 break;
 
-            case ImageUsage::SampledImage:
+            case TextureUsage::SampledImage:
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
 
-            case ImageUsage::DepthStencil:
+            case TextureUsage::DepthStencil:
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
                 alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED; // Depth/Stencil targets are always committed resources
                 break;
 
-            case ImageUsage::UnorderedAccess:
+            case TextureUsage::UnorderedAccess:
                 initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
@@ -247,7 +247,7 @@ namespace sanity::engine::renderer {
         return image;
     }
 
-    DescriptorRange RenderBackend::create_rtv_handle(const Image& image) const {
+    DescriptorRange RenderBackend::create_rtv_handle(const Texture& image) const {
         const auto handle = rtv_allocator->allocate_descriptors(1);
 
         device->CreateRenderTargetView(image.resource.Get(), nullptr, handle.cpu_handle);
@@ -255,7 +255,7 @@ namespace sanity::engine::renderer {
         return handle;
     }
 
-    DescriptorRange RenderBackend::create_dsv_handle(const Image& image) const {
+    DescriptorRange RenderBackend::create_dsv_handle(const Texture& image) const {
         const auto desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
             .Format = to_dxgi_format(image.format),
             .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
@@ -304,8 +304,8 @@ namespace sanity::engine::renderer {
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
     }
 
-    void RenderBackend::schedule_image_destruction(Rx::Ptr<Image> image) {
-        image_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Image*>(image.release()));
+    void RenderBackend::schedule_image_destruction(Rx::Ptr<Texture> image) {
+        image_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Texture*>(image.release()));
     }
 
     Rx::Ptr<BindGroupBuilder> RenderBackend::create_bind_group_builder(
@@ -511,8 +511,6 @@ namespace sanity::engine::renderer {
             is_frame_capture_active = false;
         }
         
-        FrameMark;
-
 #ifdef TRACY_ENABLE
         TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
         TracyD3D12Collect(renderer::RenderBackend::tracy_context);

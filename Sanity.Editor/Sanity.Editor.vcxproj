@@ -217,6 +217,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="scene_viewport.cpp" />
     <ClCompile Include="src\asset_registry\asset_metadata_json_conversion.cpp" />
     <ClCompile Include="src\asset_registry\asset_registry.cpp" />
     <ClCompile Include="src\entity\Components.cpp" />
@@ -237,6 +238,7 @@
     <ClCompile Include="src\ui\windows\WorldgenParamsEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scene_viewport.hpp" />
     <ClInclude Include="src\asset_registry\asset_metadata_json_conversion.hpp" />
     <ClInclude Include="src\asset_registry\asset_registry.hpp" />
     <ClInclude Include="src\asset_registry\asset_registry_structs.hpp" />

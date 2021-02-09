@@ -1,18 +1,18 @@
 #include "resources.hpp"
 
 namespace sanity::engine::renderer {
-    Uint32 size_in_bytes(const ImageFormat format) {
+    Uint32 size_in_bytes(const TextureFormat format) {
         switch(format) {
-            case ImageFormat::Rgba32F:
+            case TextureFormat::Rgba32F:
                 return 16;
 
-            case ImageFormat::Rgba8:
+            case TextureFormat::Rgba8:
                 [[fallthrough]];
-            case ImageFormat::R32F:
+            case TextureFormat::R32F:
                 [[fallthrough]];
-            case ImageFormat::Depth32:
+            case TextureFormat::Depth32:
                 [[fallthrough]];
-            case ImageFormat::Depth24Stencil8:
+            case TextureFormat::Depth24Stencil8:
                 [[fallthrough]];
             default:
                 return 4;

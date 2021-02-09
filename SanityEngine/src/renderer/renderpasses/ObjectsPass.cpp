@@ -26,8 +26,8 @@ namespace sanity::engine::renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
-            .render_target_formats = Rx::Array{ImageFormat::Rgba32F, ImageFormat::R32UInt},
-            .depth_stencil_format = ImageFormat::Depth32,
+            .render_target_formats = Rx::Array{TextureFormat::Rgba32F, TextureFormat::R32UInt},
+            .depth_stencil_format = TextureFormat::Depth32,
         });
         logger->verbose("Created standard pipeline");
 
@@ -40,8 +40,8 @@ namespace sanity::engine::renderer {
                     .enable_depth_write = false,
                     .depth_func = CompareOp::Always,
                 },
-            .render_target_formats = Rx::Array{ImageFormat::Rgba32F, ImageFormat::R32UInt},
-            .depth_stencil_format = ImageFormat::Depth32,
+            .render_target_formats = Rx::Array{TextureFormat::Rgba32F, TextureFormat::R32UInt},
+            .depth_stencil_format = TextureFormat::Depth32,
         });
         logger->verbose("Created atmospheric pipeline");
 
@@ -130,10 +130,10 @@ namespace sanity::engine::renderer {
     void ObjectsPass::create_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_backend();
 
-        const auto color_target_create_info = ImageCreateInfo{
+        const auto color_target_create_info = TextureCreateInfo{
             .name = SCENE_COLOR_RENDER_TARGET,
-            .usage = ImageUsage::RenderTarget,
-            .format = ImageFormat::Rgba32F,
+            .usage = TextureUsage::RenderTarget,
+            .format = TextureFormat::Rgba32F,
             .width = render_resolution.x,
             .height = render_resolution.y,
             .enable_resource_sharing = true,
@@ -141,10 +141,10 @@ namespace sanity::engine::renderer {
 
         color_target_handle = renderer->create_image(color_target_create_info);
 
-        const auto object_id_create_info = ImageCreateInfo{
+        const auto object_id_create_info = TextureCreateInfo{
             .name = OBJECT_ID_TARGET,
-            .usage = ImageUsage::RenderTarget,
-            .format = ImageFormat::R32UInt,
+            .usage = TextureUsage::RenderTarget,
+            .format = TextureFormat::R32UInt,
             .width = render_resolution.x,
             .height = render_resolution.y,
             .enable_resource_sharing = true,
@@ -152,19 +152,19 @@ namespace sanity::engine::renderer {
 
         object_id_target_handle = renderer->create_image(object_id_create_info);
 
-        const auto depth_target_create_info = ImageCreateInfo{
+        const auto depth_target_create_info = TextureCreateInfo{
             .name = SCENE_DEPTH_TARGET,
-            .usage = ImageUsage::DepthStencil,
-            .format = ImageFormat::Depth32,
+            .usage = TextureUsage::DepthStencil,
+            .format = TextureFormat::Depth32,
             .width = render_resolution.x,
             .height = render_resolution.y,
         };
 
         depth_target_handle = renderer->create_image(depth_target_create_info);
 
-        const auto& color_target = renderer->get_image(color_target_handle);
-        const auto& object_id_target = renderer->get_image(object_id_target_handle);
-        const auto& depth_target = renderer->get_image(depth_target_handle);
+        const auto& color_target = renderer->get_texture(color_target_handle);
+        const auto& object_id_target = renderer->get_texture(object_id_target_handle);
+        const auto& depth_target = renderer->get_texture(depth_target_handle);
 
         color_target_descriptor = device.create_rtv_handle(color_target);
         color_target_access = {.cpuDescriptor = color_target_descriptor.cpu_handle,

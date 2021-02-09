@@ -11,7 +11,7 @@
 namespace sanity::engine::renderer {
     struct RaytracingScene;
     struct Buffer;
-    struct Image;
+    struct Texture;
 
     enum class RootParameterType { Empty, Descriptor, DescriptorTable };
 
@@ -55,7 +55,7 @@ namespace sanity::engine::renderer {
     struct BindGroup {
         explicit BindGroup(ID3D12DescriptorHeap& heap_in,
                            Rx::Vector<RootParameter> root_parameters_in,
-                           Rx::Vector<BoundResource<Image>> used_images_in,
+                           Rx::Vector<BoundResource<Texture>> used_images_in,
                            Rx::Vector<BoundResource<Buffer>> used_buffers_in);
 
         BindGroup(const BindGroup& other) = default;
@@ -80,7 +80,7 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<RootParameter> root_parameters;
 
-        Rx::Vector<BoundResource<Image>> used_images;
+        Rx::Vector<BoundResource<Texture>> used_images;
         Rx::Vector<BoundResource<Buffer>> used_buffers;
     };
 
@@ -135,9 +135,9 @@ namespace sanity::engine::renderer {
 
         BindGroupBuilder& set_buffer(const Rx::String& name, const Buffer& buffer);
 
-        BindGroupBuilder& set_image(const Rx::String& name, const Image& image);
+        BindGroupBuilder& set_image(const Rx::String& name, const Texture& image);
 
-        BindGroupBuilder& set_image_array(const Rx::String& name, const Rx::Vector<const Image*>& images);
+        BindGroupBuilder& set_image_array(const Rx::String& name, const Rx::Vector<const Texture*>& images);
 
         BindGroupBuilder& set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene);
 
@@ -152,7 +152,7 @@ namespace sanity::engine::renderer {
 
         Rx::Map<Rx::String, const Buffer*> bound_buffers{};
 
-        Rx::Map<Rx::String, Rx::Vector<const Image*>> bound_image_arrays{};
+        Rx::Map<Rx::String, Rx::Vector<const Texture*>> bound_image_arrays{};
 
         Rx::Map<Rx::String, const Buffer*> bound_raytracing_scenes{};
 

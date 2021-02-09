@@ -1,9 +1,11 @@
 ﻿#include "sanity_engine.hpp"
 
 #include <filesystem>
+#include <ranges>
 
 #include "GLFW/glfw3.h"
 #include "TracyD3D12.hpp"
+#include "actor/actor.hpp"
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "glm/ext/quaternion_trigonometric.hpp"
@@ -11,7 +13,6 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "stb_image.h"
-#include "actor/actor.hpp"
 #include "ui/ConsoleWindow.hpp"
 #include "ui/fps_display.hpp"
 #include "ui/ui_components.hpp"
@@ -144,7 +145,13 @@ namespace sanity::engine {
         tick_functions.emplace_back(Rx::Utility::move(tick_function));
     }
 
+    void SanityEngine::register_system(const std::string& name, std::unique_ptr<System>&& system) {
+        systems.emplace(name, std::move(system));
+    }
+
     void SanityEngine::tick() {
+        FrameMark;
+    	
         ZoneScoped;
 
         frame_timer.stop();
@@ -169,6 +176,10 @@ namespace sanity::engine {
 
             tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(delta_time); });
 
+            for(const auto& system : systems | std::views::values) {
+                system->tick(delta_time);
+            }
+
             accumulator -= delta_time;
             time_since_application_start += delta_time;
         }
@@ -186,12 +197,12 @@ namespace sanity::engine {
 
         framerate_tracker.add_frame_time(frame_duration_seconds);
     }
-    
+
     TypeReflection& SanityEngine::get_type_reflector() { return type_reflector; }
 
     entt::entity SanityEngine::get_player() const { return player; }
 
-	World& SanityEngine::get_world() { return world; }
+    World& SanityEngine::get_world() { return world; }
 
     entt::registry& SanityEngine::get_entity_registry() { return global_registry; }
 
@@ -200,7 +211,7 @@ namespace sanity::engine {
     renderer::Renderer& SanityEngine::get_renderer() const { return *renderer; }
 
     InputManager& SanityEngine::get_input_manager() const { return *input_manager; }
-    
+
     void SanityEngine::register_cvar_change_listeners() {
         show_frametime_display->on_change([&](Rx::Console::Variable<bool>& var) {
             if(var) {
@@ -235,7 +246,7 @@ namespace sanity::engine {
         if(!frametime_display_entity) {
             frametime_display_entity = global_registry.create();
             global_registry.emplace<ui::UiComponent>(*frametime_display_entity,
-                                                 Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
+                                                     Rx::make_ptr<ui::FramerateDisplay>(RX_SYSTEM_ALLOCATOR, framerate_tracker));
         }
     }
 
@@ -249,7 +260,7 @@ namespace sanity::engine {
         if(!console_window_entity) {
             console_window_entity = global_registry.create();
             auto& comp = global_registry.emplace<ui::UiComponent>(*console_window_entity,
-                                                              Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
+                                                                  Rx::make_ptr<ui::ConsoleWindow>(RX_SYSTEM_ALLOCATOR, console_context));
             auto* console_window = static_cast<ui::Window*>(comp.panel.get());
             console_window->is_visible = true;
         }
@@ -262,13 +273,13 @@ namespace sanity::engine {
     }
 
     void SanityEngine::create_first_person_player() {
-        auto& player_actor = create_actor(global_registry , "First Person Player");
+        auto& player_actor = create_actor(global_registry, "First Person Player");
         player = player_actor.entity;
-        
+
         auto& transform_component = player_actor.get_component<TransformComponent>();
         transform_component.transform.location.y = 1.63f;
         transform_component.transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
-    	
+
         player_actor.add_component<renderer::CameraComponent>();
 
         logger->info("Created flycam");

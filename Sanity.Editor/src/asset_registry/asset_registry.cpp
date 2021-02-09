@@ -30,7 +30,7 @@ namespace sanity::editor {
 
         Uint32 width;
         Uint32 height;
-        engine::renderer::ImageFormat format;
+        engine::renderer::TextureFormat format;
         const auto* pixels = engine::load_image("data/textures/icons/directory.png", width, height, format);
         if(pixels == nullptr) {
             logger->error("Could not load directory icon at path data/textures/icons/directory.png");
@@ -40,8 +40,8 @@ namespace sanity::editor {
 
         auto cmds = renderer.get_render_backend().create_command_list();
 
-        directory_icon = renderer.create_image(engine::renderer::ImageCreateInfo{.name = "Directory icon",
-                                                                                 .usage = engine::renderer::ImageUsage::SampledImage,
+        directory_icon = renderer.create_image(engine::renderer::TextureCreateInfo{.name = "Directory icon",
+                                                                                 .usage = engine::renderer::TextureUsage::SampledImage,
                                                                                  .format = format,
                                                                                  .width = width,
                                                                                  .height = height},
@@ -58,7 +58,7 @@ namespace sanity::editor {
 
         Uint32 width;
         Uint32 height;
-        engine::renderer::ImageFormat format;
+        engine::renderer::TextureFormat format;
         const auto* pixels = engine::load_image(path, width, height, format);
         if(pixels == nullptr) {
             logger->error("Could not load icon at path '%s'", path);
@@ -66,8 +66,8 @@ namespace sanity::editor {
         }
 
         const auto extension_string = extension.string();
-        const auto create_info = engine::renderer::ImageCreateInfo{.name = Rx::String::format(".%s icon", extension_string.c_str()),
-                                                                   .usage = engine::renderer::ImageUsage::SampledImage,
+        const auto create_info = engine::renderer::TextureCreateInfo{.name = Rx::String::format(".%s icon", extension_string.c_str()),
+                                                                   .usage = engine::renderer::TextureUsage::SampledImage,
                                                                    .format = format,
                                                                    .width = width,
                                                                    .height = height};

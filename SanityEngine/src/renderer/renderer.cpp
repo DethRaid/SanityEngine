@@ -149,7 +149,7 @@ namespace sanity::engine::renderer {
         const auto& previous_resource_usages = get_previous_resource_states(render_pass_index);
 
         used_resources.each_pair([&](const TextureHandle& texture_handle, const BeginEndState& before_after_state) {
-            const auto& image = get_image(texture_handle);
+            const auto& image = get_texture(texture_handle);
             auto* resource = image.resource.Get();
 
             if(const auto* previous_state = previous_resource_usages.find(texture_handle)) {
@@ -197,7 +197,7 @@ namespace sanity::engine::renderer {
         const auto& next_resource_usages = get_next_resource_states(render_pass_index);
 
         used_resources.each_pair([&](const TextureHandle& texture_handle, const BeginEndState& before_after_state) {
-            const auto& image = get_image(texture_handle);
+            const auto& image = get_texture(texture_handle);
             auto* resource = image.resource.Get();
 
             if(const auto* next_state = next_resource_usages.find(texture_handle)) {
@@ -260,7 +260,7 @@ namespace sanity::engine::renderer {
         raytracing_scene_dirty = true;
     }
 
-    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info) {
+    TextureHandle Renderer::create_image(const TextureCreateInfo& create_info) {
         const auto idx = static_cast<Uint32>(all_images.size());
 
         auto image = device->create_image(create_info);
@@ -277,7 +277,7 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle Renderer::create_image(const ImageCreateInfo& create_info,
+    TextureHandle Renderer::create_image(const TextureCreateInfo& create_info,
                                          const void* image_data,
                                          ID3D12GraphicsCommandList4* commands,
                                          bool generate_mipmaps) {
@@ -290,7 +290,7 @@ namespace sanity::engine::renderer {
         const auto handle = create_image(create_info);
         auto& image = *all_images[handle.index];
 
-        if(create_info.usage == ImageUsage::UnorderedAccess) {
+        if(create_info.usage == TextureUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
             const auto barriers = Rx::Array{
                 CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)};
@@ -326,7 +326,7 @@ namespace sanity::engine::renderer {
 
             spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
 
-            if(create_info.usage == ImageUsage::UnorderedAccess) {
+            if(create_info.usage == TextureUsage::UnorderedAccess) {
                 // Transition the image back to UNORDERED_ACCESS
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
@@ -339,7 +339,7 @@ namespace sanity::engine::renderer {
         return handle;
     }
 
-    Rx::Optional<TextureHandle> Renderer::get_image_handle(const Rx::String& name) {
+    Rx::Optional<TextureHandle> Renderer::get_texture_handle(const Rx::String& name) {
         if(const auto* idx = image_name_to_index.find(name)) { // NOLINT(bugprone-branch-clone)
             return TextureHandle{*idx};
 
@@ -348,20 +348,20 @@ namespace sanity::engine::renderer {
         }
     }
 
-    Image Renderer::get_image(const Rx::String& image_name) const {
-        if(const auto* idx = image_name_to_index.find(image_name)) {
+    Texture Renderer::get_texture(const Rx::String& name) const {
+        if(const auto* idx = image_name_to_index.find(name)) {
             return *all_images[*idx];
 
         } else {
-            Rx::abort("Image '%s' does not exist", image_name);
+            Rx::abort("Image '%s' does not exist", name);
         }
     }
 
-    Image Renderer::get_image(const TextureHandle handle) const {
+    Texture Renderer::get_texture(const TextureHandle handle) const {
         ZoneScoped;
 
         if(handle == BACKBUFFER_HANDLE) {
-            return Image{};
+            return Texture{};
             //.name = "Backbuffer", .width = output_framebuffer_size.x, .height = output_framebuffer_size.y,      .resource =
             // get_render_backend()->get_back
 
@@ -370,12 +370,12 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void Renderer::schedule_texture_destruction(const TextureHandle& image_handle) {
-        auto image = Rx::Utility::move(all_images[image_handle.index]);
+    void Renderer::schedule_texture_destruction(const TextureHandle& texture_handle) {
+        auto image = Rx::Utility::move(all_images[texture_handle.index]);
         device->schedule_image_destruction(Rx::Utility::move(image));
     }
 
-    void Renderer::set_scene_output_image(TextureHandle output_image_handle) {}
+    void Renderer::set_scene_output_texture(TextureHandle output_texture_handle) {}
 
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
         if(!free_material_handles.is_empty()) {
@@ -536,9 +536,9 @@ namespace sanity::engine::renderer {
             PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {
-                const auto pink_texture_create_info = ImageCreateInfo{.name = "Pink",
-                                                                      .usage = ImageUsage::SampledImage,
-                                                                      .format = ImageFormat::Rgba8,
+                const auto pink_texture_create_info = TextureCreateInfo{.name = "Pink",
+                                                                      .usage = TextureUsage::SampledImage,
+                                                                      .format = TextureFormat::Rgba8,
                                                                       .width = 8,
                                                                       .height = 8};
 
@@ -552,9 +552,9 @@ namespace sanity::engine::renderer {
             }
 
             {
-                const auto normal_roughness_texture_create_info = ImageCreateInfo{.name = "Default Normal",
-                                                                                  .usage = ImageUsage::SampledImage,
-                                                                                  .format = ImageFormat::Rgba8,
+                const auto normal_roughness_texture_create_info = TextureCreateInfo{.name = "Default Normal",
+                                                                                  .usage = TextureUsage::SampledImage,
+                                                                                  .format = TextureFormat::Rgba8,
                                                                                   .width = 8,
                                                                                   .height = 8};
 
@@ -570,9 +570,9 @@ namespace sanity::engine::renderer {
             }
 
             {
-                const auto specular_emission_texture_create_info = ImageCreateInfo{.name = "Default Metallic/Roughness",
-                                                                                   .usage = ImageUsage::SampledImage,
-                                                                                   .format = ImageFormat::Rgba8,
+                const auto specular_emission_texture_create_info = TextureCreateInfo{.name = "Default Metallic/Roughness",
+                                                                                   .usage = TextureUsage::SampledImage,
+                                                                                   .format = TextureFormat::Rgba8,
                                                                                    .width = 8,
                                                                                    .height = 8};
 
@@ -627,13 +627,13 @@ namespace sanity::engine::renderer {
 
     void Renderer::reload_renderpass_shaders() { throw std::runtime_error{"Not implemented"}; }
 
-    Rx::Vector<const Image*> Renderer::get_texture_array() const {
+    Rx::Vector<const Texture*> Renderer::get_texture_array() const {
         ZoneScoped;
 
-        Rx::Vector<const Image*> images;
+        Rx::Vector<const Texture*> images;
         images.reserve(all_images.size());
 
-        all_images.each_fwd([&](const Rx::Ptr<Image>& image) { images.push_back(image.get()); });
+        all_images.each_fwd([&](const Rx::Ptr<Texture>& image) { images.push_back(image.get()); });
 
         return images;
     }

@@ -49,9 +49,9 @@ namespace sanity::engine::renderer {
         Uint32 size{0};
     };
 
-    enum class ImageUsage { RenderTarget, DepthStencil, SampledImage, UnorderedAccess };
+    enum class TextureUsage { RenderTarget, DepthStencil, SampledImage, UnorderedAccess };
 
-    enum class ImageFormat {
+    enum class TextureFormat {
         Rgba8,
         R32F,
     	R32UInt,
@@ -61,7 +61,7 @@ namespace sanity::engine::renderer {
         Depth24Stencil8,
     };
 
-    struct Image {
+    struct Texture {
         Rx::String name;
 
         Uint32 width{1};
@@ -72,18 +72,18 @@ namespace sanity::engine::renderer {
 
         D3D12MA::Allocation* allocation;
 
-        ImageFormat format;
+        TextureFormat format;
     };
 
-    struct RenderTarget : Image {
+    struct RenderTarget : Texture {
         D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
     };
 
-    struct ImageCreateInfo {
+    struct TextureCreateInfo {
         Rx::String name;
 
-        ImageUsage usage;
-        ImageFormat format;
+        TextureUsage usage;
+        TextureFormat format;
 
         Uint32 width{1};
         Uint32 height{1};
@@ -95,7 +95,7 @@ namespace sanity::engine::renderer {
         bool enable_resource_sharing{false};
     };
 
-    [[nodiscard]] Uint32 size_in_bytes(ImageFormat format);
+    [[nodiscard]] Uint32 size_in_bytes(TextureFormat format);
 
     template <typename T>
     concept GpuResource = requires(T a) {
