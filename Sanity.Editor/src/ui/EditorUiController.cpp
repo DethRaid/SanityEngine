@@ -3,6 +3,7 @@
 #include "actor/actor.hpp"
 #include "entity/entity_operations.hpp"
 #include "sanity_engine.hpp"
+#include "../../scene_viewport.hpp"
 #include "ui/Window.hpp"
 #include "windows/EntityEditorWindow.hpp"
 #include "windows/WorldgenParamsEditor.hpp"
@@ -14,14 +15,16 @@
 namespace sanity::editor::ui {
     EditorUiController::EditorUiController() {
         auto& registry = engine::g_engine->get_entity_registry();
-
-        worldgen_params_editor = create_window_entity<WorldgenParamsEditor>(registry);
-        worldgen_params_editor->is_visible = false;
-
+        
         content_browser = create_window_entity<ContentBrowser>(registry);
+        content_browser->is_visible = true;
 
         scene_hierarchy = create_window_entity<SceneHierarchy>(registry, registry, *this);
         scene_hierarchy->is_visible = true;
+
+    	auto& renderer = engine::g_engine->get_renderer();
+    	scene_viewport = create_window_entity<SceneViewport>(registry, renderer);
+        scene_viewport->is_visible = true;
     }
 
     void EditorUiController::show_worldgen_params_editor() const { worldgen_params_editor->is_visible = true; }

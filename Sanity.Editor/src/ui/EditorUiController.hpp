@@ -12,6 +12,7 @@ namespace std {
 }
 
 namespace sanity::editor::ui {
+	class SceneViewport;
 	class SceneHierarchy;
 	class WorldgenParamsEditor;
     class EntityEditorWindow;
@@ -45,6 +46,8 @@ namespace sanity::editor::ui {
         ContentBrowser* content_browser{nullptr};
 
     	SceneHierarchy* scene_hierarchy{nullptr};
+
+    	SceneViewport* scene_viewport{nullptr};
         
         template <typename WindowType, typename... Args>
         WindowType* create_window_entity(entt::registry& registry, Args&&... args) const;

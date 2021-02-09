@@ -13,44 +13,47 @@
 #include "stb_image.h"
 
 namespace sanity::engine {
-    RX_LOG("ImageLoading", logger);
+    RX_LOG("TextureLoading", logger);
 
     template <typename ComponentDataType>
-    ComponentDataType* copy_and_pad_image_data(ComponentDataType* original_data, Uint32 width, Uint32 height, Uint32 original_num_components);
+    ComponentDataType* copy_and_pad_texture_data(ComponentDataType* original_data,
+                                               Uint32 width,
+                                               Uint32 height,
+                                               Uint32 original_num_components);
 
-    void* load_image(const std::filesystem::path& image_name, Uint32& width, Uint32& height, renderer::TextureFormat& format) {
+    void* load_texture(const std::filesystem::path& texture_name, Uint32& width, Uint32& height, renderer::TextureFormat& format) {
         ZoneScoped;
 
         const auto& exe_directory = SanityEngine::executable_directory;
-        const auto full_image_path = exe_directory / image_name;
+        const auto full_texture_path = exe_directory / texture_name;
 
         int raw_width, raw_height, num_components;
 
         void* texture_data{nullptr};
 
-        const auto full_image_name = full_image_path.string();
-        if(stbi_is_hdr(full_image_name.c_str())) {
-            logger->verbose("Loading image %s as RGBA32f HDR", image_name);
-            auto* data = stbi_loadf(full_image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
+        const auto full_texture_path_string = full_texture_path.string();
+        if(stbi_is_hdr(full_texture_path_string.c_str())) {
+            logger->verbose("Loading image %s as RGBA32f HDR", texture_name);
+            auto* data = stbi_loadf(full_texture_path_string.c_str(), &raw_width, &raw_height, &num_components, 0);
             if(data != nullptr) {
                 format = renderer::TextureFormat::Rgba32F;
-                texture_data = copy_and_pad_image_data(data, raw_width, raw_height, num_components);
+                texture_data = copy_and_pad_texture_data(data, raw_width, raw_height, num_components);
                 stbi_image_free(data);
             }
 
         } else {
-            logger->verbose("Loading image %s as RGBA8 LDR", image_name);
-            auto* data = stbi_load(full_image_name.c_str(), &raw_width, &raw_height, &num_components, 0);
+            logger->verbose("Loading image %s as RGBA8 LDR", texture_name);
+            auto* data = stbi_load(full_texture_path_string.c_str(), &raw_width, &raw_height, &num_components, 0);
             if(data != nullptr) {
                 format = renderer::TextureFormat::Rgba8;
-                texture_data = copy_and_pad_image_data(data, raw_width, raw_height, num_components);
+                texture_data = copy_and_pad_texture_data(data, raw_width, raw_height, num_components);
                 stbi_image_free(data);
             }
         }
 
         if(texture_data == nullptr) {
             const auto* failure_reason = stbi_failure_reason();
-            logger->error("Could not load image %s: %s", image_name, failure_reason);
+            logger->error("Could not load image %s: %s", texture_name, failure_reason);
             return nullptr;
         }
 
@@ -60,27 +63,27 @@ namespace sanity::engine {
         return texture_data;
     }
 
-    Rx::Optional<renderer::TextureHandle> load_image_to_gpu(const std::filesystem::path& texture_name, renderer::Renderer& renderer) {
+    Rx::Optional<renderer::TextureHandle> load_texture_to_gpu(const std::filesystem::path& texture_name, renderer::Renderer& renderer) {
         ZoneScoped;
 
         Uint32 width, height;
         renderer::TextureFormat format;
-        const auto* pixels = load_image(texture_name, width, height, format);
+        const auto* pixels = load_texture(texture_name, width, height, format);
         if(pixels == nullptr) {
             return Rx::nullopt;
         }
 
         const auto texture_name_string = texture_name.string();
         const auto create_info = renderer::TextureCreateInfo{.name = texture_name_string.c_str(),
-                                                           .usage = renderer::TextureUsage::SampledTexture,
-                                                           .format = format,
-                                                           .width = width,
-                                                           .height = height};
+                                                             .usage = renderer::TextureUsage::SampledTexture,
+                                                             .format = format,
+                                                             .width = width,
+                                                             .height = height};
 
         auto& device = renderer.get_render_backend();
         auto commands = device.create_command_list();
 
-        const auto msg = Rx::String::format("load_image_to_gpu(%s)", texture_name);
+        const auto msg = Rx::String::format("load_texture_to_gpu(%s)", texture_name);
         renderer::set_object_name(commands.Get(), msg);
 
         renderer::TextureHandle handle_out{0};
@@ -97,10 +100,10 @@ namespace sanity::engine {
         return handle_out;
     }
 
-	constexpr const Uint64 DESIRED_NUM_COMPONENTS = 4;
+    constexpr const Uint64 DESIRED_NUM_COMPONENTS = 4;
 
     template <typename ComponentDataType>
-    ComponentDataType* copy_and_pad_image_data(ComponentDataType* original_data,
+    ComponentDataType* copy_and_pad_texture_data(ComponentDataType* original_data,
                                                const Uint32 width,
                                                const Uint32 height,
                                                const Uint32 original_num_components) {

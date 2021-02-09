@@ -86,6 +86,8 @@ namespace sanity::engine::renderer {
     }
 
     void PostprocessingPass::set_output_texture(const TextureHandle new_output_texture_handle) {
+        ZoneScoped;
+    	
         if(output_texture_handle.is_valid()) {
             remove_resource_usage(output_texture_handle);
         }

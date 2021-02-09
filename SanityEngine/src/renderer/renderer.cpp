@@ -14,7 +14,6 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/render_components.hpp"
-#include "renderpasses/backbuffer_output_pass.hpp"
 #include "renderpasses/postprocessing_pass.hpp"
 #include "renderpasses/ui_render_pass.hpp"
 #include "rhi/d3d12_private_data.hpp"
@@ -37,7 +36,7 @@ namespace sanity::engine::renderer {
                     1,
                     INT_MAX,
                     100000);
-
+        
     Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
@@ -380,8 +379,9 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::set_scene_output_texture(const TextureHandle output_texture_handle) {
-        auto* postprocessing_pass = static_cast<PostprocessingPass*>(postprocessing_pass_handle->get());
-        postprocessing_pass->set_output_texture(output_texture_handle);
+        ZoneScoped;
+
+        postprocessing_pass_handle.get()->set_output_texture(output_texture_handle);
     }
 
     TextureHandle Renderer::get_scene_output_texture() const {
@@ -606,7 +606,7 @@ namespace sanity::engine::renderer {
     void Renderer::load_noise_texture(const std::filesystem::path& filepath) {
         ZoneScoped;
 
-        const auto handle = load_image_to_gpu(filepath, *this);
+        const auto handle = load_texture_to_gpu(filepath, *this);
 
         if(!handle) {
             logger->error("Could not load noise texture %s", filepath);
@@ -619,18 +619,18 @@ namespace sanity::engine::renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        forward_pass_handle = RenderpassHandle{&render_passes, 0};
+        forward_pass_handle = RenderpassHandle<ObjectsPass>{&render_passes, 0};
 
         render_passes.push_back(
             Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ObjectsPass&>(*render_passes[0])));
-        denoiser_pass_handle = RenderpassHandle{&render_passes, 1};
+        denoiser_pass_handle = RenderpassHandle<DenoiserPass>{&render_passes, 1};
 
         render_passes.push_back(
             Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
-        postprocessing_pass_handle = RenderpassHandle{&render_passes, 2};
+        postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>{&render_passes, 2};
 
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
-        imgui_pass_handle = RenderpassHandle{&render_passes, 3};
+        imgui_pass_handle = RenderpassHandle<DearImGuiRenderPass>{&render_passes, 3};
     }
 
     void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }

@@ -30,7 +30,7 @@ namespace sanity::engine {
 
         } else {
             auto& renderer = g_engine->get_renderer();
-            const auto handle = load_image_to_gpu(skybox_image_path, renderer);
+            const auto handle = load_texture_to_gpu(skybox_image_path, renderer);
             if(!handle) {
                 return;
             }

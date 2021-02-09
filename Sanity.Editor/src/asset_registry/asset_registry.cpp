@@ -31,7 +31,7 @@ namespace sanity::editor {
         Uint32 width;
         Uint32 height;
         engine::renderer::TextureFormat format;
-        const auto* pixels = engine::load_image("data/textures/icons/directory.png", width, height, format);
+        const auto* pixels = engine::load_texture("data/textures/icons/directory.png", width, height, format);
         if(pixels == nullptr) {
             logger->error("Could not load directory icon at path data/textures/icons/directory.png");
             directory_icon = renderer.get_pink_texture();
@@ -59,7 +59,7 @@ namespace sanity::editor {
         Uint32 width;
         Uint32 height;
         engine::renderer::TextureFormat format;
-        const auto* pixels = engine::load_image(path, width, height, format);
+        const auto* pixels = engine::load_texture(path, width, height, format);
         if(pixels == nullptr) {
             logger->error("Could not load icon at path '%s'", path);
             return renderer.get_pink_texture();

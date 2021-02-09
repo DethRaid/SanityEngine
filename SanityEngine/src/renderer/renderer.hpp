@@ -33,9 +33,17 @@ using Microsoft::WRL::ComPtr;
 struct GLFWwindow;
 
 namespace sanity::engine::renderer {
+    class DearImGuiRenderPass;
+    class PostprocessingPass;
     class RenderCommandList;
 
-    using RenderpassHandle = VectorHandle<Rx::Ptr<RenderPass>>;
+    template <typename RenderPassType>
+    class RenderpassHandle : VectorHandle<Rx::Ptr<RenderPass>> {
+    public:
+        explicit RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, Size index_in);
+
+        RenderPassType* get();
+    };
 
     /*!
      * \brief All the information needed to decide whether or not to issue a drawcall for an object
@@ -106,9 +114,9 @@ namespace sanity::engine::renderer {
         TextureHandle create_texture(const TextureCreateInfo& create_info);
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
-                                                 const void* image_data,
-                                                 ID3D12GraphicsCommandList4* commands,
-                                                 bool generate_mipmaps = true);
+                                                   const void* image_data,
+                                                   ID3D12GraphicsCommandList4* commands,
+                                                   bool generate_mipmaps = true);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_texture_handle(const Rx::String& name);
 
@@ -123,10 +131,10 @@ namespace sanity::engine::renderer {
          */
         void set_scene_output_texture(TextureHandle output_texture_handle);
 
-    	/*!
-    	 * \brief Gets the handle to the texture that the main scene view is rendered to
-    	 */
-    	[[nodiscard]] TextureHandle get_scene_output_texture() const;
+        /*!
+         * \brief Gets the handle to the texture that the main scene view is rendered to
+         */
+        [[nodiscard]] TextureHandle get_scene_output_texture() const;
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
@@ -170,7 +178,7 @@ namespace sanity::engine::renderer {
     private:
         std::chrono::high_resolution_clock::time_point start_time;
 
-        glm::uvec2 output_framebuffer_size;
+        glm::uvec2 output_framebuffer_size{0, 0};
 
         Rx::Ptr<RenderBackend> device;
 
@@ -204,10 +212,10 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
 
-        RenderpassHandle forward_pass_handle;
-        RenderpassHandle denoiser_pass_handle;
-        RenderpassHandle postprocessing_pass_handle;
-        RenderpassHandle imgui_pass_handle;
+        RenderpassHandle<ObjectsPass> forward_pass_handle;
+        RenderpassHandle<DenoiserPass> denoiser_pass_handle;
+        RenderpassHandle<PostprocessingPass> postprocessing_pass_handle;
+        RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle;
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
 
@@ -271,4 +279,14 @@ namespace sanity::engine::renderer {
         void update_light_data_buffer(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
+
+    template <typename RenderPassType>
+    RenderpassHandle<RenderPassType>::RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, const Size index_in)
+        : VectorHandle(container_in, index_in) {}
+
+    template <typename RenderPassType>
+    RenderPassType* RenderpassHandle<RenderPassType>::get() {
+        auto* renderpass = this->operator->()->get();
+        return static_cast<RenderPassType*>(renderpass);
+    }
 } // namespace sanity::engine::renderer

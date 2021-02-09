@@ -58,7 +58,7 @@ namespace sanity::engine {
         // TODO: Eventually we'll probably want to make this method async, but that's hard
         auto final_result = ImageLoadResult{};
 
-        const auto handle_maybe = load_image_to_gpu(path, *renderer);
+        const auto handle_maybe = load_texture_to_gpu(path, *renderer);
         if(handle_maybe) {
             final_result.is_complete = true;
             final_result.succeeded = true;
