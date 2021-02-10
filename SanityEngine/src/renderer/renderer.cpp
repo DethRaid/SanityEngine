@@ -118,20 +118,7 @@ namespace sanity::engine::renderer {
 
             update_light_data_buffer(registry, frame_idx);
 
-            {
-                ZoneScopedN("Renderer::update_per_frame_data");
-
-                const auto view = registry.view<SkyboxComponent>();
-                if(view.size() == 1) {
-                    const auto skybox_entity = view.front();
-                    const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
-                    per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
-                }
-
-                per_frame_data.render_size = output_framebuffer_size;
-
-                memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
-            }
+            update_per_frame_data(registry, frame_idx);
 
             execute_all_render_passes(command_list, registry, frame_idx);
         }
@@ -542,8 +529,8 @@ namespace sanity::engine::renderer {
     void Renderer::create_builtin_images() {
         ZoneScoped;
 
-        // load_noise_texture("data/textures/noise/LDR_RGBA_0.png");
-        load_noise_texture("data/textures/noise/RuthNoise.png");
+        load_noise_texture("data/textures/noise/LDR_RGBA_0.png");
+        // load_noise_texture("data/textures/noise/RuthNoise.png");
 
         auto commands = device->create_command_list();
         commands->SetName(L"Renderer::create_builtin_images");
@@ -847,6 +834,24 @@ namespace sanity::engine::renderer {
         auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
         memcpy(dst, lights.data(), lights.size() * sizeof(GpuLight));
     }
+
+    void Renderer::update_per_frame_data(entt::registry& registry, const Uint32 frame_idx) {
+        ZoneScoped;
+
+        per_frame_data.render_size = output_framebuffer_size;
+
+    	per_frame_data.noise_texture_idx = noise_texture_handle.index;
+    	
+        const auto view = registry.view<SkyboxComponent>();
+        if(view.size() == 1) {
+            const auto skybox_entity = view.front();
+            const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
+            per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
+        }
+        
+        memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
+    }
+
 
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;

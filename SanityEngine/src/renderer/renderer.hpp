@@ -86,6 +86,7 @@ namespace sanity::engine::renderer {
 
         Uint32 frame_count;
 
+    	Uint32 noise_texture_idx;
         Uint32 sky_texture_idx;
     };
 
@@ -279,6 +280,8 @@ namespace sanity::engine::renderer {
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 
         void update_light_data_buffer(entt::registry& registry, Uint32 frame_idx);
+
+        void update_per_frame_data(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
 
