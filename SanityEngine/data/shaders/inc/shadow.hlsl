@@ -28,11 +28,12 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
                     t * z * z + c);
 }
 
-float raytrace_shadow(const float3 light_vector,
+float raytrace_shadow(float3 light_vector,
                       const float angular_size,
                       const float3 position_worldspace,
                       const float3 mesh_normal_worldspace) {
-    Texture2D noise = textures[0];
+    light_vector.z *= -1;
+	
     const float2 noise_texcoord = position_worldspace.xy * light_vector.x * light_vector.z + position_worldspace.yz * angular_size;
 
     const float noise_scale = tan(angular_size);
@@ -44,7 +45,6 @@ float raytrace_shadow(const float3 light_vector,
 
     for(uint i = 1; i <= NUM_SHADOW_RAYS; i++) {
         // Random cone with the same angular size as the sun
-
         const float3 random_vector = get_random_vector_aligned_to_normal(mesh_normal_worldspace, noise_texcoord, 1, NUM_SHADOW_RAYS);
     	
         float3 ray_direction;
