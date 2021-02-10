@@ -14,7 +14,7 @@
 
 #define RAY_START_OFFSET_ALONG_NORMAL 0.01f
 
-#define GI_BOOST 1 
+#define GI_BOOST 1
 
 uint3 get_indices(uint triangle_index) {
     const uint base_index = (triangle_index * 3);
@@ -57,7 +57,10 @@ struct SanityRayHit {
     float3 brdf_result;
 };
 
-float3 direct_analytical_light(const in SurfaceInfo surface, const in Light light, const in float3 view_vector) {
+float3 direct_analytical_light(const in SurfaceInfo surface,
+                               const in Light light,
+                               const in float3 view_vector,
+                               const in float2 noise_texcoord) {
     float3 light_vector;
     float3 light_color;
     if(light.type == LIGHT_TYPE_DIRECTIONAL) {
@@ -77,7 +80,7 @@ float3 direct_analytical_light(const in SurfaceInfo surface, const in Light ligh
 
     float shadow = 1.0;
     if(length(outgoing_light) > 0) {
-        shadow = saturate(raytrace_shadow(light_vector, light.angular_size, surface.location, surface.normal));
+        shadow = saturate(raytrace_shadow(light_vector, light.angular_size, surface.location, surface.normal, noise_texcoord));
     }
 
     return outgoing_light * shadow;
@@ -88,17 +91,22 @@ float3 direct_analytical_light(const in SurfaceInfo surface, const in Light ligh
  *
  * \return A float4 where the rgb are the incoming light and the a is 1 if we hit a surface, 0 is we're sampling the sky
  */
-float4 get_incoming_light(in float3 ray_origin,
-                          in float3 direction,
-                          in Light sun,
-                          inout RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query,
-                          out StandardVertex vertex,
-                          out MaterialData material) {
+float4 get_incoming_light(
+    const in float3 ray_origin,
+    const in float3 direction,
+    const in float3 surface_normal,
+    const in Light sun,
+    const in float2 noise_texcoord,
+    inout RayQuery<RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
+    out StandardVertex vertex,
+    out MaterialData material) {
+
+    const float cos_theta = dot(direction, surface_normal);
 
     RayDesc ray;
     ray.Origin = ray_origin;
-    ray.TMin = 0.001;
-    ray.Direction = direction;
+    ray.TMin = 0.01f * (1.0 - cos_theta); // Slight offset so we don't self-intersect
+    ray.Direction = direction * float3(1.f, 1.f, -1.f);
     ray.TMax = 1000; // TODO: Pass this in with a CB
 
     // Set up work
@@ -114,16 +122,16 @@ float4 get_incoming_light(in float3 ray_origin,
             return 0;
         }
 
-        uint triangle_index = query.CommittedPrimitiveIndex();
-        float2 barycentrics = query.CommittedTriangleBarycentrics();
+        const uint triangle_index = query.CommittedPrimitiveIndex();
+        const float2 barycentrics = query.CommittedTriangleBarycentrics();
         vertex = get_vertex_attributes(triangle_index, barycentrics);
 
         uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
         material = material_buffer[material_id];
 
         const SurfaceInfo surface = get_surface_info(vertex, material);
-
-        const float3 lit_hit_surface = direct_analytical_light(surface, sun, -ray.Direction);
+        
+        const float3 lit_hit_surface = direct_analytical_light(surface, sun, ray.Direction, noise_texcoord);
 
         return float4(lit_hit_surface, 1.0);
 
@@ -135,75 +143,6 @@ float4 get_incoming_light(in float3 ray_origin,
     }
 }
 
-float3 raytrace_reflections(const in SurfaceInfo original_surface,
-                            const in float3 eye_vector,
-                            const in float2 noise_texcoord,
-                            const in Light sun) {
-    const uint num_specular_rays = 2;
-
-    const uint num_bounces = 2;
-
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
-
-    SurfaceInfo surface = original_surface;
-
-    float3 view_vector = eye_vector;
-
-    float3 reflection = 0;
-
-    for(uint ray_idx = 1; ray_idx <= num_specular_rays; ray_idx++) {
-        float3 brdf_accumulator = 1;
-        float3 light_sample = 0;
-
-        uint bounce_idx = 0;
-        for(bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
-
-            float3 normal_of_reflection = get_random_vector_aligned_to_normal(surface.normal,
-                                                                              noise_texcoord,
-                                                                              bounce_idx + ray_idx * num_bounces,
-                                                                              num_bounces * num_specular_rays);
-
-            normal_of_reflection = normalize(lerp(surface.normal, normal_of_reflection, surface.roughness));
-
-            const float3 ray_direction = normalize(reflect(eye_vector, normal_of_reflection));
-
-            const float pdf = PDF_GGX(surface.roughness, surface.normal, ray_direction, -view_vector);
-            brdf_accumulator *= brdf_single_ray(surface, ray_direction, -view_vector) / pdf;
-
-            StandardVertex hit_vertex;
-            MaterialData hit_material;
-
-            float4 incoming_light = get_incoming_light(surface.location, ray_direction, sun, query, hit_vertex, hit_material);
-            const float3 reflected_light = brdf_accumulator * incoming_light.rgb;
-            if(any(isnan(reflected_light))) {
-                // Something went wrong. Abort this ray and try the next one
-                break;
-            }
-
-            light_sample += reflected_light;
-
-            if(incoming_light.a > 0.05) {
-                // set up next ray
-                surface = get_surface_info(hit_vertex, hit_material);
-
-                view_vector = ray_direction;
-
-            } else {
-                bounce_idx++;
-
-                // Ray escaped into the sky
-                break;
-            }
-        }
-
-        bounce_idx++;
-
-        reflection += light_sample / (float) bounce_idx;
-    }
-
-    return reflection / (float) num_specular_rays;
-}
-
 /*!
  * \brief Calculate the raytraced indirect light that hits a surface
  */
@@ -211,9 +150,9 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                     const in float3 eye_vector,
                                     const in float2 noise_texcoord,
                                     const in Light sun) {
-    const uint num_indirect_rays = 13;
+    const uint num_indirect_rays = 3;
 
-    const uint num_bounces = 2;
+    const uint num_bounces = 1;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -221,7 +160,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
 
     float3 indirect_light = 0;
 
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_CULL_BACK_FACING_TRIANGLES> query;
+    RayQuery<RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
 
     SurfaceInfo surface = original_surface;
 
@@ -237,14 +176,22 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                                                              noise_texcoord,
                                                                              bounce_idx + ray_idx * num_bounces,
                                                                              num_bounces * num_indirect_rays);
-            
-            const float pdf = saturate(dot(ray_direction, surface.normal));            	
+
+            const float pdf = saturate(dot(ray_direction, surface.normal));
             brdf_accumulator *= brdf_single_ray(surface, ray_direction, -view_vector) / pdf;
 
             StandardVertex hit_vertex;
             MaterialData hit_material;
 
-            const float4 incoming_light = get_incoming_light(surface.location, ray_direction, sun, query, hit_vertex, hit_material) / PI;
+            const float4 incoming_light = get_incoming_light(surface.location,
+                                                             ray_direction,
+                                                             surface.normal,
+                                                             sun,
+                                                             noise_texcoord,
+                                                             query,
+                                                             hit_vertex,
+                                                             hit_material) /
+                                          PI;
             const float3 reflected_light = brdf_accumulator * incoming_light.rgb;
             if(any(isnan(reflected_light))) {
                 // Something went wrong. Abort this ray and try the next one
@@ -276,7 +223,83 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
     return indirect_diffuse * GI_BOOST;
 }
 
-float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface, Texture2D noise) {
+float3 raytrace_reflections(const in SurfaceInfo original_surface,
+                            const in float3 eye_vector,
+                            const in float2 noise_texcoord,
+                            const in Light sun) {
+    const uint num_specular_rays = 1;
+
+    const uint num_bounces = 3;
+
+    RayQuery<RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+
+    SurfaceInfo surface = original_surface;
+
+    float3 view_vector = eye_vector;
+
+    float3 reflection = 0;
+
+    for(uint ray_idx = 1; ray_idx <= num_specular_rays; ray_idx++) {
+        float3 brdf_accumulator = 1;
+        float3 light_sample = 0;
+
+        uint bounce_idx = 0;
+        for(bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
+
+            float3 normal_of_reflection = get_random_vector_aligned_to_normal(surface.normal,
+                                                                              noise_texcoord,
+                                                                              bounce_idx + ray_idx * num_bounces,
+                                                                              num_bounces * num_specular_rays);
+
+            normal_of_reflection = normalize(lerp(surface.normal, normal_of_reflection, surface.roughness));
+
+            const float3 ray_direction = normalize(reflect(view_vector, normal_of_reflection));
+
+            const float pdf = PDF_GGX(surface.roughness, surface.normal, ray_direction, -view_vector);
+            brdf_accumulator *= brdf_single_ray(surface, ray_direction, -view_vector) / pdf;
+
+            StandardVertex hit_vertex;
+            MaterialData hit_material;
+
+            float4 incoming_light = get_incoming_light(surface.location,
+                                                       ray_direction,
+                                                       surface.normal,
+                                                       sun,
+                                                       noise_texcoord,
+                                                       query,
+                                                       hit_vertex,
+                                                       hit_material);
+            const float3 reflected_light = brdf_accumulator * incoming_light.rgb;
+            if(any(isnan(reflected_light))) {
+                // Something went wrong. Abort this ray and try the next one
+                break;
+            }
+
+            light_sample += reflected_light;
+
+            if(incoming_light.a > 0.05) {
+                // set up next ray
+                surface = get_surface_info(hit_vertex, hit_material);
+
+                view_vector = ray_direction;
+
+            } else {
+                bounce_idx++;
+
+                // Ray escaped into the sky
+                break;
+            }
+        }
+
+        bounce_idx++;
+
+        reflection += light_sample / (float) bounce_idx;
+    }
+
+    return reflection / (float) num_specular_rays;
+}
+
+float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface) {
     // Transform worldspace position into viewspace position
     const float4 position_viewspace = mul(camera.view, float4(surface.location, 1));
 
@@ -299,15 +322,17 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
 
     const PerFrameData frame_data = per_frame_data[0];
 
+    Texture2D noise = textures[frame_data.noise_texture_idx];
+
     float2 noise_tex_size;
     noise.GetDimensions(noise_tex_size.x, noise_tex_size.y);
-    const float2 noise_texcoord = location_ndc.xy * 0.5 * PI * frame_data.render_size / noise_tex_size;
+    const float2 noise_texcoord = location_ndc.xy * 4.f * frame_data.render_size / noise_tex_size;
 
-    const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace);
+    const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace, noise_texcoord);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
 
-	// return indirect_light;
-    	
+    return reflection;
+
     return direct_light + indirect_light + reflection;
 }

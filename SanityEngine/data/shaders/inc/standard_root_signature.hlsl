@@ -32,6 +32,7 @@ struct PerFrameData {
     float time_since_start;
     uint frame_count;
 
+	uint noise_texture_idx;
     uint sky_texture_idx;
 };
 

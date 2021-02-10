@@ -53,7 +53,7 @@ float3 brdf(in SurfaceInfo surface, float3 l, const float3 v) {
     const float NoH = saturate(dot(surface.normal, h));
     const float VoH = saturate(dot(v, h));
 
-    if(NoV < 0 || NoL < 0) {
+    if(NoL < 0) {
         return 0;
     }
 

@@ -2,9 +2,9 @@
 
 #include "standard_root_signature.hlsl"
 
-#define NUM_SHADOW_RAYS 2
+#define NUM_SHADOW_RAYS 3
 
-#define SHADOW_RAY_BIAS 0.1
+#define SHADOW_RAY_BIAS 0.01
 
 // from https://gist.github.com/keijiro/ee439d5e7388f3aafc5296005c8c3f33
 // Rotation with angle (in radians) and axis
@@ -31,22 +31,21 @@ float3x3 AngleAxis3x3(float angle, float3 axis) {
 float raytrace_shadow(float3 light_vector,
                       const float angular_size,
                       const float3 position_worldspace,
-                      const float3 mesh_normal_worldspace) {
+                      const float3 mesh_normal_worldspace,
+                      const float2 noise_texcoord) {
     light_vector.z *= -1;
-	
-    const float2 noise_texcoord = position_worldspace.xy * light_vector.x * light_vector.z + position_worldspace.yz * angular_size;
 
     const float noise_scale = tan(angular_size);
 
     // Shadow ray query
-    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
+    RayQuery<RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_CULL_FRONT_FACING_TRIANGLES | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
 
     float shadow_strength = 1.0;
 
     for(uint i = 1; i <= NUM_SHADOW_RAYS; i++) {
         // Random cone with the same angular size as the sun
         const float3 random_vector = get_random_vector_aligned_to_normal(mesh_normal_worldspace, noise_texcoord, 1, NUM_SHADOW_RAYS);
-    	
+
         float3 ray_direction;
         if(abs(angular_size) <= PI / 2) {
             ray_direction = normalize(light_vector + random_vector * noise_scale);
@@ -64,7 +63,7 @@ float raytrace_shadow(float3 light_vector,
         ray.TMax = 1000; // TODO: Pass this in with a CB
 
         // Set up work
-        q.TraceRayInline(raytracing_scene, RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES, 0xFF, ray);
+        q.TraceRayInline(raytracing_scene, 0, 0xFF, ray);
 
         // Actually perform the trace
         q.Proceed();

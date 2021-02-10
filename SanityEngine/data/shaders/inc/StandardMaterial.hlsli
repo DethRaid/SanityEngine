@@ -70,7 +70,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
     } else {
         surface.normal = vertex.normal;
     }
-    
+        
     if(material.metallic_roughness_idx != 0) {
         Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
         const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, vertex.texcoord);
@@ -89,6 +89,10 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
     } else {
         surface.emission = material.emission_value.rgb;
     }
+
+	// Hacks while I debug specular
+    surface.normal = vertex.normal;
+    surface.metalness = 1;
 
     return surface;
 }

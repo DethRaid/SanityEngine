@@ -52,17 +52,14 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
     const PerFrameData frame_data = per_frame_data[0];
     const uint frame_index = frame_data.frame_count % NUM_TEMPORAL_SAMPLES;
 
-	const float offset = total * NUM_TEMPORAL_SAMPLES;
+    const float offset = total * NUM_TEMPORAL_SAMPLES;
 
     const float2 noise_sample_location = base_noise_texcoord +
-                                         fermatsSpiralGoldenS(index + frame_index * total,
-                                                              total * NUM_TEMPORAL_SAMPLES);
+                                         fermatsSpiralGoldenS(index + frame_index * total, total * NUM_TEMPORAL_SAMPLES);
 
-    Texture2D noise = textures[0];
+    Texture2D noise = textures[per_frame_data[0].noise_texture_idx];
 
-    float2 nums;
-    nums.x = noise.Sample(bilinear_sampler, noise_sample_location).r;
-    nums.y = noise.Sample(bilinear_sampler, noise_sample_location * PI).r;
+    const float2 nums = noise.Sample(point_sampler, noise_sample_location).rg;
 
     float3 random_vector = CosineSampleHemisphere(nums);
     const float3x3 onb = transpose(construct_ONB_frisvad(normal));

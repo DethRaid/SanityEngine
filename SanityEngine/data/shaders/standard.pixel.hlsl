@@ -26,13 +26,12 @@ PixelOutput main(const VertexOutput input) {
     const SurfaceInfo surface = get_surface_info(vertex, material);
 
     const Camera camera = cameras[constants.camera_index];
-    const Texture2D noise = textures[0];
 
-    float3 total_reflected_light = get_total_reflected_light(camera, surface, noise);
+    float3 total_reflected_light = get_total_reflected_light(camera, surface);
 
 	PixelOutput output;
     output.color = float4(total_reflected_light, 1);
     output.object_id = constants.object_id;
-    
+        
 	return output;
 }
