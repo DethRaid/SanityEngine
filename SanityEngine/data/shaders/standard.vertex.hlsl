@@ -26,13 +26,11 @@ VertexOutput main(StandardVertex input) {
     const Camera camera = cameras[constants.camera_index];
     output.location_ndc = mul(camera.projection, mul(camera.view, float4(output.location_worldspace, 1)));
     
-    const float4 normal_worldspace = mul(model_matrix, float4(input.normal_modelspace, 0));
+    const float4 normal_worldspace = mul(float4(input.normal_modelspace, 0), model_matrix);
 	
     output.normal_worldspace = normal_worldspace.xyz;
     output.color = input.color;
     output.texcoord = input.texcoord;
-
-	output.normal_worldspace = input.normal_modelspace;
-
+    
     return output;
 }

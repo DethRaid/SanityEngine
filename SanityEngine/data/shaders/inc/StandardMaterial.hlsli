@@ -65,14 +65,12 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
         const float3 view_vector = vertex.location - cameras[constants.camera_index].view[2].xyz;
     	
         const float3x3 normal_matrix = cotangent_frame(vertex.normal, view_vector, vertex.texcoord);
-        surface.normal = normalize(mul(normal_matrix, surface.normal));
+        surface.normal = normalize(mul(surface.normal, normal_matrix));
             	
     } else {
         surface.normal = vertex.normal;
     }
-
-    surface.normal = vertex.normal;
-
+    
     if(material.metallic_roughness_idx != 0) {
         Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
         const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, vertex.texcoord);
