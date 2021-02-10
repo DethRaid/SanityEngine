@@ -38,11 +38,13 @@ namespace sanity::engine::renderer {
     class RenderCommandList;
 
     template <typename RenderPassType>
-    class RenderpassHandle : VectorHandle<Rx::Ptr<RenderPass>> {
+    class RenderpassHandle : public VectorHandle<Rx::Ptr<RenderPass>> {
     public:
         explicit RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, Size index_in);
 
         RenderPassType* get();
+
+        RenderPassType* get() const;
     };
 
     /*!
@@ -286,6 +288,12 @@ namespace sanity::engine::renderer {
 
     template <typename RenderPassType>
     RenderPassType* RenderpassHandle<RenderPassType>::get() {
+        auto* renderpass = this->operator->()->get();
+        return static_cast<RenderPassType*>(renderpass);
+    }
+
+    template <typename RenderPassType>
+    RenderPassType* RenderpassHandle<RenderPassType>::get() const {
         auto* renderpass = this->operator->()->get();
         return static_cast<RenderPassType*>(renderpass);
     }

@@ -2,7 +2,6 @@
 
 #include <rx/core/log.h>
 
-
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "imgui/imgui.h"
@@ -14,7 +13,7 @@
 
 namespace sanity::engine::renderer {
     RX_LOG("DearImGuiRenderPass", logger);
-	
+
     DearImGuiRenderPass::DearImGuiRenderPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 
@@ -52,9 +51,7 @@ namespace sanity::engine::renderer {
         });
     }
 
-    void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands,
-                        entt::registry& /* registry */,
-                        Uint32 /* frame_idx */) {
+    void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
 
         ImDrawData* draw_data = ImGui::GetDrawData();
@@ -65,8 +62,8 @@ namespace sanity::engine::renderer {
 
         auto& device = renderer->get_render_backend();
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "UiRenderPass::render");
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "UiRenderPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "DearImGuiRenderPass::render");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DearImGuiRenderPass::render");
         {
             const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
 
@@ -97,8 +94,10 @@ namespace sanity::engine::renderer {
         {
             ZoneScopedN("Issue UI drawcalls");
             for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
-                PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::render_ui::draw_imgui_list(%d)", i);
                 const auto* cmd_list = draw_data->CmdLists[i];
+
+                PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DearImGuiRenderPass::render_ui::draw_imgui_list(%s)", cmd_list->_OwnerName);
+
                 const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
                 const auto* imgui_indices = cmd_list->IdxBuffer.Data;
 
@@ -119,7 +118,7 @@ namespace sanity::engine::renderer {
 
                     const auto index_buffer_format = sizeof(ImDrawIdx) == sizeof(unsigned int) ? DXGI_FORMAT_R32_UINT :
                                                                                                  DXGI_FORMAT_R16_UINT;
-                	
+
                     const auto ib_view = D3D12_INDEX_BUFFER_VIEW{.BufferLocation = index_buffer.resource->GetGPUVirtualAddress(),
                                                                  .SizeInBytes = static_cast<Uint32>(index_buffer.size),
                                                                  .Format = index_buffer_format};
@@ -136,20 +135,18 @@ namespace sanity::engine::renderer {
                         const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
                         const auto material_idx = static_cast<Uint32>(imgui_material_idx);
                         commands->SetGraphicsRoot32BitConstant(0, material_idx, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-
-                        {
-                            const auto& clip_rect = cmd.ClipRect;
-                            const auto pos = draw_data->DisplayPos;
-                            const auto top_left_x = clip_rect.x - pos.x;
-                            const auto top_left_y = clip_rect.y - pos.y;
-                            const auto bottom_right_x = clip_rect.z - pos.x;
-                            const auto bottom_right_y = clip_rect.w - pos.y;
-                            const auto rect = D3D12_RECT{.left = static_cast<LONG>(top_left_x),
-                                                         .top = static_cast<LONG>(top_left_y),
-                                                         .right = static_cast<LONG>(bottom_right_x),
-                                                         .bottom = static_cast<LONG>(bottom_right_y)};
-                            commands->RSSetScissorRects(1, &rect);
-                        }
+                        
+                        const auto& clip_rect = cmd.ClipRect;
+                        const auto pos = draw_data->DisplayPos;
+                        const auto top_left_x = clip_rect.x - pos.x;
+                        const auto top_left_y = clip_rect.y - pos.y;
+                        const auto bottom_right_x = clip_rect.z - pos.x;
+                        const auto bottom_right_y = clip_rect.w - pos.y;
+                        const auto rect = D3D12_RECT{.left = static_cast<LONG>(top_left_x),
+                                                     .top = static_cast<LONG>(top_left_y),
+                                                     .right = static_cast<LONG>(bottom_right_x),
+                                                     .bottom = static_cast<LONG>(bottom_right_y)};
+                        commands->RSSetScissorRects(1, &rect);
 
                         commands->DrawIndexedInstanced(cmd.ElemCount, 1, cmd.IdxOffset, 0, 0);
                     }
@@ -164,4 +161,4 @@ namespace sanity::engine::renderer {
         }
         commands->EndRenderPass();
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer

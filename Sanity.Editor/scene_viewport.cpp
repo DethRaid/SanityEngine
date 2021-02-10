@@ -19,7 +19,19 @@ namespace sanity::editor::ui {
         recreate_scene_output_texture();
     }
 
-    void SceneViewport::draw_contents() { ImGui::Image(scene_output_texture, ImVec2{}); }
+    void SceneViewport::draw_contents() {
+        const auto content_region_min = ImGui::GetWindowContentRegionMin();
+        const auto content_region_max = ImGui::GetWindowContentRegionMax();
+        const auto im_size = ImVec2{content_region_max.x - content_region_min.x, content_region_max.y - content_region_min.y};
+
+        ImGui::Image(scene_output_texture, im_size);
+
+        const auto size = Uint2{static_cast<Uint32>(im_size.x), static_cast<Uint32>(im_size.y)};
+
+        if(size != render_size) {
+            set_render_size(size);
+        }
+    }
 
     void SceneViewport::recreate_scene_output_texture() {
         ZoneScoped;
@@ -35,8 +47,8 @@ namespace sanity::editor::ui {
         }
 
         const auto create_info = TextureCreateInfo{.name = "Scene viewport texture",
-                                                   .usage = TextureUsage::SampledTexture,
-                                                   .format = TextureFormat::Rgba32F,
+                                                   .usage = TextureUsage::RenderTarget,
+                                                   .format = TextureFormat::Rgba8,
                                                    .width = render_size.x,
                                                    .height = render_size.y};
 

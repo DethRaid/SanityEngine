@@ -36,7 +36,7 @@ namespace sanity::engine::renderer {
                     1,
                     INT_MAX,
                     100000);
-        
+
     Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
@@ -56,7 +56,7 @@ namespace sanity::engine::renderer {
         output_framebuffer_size = {width, height};
 
         // Ensure that the texture at index 0 is a dummy texture. This allows us to use 0 as a value for invalid texture handles
-        all_textures.resize(1);
+        all_textures.push_back({});
 
         create_static_mesh_storage();
 
@@ -384,10 +384,7 @@ namespace sanity::engine::renderer {
         postprocessing_pass_handle.get()->set_output_texture(output_texture_handle);
     }
 
-    TextureHandle Renderer::get_scene_output_texture() const {
-        const auto* postprocessing_pass = static_cast<const PostprocessingPass*>(postprocessing_pass_handle->get());
-        return postprocessing_pass->get_output_texture();
-    }
+    TextureHandle Renderer::get_scene_output_texture() const { return postprocessing_pass_handle.get()->get_output_texture(); }
 
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
         if(!free_material_handles.is_empty()) {
