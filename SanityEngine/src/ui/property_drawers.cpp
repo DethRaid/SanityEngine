@@ -40,7 +40,7 @@ namespace sanity::engine::ui {
     }
 
     void draw_property_editor(const Rx::String& label, glm::quat& quat) {
-        auto euler = glm::eulerAngles(quat);
+        auto euler = eulerAngles(quat);
 
         ImGui::PushID(label.data());
 
@@ -102,9 +102,9 @@ namespace sanity::engine::ui {
     }
 
     void draw_property_editor(const Rx::String& label, renderer::GpuLight& light) {
-        ui::draw_property_editor("Type", light.type);
-        ui::draw_property_editor("Color", light.color);
-        ui::draw_property_editor("Direction", light.direction_or_location);
-        ui::draw_property_editor("Angular size", light.size);
+	    draw_property_editor("Type", light.type);
+	    draw_property_editor("Color", light.color);
+	    draw_property_editor("Direction", light.direction_or_location);
+	    draw_property_editor("Angular size", light.size);
     }
 } // namespace sanity::engine::ui

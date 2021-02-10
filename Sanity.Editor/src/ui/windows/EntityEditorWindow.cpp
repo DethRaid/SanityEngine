@@ -44,21 +44,15 @@ namespace sanity::editor::ui {
 
     void draw_component_editor(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry) {
         const auto class_name = engine::g_engine->get_type_reflector().get_name_of_type(component_type_id);
-        if(ImGui::CollapsingHeader(class_name.data())) {
-            ImGui::Indent();
-
-            // @formatter:off
-            DRAW_COMPONENT_EDITOR(engine::Actor)
-            else DRAW_COMPONENT_EDITOR(engine::TransformComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::StandardRenderableComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::PostProcessingPassComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
-        	else DRAW_COMPONENT_EDITOR(engine::renderer::SkyboxComponent);
-            // @formatter:on
-
-            ImGui::Unindent();
-        }
+        // @formatter:off
+        DRAW_COMPONENT_EDITOR(engine::Actor)
+        else DRAW_COMPONENT_EDITOR(engine::TransformComponent)
+        else DRAW_COMPONENT_EDITOR(engine::renderer::StandardRenderableComponent)
+        else DRAW_COMPONENT_EDITOR(engine::renderer::PostProcessingPassComponent)
+        else DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
+        else DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
+        else DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
+        else DRAW_COMPONENT_EDITOR(engine::renderer::SkyboxComponent);
+        // @formatter:on            
     }
 } // namespace sanity::editor::ui
