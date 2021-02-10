@@ -16,7 +16,7 @@ namespace sanity::engine::renderer {
     constexpr const char* OBJECT_ID_TARGET = "Object ID";
     constexpr const char* SCENE_DEPTH_TARGET = "Scene depth target";
 
-    RX_LOG("RaytracedLightingPass", logger);
+    RX_LOG("ObjectsPass", logger);
 
     ObjectsPass::ObjectsPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         ZoneScoped;
@@ -62,8 +62,8 @@ namespace sanity::engine::renderer {
     void ObjectsPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "RaytracedLightingPass::execute");
-        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::execute");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "ObjectsPass::render");
+        PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::render");
 
         begin_render_pass(commands);
 
@@ -223,7 +223,7 @@ namespace sanity::engine::renderer {
     }
 
     void ObjectsPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
-        PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_objects_in_scene");
+        PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_objects_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
@@ -267,7 +267,7 @@ namespace sanity::engine::renderer {
             logger->error("May only have one atmospheric sky component in a scene");
 
         } else {
-            PIXScopedEvent(commands, forward_pass_color, "RaytracedLightingPass::draw_atmosphere");
+            PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_atmosphere");
 
             const auto atmosphere_entity = atmosphere_view.front();
             const auto atmosphere_id = static_cast<uint32_t>(atmosphere_entity);

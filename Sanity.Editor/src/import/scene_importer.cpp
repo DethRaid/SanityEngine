@@ -180,7 +180,7 @@ namespace sanity::editor::import {
         for(const auto& material : scene.materials) {
             ZoneScopedN(material.name.c_str());
 
-            gltf_logger->info("Importing material %s", material.name.c_str());
+            gltf_logger->info("Importing material %s", material.name);
 
             engine::renderer::StandardMaterial sanity_material{};
 
@@ -289,14 +289,14 @@ namespace sanity::editor::import {
         }
 
         if(texture.source < 0) {
-            gltf_logger->error("Texture %s has an invalid source", texture.name.c_str());
+            gltf_logger->error("Texture %s has an invalid source", texture.name);
             return Rx::nullopt;
         }
 
         // We only support three- or four-channel textures, with eight bits per chanel
         const auto& source_image = scene.images[texture.source];
         if(source_image.component != 3 && source_image.component != 4) {
-            gltf_logger->error("Source image %s does not have either three or four components", source_image.name.c_str());
+            gltf_logger->error("Source image %s does not have either three or four components", source_image.name);
             return Rx::nullopt;
         }
         if(source_image.bits != 8) {
@@ -326,7 +326,7 @@ namespace sanity::editor::import {
             image_data = padding_buffer;
         }
 
-        const auto image_name = texture_name.is_empty() ? "Imported GLTF texture" : texture_name;
+        const auto image_name = texture_name.is_empty() ? Rx::String::format("Imported GLTF texture %d", texture_idx) : texture_name;
 
         const auto create_info = engine::renderer::TextureCreateInfo{.name = image_name,
                                                                      .usage = engine::renderer::TextureUsage::SampledTexture,
@@ -353,7 +353,7 @@ namespace sanity::editor::import {
         for(const auto& mesh : scene.meshes) {
             ZoneScopedN(mesh.name.c_str());
 
-            gltf_logger->info("Importing mesh %s", mesh.name.c_str());
+            gltf_logger->info("Importing mesh %s", mesh.name);
 
             GltfMesh imported_mesh{};
             imported_mesh.primitives.reserve(mesh.primitives.size());
@@ -365,7 +365,7 @@ namespace sanity::editor::import {
 
                 const auto& primitive_mesh = get_data_from_primitive(primitive, scene, uploader);
                 if(!primitive_mesh) {
-                    gltf_logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name.c_str());
+                    gltf_logger->error("Could not read data for primitive %d in mesh %s", primitive_idx, mesh.name);
                     continue;
                 }
 
@@ -434,7 +434,7 @@ namespace sanity::editor::import {
                                                                           const tinygltf::Model& scene) {
         Rx::String all_attributes;
         for(const auto& attribute_name : primitive.attributes | std::views::keys) {
-            all_attributes = Rx::String::format("%s, %s", all_attributes, attribute_name.c_str());
+            all_attributes = Rx::String::format("%s, %s", all_attributes, attribute_name);
         }
         gltf_logger->verbose("Primitive has attributes %s", all_attributes);
 
@@ -583,7 +583,7 @@ namespace sanity::editor::import {
             renderer->add_raytracing_objects_to_scene(raytracing_objects);
 
         } else {
-            logger->error("Node %s references invalid mesh %d", node.name.c_str(), node.mesh);
+            logger->error("Node %s references invalid mesh %d", node.name, node.mesh);
         }
     }
 
