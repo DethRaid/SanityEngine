@@ -51,6 +51,8 @@ namespace sanity::engine::renderer {
         });
     }
 
+    void DearImGuiRenderPass::set_clear_color(const Vec4f& color) { clear_color = color; }
+
     void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
 
@@ -67,12 +69,15 @@ namespace sanity::engine::renderer {
         {
             const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
 
-            const auto
-                backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,
-                                                                         .BeginningAccess =
-                                                                             {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE},
-                                                                         .EndingAccess = {
-                                                                             .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+            const auto backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,
+                                                                                .BeginningAccess =
+                                                                                    {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                                                     .Clear = {.ClearValue = {.Color = {clear_color.r,
+                                                                                                                        clear_color.g,
+                                                                                                                        clear_color.b,
+                                                                                                                        clear_color.a}}}},
+                                                                                .EndingAccess = {
+                                                                                    .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
             commands->BeginRenderPass(1, &backbuffer_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
         }
@@ -135,7 +140,7 @@ namespace sanity::engine::renderer {
                         const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
                         const auto material_idx = static_cast<Uint32>(imgui_material_idx);
                         commands->SetGraphicsRoot32BitConstant(0, material_idx, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-                        
+
                         const auto& clip_rect = cmd.ClipRect;
                         const auto pos = draw_data->DisplayPos;
                         const auto top_left_x = clip_rect.x - pos.x;
