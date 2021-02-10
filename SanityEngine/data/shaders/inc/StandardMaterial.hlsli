@@ -1,7 +1,9 @@
 #pragma once
 
+#include "inc/normalmapping.hlsl"
+
 struct StandardVertex {
-    float3 position : Position;
+    float3 location : Position;
     float3 normal : Normal;
     float4 color : Color;
     float2 texcoord : Texcoord;
@@ -36,7 +38,7 @@ struct SurfaceInfo {
 
 SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialData material) {
     SurfaceInfo surface;
-    surface.location = vertex.position;
+    surface.location = vertex.location;
 
     if(material.base_color_idx != 0) {
         Texture2D albedo_texture = textures[material.base_color_idx];
@@ -59,11 +61,11 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
         surface.normal = vertex.normal;
     	
         // TODO: generate normal matrix in fragment shader like a cool kid
-        // Texture2D normal_texture = textures[material.normal_idx];
-        // surface.normal = normal_texture.Sample(bilinear_sampler, input.texcoord).xyz * 2.0 - 1.0;
-        //
-        // const float3x3 normal_matrix = cotangent_frame(input.normal_worldspace, input.position_worldspace, input.texcoord);
-        // surface.normal = mul(normal_matrix, surface.normal);
+        Texture2D normal_texture = textures[material.normal_idx];
+        surface.normal = normal_texture.Sample(bilinear_sampler, vertex.texcoord).xzy * 2.0 - 1.0;
+         
+        const float3x3 normal_matrix = cotangent_frame(vertex.normal, vertex.location, vertex.texcoord);
+        surface.normal = mul(normal_matrix, surface.normal).xzy;
 
     } else {
         surface.normal = vertex.normal;

@@ -1,6 +1,5 @@
 #include "inc/StandardMaterial.hlsli"
 #include "inc/lighting.hlsl"
-#include "inc/normalmapping.hlsl"
 
 struct VertexOutput {
     float4 location_ndc : SV_POSITION;
@@ -15,11 +14,11 @@ struct PixelOutput {
     uint object_id : SV_TARGET1;
 };
 
-PixelOutput main(VertexOutput input) {
+PixelOutput main(const VertexOutput input) {
     const MaterialData material = material_buffer[constants.material_index];
 
     StandardVertex vertex;
-    vertex.position = input.location_worldspace.xyz;
+    vertex.location = input.location_worldspace.xyz;
     vertex.normal = normalize(input.normal_worldspace);
     vertex.color = input.color;
     vertex.texcoord = input.texcoord;
@@ -34,6 +33,8 @@ PixelOutput main(VertexOutput input) {
 	PixelOutput output;
     output.color = float4(total_reflected_light, 1);
     output.object_id = constants.object_id;
+
+	// output.color.rgb = surface.normal;
 
 	return output;
 }

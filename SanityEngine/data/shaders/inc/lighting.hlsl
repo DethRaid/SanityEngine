@@ -24,7 +24,7 @@ uint3 get_indices(uint triangle_index) {
 
 StandardVertex get_vertex(int address) {
     StandardVertex v;
-    v.position = asfloat(vertices.Load3(address));
+    v.location = asfloat(vertices.Load3(address));
     address += (3 * 4);
     v.normal = asfloat(vertices.Load3(address));
     address += (3 * 4);
@@ -43,7 +43,7 @@ StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
     StandardVertex v2 = get_vertex((indices[2] * BYTES_PER_VERTEX) * 4);
 
     StandardVertex v;
-    v.position = v0.position + barycentrics.x * (v1.position - v0.position) + barycentrics.y * (v2.position - v0.position);
+    v.location = v0.location + barycentrics.x * (v1.location - v0.location) + barycentrics.y * (v2.location - v0.location);
     v.normal = v0.normal + barycentrics.x * (v1.normal - v0.normal) + barycentrics.y * (v2.normal - v0.normal);
     v.color = v0.color + barycentrics.x * (v1.color - v0.color) + barycentrics.y * (v2.color - v0.color);
     v.texcoord = v0.texcoord + barycentrics.x * (v1.texcoord - v0.texcoord) + barycentrics.y * (v2.texcoord - v0.texcoord);
@@ -306,6 +306,8 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface,
     const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
+
+	// return indirect_light;
     	
     return direct_light + indirect_light + reflection;
 }
