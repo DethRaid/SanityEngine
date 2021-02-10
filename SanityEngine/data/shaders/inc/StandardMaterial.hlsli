@@ -79,7 +79,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
 
     } else {
         surface.metalness = material.metallic_roughness_value.b;
-        surface.roughness = material.metallic_roughness_value.g;
+        surface.roughness = material.metallic_roughness_value.g * material.metallic_roughness_value.g;
     }
 
     if(material.emission_idx != 0) {
@@ -89,10 +89,6 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
     } else {
         surface.emission = material.emission_value.rgb;
     }
-
-	// Hacks while I debug specular
-    surface.normal = vertex.normal;
-    surface.metalness = 1;
 
     return surface;
 }
