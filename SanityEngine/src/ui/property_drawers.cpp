@@ -40,6 +40,8 @@ namespace sanity::engine::ui {
     }
 
     void draw_property_editor(const Rx::String& label, glm::quat& quat) {
+        auto euler = glm::eulerAngles(quat);
+
         ImGui::PushID(label.data());
 
         ImGui::Text("%s", label.data());
@@ -47,16 +49,16 @@ namespace sanity::engine::ui {
         ImGui::SetCursorPosX(150);
         ImGui::PushItemWidth(50);
         ImGui::SameLine();
-        ImGui::InputFloat("x", &quat.x, 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat("Roll", &euler.z, 0, 0, "%.3f");
         ImGui::SameLine();
-        ImGui::InputFloat("y", &quat.y, 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat("Pitch", &euler.x, 0, 0, "%.3f");
         ImGui::SameLine();
-        ImGui::InputFloat("z", &quat.z, 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly);
-        ImGui::SameLine();
-        ImGui::InputFloat("w", &quat.w, 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat("Yaw", &euler.y, 0, 0, "%.3f");
         ImGui::PopItemWidth();
 
         ImGui::PopID();
+
+        quat = glm::quat(euler);
     }
 
     void draw_property_editor(const Rx::String& label, Transform& transform) {

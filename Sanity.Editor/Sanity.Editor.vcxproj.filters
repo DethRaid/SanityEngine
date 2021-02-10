@@ -91,9 +91,6 @@
     <ClCompile Include="src\ui\windows\scene_hierarchy.cpp">
       <Filter>src\ui\windows</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\component_editors.cpp">
-      <Filter>src\ui</Filter>
-    </ClCompile>
     <ClCompile Include="scene_viewport.cpp">
       <Filter>src\ui\windows</Filter>
     </ClCompile>
@@ -152,9 +149,6 @@
     </ClInclude>
     <ClInclude Include="src\ui\windows\scene_hierarchy.hpp">
       <Filter>src\ui\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ui\component_editors.hpp">
-      <Filter>src\ui</Filter>
     </ClInclude>
     <ClInclude Include="scene_viewport.hpp">
       <Filter>src\ui\windows</Filter>
