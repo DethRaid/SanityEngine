@@ -59,7 +59,7 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
 
     Texture2D noise = textures[per_frame_data[0].noise_texture_idx];
 
-    const float2 nums = noise.Sample(point_sampler, noise_sample_location).rg;
+    const float2 nums = noise.Sample(bilinear_sampler, noise_sample_location).rg;
 
     float3 random_vector = CosineSampleHemisphere(nums);
     const float3x3 onb = transpose(construct_ONB_frisvad(normal));
