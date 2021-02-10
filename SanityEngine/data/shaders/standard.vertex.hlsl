@@ -32,5 +32,7 @@ VertexOutput main(StandardVertex input) {
     output.color = input.color;
     output.texcoord = input.texcoord;
 
+	output.normal_worldspace = input.normal_modelspace;
+
     return output;
 }

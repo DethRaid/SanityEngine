@@ -19,21 +19,21 @@ namespace sanity::engine::renderer {
 
     	glm::vec4 emission_value{0.f};
     	
-        TextureHandle base_color_texture;
+        TextureHandle base_color_texture{0};
 
-        TextureHandle normal_texture;
+        TextureHandle normal_texture{0};
 
     	/*!
     	 * G = roughness
     	 * B = metallic
     	 */
-        TextureHandle metallic_roughness_texture;
+        TextureHandle metallic_roughness_texture{0};
     	
         /*!
          * Emission is stored as the cube of the actual emission, scaled from 0 - 100 to 0 - 1
          *
          * `emission = pow(emission.r, 1 / 3) * 100;`
          */
-    	TextureHandle emission_texture;
+        TextureHandle emission_texture{0};
     };
 } // namespace renderer

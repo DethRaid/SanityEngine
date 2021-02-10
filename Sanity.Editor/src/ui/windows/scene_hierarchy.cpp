@@ -1,5 +1,6 @@
 #include "scene_hierarchy.hpp"
 
+#include "SanityEditor.hpp"
 #include "actor/actor.hpp"
 #include "core/components.hpp"
 #include "entity/Components.hpp"
@@ -33,23 +34,38 @@ namespace sanity::editor::ui {
         const auto& sanity_entity = registry->get<engine::Actor>(entity);
         const auto& transform = registry->get<engine::TransformComponent>(entity);
 
-        ImGui::PushID(sanity_entity.name.data());
+        auto should_draw = true;
+        auto should_end = false;
 
-        ImGui::Text("%s", sanity_entity.name.data());
-        ImGui::SameLine();
-        if(ImGui::Button("Inspect")) {
-            show_entity_editor(entity);
+        const auto selected_entity = g_editor->get_selected_entity();
+        if(selected_entity && *selected_entity == entity) {
+            should_draw = ImGui::BeginChild("Selection", {}, true, ImGuiWindowFlags_NoDecoration);
+            should_end = should_draw;
         }
 
-        if(!transform.children.is_empty()) {
-            if(ImGui::CollapsingHeader("Children")) {
-                ImGui::Indent();
-                transform.children.each_fwd([&](const entt::entity& child) { draw_entity(child); });
-                ImGui::Unindent();
+        if(should_draw) {
+            ImGui::PushID(sanity_entity.name.data());
+
+            ImGui::Text("%s", sanity_entity.name.data());
+            ImGui::SameLine();
+            if(ImGui::Button("Inspect")) {
+                show_entity_editor(entity);
+            }
+
+            if(!transform.children.is_empty()) {
+                if(ImGui::CollapsingHeader("Children")) {
+                    ImGui::Indent();
+                    transform.children.each_fwd([&](const entt::entity& child) { draw_entity(child); });
+                    ImGui::Unindent();
+                }
+            }
+
+            ImGui::PopID();
+
+            if(should_end) {
+                ImGui::EndChild();
             }
         }
-
-        ImGui::PopID();
     }
 
     void SceneHierarchy::show_entity_editor(const entt::entity entity) {

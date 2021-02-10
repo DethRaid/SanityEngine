@@ -14,10 +14,10 @@ struct MaterialData {};
 
 #include "inc/standard_root_signature.hlsl"
 
-VertexOutput main( DearImGuiVertex input) {
+VertexOutput main(const DearImGuiVertex input) {
 	VertexOutput output;
 
-	uint2 render_size = per_frame_data[0].render_size;
+	const uint2 render_size = per_frame_data[0].render_size;
 
     output.position = float4((input.position / render_size) * 2.0 - 1.0, 0, 1);
     output.position.y *= -1.0;

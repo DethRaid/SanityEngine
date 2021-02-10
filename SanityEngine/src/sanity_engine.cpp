@@ -85,7 +85,7 @@ namespace sanity::engine {
                 ZoneScopedN("glfwCreateWindow");
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
                 glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-                window = glfwCreateWindow(1280, 720, "Sanity Engine", nullptr, nullptr);
+                window = glfwCreateWindow(1920, 1080, "Sanity Engine", nullptr, nullptr);
                 if(window == nullptr) {
                     Rx::abort("Could not create GLFW window");
                 }

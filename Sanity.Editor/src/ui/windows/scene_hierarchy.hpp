@@ -1,15 +1,13 @@
 #pragma once
 
-#include <entt/entity/registry.hpp>
-#include <ui/Window.hpp>
-
 #include "EntityEditorWindow.hpp"
+#include "entt/entity/registry.hpp"
+#include "ui/Window.hpp"
 
 namespace sanity::editor::ui {
-	class EditorUiController;
+    class EditorUiController;
 
-	class SceneHierarchy : public engine::ui::Window
-    {
+    class SceneHierarchy : public engine::ui::Window {
     public:
         explicit SceneHierarchy(entt::registry& registry_in, EditorUiController& controller_in);
 
@@ -19,8 +17,8 @@ namespace sanity::editor::ui {
     private:
         entt::registry* registry;
 
-		EditorUiController* controller;
-		
+        EditorUiController* controller;
+
         EntityEditorWindow* entity_editor{nullptr};
 
         void draw_entity(entt::entity entity);

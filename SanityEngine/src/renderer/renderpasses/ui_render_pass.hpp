@@ -17,7 +17,7 @@ namespace sanity::engine::renderer {
 
         ~DearImGuiRenderPass() override = default;
 
-        void set_clear_color(const Vec4f& color);
+        void set_background_color(const Vec4f& color);
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
@@ -26,6 +26,6 @@ namespace sanity::engine::renderer {
 
         Rx::Ptr<RenderPipelineState> ui_pipeline;
 
-        Vec4f clear_color{79.f / 255.f, 77.f / 255.f, 78.f / 255.f, 1.f};
+        Vec4f background_color{79.f / 255.f, 77.f / 255.f, 78.f / 255.f, 1.f};
     };
 } // namespace sanity::engine::renderer

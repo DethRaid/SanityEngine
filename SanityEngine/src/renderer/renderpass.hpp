@@ -6,6 +6,7 @@
 #include "entt/entity/fwd.hpp"
 #include "renderer/handles.hpp"
 #include "rx/core/map.h"
+#include "rx/core/optional.h"
 
 namespace sanity::engine {
     class World;
@@ -26,7 +27,7 @@ namespace sanity::engine {
 
             virtual void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
 
-            [[nodiscard]] const Rx::Map<TextureHandle, BeginEndState>& get_texture_states() const;
+            [[nodiscard]] const Rx::Map<TextureHandle, Rx::Optional<BeginEndState>>& get_texture_states() const;
 
         protected:
             /*!
@@ -49,15 +50,15 @@ namespace sanity::engine {
              */
             void add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states);
 
-        	/**
-        	 * @brief Removes the usage information for this resources
-        	 * 
-        	 * @param handle A handle to the texture to remove the usage information for
-        	*/
-        	void remove_resource_usage(TextureHandle handle);
+            /**
+             * @brief Removes the usage information for this resources
+             *
+             * @param handle A handle to the texture to remove the usage information for
+             */
+            void remove_resource_usage(TextureHandle handle);
 
         private:
-            Rx::Map<TextureHandle, Rx::Pair<D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES>> texture_states;
+            Rx::Map<TextureHandle, Rx::Optional<BeginEndState>> texture_states;
         };
     } // namespace renderer
 } // namespace sanity::engine

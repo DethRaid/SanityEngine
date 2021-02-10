@@ -56,9 +56,9 @@ namespace sanity {
                 [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene,
                                                                                                         ID3D12GraphicsCommandList4* cmds);
 
-                [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> get_sanity_handle_to_texture(Int32 texture_idx,
-                                                                                                         const tinygltf::Model& scene,
-                                                                                                         ID3D12GraphicsCommandList4* cmds);
+                [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> import_texture(Int32 texture_idx,
+                                                                                           const tinygltf::Model& scene,
+                                                                                           ID3D12GraphicsCommandList4* cmds);
 
                 [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds) const;
 

@@ -51,7 +51,7 @@ namespace sanity::engine::renderer {
         });
     }
 
-    void DearImGuiRenderPass::set_clear_color(const Vec4f& color) { clear_color = color; }
+    void DearImGuiRenderPass::set_background_color(const Vec4f& color) { background_color = color; }
 
     void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
@@ -72,10 +72,10 @@ namespace sanity::engine::renderer {
             const auto backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,
                                                                                 .BeginningAccess =
                                                                                     {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                                     .Clear = {.ClearValue = {.Color = {clear_color.r,
-                                                                                                                        clear_color.g,
-                                                                                                                        clear_color.b,
-                                                                                                                        clear_color.a}}}},
+                                                                                     .Clear = {.ClearValue = {.Color = {background_color.r,
+                                                                                                                        background_color.g,
+                                                                                                                        background_color.b,
+                                                                                                                        background_color.a}}}},
                                                                                 .EndingAccess = {
                                                                                     .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 

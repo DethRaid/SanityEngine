@@ -151,17 +151,21 @@ namespace sanity::engine::renderer {
 
         const auto& previous_resource_usages = get_previous_resource_states(render_pass_index);
 
-        used_resources.each_pair([&](const TextureHandle& texture_handle, const BeginEndState& before_after_state) {
+        used_resources.each_pair([&](const TextureHandle& texture_handle, const Rx::Optional<BeginEndState>& before_after_state) {
+            if(!before_after_state) {
+                return;
+            }
+
             const auto& image = get_texture(texture_handle);
             auto* resource = image.resource.Get();
 
             if(const auto* previous_state = previous_resource_usages.find(texture_handle)) {
-                if(*previous_state == before_after_state.first) {
+                if(*previous_state == before_after_state->first) {
                     return;
                 }
 
                 // Only issue a barrier if we need a state transition
-                auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *previous_state, before_after_state.first);
+                auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, *previous_state, before_after_state->first);
 
                 // Issue the end of a split barrier cause we're the best
                 barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
@@ -169,13 +173,13 @@ namespace sanity::engine::renderer {
                 barriers.push_back(barrier);
 
             } else {
-                if(before_after_state.first != D3D12_RESOURCE_STATE_COMMON) {
+                if(before_after_state->first != D3D12_RESOURCE_STATE_COMMON) {
                     // no previous usage so just barrier from COMMON
                     // No split barrier here, that'd be silly
 
                     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
                                                                                D3D12_RESOURCE_STATE_COMMON,
-                                                                               before_after_state.first);
+                                                                               before_after_state->first);
 
                     barriers.push_back(barrier);
                 }
@@ -199,17 +203,21 @@ namespace sanity::engine::renderer {
 
         const auto& next_resource_usages = get_next_resource_states(render_pass_index);
 
-        used_resources.each_pair([&](const TextureHandle& texture_handle, const BeginEndState& before_after_state) {
+        used_resources.each_pair([&](const TextureHandle& texture_handle, const Rx::Optional<BeginEndState>& before_after_state) {
+            if(!before_after_state) {
+                return;
+            }
+
             const auto& image = get_texture(texture_handle);
             auto* resource = image.resource.Get();
 
             if(const auto* next_state = next_resource_usages.find(texture_handle)) {
-                if(before_after_state.second == *next_state) {
+                if(before_after_state->second == *next_state) {
                     return;
                 }
 
                 // Only issue a barrier if we need a state transition
-                auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, before_after_state.second, *next_state);
+                auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, before_after_state->second, *next_state);
 
                 // Issue the end of a split barrier cause we're the best
                 barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
@@ -217,12 +225,12 @@ namespace sanity::engine::renderer {
                 barriers.push_back(barrier);
 
             } else {
-                if(before_after_state.second != D3D12_RESOURCE_STATE_COMMON) {
+                if(before_after_state->second != D3D12_RESOURCE_STATE_COMMON) {
                     // no next usage so just barrier to COMMON
                     // No split barrier here, that'd be silly
 
                     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
-                                                                               before_after_state.second,
+                                                                               before_after_state->second,
                                                                                D3D12_RESOURCE_STATE_COMMON);
 
                     barriers.push_back(barrier);
@@ -687,9 +695,9 @@ namespace sanity::engine::renderer {
                     const auto& renderpass_resources = render_passes[i]->get_texture_states();
                     if(previous_states.find(texture) == nullptr) {
                         // No usage for this resource has been found yes
-                        if(const auto* states = renderpass_resources.find(texture)) {
+                        if(const auto* states = renderpass_resources.find(texture); states != nullptr && states->has_value()) {
                             // This renderpass has an entry for the resource we care about!
-                            previous_states.insert(texture, states->second);
+                            previous_states.insert(texture, (*states)->second);
                         }
                     }
                 });
@@ -709,9 +717,9 @@ namespace sanity::engine::renderer {
                     const auto& renderpass_resources = render_passes[i]->get_texture_states();
                     if(next_states.find(texture) == nullptr) {
                         // No usage for this resource has been found yes
-                        if(const auto* states = renderpass_resources.find(texture)) {
+                        if(const auto* states = renderpass_resources.find(texture); states != nullptr && states->has_value()) {
                             // This renderpass has an entry for the resource we care about!
-                            next_states.insert(texture, states->first);
+                            next_states.insert(texture, (*states)->first);
                         }
                     }
                 });

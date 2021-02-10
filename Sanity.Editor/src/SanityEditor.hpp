@@ -22,6 +22,10 @@ namespace sanity::editor {
 
         [[nodiscard]] const std::filesystem::path& get_content_directory() const;
 
+        void set_selected_entity(const Rx::Optional<entt::entity>& entity);
+
+        [[nodiscard]] Rx::Optional<entt::entity> get_selected_entity() const;
+
     private:
         ui::EditorUiController ui_controller;
 
@@ -38,12 +42,19 @@ namespace sanity::editor {
 
         Project project_data;
 
+        /**
+         * @brief Entity that is currently selected in the viewport or the scene hierarchy window
+         */
+        Rx::Optional<entt::entity> selected_entity;
+
+        Rx::Vector<Rx::Function<void(entt::entity)>> on_selected_entity_change_callbacks;
+
         void load_project(const std::filesystem::path& project_file, bool should_scan_project_directory = true);
 
         void scan_project_directory_async(const std::filesystem::path& project_content_directory);
 
         void register_editor_component_type_reflection();
-    	
+
         void create_application_gui();
     };
 

@@ -212,7 +212,7 @@ namespace sanity::editor::import {
             const auto normal_texture_idx{material.normalTexture.index};
 
             if(base_color_texture_idx != -1) {
-                if(const auto handle = get_sanity_handle_to_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.base_color_texture = *handle;
 
                 } else {
@@ -224,7 +224,7 @@ namespace sanity::editor::import {
             }
 
             if(metalness_roughness_texture_idx != -1) {
-                if(const auto handle = get_sanity_handle_to_texture(metalness_roughness_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(metalness_roughness_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.metallic_roughness_texture = *handle;
 
                 } else {
@@ -236,7 +236,7 @@ namespace sanity::editor::import {
             }
 
             if(normal_texture_idx != -1) {
-                if(const auto handle = get_sanity_handle_to_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.normal_texture = *handle;
 
                 } else {
@@ -248,7 +248,7 @@ namespace sanity::editor::import {
             }
 
             if(emission_texture_idx != -1) {
-                if(const auto handle = get_sanity_handle_to_texture(emission_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(emission_texture_idx, scene, cmds); handle.has_value()) {
                     sanity_material.emission_texture = *handle;
 
                 } else {
@@ -268,9 +268,9 @@ namespace sanity::editor::import {
         return imported_materials;
     }
 
-    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::get_sanity_handle_to_texture(const Int32 texture_idx,
-                                                                                              const tinygltf::Model& scene,
-                                                                                              ID3D12GraphicsCommandList4* cmds) {
+    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::import_texture(const Int32 texture_idx,
+                                                                                const tinygltf::Model& scene,
+                                                                                ID3D12GraphicsCommandList4* cmds) {
         static Byte* padding_buffer{nullptr};
 
         ZoneScoped;
@@ -315,7 +315,7 @@ namespace sanity::editor::import {
 
             for(Uint32 pixel_idx = 0; pixel_idx < static_cast<Uint32>(source_image.width * source_image.height); pixel_idx++) {
                 padding_buffer[write_idx] = source_image.image[read_idx];
-                padding_buffer[write_idx + 1] = source_image.image[read_idx + 3];
+                padding_buffer[write_idx + 1] = source_image.image[read_idx + 1];
                 padding_buffer[write_idx + 2] = source_image.image[read_idx + 2];
                 padding_buffer[write_idx + 3] = 0xFF;
 
@@ -329,10 +329,10 @@ namespace sanity::editor::import {
         const auto image_name = texture_name.is_empty() ? "Imported GLTF texture" : texture_name;
 
         const auto create_info = engine::renderer::TextureCreateInfo{.name = image_name,
-                                                                   .usage = engine::renderer::TextureUsage::SampledTexture,
-                                                                   .format = engine::renderer::TextureFormat::Rgba8,
-                                                                   .width = static_cast<Uint32>(source_image.width),
-                                                                   .height = static_cast<Uint32>(source_image.height)};
+                                                                     .usage = engine::renderer::TextureUsage::SampledTexture,
+                                                                     .format = engine::renderer::TextureFormat::Rgba8,
+                                                                     .width = static_cast<Uint32>(source_image.width),
+                                                                     .height = static_cast<Uint32>(source_image.height)};
 
         const auto handle = renderer->create_texture(create_info, image_data, cmds);
         loaded_textures.insert(texture_name, handle);
@@ -486,19 +486,18 @@ namespace sanity::editor::import {
             // Hope that all the buffers have the same size... They should...
 
             const auto location = *position_read_ptr;
+            position_read_ptr++;
+
             const auto normal = *normal_read_ptr;
+            normal_read_ptr++;
+
             Vec2f texcoord;
             if(texcoord_read_ptr != nullptr) {
                 texcoord = *texcoord_read_ptr;
-                texcoord.y = 1.0f - texcoord.y; // Convert OpenGL-style texcoords to DirectX-style
+                texcoord_read_ptr++;
             }
 
-            vertices.push_back(
-                StandardVertex{.location = location, .normal = {normal.x, normal.y, -normal.z}, .texcoord = {texcoord.x, -texcoord.y}});
-
-            position_read_ptr++;
-            normal_read_ptr++;
-            texcoord_read_ptr++;
+            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, normal.y, -normal.z}, .texcoord = texcoord});
         }
 
         return vertices;

@@ -51,6 +51,7 @@ namespace sanity::editor::ui {
 
         const auto scene_entity = importer->import_gltf_scene(mesh_path, metadata.import_settings, registry);
         if(scene_entity) {
+            g_editor->set_selected_entity(scene_entity);
         }
     }
 } // namespace sanity::editor::ui

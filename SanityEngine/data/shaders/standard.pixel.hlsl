@@ -34,7 +34,7 @@ PixelOutput main(const VertexOutput input) {
     output.color = float4(total_reflected_light, 1);
     output.object_id = constants.object_id;
 
-	// output.color.rgb = surface.normal;
+	output.color.rgb = surface.normal;
 
 	return output;
 }
