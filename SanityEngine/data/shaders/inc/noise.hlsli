@@ -8,7 +8,7 @@
 
 #define GOLDEN_ANGLE TAU / PHI / PHI
 
-#define NUM_TEMPORAL_SAMPLES 13
+#define NUM_TEMPORAL_SAMPLES 69
 
 float2 fermatsSpiralGoldenN(float index, float total) {
     float theta = index * GOLDEN_ANGLE;
