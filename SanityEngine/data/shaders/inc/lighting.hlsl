@@ -97,7 +97,7 @@ float4 get_incoming_light(
     const in float3 surface_normal,
     const in Light sun,
     const in float2 noise_texcoord,
-    inout RayQuery<RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
+    inout RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
     out StandardVertex vertex,
     out MaterialData material) {
 
@@ -152,7 +152,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                     const in Light sun) {
     const uint num_indirect_rays = 1;
 
-    const uint num_bounces = 1;
+    const uint num_bounces = 2;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -160,7 +160,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
 
     float3 indirect_light = 0;
 
-    RayQuery<RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
 
     SurfaceInfo surface = original_surface;
 
@@ -227,11 +227,11 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
                             const in float3 eye_vector,
                             const in float2 noise_texcoord,
                             const in Light sun) {
-    const uint num_specular_rays = 1;
+    const uint num_specular_rays = 2;
 
-    const uint num_bounces = 1;
+    const uint num_bounces = 3;
 
-    RayQuery<RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
 
     SurfaceInfo surface = original_surface;
 
