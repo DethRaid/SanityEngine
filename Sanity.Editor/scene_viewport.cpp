@@ -1,5 +1,7 @@
 #include "scene_viewport.hpp"
 
+#include "renderer/rhi/d3d12_private_data.hpp"
+
 #include "Tracy.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/renderer.hpp"
@@ -7,6 +9,8 @@
 using namespace sanity::engine::renderer;
 
 namespace sanity::editor::ui {
+    RX_LOG("SceneViewport", logger);
+
     SceneViewport::SceneViewport(Renderer& renderer_in) : Window{"Scene Viewport"}, renderer{&renderer_in} {}
 
     void SceneViewport::set_render_size(const Uint2& new_render_size) {
@@ -26,8 +30,11 @@ namespace sanity::editor::ui {
 
         ImGui::Image(scene_output_texture, im_size);
 
-        const auto size = Uint2{static_cast<Uint32>(im_size.x), static_cast<Uint32>(im_size.y)};
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+            logger->info("User clicked on scene output texture");
+        }
 
+        const auto size = Uint2{static_cast<Uint32>(im_size.x), static_cast<Uint32>(im_size.y)};
         if(size != render_size) {
             set_render_size(size);
         }

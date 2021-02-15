@@ -36,7 +36,7 @@ namespace sanity::engine::renderer {
             private_data_logger->error("Could not retrieve size of object name");
             return "Unnamed object";
         }
-    	
+
         Rx::WideString name{};
         name.resize(data_size);
         result = object->GetPrivateData(WKPDID_D3DDebugObjectNameW, &data_size, name.data());
@@ -81,7 +81,7 @@ namespace sanity::engine::renderer {
 
         return com_pointer;
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer
 
 namespace Rx {
     template <>
