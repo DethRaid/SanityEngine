@@ -786,7 +786,7 @@ namespace sanity::engine::renderer {
                                                          prebuild_info.ScratchDataSizeInBytes);
             prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                            prebuild_info.ResultDataMaxSizeInBytes);
-
+            
             auto scratch_buffer = device->get_scratch_buffer(static_cast<Uint32>(prebuild_info.ScratchDataSizeInBytes));
 
             const auto as_buffer_create_info = BufferCreateInfo{.name = "Raytracing Scene",
@@ -799,16 +799,16 @@ namespace sanity::engine::renderer {
                 .Inputs = as_inputs,
                 .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress(),
             };
-
-            DEFER(a, [&]() { device->return_staging_buffer(Rx::Utility::move(instance_buffer)); });
-            DEFER(b, [&]() { device->return_scratch_buffer(Rx::Utility::move(scratch_buffer)); });
-
+            
             commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
             const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
             raytracing_scene = {Rx::Utility::move(as_buffer)};
+        	
+            device->return_staging_buffer(Rx::Utility::move(instance_buffer));
+            device->return_scratch_buffer(Rx::Utility::move(scratch_buffer));
         }
     }
 
@@ -840,18 +840,17 @@ namespace sanity::engine::renderer {
 
         per_frame_data.render_size = output_framebuffer_size;
 
-    	per_frame_data.noise_texture_idx = noise_texture_handle.index;
-    	
+        per_frame_data.noise_texture_idx = noise_texture_handle.index;
+
         const auto view = registry.view<SkyboxComponent>();
         if(view.size() == 1) {
             const auto skybox_entity = view.front();
             const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
             per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
         }
-        
+
         memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
     }
-
 
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
         ZoneScoped;

@@ -15,7 +15,7 @@ namespace sanity::engine::renderer {
     struct PlacedMesh {
         Mesh mesh{};
 
-        Transform transform{};
+        glm::mat4 model_matrix{1.f};
     };
 
     /*!

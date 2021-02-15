@@ -456,15 +456,23 @@ namespace sanity::engine::renderer {
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
         meshes.each_fwd([&](const PlacedMesh& mesh) {
-            const auto transform_buffer = device.get_staging_buffer(sizeof(Transform));
-            const auto matrix = mesh.transform.to_matrix();
-            memcpy(transform_buffer.mapped_ptr, &matrix[0][0], sizeof(Transform));
+            const auto transform_buffer = device.get_staging_buffer(sizeof(glm::mat3x4));
+            const auto matrix = glm::mat4x3{glm::vec3{mesh.model_matrix[0]},
+                                            glm::vec3{mesh.model_matrix[1]},
+                                            glm::vec3{mesh.model_matrix[2]},
+                                            glm::vec3{mesh.model_matrix[3]}};
+            memcpy(transform_buffer.mapped_ptr, &mesh.model_matrix[0][0], sizeof(glm::mat4x3));
+
+        	// const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(transform_buffer.resource.Get(),
+            //                                                           D3D12_RESOURCE_STATE_COMMON,
+            //                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            // commands->ResourceBarrier(1, &barrier);
 
             const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh.mesh;
 
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
-                                                            .Triangles = {.Transform3x4 = 0,
+                                                            .Triangles = {.Transform3x4 = transform_buffer.resource->GetGPUVirtualAddress(),
                                                                           .IndexFormat = DXGI_FORMAT_R32_UINT,
                                                                           .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
                                                                           .IndexCount = num_indices,

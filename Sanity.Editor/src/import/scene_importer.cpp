@@ -189,23 +189,23 @@ namespace sanity::editor::import {
             const auto base_color_texture_idx{material.pbrMetallicRoughness.baseColorTexture.index};
             if(base_color_texture_idx == -1) {
                 const auto data = material.pbrMetallicRoughness.baseColorFactor;
-                sanity_material.base_color_value.r = data[0];
-                sanity_material.base_color_value.g = data[1];
-                sanity_material.base_color_value.b = data[2];
-                sanity_material.base_color_value.a = data[3];
+                sanity_material.base_color_value.r = static_cast<float>(data[0]);
+                sanity_material.base_color_value.g = static_cast<float>(data[1]);
+                sanity_material.base_color_value.b = static_cast<float>(data[2]);
+                sanity_material.base_color_value.a = static_cast<float>(data[3]);
             }
 
             const auto metalness_roughness_texture_idx{material.pbrMetallicRoughness.metallicRoughnessTexture.index};
             if(metalness_roughness_texture_idx == -1) {
-                sanity_material.metallic_roughness_value.g = material.pbrMetallicRoughness.roughnessFactor;
-                sanity_material.metallic_roughness_value.b = material.pbrMetallicRoughness.metallicFactor;
+                sanity_material.metallic_roughness_value.g = static_cast<float>(material.pbrMetallicRoughness.roughnessFactor);
+                sanity_material.metallic_roughness_value.b = static_cast<float>(material.pbrMetallicRoughness.metallicFactor);
             }
 
             const auto emission_texture_idx{material.emissiveTexture.index};
             if(emission_texture_idx == -1) {
-                sanity_material.emission_value.r = material.emissiveFactor[0];
-                sanity_material.emission_value.g = material.emissiveFactor[1];
-                sanity_material.emission_value.b = material.emissiveFactor[2];
+                sanity_material.emission_value.r = static_cast<float>(material.emissiveFactor[0]);
+                sanity_material.emission_value.g = static_cast<float>(material.emissiveFactor[1]);
+                sanity_material.emission_value.b = static_cast<float>(material.emissiveFactor[2]);
                 sanity_material.emission_value.a = 0;
             }
 
@@ -535,8 +535,8 @@ namespace sanity::editor::import {
             auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
 
-            const auto vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
-            const auto index_buffer = renderer->get_static_mesh_store().get_index_buffer();
+            const auto& vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
+            const auto& index_buffer = renderer->get_static_mesh_store().get_index_buffer();
 
             Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
@@ -558,11 +558,14 @@ namespace sanity::editor::import {
                 // Build raytracing acceleration structure. We make a separate BLAS for each primitive because they
                 // might have separate materials. However, this will create too many BLASs if primitives share
                 // materials. This will be addressed in a future revision
-                Rx::Vector<engine::renderer::PlacedMesh> meshes_for_raytracing;
-
-                meshes_for_raytracing.emplace_back(primitive.mesh, parent_transform_component.transform);
-
-                const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer, index_buffer, meshes_for_raytracing, cmds);
+                
+                const auto model_matrix = primitive_transform_component.get_local_matrix();
+                const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer,
+                                                                            index_buffer,
+                                                                            Rx::Array{
+                                                                                engine::renderer::PlacedMesh{.mesh = primitive.mesh,
+                                                                                                             .model_matrix = model_matrix}},
+                                                                            cmds);
 
                 auto& raytracing_object_component = primitive_actor.add_component<engine::renderer::RaytracingObjectComponent>();
                 raytracing_object_component.as_handle = as_handle;
@@ -571,7 +574,7 @@ namespace sanity::editor::import {
 
                 const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle,
                                                                            .material = ray_material,
-                                                                           .transform = primitive_transform_component.get_world_matrix(
+                                                                           .transform = primitive_transform_component.get_model_matrix(
                                                                                registry)};
                 //,
                 //.transform = cached_transform.to_matrix()};
