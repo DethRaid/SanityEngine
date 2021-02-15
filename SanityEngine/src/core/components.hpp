@@ -13,7 +13,15 @@ namespace sanity::engine {
 
         Rx::Vector<entt::entity> children;
 
-    	[[nodiscard]] glm::mat4 get_world_matrix(const entt::registry& registry) const;
+    	/**
+    	 * @brief Returns the matrix from this node's local transform frame to it's immediate parent's transform frame
+       	 */
+        [[nodiscard]] glm::mat4 get_local_matrix() const;
+
+    	/**
+    	 * @brief Returns the matrix that transforms from this node's local transform frame to the world transform frame
+    	 */
+    	[[nodiscard]] glm::mat4 get_model_matrix(const entt::registry& registry) const;
 
     	[[nodiscard]] Transform* operator->();
 
