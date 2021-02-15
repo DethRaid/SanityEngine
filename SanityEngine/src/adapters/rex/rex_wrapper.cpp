@@ -84,7 +84,8 @@ namespace Rx {
     }
 
     const char* FormatNormalize<glm::qua<float, glm::defaultp>>::operator()(const glm::quat& data) {
-        sprintf_s(scratch, "(%f, %f, %f, %f)", data.x, data.y, data.z, data.w);
+        const auto euler = glm::eulerAngles(data);
+        sprintf_s(scratch, "(%f, %f, %f)", euler.x, euler.y, euler.z);
 
         return scratch;
     }

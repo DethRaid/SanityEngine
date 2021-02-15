@@ -48,13 +48,13 @@ namespace Rx {
 
     template <>
     struct FormatNormalize<glm::vec3> {
-        char scratch[FormatSize<Float32>::size * 3 + sizeof "{, , }" - 1];
+        char scratch[FormatSize<Float32>::size * 3 + sizeof "(, , )" - 1];
         const char* operator()(const glm::vec3& data);
     };
 
     template <>
     struct FormatNormalize<glm::quat> {
-        char scratch[FormatSize<Float32>::size * 4 + sizeof "{, , , }" - 1];
+        char scratch[FormatSize<Float32>::size * 3 + sizeof "(, , )" - 1];
         const char* operator()(const glm::quat& data);
     };
 } // namespace Rx
