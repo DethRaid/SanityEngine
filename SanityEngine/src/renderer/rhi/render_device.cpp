@@ -300,7 +300,7 @@ namespace sanity::engine::renderer {
 
     void RenderBackend::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
         ZoneScoped;
-    	
+
         buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
     }
 
@@ -510,7 +510,7 @@ namespace sanity::engine::renderer {
             end_capture();
             is_frame_capture_active = false;
         }
-        
+
 #ifdef TRACY_ENABLE
         TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
         TracyD3D12Collect(renderer::RenderBackend::tracy_context);
@@ -555,11 +555,11 @@ namespace sanity::engine::renderer {
 
     bool RenderBackend::has_separate_device_memory() const { return !is_uma; }
 
-    Buffer RenderBackend::get_staging_buffer(const Uint64 num_bytes) {
+    Buffer RenderBackend::get_staging_buffer(const Uint64 num_bytes, const Uint64 alignment) {
         ZoneScoped;
 
         for(size_t i = 0; i < staging_buffers.size(); i++) {
-            if(staging_buffers[i].size >= num_bytes) {
+            if(staging_buffers[i].size >= num_bytes && staging_buffers[i].alignment == alignment) {
                 // Return the first suitable buffer we find
                 auto buffer = Rx::Utility::move(staging_buffers[i]);
                 staging_buffers.erase(i, i + 1);
@@ -569,7 +569,7 @@ namespace sanity::engine::renderer {
         }
 
         // No suitable buffer is available, let's make a new one
-        return create_staging_buffer(num_bytes);
+        return create_staging_buffer(num_bytes, alignment);
     }
 
     Buffer RenderBackend::get_staging_buffer_for_texture(ID3D12Resource* texture) {
@@ -1468,8 +1468,8 @@ namespace sanity::engine::renderer {
         wait_for_frame(frame_index);
     }
 
-    Buffer RenderBackend::create_staging_buffer(const Uint64 num_bytes) {
-        const auto desc = CD3DX12_RESOURCE_DESC::Buffer(num_bytes);
+    Buffer RenderBackend::create_staging_buffer(const Uint64 size, const Uint64 alignment) {
+        const auto desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_NONE, alignment);
 
         const D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
 
@@ -1489,8 +1489,9 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not create staging buffer: %s", to_string(result));
         }
 
-        buffer.size = num_bytes;
-        D3D12_RANGE range{0, num_bytes};
+        buffer.size = size;
+        buffer.alignment = alignment;
+        D3D12_RANGE range{0, size};
         result = buffer.resource->Map(0, &range, &buffer.mapped_ptr);
         if(FAILED(result)) {
             Rx::abort("Could not map staging buffer: %s", to_string(result));

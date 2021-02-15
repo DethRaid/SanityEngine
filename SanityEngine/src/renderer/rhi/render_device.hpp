@@ -164,7 +164,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] bool has_separate_device_memory() const;
 
-        [[nodiscard]] Buffer get_staging_buffer(Uint64 num_bytes);
+        [[nodiscard]] Buffer get_staging_buffer(Uint64 num_bytes, Uint64 alignment = 0);
 
         [[nodiscard]] Buffer get_staging_buffer_for_texture(ID3D12Resource* texture);
 
@@ -372,7 +372,7 @@ namespace sanity::engine::renderer {
 
         void wait_gpu_idle(uint64_t frame_index);
 
-        [[nodiscard]] Buffer create_staging_buffer(Uint64 num_bytes);
+        [[nodiscard]] Buffer create_staging_buffer(Uint64 size, Uint64 alignment);
 
         [[nodiscard]] Buffer create_scratch_buffer(Uint32 num_bytes);
 

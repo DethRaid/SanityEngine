@@ -15,11 +15,13 @@ namespace sanity::engine::renderer {
     struct Buffer {
         Rx::String name;
 
-        Uint64 size{};
+        Uint64 size{0};
+
+    	Uint64 alignment{0};
 
         ComPtr<ID3D12Resource> resource;
 
-        D3D12MA::Allocation* allocation;
+        D3D12MA::Allocation* allocation{nullptr};
 
         void* mapped_ptr{nullptr};
     };
