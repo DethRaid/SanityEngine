@@ -18,10 +18,10 @@ float V_SmithGGXCorrelated(float NoV, float NoL, float a) {
 
 float Fd_Lambert() { return 1.0 / PI; }
 
-float Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
+float3 Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
     float f90 = 0.5 + 2.0 * roughness * LoH * LoH;
-    float lightScatter = F_Schlick(NoL, 1.0, f90);
-    float viewScatter = F_Schlick(NoV, 1.0, f90);
+    float3 lightScatter = F_Schlick(NoL, 1.0, f90);
+    float3 viewScatter = F_Schlick(NoV, 1.0, f90);
 
     return lightScatter * viewScatter * (1.0 / PI);
 }
@@ -59,20 +59,17 @@ float3 brdf(in SurfaceInfo surface, float3 l, const float3 v) {
 
     NoV = abs(NoV);
     NoL = saturate(NoL);
-
-    // perceptually linear roughness to roughness (see parameterization)
-    const float roughness = surface.roughness * surface.roughness;
-
-    const float D = D_GGX(NoH, roughness);
+    
+    const float D = D_GGX(NoH, surface.roughness);
     const float3 F = F_Schlick(VoH, f0, 1.f);
-    const float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
+    const float V = V_SmithGGXCorrelated(NoV, NoL, surface.roughness);
 
     // specular BRDF
     const float3 Fr = (D * V) * F;
 
     // diffuse BRDF
     const float LoH = saturate(dot(l, h));
-    const float3 Fd = diffuse_color * Fd_Burley(NoV, NoL, LoH, roughness);
+    const float3 Fd = diffuse_color * Fd_Burley(NoV, NoL, LoH, surface.roughness);
 
     return Fd + Fr;
 }
@@ -97,19 +94,16 @@ float3 brdf_single_ray(in SurfaceInfo surface, const float3 l, const float3 v) {
 
     NoV = abs(NoV);
     NoL = saturate(NoL);
-
-    // perceptually linear roughness to roughness (see parameterization)
-    float roughness = surface.roughness * surface.roughness;
-
+    
     float3 F = F_Schlick(VoH, f0, 1.f);
-    float V = V_SmithGGXCorrelated(NoV, NoL, roughness);
+    float V = V_SmithGGXCorrelated(NoV, NoL, surface.roughness);
 
     // specular BRDF
     float3 Fr = V * F;
 
     // diffuse BRDF
     const float LoH = saturate(dot(l, h));
-    float3 Fd = diffuse_color * Fd_Burley(NoV, NoL, LoH, roughness);
+    float3 Fd = diffuse_color * Fd_Burley(NoV, NoL, LoH, surface.roughness);
 
     return Fd + Fr;
 }
