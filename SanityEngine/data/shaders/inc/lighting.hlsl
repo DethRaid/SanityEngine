@@ -16,6 +16,8 @@
 
 #define GI_BOOST 1
 
+#define LIGHTING_RAY_FLAGS RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
+
 uint3 get_indices(uint triangle_index) {
     const uint base_index = (triangle_index * 3);
     const int address = (base_index * 4);
@@ -80,7 +82,7 @@ float3 direct_analytical_light(const in SurfaceInfo surface,
 
     float shadow = 1.0;
     if(length(outgoing_light) > 0) {
-       shadow = saturate(raytrace_shadow(light_vector, light.angular_size, surface.location, surface.normal, noise_texcoord));
+        shadow = saturate(raytrace_shadow(light_vector, light.angular_size, surface.location, surface.normal, noise_texcoord));
     }
 
     return outgoing_light * shadow;
@@ -91,15 +93,14 @@ float3 direct_analytical_light(const in SurfaceInfo surface,
  *
  * \return A float4 where the rgb are the incoming light and the a is 1 if we hit a surface, 0 is we're sampling the sky
  */
-float4 get_incoming_light(
-    const in float3 ray_origin,
-    const in float3 direction,
-    const in float3 surface_normal,
-    const in Light sun,
-    const in float2 noise_texcoord,
-    inout RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query,
-    out StandardVertex vertex,
-    out MaterialData material) {
+float4 get_incoming_light(const in float3 ray_origin,
+                          const in float3 direction,
+                          const in float3 surface_normal,
+                          const in Light sun,
+                          const in float2 noise_texcoord,
+                          inout RayQuery<LIGHTING_RAY_FLAGS> query,
+                          out StandardVertex vertex,
+                          out MaterialData material) {
 
     const float cos_theta = dot(direction, surface_normal);
 
@@ -130,7 +131,7 @@ float4 get_incoming_light(
         material = material_buffer[material_id];
 
         const SurfaceInfo surface = get_surface_info(vertex, material);
-        
+
         const float3 lit_hit_surface = direct_analytical_light(surface, sun, ray.Direction, noise_texcoord);
 
         return float4(lit_hit_surface, 1.0);
@@ -160,7 +161,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
 
     float3 indirect_light = 0;
 
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+    RayQuery<LIGHTING_RAY_FLAGS> query;
 
     SurfaceInfo surface = original_surface;
 
@@ -231,7 +232,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
 
     const uint num_bounces = 3;
 
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
+    RayQuery<LIGHTING_RAY_FLAGS> query;
 
     SurfaceInfo surface = original_surface;
 
@@ -331,6 +332,6 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace, noise_texcoord);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
-    
+
     return direct_light + indirect_light + reflection;
 }
