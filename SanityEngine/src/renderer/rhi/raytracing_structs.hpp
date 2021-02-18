@@ -27,7 +27,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Buffer that holds the bottom-level acceleration structure
          */
-        Buffer blas_buffer;
+        BufferHandle blas_buffer;
     };
 
     struct RaytracingMaterial {
@@ -52,6 +52,6 @@ namespace sanity::engine::renderer {
      * \brief Struct for the top level acceleration structure that we can raytrace against
      */
     struct RaytracingScene {
-        Buffer buffer;
+        BufferHandle buffer;
     };
 } // namespace sanity::engine::renderer

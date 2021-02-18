@@ -10,6 +10,7 @@
 #include "d3dx12.hpp"
 #include "framebuffer.hpp"
 #include "render_device.hpp"
+#include "renderer/renderer.hpp"
 
 namespace sanity::engine::renderer {
     DXGI_FORMAT to_dxgi_format(const TextureFormat format) {
@@ -452,15 +453,17 @@ namespace sanity::engine::renderer {
     }
 
     RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                            RenderBackend& device,
+                                                                            Renderer& renderer,
                                                                             const Buffer& vertex_buffer,
                                                                             const Buffer& index_buffer,
                                                                             const Rx::Vector<PlacedMesh>& meshes) {
 
+    	auto& backend = renderer.get_render_backend();
+
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
         geom_descs.reserve(meshes.size());
         meshes.each_fwd([&](const PlacedMesh& mesh) {
-            const auto transform_buffer = device.get_staging_buffer(sizeof(glm::mat3x4));
+            const auto transform_buffer = backend.get_staging_buffer(sizeof(glm::mat3x4));
             const auto matrix = glm::mat4x3{glm::vec3{mesh.model_matrix[0]},
                                             glm::vec3{mesh.model_matrix[1]},
                                             glm::vec3{mesh.model_matrix[2]},
@@ -490,7 +493,7 @@ namespace sanity::engine::renderer {
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(Rx::Utility::move(geom_desc));
-            device.return_staging_buffer(transform_buffer);
+            backend.return_staging_buffer(transform_buffer);
         });
 
         const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
@@ -501,20 +504,21 @@ namespace sanity::engine::renderer {
             .pGeometryDescs = geom_descs.data()};
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
-        device.device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+        backend.device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
 
         as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                         as_prebuild_info.ScratchDataSizeInBytes);
         as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                           as_prebuild_info.ResultDataMaxSizeInBytes);
 
-        auto scratch_buffer = device.get_scratch_buffer(static_cast<Uint32>(as_prebuild_info.ScratchDataSizeInBytes));
+        auto scratch_buffer = backend.get_scratch_buffer(static_cast<Uint32>(as_prebuild_info.ScratchDataSizeInBytes));
 
         const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
                                                                 .size = static_cast<Uint32>(as_prebuild_info.ResultDataMaxSizeInBytes)};
 
-        auto result_buffer = device.create_buffer(result_buffer_create_info);
+    	const auto result_buffer_handle = renderer.create_buffer(result_buffer_create_info);
+        const auto result_buffer = renderer.get_buffer(result_buffer_handle);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
@@ -526,9 +530,9 @@ namespace sanity::engine::renderer {
         const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
         commands->ResourceBarrier(1, &barrier);
 
-        device.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
+        backend.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
 
-        return {.blas_buffer = *result_buffer};
+        return {.blas_buffer = result_buffer_handle};
     }
 
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,
