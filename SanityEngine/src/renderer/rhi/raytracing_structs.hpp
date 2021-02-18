@@ -28,7 +28,7 @@ namespace sanity::engine::renderer {
         BufferHandle blas_buffer;
     };
 
-	using RaytracingAsHandle = Handle<RaytracingAccelerationStructure>;
+	using RaytracingAsHandle = GpuResourceHandle<RaytracingAccelerationStructure>;
 
     struct RaytracingMaterial {
         Uint32 handle : 24;

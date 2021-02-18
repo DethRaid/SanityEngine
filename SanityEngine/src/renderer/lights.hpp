@@ -36,7 +36,7 @@ namespace sanity::engine::renderer {
         // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 
-	using LightHandle = Handle<GpuLight>;
+	using LightHandle = GpuResourceHandle<GpuLight>;
 
     struct ImageBasedLightingInfo {
         /*!

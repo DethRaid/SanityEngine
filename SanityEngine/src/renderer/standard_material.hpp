@@ -37,5 +37,5 @@ namespace sanity::engine::renderer {
         TextureHandle emission_texture{0};
     };
 
-	using StandardMaterialHandle = Handle<StandardMaterial>;
+	using StandardMaterialHandle = GpuResourceHandle<StandardMaterial>;
 } // namespace renderer

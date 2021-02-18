@@ -5,12 +5,12 @@
 
 namespace sanity::engine::renderer {
     template <typename ResourceType>
-    struct Handle {
+    struct GpuResourceHandle {
         Uint32 index{0xFFFFFFFF};
 
         Rx::Vector<ResourceType>* storage{nullptr};
 
-        [[nodiscard]] bool operator==(const Handle& other) const = default;
+        [[nodiscard]] bool operator==(const GpuResourceHandle& other) const = default;
 
         [[nodiscard]] bool is_valid() const;
 
@@ -18,12 +18,12 @@ namespace sanity::engine::renderer {
     };
 
     template <typename ResourceType>
-    bool Handle<ResourceType>::is_valid() const {
+    bool GpuResourceHandle<ResourceType>::is_valid() const {
         return index != 0xFFFFFFFF && storage != nullptr;
     }
 
     template <typename ResourceType>
-    ResourceType* Handle<ResourceType>::operator->() const {
+    ResourceType* GpuResourceHandle<ResourceType>::operator->() const {
         if(!is_valid()) {
             return nullptr;
         }
