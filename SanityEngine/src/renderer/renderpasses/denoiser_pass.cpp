@@ -67,7 +67,7 @@ namespace sanity::engine::renderer {
 
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    denoiser_material_buffer.resource->GetGPUVirtualAddress());
+                                                    denoiser_material_buffer_handle.resource->GetGPUVirtualAddress());
 
         commands->DrawInstanced(3, 1, 0, 0);
 
@@ -149,10 +149,11 @@ namespace sanity::engine::renderer {
                         scene_color_target_handle.index,
                         scene_depth_target_handle.index);
 
-        denoiser_material_buffer = *device.create_buffer({.name = "Denoiser material buffer",
+        denoiser_material_buffer_handle = renderer->create_buffer({.name = "Denoiser material buffer",
                                                          .usage = BufferUsage::ConstantBuffer,
                                                          .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
+        const auto& denoiser_material_buffer = renderer->get_buffer(denoiser_material_buffer_handle);
 
-        memcpy(denoiser_material_buffer.mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
+        memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
     }
 } // namespace renderer

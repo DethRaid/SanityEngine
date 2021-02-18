@@ -49,7 +49,7 @@ namespace sanity::engine::renderer {
          */
         DescriptorRange denoised_rtv_handle;
 
-        Buffer denoiser_material_buffer;
+        BufferHandle denoiser_material_buffer_handle;
 
         void create_textures_and_framebuffer(const glm::uvec2& render_resolution);
 
