@@ -36,6 +36,8 @@ namespace sanity::engine::renderer {
         // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 
+	using LightHandle = Handle<GpuLight>;
+
     struct ImageBasedLightingInfo {
         /*!
          * @brief Handle to the texture to use to the skybox that gets drawn directly to screen

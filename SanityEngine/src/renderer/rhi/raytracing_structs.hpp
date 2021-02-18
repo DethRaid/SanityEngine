@@ -1,11 +1,9 @@
 #pragma once
 
 #include "core/transform.hpp"
-#include "glm/mat4x4.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/mesh.hpp"
 #include "resources.hpp"
-#include "rx/core/ptr.h"
 
 namespace sanity::engine::renderer {
     constexpr Uint32 OPAQUE_OBJECT_BIT = 0x01;
@@ -29,6 +27,8 @@ namespace sanity::engine::renderer {
          */
         BufferHandle blas_buffer;
     };
+
+	using RaytracingAsHandle = Handle<RaytracingAccelerationStructure>;
 
     struct RaytracingMaterial {
         Uint32 handle : 24;

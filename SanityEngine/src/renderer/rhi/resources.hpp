@@ -27,6 +27,8 @@ namespace sanity::engine::renderer {
         void* mapped_ptr{nullptr};
     };
 
+    using BufferHandle = Handle<Buffer>;
+
     /*!
      * \brief All the possible ways that one can use a buffer
      */
@@ -79,6 +81,8 @@ namespace sanity::engine::renderer {
         TextureFormat format;
     };
 
+	using TextureHandle = Handle<Texture>;
+
     struct RenderTarget : Texture {
         D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
     };
@@ -113,6 +117,8 @@ namespace sanity::engine::renderer {
         Uint3 size;
         Uint32 padding;
     };
+
+	using FluidVolumeHandle = Handle<FluidVolume>;
 
     [[nodiscard]] Uint32 size_in_bytes(TextureFormat format);
 
