@@ -37,7 +37,7 @@ namespace sanity::engine::renderer {
          * @param texture Texture to generate mips for
          * @param cmds Command list ot use
          */
-        void generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds) const;
+        void generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList2* cmds) const;
 
     private:
         ComPtr<ID3D12RootSignature> root_signature;

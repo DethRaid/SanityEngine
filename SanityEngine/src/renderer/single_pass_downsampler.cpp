@@ -58,7 +58,7 @@ namespace sanity::engine::renderer {
         return SinglePassDownsampler{spd_root_sig, spd_pipeline, backend};
     }
 
-    void SinglePassDownsampler::generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList4* cmds) const {
+    void SinglePassDownsampler::generate_mip_chain_for_texture(ID3D12Resource* texture, ID3D12GraphicsCommandList2* cmds) const {
         const auto texture_name = get_object_name(texture);
         ZoneScoped;
 
