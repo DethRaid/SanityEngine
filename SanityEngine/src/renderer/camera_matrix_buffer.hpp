@@ -50,7 +50,7 @@ namespace sanity::engine::renderer {
 
         void set_camera_matrices(Uint32 camera_idx, const CameraMatrices& matrices);
 
-        [[nodiscard]] Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
+        [[nodiscard]] const Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
 
         [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
 
@@ -61,6 +61,6 @@ namespace sanity::engine::renderer {
 
         Rx::Array<CameraMatrices[MAX_NUM_CAMERAS]> host_data{};
 
-        Rx::Vector<Buffer*> device_data;
+        Rx::Vector<Buffer> device_data;
     };
 } // namespace renderer

@@ -29,7 +29,7 @@ namespace sanity::engine::renderer {
 
         Rx::Ptr<RenderPipelineState> postprocessing_pipeline;
 
-        Rx::Ptr<Buffer> postprocessing_materials_buffer;
+        Buffer postprocessing_materials_buffer;
     	
         TextureHandle output_texture_handle{0};
     	

@@ -27,13 +27,13 @@ namespace sanity::engine::renderer {
 
         postprocessing_pipeline = device.create_render_pipeline_state(create_info);
 
-        postprocessing_materials_buffer = device.create_buffer(BufferCreateInfo{.name = "Postprocessing materials buffer",
+        postprocessing_materials_buffer = *device.create_buffer(BufferCreateInfo{.name = "Postprocessing materials buffer",
                                                                                 .usage = BufferUsage::StagingBuffer,
                                                                                 .size = sizeof(BackbufferOutputMaterial)});
 
         const auto material = BackbufferOutputMaterial{.scene_output_image = denoiser_pass.get_output_texture()};
 
-        memcpy(postprocessing_materials_buffer->mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
+        memcpy(postprocessing_materials_buffer.mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
 
         add_resource_usage(material.scene_output_image, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -77,7 +77,7 @@ namespace sanity::engine::renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
 
         commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    postprocessing_materials_buffer->resource->GetGPUVirtualAddress());
+                                                    postprocessing_materials_buffer.resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetPipelineState(postprocessing_pipeline->pso.Get());
         commands->DrawInstanced(3, 1, 0, 0);

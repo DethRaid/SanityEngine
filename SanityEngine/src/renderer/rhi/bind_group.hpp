@@ -42,14 +42,14 @@ namespace sanity::engine::renderer {
     struct BoundResource {
         BoundResource() = default;
 
-        BoundResource(const ResourceType* resource_in, D3D12_RESOURCE_STATES states_in);
+        BoundResource(const ResourceType& resource_in, D3D12_RESOURCE_STATES states_in);
 
-        const ResourceType* resource{nullptr};
+        ResourceType resource;
         D3D12_RESOURCE_STATES states{};
     };
 
     template <typename ResourceType>
-    BoundResource<ResourceType>::BoundResource(const ResourceType* resource_in, const D3D12_RESOURCE_STATES states_in)
+    BoundResource<ResourceType>::BoundResource(const ResourceType& resource_in, const D3D12_RESOURCE_STATES states_in)
         : resource{resource_in}, states{states_in} {}
 
     struct BindGroup {
@@ -137,7 +137,7 @@ namespace sanity::engine::renderer {
 
         BindGroupBuilder& set_image(const Rx::String& name, const Texture& image);
 
-        BindGroupBuilder& set_image_array(const Rx::String& name, const Rx::Vector<const Texture*>& images);
+        BindGroupBuilder& set_image_array(const Rx::String& name, const Rx::Vector<Texture>& images);
 
         BindGroupBuilder& set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene);
 
@@ -150,11 +150,11 @@ namespace sanity::engine::renderer {
 
         UINT descriptor_size;
 
-        Rx::Map<Rx::String, const Buffer*> bound_buffers{};
+        Rx::Map<Rx::String, Buffer> bound_buffers{};
 
-        Rx::Map<Rx::String, Rx::Vector<const Texture*>> bound_image_arrays{};
+        Rx::Map<Rx::String, Rx::Vector<Texture>> bound_image_arrays{};
 
-        Rx::Map<Rx::String, const Buffer*> bound_raytracing_scenes{};
+        Rx::Map<Rx::String, Buffer> bound_raytracing_scenes{};
 
         Rx::Map<Rx::String, RootDescriptorDescription> root_descriptor_descriptions;
         Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_table_descriptor_mappings;

@@ -7,7 +7,6 @@
 #include "core/align.hpp"
 #include "core/components.hpp"
 #include "core/constants.hpp"
-#include "core/defer.hpp"
 #include "entt/entity/registry.hpp"
 #include "imgui/imgui.h"
 #include "loading/image_loading.hpp"
@@ -263,12 +262,12 @@ namespace sanity::engine::renderer {
 
         auto image = device->create_texture(create_info);
         if(image) {
-            all_textures.push_back(Rx::Utility::move(image));
+            all_textures.push_back(*image);
             texture_name_to_index.insert(create_info.name, idx);
 
             // logger->verbose("Created texture %s with index %u", create_info.name, idx);
 
-            return {idx};
+            return {{idx}};
 
         } else {
             return pink_texture_handle;
@@ -278,7 +277,7 @@ namespace sanity::engine::renderer {
     TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info,
                                            const void* image_data,
                                            ID3D12GraphicsCommandList4* commands,
-                                           bool generate_mipmaps) {
+                                           const bool generate_mipmaps) {
         ZoneScoped;
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
@@ -286,7 +285,7 @@ namespace sanity::engine::renderer {
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, scope_name.data());
 
         const auto handle = create_texture(create_info);
-        auto& image = *all_textures[handle.index];
+        auto& image = all_textures[handle.index];
 
         if(create_info.usage == TextureUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
@@ -348,7 +347,7 @@ namespace sanity::engine::renderer {
 
     Texture Renderer::get_texture(const Rx::String& name) const {
         if(const auto* idx = texture_name_to_index.find(name)) {
-            return *all_textures[*idx];
+            return all_textures[*idx];
 
         } else {
             Rx::abort("Texture '%s' does not exist", name);
@@ -364,13 +363,43 @@ namespace sanity::engine::renderer {
             // get_render_backend()->get_back
 
         } else {
-            return *all_textures[handle.index];
+            return all_textures[handle.index];
         }
     }
 
     void Renderer::schedule_texture_destruction(const TextureHandle& texture_handle) {
-        auto texture = Rx::Utility::move(all_textures[texture_handle.index]);
-        device->schedule_texture_destruction(Rx::Utility::move(texture));
+        // Intentional copy. We zero out the memory later
+        const auto texture = Rx::Utility::move(all_textures[texture_handle.index]);
+        device->schedule_texture_destruction(texture);
+
+        all_textures[texture_handle.index] = {};
+    }
+
+    FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
+        FluidVolume new_volume;
+        const auto density_temperature_reaction_phi_texture_create_info = TextureCreateInfo{.name = create_info.name,
+                                                                                            .usage = TextureUsage::UnorderedAccess,
+                                                                                            .format = TextureFormat::Rgba32F,
+                                                                                            .width = create_info.size.x,
+                                                                                            .height = create_info.size.y,
+                                                                                            .depth = create_info.size.z};
+        new_volume.density_temperature_reaction_phi_texture_handle = create_texture(density_temperature_reaction_phi_texture_create_info);
+
+        const auto velocity_pressure_texture_create_info = TextureCreateInfo{.name = create_info.name,
+                                                                             .usage = TextureUsage::UnorderedAccess,
+                                                                             .format = TextureFormat::Rg32F,
+                                                                             .width = create_info.size.x,
+                                                                             .height = create_info.size.y,
+                                                                             .depth = create_info.size.z};
+        new_volume.velocity_pressure_texture_handle = create_texture(velocity_pressure_texture_create_info);
+
+        new_volume.size = create_info.size;
+
+        const auto handle = FluidVolumeHandle{{.index = static_cast<Uint32>(all_fluid_volumes.size())}};
+
+    	all_fluid_volumes.push_back(new_volume);
+
+    	return handle;
     }
 
     void Renderer::set_scene_output_texture(const TextureHandle output_texture_handle) {
@@ -389,13 +418,15 @@ namespace sanity::engine::renderer {
             return handle;
         }
 
-        const auto handle = StandardMaterialHandle{.index = static_cast<Uint32>(standard_materials.size())};
+        const auto handle = StandardMaterialHandle{{.index = static_cast<Uint32>(standard_materials.size())}};
         standard_materials.push_back(material);
 
         return handle;
     }
 
-    Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const { return *material_device_buffers[frame_idx]; }
+    const Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const {
+        return material_device_buffers[frame_idx];
+    }
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
 
@@ -405,7 +436,7 @@ namespace sanity::engine::renderer {
                 Rx::abort("Maximum number of lights already in use! Unable to upload any more");
             }
 
-            const auto handle = LightHandle{next_free_light_index};
+            const auto handle = LightHandle{{next_free_light_index}};
             next_free_light_index++;
 
             return handle;
@@ -436,7 +467,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
-    RaytracingASHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
+    RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
                                                             const Rx::Vector<PlacedMesh>& meshes,
                                                             ID3D12GraphicsCommandList4* commands) {
@@ -448,7 +479,7 @@ namespace sanity::engine::renderer {
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
 
-        return {handle_idx};
+        return {{handle_idx}};
     }
 
     void Renderer::create_static_mesh_storage() {
@@ -468,8 +499,8 @@ namespace sanity::engine::renderer {
 
         static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR,
                                                           *device,
-                                                          Rx::Utility::move(vertex_buffer),
-                                                          Rx::Utility::move(index_buffer));
+                                                          *vertex_buffer,
+                                                          *index_buffer);
     }
 
     void Renderer::create_per_frame_buffers() {
@@ -491,38 +522,62 @@ namespace sanity::engine::renderer {
 
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             per_frame_data_buffer_create_info.name = Rx::String::format("Per frame data buffer %d", i);
-            per_frame_data_buffers.push_back(device->create_buffer(per_frame_data_buffer_create_info));
+            const auto per_frame_buffer = device->create_buffer(per_frame_data_buffer_create_info);
+            if(per_frame_buffer) {
+                per_frame_data_buffers.push_back(*per_frame_buffer);
+
+            } else {
+                logger->error("Could not create buffer %s", per_frame_data_buffer_create_info.name);
+            }
 
             model_matrix_buffer_create_info.name = Rx::String::format("Model matrix buffer %d", i);
-            model_matrix_buffers.push_back(device->create_buffer(model_matrix_buffer_create_info));
+            const auto model_matrix_buffer = device->create_buffer(model_matrix_buffer_create_info);
+            if(model_matrix_buffer) {
+                model_matrix_buffers.push_back(*model_matrix_buffer);
+
+            } else {
+                logger->error("Could not create buffer %s", model_matrix_buffer_create_info.name);
+            }
 
             next_unused_model_matrix_per_frame.emplace_back(Rx::make_ptr<Rx::Concurrency::Atomic<Uint32>>(RX_SYSTEM_ALLOCATOR, 0_u32));
         }
     }
 
     void Renderer::create_material_data_buffers() {
-        ZoneScoped
+        ZoneScoped;
 
-            const auto num_gpu_frames = device->get_max_num_gpu_frames();
+        const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MATERIAL_DATA_BUFFER_SIZE};
         material_device_buffers.reserve(num_gpu_frames);
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             create_info.name = Rx::String::format("Material Data Buffer %d", i);
-            material_device_buffers.push_back(device->create_buffer(create_info));
+            const auto material_buffer = device->create_buffer(create_info);
+            if(material_buffer) {
+                material_device_buffers.push_back(*material_buffer);
+
+            } else {
+                logger->error("Could not create buffer %s", create_info.name);
+            }
         }
     }
 
     void Renderer::create_light_buffers() {
-        ZoneScoped
+        ZoneScoped;
 
-            const auto num_gpu_frames = device->get_max_num_gpu_frames();
+        const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(GpuLight)};
 
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             create_info.name = Rx::String::format("Light Buffer %d", i);
-            light_device_buffers.push_back(device->create_buffer(create_info));
+            const auto light_buffer = device->create_buffer(create_info);
+            if(light_buffer) {
+                light_device_buffers.push_back(*light_buffer);
+
+            } else {
+                logger->error("Could not create buffer %s", create_info.name);
+            }
         }
     }
 
@@ -629,16 +684,7 @@ namespace sanity::engine::renderer {
 
     void Renderer::reload_renderpass_shaders() { throw std::runtime_error{"Not implemented"}; }
 
-    Rx::Vector<const Texture*> Renderer::get_texture_array() const {
-        ZoneScoped;
-
-        Rx::Vector<const Texture*> images;
-        images.reserve(all_textures.size());
-
-        all_textures.each_fwd([&](const Rx::Ptr<Texture>& image) { images.push_back(image.get()); });
-
-        return images;
-    }
+    const Rx::Vector<Texture>& Renderer::get_texture_array() const { return all_textures; }
 
     void Renderer::update_cameras(entt::registry& registry, const Uint32 frame_idx) const {
         ZoneScoped;
@@ -668,7 +714,7 @@ namespace sanity::engine::renderer {
     void Renderer::upload_material_data(const Uint32 frame_idx) {
         ZoneScoped;
 
-        auto& buffer = *material_device_buffers[frame_idx];
+        const auto& buffer = material_device_buffers[frame_idx];
         memcpy(buffer.mapped_ptr, standard_materials.data(), standard_materials.size() * sizeof(StandardMaterial));
     }
 
@@ -722,8 +768,8 @@ namespace sanity::engine::renderer {
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
-        if(raytracing_scene.buffer) {
-            device->schedule_buffer_destruction(Rx::Utility::move(raytracing_scene.buffer));
+        if(has_raytracing_scene) {
+            device->schedule_buffer_destruction(raytracing_scene.buffer);
         }
 
         if(!raytracing_objects.is_empty()) {
@@ -767,7 +813,7 @@ namespace sanity::engine::renderer {
 
                 const auto& ray_geo = raytracing_geometries[object.as_handle.index];
 
-                const auto& buffer = *ray_geo.blas_buffer;
+                const auto& buffer = ray_geo.blas_buffer;
                 desc.AccelerationStructure = buffer.resource->GetGPUVirtualAddress();
             }
 
@@ -786,7 +832,7 @@ namespace sanity::engine::renderer {
                                                          prebuild_info.ScratchDataSizeInBytes);
             prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                            prebuild_info.ResultDataMaxSizeInBytes);
-            
+
             auto scratch_buffer = device->get_scratch_buffer(static_cast<Uint32>(prebuild_info.ScratchDataSizeInBytes));
 
             const auto as_buffer_create_info = BufferCreateInfo{.name = "Raytracing Scene",
@@ -799,14 +845,15 @@ namespace sanity::engine::renderer {
                 .Inputs = as_inputs,
                 .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress(),
             };
-            
+
             commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
             const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
-            raytracing_scene = {Rx::Utility::move(as_buffer)};
-        	
+            raytracing_scene = {*as_buffer};
+            has_raytracing_scene = true;
+
             device->return_staging_buffer(Rx::Utility::move(instance_buffer));
             device->return_scratch_buffer(Rx::Utility::move(scratch_buffer));
         }
@@ -831,7 +878,7 @@ namespace sanity::engine::renderer {
             }
         });
 
-        auto* dst = device->map_buffer(*light_device_buffers[frame_idx]);
+        auto* dst = device->map_buffer(light_device_buffers[frame_idx]);
         memcpy(dst, lights.data(), lights.size() * sizeof(GpuLight));
     }
 
@@ -849,7 +896,7 @@ namespace sanity::engine::renderer {
             per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
         }
 
-        memcpy(per_frame_data_buffers[frame_idx]->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
+        memcpy(per_frame_data_buffers[frame_idx].mapped_ptr, &per_frame_data, sizeof(PerFrameData));
     }
 
     Rx::Ptr<BindGroup> Renderer::bind_global_resources_for_frame(const Uint32 frame_idx) {
@@ -859,26 +906,26 @@ namespace sanity::engine::renderer {
         material_bind_group_builder.clear_all_bindings();
 
         material_bind_group_builder.set_buffer("cameras", camera_matrix_buffers->get_device_buffer_for_frame(frame_idx));
-        material_bind_group_builder.set_buffer("lights", *light_device_buffers[frame_idx]);
-        material_bind_group_builder.set_buffer("per_frame_data", *per_frame_data_buffers[frame_idx]);
+        material_bind_group_builder.set_buffer("lights", light_device_buffers[frame_idx]);
+        material_bind_group_builder.set_buffer("per_frame_data", per_frame_data_buffers[frame_idx]);
         material_bind_group_builder.set_image_array("textures", get_texture_array());
 
         // TODO: We may have to rethink raytracing if we start using multiple buffers for mesh data storage
         material_bind_group_builder.set_buffer("indices", static_mesh_storage->get_index_buffer());
         material_bind_group_builder.set_buffer("vertices", static_mesh_storage->get_vertex_buffer());
-        if(raytracing_scene.buffer) {
+        if(has_raytracing_scene) {
             material_bind_group_builder.set_raytracing_scene("raytracing_scene", raytracing_scene);
         }
 
         return material_bind_group_builder.build();
     }
 
-    Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *model_matrix_buffers[frame_idx]; }
+    Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return model_matrix_buffers[frame_idx]; }
 
     Uint32 Renderer::add_model_matrix_to_frame(const glm::mat4& model_matrix, const Uint32 frame_idx) {
         const auto index = next_unused_model_matrix_per_frame[frame_idx]->fetch_add(1);
 
-        auto* dst = static_cast<glm::mat4*>(model_matrix_buffers[frame_idx]->mapped_ptr);
+        auto* dst = static_cast<glm::mat4*>(model_matrix_buffers[frame_idx].mapped_ptr);
         memcpy(dst + index, &model_matrix, sizeof(glm::mat4));
 
         return index;

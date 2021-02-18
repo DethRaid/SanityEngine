@@ -31,6 +31,16 @@ namespace sanity::engine::renderer {
         });
         logger->verbose("Created standard pipeline");
 
+        outline_pipeline = device.create_render_pipeline_state({
+            .name = "Standard material pipeline",
+            .vertex_shader = load_shader("standard.vertex"),
+            .pixel_shader = load_shader("standard.pixel"),
+            .rasterizer_state = RasterizerState{.cull_mode = CullMode::Front},
+            .render_target_formats = Rx::Array{TextureFormat::Rgba32F, TextureFormat::R32UInt},
+            .depth_stencil_format = TextureFormat::Depth32,
+        });
+        logger->verbose("Created standard pipeline");
+
         atmospheric_sky_pipeline = device.create_render_pipeline_state({
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("fullscreen.vertex"),
@@ -81,50 +91,11 @@ namespace sanity::engine::renderer {
 
         draw_objects_in_scene(commands, registry, frame_idx);
 
+        draw_outlines(commands, registry, frame_idx);
+
         commands->EndRenderPass();
 
-        // const auto& depth_image = renderer->get_image(depth_target_handle);
-        // const auto& downsampled_depth_image = renderer->get_image(downsampled_depth_target_handle);
-        //
-        // {
-        //     const auto barriers = std::array{
-        //         CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
-        //                                              D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        //                                              D3D12_RESOURCE_STATE_COPY_SOURCE),
-        //         CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
-        //                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        //                                              D3D12_RESOURCE_STATE_COPY_DEST),
-        //     };
-        //     commands->ResourceBarrier(barriers.size(), barriers.data());
-        // }
-        //
-        // const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = depth_image.resource.Get(),
-        //                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-        //                                                            .SubresourceIndex = 0};
-        // const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = downsampled_depth_image.resource.Get(),
-        //                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-        //                                                            .SubresourceIndex = 0};
-        // const auto src_box = D3D12_BOX{.left = 0,
-        //                                .top = 0,
-        //                                .front = 0,
-        //                                .right = depth_image.width,
-        //                                .bottom = depth_image.height,
-        //                                .back = depth_image.depth};
-        // commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &src_box);
-        //
-        // {
-        //     const auto barriers = std::array{
-        //         CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
-        //                                              D3D12_RESOURCE_STATE_COPY_SOURCE,
-        //                                              D3D12_RESOURCE_STATE_DEPTH_WRITE),
-        //         CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
-        //                                              D3D12_RESOURCE_STATE_COPY_DEST,
-        //                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-        //     };
-        //     commands->ResourceBarrier(barriers.size(), barriers.data());
-        // }
-        //
-        // renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
+        // copy_render_targets(commands);
     }
 
     void ObjectsPass::create_framebuffer(const glm::uvec2& render_resolution) {
@@ -223,15 +194,14 @@ namespace sanity::engine::renderer {
     }
 
     void ObjectsPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+        ZoneScoped;
         PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_objects_in_scene");
 
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
-        {
-            auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
-            commands->SetGraphicsRootShaderResourceView(RenderBackend::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
-                                                        model_matrix_buffer.resource->GetGPUVirtualAddress());
-        }
+        const auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
+        commands->SetGraphicsRootShaderResourceView(RenderBackend::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
+                                                    model_matrix_buffer.resource->GetGPUVirtualAddress());
 
         const auto& mesh_storage = renderer->get_static_mesh_store();
         mesh_storage.bind_to_command_list(commands);
@@ -241,24 +211,50 @@ namespace sanity::engine::renderer {
         commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
                                                     material_buffer.resource->GetGPUVirtualAddress());
 
-        {
-            const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
-            renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable) {
-                // TODO: Frustum culling, view distance calculations, etc
+        const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
+        renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable) {
+            // TODO: Frustum culling, view distance calculations, etc
 
-                // TODO: Figure out the priority queues to put things in
+            // TODO: Figure out the priority queues to put things in
 
-                const auto entity_id = static_cast<uint32_t>(entity);
-                commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+            const auto entity_id = static_cast<uint32_t>(entity);
+            commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
-                commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 
-                const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform.get_model_matrix(registry), frame_idx);
-                commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
+            const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform.get_model_matrix(registry), frame_idx);
+            commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
 
-                commands->DrawIndexedInstanced(renderable.mesh.num_indices, 1, renderable.mesh.first_index, 0, 0);
-            });
-        }
+            commands->DrawIndexedInstanced(renderable.mesh.num_indices, 1, renderable.mesh.first_index, 0, 0);
+        });
+    }
+
+    void ObjectsPass::draw_outlines(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) {
+        PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_outlines");
+        commands->SetPipelineState(outline_pipeline->pso.Get());
+
+        const auto outline_view = registry.view<TransformComponent, StandardRenderableComponent, OutlineRenderComponent>();
+        outline_view.each([&](const auto entity,
+                              const TransformComponent& transform,
+                              const StandardRenderableComponent& renderable,
+                              const OutlineRenderComponent& outline) {
+            // TODO: Culling and whatnot
+
+            const auto entity_id = static_cast<uint32_t>(entity);
+            commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+
+            commands->SetGraphicsRoot32BitConstant(0, outline.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+
+            // Intentionally a copy - I want to modify the transform for the outline without modifying the transform for the renderable
+            auto outline_transform = transform;
+
+            outline_transform.transform.scale *= outline.outline_scale;
+
+            const auto model_material_index = renderer->add_model_matrix_to_frame(outline_transform.get_model_matrix(registry), frame_idx);
+            commands->SetGraphicsRoot32BitConstant(0, model_material_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
+
+            commands->DrawIndexedInstanced(renderable.mesh.num_indices, 1, renderable.mesh.first_index, 0, 0);
+        });
     }
 
     void ObjectsPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
@@ -281,4 +277,55 @@ namespace sanity::engine::renderer {
         }
     }
 
+    void ObjectsPass::copy_render_targets(ID3D12GraphicsCommandList4* commands) const {
+        const auto& object_id_texture = renderer->get_texture(object_id_target_handle);
+        const auto& depth_image = renderer->get_texture(depth_target_handle);
+        const auto& downsampled_depth_image = renderer->get_texture(downsampled_depth_target_handle);
+
+        {
+            const auto barriers = std::array{
+                CD3DX12_RESOURCE_BARRIER::Transition(object_id_texture.resource.Get(),
+                                                     D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                     D3D12_RESOURCE_STATE_COPY_SOURCE),
+                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
+                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                     D3D12_RESOURCE_STATE_COPY_SOURCE),
+                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
+                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                     D3D12_RESOURCE_STATE_COPY_DEST),
+            };
+            commands->ResourceBarrier(barriers.size(), barriers.data());
+        }
+
+        const D3D12_TEXTURE_COPY_LOCATION src_copy_location{.pResource = depth_image.resource.Get(),
+                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                            .SubresourceIndex = 0};
+        const D3D12_TEXTURE_COPY_LOCATION dst_copy_location{.pResource = downsampled_depth_image.resource.Get(),
+                                                            .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                                                            .SubresourceIndex = 0};
+        const D3D12_BOX src_box{.left = 0,
+                                .top = 0,
+                                .front = 0,
+                                .right = depth_image.width,
+                                .bottom = depth_image.height,
+                                .back = depth_image.depth};
+        commands->CopyTextureRegion(&dst_copy_location, 0, 0, 0, &src_copy_location, &src_box);
+
+        {
+            const auto barriers = std::array{
+                CD3DX12_RESOURCE_BARRIER::Transition(object_id_texture.resource.Get(),
+                                                     D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                                     D3D12_RESOURCE_STATE_RENDER_TARGET),
+                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
+                                                     D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE),
+                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
+                                                     D3D12_RESOURCE_STATE_COPY_DEST,
+                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+            };
+            commands->ResourceBarrier(barriers.size(), barriers.data());
+        }
+
+        renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
+    }
 } // namespace sanity::engine::renderer

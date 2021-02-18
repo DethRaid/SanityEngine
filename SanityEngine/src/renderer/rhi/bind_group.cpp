@@ -95,16 +95,16 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         const auto& d3d12_buffer = static_cast<const Buffer&>(buffer);
-        bound_buffers.insert(name, &d3d12_buffer);
+        bound_buffers.insert(name, d3d12_buffer);
 
         return *this;
     }
 
     BindGroupBuilder& BindGroupBuilder::set_image(const Rx::String& name, const Texture& image) {
-        return set_image_array(name, Rx::Array{&image});
+        return set_image_array(name, Rx::Array{image});
     }
 
-    BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<const Texture*>& images) {
+    BindGroupBuilder& BindGroupBuilder::set_image_array(const Rx::String& name, const Rx::Vector<Texture>& images) {
         ZoneScoped;
 
         bound_image_arrays.insert(name, images);
@@ -115,7 +115,7 @@ namespace sanity::engine::renderer {
     BindGroupBuilder& BindGroupBuilder::set_raytracing_scene(const Rx::String& name, const RaytracingScene& scene) {
         ZoneScoped;
 
-        bound_raytracing_scenes.insert(name, scene.buffer.get());
+        bound_raytracing_scenes.insert(name, scene.buffer);
 
         return *this;
     }
@@ -146,8 +146,8 @@ namespace sanity::engine::renderer {
             root_parameters[idx].type = RootParameterType::Descriptor;
             root_parameters[idx].descriptor.type = type;
 
-            if(const Buffer** bound_buffer = bound_buffers.find(name)) {
-                root_parameters[idx].descriptor.address = (*bound_buffer)->resource->GetGPUVirtualAddress();
+            if(const Buffer* bound_buffer = bound_buffers.find(name)) {
+                root_parameters[idx].descriptor.address = bound_buffer->resource->GetGPUVirtualAddress();
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -159,9 +159,9 @@ namespace sanity::engine::renderer {
 
                 used_buffers.emplace_back(*bound_buffer, states);
 
-            } else if(const Rx::Vector<const Texture*>* bound_image = bound_image_arrays.find(name)) {
+            } else if(const Rx::Vector<Texture>* bound_image = bound_image_arrays.find(name)) {
                 RX_ASSERT(bound_image->size() == 1, "May only bind a single image to a root descriptor");
-                root_parameters[idx].descriptor.address = (*bound_image)[0]->resource->GetGPUVirtualAddress();
+                root_parameters[idx].descriptor.address = (*bound_image)[0].resource->GetGPUVirtualAddress();
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
                 if(type == DescriptorType::ConstantBuffer) {
@@ -173,12 +173,12 @@ namespace sanity::engine::renderer {
 
                 used_images.emplace_back((*bound_image)[0], states);
 
-            } else if(const Buffer** scene = bound_raytracing_scenes.find(name)) {
+            } else if(const Buffer* scene = bound_raytracing_scenes.find(name)) {
                 RX_ASSERT(type == DescriptorType::ShaderResource,
                           "May only bind raytracing acceleration structure %s as a shader resource",
-                          (*scene)->name.data());
+                          scene->name.data());
 
-                root_parameters[idx].descriptor.address = (*scene)->resource->GetGPUVirtualAddress();
+                root_parameters[idx].descriptor.address = scene->resource->GetGPUVirtualAddress();
 
                 // Don't need to issue barriers for raytracing acceleration structures
 
@@ -189,16 +189,16 @@ namespace sanity::engine::renderer {
 
         // Bind resources to descriptor table descriptors
         descriptor_table_descriptor_mappings.each_pair([&](const Rx::String& name, const DescriptorTableDescriptorDescription& desc) {
-            if(const Buffer** buffer_itr = bound_buffers.find(name)) {
-                auto* buffer = *buffer_itr;
+            if(const Buffer* buffer_itr = bound_buffers.find(name)) {
+                auto& buffer = *buffer_itr;
 
                 auto states = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 
                 switch(desc.type) {
                     case DescriptorType::ConstantBuffer: {
                         D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};
-                        cbv_desc.SizeInBytes = static_cast<UINT>(buffer->size);
-                        cbv_desc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
+                        cbv_desc.SizeInBytes = static_cast<UINT>(buffer.size);
+                        cbv_desc.BufferLocation = buffer.resource->GetGPUVirtualAddress();
 
                         device->CreateConstantBufferView(&cbv_desc, desc.handle);
 
@@ -215,7 +215,7 @@ namespace sanity::engine::renderer {
                         srv_desc.Buffer.StructureByteStride = desc.structured_buffer_element_size;
                         srv_desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-                        device->CreateShaderResourceView(buffer->resource.Get(), &srv_desc, desc.handle);
+                        device->CreateShaderResourceView(buffer.resource.Get(), &srv_desc, desc.handle);
                     } break;
 
                     case DescriptorType::UnorderedAccess: {
@@ -227,7 +227,7 @@ namespace sanity::engine::renderer {
                         uav_desc.Buffer.StructureByteStride = desc.structured_buffer_element_size;
                         uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-                        device->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &uav_desc, desc.handle);
+                        device->CreateUnorderedAccessView(buffer.resource.Get(), nullptr, &uav_desc, desc.handle);
 
                         states |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                     } break;
@@ -247,21 +247,30 @@ namespace sanity::engine::renderer {
 
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
-                        images->each_fwd([&](const Texture* image) {
-                            if(image != nullptr) {
+                        images->each_fwd([&](const Texture& image) {
+                            if(image.resource) {
                                 D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
-                                srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-                                srv_desc.Format = to_dxgi_format(image->format);
+                                srv_desc.Format = to_dxgi_format(image.format);
                                 if(srv_desc.Format == DXGI_FORMAT_D32_FLOAT) {
                                     srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
                                 }
                                 srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                                srv_desc.Texture2D.MostDetailedMip = 0;
-                                srv_desc.Texture2D.MipLevels = 0xFFFFFFFF;
-                                srv_desc.Texture2D.PlaneSlice = 0;
-                                srv_desc.Texture2D.ResourceMinLODClamp = 0;
 
-                                device->CreateShaderResourceView(image->resource.Get(), &srv_desc, handle);
+                                if(image.depth == 1) {
+                                    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                                    srv_desc.Texture2D.MostDetailedMip = 0;
+                                    srv_desc.Texture2D.MipLevels = 0xFFFFFFFF;
+                                    srv_desc.Texture2D.PlaneSlice = 0;
+                                    srv_desc.Texture2D.ResourceMinLODClamp = 0;
+                                	
+                                } else {
+                                    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+                                    srv_desc.Texture3D.MostDetailedMip = 0;
+                                    srv_desc.Texture3D.MipLevels = 0xFFFFFFFF;
+                                    srv_desc.Texture3D.ResourceMinLODClamp = 0;
+                                }
+
+                                device->CreateShaderResourceView(image.resource.Get(), &srv_desc, handle);
                             }
 
                             handle.Offset(descriptor_size);
@@ -271,15 +280,15 @@ namespace sanity::engine::renderer {
                     case DescriptorType::UnorderedAccess: {
                         CD3DX12_CPU_DESCRIPTOR_HANDLE handle{desc.handle};
 
-                        images->each_fwd([&](const Texture* image) {
-                            const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = to_dxgi_format(image->format),
+                        images->each_fwd([&](const Texture& image) {
+                            const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = to_dxgi_format(image.format),
                                                                                    .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
                                                                                    .Texture2D = {
                                                                                        .MipSlice = 0,
                                                                                        .PlaneSlice = 0,
                                                                                    }};
 
-                            device->CreateUnorderedAccessView(image->resource.Get(), nullptr, &uav_desc, handle);
+                            device->CreateUnorderedAccessView(image.resource.Get(), nullptr, &uav_desc, handle);
 
                             handle.Offset(descriptor_size);
                         });
@@ -296,4 +305,4 @@ namespace sanity::engine::renderer {
                                        Rx::Utility::move(used_images),
                                        Rx::Utility::move(used_buffers));
     } // namespace rhi
-} // namespace renderer
+} // namespace sanity::engine::renderer

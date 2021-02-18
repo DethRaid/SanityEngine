@@ -37,14 +37,31 @@ namespace sanity::engine::renderer {
         Mesh mesh;
 
         /*!
-         * \brief Material to use  when rendering that mesh
+         * \brief Material to use when rendering this mesh
          */
         StandardMaterialHandle material{};
 
         /*!
-         * \brief If true this object is ren
+         * \brief If true this object is rendered in the scene's background layer
          */
         bool is_background{false};
+    };
+
+	/**
+	 * @brief Marks that an object should have an outline drawn around it
+	*/
+    struct __declspec(uuid("{00988F57-AFBD-4E37-9FC8-32813E1F6C2B}")) OutlineRenderComponent {
+        /**
+         * @brief Scale of the outline mesh compared to the normal mesh
+        */
+        float outline_scale{1.05f};
+
+        /**
+         * @brief Color of the outline
+        */
+        Vec3f color;
+
+    	StandardMaterialHandle material{};
     };
 
     /*!
@@ -56,7 +73,7 @@ namespace sanity::engine::renderer {
     };
 
     struct __declspec(uuid("{BB1E8A88-79FE-4934-8335-E5226022F441}")) RaytracingObjectComponent {
-        RaytracingASHandle as_handle{0};
+        RaytracingAsHandle as_handle{0};
     };
 
     /*!
@@ -104,6 +121,12 @@ namespace sanity::engine::renderer {
      */
     struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) SkyboxComponent {
         TextureHandle skybox_texture{};
+    };
+
+    struct __declspec(uuid("{6763FAED-5C17-40E1-871F-0115E60F21EA}")) FluidVolumeComponent {
+        FluidVolumeHandle volume{};
+
+    	Uint3 volume_size{1, 1, 1};
     };
 
     void draw_component_editor(StandardRenderableComponent& renderable);

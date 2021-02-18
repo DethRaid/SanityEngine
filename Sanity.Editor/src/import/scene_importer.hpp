@@ -32,7 +32,7 @@ namespace sanity {
                 struct GltfPrimitive {
                     engine::renderer::Mesh mesh{};
 
-                    engine::renderer::RaytracingASHandle ray_geo_handle{};
+                    engine::renderer::RaytracingAsHandle ray_geo_handle{};
 
                     Int32 material_idx{-1};
                 };

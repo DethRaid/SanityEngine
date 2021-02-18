@@ -47,13 +47,13 @@ namespace sanity::engine::renderer {
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             create_info.name = Rx::String::format("Camera Matrix Buffer {}", i);
             auto buffer = device->create_buffer(create_info);
-            device_data.push_back(buffer.release());
+            device_data.push_back(*buffer);
         }
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](Buffer* buffer) {
-            device->schedule_buffer_destruction(Rx::Ptr<Buffer>{Rx::Memory::SystemAllocator::instance(), buffer});
+        device_data.each_fwd([&](const Buffer& buffer) {
+            device->schedule_buffer_destruction(buffer);
         });
     }
 
@@ -75,13 +75,13 @@ namespace sanity::engine::renderer {
         host_data[camera_idx] = matrices;
     }
 
-    Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
+    const Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
         RX_ASSERT(frame_idx < device_data.size(),
                   "Not enough device buffers! There are %u device buffers for camera matrices, but buffer %u was requested",
                   device_data.size(),
                   frame_idx);
 
-        return *device_data[frame_idx];
+        return device_data[frame_idx];
     }
 
     const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
@@ -89,6 +89,6 @@ namespace sanity::engine::renderer {
     void CameraMatrixBuffer::upload_data(const Uint32 frame_idx) const {
         const auto num_bytes_to_upload = static_cast<Uint32>(host_data.size()) * sizeof(CameraMatrices);
 
-        memcpy(device_data[frame_idx]->mapped_ptr, host_data.data(), num_bytes_to_upload);
+        memcpy(device_data[frame_idx].mapped_ptr, host_data.data(), num_bytes_to_upload);
     }
 } // namespace sanity::engine::renderer

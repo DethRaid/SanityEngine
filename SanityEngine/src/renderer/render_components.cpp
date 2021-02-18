@@ -38,6 +38,6 @@ namespace sanity::engine::renderer {
     }
 
     void draw_component_editor(SkyboxComponent& sky) {
-        // Fill in when the component has things
+        // Fill in when the component has controls to draw
     }
 } // namespace sanity::engine::renderer

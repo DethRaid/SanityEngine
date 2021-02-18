@@ -70,7 +70,7 @@ namespace sanity::engine::renderer {
 
     class MeshDataStore {
     public:
-        MeshDataStore(RenderBackend& device_in, Rx::Ptr<Buffer> vertex_buffer_in, Rx::Ptr<Buffer> index_buffer_in);
+        MeshDataStore(RenderBackend& device_in, Buffer vertex_buffer_in, Buffer index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
         MeshDataStore& operator=(const MeshDataStore& other) = delete;
@@ -96,9 +96,9 @@ namespace sanity::engine::renderer {
     private:
         RenderBackend* device;
 
-        Rx::Ptr<Buffer> vertex_buffer;
+        Buffer vertex_buffer;
 
-        Rx::Ptr<Buffer> index_buffer;
+        Buffer index_buffer;
 
         Rx::Vector<VertexBufferBinding> vertex_bindings{};
 

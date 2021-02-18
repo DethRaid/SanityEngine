@@ -3,30 +3,25 @@
 #include "core/types.hpp"
 
 namespace sanity::engine::renderer {
-    struct TextureHandle {
+    struct Handle {
         Uint32 index{0};
 
-    	[[nodiscard]] bool operator==(const TextureHandle& other) const = default;
+        [[nodiscard]] bool operator==(const Handle& other) const = default;
 
-    	[[nodiscard]] bool is_valid() const;
-    };
-    
-    struct StandardMaterialHandle {
-        Uint32 index{0};
+        [[nodiscard]] bool is_valid() const;
     };
 
-    struct LightHandle {
-        Uint32 index{0};
-    };
+    struct TextureHandle : Handle {};
 
-    struct RaytracingASHandle {
-        Uint32 index{0};
-    };
+    struct FluidVolumeHandle : Handle {};
 
-    struct ModelMatrixHandle {
-        Uint32 index{0};
-    };
+    struct StandardMaterialHandle : Handle {};
 
-    inline bool TextureHandle::is_valid() const { return index != 0; }
-} // namespace renderer
+    struct LightHandle : Handle {};
 
+    struct RaytracingAsHandle : Handle {};
+
+    struct ModelMatrixHandle : Handle {};
+
+    inline bool Handle::is_valid() const { return index != 0; }
+} // namespace sanity::engine::renderer

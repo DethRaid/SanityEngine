@@ -14,6 +14,21 @@
 namespace sanity::engine::renderer {
     DXGI_FORMAT to_dxgi_format(const TextureFormat format) {
         switch(format) {
+            case TextureFormat::Rgba8:
+                return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+            case TextureFormat::Rg16F:
+                return DXGI_FORMAT_R16G16_FLOAT;
+
+            case TextureFormat::R32F:
+                return DXGI_FORMAT_R32_FLOAT;
+
+            case TextureFormat::R32UInt:
+                return DXGI_FORMAT_R32_UINT;
+
+        	case TextureFormat::Rg32F:
+                return DXGI_FORMAT_R32G32_FLOAT;
+        	
             case TextureFormat::Rgba32F:
                 return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
@@ -23,17 +38,6 @@ namespace sanity::engine::renderer {
             case TextureFormat::Depth24Stencil8:
                 return DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-            case TextureFormat::R32F:
-                return DXGI_FORMAT_R32_FLOAT;
-
-            case TextureFormat::R32UInt:
-                return DXGI_FORMAT_R32_UINT;
-
-            case TextureFormat::Rg16F:
-                return DXGI_FORMAT_R16G16_FLOAT;
-
-            case TextureFormat::Rgba8:
-                [[fallthrough]];
             default:
                 return DXGI_FORMAT_R8G8B8A8_UNORM;
         }
@@ -524,7 +528,7 @@ namespace sanity::engine::renderer {
 
         device.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
 
-        return {Rx::Utility::move(result_buffer)};
+        return {.blas_buffer = *result_buffer};
     }
 
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,

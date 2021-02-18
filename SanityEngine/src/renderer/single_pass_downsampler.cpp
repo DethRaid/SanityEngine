@@ -140,7 +140,7 @@ namespace sanity::engine::renderer {
             cmds->ResourceBarrier(1, &barrier);
         }
 
-        backend->schedule_buffer_destruction(Rx::Utility::move(global_counter_buffer));
+        backend->schedule_buffer_destruction(*global_counter_buffer);
     }
 
     SinglePassDownsampler::SinglePassDownsampler(ComPtr<ID3D12RootSignature> root_signature_in,
