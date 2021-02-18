@@ -114,11 +114,19 @@ namespace sanity::engine::renderer {
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
+    	[[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info);
+
+    	[[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info, const void* data, ID3D12GraphicsCommandList2* cmds);
+
+    	[[nodiscard]] Rx::Optional<Buffer> get_buffer(const Rx::String& name);
+
+    	[[nodiscard]] Rx::Optional<Buffer> get_buffer(const BufferHandle& handle);
+
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info);
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
                                                    const void* image_data,
-                                                   ID3D12GraphicsCommandList4* commands,
+                                                   ID3D12GraphicsCommandList2* commands,
                                                    bool generate_mipmaps = true);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_texture_handle(const Rx::String& name);
@@ -155,9 +163,7 @@ namespace sanity::engine::renderer {
                                                                     const Buffer& index_buffer,
                                                                     const Rx::Vector<PlacedMesh>& meshes,
                                                                     ID3D12GraphicsCommandList4* commands);
-
-        [[nodiscard]] Rx::Ptr<BindGroup> bind_global_resources_for_frame(Uint32 frame_idx);
-
+        
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
         [[nodiscard]] Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
@@ -191,26 +197,31 @@ namespace sanity::engine::renderer {
 
         Rx::Ptr<MeshDataStore> static_mesh_storage;
 
+        Rx::Map<Rx::String, BufferHandle> buffer_name_to_handle;
+        Rx::Vector<Buffer> all_buffers;
+
+        Rx::Map<Rx::String, TextureHandle> texture_name_to_index;
+        Rx::Vector<Texture> all_textures;
+
+    	Rx::Map<Rx::String, FluidVolumeHandle> fluid_volume_name_to_handle;
+        Rx::Vector<FluidVolume> all_fluid_volumes;
+
         PerFrameData per_frame_data;
-        Rx::Vector<Buffer> per_frame_data_buffers;
+        Rx::Vector<BufferHandle> per_frame_data_buffers;
 
         Rx::Ptr<CameraMatrixBuffer> camera_matrix_buffers;
 
         Rx::Vector<StandardMaterial> standard_materials;
         Rx::Vector<StandardMaterialHandle> free_material_handles;
-        Rx::Vector<Buffer> material_device_buffers;
-
-        Rx::Map<Rx::String, Uint32> texture_name_to_index;
-        Rx::Vector<Texture> all_textures;
-
-        Rx::Vector<FluidVolume> all_fluid_volumes;
-
+    	
+        Rx::Vector<BufferHandle> material_device_buffers;
+        
         Rx::Ptr<SinglePassDownsampler> spd;
 
         Uint32 next_free_light_index{1}; // Index 0 is the sun, its hardcoded and timing-dependent and all the things we hate
         Rx::Vector<LightHandle> available_light_handles;
         Rx::Array<GpuLight[MAX_NUM_LIGHTS]> lights;
-        Rx::Vector<Buffer> light_device_buffers;
+        Rx::Vector<BufferHandle> light_device_buffers;
 
         std::queue<Mesh> pending_raytracing_upload_meshes;
         bool raytracing_scene_dirty{false};
@@ -274,14 +285,14 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<RaytracingObject> raytracing_objects;
 
-        Rx::Vector<Buffer> model_matrix_buffers;
+        Rx::Vector<BufferHandle> model_matrix_buffers;
 
         Rx::Vector<Rx::Ptr<Rx::Concurrency::Atomic<Uint32>>> next_unused_model_matrix_per_frame;
 
     	bool has_raytracing_scene{false};
         RaytracingScene raytracing_scene;
 
-        Rx::Ptr<Buffer> visible_objects_buffer;
+        Rx::Ptr<BufferHandle> visible_objects_buffer;
 
         void rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands);
 

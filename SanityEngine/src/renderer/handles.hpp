@@ -4,12 +4,14 @@
 
 namespace sanity::engine::renderer {
     struct Handle {
-        Uint32 index{0};
+        Uint32 index{0xFFFFFFFF};
 
         [[nodiscard]] bool operator==(const Handle& other) const = default;
 
         [[nodiscard]] bool is_valid() const;
     };
+
+    struct BufferHandle : Handle {};
 
     struct TextureHandle : Handle {};
 
@@ -23,5 +25,5 @@ namespace sanity::engine::renderer {
 
     struct ModelMatrixHandle : Handle {};
 
-    inline bool Handle::is_valid() const { return index != 0; }
+    inline bool Handle::is_valid() const { return index != 0xFFFFFFFF; }
 } // namespace sanity::engine::renderer
