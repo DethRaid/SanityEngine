@@ -2,7 +2,7 @@
 
 #include "renderer/debugging/pix.hpp"
 #include "renderer/renderpass.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 
@@ -29,7 +29,7 @@ namespace sanity::engine::renderer {
 
         Rx::Ptr<RenderPipelineState> postprocessing_pipeline;
 
-        Buffer postprocessing_materials_buffer;
+        BufferHandle postprocessing_materials_buffer_handle;
     	
         TextureHandle output_texture_handle{0};
     	

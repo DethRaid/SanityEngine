@@ -5,7 +5,6 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "renderer/rhi/render_device.hpp"
 #include "rx/core/log.h"
 
 namespace sanity::engine::renderer {
@@ -27,13 +26,13 @@ namespace sanity::engine::renderer {
 
         postprocessing_pipeline = device.create_render_pipeline_state(create_info);
 
-        postprocessing_materials_buffer = *device.create_buffer(BufferCreateInfo{.name = "Postprocessing materials buffer",
-                                                                                .usage = BufferUsage::StagingBuffer,
-                                                                                .size = sizeof(BackbufferOutputMaterial)});
+    	postprocessing_materials_buffer_handle = renderer->create_buffer(
+            {.name = "Postprocessing materials buffer", .usage = BufferUsage::StagingBuffer, .size = sizeof(BackbufferOutputMaterial)});
+       const auto postprocessing_materials_buffer = renderer->get_buffer(postprocessing_materials_buffer_handle);
 
         const auto material = BackbufferOutputMaterial{.scene_output_image = denoiser_pass.get_output_texture()};
 
-        memcpy(postprocessing_materials_buffer.mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
+        memcpy(postprocessing_materials_buffer->mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
 
         add_resource_usage(material.scene_output_image, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -77,7 +76,7 @@ namespace sanity::engine::renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
 
         commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    postprocessing_materials_buffer.resource->GetGPUVirtualAddress());
+                                                    postprocessing_materials_buffer_handle.resource->GetGPUVirtualAddress());
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetPipelineState(postprocessing_pipeline->pso.Get());
         commands->DrawInstanced(3, 1, 0, 0);
