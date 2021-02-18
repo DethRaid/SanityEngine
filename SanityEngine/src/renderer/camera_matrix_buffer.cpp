@@ -4,7 +4,7 @@
 #include "renderer.hpp"
 #include "core/components.hpp"
 #include "glm/gtx/quaternion.hpp"
-#include "rhi/render_device.hpp"
+#include "rhi/render_backend.hpp"
 
 namespace sanity::engine::renderer {
     void CameraMatrices::copy_matrices_to_previous() {

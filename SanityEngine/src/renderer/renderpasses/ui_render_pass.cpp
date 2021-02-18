@@ -8,7 +8,7 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/debugging/pix.hpp"
 #include "renderer/renderer.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {

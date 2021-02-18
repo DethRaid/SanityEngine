@@ -15,7 +15,7 @@
 #include "rhi/bind_group.hpp"
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
-#include "rhi/render_device.hpp"
+#include "rhi/render_backend.hpp"
 #include "rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
@@ -114,13 +114,13 @@ namespace sanity::engine::renderer {
 
         void add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects);
 
-    	[[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info);
+        [[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info);
 
-    	[[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info, const void* data, ID3D12GraphicsCommandList2* cmds);
+        [[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info, const void* data, ID3D12GraphicsCommandList2* cmds);
 
-    	[[nodiscard]] Rx::Optional<Buffer> get_buffer(const Rx::String& name);
+        [[nodiscard]] Rx::Optional<Buffer> get_buffer(const Rx::String& name) const;
 
-    	[[nodiscard]] Rx::Optional<Buffer> get_buffer(const BufferHandle& handle);
+        [[nodiscard]] Rx::Optional<Buffer> get_buffer(const BufferHandle& handle) const;
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info);
 
@@ -163,7 +163,7 @@ namespace sanity::engine::renderer {
                                                                     const Buffer& index_buffer,
                                                                     const Rx::Vector<PlacedMesh>& meshes,
                                                                     ID3D12GraphicsCommandList4* commands);
-        
+
         [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
 
         [[nodiscard]] Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
@@ -179,7 +179,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] SinglePassDownsampler& get_spd() const;
 
         [[nodiscard]] const Rx::Vector<Texture>& get_texture_array() const;
-    	
+
         [[nodiscard]] TextureHandle get_noise_texture() const;
 
         [[nodiscard]] TextureHandle get_pink_texture() const;
@@ -203,7 +203,7 @@ namespace sanity::engine::renderer {
         Rx::Map<Rx::String, TextureHandle> texture_name_to_index;
         Rx::Vector<Texture> all_textures;
 
-    	Rx::Map<Rx::String, FluidVolumeHandle> fluid_volume_name_to_handle;
+        Rx::Map<Rx::String, FluidVolumeHandle> fluid_volume_name_to_handle;
         Rx::Vector<FluidVolume> all_fluid_volumes;
 
         PerFrameData per_frame_data;
@@ -213,9 +213,9 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<StandardMaterial> standard_materials;
         Rx::Vector<StandardMaterialHandle> free_material_handles;
-    	
+
         Rx::Vector<BufferHandle> material_device_buffers;
-        
+
         Rx::Ptr<SinglePassDownsampler> spd;
 
         Uint32 next_free_light_index{1}; // Index 0 is the sun, its hardcoded and timing-dependent and all the things we hate
@@ -239,9 +239,13 @@ namespace sanity::engine::renderer {
         RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle;
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
+        Rx::Vector<DescriptorRange> buffer_descriptors;
+        Rx::Vector<DescriptorRange> texture_descriptors;
 
-#pragma region Initialization
+        #pragma region Initialization
         void create_static_mesh_storage();
+
+        void allocate_resource_descriptors();
 
         void create_per_frame_buffers();
 
@@ -259,7 +263,7 @@ namespace sanity::engine::renderer {
 
         void reload_renderpass_shaders();
 #pragma endregion
-        
+
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
         void upload_material_data(Uint32 frame_idx);
@@ -289,7 +293,7 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<Rx::Ptr<Rx::Concurrency::Atomic<Uint32>>> next_unused_model_matrix_per_frame;
 
-    	bool has_raytracing_scene{false};
+        bool has_raytracing_scene{false};
         RaytracingScene raytracing_scene;
 
         Rx::Ptr<BufferHandle> visible_objects_buffer;

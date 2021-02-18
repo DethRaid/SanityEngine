@@ -551,7 +551,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\rhi\helpers.hpp" />
     <ClInclude Include="src\renderer\rhi\mesh_data_store.hpp" />
     <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp" />
-    <ClInclude Include="src\renderer\rhi\render_device.hpp" />
+    <ClInclude Include="src\renderer\rhi\render_backend.hpp" />
     <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp" />
     <ClInclude Include="src\renderer\rhi\resources.hpp" />
     <ClInclude Include="src\renderer\single_pass_downsampler.hpp" />
@@ -625,7 +625,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\renderer\rhi\helpers.cpp" />
     <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp" />
-    <ClCompile Include="src\renderer\rhi\render_device.cpp" />
+    <ClCompile Include="src\renderer\rhi\render_backend.cpp" />
     <ClCompile Include="src\renderer\rhi\resources.cpp" />
     <ClCompile Include="src\renderer\single_pass_downsampler.cpp" />
     <ClCompile Include="src\sanity_engine.cpp" />

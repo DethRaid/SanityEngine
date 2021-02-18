@@ -239,7 +239,7 @@
     <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp">
       <Filter>src\renderer\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\rhi\render_device.hpp">
+    <ClInclude Include="src\renderer\rhi\render_backend.hpp">
       <Filter>src\renderer\rhi</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp">
@@ -463,7 +463,7 @@
     <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp">
       <Filter>src\renderer\rhi</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\rhi\render_device.cpp">
+    <ClCompile Include="src\renderer\rhi\render_backend.cpp">
       <Filter>src\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\rhi\resources.cpp">

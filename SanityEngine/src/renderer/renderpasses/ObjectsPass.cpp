@@ -7,7 +7,7 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderer.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "rx/core/log.h"
 #include "world/world.hpp"
 

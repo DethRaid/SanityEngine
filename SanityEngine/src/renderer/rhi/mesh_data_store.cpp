@@ -3,7 +3,7 @@
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "renderer/rhi/helpers.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "rx/core/log.h"
 
 namespace sanity::engine::renderer {

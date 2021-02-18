@@ -8,7 +8,7 @@
 #include "imgui/imgui.h"
 #include "renderer/debugging/pix.hpp"
 #include "renderer/renderer.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/resources.hpp"
 #include "rx/core/log.h"
 

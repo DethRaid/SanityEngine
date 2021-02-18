@@ -18,7 +18,7 @@
 #include "rhi/d3d12_private_data.hpp"
 #include "rhi/d3dx12.hpp"
 #include "rhi/helpers.hpp"
-#include "rhi/render_device.hpp"
+#include "rhi/render_backend.hpp"
 #include "rx/console/variable.h"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
@@ -55,6 +55,8 @@ namespace sanity::engine::renderer {
         output_framebuffer_size = {width, height};
 
         create_static_mesh_storage();
+
+        allocate_resource_descriptors();
 
         create_per_frame_buffers();
 
@@ -273,11 +275,28 @@ namespace sanity::engine::renderer {
         const auto handle = create_buffer(create_info);
         const auto buffer = get_buffer(handle);
 
-        if(create_info.usage == BufferUsage::StagingBuffer) {
+        if(buffer->mapped_ptr != nullptr) {
+            memcpy(buffer->mapped_ptr, data, create_info.size);
+
+        } else {
+            const auto staging_buffer = device->get_staging_buffer(create_info.size);
+            memcpy(staging_buffer.mapped_ptr, data, create_info.size);
+
+            cmds->CopyBufferRegion(buffer->resource.Get(), 0, staging_buffer.resource.Get(), 0, create_info.size);
         }
+
+    	return handle;
     }
 
-    Rx::Optional<Buffer> Renderer::get_buffer(const BufferHandle& handle) {
+    Rx::Optional<Buffer> Renderer::get_buffer(const Rx::String& name) const {
+        if(const auto* handle = buffer_name_to_handle.find(name)) {
+            return get_buffer(*handle);
+        }
+
+        return Rx::nullopt;
+    }
+
+    Rx::Optional<Buffer> Renderer::get_buffer(const BufferHandle& handle) const {
         if(handle.index >= all_buffers.size()) {
             return Rx::nullopt;
         }
@@ -530,6 +549,22 @@ namespace sanity::engine::renderer {
         static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, *vertex_buffer, *index_buffer);
     }
 
+    void Renderer::allocate_resource_descriptors() {
+        ZoneScoped;
+
+        auto& descriptors = device->get_cbv_srv_uav_allocator();
+
+        const auto num_gpu_frames = device->get_max_num_gpu_frames();
+
+        buffer_descriptors.resize(num_gpu_frames);
+        texture_descriptors.resize(num_gpu_frames);
+
+        for(auto i = 0u; i < num_gpu_frames; i++) {
+            buffer_descriptors[i] = descriptors.allocate_descriptors(MAX_NUM_BUFFERS);
+            texture_descriptors[i] = descriptors.allocate_descriptors(MAX_NUM_TEXTURES);
+        }
+    }
+
     void Renderer::create_per_frame_buffers() {
         ZoneScoped;
 
@@ -734,6 +769,14 @@ namespace sanity::engine::renderer {
             matrices.calculate_view_matrix(transform);
             matrices.calculate_projection_matrix(camera);
         });
+
+        const auto& camera_buffer_handle = camera_matrix_buffers->get_device_buffer_for_frame(frame_idx);
+        const auto& camera_buffer = get_buffer(camera_buffer_handle);
+
+        const auto& camera_data = camera_matrix_buffers->get_host_data();
+        const auto num_bytes_to_upload = static_cast<Uint32>(camera_data.size()) * sizeof(CameraMatrices);
+
+        memcpy(camera_buffer->mapped_ptr, camera_data.data(), num_bytes_to_upload);
 
         camera_matrix_buffers->upload_data(frame_idx);
     }

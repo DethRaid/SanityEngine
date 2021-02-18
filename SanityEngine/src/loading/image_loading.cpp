@@ -6,7 +6,7 @@
 #include "renderer/renderer.hpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/rhi/helpers.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/resources.hpp"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"

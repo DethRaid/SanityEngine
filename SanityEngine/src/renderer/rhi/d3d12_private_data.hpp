@@ -6,7 +6,7 @@
 
 #include "core/types.hpp"
 #include "renderer/rhi/helpers.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "rx/core/log.h"
 #include "rx/core/optional.h"
 #include "rx/core/string.h"

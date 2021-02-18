@@ -9,7 +9,7 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "glm/ext/quaternion_trigonometric.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "stb_image.h"

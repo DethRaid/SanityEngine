@@ -2,7 +2,7 @@
 
 #include "renderer/renderpass.hpp"
 #include "renderer/rhi/compute_pipeline_state.hpp"
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "rx/core/ptr.h"
 
 using Microsoft::WRL::ComPtr;

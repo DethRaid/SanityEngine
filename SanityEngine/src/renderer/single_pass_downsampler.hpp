@@ -4,7 +4,7 @@
 #include <wrl/client.h>
 
 #include "core/types.hpp"
-#include "rhi/render_device.hpp"
+#include "rhi/render_backend.hpp"
 
 using Microsoft::WRL::ComPtr;
 

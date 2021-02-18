@@ -1,6 +1,6 @@
 #include "world_preview_panel.hpp"
 
-#include "renderer/rhi/render_device.hpp"
+#include "renderer/rhi/render_backend.hpp"
 
 namespace sanity::engine::ui {
     WorldPreviewPane::WorldPreviewPane(const renderer::Renderer& renderer_in) : UiPanel{"World Preview Pane"}, renderer{&renderer_in} {
