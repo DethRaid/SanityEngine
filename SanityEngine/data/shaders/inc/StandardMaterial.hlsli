@@ -36,7 +36,7 @@ struct SurfaceInfo {
 
 #include "standard_root_signature.hlsl"
 
-SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialData material) {
+SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialData material) {	
     SurfaceInfo surface;
     surface.location = vertex.location;
 
@@ -62,7 +62,9 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
         surface.normal = normal_texture.Sample(bilinear_sampler, vertex.texcoord).xyz * 2.0 - 1.0;
         surface.normal.y *= -1; // Convert from right-handed normalmaps to left-handed normals
 
-        const float3 view_vector = vertex.location - cameras[constants.camera_index].view[2].xyz;
+        PerFrameData data = srv_buffers[0].Load<PerFrameData>(0);
+        ByteAddressBuffer cameras = srv_buffers[data.camera_buffer_index];
+        const float3 view_vector = vertex.location - cameras.Load<Camera>(constants.camera_index * sizeof(Camera)).view[2].xyz;
     	
         const float3x3 normal_matrix = cotangent_frame(vertex.normal, view_vector, vertex.texcoord);
         surface.normal = normalize(mul(surface.normal, normal_matrix));

@@ -32,6 +32,11 @@ struct PerFrameData {
     float time_since_start;
     uint frame_count;
 
+    uint camera_buffer_index;
+    uint light_buffer_index;
+    uint vertex_data_buffer_index;
+    uint index_buffer_index;
+	
 	uint noise_texture_idx;
     uint sky_texture_idx;
 };
@@ -51,16 +56,28 @@ SamplerState bilinear_sampler : register(s1);
  */
 SamplerState trilinear_sampler : register(s2);
 
+// Root constants
+
 struct StandardPushConstants {
     /*!
      * \brief Index of the camera that will render this draw
      */
     uint camera_index;
 
+	/*!
+	 * \brief Index in the global buffers array of the buffer that holds our data
+	 */
+	uint data_buffer_index;
+
     /*!
      * \brief Index of the material data for the current draw
      */
     uint material_index;
+    
+	/*!
+	 * \brief Index of the buffer with model matrices for this draw
+	 */
+	uint model_matrix_buffer_index;
 
     /*!
      * \brief Index of our model matrix within the currently bound buffer
@@ -73,55 +90,27 @@ struct StandardPushConstants {
 	uint object_id;
 } constants;
 
-
-
-ByteAddressBuffer srv_buffers[] : register(t0, space0);
-
-RWByteAddressBuffer uav_buffers[] : register(u0, space1);
-
-
-
-Texture2D textures[] : register(t0, space2);
-
-Texture3D textures3d[] : register(t0, space3);
-
-RWTexture3D<float4> uav_textures3d_rgba[] : register(u0, space4);
-
-RWTexture3D<float2> uav_textures3d_rg[] : register(u0, space5);
-
-
-/*!
- * \brief Array of all the materials
- */
-StructuredBuffer<Camera> cameras : register(t0);
-
-/*!
- * \brief Array of all the materials
- */
-StructuredBuffer<MaterialData> material_buffer : register(t1);
-
-/*!
- * \brief Array of all the lights in the scene
- *
- * When I get forward+ rendering working, there will be a separate buffer for which lights affect which object
- */
-StructuredBuffer<Light> lights : register(t2);
+// Registers 0 - 15: raytracing stuff that can't be bindlessly accessed
 
 /*!
  * \brief Acceleration structure for all the objects that we can raytrace against
  */
-RaytracingAccelerationStructure raytracing_scene : register(t3);
+RaytracingAccelerationStructure raytracing_scene : register(t0);
 
-ByteAddressBuffer indices : register(t4);
-ByteAddressBuffer vertices : register(t5);
+// Register 16: Resource arrays
 
-/*!
- * \brief Data which is constant for the entire frame
- */
-StructuredBuffer<PerFrameData> per_frame_data : register(t6);
+ByteAddressBuffer srv_buffers[] : register(t16, space0);
 
-/*!
- * \brief Buffer of all the model matrices that are relevant for the current thing being rendered
- */
-StructuredBuffer<float4x4> model_matrices : register(t7);
+RWByteAddressBuffer uav_buffers[] : register(u16, space1);
+
+
+Texture2D textures[] : register(t16, space2);
+
+Texture3D textures3d[] : register(t16, space3);
+
+RWTexture3D<float4> uav_textures3d_rgba[] : register(u16, space4);
+
+RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space5);
+
+
 
