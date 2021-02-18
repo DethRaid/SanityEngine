@@ -172,6 +172,8 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] SinglePassDownsampler& get_spd() const;
 
+        [[nodiscard]] const Rx::Vector<Texture>& get_texture_array() const;
+    	
         [[nodiscard]] TextureHandle get_noise_texture() const;
 
         [[nodiscard]] TextureHandle get_pink_texture() const;
@@ -246,9 +248,7 @@ namespace sanity::engine::renderer {
 
         void reload_renderpass_shaders();
 #pragma endregion
-
-        [[nodiscard]] const Rx::Vector<Texture>& get_texture_array() const;
-
+        
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
         void upload_material_data(Uint32 frame_idx);

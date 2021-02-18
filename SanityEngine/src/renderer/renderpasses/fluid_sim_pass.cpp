@@ -72,10 +72,11 @@ namespace sanity::engine::renderer {
 
         auto& backend = renderer->get_render_backend();
 
+    	const auto descriptor_size = backend.get_cbv_srv_uav_allocator().get_descriptor_size();
+
         commands->SetComputeRootSignature(fluid_sim_root_sig.Get());
 
-       // const auto& textures = renderer->get_all_textures();
-
+       
         commands->SetPipelineState(fluid_sim_pipeline.Get());
 
         fluid_sims_view.each(
