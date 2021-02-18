@@ -6,9 +6,23 @@
 namespace sanity::engine::renderer {
     template <typename ResourceType>
     struct GpuResourceHandle {
+        static inline GpuResourceHandle<ResourceType> empty = GpuResourceHandle(0xFFFFFFFF, nullptr);
+    	
         Uint32 index{0xFFFFFFFF};
 
         Rx::Vector<ResourceType>* storage{nullptr};
+
+    	GpuResourceHandle() = default;
+
+        GpuResourceHandle(Uint32 index_in, Rx::Vector<ResourceType>* storage_in);
+
+        GpuResourceHandle(const GpuResourceHandle<ResourceType>& other) = default;
+        GpuResourceHandle& operator=(const GpuResourceHandle<ResourceType>& other) = default;
+
+        GpuResourceHandle(GpuResourceHandle<ResourceType>&& old) noexcept = default;
+        GpuResourceHandle& operator=(GpuResourceHandle<ResourceType>&& old) noexcept = default;
+
+    	~GpuResourceHandle() = default;
 
         [[nodiscard]] bool operator==(const GpuResourceHandle& other) const = default;
 
@@ -18,8 +32,12 @@ namespace sanity::engine::renderer {
     };
 
     template <typename ResourceType>
+    GpuResourceHandle<ResourceType>::GpuResourceHandle(const Uint32 index_in, Rx::Vector<ResourceType>* storage_in)
+        : index{index_in}, storage{storage_in} {}
+
+    template <typename ResourceType>
     bool GpuResourceHandle<ResourceType>::is_valid() const {
-        return index != 0xFFFFFFFF && storage != nullptr;
+        return index != 0xFFFFFFFF && storage != nullptr && index < storage->size();
     }
 
     template <typename ResourceType>

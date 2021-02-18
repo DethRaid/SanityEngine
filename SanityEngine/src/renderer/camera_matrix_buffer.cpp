@@ -1,9 +1,8 @@
 #include "camera_matrix_buffer.hpp"
 
-
-#include "renderer.hpp"
 #include "core/components.hpp"
 #include "glm/gtx/quaternion.hpp"
+#include "renderer.hpp"
 #include "rhi/render_backend.hpp"
 
 namespace sanity::engine::renderer {
@@ -54,9 +53,7 @@ namespace sanity::engine::renderer {
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](const Buffer& buffer) {
-            device->schedule_buffer_destruction(buffer);
-        });
+        device_data.each_fwd([&](const Buffer& buffer) { device->schedule_buffer_destruction(buffer); });
     }
 
     CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const Uint32 idx) {
@@ -75,6 +72,16 @@ namespace sanity::engine::renderer {
         RX_ASSERT(camera_idx < MAX_NUM_CAMERAS, "Camera index %u must be less than MAX_NUM_CAMERAS (%u)", camera_idx, MAX_NUM_CAMERAS);
 
         host_data[camera_idx] = matrices;
+    }
+
+    void CameraMatrixBuffer::upload_data(const Uint32 frame_idx) const {
+
+        const auto& camera_buffer_handle = get_device_buffer_for_frame(frame_idx);
+
+        const auto& camera_data = get_host_data();
+        const auto num_bytes_to_upload = static_cast<Uint32>(camera_data.size()) * sizeof(CameraMatrices);
+
+        memcpy(camera_buffer_handle->mapped_ptr, camera_data.data(), num_bytes_to_upload);
     }
 
     const BufferHandle& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {

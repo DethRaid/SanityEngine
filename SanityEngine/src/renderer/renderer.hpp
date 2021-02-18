@@ -220,7 +220,7 @@ namespace sanity::engine::renderer {
 
         Uint32 next_free_light_index{1}; // Index 0 is the sun, its hardcoded and timing-dependent and all the things we hate
         Rx::Vector<LightHandle> available_light_handles;
-        Rx::Array<GpuLight[MAX_NUM_LIGHTS]> lights;
+        Rx::Vector<GpuLight> lights;
         Rx::Vector<BufferHandle> light_device_buffers;
 
         std::queue<Mesh> pending_raytracing_upload_meshes;

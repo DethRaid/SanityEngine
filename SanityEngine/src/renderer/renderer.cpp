@@ -259,11 +259,11 @@ namespace sanity::engine::renderer {
     BufferHandle Renderer::create_buffer(const BufferCreateInfo& create_info) {
         const auto buffer = device->create_buffer(create_info);
         if(!buffer) {
-            return {{0}};
+            return BufferHandle::empty;
         }
 
         const auto idx = static_cast<Uint32>(all_buffers.size());
-        const auto handle = BufferHandle{{idx}};
+        const auto handle = BufferHandle(idx, &all_buffers);
 
         buffer_name_to_handle.insert(create_info.name, handle);
         all_buffers.push_back(*buffer);
@@ -306,7 +306,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info) {
         const auto idx = static_cast<Uint32>(all_textures.size());
-        const auto handle = TextureHandle{{idx}};
+        const auto handle = TextureHandle(idx, &all_textures);
 
         auto image = device->create_texture(create_info);
         if(image) {
@@ -443,7 +443,7 @@ namespace sanity::engine::renderer {
 
         new_volume.size = create_info.size;
 
-        const auto handle = FluidVolumeHandle{{.index = static_cast<Uint32>(all_fluid_volumes.size())}};
+        const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()), &all_fluid_volumes);
 
         all_fluid_volumes.push_back(new_volume);
 
@@ -466,7 +466,7 @@ namespace sanity::engine::renderer {
             return handle;
         }
 
-        const auto handle = StandardMaterialHandle{{.index = static_cast<Uint32>(standard_materials.size())}};
+        const auto handle = StandardMaterialHandle(static_cast<Uint32>(standard_materials.size()), &standard_materials);
         standard_materials.push_back(material);
 
         return handle;
@@ -485,7 +485,7 @@ namespace sanity::engine::renderer {
                 Rx::abort("Maximum number of lights already in use! Unable to upload any more");
             }
 
-            const auto handle = LightHandle{{next_free_light_index}};
+            const auto handle = LightHandle(next_free_light_index, &lights);
             next_free_light_index++;
 
             return handle;
@@ -528,7 +528,7 @@ namespace sanity::engine::renderer {
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
 
-        return {{handle_idx}};
+        return RaytracingAsHandle(handle_idx, &raytracing_geometries);
     }
 
     void Renderer::create_static_mesh_storage() {
@@ -769,14 +769,6 @@ namespace sanity::engine::renderer {
             matrices.calculate_view_matrix(transform);
             matrices.calculate_projection_matrix(camera);
         });
-
-        const auto& camera_buffer_handle = camera_matrix_buffers->get_device_buffer_for_frame(frame_idx);
-        const auto& camera_buffer = get_buffer(camera_buffer_handle);
-
-        const auto& camera_data = camera_matrix_buffers->get_host_data();
-        const auto num_bytes_to_upload = static_cast<Uint32>(camera_data.size()) * sizeof(CameraMatrices);
-
-        memcpy(camera_buffer->mapped_ptr, camera_data.data(), num_bytes_to_upload);
 
         camera_matrix_buffers->upload_data(frame_idx);
     }
