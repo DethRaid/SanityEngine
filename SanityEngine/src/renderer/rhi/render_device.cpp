@@ -111,7 +111,8 @@ namespace sanity::engine::renderer {
         device_allocator->Release();
     }
 
-    Rx::Ptr<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info, D3D12_RESOURCE_FLAGS additional_flags) const {
+    Rx::Optional<Buffer> RenderBackend::create_buffer(const BufferCreateInfo& create_info,
+                                                      const D3D12_RESOURCE_FLAGS additional_flags) const {
         ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
         desc.Flags = additional_flags;
@@ -155,33 +156,33 @@ namespace sanity::engine::renderer {
                 logger->warning("Unknown buffer usage %u", create_info.usage);
         }
 
-        auto buffer = Rx::make_ptr<Buffer>(RX_SYSTEM_ALLOCATOR);
+        auto buffer = Buffer{};
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
                                                              initial_state,
                                                              nullptr,
-                                                             &buffer->allocation,
-                                                             IID_PPV_ARGS(&buffer->resource));
+                                                             &buffer.allocation,
+                                                             IID_PPV_ARGS(&buffer.resource));
         if(FAILED(result)) {
             logger->error("Could not create buffer %s: %s", create_info.name, to_string(result));
-            return {};
+            return Rx::nullopt;
         }
 
         if(should_map) {
             D3D12_RANGE mapped_range{0, create_info.size};
-            buffer->resource->Map(0, &mapped_range, &buffer->mapped_ptr);
+            buffer.resource->Map(0, &mapped_range, &buffer.mapped_ptr);
         }
 
-        buffer->size = create_info.size;
+        buffer.size = create_info.size;
 
-        buffer->name = create_info.name;
+        buffer.name = create_info.name;
 
-        set_object_name(buffer->resource.Get(), create_info.name);
+        set_object_name(buffer.resource.Get(), create_info.name);
 
-        return Rx::Utility::move(buffer);
+        return buffer;
     }
 
-    Rx::Ptr<Texture> RenderBackend::create_texture(const TextureCreateInfo& create_info) const {
+    Rx::Optional<Texture> RenderBackend::create_texture(const TextureCreateInfo& create_info) const {
         auto format = to_dxgi_format(create_info.format); // TODO: Different to_dxgi_format functions for the different kinds of things
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
@@ -196,8 +197,8 @@ namespace sanity::engine::renderer {
             alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
         }
 
-        auto texture = Rx::make_ptr<Texture>(RX_SYSTEM_ALLOCATOR);
-        texture->format = create_info.format;
+        Texture texture;
+        texture.format = create_info.format;
 
         D3D12_RESOURCE_STATES initial_state{D3D12_RESOURCE_STATE_COMMON};
         switch(create_info.usage) {
@@ -225,11 +226,11 @@ namespace sanity::engine::renderer {
                                                              &desc,
                                                              initial_state,
                                                              nullptr,
-                                                             &texture->allocation,
-                                                             IID_PPV_ARGS(&texture->resource));
+                                                             &texture.allocation,
+                                                             IID_PPV_ARGS(&texture.resource));
         if(FAILED(result)) {
             logger->error("Could not create texture %s", create_info.name);
-            return {};
+            return Rx::nullopt;
         }
 
         // logger->verbose("Created texture %s (%dx%d) with initial state %s",
@@ -238,11 +239,11 @@ namespace sanity::engine::renderer {
         //                 create_info.height,
         //                 resource_state_to_string(initial_state));
 
-        texture->name = create_info.name;
-        texture->width = static_cast<Uint32>(desc.Width);
-        texture->height = desc.Height;
+        texture.name = create_info.name;
+        texture.width = static_cast<Uint32>(desc.Width);
+        texture.height = desc.Height;
 
-        set_object_name(texture->resource.Get(), create_info.name);
+        set_object_name(texture.resource.Get(), create_info.name);
 
         return texture;
     }
@@ -298,14 +299,10 @@ namespace sanity::engine::renderer {
         return ptr;
     }
 
-    void RenderBackend::schedule_buffer_destruction(Rx::Ptr<Buffer> buffer) {
-        ZoneScoped;
+    void RenderBackend::schedule_buffer_destruction(const Buffer& buffer) { buffer_deletion_list[cur_gpu_frame_idx].push_back(buffer); }
 
-        buffer_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Buffer*>(buffer.release()));
-    }
-
-    void RenderBackend::schedule_texture_destruction(Rx::Ptr<Texture> texture) {
-        texture_deletion_list[cur_gpu_frame_idx].emplace_back(RX_SYSTEM_ALLOCATOR, static_cast<Texture*>(texture.release()));
+    void RenderBackend::schedule_texture_destruction(const Texture& texture) {
+        texture_deletion_list[cur_gpu_frame_idx].push_back(texture);
     }
 
     Rx::Ptr<BindGroupBuilder> RenderBackend::create_bind_group_builder(
@@ -323,6 +320,10 @@ namespace sanity::engine::renderer {
                                               root_descriptors,
                                               descriptor_table_descriptors,
                                               descriptor_table_handles);
+    }
+
+    ComPtr<ID3D12PipelineState> RenderBackend::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader) const {
+        return create_compute_pipeline_state(compute_shader, standard_root_signature);
     }
 
     ComPtr<ID3D12PipelineState> RenderBackend::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
@@ -1054,6 +1055,8 @@ namespace sanity::engine::renderer {
 
         return sig;
     }
+
+    ComPtr<ID3D12RootSignature> RenderBackend::get_standard_root_signature() const { return standard_root_signature; }
 
     DescriptorAllocator& RenderBackend::get_cbv_srv_uav_allocator() const { return *cbv_srv_uav_allocator; }
 

@@ -5,6 +5,7 @@
 #include <d3d12.h>
 
 #include "core/types.hpp"
+#include "renderer/handles.hpp"
 #include "rx/core/string.h"
 
 namespace D3D12MA {
@@ -17,7 +18,7 @@ namespace sanity::engine::renderer {
 
         Uint64 size{0};
 
-    	Uint64 alignment{0};
+        Uint64 alignment{0};
 
         ComPtr<ID3D12Resource> resource;
 
@@ -56,11 +57,12 @@ namespace sanity::engine::renderer {
     enum class TextureFormat {
         Rgba8,
         R32F,
-    	R32UInt,
+        R32UInt,
         Rg16F,
         Rgba32F,
         Depth32,
         Depth24Stencil8,
+        Rg32F,
     };
 
     struct Texture {
@@ -97,6 +99,21 @@ namespace sanity::engine::renderer {
         bool enable_resource_sharing{false};
     };
 
+    struct FluidVolumeCreateInfo {
+        Rx::String name;
+
+        Uint3 size;
+
+        // TODO: Information about what kind of fluid
+    };
+
+    struct FluidVolume {
+        TextureHandle density_temperature_reaction_phi_texture_handle;
+        TextureHandle velocity_pressure_texture_handle;
+        Uint3 size;
+        Uint32 padding;
+    };
+
     [[nodiscard]] Uint32 size_in_bytes(TextureFormat format);
 
     template <typename T>
@@ -104,4 +121,4 @@ namespace sanity::engine::renderer {
         { a.allocation }
         ->std::convertible_to<D3D12MA::Allocation*>;
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

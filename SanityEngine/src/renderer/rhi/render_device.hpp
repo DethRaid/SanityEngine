@@ -89,10 +89,10 @@ namespace sanity::engine::renderer {
 
         ~RenderBackend();
 
-        [[nodiscard]] Rx::Ptr<Buffer> create_buffer(const BufferCreateInfo& create_info,
-                                                    D3D12_RESOURCE_FLAGS additional_flags = D3D12_RESOURCE_FLAG_NONE) const;
+        [[nodiscard]] Rx::Optional<Buffer> create_buffer(const BufferCreateInfo& create_info,
+                                                         D3D12_RESOURCE_FLAGS additional_flags = D3D12_RESOURCE_FLAG_NONE) const;
 
-        [[nodiscard]] Rx::Ptr<Texture> create_texture(const TextureCreateInfo& create_info) const;
+        [[nodiscard]] Rx::Optional<Texture> create_texture(const TextureCreateInfo& create_info) const;
 
         [[nodiscard]] DescriptorRange create_rtv_handle(const Texture& texture) const;
 
@@ -104,9 +104,9 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] void* map_buffer(const Buffer& buffer) const;
 
-        void schedule_buffer_destruction(Rx::Ptr<Buffer> buffer);
+        void schedule_buffer_destruction(const Buffer& buffer);
 
-        void schedule_texture_destruction(Rx::Ptr<Texture> texture);
+        void schedule_texture_destruction(const Texture& texture);
 
         /*!
          * \brief Creates a bind group builder with the provided descriptors
@@ -120,6 +120,8 @@ namespace sanity::engine::renderer {
             const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
             const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
             const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {}) const;
+
+        [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader) const;
 
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
                                                                                 const ComPtr<ID3D12RootSignature>& root_signature) const;
@@ -178,6 +180,8 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] ComPtr<ID3D12RootSignature> compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const;
 
+        [[nodiscard]] ComPtr<ID3D12RootSignature> get_standard_root_signature() const;
+
         [[nodiscard]] DescriptorAllocator& get_cbv_srv_uav_allocator() const;
 
         [[nodiscard]] ID3D12DescriptorHeap* get_cbv_srv_uav_heap() const;
@@ -227,8 +231,8 @@ namespace sanity::engine::renderer {
         ComPtr<ID3D12Fence> frame_fences;
         Rx::Vector<uint64_t> frame_fence_values;
 
-        Rx::Vector<Rx::Vector<Rx::Ptr<Buffer>>> buffer_deletion_list;
-        Rx::Vector<Rx::Vector<Rx::Ptr<Texture>>> texture_deletion_list;
+        Rx::Vector<Rx::Vector<Buffer>> buffer_deletion_list;
+        Rx::Vector<Rx::Vector<Texture>> texture_deletion_list;
 
         Rx::Ptr<DescriptorAllocator> cbv_srv_uav_allocator;
         Rx::Ptr<DescriptorAllocator> rtv_allocator;

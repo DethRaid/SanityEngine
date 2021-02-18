@@ -417,6 +417,8 @@
     <ClInclude Include="src\actor\actor.hpp">
       <Filter>src\actor</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\fluid_sim_pass.hpp" />
+    <ClInclude Include="src\renderer\rhi\compute_pipeline_state.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -617,6 +619,8 @@
     <ClCompile Include="src\actor\actor.cpp">
       <Filter>src\actor</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\fluid_sim_pass.cpp" />
+    <ClCompile Include="src\renderer\rhi\compute_pipeline_state.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

@@ -28,7 +28,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;
 
-    	[[nodiscard]] TextureHandle get_object_id_texture() const;
+        [[nodiscard]] TextureHandle get_object_id_texture() const;
 
         [[nodiscard]] TextureHandle get_depth_target_handle() const;
 
@@ -36,6 +36,7 @@ namespace sanity::engine::renderer {
         Renderer* renderer;
 
         Rx::Ptr<RenderPipelineState> standard_pipeline;
+        Rx::Ptr<RenderPipelineState> outline_pipeline;
         Rx::Ptr<RenderPipelineState> atmospheric_sky_pipeline;
 
         TextureHandle color_target_handle;
@@ -48,14 +49,14 @@ namespace sanity::engine::renderer {
 
         D3D12_RENDER_PASS_RENDER_TARGET_DESC color_target_access;
 
-    	D3D12_RENDER_PASS_RENDER_TARGET_DESC object_id_target_access;
+        D3D12_RENDER_PASS_RENDER_TARGET_DESC object_id_target_access;
 
         D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_target_access;
 
         glm::uvec2 render_target_size;
-    	
+
         DescriptorRange color_target_descriptor;
-        DescriptorRange object_id_target_descriptor; 
+        DescriptorRange object_id_target_descriptor;
         DescriptorRange depth_target_descriptor;
 
         void create_framebuffer(const glm::uvec2& render_resolution);
@@ -64,6 +65,10 @@ namespace sanity::engine::renderer {
 
         void draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx);
 
+        void draw_outlines(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx);
+
         void draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const;
+
+        void copy_render_targets(ID3D12GraphicsCommandList4* commands) const;
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer
