@@ -70,10 +70,10 @@ float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
     const MaterialData material = material_buffer[constants.material_index];
     Texture2D scene_output = textures[material.texture_idx];
     const float4 color = scene_output.Sample(bilinear_sampler, vertex.texcoord);
-
+    	
     const float luma = LUMA(color.rgb);
     const float tonemap_factor = 1.0 / (1.0 + luma);
-    const float3 correct_color = color.rgb * tonemap_factor;
+    float3 correct_color = color.rgb * tonemap_factor;
 
     // IrrGlslExtToneMapperReinhardParamsT params;
     // params.key_and_manual_linear_exposure = 1.5;
@@ -81,5 +81,6 @@ float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
     //
     // float3 correct_color = reinhard_tonemap(params, color, 16.0);
     // float3 correct_color = jodie_robo2_electric_boogaloo(color.rgb);
+	// correct_color.rgb = pow(correct_color.rgb, 2.2f);
     return float4(correct_color, color.a);
 }

@@ -151,9 +151,9 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
                                     const in float3 eye_vector,
                                     const in float2 noise_texcoord,
                                     const in Light sun) {
-    const uint num_indirect_rays = 1;
+    const uint num_indirect_rays = 5;
 
-    const uint num_bounces = 2;
+    const uint num_bounces = 3;
 
     // TODO: In theory, we should walk the ray to collect all transparent hits that happen closer than the closest opaque hit, and filter
     // the opaque hit's light through the transparent surfaces. This will be implemented l a t e r when I feel more comfortable with ray
@@ -172,7 +172,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
         float3 light_sample = 0;
 
         uint num_light_samples = 1;
-        for(uint bounce_idx = 1; bounce_idx <= num_bounces; bounce_idx++) {
+        for(uint bounce_idx = 0; bounce_idx < num_bounces; bounce_idx++) {
             const float3 ray_direction = get_random_vector_aligned_to_normal(surface.normal,
                                                                              noise_texcoord,
                                                                              bounce_idx + ray_idx * num_bounces,
@@ -332,6 +332,6 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace, noise_texcoord);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
-
+    
     return direct_light + indirect_light + reflection;
 }

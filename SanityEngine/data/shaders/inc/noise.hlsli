@@ -8,7 +8,7 @@
 
 #define GOLDEN_ANGLE TAU / PHI / PHI
 
-#define NUM_TEMPORAL_SAMPLES 69
+#define NUM_TEMPORAL_SAMPLES 13
 
 float2 fermatsSpiralGoldenN(float index, float total) {
     float theta = index * GOLDEN_ANGLE;
@@ -50,7 +50,7 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
                                            const in float index,
                                            const in float total) {
     const PerFrameData frame_data = per_frame_data[0];
-    const uint frame_index = frame_data.frame_count % NUM_TEMPORAL_SAMPLES;
+    const uint frame_index = (frame_data.frame_count * 69) % NUM_TEMPORAL_SAMPLES;
 
     const float offset = total * NUM_TEMPORAL_SAMPLES;
 
