@@ -52,14 +52,17 @@ namespace sanity::engine::renderer {
      */
     class RenderBackend {
     public:
-        static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
-        static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 1;
-        static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 2;
-        static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = 3;
-
         static constexpr Uint32 ROOT_CONSTANTS_ROOT_PARAMETER_INDEX = 0;
-        static constexpr Uint32 MATERIAL_BUFFER_ROOT_PARAMETER_INDEX = 2;
-        static constexpr Uint32 MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX = 8;
+        static constexpr Uint32 RAYTRACING_SCENE_ROOT_PARAMETER_INDEX = 1;
+        static constexpr Uint32 RESOURCES_ARRAY_ROOT_PARAMETER_INDEX = 2;
+        static constexpr Uint32 TEXTURES_ARRAY_ROOT_PARAMETER_INDEX = 3;
+
+        static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
+        static constexpr Uint32 DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET = 1;
+        static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 2;
+        static constexpr Uint32 MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = 3;
+        static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 4;
+        static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = 5;
 
 #ifdef TRACY_ENABLE
         inline static tracy::D3D12QueueCtx* tracy_context{nullptr};
@@ -316,6 +319,14 @@ namespace sanity::engine::renderer {
                                                       .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
                                                       .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
                                                       .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
+
+        D3D12_STATIC_SAMPLER_DESC trilinear_sampler_desc{.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+                                                         .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                         .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                         .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                                                         .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+                                                         .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+                                                         .MaxAnisotropy = 8};
 
         ComPtr<ID3D12CommandSignature> standard_drawcall_command_signature;
 

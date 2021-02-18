@@ -1,4 +1,4 @@
-#include "render_device.hpp"
+#include "render_backend.hpp"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 
@@ -953,50 +953,76 @@ namespace sanity::engine::renderer {
     void RenderBackend::create_standard_root_signature() {
         ZoneScoped;
 
-        Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{10};
+        Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{3};
 
         // Root constants for indices and IDs
-        root_parameters[0].InitAsConstants(4, 0);
+        root_parameters[ROOT_CONSTANTS_ROOT_PARAMETER_INDEX].InitAsConstants(6, 0);
 
-        // Camera data buffer
-        root_parameters[1].InitAsShaderResourceView(0);
+        // Raytracing data
+        root_parameters[RAYTRACING_SCENE_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(0);
 
-        // Material data buffer
-        root_parameters[MATERIAL_BUFFER_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(1);
+        // Resources
+        const Rx::Vector<D3D12_DESCRIPTOR_RANGE> resource_table_descriptor_ranges = Rx::Array{
+            // SRV buffers
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                .NumDescriptors = MAX_NUM_BUFFERS,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 0,
+                .OffsetInDescriptorsFromTableStart = 0,
+            },
 
-        // Lights buffer
-        root_parameters[3].InitAsShaderResourceView(2);
+            // UAV buffers
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                .NumDescriptors = MAX_NUM_BUFFERS,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 1,
+                .OffsetInDescriptorsFromTableStart = 0,
+            },
 
-        // Raytracing acceleration structure
-        root_parameters[4].InitAsShaderResourceView(3);
+            // Texture2D
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                .NumDescriptors = MAX_NUM_TEXTURES,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 0,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+            },
 
-        // Index buffer
-        root_parameters[5].InitAsShaderResourceView(4);
+            // Texture3D
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                .NumDescriptors = MAX_NUM_TEXTURES,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 0,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+            },
 
-        // Vertex buffer
-        root_parameters[6].InitAsShaderResourceView(5);
+            // RWTexture3D<float4>
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+                .NumDescriptors = MAX_NUM_TEXTURES,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 0,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+            },
 
-        // Per-frame data
-        root_parameters[7].InitAsShaderResourceView(6);
-
-        // Model matrix buffer
-        root_parameters[MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(7);
-
-        // Textures array
-        Rx::Vector<D3D12_DESCRIPTOR_RANGE> descriptor_table_ranges;
-        descriptor_table_ranges.push_back(D3D12_DESCRIPTOR_RANGE{
-            .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-            .NumDescriptors = MAX_NUM_TEXTURES,
-            .BaseShaderRegister = 16,
-            .RegisterSpace = 0,
-            .OffsetInDescriptorsFromTableStart = 0,
-        });
-
-        root_parameters[9].InitAsDescriptorTable(static_cast<UINT>(descriptor_table_ranges.size()), descriptor_table_ranges.data());
+            // RWTexture3D<float2>
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+                .NumDescriptors = MAX_NUM_TEXTURES,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 0,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+            },
+        };
+        root_parameters[RESOURCES_ARRAY_ROOT_PARAMETER_INDEX].InitAsDescriptorTable(static_cast<UINT>(
+                                                                                        resource_table_descriptor_ranges.size()),
+                                                                                    resource_table_descriptor_ranges.data());
 
         Rx::Vector<D3D12_STATIC_SAMPLER_DESC> static_samplers{3};
 
-        // Point sampler
         auto& point_sampler = static_samplers[0];
         point_sampler = this->point_sampler_desc;
 
@@ -1005,12 +1031,7 @@ namespace sanity::engine::renderer {
         linear_sampler.ShaderRegister = 1;
 
         auto& trilinear_sampler = static_samplers[2];
-        trilinear_sampler.Filter = D3D12_FILTER_ANISOTROPIC;
-        trilinear_sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        trilinear_sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        trilinear_sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        trilinear_sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        trilinear_sampler.MaxAnisotropy = 8;
+        trilinear_sampler = trilinear_sampler_desc;
         trilinear_sampler.ShaderRegister = 2;
 
         D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
