@@ -73,6 +73,23 @@ struct StandardPushConstants {
 	uint object_id;
 } constants;
 
+
+
+ByteAddressBuffer srv_buffers[] : register(t0, space0);
+
+RWByteAddressBuffer uav_buffers[] : register(u0, space1);
+
+
+
+Texture2D textures[] : register(t0, space2);
+
+Texture3D textures3d[] : register(t0, space3);
+
+RWTexture3D<float4> uav_textures3d_rgba[] : register(u0, space4);
+
+RWTexture3D<float2> uav_textures3d_rg[] : register(u0, space5);
+
+
 /*!
  * \brief Array of all the materials
  */
@@ -108,7 +125,3 @@ StructuredBuffer<PerFrameData> per_frame_data : register(t6);
  */
 StructuredBuffer<float4x4> model_matrices : register(t7);
 
-/*!
- * \brief Array of all the textures that are available for a shader to sample from
- */
-Texture2D textures[] : register(t16);

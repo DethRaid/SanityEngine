@@ -15,8 +15,10 @@ struct PixelOutput {
 };
 
 PixelOutput main(const VertexOutput input) {
-    const MaterialData material = material_buffer[constants.material_index];
-
+    ByteAddressBuffer my_material_buffer = srv_buffers[0];
+	uint read_offset = sizeof(MaterialData) * constants.material_index;
+	MaterialData material = my_material_buffer.Load<MaterialData>(read_offset);
+	
     StandardVertex vertex;
     vertex.location = input.location_worldspace.xyz;
     vertex.normal = normalize(input.normal_worldspace);
