@@ -9,7 +9,8 @@
 #include "rx/core/vector.h"
 
 namespace sanity::engine::renderer {
-    class RenderBackend;
+	class Renderer;
+	class RenderBackend;
 	
     struct CameraMatrices {
         glm::mat4 view_matrix{};
@@ -34,7 +35,7 @@ namespace sanity::engine::renderer {
      */
     class CameraMatrixBuffer {
     public:
-        explicit CameraMatrixBuffer(RenderBackend& device_in);
+        explicit CameraMatrixBuffer(Renderer& renderer);
 
         CameraMatrixBuffer(const CameraMatrixBuffer& other) = delete;
         CameraMatrixBuffer& operator=(const CameraMatrixBuffer& other) = delete;
@@ -50,17 +51,15 @@ namespace sanity::engine::renderer {
 
         void set_camera_matrices(Uint32 camera_idx, const CameraMatrices& matrices);
 
-        [[nodiscard]] const Buffer& get_device_buffer_for_frame(Uint32 frame_idx) const;
+        [[nodiscard]] const BufferHandle& get_device_buffer_for_frame(Uint32 frame_idx) const;
 
-        [[nodiscard]] const CameraMatrices* get_host_data_pointer() const;
-
-        void upload_data(Uint32 frame_idx) const;
+        [[nodiscard]] const Rx::Array<CameraMatrices[MAX_NUM_CAMERAS]>& get_host_data() const;
 
     private:
         RenderBackend* device;
 
         Rx::Array<CameraMatrices[MAX_NUM_CAMERAS]> host_data{};
 
-        Rx::Vector<Buffer> device_data;
+        Rx::Vector<BufferHandle> device_data;
     };
 } // namespace renderer

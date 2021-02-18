@@ -1,5 +1,7 @@
 #include "camera_matrix_buffer.hpp"
 
+
+#include "renderer.hpp"
 #include "core/components.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "rhi/render_device.hpp"
@@ -38,7 +40,7 @@ namespace sanity::engine::renderer {
         inverse_projection_matrix = inverse(projection_matrix);
     }
 
-    CameraMatrixBuffer::CameraMatrixBuffer(RenderBackend& device_in) : device{&device_in} {
+    CameraMatrixBuffer::CameraMatrixBuffer(Renderer& renderer) : device{&renderer.get_render_backend()} {
         const auto num_gpu_frames = device->get_max_num_gpu_frames();
         device_data.reserve(num_gpu_frames);
 
@@ -46,8 +48,8 @@ namespace sanity::engine::renderer {
 
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             create_info.name = Rx::String::format("Camera Matrix Buffer {}", i);
-            auto buffer = device->create_buffer(create_info);
-            device_data.push_back(*buffer);
+            auto buffer = renderer.create_buffer(create_info);
+            device_data.push_back(buffer);
         }
     }
 
@@ -75,7 +77,7 @@ namespace sanity::engine::renderer {
         host_data[camera_idx] = matrices;
     }
 
-    const Buffer& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
+    const BufferHandle& CameraMatrixBuffer::get_device_buffer_for_frame(const Uint32 frame_idx) const {
         RX_ASSERT(frame_idx < device_data.size(),
                   "Not enough device buffers! There are %u device buffers for camera matrices, but buffer %u was requested",
                   device_data.size(),
@@ -84,11 +86,5 @@ namespace sanity::engine::renderer {
         return device_data[frame_idx];
     }
 
-    const CameraMatrices* CameraMatrixBuffer::get_host_data_pointer() const { return host_data.data(); }
-
-    void CameraMatrixBuffer::upload_data(const Uint32 frame_idx) const {
-        const auto num_bytes_to_upload = static_cast<Uint32>(host_data.size()) * sizeof(CameraMatrices);
-
-        memcpy(device_data[frame_idx].mapped_ptr, host_data.data(), num_bytes_to_upload);
-    }
+    const Rx::Array<CameraMatrices[MAX_NUM_CAMERAS]>& CameraMatrixBuffer::get_host_data() const { return host_data; }
 } // namespace sanity::engine::renderer
