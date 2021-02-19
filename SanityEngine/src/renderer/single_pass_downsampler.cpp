@@ -71,10 +71,10 @@ namespace sanity::engine::renderer {
         varAU2(num_work_groups_and_mips);
 
         const auto desc = texture->GetDesc();
-        varAU4(rectInfo) = initAU4(0, 0, static_cast<AU1>(desc.Width), desc.Height);
+        varAU4(rect_info) = initAU4(0, 0, static_cast<AU1>(desc.Width), desc.Height);
         const auto inverse_size = Vec2f{1.0f / static_cast<Float32>(desc.Width), 1.0f / static_cast<Float32>(desc.Height)};
 
-        SpdSetup(dispatch_thread_group_count_xy, work_group_offset, num_work_groups_and_mips, rectInfo);
+        SpdSetup(dispatch_thread_group_count_xy, work_group_offset, num_work_groups_and_mips, rect_info);
 
         const auto num_work_groups = num_work_groups_and_mips[0];
         const auto num_mips = num_work_groups_and_mips[1];
@@ -82,6 +82,10 @@ namespace sanity::engine::renderer {
         // Set up descriptors
         const auto descriptor_table_handle = fill_descriptor_table(texture, device, num_mips);
 
+    	// Allowed usage of creating a non-bindless buffer, since this uses a bindy resource mode
+
+    	// TODO: Convert SPD to use bindless resources
+    	
         auto global_counter_buffer = backend->create_buffer(
             {.name = "SPD Global Counter", .usage = BufferUsage::UnorderedAccess, .size = sizeof(Uint32)});
 
