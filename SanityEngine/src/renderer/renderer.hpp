@@ -97,7 +97,7 @@ namespace sanity::engine::renderer {
      */
     class Renderer {
     public:
-        inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000};
+        inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000, nullptr};
 
         explicit Renderer(GLFWwindow* window);
 

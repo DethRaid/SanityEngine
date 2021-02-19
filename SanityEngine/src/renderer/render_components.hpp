@@ -1,5 +1,6 @@
 #pragma once
 
+#include "standard_material.hpp"
 #include "core/types.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/lights.hpp"
@@ -69,11 +70,11 @@ namespace sanity::engine::renderer {
      */
     struct __declspec(uuid("{3F869FC4-F339-4125-82F2-0A3775552112}")) PostProcessingPassComponent {
         Uint32 draw_idx{0};
-        StandardMaterialHandle material{0};
+        StandardMaterialHandle material{};
     };
 
     struct __declspec(uuid("{BB1E8A88-79FE-4934-8335-E5226022F441}")) RaytracingObjectComponent {
-        RaytracingAsHandle as_handle{0};
+        RaytracingAsHandle as_handle{};
     };
 
     /*!
@@ -98,7 +99,7 @@ namespace sanity::engine::renderer {
      * \brief A light that can illuminate the scene
      */
     struct __declspec(uuid("{C1299481-3F19-4068-9724-FD89FF59EA65}")) LightComponent {
-        LightHandle handle;
+        LightHandle handle{};
 
         LightType type{LightType::directional};
 

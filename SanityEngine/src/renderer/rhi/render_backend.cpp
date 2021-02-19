@@ -1028,6 +1028,7 @@ namespace sanity::engine::renderer {
 
         auto& trilinear_sampler = static_samplers[2];
         trilinear_sampler = trilinear_sampler_desc;
+        trilinear_sampler.MaxAnisotropy = 8;
         trilinear_sampler.ShaderRegister = 2;
 
         D3D12_ROOT_SIGNATURE_DESC root_signature_desc;

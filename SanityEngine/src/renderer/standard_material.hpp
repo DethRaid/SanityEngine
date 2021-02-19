@@ -1,6 +1,7 @@
 #pragma once
 
 #include "handles.hpp"
+#include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
     /*!
@@ -19,22 +20,22 @@ namespace sanity::engine::renderer {
 
     	glm::vec4 emission_value{0.f};
     	
-        TextureHandle base_color_texture{0};
+        GpuResourceHandle<Texture> base_color_texture{};
 
-        TextureHandle normal_texture{0};
+        GpuResourceHandle<Texture> normal_texture{};
 
     	/*!
     	 * G = roughness
     	 * B = metallic
     	 */
-        TextureHandle metallic_roughness_texture{0};
+        GpuResourceHandle<Texture> metallic_roughness_texture{};
     	
         /*!
          * Emission is stored as the cube of the actual emission, scaled from 0 - 100 to 0 - 1
          *
          * `emission = pow(emission.r, 1 / 3) * 100;`
          */
-        TextureHandle emission_texture{0};
+        GpuResourceHandle<Texture> emission_texture{};
     };
 
 	using StandardMaterialHandle = GpuResourceHandle<StandardMaterial>;

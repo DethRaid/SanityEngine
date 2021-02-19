@@ -560,8 +560,8 @@ namespace sanity::editor::import {
                 // materials. This will be addressed in a future revision
                 
                 const auto model_matrix = primitive_transform_component.get_local_matrix();
-                const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer,
-                                                                            index_buffer,
+                const auto as_handle = renderer->create_raytracing_geometry(*vertex_buffer,
+                                                                            *index_buffer,
                                                                             Rx::Array{
                                                                                 engine::renderer::PlacedMesh{.mesh = primitive.mesh,
                                                                                                              .model_matrix = model_matrix}},

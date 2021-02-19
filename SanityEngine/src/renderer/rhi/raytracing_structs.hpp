@@ -25,7 +25,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Buffer that holds the bottom-level acceleration structure
          */
-        BufferHandle blas_buffer;
+        BufferHandle blas_buffer{};
     };
 
 	using RaytracingAsHandle = GpuResourceHandle<RaytracingAccelerationStructure>;
@@ -38,7 +38,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Buffer that holds the object's bottom-level acceleration structure
          */
-        RaytracingAsHandle as_handle{0};
+        RaytracingAsHandle as_handle{};
 
         /*!
          * \brief Material to render this RaytracingObject with
@@ -52,6 +52,6 @@ namespace sanity::engine::renderer {
      * \brief Struct for the top level acceleration structure that we can raytrace against
      */
     struct RaytracingScene {
-        BufferHandle buffer;
+        BufferHandle buffer{};
     };
 } // namespace sanity::engine::renderer

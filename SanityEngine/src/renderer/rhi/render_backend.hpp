@@ -325,8 +325,7 @@ namespace sanity::engine::renderer {
                                                          .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
                                                          .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
                                                          .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
-                                                         .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
-                                                         .MaxAnisotropy = 8};
+                                                         .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL};
 
         ComPtr<ID3D12CommandSignature> standard_drawcall_command_signature;
 

@@ -43,10 +43,10 @@ namespace sanity::editor::ui {
     void SceneViewport::recreate_scene_output_texture() {
         ZoneScoped;
 
-        if(scene_output_texture != nullptr) {
+        if(scene_output_texture_handle.is_valid()) {
             const auto scene_output_texture_handle_u64 = reinterpret_cast<Uint64>(scene_output_texture);
             const auto scene_output_texture_handle_index = static_cast<Uint32>(scene_output_texture_handle_u64);
-            const auto scene_output_texture_handle = TextureHandle{scene_output_texture_handle_index};
+            scene_output_texture_handle = TextureHandle(scene_output_texture_handle_index, scene_output_texture_handle.storage);
 
             renderer->schedule_texture_destruction(scene_output_texture_handle);
 
@@ -59,7 +59,7 @@ namespace sanity::editor::ui {
                                                    .width = render_size.x,
                                                    .height = render_size.y};
 
-        const auto scene_output_texture_handle = renderer->create_texture(create_info);
+        scene_output_texture_handle = renderer->create_texture(create_info);
         const auto scene_output_texture_index = static_cast<Uint64>(scene_output_texture_handle.index);
         scene_output_texture = reinterpret_cast<void*>(scene_output_texture_index);
 

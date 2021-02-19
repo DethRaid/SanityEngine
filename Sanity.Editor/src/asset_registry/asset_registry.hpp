@@ -5,6 +5,7 @@
 #include "asset_registry/asset_metadata_json_conversion.hpp"
 #include "nlohmann/json.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/rhi/resources.hpp"
 #include "rx/core/filesystem/file.h"
 #include "rx/core/log.h"
 #include "rx/core/map.h"
@@ -49,8 +50,7 @@ namespace sanity::editor {
     }
 
     template <typename ImportSettingsType>
-    void AssetRegistry::save_meta_for_asset(const std::filesystem::path& asset_path,
-                                                const AssetMetadata<ImportSettingsType>& metadata) {
+    void AssetRegistry::save_meta_for_asset(const std::filesystem::path& asset_path, const AssetMetadata<ImportSettingsType>& metadata) {
         const nlohmann::json json = metadata;
         const auto json_string = nlohmann::to_string(json);
 

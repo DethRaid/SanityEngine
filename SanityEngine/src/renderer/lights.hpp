@@ -3,6 +3,7 @@
 #include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
 #include "glm/vec3.hpp"
+#include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
     constexpr Uint32 MAX_NUM_LIGHTS = 32;
@@ -11,7 +12,7 @@ namespace sanity::engine::renderer {
 
     /*!
      * @brief Struct for a light on the GPU
-    */
+     */
     struct GpuLight {
         LightType type{LightType::directional};
 
@@ -36,22 +37,22 @@ namespace sanity::engine::renderer {
         // Hack to make the soft shadows easier to see in my test scene, should remove the *10 multiplier when I have a real scene
     };
 
-	using LightHandle = GpuResourceHandle<GpuLight>;
+    using LightHandle = GpuResourceHandle<GpuLight>;
 
     struct ImageBasedLightingInfo {
         /*!
          * @brief Handle to the texture to use to the skybox that gets drawn directly to screen
          */
-        TextureHandle skybox_handle{0};
+        TextureHandle skybox_handle{};
 
         /*!
          * @brief Handle to the prefiltered environment lighting
          */
-        TextureHandle environment_lighting_handle{0};
+        TextureHandle environment_lighting_handle{};
 
         /*!
          * @brief Handle to the texture to use for reflections
          */
-        TextureHandle reflection_map{0};
+        TextureHandle reflection_map{};
     };
 } // namespace sanity::engine::renderer

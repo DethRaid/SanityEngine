@@ -56,6 +56,6 @@ namespace sanity::engine::renderer {
             Rx::abort("Invalid handle");
         }
 
-        return &(*storage)[index];
+        return (*storage)[index];
     }
 } // namespace sanity::engine::renderer

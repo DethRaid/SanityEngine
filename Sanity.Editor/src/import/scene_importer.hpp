@@ -1,11 +1,12 @@
 #pragma once
 
-#include <actor/actor.hpp>
-
+#include "actor/actor.hpp"
 #include "entt/entity/fwd.hpp"
 #include "loading/asset_loader.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/rhi/mesh_data_store.hpp"
+#include "renderer/rhi/raytracing_structs.hpp"
+#include "renderer/standard_material.hpp"
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
 #include "rx/core/vector.h"

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <renderer/rhi/resources.hpp>
+
 #include "core/types.hpp"
 #include "ui/Window.hpp"
 
@@ -32,6 +34,8 @@ namespace sanity::editor::ui {
         Uint2 render_size{0, 0};
 
         ImTextureID scene_output_texture{nullptr};
+    	
+        engine::renderer::TextureHandle scene_output_texture_handle;
 
         void draw_contents() override;
 
