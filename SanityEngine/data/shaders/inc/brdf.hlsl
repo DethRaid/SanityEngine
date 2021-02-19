@@ -32,7 +32,7 @@ float PDF_GGX(const in float roughness, const in float3 n, const in float3 l, co
     const float VoH = saturate(dot(v, h));
     const float NoH = saturate(dot(n, h));
 
-    D_GGX(NoH, roughness) * NoH / (4.0 + VoH);
+    // D_GGX(NoH, roughness) * NoH / (4.0 + VoH);
 
     return 1 / (4 * VoH);
 }

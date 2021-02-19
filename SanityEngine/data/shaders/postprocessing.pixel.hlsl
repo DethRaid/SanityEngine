@@ -67,7 +67,8 @@ float3 jodie_robo2_electric_boogaloo(const float3 color) {
 }
 
 float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
-    const MaterialData material = material_buffer[constants.material_index];
+    ByteAddressBuffer data_buffer = srv_buffers[constants.data_buffer_index];
+    const MaterialData material = data_buffer.Load<MaterialData>(sizeof(MaterialData) * constants.material_index);
     Texture2D scene_output = textures[material.texture_idx];
     const float4 color = scene_output.Sample(bilinear_sampler, vertex.texcoord);
     	

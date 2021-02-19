@@ -49,7 +49,7 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
                                            const in float2 base_noise_texcoord,
                                            const in float index,
                                            const in float total) {
-    const PerFrameData frame_data = per_frame_data[0];
+    const PerFrameData frame_data = get_per_frame_data();
     const uint frame_index = (frame_data.frame_count * 69) % NUM_TEMPORAL_SAMPLES;
 
     const float offset = total * NUM_TEMPORAL_SAMPLES;
@@ -57,7 +57,7 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
     const float2 noise_sample_location = base_noise_texcoord +
                                          fermatsSpiralGoldenS(index + frame_index * total, total * NUM_TEMPORAL_SAMPLES);
 
-    Texture2D noise = textures[per_frame_data[0].noise_texture_idx];
+    Texture2D noise = textures[frame_data.noise_texture_idx];
 
     const float2 nums = noise.Sample(bilinear_sampler, noise_sample_location).rg;
 

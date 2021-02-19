@@ -15,7 +15,7 @@ struct MaterialData {
 const static float ACCUMULATION_POWER = 1;
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
-    MaterialData material = material_buffer[constants.material_index];
+    GET_CURRENT_DATA(MaterialData, material);
 
     Texture2D scene_output_texture = textures[material.scene_output_texture_idx];
 

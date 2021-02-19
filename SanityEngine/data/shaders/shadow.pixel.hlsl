@@ -17,7 +17,7 @@ struct MaterialData {
 #include "inc/standard_root_signature.hlsl"
 
 float4 main(VertexOutput input) : SV_TARGET {
-    MaterialData material = material_buffer[constants.material_index];
+    GET_CURRENT_DATA(MaterialData, material);
     Texture2D albedo_tex = textures[material.albedo_idx];
     float4 albedo = albedo_tex.Sample(bilinear_sampler, input.texcoord);
 

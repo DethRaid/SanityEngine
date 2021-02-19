@@ -15,9 +15,7 @@ struct PixelOutput {
 };
 
 PixelOutput main(const VertexOutput input) {
-    ByteAddressBuffer my_material_buffer = srv_buffers[0];
-	const uint read_offset = sizeof(MaterialData) * constants.material_index;
-	const MaterialData material = my_material_buffer.Load<MaterialData>(read_offset);
+	GET_CURRENT_DATA(MaterialData, material);
 	
     StandardVertex vertex;
     vertex.location = input.location_worldspace.xyz;
@@ -27,7 +25,7 @@ PixelOutput main(const VertexOutput input) {
 
     const SurfaceInfo surface = get_surface_info(vertex, material);
 
-    const Camera camera = cameras[constants.camera_index];
+    const Camera camera = get_current_camera();
 
     float3 total_reflected_light = get_total_reflected_light(camera, surface);
 

@@ -21,10 +21,16 @@
 uint3 get_indices(uint triangle_index) {
     const uint base_index = (triangle_index * 3);
     const int address = (base_index * 4);
+    
+	PerFrameData data = get_per_frame_data();
+	ByteAddressBuffer indices = srv_buffers[data.index_buffer_index];
     return indices.Load3(address);
 }
 
-StandardVertex get_vertex(int address) {
+StandardVertex get_vertex(int address) {    
+	PerFrameData data = get_per_frame_data();
+	ByteAddressBuffer vertices = srv_buffers[data.vertex_data_buffer_index];
+	
     StandardVertex v;
     v.location = asfloat(vertices.Load3(address));
     address += (3 * 4);
@@ -128,7 +134,8 @@ float4 get_incoming_light(const in float3 ray_origin,
         vertex = get_vertex_attributes(triangle_index, barycentrics);
 
         uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
-        material = material_buffer[material_id];
+    	GET_DATA(MaterialData, material_id, hit_material)
+    	material = hit_material;
 
         const SurfaceInfo surface = get_surface_info(vertex, material);
 
@@ -311,7 +318,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     float3 view_vector_worldspace = normalize(mul(camera.inverse_view, float4(view_vector_viewspace, 0)).xyz);
     view_vector_worldspace.z *= -1;
 
-    Light sun = lights[SUN_LIGHT_INDEX];
+    Light sun = get_light(SUN_LIGHT_INDEX);
 
     // Calculate how much of the sun's light gets through the atmosphere
     const float3 direction_to_sun = normalize(sun.direction_or_location * float3(1, -1, 1));
@@ -321,7 +328,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     float4 location_ndc = mul(camera.projection, position_viewspace);
     location_ndc /= location_ndc.w;
 
-    const PerFrameData frame_data = per_frame_data[0];
+    const PerFrameData frame_data = get_per_frame_data();
 
     Texture2D noise = textures[frame_data.noise_texture_idx];
 

@@ -11,7 +11,7 @@ struct MaterialData {};
 #include "inc/standard_root_signature.hlsl"
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
-    const Camera camera = cameras[constants.camera_index];
+    const Camera camera = get_current_camera();
     const float4 location_clipspace = float4(input.position_clipspace, 1);
     float4 location_viewspace = mul(camera.inverse_projection, location_clipspace);
     location_viewspace /= location_viewspace.w;
