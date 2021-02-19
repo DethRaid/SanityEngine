@@ -132,9 +132,13 @@ Camera get_camera(const uint index) {
 
 Camera get_current_camera() { return get_camera(constants.camera_index); }
 
+struct NonCrashingMatrix {
+	float4x4 m;
+};
+
 float4x4 get_model_matrix(const uint index) {
     ByteAddressBuffer model_matrix_buffer = srv_buffers[constants.model_matrix_buffer_index];
-    return model_matrix_buffer.Load<float4x4>(sizeof(float4x4) * index);
+    return model_matrix_buffer.Load<NonCrashingMatrix>(sizeof(float4x4) * index).m;
 }
 
 float4x4 get_current_model_matrix() { return get_model_matrix(constants.model_matrix_index); }
