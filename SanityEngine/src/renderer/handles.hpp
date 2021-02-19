@@ -7,8 +7,6 @@
 namespace sanity::engine::renderer {
     template <typename ResourceType>
     struct GpuResourceHandle {
-        static inline GpuResourceHandle<ResourceType> empty = GpuResourceHandle(0xFFFFFFFF, nullptr);
-
         Uint32 index{0xFFFFFFFF};
 
         Rx::Vector<ResourceType>* storage{nullptr};

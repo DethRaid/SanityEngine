@@ -259,7 +259,7 @@ namespace sanity::engine::renderer {
     BufferHandle Renderer::create_buffer(const BufferCreateInfo& create_info) {
         const auto buffer = device->create_buffer(create_info);
         if(!buffer) {
-            return BufferHandle::empty;
+            return {};
         }
 
         const auto idx = static_cast<Uint32>(all_buffers.size());
@@ -285,7 +285,7 @@ namespace sanity::engine::renderer {
             cmds->CopyBufferRegion(buffer->resource.Get(), 0, staging_buffer.resource.Get(), 0, create_info.size);
         }
 
-    	return handle;
+        return handle;
     }
 
     Rx::Optional<Buffer> Renderer::get_buffer(const Rx::String& name) const {

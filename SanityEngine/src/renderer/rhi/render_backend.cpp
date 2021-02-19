@@ -116,11 +116,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
         desc.Flags = additional_flags;
-
-        if(create_info.usage == BufferUsage::StagingBuffer) {
-            // Try to get a staging buffer from the pool
-        }
-
+        
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
         bool should_map = false;
 
