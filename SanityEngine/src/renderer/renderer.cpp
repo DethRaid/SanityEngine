@@ -538,15 +538,15 @@ namespace sanity::engine::renderer {
             .size = STATIC_MESH_VERTEX_BUFFER_SIZE,
         };
 
-        auto vertex_buffer = device->create_buffer(vertex_create_info);
+        auto vertex_buffer = create_buffer(vertex_create_info);
 
         const auto index_buffer_create_info = BufferCreateInfo{.name = "Static Mesh Index Buffer",
                                                                .usage = BufferUsage::IndexBuffer,
                                                                .size = STATIC_MESH_INDEX_BUFFER_SIZE};
 
-        auto index_buffer = device->create_buffer(index_buffer_create_info);
+        auto index_buffer = create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, *vertex_buffer, *index_buffer);
+        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *device, vertex_buffer, index_buffer);
     }
 
     void Renderer::allocate_resource_descriptors() {

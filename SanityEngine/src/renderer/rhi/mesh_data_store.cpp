@@ -14,8 +14,8 @@ namespace sanity::engine::renderer {
         const auto& index_buffer = mesh_store->get_index_buffer();
         const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-        auto* vertex_resource = vertex_buffer.resource.Get();
-        auto* index_resource = index_buffer.resource.Get();
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -43,8 +43,8 @@ namespace sanity::engine::renderer {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-            auto* vertex_resource = vertex_buffer.resource.Get();
-            auto* index_resource = index_buffer.resource.Get();
+            auto* vertex_resource = vertex_buffer->resource.Get();
+            auto* index_resource = index_buffer->resource.Get();
 
             auto previous_resource_state = D3D12_RESOURCE_STATE_COPY_DEST;
             if(state == State::BuildRaytracingGeometry) {
@@ -78,8 +78,8 @@ namespace sanity::engine::renderer {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-            auto* vertex_resource = vertex_buffer.resource.Get();
-            auto* index_resource = index_buffer.resource.Get();
+            auto* vertex_resource = vertex_buffer->resource.Get();
+            auto* index_resource = index_buffer->resource.Get();
 
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
             barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -95,26 +95,26 @@ namespace sanity::engine::renderer {
         }
     }
 
-    MeshDataStore::MeshDataStore(RenderBackend& device_in, Buffer vertex_buffer_in, Buffer index_buffer_in)
+    MeshDataStore::MeshDataStore(RenderBackend& device_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in)
         : device{&device_in}, vertex_buffer{Rx::Utility::move(vertex_buffer_in)}, index_buffer{Rx::Utility::move(index_buffer_in)} {
 
         vertex_bindings.reserve(4);
-        vertex_bindings.push_back(VertexBufferBinding{&vertex_buffer, offsetof(StandardVertex, location), sizeof(StandardVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{&vertex_buffer, offsetof(StandardVertex, normal), sizeof(StandardVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{&vertex_buffer, offsetof(StandardVertex, color), sizeof(StandardVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{&vertex_buffer, offsetof(StandardVertex, texcoord), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, location), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, normal), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, color), sizeof(StandardVertex)});
+        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, texcoord), sizeof(StandardVertex)});
     }
 
     MeshDataStore::~MeshDataStore() {
-        device->schedule_buffer_destruction(vertex_buffer);
-        device->schedule_buffer_destruction(index_buffer);
+        device->schedule_buffer_destruction(*vertex_buffer);
+        device->schedule_buffer_destruction(*index_buffer);
     }
 
     const Rx::Vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
 
-    const Buffer& MeshDataStore::get_vertex_buffer() const { return vertex_buffer; }
+    const BufferHandle& MeshDataStore::get_vertex_buffer() const { return vertex_buffer; }
 
-    const Buffer& MeshDataStore::get_index_buffer() const { return index_buffer; }
+    const BufferHandle& MeshDataStore::get_index_buffer() const { return index_buffer; }
 
     MeshUploader MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) { return MeshUploader{commands, this}; }
 
@@ -139,8 +139,8 @@ namespace sanity::engine::renderer {
 
         indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
-        auto* vertex_resource = vertex_buffer.resource.Get();
-        auto* index_resource = index_buffer.resource.Get();
+        auto* vertex_resource = vertex_buffer->resource.Get();
+        auto* index_resource = index_buffer->resource.Get();
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
@@ -173,11 +173,11 @@ namespace sanity::engine::renderer {
         Rx::Array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views{};
         for(Uint32 i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
-            const auto* buffer = static_cast<const Buffer*>(binding.buffer);
+            const auto& buffer = static_cast<const Buffer>(binding.buffer);
 
             D3D12_VERTEX_BUFFER_VIEW view{};
-            view.BufferLocation = buffer->resource->GetGPUVirtualAddress() + binding.offset;
-            view.SizeInBytes = static_cast<Uint32>(buffer->size - binding.offset);
+            view.BufferLocation = buffer.resource->GetGPUVirtualAddress() + binding.offset;
+            view.SizeInBytes = static_cast<Uint32>(buffer.size - binding.offset);
             view.StrideInBytes = binding.vertex_size;
 
             vertex_buffer_views[i] = view;
@@ -186,8 +186,8 @@ namespace sanity::engine::renderer {
         commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
 
         D3D12_INDEX_BUFFER_VIEW index_view{};
-        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
-        index_view.SizeInBytes = static_cast<Uint32>(index_buffer.size);
+        index_view.BufferLocation = index_buffer->resource->GetGPUVirtualAddress();
+        index_view.SizeInBytes = static_cast<Uint32>(index_buffer->size);
         index_view.Format = DXGI_FORMAT_R32_UINT;
 
         commands->IASetIndexBuffer(&index_view);

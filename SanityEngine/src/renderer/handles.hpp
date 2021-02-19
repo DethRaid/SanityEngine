@@ -1,18 +1,19 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "rx/core/abort.h"
 #include "rx/core/vector.h"
 
 namespace sanity::engine::renderer {
     template <typename ResourceType>
     struct GpuResourceHandle {
         static inline GpuResourceHandle<ResourceType> empty = GpuResourceHandle(0xFFFFFFFF, nullptr);
-    	
+
         Uint32 index{0xFFFFFFFF};
 
         Rx::Vector<ResourceType>* storage{nullptr};
 
-    	GpuResourceHandle() = default;
+        GpuResourceHandle() = default;
 
         GpuResourceHandle(Uint32 index_in, Rx::Vector<ResourceType>* storage_in);
 
@@ -22,13 +23,15 @@ namespace sanity::engine::renderer {
         GpuResourceHandle(GpuResourceHandle<ResourceType>&& old) noexcept = default;
         GpuResourceHandle& operator=(GpuResourceHandle<ResourceType>&& old) noexcept = default;
 
-    	~GpuResourceHandle() = default;
+        ~GpuResourceHandle() = default;
 
         [[nodiscard]] bool operator==(const GpuResourceHandle& other) const = default;
 
         [[nodiscard]] bool is_valid() const;
 
         [[nodiscard]] ResourceType* operator->() const;
+
+        [[nodiscard]] ResourceType& operator*() const;
     };
 
     template <typename ResourceType>
@@ -49,4 +52,12 @@ namespace sanity::engine::renderer {
         return &(*storage)[index];
     }
 
+    template <typename ResourceType>
+    ResourceType& GpuResourceHandle<ResourceType>::operator*() const {
+        if(!is_valid()) {
+            Rx::abort("Invalid handle");
+        }
+
+        return &(*storage)[index];
+    }
 } // namespace sanity::engine::renderer

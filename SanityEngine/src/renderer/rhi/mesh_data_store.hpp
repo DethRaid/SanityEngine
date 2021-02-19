@@ -26,7 +26,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief The buffer to bind
          */
-        Buffer* buffer;
+        Buffer buffer;
 
         /*!
          * \brief Offset in bytes where the relevant data starts
@@ -70,7 +70,7 @@ namespace sanity::engine::renderer {
 
     class MeshDataStore {
     public:
-        MeshDataStore(RenderBackend& device_in, Buffer vertex_buffer_in, Buffer index_buffer_in);
+        MeshDataStore(RenderBackend& device_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
         MeshDataStore& operator=(const MeshDataStore& other) = delete;
@@ -82,9 +82,9 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] const Rx::Vector<VertexBufferBinding>& get_vertex_bindings() const;
 
-        [[nodiscard]] const Buffer& get_vertex_buffer() const;
+        [[nodiscard]] const BufferHandle& get_vertex_buffer() const;
 
-        [[nodiscard]] const Buffer& get_index_buffer() const;
+        [[nodiscard]] const BufferHandle& get_index_buffer() const;
 
         /*!
          * \brief Prepares the vertex and index buffers to receive new mesh data
@@ -96,9 +96,9 @@ namespace sanity::engine::renderer {
     private:
         RenderBackend* device;
 
-        Buffer vertex_buffer;
+        BufferHandle vertex_buffer;
 
-        Buffer index_buffer;
+        BufferHandle index_buffer;
 
         Rx::Vector<VertexBufferBinding> vertex_bindings{};
 
