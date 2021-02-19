@@ -212,9 +212,6 @@
     <ClInclude Include="src\renderer\debugging\pix.hpp">
       <Filter>src\renderer\debugging</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\rhi\bind_group.hpp">
-      <Filter>src\renderer\rhi</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\rhi\command_list.hpp">
       <Filter>src\renderer\rhi</Filter>
     </ClInclude>
@@ -451,9 +448,6 @@
     <ClCompile Include="src\renderer\renderer.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\rhi\bind_group.cpp">
-      <Filter>src\renderer\rhi</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp">
       <Filter>src\renderer\rhi</Filter>
     </ClCompile>
@@ -639,9 +633,6 @@
     <FxCompile Include="data\shaders\atmospheric_sky.pixel.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\FillOcean.compute.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
     <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
@@ -649,9 +640,6 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="data\shaders\shadow.pixel.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\standard.pixel.hlsl">

@@ -53,7 +53,7 @@ namespace sanity::engine::renderer {
     }
 
     CameraMatrixBuffer::~CameraMatrixBuffer() {
-        device_data.each_fwd([&](const Buffer& buffer) { device->schedule_buffer_destruction(buffer); });
+        device_data.each_fwd([&](const BufferHandle& buffer) { device->schedule_buffer_destruction(*buffer); });
     }
 
     CameraMatrices& CameraMatrixBuffer::get_camera_matrices(const Uint32 idx) {

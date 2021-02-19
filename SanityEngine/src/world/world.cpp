@@ -6,23 +6,30 @@
 #include "renderer/render_components.hpp"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
+#include "renderer/renderer.hpp"
 
 namespace sanity::engine {
     RX_LOG("World", logger);
 
     World::World(entt::registry& registry_in) : registry{&registry_in} {
-        auto& sky_actor = engine::create_actor(*registry, "Sky");
+       
+    }
+
+    void World::create_planetary_sky(renderer::Renderer& renderer)
+    {
+	  auto& sky_actor = engine::create_actor(*registry, "Sky");
         sky_actor.add_component<renderer::SkyboxComponent>();
-        sky_actor.add_component<renderer::LightComponent>();
+        auto& sun = sky_actor.add_component<renderer::LightComponent>();
+    	sun.handle = renderer.next_next_free_light_handle();
         auto& transform = sky_actor.get_transform();
         transform.rotation = quatLookAtLH(normalize(glm::vec3{0.049756793f, 0.59547983f, -0.994187036f}), glm::vec3{0, 1, 0});
-        sky = sky_actor.entity;
+        sky = sky_actor.entity;   
     }
 
     void World::set_skybox(const std::filesystem::path& skybox_image_path) {
         auto& atmosphere = registry->get<renderer::SkyboxComponent>(sky);
 
-        // TODO: AssetStreamingManager that handles loading the asset if needed
+        // TODO: Load skybox through a AssetStreamingManager 
 
         if(const auto* skybox_handle = cached_skybox_handles.find(skybox_image_path); skybox_handle != nullptr) {
             atmosphere.skybox_texture = *skybox_handle;

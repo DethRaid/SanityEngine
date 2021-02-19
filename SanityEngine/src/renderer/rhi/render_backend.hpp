@@ -10,7 +10,6 @@
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "glm/glm.hpp"
-#include "renderer/rhi/bind_group.hpp"
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/descriptor_allocator.hpp"
 #include "renderer/rhi/framebuffer.hpp"
@@ -59,7 +58,7 @@ namespace sanity::engine::renderer {
 
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
         static constexpr Uint32 DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET = 1;
-        static constexpr Uint32 MATERIAL_INDEX_ROOT_CONSTANT_OFFSET = 2;
+        static constexpr Uint32 DATA_INDEX_ROOT_CONSTANT_OFFSET = 2;
         static constexpr Uint32 MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = 3;
         static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 4;
         static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = 5;
@@ -110,20 +109,7 @@ namespace sanity::engine::renderer {
         void schedule_buffer_destruction(const Buffer& buffer);
 
         void schedule_texture_destruction(const Texture& texture);
-
-        /*!
-         * \brief Creates a bind group builder with the provided descriptors
-         *
-         * \param root_descriptors Mapping from root descriptor name to information about how to bind to that root descriptor
-         * \param descriptor_table_descriptors Mapping from the name of a descriptors in a descriptor table to information about how to bind
-         * to that descriptors
-         * \param descriptor_table_handles Mapping from root parameters index to GPU handle to the descriptor table to bind to that index
-         */
-        [[nodiscard]] Rx::Ptr<BindGroupBuilder> create_bind_group_builder(
-            const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors = {},
-            const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors = {},
-            const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles = {}) const;
-
+        
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader) const;
 
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
@@ -142,8 +128,6 @@ namespace sanity::engine::renderer {
         [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4>&& commands);
-
-        BindGroupBuilder& get_material_bind_group_builder_for_frame(Uint32 frame_idx);
 
         void begin_frame(uint64_t frame_count);
 
@@ -288,8 +272,6 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<ComPtr<ID3D12Fence>> command_list_done_fences;
 
-        Rx::Vector<Rx::Ptr<BindGroupBuilder>> material_bind_group_builder;
-
         /*!
          * \brief Index of the swapchain image we're currently rendering to
          */
@@ -354,8 +336,6 @@ namespace sanity::engine::renderer {
         void initialize_dma();
 
         void create_standard_root_signature();
-
-        void create_material_resource_binders();
 
         void create_pipeline_input_layouts();
 

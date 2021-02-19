@@ -108,6 +108,8 @@ namespace sanity::engine {
 
             asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
+        	world.create_planetary_sky(*renderer);
+
             create_first_person_player();
 
             if(*show_frametime_display) {

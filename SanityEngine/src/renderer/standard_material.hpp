@@ -2,6 +2,7 @@
 
 #include "handles.hpp"
 #include "renderer/rhi/resources.hpp"
+#include "glm/vec4.hpp"
 
 namespace sanity::engine::renderer {
     /*!

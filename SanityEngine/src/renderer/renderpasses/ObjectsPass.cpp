@@ -79,8 +79,7 @@ namespace sanity::engine::renderer {
 
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
 
-        const auto& bind_group = renderer->bind_global_resources_for_frame(frame_idx);
-        bind_group->bind_to_graphics_signature(commands);
+    	// TODO: Bind global resources at the beginning of the frame, after everything is converted to The Root Signature
 
         // Hardcode camera 0 as the player camera
         // TODO: Decide if this is fine
@@ -200,16 +199,16 @@ namespace sanity::engine::renderer {
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
         const auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
-        commands->SetGraphicsRootShaderResourceView(RenderBackend::MODEL_MATRIX_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    model_matrix_buffer.resource->GetGPUVirtualAddress());
+        commands->SetGraphicsRoot32BitConstant(0,
+                                                    model_matrix_buffer.index, RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
         const auto& mesh_storage = renderer->get_static_mesh_store();
         mesh_storage.bind_to_command_list(commands);
 
         auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
 
-        commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    material_buffer.resource->GetGPUVirtualAddress());
+        commands->SetGraphicsRoot32BitConstant(0,
+                                                    material_buffer.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
 
         const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
         renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable) {
@@ -220,7 +219,7 @@ namespace sanity::engine::renderer {
             const auto entity_id = static_cast<uint32_t>(entity);
             commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
-            commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
             const auto model_matrix_index = renderer->add_model_matrix_to_frame(transform.get_model_matrix(registry), frame_idx);
             commands->SetGraphicsRoot32BitConstant(0, model_matrix_index, RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET);
@@ -243,7 +242,7 @@ namespace sanity::engine::renderer {
             const auto entity_id = static_cast<uint32_t>(entity);
             commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
-            commands->SetGraphicsRoot32BitConstant(0, outline.material.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0, outline.material.index, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
             // Intentionally a copy - I want to modify the transform for the outline without modifying the transform for the renderable
             auto outline_transform = transform;
@@ -294,7 +293,7 @@ namespace sanity::engine::renderer {
                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                      D3D12_RESOURCE_STATE_COPY_DEST),
             };
-            commands->ResourceBarrier(barriers.size(), barriers.data());
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         const D3D12_TEXTURE_COPY_LOCATION src_copy_location{.pResource = depth_image.resource.Get(),
@@ -323,7 +322,7 @@ namespace sanity::engine::renderer {
                                                      D3D12_RESOURCE_STATE_COPY_DEST,
                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
             };
-            commands->ResourceBarrier(barriers.size(), barriers.data());
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <wrl/client.h>
 
 #include <d3d12.h>
 
@@ -11,6 +12,8 @@
 namespace D3D12MA {
     class Allocation;
 }
+
+using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
     struct Buffer {

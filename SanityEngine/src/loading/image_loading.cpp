@@ -86,7 +86,7 @@ namespace sanity::engine {
         const auto msg = Rx::String::format("load_texture_to_gpu(%s)", texture_name);
         renderer::set_object_name(commands.Get(), msg);
 
-        renderer::TextureHandle handle_out{0};
+        renderer::TextureHandle handle_out{};
 
         {
             TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());

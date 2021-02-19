@@ -92,8 +92,6 @@ namespace sanity::engine::renderer {
 
         create_standard_root_signature();
 
-        create_material_resource_binders();
-
         create_pipeline_input_layouts();
 
         create_command_signatures();
@@ -300,24 +298,7 @@ namespace sanity::engine::renderer {
     void RenderBackend::schedule_texture_destruction(const Texture& texture) {
         texture_deletion_list[cur_gpu_frame_idx].push_back(texture);
     }
-
-    Rx::Ptr<BindGroupBuilder> RenderBackend::create_bind_group_builder(
-        const Rx::Map<Rx::String, RootDescriptorDescription>& root_descriptors,
-        const Rx::Map<Rx::String, DescriptorTableDescriptorDescription>& descriptor_table_descriptors,
-        const Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE>& descriptor_table_handles) const {
-
-        RX_ASSERT(descriptor_table_descriptors.is_empty() == descriptor_table_handles.is_empty(),
-                  "If you specify descriptor table descriptors, you must also specify descriptor table handles");
-
-        return Rx::make_ptr<BindGroupBuilder>(RX_SYSTEM_ALLOCATOR,
-                                              *device.Get(),
-                                              *cbv_srv_uav_allocator->get_heap(),
-                                              cbv_srv_uav_allocator->get_descriptor_size(),
-                                              root_descriptors,
-                                              descriptor_table_descriptors,
-                                              descriptor_table_handles);
-    }
-
+    
     ComPtr<ID3D12PipelineState> RenderBackend::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader) const {
         return create_compute_pipeline_state(compute_shader, standard_root_signature);
     }
@@ -348,46 +329,7 @@ namespace sanity::engine::renderer {
     Rx::Ptr<RenderPipelineState> RenderBackend::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
         return create_pipeline_state(create_info, *standard_root_signature.Get());
     }
-
-    DescriptorType to_descriptor_type(const D3D_SHADER_INPUT_TYPE type) {
-        switch(type) {
-            case D3D_SIT_CBUFFER:
-                return DescriptorType::ConstantBuffer;
-
-            case D3D_SIT_TBUFFER: // NOLINT(bugprone-branch-clone)
-                [[fallthrough]];
-            case D3D_SIT_TEXTURE:
-                [[fallthrough]];
-            case D3D_SIT_STRUCTURED:
-                return DescriptorType::ShaderResource;
-
-            case D3D_SIT_UAV_RWTYPED:
-                [[fallthrough]];
-            case D3D_SIT_UAV_RWSTRUCTURED:
-                return DescriptorType::UnorderedAccess;
-
-            case D3D_SIT_SAMPLER: // NOLINT(bugprone-branch-clone)
-                [[fallthrough]];
-            case D3D_SIT_BYTEADDRESS:
-                [[fallthrough]];
-            case D3D_SIT_UAV_RWBYTEADDRESS:
-                [[fallthrough]];
-            case D3D_SIT_UAV_APPEND_STRUCTURED:
-                [[fallthrough]];
-            case D3D_SIT_UAV_CONSUME_STRUCTURED:
-                [[fallthrough]];
-            case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-                [[fallthrough]];
-            case D3D_SIT_RTACCELERATIONSTRUCTURE:
-                [[fallthrough]];
-            case D3D_SIT_UAV_FEEDBACKTEXTURE:
-                [[fallthrough]];
-            default:
-                logger->error("Unknown descriptor type, defaulting to UAV");
-                return DescriptorType::UnorderedAccess;
-        }
-    }
-
+    
     ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_command_list(Rx::Optional<Uint32> frame_idx) {
         Rx::Concurrency::ScopeLock l{create_command_list_mutex};
 
@@ -450,13 +392,7 @@ namespace sanity::engine::renderer {
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
-
-    BindGroupBuilder& RenderBackend::get_material_bind_group_builder_for_frame(const Uint32 frame_idx) {
-        RX_ASSERT(frame_idx < material_bind_group_builder.size(), "Not enough material resource binders for every swapchain texture");
-
-        return *material_bind_group_builder[frame_idx];
-    }
-
+    
     void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
 
@@ -879,9 +815,13 @@ namespace sanity::engine::renderer {
     void RenderBackend::create_descriptor_heaps() {
         ZoneScoped;
 
+    	const auto total_num_buffers = *cvar_max_in_flight_gpu_frames * MAX_NUM_BUFFERS;
+        const auto total_num_textures = *cvar_max_in_flight_gpu_frames * MAX_NUM_TEXTURES;
+    	const auto num_bespoke_descriptors = 666;   // Descriptors for the RT AS or idk whatever wants descriptors
+    	
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                                   MAX_NUM_TEXTURES * 2 * cvar_max_in_flight_gpu_frames->get());
+                                                                   total_num_buffers + total_num_textures + num_bespoke_descriptors);
 
         cbv_srv_uav_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, new_cbv_srv_uav_heap, new_cbv_srv_uav_size);
 
@@ -982,7 +922,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 0,
+                .RegisterSpace = 2,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -991,7 +931,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 0,
+                .RegisterSpace = 3,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -1000,7 +940,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 0,
+                .RegisterSpace = 4,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -1009,7 +949,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 0,
+                .RegisterSpace = 5,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
         };
@@ -1082,44 +1022,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         return cbv_srv_uav_allocator->get_heap();
     }
-
-    void RenderBackend::create_material_resource_binders() {
-        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
-
-        Rx::Map<Rx::String, RootDescriptorDescription> root_descriptors;
-        root_descriptors.insert("cameras", RootDescriptorDescription{1_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("material_buffer", RootDescriptorDescription{2_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("lights", RootDescriptorDescription{3_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("raytracing_scene", RootDescriptorDescription{4_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("indices", RootDescriptorDescription{5_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("vertices", RootDescriptorDescription{6_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("per_frame_data", RootDescriptorDescription{7_u32, DescriptorType::ShaderResource});
-        root_descriptors.insert("model_matrices", RootDescriptorDescription{8_u32, DescriptorType::ShaderResource});
-
-        material_bind_group_builder.reserve(num_gpu_frames);
-
-        auto range = cbv_srv_uav_allocator->allocate_descriptors(MAX_NUM_TEXTURES * 3);
-        const auto descriptor_size = cbv_srv_uav_allocator->get_descriptor_size();
-
-        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle{range.cpu_handle};
-        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle{range.gpu_handle};
-
-        for(Uint32 i = 0; i < num_gpu_frames; i++) {
-            Rx::Map<Rx::String, DescriptorTableDescriptorDescription> descriptor_tables;
-            // Textures array _always_ is at the start of the descriptor heap
-            descriptor_tables.insert("textures", DescriptorTableDescriptorDescription{DescriptorType::ShaderResource, cpu_handle});
-
-            Rx::Map<Uint32, D3D12_GPU_DESCRIPTOR_HANDLE> descriptor_table_gpu_handles;
-            descriptor_table_gpu_handles.insert(static_cast<Uint32>(root_descriptors.size() + 1), gpu_handle);
-
-            material_bind_group_builder.push_back(
-                create_bind_group_builder(root_descriptors, descriptor_tables, descriptor_table_gpu_handles));
-
-            cpu_handle.Offset(MAX_NUM_TEXTURES, descriptor_size);
-            gpu_handle.Offset(MAX_NUM_TEXTURES, descriptor_size);
-        }
-    }
-
+    
     void RenderBackend::create_pipeline_input_layouts() {
         standard_graphics_pipeline_input_layout.reserve(4);
 
@@ -1194,7 +1097,7 @@ namespace sanity::engine::renderer {
             argument_descs = Rx::Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
                                                                     .Constant =
                                                                         {.RootParameterIndex = ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                                         .DestOffsetIn32BitValues = MATERIAL_INDEX_ROOT_CONSTANT_OFFSET,
+                                                                         .DestOffsetIn32BitValues = DATA_INDEX_ROOT_CONSTANT_OFFSET,
                                                                          .Num32BitValuesToSet = 1}},
                                        D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED}};
         const auto desc = D3D12_COMMAND_SIGNATURE_DESC{.ByteStride = sizeof(IndirectDrawCommandWithRootConstant),

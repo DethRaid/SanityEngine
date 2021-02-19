@@ -39,7 +39,7 @@ namespace sanity::engine::renderer {
     Renderer::Renderer(GLFWwindow* window)
         : start_time{std::chrono::high_resolution_clock::now()},
           device{make_render_device(window)},
-          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *device)},
+          camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *this)},
           spd{Rx::make_ptr<SinglePassDownsampler>(RX_SYSTEM_ALLOCATOR, SinglePassDownsampler::Create(*device))},
           forward_pass_handle{nullptr, 0},
           denoiser_pass_handle{nullptr, 0},
@@ -472,9 +472,8 @@ namespace sanity::engine::renderer {
         return handle;
     }
 
-    const Buffer& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const {
-        const auto handle = material_device_buffers[frame_idx];
-        return all_buffers[handle.index];
+    const BufferHandle& Renderer::get_standard_material_buffer_for_frame(const Uint32 frame_idx) const {
+        return material_device_buffers[frame_idx];
     }
 
     void Renderer::deallocate_standard_material(const StandardMaterialHandle handle) { free_material_handles.push_back(handle); }
@@ -523,7 +522,7 @@ namespace sanity::engine::renderer {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
-        auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *device, vertex_buffer, index_buffer, meshes);
+        auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *this, vertex_buffer, index_buffer, meshes);
 
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
@@ -627,6 +626,8 @@ namespace sanity::engine::renderer {
     void Renderer::create_light_buffers() {
         ZoneScoped;
 
+        lights.resize(MAX_NUM_LIGHTS);
+    	
         const auto num_gpu_frames = device->get_max_num_gpu_frames();
 
         auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_LIGHTS * sizeof(GpuLight)};
@@ -968,7 +969,7 @@ namespace sanity::engine::renderer {
         memcpy(buffer->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
     }
 
-    Buffer& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return *get_buffer(model_matrix_buffers[frame_idx]); }
+    BufferHandle& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return model_matrix_buffers[frame_idx]; }
 
     Uint32 Renderer::add_model_matrix_to_frame(const glm::mat4& model_matrix, const Uint32 frame_idx) {
         const auto index = next_unused_model_matrix_per_frame[frame_idx]->fetch_add(1);

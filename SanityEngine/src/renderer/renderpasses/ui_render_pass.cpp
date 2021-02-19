@@ -139,7 +139,7 @@ namespace sanity::engine::renderer {
                     } else {
                         const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
                         const auto material_idx = static_cast<Uint32>(imgui_material_idx);
-                        commands->SetGraphicsRoot32BitConstant(0, material_idx, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+                        commands->SetGraphicsRoot32BitConstant(0, material_idx, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
                         const auto& clip_rect = cmd.ClipRect;
                         const auto pos = draw_data->DisplayPos;

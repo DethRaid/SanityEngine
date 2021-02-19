@@ -31,7 +31,7 @@ namespace sanity::engine::renderer {
 
         BufferHandle postprocessing_materials_buffer_handle;
     	
-        TextureHandle output_texture_handle{0};
+        TextureHandle output_texture_handle{};
     	
         DescriptorRange output_rtv_handle{};
     };

@@ -12,7 +12,6 @@
 #include "renderer/renderpasses/ObjectsPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "renderer/standard_material.hpp"
-#include "rhi/bind_group.hpp"
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_backend.hpp"
@@ -151,7 +150,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
 
-        [[nodiscard]] const Buffer& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
+        [[nodiscard]] const BufferHandle& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
 
         void deallocate_standard_material(StandardMaterialHandle handle);
 
@@ -164,7 +163,7 @@ namespace sanity::engine::renderer {
                                                                     const Rx::Vector<PlacedMesh>& meshes,
                                                                     ID3D12GraphicsCommandList4* commands);
 
-        [[nodiscard]] Buffer& get_model_matrix_for_frame(Uint32 frame_idx);
+        [[nodiscard]] BufferHandle& get_model_matrix_for_frame(Uint32 frame_idx);
 
         [[nodiscard]] Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
 

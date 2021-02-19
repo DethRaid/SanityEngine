@@ -5,6 +5,7 @@
 #include "core/types.hpp"
 #include "entt/entity/fwd.hpp"
 #include "renderer/handles.hpp"
+#include "rhi/resources.hpp"
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
 

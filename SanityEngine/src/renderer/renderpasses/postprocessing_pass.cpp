@@ -75,9 +75,9 @@ namespace sanity::engine::renderer {
         scissor_rect.bottom = static_cast<LONG>(output_texture.height);
         commands->RSSetScissorRects(1, &scissor_rect);
 
-        commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    postprocessing_materials_buffer_handle.resource->GetGPUVirtualAddress());
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(0,
+                                                    postprocessing_materials_buffer_handle.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
         commands->SetPipelineState(postprocessing_pipeline->pso.Get());
         commands->DrawInstanced(3, 1, 0, 0);
 

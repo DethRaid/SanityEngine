@@ -541,7 +541,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
-    <ClInclude Include="src\renderer\rhi\bind_group.hpp" />
     <ClInclude Include="src\renderer\rhi\command_list.hpp" />
     <ClInclude Include="src\renderer\rhi\compute_pipeline_state.hpp" />
     <ClInclude Include="src\renderer\rhi\d3d12_private_data.hpp" />
@@ -620,7 +619,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
     <ClCompile Include="src\renderer\render_components.cpp" />
-    <ClCompile Include="src\renderer\rhi\bind_group.cpp" />
     <ClCompile Include="src\renderer\rhi\compute_pipeline_state.cpp" />
     <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\renderer\rhi\helpers.cpp" />
@@ -665,12 +663,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</DeploymentContent>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="data\shaders\FillOcean.compute.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</DeploymentContent>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="data\shaders\fullscreen.vertex.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">false</ExcludedFromBuild>
@@ -727,12 +719,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="data\shaders\raytracing_accumulation.pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</DeploymentContent>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="data\shaders\shadow.pixel.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">true</DeploymentContent>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

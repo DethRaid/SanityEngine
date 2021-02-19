@@ -517,8 +517,7 @@ namespace sanity::engine::renderer {
                                                                 .usage = BufferUsage::RaytracingAccelerationStructure,
                                                                 .size = static_cast<Uint32>(as_prebuild_info.ResultDataMaxSizeInBytes)};
 
-    	const auto result_buffer_handle = renderer.create_buffer(result_buffer_create_info);
-        const auto result_buffer = renderer.get_buffer(result_buffer_handle);
+    	const auto result_buffer = renderer.create_buffer(result_buffer_create_info);
 
         const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
             .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
@@ -532,7 +531,7 @@ namespace sanity::engine::renderer {
 
         backend.return_scratch_buffer(Rx::Utility::move(scratch_buffer));
 
-        return {.blas_buffer = result_buffer_handle};
+        return {.blas_buffer = result_buffer};
     }
 
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,

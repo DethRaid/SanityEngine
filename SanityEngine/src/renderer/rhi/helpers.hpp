@@ -10,7 +10,8 @@
 #include "resources.hpp"
 
 namespace sanity::engine::renderer {
-    struct RenderTargetBeginningAccess;
+	class Renderer;
+	struct RenderTargetBeginningAccess;
     struct RenderTargetEndingAccess;
 
     constexpr uint64_t FENCE_UNSIGNALED = 0;
@@ -49,7 +50,7 @@ namespace sanity::engine::renderer {
     Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
 
     RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                            RenderBackend& device,
+                                                                            Renderer& device,
                                                                             const Buffer& vertex_buffer,
                                                                             const Buffer& index_buffer,
                                                                             const Rx::Vector<PlacedMesh>& meshes);

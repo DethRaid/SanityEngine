@@ -4,7 +4,7 @@
 #include "core/Prelude.hpp"
 #include "entt/entity/view.hpp"
 #include "imgui/imgui.h"
-#include "renderer/handles.hpp"
+#include "renderer/rhi/resources.hpp"
 #include "ui/ui_components.hpp"
 
 namespace sanity::engine {

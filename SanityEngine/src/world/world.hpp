@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include "entt/fwd.hpp"
-#include "renderer/handles.hpp"
+#include "renderer/rhi/resources.hpp"
 #include "rx/core/map.h"
 
 namespace Rx {
@@ -11,7 +11,11 @@ namespace Rx {
 }
 
 namespace sanity::engine {
-    struct Actor;
+	namespace renderer {
+		class Renderer;
+	}
+
+	struct Actor;
     /*!
      * @brief Abstraction over the world
      *
@@ -22,6 +26,8 @@ namespace sanity::engine {
     class World {
     public:
         explicit World(entt::registry& registry_in);
+
+    	void create_planetary_sky(renderer::Renderer& renderer);
 
         void set_skybox(const std::filesystem::path& skybox_image_path);
 
