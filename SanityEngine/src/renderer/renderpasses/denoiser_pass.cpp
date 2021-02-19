@@ -65,9 +65,7 @@ namespace sanity::engine::renderer {
 
         commands->SetPipelineState(denoising_pipeline->pso.Get());
 
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
-        commands->SetGraphicsRootShaderResourceView(RenderBackend::MATERIAL_BUFFER_ROOT_PARAMETER_INDEX,
-                                                    denoiser_material_buffer_handle.resource->GetGPUVirtualAddress());
+        commands->SetGraphicsRoot32BitConstant(0, denoiser_material_buffer_handle.index, RenderBackend::MATERIAL_INDEX_ROOT_CONSTANT_OFFSET);
 
         commands->DrawInstanced(3, 1, 0, 0);
 
