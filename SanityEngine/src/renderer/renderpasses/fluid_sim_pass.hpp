@@ -27,6 +27,8 @@ namespace sanity::engine::renderer {
     private:
         Renderer* renderer{nullptr};
 
+    	// TODO: A "per-GPU-frame" buffer thing for fluid sim data
+
         ComPtr<ID3D12PipelineState> fluid_sim_pipeline;
         ComPtr<ID3D12RootSignature> fluid_sim_root_sig;
         ComPtr<ID3D12CommandSignature> fluid_sim_command_signature;

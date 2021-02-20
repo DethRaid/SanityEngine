@@ -60,7 +60,7 @@ namespace sanity::engine::renderer {
                                          D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH}};
 
         const D3D12_COMMAND_SIGNATURE_DESC command_signature_desc{.ByteStride = 0,
-                                                                  .NumArgumentDescs = arguments.size(),
+                                                                  .NumArgumentDescs = static_cast<UINT>(arguments.size()),
                                                                   .pArgumentDescs = arguments.data()};
         backend.device->CreateCommandSignature(&command_signature_desc,
                                                fluid_sim_root_sig.Get(),
@@ -71,11 +71,8 @@ namespace sanity::engine::renderer {
         const auto& fluid_sims_view = registry.view<TransformComponent, FluidVolumeComponent>();
 
         auto& backend = renderer->get_render_backend();
-
-    	const auto descriptor_size = backend.get_cbv_srv_uav_allocator().get_descriptor_size();
-
+        
         commands->SetComputeRootSignature(fluid_sim_root_sig.Get());
-
        
         commands->SetPipelineState(fluid_sim_pipeline.Get());
 
