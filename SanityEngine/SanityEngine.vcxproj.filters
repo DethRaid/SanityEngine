@@ -112,6 +112,9 @@
     <Filter Include="src\actor">
       <UniqueIdentifier>{fd7335b3-acb6-484f-bddb-28994f728571}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\renderer\hlsl">
+      <UniqueIdentifier>{14e08386-4132-41ee-96da-f8742b8f4c76}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -414,8 +417,18 @@
     <ClInclude Include="src\actor\actor.hpp">
       <Filter>src\actor</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\fluid_sim_pass.hpp" />
-    <ClInclude Include="src\renderer\rhi\compute_pipeline_state.hpp" />
+    <ClInclude Include="src\renderer\rhi\compute_pipeline_state.hpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\fluid_sim_pass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\gpu_resource_pool.hpp">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\hlsl\shared_structs.hpp">
+      <Filter>src\renderer\hlsl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -613,8 +626,15 @@
     <ClCompile Include="src\actor\actor.cpp">
       <Filter>src\actor</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\fluid_sim_pass.cpp" />
-    <ClCompile Include="src\renderer\rhi\compute_pipeline_state.cpp" />
+    <ClCompile Include="src\renderer\rhi\compute_pipeline_state.cpp">
+      <Filter>src\renderer\rhi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\fluid_sim_pass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\gpu_resource_pool.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -652,9 +672,6 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\ui.vertex.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="data\shaders\WaterFlow.compute.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="data\shaders\inc\atmospheric_scattering.hlsl">

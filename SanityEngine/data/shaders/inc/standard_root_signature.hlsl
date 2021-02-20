@@ -1,17 +1,5 @@
 #pragma once
 
-struct Camera {
-    float4x4 view;
-    float4x4 projection;
-    float4x4 inverse_view;
-    float4x4 inverse_projection;
-
-    float4x4 previous_view;
-    float4x4 previous_projection;
-    float4x4 previous_inverse_view;
-    float4x4 previous_inverse_projection;
-};
-
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_SPHERE 1
 #define LIGHT_TYPE_RECTANGLE 2
@@ -19,27 +7,7 @@ struct Camera {
 
 #define SUN_LIGHT_INDEX 0
 
-struct Light {
-    uint type;
-    float3 color;
-    float3 direction_or_location;
-    float angular_size;
-};
-
-struct PerFrameData {
-    uint2 render_size;
-
-    float time_since_start;
-    uint frame_count;
-
-    uint camera_buffer_index;
-    uint light_buffer_index;
-    uint vertex_data_buffer_index;
-    uint index_buffer_index;
-
-    uint noise_texture_idx;
-    uint sky_texture_idx;
-};
+#include "shared_structs.hpp"
 
 /*!
  * \brief Point sampler you can use to sample any texture
