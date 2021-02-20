@@ -39,18 +39,18 @@ namespace sanity::engine {
 
         void register_tick_function(Rx::Function<void(Float32)>&& tick_function);
 
-    	void register_system(const std::string& name, std::unique_ptr<System>&& system);
+        void register_system(const std::string& name, std::unique_ptr<System>&& system);
 
         /*!
          * \brief Executes a single frame, updating game logic and rendering the scene
          */
         void tick();
-        
+
         [[nodiscard]] TypeReflection& get_type_reflector();
 
         [[nodiscard]] entt::entity get_player() const;
 
-    	[[nodiscard]] World& get_world();
+        [[nodiscard]] World& get_world();
 
         /*!
          * \brief Returns the engine-side registry of entities. This should be used for UI components mostly
@@ -62,6 +62,8 @@ namespace sanity::engine {
         [[nodiscard]] renderer::Renderer& get_renderer() const;
 
         [[nodiscard]] InputManager& get_input_manager() const;
+    	
+        [[nodiscard]] Uint32 get_frame_count() const;
 
     private:
         rex::Wrapper rex;
@@ -120,7 +122,7 @@ namespace sanity::engine {
 
 #pragma region Update loop
         std::unordered_map<std::string, std::unique_ptr<System>> systems;
-    	
+
         void render();
 #pragma endregion
 

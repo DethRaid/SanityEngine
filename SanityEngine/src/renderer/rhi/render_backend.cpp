@@ -822,13 +822,16 @@ namespace sanity::engine::renderer {
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                                    total_num_buffers + total_num_textures + num_bespoke_descriptors);
+        set_object_name(new_cbv_srv_uav_heap.Get(), "CBV/SRV/UAV Heap");
 
         cbv_srv_uav_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, new_cbv_srv_uav_heap, new_cbv_srv_uav_size);
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
+        set_object_name(rtv_heap.Get(), "RTV Heap");
         rtv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, rtv_heap, rtv_size);
 
         const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
+        set_object_name(dsv_heap.Get(), "DSV Heap");
         dsv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, dsv_heap, dsv_size);
     }
 

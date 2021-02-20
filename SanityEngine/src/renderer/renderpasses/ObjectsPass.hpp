@@ -47,17 +47,17 @@ namespace sanity::engine::renderer {
 
         Uint64 forward_pass_color{PIX_COLOR(224, 96, 54)};
 
-        D3D12_RENDER_PASS_RENDER_TARGET_DESC color_target_access;
+        D3D12_RENDER_PASS_RENDER_TARGET_DESC color_target_access{};
 
-        D3D12_RENDER_PASS_RENDER_TARGET_DESC object_id_target_access;
+        D3D12_RENDER_PASS_RENDER_TARGET_DESC object_id_target_access{};
 
-        D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_target_access;
+        D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_target_access{};
 
-        glm::uvec2 render_target_size;
+        glm::uvec2 render_target_size{};
 
-        DescriptorRange color_target_descriptor;
-        DescriptorRange object_id_target_descriptor;
-        DescriptorRange depth_target_descriptor;
+        DescriptorRange color_target_descriptor{};
+        DescriptorRange object_id_target_descriptor{};
+        DescriptorRange depth_target_descriptor{};
 
         void create_framebuffer(const glm::uvec2& render_resolution);
 

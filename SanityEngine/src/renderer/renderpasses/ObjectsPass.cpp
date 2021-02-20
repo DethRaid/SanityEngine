@@ -2,7 +2,6 @@
 
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
-#include "core/types.hpp"
 #include "entt/entity/registry.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/render_components.hpp"
@@ -79,10 +78,15 @@ namespace sanity::engine::renderer {
 
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
 
-    	// TODO: Bind global resources at the beginning of the frame, after everything is converted to The Root Signature
+        // TODO: Bind global resources at the beginning of the frame, after everything is converted to The Root Signature
+        auto* heap = renderer->get_render_backend().get_cbv_srv_uav_heap();
+        commands->SetDescriptorHeaps(1, &heap);
+        commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX,
+                                                 renderer->get_resource_array_gpu_descriptor(frame_idx));
 
         // Hardcode camera 0 as the player camera
-        // TODO: Decide if this is fine
+        // TODO: Make a camera handle system
+        // More important TODO: Generalize this whole "allocate slots from an array" system I seem to be relying on
         commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::CAMERA_INDEX_ROOT_CONSTANT_OFFSET);
 
         // Draw atmosphere first because projection matrices are hard
@@ -199,16 +203,14 @@ namespace sanity::engine::renderer {
         commands->SetPipelineState(standard_pipeline->pso.Get());
 
         const auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
-        commands->SetGraphicsRoot32BitConstant(0,
-                                                    model_matrix_buffer.index, RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(0, model_matrix_buffer.index, RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
         const auto& mesh_storage = renderer->get_static_mesh_store();
         mesh_storage.bind_to_command_list(commands);
 
-        auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
+        const auto& material_buffer = renderer->get_standard_material_buffer_for_frame(frame_idx);
 
-        commands->SetGraphicsRoot32BitConstant(0,
-                                                    material_buffer.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(0, material_buffer.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
 
         const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
         renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable) {

@@ -20,6 +20,7 @@
 #include "rx/core/vector.h"
 #include "settings.hpp"
 #include "single_pass_downsampler.hpp"
+#include "hlsl/shared_structs.hpp"
 
 namespace std {
     namespace filesystem {
@@ -71,24 +72,7 @@ namespace sanity::engine::renderer {
 
         Uint32 start_vertex_location{};
     };
-
-    /*!
-     * \brief Data that remains constant for the entire frame
-     */
-    struct PerFrameData {
-        glm::uvec2 render_size{};
-
-        /*!
-         * \brief Number of seconds since the program started
-         */
-        Float32 time_since_start{0};
-
-        Uint32 frame_count;
-
-        Uint32 noise_texture_idx;
-        Uint32 sky_texture_idx;
-    };
-
+    
     /*!
      * \brief Renderer class that uses a clustered forward lighting algorithm
      *
@@ -163,6 +147,8 @@ namespace sanity::engine::renderer {
                                                                     const Rx::Vector<PlacedMesh>& meshes,
                                                                     ID3D12GraphicsCommandList4* commands);
 
+        [[nodiscard]] D3D12_GPU_DESCRIPTOR_HANDLE get_resource_array_gpu_descriptor(Uint32 frame_idx) const;
+
         [[nodiscard]] BufferHandle& get_model_matrix_for_frame(Uint32 frame_idx);
 
         [[nodiscard]] Uint32 add_model_matrix_to_frame(const glm::mat4& model_matrix, Uint32 frame_idx);
@@ -192,7 +178,7 @@ namespace sanity::engine::renderer {
 
         glm::uvec2 output_framebuffer_size{0, 0};
 
-        Rx::Ptr<RenderBackend> device;
+        Rx::Ptr<RenderBackend> backend;
 
         Rx::Ptr<MeshDataStore> static_mesh_storage;
 
@@ -238,10 +224,9 @@ namespace sanity::engine::renderer {
         RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle;
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
-        Rx::Vector<DescriptorRange> buffer_descriptors;
-        Rx::Vector<DescriptorRange> texture_descriptors;
+        Rx::Vector<DescriptorRange> resource_descriptors;
 
-        #pragma region Initialization
+#pragma region Initialization
         void create_static_mesh_storage();
 
         void allocate_resource_descriptors();
@@ -268,6 +253,8 @@ namespace sanity::engine::renderer {
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
+        void bind_buffers_and_textures(ID3D12GraphicsCommandList* cmds, Uint32 frame_idx);
+
         void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,

@@ -108,7 +108,7 @@ namespace sanity::engine {
 
             asset_registry = Rx::make_ptr<AssetRegistry>(RX_SYSTEM_ALLOCATOR, "data/Content");
 
-        	world.create_planetary_sky(*renderer);
+            world.create_planetary_sky(*renderer);
 
             create_first_person_player();
 
@@ -153,7 +153,7 @@ namespace sanity::engine {
 
     void SanityEngine::tick() {
         FrameMark;
-    	
+
         ZoneScoped;
 
         frame_timer.stop();
@@ -213,6 +213,8 @@ namespace sanity::engine {
     renderer::Renderer& SanityEngine::get_renderer() const { return *renderer; }
 
     InputManager& SanityEngine::get_input_manager() const { return *input_manager; }
+
+    Uint32 SanityEngine::get_frame_count() const { return frame_count; }
 
     void SanityEngine::register_cvar_change_listeners() {
         show_frametime_display->on_change([&](Rx::Console::Variable<bool>& var) {
