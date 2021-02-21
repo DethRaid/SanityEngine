@@ -121,7 +121,7 @@ namespace sanity::engine::renderer {
 
             command_list->SetGraphicsRootSignature(backend->get_standard_root_signature().Get());
 
-            bind_buffers_and_textures(command_list.Get(), frame_idx);
+            update_resource_array_descriptors(command_list.Get(), frame_idx);
 
             execute_all_render_passes(command_list, registry, frame_idx);
         }
@@ -537,6 +537,8 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
+    BufferHandle Renderer::get_per_frame_data_buffer(const Uint32 frame_idx) const { return per_frame_data_buffers[frame_idx]; }
+
     RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
                                                             const Rx::Vector<PlacedMesh>& meshes,
@@ -806,7 +808,7 @@ namespace sanity::engine::renderer {
         memcpy(buffer->mapped_ptr, standard_materials.data(), standard_materials.size() * sizeof(StandardMaterial));
     }
 
-    void Renderer::bind_buffers_and_textures(ID3D12GraphicsCommandList* cmds, const Uint32 frame_idx) {
+    void Renderer::update_resource_array_descriptors(ID3D12GraphicsCommandList* cmds, const Uint32 frame_idx) {
         const auto& resource_descriptors_range = resource_descriptors[frame_idx];
 
         // Intentional copy
@@ -864,10 +866,6 @@ namespace sanity::engine::renderer {
 
             write_descriptor.Offset(1, descriptor_size);
         }
-
-        auto* descriptor_heap = backend->get_cbv_srv_uav_heap();
-        cmds->SetDescriptorHeaps(1, &descriptor_heap);
-        cmds->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, resource_descriptors_range.gpu_handle);
     }
 
     Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_previous_resource_states(const Uint32 cur_renderpass_index) const {
@@ -1065,8 +1063,6 @@ namespace sanity::engine::renderer {
         const auto buffer = get_buffer(per_frame_data_buffers[frame_idx]);
 
         memcpy(buffer->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
-
-        logger->info("Set light buffer index to %d", per_frame_data.light_buffer_index);
     }
 
     BufferHandle& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return model_matrix_buffers[frame_idx]; }

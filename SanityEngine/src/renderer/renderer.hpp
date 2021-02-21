@@ -172,6 +172,8 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_normal_texture() const;
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
+    	
+        [[nodiscard]] BufferHandle get_per_frame_data_buffer(Uint32 frame_idx) const;
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -253,7 +255,7 @@ namespace sanity::engine::renderer {
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
-        void bind_buffers_and_textures(ID3D12GraphicsCommandList* cmds, Uint32 frame_idx);
+        void update_resource_array_descriptors(ID3D12GraphicsCommandList* cmds, Uint32 frame_idx);
 
         void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
 

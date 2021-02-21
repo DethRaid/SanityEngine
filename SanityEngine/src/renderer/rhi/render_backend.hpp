@@ -10,6 +10,7 @@
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "glm/glm.hpp"
+#include "renderer/hlsl/shared_structs.hpp"
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/descriptor_allocator.hpp"
 #include "renderer/rhi/framebuffer.hpp"
@@ -45,9 +46,10 @@ namespace sanity::engine::renderer {
     /*
      * \brief A device which can be used to render
      *
-     * A render device - and by extension the CPU - may only record commands for a single frame at a time. However, the GPU may be executing
-     * one frame for each image in the swapchain. Most of the synchronization concerns should be hidden behind this interface, but be aware
-     * that the frame that the GPU may be several frames behind the CPU
+     * A render backend - and by extension the CPU - may only record commands for a single frame at a time. However,
+     * the GPU may be executing one frame for each image in the swapchain. Most of the synchronization concerns should
+     * be hidden behind this interface, but be aware that the GPU may be several frames behind the CPU. Keep your
+     * resources alive until you know that the GPU has finished with them
      */
     class RenderBackend {
     public:
@@ -56,26 +58,21 @@ namespace sanity::engine::renderer {
         static constexpr Uint32 RESOURCES_ARRAY_ROOT_PARAMETER_INDEX = 2;
         static constexpr Uint32 TEXTURES_ARRAY_ROOT_PARAMETER_INDEX = 3;
 
-        static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = 0;
-        static constexpr Uint32 DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET = 1;
-        static constexpr Uint32 DATA_INDEX_ROOT_CONSTANT_OFFSET = 2;
-        static constexpr Uint32 MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = 3;
-        static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = 4;
-        static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = 5;
+        static constexpr Uint32 PER_FRAME_DATA_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants,
+                                                                                            per_frame_data_buffer_index) /
+                                                                                   4;
+        static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, camera_index) / 4;
+        static constexpr Uint32 DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET = offsetof(StandardPushConstants, data_buffer_index) / 4;
+        static constexpr Uint32 DATA_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, data_index) / 4;
+        static constexpr Uint32 MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants,
+                                                                                          model_matrix_buffer_index) /
+                                                                                 4;
+        static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, model_matrix_index) / 4;
+        static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, object_id) / 4;
 
 #ifdef TRACY_ENABLE
         inline static tracy::D3D12QueueCtx* tracy_context{nullptr};
 #endif
-
-        // TODO: Express this struct in compute land
-        struct IndirectDrawCommandWithRootConstant {
-            Uint32 constant{};
-            Uint32 vertex_count{};
-            Uint32 instance_count{1};
-            Uint32 start_index_location{};
-            Int32 base_vertex_location{};
-            Uint32 start_instance_location{};
-        };
 
         ComPtr<ID3D12Device> device;
         ComPtr<ID3D12Device1> device1;
@@ -109,7 +106,7 @@ namespace sanity::engine::renderer {
         void schedule_buffer_destruction(const Buffer& buffer);
 
         void schedule_texture_destruction(const Texture& texture);
-        
+
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader) const;
 
         [[nodiscard]] ComPtr<ID3D12PipelineState> create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,

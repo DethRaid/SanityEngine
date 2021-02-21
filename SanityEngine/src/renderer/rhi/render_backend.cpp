@@ -35,7 +35,7 @@ namespace sanity::engine::renderer {
         cvar_enable_gpu_based_validation,
         "r.EnableGpuBasedValidation",
         "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        false);
+        true);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 1, 8, 3);
@@ -114,7 +114,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(create_info.size);
         desc.Flags = additional_flags;
-        
+
         D3D12_RESOURCE_STATES initial_state = D3D12_RESOURCE_STATE_COMMON;
         bool should_map = false;
 
@@ -298,7 +298,7 @@ namespace sanity::engine::renderer {
     void RenderBackend::schedule_texture_destruction(const Texture& texture) {
         texture_deletion_list[cur_gpu_frame_idx].push_back(texture);
     }
-    
+
     ComPtr<ID3D12PipelineState> RenderBackend::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader) const {
         return create_compute_pipeline_state(compute_shader, standard_root_signature);
     }
@@ -329,7 +329,7 @@ namespace sanity::engine::renderer {
     Rx::Ptr<RenderPipelineState> RenderBackend::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
         return create_pipeline_state(create_info, *standard_root_signature.Get());
     }
-    
+
     ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_command_list(Rx::Optional<Uint32> frame_idx) {
         Rx::Concurrency::ScopeLock l{create_command_list_mutex};
 
@@ -392,7 +392,7 @@ namespace sanity::engine::renderer {
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
-    
+
     void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
 
@@ -815,10 +815,10 @@ namespace sanity::engine::renderer {
     void RenderBackend::create_descriptor_heaps() {
         ZoneScoped;
 
-    	const auto total_num_buffers = *cvar_max_in_flight_gpu_frames * MAX_NUM_BUFFERS;
+        const auto total_num_buffers = *cvar_max_in_flight_gpu_frames * MAX_NUM_BUFFERS;
         const auto total_num_textures = *cvar_max_in_flight_gpu_frames * MAX_NUM_TEXTURES;
-    	const auto num_bespoke_descriptors = 666;   // Descriptors for the RT AS or idk whatever wants descriptors
-    	
+        const auto num_bespoke_descriptors = 666; // Descriptors for the RT AS or idk whatever wants descriptors
+
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                                    total_num_buffers + total_num_textures + num_bespoke_descriptors);
@@ -895,7 +895,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<CD3DX12_ROOT_PARAMETER> root_parameters{3};
 
         // Root constants for indices and IDs
-        root_parameters[ROOT_CONSTANTS_ROOT_PARAMETER_INDEX].InitAsConstants(6, 0);
+        root_parameters[ROOT_CONSTANTS_ROOT_PARAMETER_INDEX].InitAsConstants(sizeof(StandardPushConstants) / 4, 0);
 
         // Raytracing data
         root_parameters[RAYTRACING_SCENE_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(0);
@@ -1025,7 +1025,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         return cbv_srv_uav_allocator->get_heap();
     }
-    
+
     void RenderBackend::create_pipeline_input_layouts() {
         standard_graphics_pipeline_input_layout.reserve(4);
 
@@ -1096,13 +1096,12 @@ namespace sanity::engine::renderer {
     }
 
     void RenderBackend::create_command_signatures() {
-        const auto
-            argument_descs = Rx::Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
-                                                                    .Constant =
-                                                                        {.RootParameterIndex = ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                                         .DestOffsetIn32BitValues = DATA_INDEX_ROOT_CONSTANT_OFFSET,
-                                                                         .Num32BitValuesToSet = 1}},
-                                       D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED}};
+        const auto argument_descs = Rx::Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
+                                                                           .Constant =
+                                                                               {.RootParameterIndex = ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                                                .DestOffsetIn32BitValues = DATA_INDEX_ROOT_CONSTANT_OFFSET,
+                                                                                .Num32BitValuesToSet = 1}},
+                                              D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED}};
         const auto desc = D3D12_COMMAND_SIGNATURE_DESC{.ByteStride = sizeof(IndirectDrawCommandWithRootConstant),
                                                        .NumArgumentDescs = static_cast<UINT>(argument_descs.size()),
                                                        .pArgumentDescs = argument_descs.data()};

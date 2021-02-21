@@ -26,37 +26,7 @@ SamplerState trilinear_sampler : register(s2);
 
 // Root constants
 
-struct StandardPushConstants {
-    /*!
-     * \brief Index of the camera that will render this draw
-     */
-    uint camera_index;
-
-    /*!
-     * \brief Index in the global buffers array of the buffer that holds our data
-     */
-    uint data_buffer_index;
-
-    /*!
-     * \brief Index of the material data for the current draw
-     */
-    uint material_index;
-
-    /*!
-     * \brief Index of the buffer with model matrices for this draw
-     */
-    uint model_matrix_buffer_index;
-
-    /*!
-     * \brief Index of our model matrix within the currently bound buffer
-     */
-    uint model_matrix_index;
-
-    /*!
-     * \brief Identifier for the object currently being rendered. Guaranteed to be unique for each object
-     */
-    uint object_id;
-} constants;
+StandardPushConstants constants;
 
 // Registers 0 - 15: raytracing stuff that can't be bindlessly accessed
 
@@ -82,7 +52,7 @@ RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space5);
 // Helpers
 
 PerFrameData get_per_frame_data() {
-    ByteAddressBuffer frame_data_buffer = srv_buffers[0];
+    ByteAddressBuffer frame_data_buffer = srv_buffers[constants.per_frame_data_buffer_index];
     return frame_data_buffer.Load<PerFrameData>(0);
 }
 
@@ -116,4 +86,4 @@ float4x4 get_current_model_matrix() { return get_model_matrix(constants.model_ma
 	const uint read_offset = sizeof(Type) * index;   \
 	const Type varname = my_material_buffer.Load<Type>(read_offset);
 
-#define GET_CURRENT_DATA(Type, varname) GET_DATA(Type, constants.material_index, varname)
+#define GET_CURRENT_DATA(Type, varname) GET_DATA(Type, constants.data_index, varname)

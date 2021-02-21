@@ -5,9 +5,11 @@
 #include "rx/core/vector.h"
 
 namespace sanity::engine::renderer {
+    static constexpr auto INVALID_RESOURCE_HANDLE = 0xFFFFFFFF;
+	
     template <typename ResourceType>
-    struct GpuResourceHandle {
-        Uint32 index{0xFFFFFFFF};
+    struct GpuResourceHandle {    	
+        Uint32 index{INVALID_RESOURCE_HANDLE};
 
         Rx::Vector<ResourceType>* storage{nullptr};
 
@@ -38,7 +40,7 @@ namespace sanity::engine::renderer {
 
     template <typename ResourceType>
     bool GpuResourceHandle<ResourceType>::is_valid() const {
-        return index != 0xFFFFFFFF && storage != nullptr && index < storage->size();
+        return index != INVALID_RESOURCE_HANDLE && storage != nullptr && index < storage->size();
     }
 
     template <typename ResourceType>
