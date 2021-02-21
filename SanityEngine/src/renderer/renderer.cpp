@@ -537,7 +537,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
-    BufferHandle Renderer::get_per_frame_data_buffer(const Uint32 frame_idx) const { return per_frame_data_buffers[frame_idx]; }
+    BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
 
     RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
@@ -595,12 +595,12 @@ namespace sanity::engine::renderer {
 
         const auto num_gpu_frames = backend->get_max_num_gpu_frames();
 
-        per_frame_data_buffers.reserve(num_gpu_frames);
+        frame_constants_buffers.reserve(num_gpu_frames);
         model_matrix_buffers.reserve(num_gpu_frames);
 
         auto per_frame_data_buffer_create_info = BufferCreateInfo{
             .usage = BufferUsage::ConstantBuffer,
-            .size = sizeof(PerFrameData),
+            .size = sizeof(FrameConstants),
         };
 
         auto model_matrix_buffer_create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer,
@@ -611,7 +611,7 @@ namespace sanity::engine::renderer {
             per_frame_data_buffer_create_info.name = Rx::String::format("Per frame data buffer %d", i);
             const auto per_frame_buffer = create_buffer(per_frame_data_buffer_create_info);
             if(per_frame_buffer.is_valid()) {
-                per_frame_data_buffers.push_back(per_frame_buffer);
+                frame_constants_buffers.push_back(per_frame_buffer);
 
             } else {
                 logger->error("Could not create buffer %s", per_frame_data_buffer_create_info.name);
@@ -1060,9 +1060,9 @@ namespace sanity::engine::renderer {
             per_frame_data.sky_texture_idx = 0;
         }
 
-        const auto buffer = get_buffer(per_frame_data_buffers[frame_idx]);
+        const auto buffer = get_buffer(frame_constants_buffers[frame_idx]);
 
-        memcpy(buffer->mapped_ptr, &per_frame_data, sizeof(PerFrameData));
+        memcpy(buffer->mapped_ptr, &per_frame_data, sizeof(FrameConstants));
     }
 
     BufferHandle& Renderer::get_model_matrix_for_frame(const Uint32 frame_idx) { return model_matrix_buffers[frame_idx]; }

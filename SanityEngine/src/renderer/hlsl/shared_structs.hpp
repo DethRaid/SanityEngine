@@ -36,7 +36,7 @@ namespace sanity::engine::renderer {
         float4x4 previous_inverse_projection;
     };
 
-    struct PerFrameData {
+    struct FrameConstants {
         float time_since_start;
         uint frame_count;
 

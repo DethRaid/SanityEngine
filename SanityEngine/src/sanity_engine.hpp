@@ -108,7 +108,7 @@ namespace sanity::engine {
 
         Float32 accumulator = 0;
 
-        Uint64 frame_count = 0;
+        Uint32 frame_count = 0;
 
         Rx::Vector<Rx::Function<void(Float32)>> tick_functions;
 

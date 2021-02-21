@@ -16,7 +16,7 @@ float2 equi_uvs(float3 uvw) {
 }
 
 float3 get_sky_in_direction(const in float3 view_vector_worldspace) {
-    const PerFrameData per_frame_data = get_per_frame_data();
+    const FrameConstants per_frame_data = get_per_frame_data();
     const float3 sky_view_vector = view_vector_worldspace * float3(1, -1, 1);
     uint skybox_index = per_frame_data.sky_texture_idx;
     if(skybox_index == 0) {

@@ -51,19 +51,19 @@ RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space5);
 
 // Helpers
 
-PerFrameData get_per_frame_data() {
+FrameConstants get_per_frame_data() {
     ByteAddressBuffer frame_data_buffer = srv_buffers[constants.per_frame_data_buffer_index];
-    return frame_data_buffer.Load<PerFrameData>(0);
+    return frame_data_buffer.Load<FrameConstants>(0);
 }
 
 Light get_light(const uint index) {
-    PerFrameData per_frame_data = get_per_frame_data();
+    FrameConstants per_frame_data = get_per_frame_data();
     ByteAddressBuffer lights_buffer = srv_buffers[per_frame_data.light_buffer_index];
     return lights_buffer.Load<Light>(sizeof(Light) * index);
 }
 
 Camera get_camera(const uint index) {
-    PerFrameData per_frame_data = get_per_frame_data();
+    FrameConstants per_frame_data = get_per_frame_data();
     ByteAddressBuffer cameras_buffer = srv_buffers[per_frame_data.camera_buffer_index];
     return cameras_buffer.Load<Camera>(sizeof(Camera) * index);
 }

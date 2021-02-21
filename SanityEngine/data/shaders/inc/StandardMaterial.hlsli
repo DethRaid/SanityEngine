@@ -62,7 +62,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
         surface.normal = normal_texture.Sample(bilinear_sampler, vertex.texcoord).xyz * 2.0 - 1.0;
         surface.normal.y *= -1; // Convert from right-handed normalmaps to left-handed normals
 
-        PerFrameData data = srv_buffers[0].Load<PerFrameData>(0);
+        FrameConstants data = srv_buffers[0].Load<FrameConstants>(0);
         ByteAddressBuffer cameras = srv_buffers[data.camera_buffer_index];
         const float3 view_vector = vertex.location - cameras.Load<Camera>(constants.camera_index * sizeof(Camera)).view[2].xyz;
     	

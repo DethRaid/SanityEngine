@@ -173,7 +173,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
     	
-        [[nodiscard]] BufferHandle get_per_frame_data_buffer(Uint32 frame_idx) const;
+        [[nodiscard]] BufferHandle get_frame_constants_buffer(Uint32 frame_idx) const;
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -193,8 +193,8 @@ namespace sanity::engine::renderer {
         Rx::Map<Rx::String, FluidVolumeHandle> fluid_volume_name_to_handle;
         Rx::Vector<FluidVolume> all_fluid_volumes;
 
-        PerFrameData per_frame_data;
-        Rx::Vector<BufferHandle> per_frame_data_buffers;
+        FrameConstants per_frame_data;
+        Rx::Vector<BufferHandle> frame_constants_buffers;
 
         Rx::Ptr<CameraMatrixBuffer> camera_matrix_buffers;
 

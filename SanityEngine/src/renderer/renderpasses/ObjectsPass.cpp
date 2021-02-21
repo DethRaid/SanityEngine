@@ -79,8 +79,8 @@ namespace sanity::engine::renderer {
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
 
     	commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                               renderer->get_per_frame_data_buffer(frame_idx).index,
-                                               RenderBackend::PER_FRAME_DATA_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
+                                               renderer->get_frame_constants_buffer(frame_idx).index,
+                                               RenderBackend::FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
         // Hardcode camera 0 as the player camera
         // TODO: Make a camera handle system
@@ -227,8 +227,9 @@ namespace sanity::engine::renderer {
 
             // TODO: Figure out the priority queues to put things in
 
-            const auto entity_id = static_cast<uint32_t>(entity);
-            commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+            // TODO: Record drawcalls into an indirect command buffer rather than recording into the command list
+            
+            commands->SetGraphicsRoot32BitConstant(0, static_cast<uint32_t>(entity), RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
@@ -276,8 +277,7 @@ namespace sanity::engine::renderer {
             PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_atmosphere");
 
             const auto atmosphere_entity = atmosphere_view.front();
-            const auto atmosphere_id = static_cast<uint32_t>(atmosphere_entity);
-            commands->SetGraphicsRoot32BitConstant(0, atmosphere_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0, static_cast<uint32_t>(atmosphere_entity), RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
 

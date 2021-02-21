@@ -22,13 +22,13 @@ uint3 get_indices(uint triangle_index) {
     const uint base_index = (triangle_index * 3);
     const int address = (base_index * 4);
     
-	PerFrameData data = get_per_frame_data();
+	FrameConstants data = get_per_frame_data();
 	ByteAddressBuffer indices = srv_buffers[data.index_buffer_index];
     return indices.Load3(address);
 }
 
 StandardVertex get_vertex(int address) {    
-	PerFrameData data = get_per_frame_data();
+	FrameConstants data = get_per_frame_data();
 	ByteAddressBuffer vertices = srv_buffers[data.vertex_data_buffer_index];
 	
     StandardVertex v;
@@ -328,7 +328,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     float4 location_ndc = mul(camera.projection, position_viewspace);
     location_ndc /= location_ndc.w;
 
-    const PerFrameData frame_data = get_per_frame_data();
+    const FrameConstants frame_data = get_per_frame_data();
 
     Texture2D noise = textures[frame_data.noise_texture_idx];
 
