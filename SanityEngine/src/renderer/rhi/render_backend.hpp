@@ -56,8 +56,7 @@ namespace sanity::engine::renderer {
         static constexpr Uint32 ROOT_CONSTANTS_ROOT_PARAMETER_INDEX = 0;
         static constexpr Uint32 RAYTRACING_SCENE_ROOT_PARAMETER_INDEX = 1;
         static constexpr Uint32 RESOURCES_ARRAY_ROOT_PARAMETER_INDEX = 2;
-        static constexpr Uint32 TEXTURES_ARRAY_ROOT_PARAMETER_INDEX = 3;
-
+    	
         static constexpr Uint32 FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants,
                                                                                             frame_constants_buffer_index) /
                                                                                    4;

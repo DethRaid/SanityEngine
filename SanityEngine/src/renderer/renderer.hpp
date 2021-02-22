@@ -174,6 +174,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
     	
         [[nodiscard]] BufferHandle get_frame_constants_buffer(Uint32 frame_idx) const;
+        [[nodiscard]] const RaytracingScene& get_raytracing_scene() const;
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;

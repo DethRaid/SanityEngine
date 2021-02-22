@@ -78,7 +78,11 @@ namespace sanity::engine::renderer {
 
         commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
 
-    	commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+        // TODO: Bind global resources at the beginning of the frame, after everything is converted to The Root Signature
+        auto* heap = renderer->get_render_backend().get_cbv_srv_uav_heap();
+        commands->SetDescriptorHeaps(1, &heap);
+
+        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                                renderer->get_frame_constants_buffer(frame_idx).index,
                                                RenderBackend::FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
@@ -99,12 +103,15 @@ namespace sanity::engine::renderer {
                                                model_matrix_buffer.index,
                                                RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
-        // TODO: Bind global resources at the beginning of the frame, after everything is converted to The Root Signature
-        auto* heap = renderer->get_render_backend().get_cbv_srv_uav_heap();
-        commands->SetDescriptorHeaps(1, &heap);
+        const auto& rt_scene = renderer->get_raytracing_scene();
+        if(rt_scene.buffer.is_valid()) {
+            commands->SetGraphicsRootShaderResourceView(RenderBackend::RAYTRACING_SCENE_ROOT_PARAMETER_INDEX,
+                                                        rt_scene.buffer->resource->GetGPUVirtualAddress());
+        }
+    	
         commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX,
                                                  renderer->get_resource_array_gpu_descriptor(frame_idx));
-        
+
         // Draw atmosphere first because projection matrices are hard
         draw_atmosphere(commands, registry);
 
@@ -228,7 +235,7 @@ namespace sanity::engine::renderer {
             // TODO: Figure out the priority queues to put things in
 
             // TODO: Record drawcalls into an indirect command buffer rather than recording into the command list
-            
+
             commands->SetGraphicsRoot32BitConstant(0, static_cast<uint32_t>(entity), RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
@@ -277,7 +284,9 @@ namespace sanity::engine::renderer {
             PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_atmosphere");
 
             const auto atmosphere_entity = atmosphere_view.front();
-            commands->SetGraphicsRoot32BitConstant(0, static_cast<uint32_t>(atmosphere_entity), RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0,
+                                                   static_cast<uint32_t>(atmosphere_entity),
+                                                   RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
 

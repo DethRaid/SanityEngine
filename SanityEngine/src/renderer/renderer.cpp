@@ -538,6 +538,8 @@ namespace sanity::engine::renderer {
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
     BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
+	
+    const RaytracingScene& Renderer::get_raytracing_scene() const { return raytracing_scene; }
 
     RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
