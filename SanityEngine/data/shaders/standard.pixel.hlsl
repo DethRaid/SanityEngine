@@ -1,4 +1,4 @@
-#include "inc/StandardMaterial.hlsli"
+#include "inc/load_standard_material.hlsl"
 #include "inc/lighting.hlsl"
 
 struct VertexOutput {
@@ -15,7 +15,7 @@ struct PixelOutput {
 };
 
 PixelOutput main(const VertexOutput input) {
-	GET_CURRENT_DATA(MaterialData, material);
+	GET_CURRENT_DATA(StandardMaterial, material);
 	
     StandardVertex vertex;
     vertex.location = input.location_worldspace.xyz;

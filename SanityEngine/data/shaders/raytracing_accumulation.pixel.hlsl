@@ -4,20 +4,16 @@ struct FullscreenVertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-struct MaterialData {
-    uint accumulation_texture_idx;
-    uint scene_output_texture_idx;
-    uint scene_depth_texture_idx;
-};
-
 #include "inc/standard_root_signature.hlsl"
+
+#include "postprocessing_structs.hpp"
 
 const static float ACCUMULATION_POWER = 1;
 
 float4 main(FullscreenVertexOutput input) : SV_TARGET {
-    GET_CURRENT_DATA(MaterialData, material);
+    GET_CURRENT_DATA(AccumulationMaterial, material);
 
-    Texture2D scene_output_texture = textures[material.scene_output_texture_idx];
+    Texture2D scene_output_texture = textures[material.scene_output_texture];
 
     // Texture2D depth_texture = textures[material.scene_depth_texture_idx];
     // float cur_depth = depth_texture.Sample(point_sampler, input.texcoord).r;
@@ -38,7 +34,7 @@ float4 main(FullscreenVertexOutput input) : SV_TARGET {
 
     // Only add in the previous frame's data if the pixel was onscreen last frame
     // if(previous_texcoord.x <= 1.0 && previous_texcoord.x >= 0.0 && previous_texcoord.y <= 1.0 && previous_texcoord.y >= 0.0) {
-    Texture2D accumulation_texture = textures[material.accumulation_texture_idx];
+    Texture2D accumulation_texture = textures[material.accumulation_texture];
     float3 accumulated_color = accumulation_texture.Sample(point_sampler, input.texcoord).rgb;
     
     float3 final_color = lerp(accumulated_color, scene_color.rgb, ACCUMULATION_POWER);

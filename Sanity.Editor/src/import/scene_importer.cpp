@@ -11,8 +11,8 @@
 #include "core/types.hpp"
 #include "entity/entity_operations.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "renderer/renderer.hpp"
-#include "renderer/standard_material.hpp"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
 #include "sanity_engine.hpp"
@@ -213,49 +213,49 @@ namespace sanity::editor::import {
 
             if(base_color_texture_idx != -1) {
                 if(const auto handle = import_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
-                    sanity_material.base_color_texture = *handle;
+                    sanity_material.base_color_texture_idx = handle->index;
 
                 } else {
                     gltf_logger->error("Could not import base color texture %d (from material %s) into SanityEngine",
                                        base_color_texture_idx,
                                        material.name);
-                    sanity_material.base_color_texture = renderer->get_pink_texture();
+                    sanity_material.base_color_texture_idx = renderer->get_pink_texture().index;
                 }
             }
 
             if(metalness_roughness_texture_idx != -1) {
                 if(const auto handle = import_texture(metalness_roughness_texture_idx, scene, cmds); handle.has_value()) {
-                    sanity_material.metallic_roughness_texture = *handle;
+                    sanity_material.metallic_roughness_texture_idx = handle->index;
 
                 } else {
                     gltf_logger->error("Could not import metallic/roughness texture %d (from material %s) into SanityEngine",
                                        metalness_roughness_texture_idx,
                                        material.name);
-                    sanity_material.metallic_roughness_texture = renderer->get_pink_texture();
+                    sanity_material.metallic_roughness_texture_idx = renderer->get_pink_texture().index;
                 }
             }
 
             if(normal_texture_idx != -1) {
                 if(const auto handle = import_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
-                    sanity_material.normal_texture = *handle;
+                    sanity_material.normal_texture_idx = handle->index;
 
                 } else {
                     gltf_logger->error("Could not import normalmap texture %d (from material %s) into SanityEngine",
                                        normal_texture_idx,
                                        material.name);
-                    sanity_material.normal_texture = renderer->get_pink_texture();
+                    sanity_material.normal_texture_idx = renderer->get_pink_texture().index;
                 }
             }
 
             if(emission_texture_idx != -1) {
                 if(const auto handle = import_texture(emission_texture_idx, scene, cmds); handle.has_value()) {
-                    sanity_material.emission_texture = *handle;
+                    sanity_material.emission_texture_idx = handle->index;
 
                 } else {
                     gltf_logger->error("Could not import emission texture %d (from material %s) into SanityEngine",
                                        emission_texture_idx,
                                        material.name);
-                    sanity_material.normal_texture = renderer->get_pink_texture();
+                    sanity_material.emission_texture_idx = renderer->get_pink_texture().index;
                 }
             }
 
@@ -558,7 +558,7 @@ namespace sanity::editor::import {
                 // Build raytracing acceleration structure. We make a separate BLAS for each primitive because they
                 // might have separate materials. However, this will create too many BLASs if primitives share
                 // materials. This will be addressed in a future revision
-                
+
                 const auto model_matrix = primitive_transform_component.get_local_matrix();
                 const auto as_handle = renderer->create_raytracing_geometry(*vertex_buffer,
                                                                             *index_buffer,

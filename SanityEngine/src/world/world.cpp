@@ -18,7 +18,7 @@ namespace sanity::engine {
     void World::create_planetary_sky(renderer::Renderer& renderer)
     {
 	  auto& sky_actor = engine::create_actor(*registry, "Sky");
-        sky_actor.add_component<renderer::SkyboxComponent>();
+        sky_actor.add_component<renderer::SkyComponent>();
         auto& sun = sky_actor.add_component<renderer::LightComponent>();
     	sun.handle = renderer.next_next_free_light_handle();
         auto& transform = sky_actor.get_transform();
@@ -27,7 +27,7 @@ namespace sanity::engine {
     }
 
     void World::set_skybox(const std::filesystem::path& skybox_image_path) {
-        auto& atmosphere = registry->get<renderer::SkyboxComponent>(sky);
+        auto& atmosphere = registry->get<renderer::SkyComponent>(sky);
 
         // TODO: Load skybox through a AssetStreamingManager 
 

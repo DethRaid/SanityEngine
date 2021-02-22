@@ -1,23 +1,14 @@
 #pragma once
 
+#include "constants.hpp"
 #include "inc/normalmapping.hlsl"
+#include "standard_material.hpp"
 
 struct StandardVertex {
     float3 location : Position;
     float3 normal : Normal;
     float4 color : Color;
     float2 texcoord : Texcoord;
-};
-
-struct MaterialData {
-    float4 base_color_value;
-    float4 metallic_roughness_value;
-    float4 emission_value;
-
-    uint base_color_idx;
-    uint normal_idx;
-    uint metallic_roughness_idx;
-    uint emission_idx;
 };
 
 struct SurfaceInfo {
@@ -36,12 +27,12 @@ struct SurfaceInfo {
 
 #include "standard_root_signature.hlsl"
 
-SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialData material) {	
+SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMaterial material) {	
     SurfaceInfo surface;
     surface.location = vertex.location;
 
-    if(material.base_color_idx != 0) {
-        Texture2D albedo_texture = textures[material.base_color_idx];
+    if(material.base_color_texture_idx != INVALID_RESOURCE_HANDLE) {
+        Texture2D albedo_texture = textures[material.base_color_texture_idx];
         surface.base_color = albedo_texture.Sample(bilinear_sampler, vertex.texcoord);
         surface.base_color.rgb = pow(surface.base_color.rgb, 1.0 / 2.2);
 
@@ -57,12 +48,12 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
     //     discard;
     // }
 
-    if(material.normal_idx != 0) {
-        Texture2D normal_texture = textures[material.normal_idx];
+    if(material.normal_texture_idx != INVALID_RESOURCE_HANDLE) {
+        Texture2D normal_texture = textures[material.normal_texture_idx];
         surface.normal = normal_texture.Sample(bilinear_sampler, vertex.texcoord).xyz * 2.0 - 1.0;
         surface.normal.y *= -1; // Convert from right-handed normalmaps to left-handed normals
 
-        FrameConstants data = srv_buffers[0].Load<FrameConstants>(0);
+        FrameConstants data = get_frame_constants();
         ByteAddressBuffer cameras = srv_buffers[data.camera_buffer_index];
         const float3 view_vector = vertex.location - cameras.Load<Camera>(constants.camera_index * sizeof(Camera)).view[2].xyz;
     	
@@ -73,8 +64,8 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
         surface.normal = vertex.normal;
     }
         
-    if(material.metallic_roughness_idx != 0) {
-        Texture2D metallic_roughness_texture = textures[material.metallic_roughness_idx];
+    if(material.metallic_roughness_texture_idx != INVALID_RESOURCE_HANDLE) {
+        Texture2D metallic_roughness_texture = textures[material.metallic_roughness_texture_idx];
         const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, vertex.texcoord);
         surface.metalness = metallic_roughness.b;
         surface.roughness = metallic_roughness.g;
@@ -84,8 +75,8 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in MaterialDa
         surface.roughness = material.metallic_roughness_value.g * material.metallic_roughness_value.g;
     }
 
-    if(material.emission_idx != 0) {
-        Texture2D emission_texture = textures[material.emission_idx];
+    if(material.emission_texture_idx != INVALID_RESOURCE_HANDLE) {
+        Texture2D emission_texture = textures[material.emission_texture_idx];
         surface.emission = emission_texture.Sample(bilinear_sampler, vertex.texcoord).rgb;
 
     } else {

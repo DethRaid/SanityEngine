@@ -49,7 +49,7 @@ float3 get_random_vector_aligned_to_normal(const in float3 normal,
                                            const in float2 base_noise_texcoord,
                                            const in float index,
                                            const in float total) {
-    const FrameConstants frame_data = get_per_frame_data();
+    const FrameConstants frame_data = get_frame_constants();
     const uint frame_index = (frame_data.frame_count * 69) % NUM_TEMPORAL_SAMPLES;
 
     const float offset = total * NUM_TEMPORAL_SAMPLES;

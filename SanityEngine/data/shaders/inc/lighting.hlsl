@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StandardMaterial.hlsli"
+#include "load_standard_material.hlsl"
 #include "atmospheric_scattering.hlsl"
 #include "brdf.hlsl"
 #include "noise.hlsli"
@@ -22,13 +22,13 @@ uint3 get_indices(uint triangle_index) {
     const uint base_index = (triangle_index * 3);
     const int address = (base_index * 4);
     
-	FrameConstants data = get_per_frame_data();
+	FrameConstants data = get_frame_constants();
 	ByteAddressBuffer indices = srv_buffers[data.index_buffer_index];
     return indices.Load3(address);
 }
 
 StandardVertex get_vertex(int address) {    
-	FrameConstants data = get_per_frame_data();
+	FrameConstants data = get_frame_constants();
 	ByteAddressBuffer vertices = srv_buffers[data.vertex_data_buffer_index];
 	
     StandardVertex v;
@@ -106,7 +106,7 @@ float4 get_incoming_light(const in float3 ray_origin,
                           const in float2 noise_texcoord,
                           inout RayQuery<LIGHTING_RAY_FLAGS> query,
                           out StandardVertex vertex,
-                          out MaterialData material) {
+                          out StandardMaterial material) {
 
     const float cos_theta = dot(direction, surface_normal);
 
@@ -134,7 +134,7 @@ float4 get_incoming_light(const in float3 ray_origin,
         vertex = get_vertex_attributes(triangle_index, barycentrics);
 
         uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
-    	GET_DATA(MaterialData, material_id, hit_material)
+        GET_DATA(StandardMaterial, material_id, hit_material)
     	material = hit_material;
 
         const SurfaceInfo surface = get_surface_info(vertex, material);
@@ -189,7 +189,7 @@ float3 raytrace_global_illumination(const in SurfaceInfo original_surface,
             brdf_accumulator *= brdf_single_ray(surface, ray_direction, -view_vector) / pdf;
 
             StandardVertex hit_vertex;
-            MaterialData hit_material;
+            StandardMaterial hit_material;
 
             const float4 incoming_light = get_incoming_light(surface.location,
                                                              ray_direction,
@@ -267,7 +267,7 @@ float3 raytrace_reflections(const in SurfaceInfo original_surface,
             brdf_accumulator *= brdf_single_ray(surface, ray_direction, -view_vector) / pdf;
 
             StandardVertex hit_vertex;
-            MaterialData hit_material;
+            StandardMaterial hit_material;
 
             float4 incoming_light = get_incoming_light(surface.location,
                                                        ray_direction,
@@ -328,7 +328,7 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     float4 location_ndc = mul(camera.projection, position_viewspace);
     location_ndc /= location_ndc.w;
 
-    const FrameConstants frame_data = get_per_frame_data();
+    const FrameConstants frame_data = get_frame_constants();
 
     Texture2D noise = textures[frame_data.noise_texture_idx];
 

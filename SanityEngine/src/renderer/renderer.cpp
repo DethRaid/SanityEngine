@@ -598,7 +598,7 @@ namespace sanity::engine::renderer {
         frame_constants_buffers.reserve(num_gpu_frames);
         model_matrix_buffers.reserve(num_gpu_frames);
 
-        auto per_frame_data_buffer_create_info = BufferCreateInfo{
+        auto frame_constants_buffer_create_info = BufferCreateInfo{
             .usage = BufferUsage::ConstantBuffer,
             .size = sizeof(FrameConstants),
         };
@@ -608,13 +608,13 @@ namespace sanity::engine::renderer {
                                                                                             r_max_drawcalls_per_frame->get())};
 
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
-            per_frame_data_buffer_create_info.name = Rx::String::format("Per frame data buffer %d", i);
-            const auto per_frame_buffer = create_buffer(per_frame_data_buffer_create_info);
-            if(per_frame_buffer.is_valid()) {
-                frame_constants_buffers.push_back(per_frame_buffer);
+            frame_constants_buffer_create_info.name = Rx::String::format("Frame constants buffer %d", i);
+            const auto frame_constants_buffer = create_buffer(frame_constants_buffer_create_info);
+            if(frame_constants_buffer.is_valid()) {
+                frame_constants_buffers.push_back(frame_constants_buffer);
 
             } else {
-                logger->error("Could not create buffer %s", per_frame_data_buffer_create_info.name);
+                logger->error("Could not create buffer %s", frame_constants_buffer_create_info.name);
             }
 
             model_matrix_buffer_create_info.name = Rx::String::format("Model matrix buffer %d", i);
@@ -1050,14 +1050,14 @@ namespace sanity::engine::renderer {
 
         per_frame_data.noise_texture_idx = noise_texture_handle.index;
 
-        const auto view = registry.view<SkyboxComponent>();
+        per_frame_data.sky_texture_idx = 0;
+        const auto view = registry.view<SkyComponent>();
         if(view.size() == 1) {
-            const auto skybox_entity = view.front();
-            const auto& skybox = registry.get<SkyboxComponent>(skybox_entity);
-            per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
-
-        } else {
-            per_frame_data.sky_texture_idx = 0;
+            view.each([&](const SkyComponent& skybox) {
+                if(skybox.skybox_texture.is_valid()) {
+                    per_frame_data.sky_texture_idx = skybox.skybox_texture.index;
+                }
+            });
         }
 
         const auto buffer = get_buffer(frame_constants_buffers[frame_idx]);

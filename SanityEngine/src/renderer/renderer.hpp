@@ -11,7 +11,7 @@
 #include "renderer/render_components.hpp"
 #include "renderer/renderpasses/ObjectsPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "renderer/standard_material.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_backend.hpp"

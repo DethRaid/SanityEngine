@@ -4,6 +4,7 @@
 #include "TracyD3D12.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/hlsl/postprocessing_structs.hpp"
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/helpers.hpp"
 #include "renderer/rhi/render_backend.hpp"
@@ -12,13 +13,7 @@
 namespace sanity::engine::renderer {
     constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
     constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
-
-    struct AccumulationMaterial {
-        TextureHandle accumulation_texture;
-        TextureHandle scene_output_texture;
-        TextureHandle scene_depth_texture;
-    };
-
+    
     RX_LOG("Postprocessing Pass", logger);
 
     DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ObjectsPass& forward_pass)
@@ -139,9 +134,9 @@ namespace sanity::engine::renderer {
         const auto scene_depth_target_handle = forward_pass.get_depth_target_handle();
 
         const auto accumulation_material = AccumulationMaterial{
-            .accumulation_texture = accumulation_target_handle,
-            .scene_output_texture = scene_color_target_handle,
-            .scene_depth_texture = scene_depth_target_handle,
+            .accumulation_texture = accumulation_target_handle.index,
+            .scene_output_texture = scene_color_target_handle.index,
+            .scene_depth_texture = scene_depth_target_handle.index,
         };
 
         logger->verbose("Scene output texture idx: %u, Scene depth texture: %u",

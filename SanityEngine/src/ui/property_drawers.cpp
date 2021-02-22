@@ -7,7 +7,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "imgui/imgui.h"
-#include "renderer/standard_material.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "renderer/lights.hpp"
 #include "renderer/mesh.hpp"
 #include "rx/core/string.h"

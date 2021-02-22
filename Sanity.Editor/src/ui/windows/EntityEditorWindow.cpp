@@ -52,7 +52,7 @@ namespace sanity::editor::ui {
         else DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
         else DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
         else DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
-        else DRAW_COMPONENT_EDITOR(engine::renderer::SkyboxComponent);
+    	else DRAW_COMPONENT_EDITOR(engine::renderer::SkyComponent);
         // @formatter:on            
     }
 } // namespace sanity::editor::ui

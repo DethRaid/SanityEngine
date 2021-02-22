@@ -243,7 +243,7 @@ namespace sanity::engine {
         type_reflector.register_type_name<renderer::RaytracingObjectComponent>("Raytracing Object");
         type_reflector.register_type_name<renderer::CameraComponent>("Camera");
         type_reflector.register_type_name<renderer::LightComponent>("Light");
-        type_reflector.register_type_name<renderer::SkyboxComponent>("Skybox");
+        type_reflector.register_type_name<renderer::SkyComponent>("Skybox");
     }
 
     void SanityEngine::make_frametime_display() {

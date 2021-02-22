@@ -8,17 +8,13 @@
 #include "rx/core/log.h"
 
 namespace sanity::engine::renderer {
-    struct BackbufferOutputMaterial {
-        TextureHandle scene_output_image;
-    };
-
     RX_LOG("PostprocessingPass", logger);
 
     PostprocessingPass::PostprocessingPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
         auto& device = renderer->get_render_backend();
 
         const auto create_info = RenderPipelineStateCreateInfo{
-            .name = "Backbuffer output",
+            .name = "Postprocessing",
             .vertex_shader = load_shader("fullscreen.vertex"),
             .pixel_shader = load_shader("postprocessing.pixel"),
             .render_target_formats = Rx::Array{TextureFormat::Rgba8},
@@ -26,15 +22,15 @@ namespace sanity::engine::renderer {
 
         postprocessing_pipeline = device.create_render_pipeline_state(create_info);
 
-    	postprocessing_materials_buffer_handle = renderer->create_buffer(
-            {.name = "Postprocessing materials buffer", .usage = BufferUsage::StagingBuffer, .size = sizeof(BackbufferOutputMaterial)});
-       const auto postprocessing_materials_buffer = renderer->get_buffer(postprocessing_materials_buffer_handle);
+        postprocessing_material_buffer_handle = renderer->create_buffer(
+            {.name = "Postprocessing materials buffer", .usage = BufferUsage::ConstantBuffer, .size = sizeof(PostprocessingMaterial)});
+        
+    	const auto& scene_output_image_handle = denoiser_pass.get_output_texture();
+        const auto material = PostprocessingMaterial{.scene_output_image = scene_output_image_handle.index};
 
-        const auto material = BackbufferOutputMaterial{.scene_output_image = denoiser_pass.get_output_texture()};
+        memcpy(postprocessing_material_buffer_handle->mapped_ptr, &material, sizeof(PostprocessingMaterial));
 
-        memcpy(postprocessing_materials_buffer->mapped_ptr, &material, sizeof(BackbufferOutputMaterial));
-
-        add_resource_usage(material.scene_output_image, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        add_resource_usage(scene_output_image_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
         logger->verbose("Initialized backbuffer output pass");
     }
@@ -75,9 +71,13 @@ namespace sanity::engine::renderer {
         scissor_rect.bottom = static_cast<LONG>(output_texture.height);
         commands->RSSetScissorRects(1, &scissor_rect);
 
-        commands->SetGraphicsRoot32BitConstant(0,
-                                                    postprocessing_materials_buffer_handle.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
-        commands->SetGraphicsRoot32BitConstant(0, 0, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                               postprocessing_material_buffer_handle.index,
+                                               RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                               0,
+                                               RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
+    	
         commands->SetPipelineState(postprocessing_pipeline->pso.Get());
         commands->DrawInstanced(3, 1, 0, 0);
 
@@ -86,7 +86,7 @@ namespace sanity::engine::renderer {
 
     void PostprocessingPass::set_output_texture(const TextureHandle new_output_texture_handle) {
         ZoneScoped;
-    	
+
         if(output_texture_handle.is_valid()) {
             remove_resource_usage(output_texture_handle);
         }

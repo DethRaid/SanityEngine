@@ -4,10 +4,6 @@ struct FullscreenVertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-struct MaterialData {
-    uint texture_idx;
-};
-
 #include "inc/standard_root_signature.hlsl"
 
 #define LUMA(color) (color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722)
@@ -67,8 +63,8 @@ float3 jodie_robo2_electric_boogaloo(const float3 color) {
 }
 
 float4 main(FullscreenVertexOutput vertex) : SV_TARGET {
-    GET_CURRENT_DATA(MaterialData, material);
-    Texture2D scene_output = textures[material.texture_idx];
+    GET_CURRENT_DATA(PostprocessingMaterial, material);
+    Texture2D scene_output = textures[material.scene_output_image];
     const float4 color = scene_output.Sample(bilinear_sampler, vertex.texcoord);
     	
     const float luma = LUMA(color.rgb);

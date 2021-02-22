@@ -51,19 +51,19 @@ RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space5);
 
 // Helpers
 
-FrameConstants get_per_frame_data() {
-    ByteAddressBuffer frame_data_buffer = srv_buffers[constants.per_frame_data_buffer_index];
+FrameConstants get_frame_constants() {
+    ByteAddressBuffer frame_data_buffer = srv_buffers[constants.frame_constants_buffer_index];
     return frame_data_buffer.Load<FrameConstants>(0);
 }
 
 Light get_light(const uint index) {
-    FrameConstants per_frame_data = get_per_frame_data();
+    FrameConstants per_frame_data = get_frame_constants();
     ByteAddressBuffer lights_buffer = srv_buffers[per_frame_data.light_buffer_index];
     return lights_buffer.Load<Light>(sizeof(Light) * index);
 }
 
 Camera get_camera(const uint index) {
-    FrameConstants per_frame_data = get_per_frame_data();
+    FrameConstants per_frame_data = get_frame_constants();
     ByteAddressBuffer cameras_buffer = srv_buffers[per_frame_data.camera_buffer_index];
     return cameras_buffer.Load<Camera>(sizeof(Camera) * index);
 }
@@ -82,8 +82,8 @@ float4x4 get_model_matrix(const uint index) {
 float4x4 get_current_model_matrix() { return get_model_matrix(constants.model_matrix_index); }
 
 #define GET_DATA(Type, index, varname) \
-    ByteAddressBuffer my_material_buffer = srv_buffers[0];  \
+    ByteAddressBuffer data_buffer = srv_buffers[constants.data_buffer_index];  \
 	const uint read_offset = sizeof(Type) * index;   \
-	const Type varname = my_material_buffer.Load<Type>(read_offset);
+	const Type varname = data_buffer.Load<Type>(read_offset);
 
 #define GET_CURRENT_DATA(Type, varname) GET_DATA(Type, constants.data_index, varname)

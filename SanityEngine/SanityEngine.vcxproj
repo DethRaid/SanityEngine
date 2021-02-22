@@ -465,7 +465,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </FxCompile>
-    <None Include="data\shaders\inc\StandardMaterial.hlsli" />
+    <None Include="data\shaders\inc\load_standard_material.hlsl" />
     <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
@@ -530,7 +530,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\debugging\pix.hpp" />
     <ClInclude Include="src\renderer\gpu_resource_pool.hpp" />
     <ClInclude Include="src\renderer\handles.hpp" />
+    <ClInclude Include="src\renderer\hlsl\constants.hpp" />
+    <ClInclude Include="src\renderer\hlsl\interop.hpp" />
+    <ClInclude Include="src\renderer\hlsl\postprocessing_structs.hpp" />
     <ClInclude Include="src\renderer\hlsl\shared_structs.hpp" />
+    <ClInclude Include="src\renderer\hlsl\standard_material.hpp" />
     <ClInclude Include="src\renderer\lights.hpp" />
     <ClInclude Include="src\renderer\material.hpp" />
     <ClInclude Include="src\renderer\mesh.hpp" />
@@ -556,7 +560,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp" />
     <ClInclude Include="src\renderer\rhi\resources.hpp" />
     <ClInclude Include="src\renderer\single_pass_downsampler.hpp" />
-    <ClInclude Include="src\renderer\standard_material.hpp" />
     <ClInclude Include="src\sanity_engine.hpp" />
     <ClInclude Include="src\settings.hpp" />
     <ClInclude Include="src\stats\framerate_tracker.hpp" />

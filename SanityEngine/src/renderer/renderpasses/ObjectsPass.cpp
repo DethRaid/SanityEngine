@@ -269,7 +269,7 @@ namespace sanity::engine::renderer {
     }
 
     void ObjectsPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
-        const auto atmosphere_view = registry.view<SkyboxComponent>();
+        const auto atmosphere_view = registry.view<SkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "standard_material.hpp"
 #include "core/types.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/lights.hpp"
 #include "renderer/mesh.hpp"
 #include "rhi/raytracing_structs.hpp"
+#include "hlsl/standard_material.hpp"
 
 namespace sanity::engine::renderer {
     /*!
@@ -48,21 +48,21 @@ namespace sanity::engine::renderer {
         bool is_background{false};
     };
 
-	/**
-	 * @brief Marks that an object should have an outline drawn around it
-	*/
+    /**
+     * @brief Marks that an object should have an outline drawn around it
+     */
     struct __declspec(uuid("{00988F57-AFBD-4E37-9FC8-32813E1F6C2B}")) OutlineRenderComponent {
         /**
          * @brief Scale of the outline mesh compared to the normal mesh
-        */
+         */
         float outline_scale{1.05f};
 
         /**
          * @brief Color of the outline
-        */
+         */
         Vec3f color;
 
-    	StandardMaterialHandle material{};
+        StandardMaterialHandle material{};
     };
 
     /*!
@@ -120,14 +120,19 @@ namespace sanity::engine::renderer {
      *
      * NOTE: Only one allowed in the scene ever
      */
-    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) SkyboxComponent {
+    struct __declspec(uuid("{31AB3022-C3A9-4E48-AC49-2703C66A91EA}")) SkyComponent {
+        /**
+         * @brief Handle to the skybox texture
+         *
+         * If this handle is invalid, Sanity will instead render a procedural atmospheric sky
+         */
         TextureHandle skybox_texture{};
     };
 
     struct __declspec(uuid("{6763FAED-5C17-40E1-871F-0115E60F21EA}")) FluidVolumeComponent {
         FluidVolumeHandle volume{};
 
-    	Uint3 volume_size{1, 1, 1};
+        Uint3 volume_size{1, 1, 1};
     };
 
     void draw_component_editor(StandardRenderableComponent& renderable);
@@ -140,5 +145,5 @@ namespace sanity::engine::renderer {
 
     void draw_component_editor(LightComponent& light);
 
-    void draw_component_editor(SkyboxComponent& sky);
+    void draw_component_editor(SkyComponent& sky);
 } // namespace sanity::engine::renderer

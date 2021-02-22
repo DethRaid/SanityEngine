@@ -37,7 +37,7 @@ namespace sanity::engine::renderer {
         ui::draw_property_editor("Size", light.size);
     }
 
-    void draw_component_editor(SkyboxComponent& sky) {
+    void draw_component_editor(SkyComponent& sky) {
         // Fill in when the component has controls to draw
     }
 } // namespace sanity::engine::renderer

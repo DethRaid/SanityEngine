@@ -1,20 +1,9 @@
 #pragma once
 
+#include "interop.hpp"
+
 #if __cplusplus
-#include "core/types.hpp"
-
 namespace sanity::engine::renderer {
-
-    // ReSharper disable CppInconsistentNaming
-
-    using uint = Uint32;
-    using uint2 = glm::uvec2;
-
-    using float3 = glm::vec3;
-    using float4x4 = glm::mat4;
-
-    // ReSharper restore CppInconsistentNaming
-
 #endif
 
     struct Light {
@@ -50,12 +39,16 @@ namespace sanity::engine::renderer {
 
         uint2 render_size;
     };
-
+	
+    struct PostprocessingMaterial {
+        uint scene_output_image;
+    };
+	
     struct StandardPushConstants {
         /*!
          * \brief Index of the per-frame-data buffer
          */
-        uint per_frame_data_buffer_index;
+        uint frame_constants_buffer_index;
 
         /*!
          * \brief Index of the camera that will render this draw

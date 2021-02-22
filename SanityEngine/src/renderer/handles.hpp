@@ -1,12 +1,11 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "renderer/hlsl/constants.hpp"
 #include "rx/core/abort.h"
 #include "rx/core/vector.h"
 
-namespace sanity::engine::renderer {
-    static constexpr auto INVALID_RESOURCE_HANDLE = 0xFFFFFFFF;
-	
+namespace sanity::engine::renderer {	
     template <typename ResourceType>
     struct GpuResourceHandle {    	
         Uint32 index{INVALID_RESOURCE_HANDLE};

@@ -59,7 +59,7 @@ namespace sanity::engine::renderer {
         static constexpr Uint32 TEXTURES_ARRAY_ROOT_PARAMETER_INDEX = 3;
 
         static constexpr Uint32 FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants,
-                                                                                            per_frame_data_buffer_index) /
+                                                                                            frame_constants_buffer_index) /
                                                                                    4;
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, camera_index) / 4;
         static constexpr Uint32 DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET = offsetof(StandardPushConstants, data_buffer_index) / 4;

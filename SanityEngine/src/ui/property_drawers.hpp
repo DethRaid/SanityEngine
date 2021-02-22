@@ -4,7 +4,7 @@
 #include "glm/fwd.hpp"
 #include "renderer/lights.hpp"
 #include "renderer/mesh.hpp"
-#include "renderer/standard_material.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "rx/core/map.h"
 
 namespace sanity {
