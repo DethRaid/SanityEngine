@@ -174,6 +174,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
     	
         [[nodiscard]] BufferHandle get_frame_constants_buffer(Uint32 frame_idx) const;
+    	
         [[nodiscard]] const RaytracingScene& get_raytracing_scene() const;
 
     private:
@@ -193,8 +194,9 @@ namespace sanity::engine::renderer {
 
         Rx::Map<Rx::String, FluidVolumeHandle> fluid_volume_name_to_handle;
         Rx::Vector<FluidVolume> all_fluid_volumes;
+        Rx::Vector<BufferHandle> fluid_volume_buffers;
 
-        FrameConstants per_frame_data;
+        FrameConstants frame_constants;
         Rx::Vector<BufferHandle> frame_constants_buffers;
 
         Rx::Ptr<CameraMatrixBuffer> camera_matrix_buffers;
@@ -235,6 +237,8 @@ namespace sanity::engine::renderer {
         void allocate_resource_descriptors();
 
         void create_per_frame_buffers();
+            	
+        void create_fluid_volume_buffers();
 
         void create_material_data_buffers();
 
@@ -253,6 +257,8 @@ namespace sanity::engine::renderer {
 
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
+        void upload_fluid_volume_data(Uint32 frame_idx);
+    	
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
@@ -291,7 +297,7 @@ namespace sanity::engine::renderer {
 
         void update_light_data_buffer(entt::registry& registry, Uint32 frame_idx);
 
-        void update_per_frame_data(entt::registry& registry, Uint32 frame_idx);
+        void update_frame_constants(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
 

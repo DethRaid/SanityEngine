@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/renderpass.hpp"
+#include "renderer/hlsl/fluid_sim_data.hpp"
 #include "renderer/rhi/compute_pipeline_state.hpp"
 #include "renderer/rhi/render_backend.hpp"
 #include "rx/core/ptr.h"
@@ -14,12 +15,6 @@ namespace sanity::engine::renderer {
      */
     class FluidSimPass : public RenderPass {
     public:
-    	static inline const Uint32 ROOT_CONSTANTS_INDEX = 0;
-        static inline const Uint32 FLUID_SIM_PARAMS_BUFFER_INDEX = 1;
-        static inline const Uint32 TEXTURES_ARRAY_INDEX = 2;
-
-        static inline const Uint32 FLUID_VOLUME_INDEX_ROOT_CONSTANT_OFFSET = 0;
-
         explicit FluidSimPass(Renderer& renderer_in);
 
         void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
@@ -27,10 +22,10 @@ namespace sanity::engine::renderer {
     private:
         Renderer* renderer{nullptr};
 
-    	// TODO: A "per-GPU-frame" buffer thing for fluid sim data
+    	Rx::Vector<FluidSimData> all_fluid_sim_data;
+        Rx::Vector<BufferHandle> fluid_sim_data_buffers;
 
         ComPtr<ID3D12PipelineState> fluid_sim_pipeline;
-        ComPtr<ID3D12RootSignature> fluid_sim_root_sig;
         ComPtr<ID3D12CommandSignature> fluid_sim_command_signature;
     };
 } // namespace sanity::engine::renderer

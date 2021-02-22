@@ -1,11 +1,12 @@
 #pragma once
 
 #include <concepts>
-#include <wrl/client.h>
 
 #include <d3d12.h>
+#include <wrl/client.h>
 
 #include "core/types.hpp"
+#include "glm/glm.hpp"
 #include "renderer/handles.hpp"
 #include "rx/core/string.h"
 
@@ -84,7 +85,7 @@ namespace sanity::engine::renderer {
         TextureFormat format;
     };
 
-	using TextureHandle = GpuResourceHandle<Texture>;
+    using TextureHandle = GpuResourceHandle<Texture>;
 
     struct RenderTarget : Texture {
         D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
@@ -109,19 +110,10 @@ namespace sanity::engine::renderer {
     struct FluidVolumeCreateInfo {
         Rx::String name;
 
-        Uint3 size;
+        glm::uint3 size;
 
         // TODO: Information about what kind of fluid
     };
-
-    struct FluidVolume {
-        TextureHandle density_temperature_reaction_phi_texture_handle;
-        TextureHandle velocity_pressure_texture_handle;
-        Uint3 size;
-        Uint32 padding;
-    };
-
-	using FluidVolumeHandle = GpuResourceHandle<FluidVolume>;
 
     [[nodiscard]] Uint32 size_in_bytes(TextureFormat format);
 

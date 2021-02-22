@@ -2,10 +2,11 @@
 
 #include "core/types.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/hlsl/fluid_sim.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "renderer/lights.hpp"
 #include "renderer/mesh.hpp"
-#include "rhi/raytracing_structs.hpp"
-#include "hlsl/standard_material.hpp"
+#include "renderer/rhi/raytracing_structs.hpp"
 
 namespace sanity::engine::renderer {
     /*!
@@ -101,7 +102,7 @@ namespace sanity::engine::renderer {
     struct __declspec(uuid("{C1299481-3F19-4068-9724-FD89FF59EA65}")) LightComponent {
         LightHandle handle{};
 
-        LightType type{LightType::directional};
+        LightType type{LightType::Directional};
 
         /*!
          * \brief HDR color of this light
@@ -131,8 +132,6 @@ namespace sanity::engine::renderer {
 
     struct __declspec(uuid("{6763FAED-5C17-40E1-871F-0115E60F21EA}")) FluidVolumeComponent {
         FluidVolumeHandle volume{};
-
-        Uint3 volume_size{1, 1, 1};
     };
 
     void draw_component_editor(StandardRenderableComponent& renderable);

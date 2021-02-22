@@ -687,10 +687,10 @@ namespace sanity::editor::import {
         light_component.handle = renderer->next_next_free_light_handle();
 
         if(gltf_light.type == "directional") {
-            light_component.type = engine::renderer::LightType::directional;
+            light_component.type = engine::renderer::LightType::Directional;
 
         } else if(gltf_light.type == "point" || gltf_light.type == "spot") {
-            light_component.type = engine::renderer::LightType::sphere;
+            light_component.type = engine::renderer::LightType::Sphere;
             light_component.size = 0.01f; // 1 cm radius because it feels fine
 
         } else {

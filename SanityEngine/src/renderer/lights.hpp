@@ -6,15 +6,13 @@
 #include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
-    constexpr Uint32 MAX_NUM_LIGHTS = 32;
-
-    enum class LightType { directional = 0, sphere = 1 };
+    enum class LightType { Directional = 0, Sphere = 1 };
 
     /*!
      * @brief Struct for a light on the GPU
      */
     struct GpuLight {
-        LightType type{LightType::directional};
+        LightType type{LightType::Directional};
 
         /*!
          * \brief HDR color of this light

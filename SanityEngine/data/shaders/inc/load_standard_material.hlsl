@@ -31,7 +31,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMa
     SurfaceInfo surface;
     surface.location = vertex.location;
 
-    if(material.base_color_texture_idx != INVALID_RESOURCE_HANDLE) {
+    if(material.base_color_texture_idx != 0 && material.base_color_texture_idx != INVALID_RESOURCE_HANDLE) {
         Texture2D albedo_texture = textures[material.base_color_texture_idx];
         surface.base_color = albedo_texture.Sample(bilinear_sampler, vertex.texcoord);
         surface.base_color.rgb = pow(surface.base_color.rgb, 1.0 / 2.2);
@@ -48,7 +48,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMa
     //     discard;
     // }
 
-    if(material.normal_texture_idx != INVALID_RESOURCE_HANDLE) {
+    if(material.normal_texture_idx != 0 && material.normal_texture_idx != INVALID_RESOURCE_HANDLE) {
         Texture2D normal_texture = textures[material.normal_texture_idx];
         surface.normal = normal_texture.Sample(bilinear_sampler, vertex.texcoord).xyz * 2.0 - 1.0;
         surface.normal.y *= -1; // Convert from right-handed normalmaps to left-handed normals
@@ -64,7 +64,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMa
         surface.normal = vertex.normal;
     }
         
-    if(material.metallic_roughness_texture_idx != INVALID_RESOURCE_HANDLE) {
+    if(material.metallic_roughness_texture_idx != 0 && material.metallic_roughness_texture_idx != INVALID_RESOURCE_HANDLE) {
         Texture2D metallic_roughness_texture = textures[material.metallic_roughness_texture_idx];
         const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, vertex.texcoord);
         surface.metalness = metallic_roughness.b;
@@ -75,7 +75,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMa
         surface.roughness = material.metallic_roughness_value.g * material.metallic_roughness_value.g;
     }
 
-    if(material.emission_texture_idx != INVALID_RESOURCE_HANDLE) {
+    if(material.emission_texture_idx != 0 && material.emission_texture_idx != INVALID_RESOURCE_HANDLE) {
         Texture2D emission_texture = textures[material.emission_texture_idx];
         surface.emission = emission_texture.Sample(bilinear_sampler, vertex.texcoord).rgb;
 
