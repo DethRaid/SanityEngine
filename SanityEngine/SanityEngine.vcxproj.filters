@@ -206,7 +206,7 @@
     <ClInclude Include="src\renderer\renderer.hpp">
       <Filter>src\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpass.hpp">
+    <ClInclude Include="src\renderer\render_pass.hpp">
       <Filter>src\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\debugging\pix.hpp">
@@ -572,7 +572,7 @@
     <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpass.cpp">
+    <ClCompile Include="src\renderer\render_pass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\Window.cpp">

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/renderpass.hpp"
+#include "renderer/render_pass.hpp"
 
 namespace sanity::engine::renderer {
     /*!

@@ -30,12 +30,12 @@ namespace sanity::engine::renderer {
 
         memcpy(postprocessing_material_buffer_handle->mapped_ptr, &material, sizeof(PostprocessingMaterial));
 
-        add_resource_usage(scene_output_image_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(scene_output_image_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
         logger->verbose("Initialized backbuffer output pass");
     }
 
-    void PostprocessingPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+    void PostprocessingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         if(!output_texture_handle.is_valid()) {
             return;
         }
@@ -88,10 +88,10 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         if(output_texture_handle.is_valid()) {
-            remove_resource_usage(output_texture_handle);
+            clear_resource_usage(output_texture_handle);
         }
 
-        add_resource_usage(new_output_texture_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        set_resource_usage(new_output_texture_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
         output_texture_handle = new_output_texture_handle;
         const auto& output_texture = renderer->get_texture(output_texture_handle);

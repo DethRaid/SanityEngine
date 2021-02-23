@@ -56,9 +56,9 @@ namespace sanity::engine::renderer {
 
         create_framebuffer(render_resolution);
 
-        add_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        add_resource_usage(object_id_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        add_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        set_resource_usage(color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        set_resource_usage(object_id_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        set_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     ObjectsPass::~ObjectsPass() {
@@ -68,7 +68,7 @@ namespace sanity::engine::renderer {
         auto& device = renderer->get_render_backend();
     }
 
-    void ObjectsPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void ObjectsPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "ObjectsPass::render");

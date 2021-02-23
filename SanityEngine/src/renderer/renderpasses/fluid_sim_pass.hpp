@@ -1,10 +1,9 @@
 #pragma once
 
-#include "renderer/renderpass.hpp"
-#include "renderer/hlsl/fluid_sim_data.hpp"
+#include "renderer/hlsl/fluid_sim.hpp"
+#include "renderer/render_pass.hpp"
 #include "renderer/rhi/compute_pipeline_state.hpp"
 #include "renderer/rhi/render_backend.hpp"
-#include "rx/core/ptr.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -17,15 +16,18 @@ namespace sanity::engine::renderer {
     public:
         explicit FluidSimPass(Renderer& renderer_in);
 
-        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+    	void collect_work(entt::registry& registry, Uint32 frame_idx) override;
+
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
     private:
         Renderer* renderer{nullptr};
 
-    	Rx::Vector<FluidSimData> all_fluid_sim_data;
-        Rx::Vector<BufferHandle> fluid_sim_data_buffers;
-
         ComPtr<ID3D12PipelineState> fluid_sim_pipeline;
         ComPtr<ID3D12CommandSignature> fluid_sim_command_signature;
+
+    	Rx::Vector<FluidSimDispatch> fluid_sim_dispatches;
+
+    	Rx::Vector<BufferHandle> fluid_sim_dispatch_command_buffers;
     };
 } // namespace sanity::engine::renderer

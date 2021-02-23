@@ -53,7 +53,7 @@ namespace sanity::engine::renderer {
 
     void DearImGuiRenderPass::set_background_color(const Vec4f& color) { background_color = color; }
 
-    void DearImGuiRenderPass::render(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+    void DearImGuiRenderPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
 
         ImDrawData* draw_data = ImGui::GetDrawData();

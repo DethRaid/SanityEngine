@@ -3,7 +3,7 @@
 #include "glm/fwd.hpp"
 #include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
-#include "renderer/renderpass.hpp"
+#include "renderer/render_pass.hpp"
 #include "renderer/rhi/descriptor_allocator.hpp"
 #include "renderer/rhi/framebuffer.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
@@ -24,7 +24,7 @@ namespace sanity::engine::renderer {
          */
         explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ObjectsPass& forward_pass);
 
-        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
         [[nodiscard]] TextureHandle get_output_texture() const;
 

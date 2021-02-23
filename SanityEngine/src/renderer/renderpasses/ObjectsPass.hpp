@@ -5,7 +5,7 @@
 #include "glm/vec2.hpp"
 #include "renderer/debugging/pix.hpp"
 #include "renderer/handles.hpp"
-#include "renderer/renderpass.hpp"
+#include "renderer/render_pass.hpp"
 #include "renderer/rhi/descriptor_allocator.hpp"
 #include "renderer/rhi/framebuffer.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
@@ -23,7 +23,7 @@ namespace sanity::engine::renderer {
         ~ObjectsPass() override;
 
 #pragma region RenderPass
-        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 #pragma endregion
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;

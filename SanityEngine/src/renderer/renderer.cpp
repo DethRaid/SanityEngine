@@ -246,12 +246,14 @@ namespace sanity::engine::renderer {
             TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
             PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
+            render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->collect_work(registry, frame_idx); });
+
             for(Uint32 i = 0; i < render_passes.size(); i++) {
                 Rx::Ptr<RenderPass>& render_pass = render_passes[i];
 
                 issue_pre_pass_barriers(command_list.Get(), i, render_pass);
 
-                render_pass->render(command_list.Get(), registry, frame_idx);
+                render_pass->record_work(command_list.Get(), registry, frame_idx);
 
                 issue_post_pass_barriers(command_list.Get(), i, render_pass);
             }
@@ -457,8 +459,7 @@ namespace sanity::engine::renderer {
                                                                                             .width = create_info.size.x,
                                                                                             .height = create_info.size.y,
                                                                                             .depth = create_info.size.z};
-        new_volume.density_temperature_reaction_phi_texture_handle = create_texture(density_temperature_reaction_phi_texture_create_info)
-                                                                         .index;
+        new_volume.texture_1_handle = create_texture(density_temperature_reaction_phi_texture_create_info);
 
         const auto velocity_pressure_texture_create_info = TextureCreateInfo{.name = create_info.name,
                                                                              .usage = TextureUsage::UnorderedAccess,
@@ -466,7 +467,7 @@ namespace sanity::engine::renderer {
                                                                              .width = create_info.size.x,
                                                                              .height = create_info.size.y,
                                                                              .depth = create_info.size.z};
-        new_volume.velocity_pressure_texture_handle = create_texture(velocity_pressure_texture_create_info).index;
+        new_volume.texture_2_handle = create_texture(velocity_pressure_texture_create_info);
 
         new_volume.size = create_info.size;
 
@@ -545,6 +546,8 @@ namespace sanity::engine::renderer {
     BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
 
     const RaytracingScene& Renderer::get_raytracing_scene() const { return raytracing_scene; }
+
+    BufferHandle Renderer::get_fluid_volumes_buffer(const Uint32 frame_idx) const { return fluid_volume_buffers[frame_idx]; }
 
     RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
@@ -783,18 +786,18 @@ namespace sanity::engine::renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(4);
         render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        forward_pass_handle = RenderpassHandle<ObjectsPass>{&render_passes, 0};
+        forward_pass_handle = RenderpassHandle<ObjectsPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(
             Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ObjectsPass&>(*render_passes[0])));
-        denoiser_pass_handle = RenderpassHandle<DenoiserPass>{&render_passes, 1};
+        denoiser_pass_handle = RenderpassHandle<DenoiserPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(
             Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
-        postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>{&render_passes, 2};
+        postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
-        imgui_pass_handle = RenderpassHandle<DearImGuiRenderPass>{&render_passes, 3};
+        imgui_pass_handle = RenderpassHandle<DearImGuiRenderPass>::make_from_last_element(render_passes);
     }
 
     void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }
@@ -831,9 +834,16 @@ namespace sanity::engine::renderer {
     void Renderer::upload_fluid_volume_data(const Uint32 frame_idx) {
         ZoneScoped;
 
-        const auto buffer_handle = fluid_volume_buffers[frame_idx];
-        const auto num_volumes_to_copy = Rx::Algorithm::min(MAX_NUM_FLUID_VOLUMES, static_cast<UINT>(all_fluid_volumes.size()));
-        memcpy(buffer_handle->mapped_ptr, all_fluid_volumes.data(), num_volumes_to_copy * sizeof(FluidVolume));
+        const auto& buffer_handle = fluid_volume_buffers[frame_idx];
+        auto* fluid_volume_write_ptr = static_cast<GpuFluidVolume*>(buffer_handle->mapped_ptr);
+
+        all_fluid_volumes.each_fwd([&](const FluidVolume& volume) {
+            fluid_volume_write_ptr->texture_1_idx = volume.texture_1_handle.index;
+            fluid_volume_write_ptr->texture_2_idx = volume.texture_2_handle.index;
+            fluid_volume_write_ptr->size = volume.size;
+
+            fluid_volume_write_ptr++;
+        });
     }
 
     void Renderer::upload_material_data(const Uint32 frame_idx) {

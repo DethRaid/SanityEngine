@@ -26,7 +26,24 @@ namespace sanity::engine {
         public:
             virtual ~RenderPass() = default;
 
-            virtual void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
+            /**
+             * @brief Examines the state of the world and makes note of any GPU operations that are needed
+             *
+             * Think of it as recording a high-level command list of GPU work. Except most of Sanity's renderer doesn't use the two-pass
+             * system and instead does everything in `record_work`. It's on the TODO list, I promise.......
+             *
+             * @note You can and should make calls to `set_resource_usage` in this method
+             */
+            virtual void collect_work(entt::registry& registry, Uint32 frame_idx);
+
+            /**
+             * @brief Records this pass's work into a GPU command list
+             * 
+             * @param commands Command list to record work to
+             * @param registry EnTT registry for the world. Hopefully eventually only collect_work will need this
+             * @param frame_idx Index of the GPU frame to record work for
+            */
+            virtual void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
 
             [[nodiscard]] const Rx::Map<TextureHandle, Rx::Optional<BeginEndState>>& get_texture_states() const;
 
@@ -37,7 +54,7 @@ namespace sanity::engine {
              * \param handle A handle to the texture to mark the usage of
              * \param states The states of this resource during this renderpass
              */
-            void add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES states);
+            void set_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES states);
 
             /*!
              * \brief Describes how this renderpass will use a resource
@@ -49,14 +66,14 @@ namespace sanity::engine {
              * \param begin_states The states that the resource must be in when this render pass begins
              * \param end_states The states that this resource will be in when this render pass ends
              */
-            void add_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states);
+            void set_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states);
 
             /**
              * @brief Removes the usage information for this resources
              *
              * @param handle A handle to the texture to remove the usage information for
              */
-            void remove_resource_usage(TextureHandle handle);
+            void clear_resource_usage(TextureHandle handle);
 
         private:
             Rx::Map<TextureHandle, Rx::Optional<BeginEndState>> texture_states;

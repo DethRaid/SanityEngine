@@ -33,11 +33,11 @@ namespace sanity::engine::renderer {
 
         create_material(forward_pass);
 
-        add_resource_usage(accumulation_target_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-        add_resource_usage(denoised_color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        set_resource_usage(accumulation_target_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+        set_resource_usage(denoised_color_target_handle, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
     }
 
-    void DenoiserPass::render(ID3D12GraphicsCommandList4* commands,
+    void DenoiserPass::record_work(ID3D12GraphicsCommandList4* commands,
                               entt::registry& /* registry */,
                               Uint32 /* frame_idx */) {
         ZoneScoped;

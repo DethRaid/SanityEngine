@@ -2,6 +2,7 @@
 
 #if __cplusplus
 #include "core/types.hpp"
+#include "glm/glm.hpp"
 
 // ReSharper disable CppInconsistentNaming
 

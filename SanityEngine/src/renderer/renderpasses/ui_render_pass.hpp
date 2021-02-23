@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "renderer/renderpass.hpp"
+#include "renderer/render_pass.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "rx/core/ptr.h"
 
@@ -19,7 +19,7 @@ namespace sanity::engine::renderer {
 
         void set_background_color(const Vec4f& color);
 
-        void render(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
     private:
         Renderer* renderer;

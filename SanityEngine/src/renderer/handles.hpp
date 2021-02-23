@@ -13,8 +13,8 @@ namespace sanity::engine::renderer {
         Rx::Vector<ResourceType>* storage{nullptr};
 
         GpuResourceHandle() = default;
-
-        GpuResourceHandle(Uint32 index_in, Rx::Vector<ResourceType>* storage_in);
+        
+        explicit GpuResourceHandle(Uint32 index_in, Rx::Vector<ResourceType>* storage_in);
 
         GpuResourceHandle(const GpuResourceHandle<ResourceType>& other) = default;
         GpuResourceHandle& operator=(const GpuResourceHandle<ResourceType>& other) = default;

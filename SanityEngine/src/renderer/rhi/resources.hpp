@@ -110,7 +110,7 @@ namespace sanity::engine::renderer {
     struct FluidVolumeCreateInfo {
         Rx::String name;
 
-        glm::uint3 size;
+        glm::uvec3 size;
 
         // TODO: Information about what kind of fluid
     };

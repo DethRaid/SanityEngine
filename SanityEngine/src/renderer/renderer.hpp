@@ -6,12 +6,13 @@
 #include "core/Prelude.hpp"
 #include "core/VectorHandle.hpp"
 #include "core/async/synchronized_resource.hpp"
+#include "hlsl/shared_structs.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderpasses/ObjectsPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "renderer/hlsl/standard_material.hpp"
 #include "rhi/mesh_data_store.hpp"
 #include "rhi/raytracing_structs.hpp"
 #include "rhi/render_backend.hpp"
@@ -20,7 +21,6 @@
 #include "rx/core/vector.h"
 #include "settings.hpp"
 #include "single_pass_downsampler.hpp"
-#include "hlsl/shared_structs.hpp"
 
 namespace std {
     namespace filesystem {
@@ -40,6 +40,11 @@ namespace sanity::engine::renderer {
     template <typename RenderPassType>
     class RenderpassHandle : public VectorHandle<Rx::Ptr<RenderPass>> {
     public:
+        /**
+         * @brief Makes a handle to the last render pass in the container
+         */
+        [[nodiscard]] static RenderpassHandle<RenderPassType> make_from_last_element(Rx::Vector<Rx::Ptr<RenderPass>>& container);
+
         explicit RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, Size index_in);
 
         RenderPassType* get();
@@ -72,7 +77,7 @@ namespace sanity::engine::renderer {
 
         Uint32 start_vertex_location{};
     };
-    
+
     /*!
      * \brief Renderer class that uses a clustered forward lighting algorithm
      *
@@ -172,10 +177,12 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_normal_texture() const;
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
-    	
+
         [[nodiscard]] BufferHandle get_frame_constants_buffer(Uint32 frame_idx) const;
-    	
+
         [[nodiscard]] const RaytracingScene& get_raytracing_scene() const;
+
+        [[nodiscard]] BufferHandle get_fluid_volumes_buffer(Uint32 frame_idx) const;
 
     private:
         std::chrono::high_resolution_clock::time_point start_time;
@@ -237,7 +244,7 @@ namespace sanity::engine::renderer {
         void allocate_resource_descriptors();
 
         void create_per_frame_buffers();
-            	
+
         void create_fluid_volume_buffers();
 
         void create_material_data_buffers();
@@ -258,7 +265,7 @@ namespace sanity::engine::renderer {
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
 
         void upload_fluid_volume_data(Uint32 frame_idx);
-    	
+
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
@@ -300,6 +307,11 @@ namespace sanity::engine::renderer {
         void update_frame_constants(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
+
+    template <typename RenderPassType>
+    RenderpassHandle<RenderPassType> RenderpassHandle<RenderPassType>::make_from_last_element(Rx::Vector<Rx::Ptr<RenderPass>>& container) {
+        return RenderpassHandle<RenderPassType>{&container, container.size() - 1};
+    }
 
     template <typename RenderPassType>
     RenderpassHandle<RenderPassType>::RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, const Size index_in)
