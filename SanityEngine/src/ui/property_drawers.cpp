@@ -45,7 +45,7 @@ namespace sanity::engine::ui {
         ImGui::Text("%s", label.data());
 
         ImGui::SetCursorPosX(150);
-        ImGui::PushItemWidth(50);
+        ImGui::PushItemWidth(75);
         ImGui::SameLine();
         ImGui::InputInt("x", reinterpret_cast<int*>(&vec.x));
         ImGui::SameLine();
@@ -114,9 +114,9 @@ namespace sanity::engine::ui {
     }
 
     void draw_property(const Rx::String& label, renderer::LightType& type) {
-        const static std::vector<const char*> TYPE_NAMES = {"Directional", "Sphere"};
-
-        ImGui::ListBox(label.data(), reinterpret_cast<int*>(&type), TYPE_NAMES.data(), static_cast<int>(TYPE_NAMES.size()));
+        const static Rx::Vector<Rx::String> TYPE_NAMES = Rx::Array{"Directional", "Sphere"};
+        
+        draw_drop_down_selector(label, TYPE_NAMES, reinterpret_cast<Uint32&>(type));
     }
 
     void draw_property(const Rx::String& label, renderer::GpuLight& light) {
@@ -126,5 +126,21 @@ namespace sanity::engine::ui {
         draw_property("Color", light.color);
         draw_property("Direction", light.direction_or_location);
         draw_property("Angular size", light.size);
+    }
+
+    void draw_drop_down_selector(const Rx::String& label, const Rx::Vector<Rx::String>& list_items, Uint32& selected_item) {
+        if(ImGui::BeginCombo(label.data(), list_items[selected_item].data())) {
+            for(auto i = 0u; i < list_items.size(); i++) {
+                const auto is_selected = selected_item == i;
+                if(ImGui::Selectable(list_items[i].data(), is_selected)) {
+                    selected_item = i;
+                }
+                if(is_selected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
     }
 } // namespace sanity::engine::ui

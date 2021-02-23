@@ -1,5 +1,7 @@
 #include "EntityEditorWindow.hpp"
 
+#include <ui/property_drawers.hpp>
+
 #include "SanityEditor.hpp"
 #include "actor/actor.hpp"
 #include "core/components.hpp"
@@ -33,25 +35,35 @@ namespace sanity::editor::ui {
     }
 
     void EntityEditorWindow::draw_contents() {
-        auto& sanity_entity = registry->get<engine::Actor>(entity);
+        auto& actor = registry->get<engine::Actor>(entity);
 
-        ImGui::Text("%s", sanity_entity.name.data());
+        ImGui::Text("%s", actor.name.data());
 
-        if(ImGui::Button("Add Component")) {
-            should_show_component_type_list = true;
-            const auto& pos = ImGui::GetMousePos();
-            component_type_list_location.x = pos.x;
-            component_type_list_location.y = pos.y;
+        switch(state) {
+            case State::Default:
+                if(ImGui::Button("Add Component")) {
+                    state = State::AddingComponent;
+                }
+                break;
+
+            case State::AddingComponent: {
+                draw_component_type_list(actor);
+
+                if(ImGui::Button("Add")) {
+                    actor.add_component(selected_component_type_guid);
+                    state = State::Default;
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")) {
+                    state = State::Default;
+                }
+            } break;
         }
 
-        sanity_entity.component_class_ids.each_fwd([&](const GUID class_id) {
+        actor.component_class_ids.each_fwd([&](const GUID class_id) {
             ImGui::Separator();
             draw_component(class_id, entity, *registry);
         });
-
-        if(should_show_component_type_list) {
-            draw_component_type_list(sanity_entity);
-        }
     }
 
 #define MAYBE_ADD_COMPONENT(Type)                                                                                                          \
@@ -65,20 +77,26 @@ namespace sanity::editor::ui {
         // At the time of writing, the type reflector only has information about components. No filtering is necessary
         const auto& type_names = type_reflection.get_type_names();
 
+        // Names of components that are not already added to this actor
+        auto available_component_names = Rx::Vector<Rx::String>();
+        auto guids = Rx::Vector<GUID>();
+
         // TODO: Sort the component names intelligently
         type_names.each_pair([&](const GUID& guid, const Rx::String& component_type_name) {
             if(actor.has_component(guid)) {
                 return RX_ITERATION_CONTINUE;
             }
-        	
-            if(ImGui::Button(component_type_name.data())) {
-                actor.add_component(guid);
 
-                return RX_ITERATION_STOP;
-            }
+            available_component_names.push_back(component_type_name.data());
+            guids.push_back(guid);
 
             return RX_ITERATION_CONTINUE;
         });
+
+        ImGui::Separator();
+
+        draw_drop_down_selector("Component Type", available_component_names, cur_component_type_idx);
+        selected_component_type_guid = guids[cur_component_type_idx];
     }
 
 #define DRAW_COMPONENT_EDITOR(Type)                                                                                                        \

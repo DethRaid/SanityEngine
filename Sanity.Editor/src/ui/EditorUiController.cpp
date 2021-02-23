@@ -1,7 +1,5 @@
 #include "EditorUiController.hpp"
 
-#include "actor/actor.hpp"
-#include "entity/entity_operations.hpp"
 #include "sanity_engine.hpp"
 #include "../../scene_viewport.hpp"
 #include "ui/Window.hpp"
@@ -10,7 +8,6 @@
 #include "windows/content_browser.hpp"
 #include "windows/mesh_import_window.hpp"
 #include "windows/scene_hierarchy.hpp"
-#include "world/world.hpp"
 
 namespace sanity::editor::ui {
     EditorUiController::EditorUiController() {
@@ -37,12 +34,12 @@ namespace sanity::editor::ui {
         return entity_editor_window;
     }
 
-    void EditorUiController::create_and_edit_new_entity() const {
+    void EditorUiController::create_and_edit_new_entity(const engine::ActorType actor_type) const {
         auto& registry = engine::g_engine->get_entity_registry();
 
-        const auto& new_entity = engine::create_actor(registry, "New Entity");
-
-        show_edit_entity_window(new_entity.entity, registry);
+        auto& new_actor = create_actor(registry, "New Actor", actor_type);
+        
+        show_edit_entity_window(new_actor.entity, registry);
     }
 
     void EditorUiController::set_content_browser_directory(const std::filesystem::path& content_directory) const {

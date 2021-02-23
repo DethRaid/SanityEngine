@@ -18,12 +18,20 @@ namespace sanity::editor::ui {
         void draw_contents() override;
 
     private:
+        enum class State {
+            Default,
+            AddingComponent,
+        };
+
         entt::entity entity;
 
         entt::registry* registry{nullptr};
 
-        bool should_show_component_type_list{false};
-        glm::uvec2 component_type_list_location{};
+        Uint32 cur_component_type_idx{0};
+
+        GUID selected_component_type_guid{};
+
+        State state{State::Default};
 
         void draw_component_type_list(engine::Actor& actor);
     };

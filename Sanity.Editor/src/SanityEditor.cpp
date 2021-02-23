@@ -118,8 +118,6 @@ namespace sanity::editor {
     void SanityEditor::set_selected_entity(const Rx::Optional<entt::entity>& entity) {
         selected_entity = entity;
 
-    	
-
         on_selected_entity_change_callbacks.each_fwd([&](const Rx::Function<void(entt::entity)>& callback) { callback(*selected_entity); });
     }
 

@@ -2,6 +2,7 @@
 
 #include "EditorUiController.hpp"
 #include "SanityEditor.hpp"
+#include "actor/actor.hpp"
 #include "imgui/imgui.h"
 
 namespace sanity::editor::ui {
@@ -38,10 +39,9 @@ namespace sanity::editor::ui {
             ui_controller->set_content_browser_directory(content_dir);
         }
 
-    	if(ImGui::MenuItem("Scene Hierarchy"))
-    	{
+        if(ImGui::MenuItem("Scene Hierarchy")) {
             ui_controller->show_scene_hierarchy_window();
-    	}
+        }
     }
 
     void ApplicationGui::draw_world_menu() const {
@@ -53,6 +53,10 @@ namespace sanity::editor::ui {
     void ApplicationGui::draw_entity_menu() const {
         if(ImGui::MenuItem("New entity")) {
             ui_controller->create_and_edit_new_entity();
+        }
+
+        if(ImGui::MenuItem("New fluid volume")) {
+            ui_controller->create_and_edit_new_entity(engine::ActorType::FluidVolume);
         }
     }
 } // namespace sanity::editor::ui

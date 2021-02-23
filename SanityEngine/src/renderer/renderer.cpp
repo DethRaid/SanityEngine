@@ -453,20 +453,23 @@ namespace sanity::engine::renderer {
 
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
         FluidVolume new_volume;
+
+    	const auto texture_size = glm::uvec3(glm::vec3(create_info.size) * create_info.voxels_per_meter);
+    	
         const auto density_temperature_reaction_phi_texture_create_info = TextureCreateInfo{.name = create_info.name,
                                                                                             .usage = TextureUsage::UnorderedAccess,
                                                                                             .format = TextureFormat::Rgba32F,
-                                                                                            .width = create_info.size.x,
-                                                                                            .height = create_info.size.y,
-                                                                                            .depth = create_info.size.z};
+                                                                                            .width = texture_size.x,
+                                                                                            .height = texture_size.y,
+                                                                                            .depth = texture_size.z};
         new_volume.texture_1_handle = create_texture(density_temperature_reaction_phi_texture_create_info);
 
         const auto velocity_pressure_texture_create_info = TextureCreateInfo{.name = create_info.name,
                                                                              .usage = TextureUsage::UnorderedAccess,
                                                                              .format = TextureFormat::Rg32F,
-                                                                             .width = create_info.size.x,
-                                                                             .height = create_info.size.y,
-                                                                             .depth = create_info.size.z};
+                                                                             .width = texture_size.x,
+                                                                             .height = texture_size.y,
+                                                                             .depth = texture_size.z};
         new_volume.texture_2_handle = create_texture(velocity_pressure_texture_create_info);
 
         new_volume.size = create_info.size;

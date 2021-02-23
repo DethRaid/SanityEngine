@@ -44,6 +44,8 @@ namespace sanity::engine::ui {
 
     void draw_property(const Rx::String& label, renderer::GpuLight& light);
 
+	void draw_drop_down_selector(const Rx::String& label, const Rx::Vector<Rx::String>& list_items, Uint32& selected_item);
+
     template <typename KeyType, typename ValueType>
     void draw_property(const Rx::String& label, Rx::Map<KeyType, ValueType>& map);
 

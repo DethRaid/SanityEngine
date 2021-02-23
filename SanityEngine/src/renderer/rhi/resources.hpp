@@ -112,6 +112,8 @@ namespace sanity::engine::renderer {
 
         glm::uvec3 size;
 
+    	float voxels_per_meter{4};
+
         // TODO: Information about what kind of fluid
     };
 

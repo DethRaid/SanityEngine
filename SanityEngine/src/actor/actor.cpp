@@ -3,6 +3,7 @@
 #include "core/components.hpp"
 #include "renderer/render_components.hpp"
 #include "rx/core/log.h"
+#include "sanity_engine.hpp"
 #include "ui/property_drawers.hpp"
 
 namespace sanity::engine {
@@ -41,6 +42,37 @@ namespace sanity::engine {
         return transform_component.transform;
     }
 
+    void Actor::add_component(GUID type_id) {
+        if(type_id == __uuidof(TransformComponent)) {
+            add_component<TransformComponent>();
+
+        } else if(type_id == __uuidof(renderer::StandardRenderableComponent)) {
+            add_component<renderer::StandardRenderableComponent>();
+
+        } else if(type_id == __uuidof(renderer::PostProcessingPassComponent)) {
+            add_component<renderer::PostProcessingPassComponent>();
+
+        } else if(type_id == __uuidof(renderer::RaytracingObjectComponent)) {
+            add_component<renderer::RaytracingObjectComponent>();
+
+        } else if(type_id == __uuidof(renderer::CameraComponent)) {
+            add_component<renderer::CameraComponent>();
+
+        } else if(type_id == __uuidof(renderer::LightComponent)) {
+            add_component<renderer::LightComponent>();
+
+        } else if(type_id == __uuidof(renderer::SkyComponent)) {
+            add_component<renderer::SkyComponent>();
+
+        } else if(type_id == __uuidof(renderer::FluidVolumeComponent)) {
+            add_component<renderer::FluidVolumeComponent>();
+
+        } else {
+            logger->error("%s: Unknown component type %s, unable to add", __func__, type_id);
+            DebugBreak();
+        }
+    }
+
     bool Actor::has_component(const GUID guid) const {
         if(guid == __uuidof(TransformComponent)) {
             return has_component<TransformComponent>();
@@ -67,22 +99,32 @@ namespace sanity::engine {
             return has_component<renderer::FluidVolumeComponent>();
         }
 
-        logger->error("Unknown component type %s", guid);
+        // Ignore some components that aren't user-facing
+        // TODO: A smart way to disambiguate user-facing components from internal ones
 
         return false;
     }
 
-    Actor& create_actor(entt::registry& registry, const Rx::String& name) {
+    Actor& create_actor(entt::registry& registry, const Rx::String& name, const ActorType actor_type) {
         const auto entity = registry.create();
 
-        auto& actor_component = registry.emplace<Actor>(entity);
-        actor_component.registry = &registry;
-        actor_component.entity = entity;
-        actor_component.name = name;
+        auto& actor = registry.emplace<Actor>(entity);
+        actor.registry = &registry;
+        actor.entity = entity;
+        actor.name = name;
 
-        actor_component.add_component<TransformComponent>();
+        actor.add_component<TransformComponent>();
 
-        return actor_component;
+        if(actor_type == ActorType::FluidVolume) {
+            auto& volume = actor.add_component<renderer::FluidVolumeComponent>();
+
+            auto& renderer = g_engine->get_renderer();
+
+            const auto fluid_info = renderer::FluidVolumeCreateInfo{.name = name, .size = {10, 10, 10}};
+            volume.volume = renderer.create_fluid_volume(fluid_info);
+        }
+
+        return actor;
     }
 
     void draw_component_properties(Actor& entity) {

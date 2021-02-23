@@ -12,6 +12,12 @@ namespace Rx {
 
 namespace sanity::engine {
     struct Transform;
+
+    enum class ActorType {
+        Default,
+        FluidVolume,
+    };
+
     /*!
      * \brief Component type for any entity within SanityEngine
      *
@@ -55,6 +61,13 @@ namespace sanity::engine {
         template <typename ComponentType, typename... Args>
         ComponentType& add_component(Args&&... args);
 
+        /**
+         * @brief Adds a default instance of a component to this actor
+         *
+         * @param type_id ID of the type of the component
+         */
+        void add_component(GUID type_id);
+
         template <typename ComponentType>
         [[nodiscard]] bool has_component() const;
 
@@ -80,7 +93,7 @@ namespace sanity::engine {
      * @note Do not save the reference that this function returns. Instead, save the member `Actor::entity`. The returned reference will
      * eventually become invalid as actors get created and destroyed, but the entity ID is stable
      */
-    [[nodiscard]] Actor& create_actor(entt::registry& registry, const Rx::String& name = "New Actor");
+    [[nodiscard]] Actor& create_actor(entt::registry& registry, const Rx::String& name = "New Actor", ActorType actor_type = ActorType::Default);
 
     void draw_component_properties(Actor& entity);
 
