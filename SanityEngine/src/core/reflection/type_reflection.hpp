@@ -13,7 +13,9 @@ namespace sanity::engine {
         template <typename Type>
         [[nodiscard]] Rx::String get_name_of_type() const;
 
-    	[[nodiscard]] Rx::String get_name_of_type(GUID type_id) const;
+        [[nodiscard]] Rx::String get_name_of_type(GUID type_id) const;
+
+        [[nodiscard]] const Rx::Map<GUID, Rx::String>& get_type_names() const;
 
     private:
         Rx::Map<GUID, Rx::String> type_names;
@@ -28,7 +30,7 @@ namespace sanity::engine {
     template <typename Type>
     Rx::String TypeReflection::get_name_of_type() const {
         const auto type_id = __uuidof(Type);
-    	
+
         return get_name_of_type(type_id);
     }
 } // namespace sanity::engine

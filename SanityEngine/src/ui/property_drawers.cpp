@@ -39,6 +39,24 @@ namespace sanity::engine::ui {
         ImGui::PopID();
     }
 
+    void draw_property(const Rx::String& label, glm::uvec3& vec) {
+        ImGui::PushID(label.data());
+
+        ImGui::Text("%s", label.data());
+
+        ImGui::SetCursorPosX(150);
+        ImGui::PushItemWidth(50);
+        ImGui::SameLine();
+        ImGui::InputInt("x", reinterpret_cast<int*>(&vec.x));
+        ImGui::SameLine();
+        ImGui::InputInt("y", reinterpret_cast<int*>(&vec.y));
+        ImGui::SameLine();
+        ImGui::InputInt("z", reinterpret_cast<int*>(&vec.z));
+        ImGui::PopItemWidth();
+
+        ImGui::PopID();
+    }
+
     void draw_property(const Rx::String& label, glm::quat& quat) {
         auto euler = eulerAngles(quat);
 
@@ -82,7 +100,7 @@ namespace sanity::engine::ui {
 
     void draw_property(const Rx::String& label, renderer::Mesh& mesh) {
         ImGui::Text("%s", label.data());
-    	
+
         ImGui::LabelText("First vertex", "%d", mesh.first_vertex);
         ImGui::LabelText("Num vertices", "%d", mesh.num_vertices);
         ImGui::LabelText("First index", "%d", mesh.first_index);
@@ -91,7 +109,7 @@ namespace sanity::engine::ui {
 
     void draw_property(const Rx::String& label, renderer::StandardMaterialHandle& handle) {
         ImGui::Text("%s", label.data());
-    	
+
         ImGui::LabelText("Handle", "%#010x", handle.index);
     }
 
@@ -103,7 +121,7 @@ namespace sanity::engine::ui {
 
     void draw_property(const Rx::String& label, renderer::GpuLight& light) {
         ImGui::Text("%s", label.data());
-    	
+
         draw_property("Type", light.type);
         draw_property("Color", light.color);
         draw_property("Direction", light.direction_or_location);

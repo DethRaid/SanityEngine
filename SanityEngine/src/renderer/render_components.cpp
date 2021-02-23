@@ -40,4 +40,9 @@ namespace sanity::engine::renderer {
     void draw_component_properties(SkyComponent& sky) {
         // Fill in when the component has controls to draw
     }
+
+    void draw_component_properties(FluidVolumeComponent& volume) {
+        // TODO: Set the resolution of the volume and other fluid properties, update the GPU representation when the data changes
+        ui::draw_property("Size", volume.volume->size);
+    }
 } // namespace sanity::engine::renderer

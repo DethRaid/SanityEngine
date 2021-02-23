@@ -11,8 +11,8 @@ namespace Rx {
 }
 
 namespace sanity::engine {
-	struct Transform;
-	/*!
+    struct Transform;
+    /*!
      * \brief Component type for any entity within SanityEngine
      *
      * Entities have a system for sending and receiving events. Other components may subscribe to that system and react to events
@@ -20,7 +20,7 @@ namespace sanity::engine {
     struct __declspec(uuid("{6A611962-D937-4FC8-AF7D-7FFE4CD43749}")) Actor {
         Rx::String name;
 
-    	GUID id;
+        GUID id;
 
         Rx::Map<Rx::String, Int32> tags;
 
@@ -38,7 +38,7 @@ namespace sanity::engine {
 
         void remove_num_tags(const Rx::String& tag, Uint32 num_stacks);
 
-    	[[nodiscard]] Transform& get_transform() const;
+        [[nodiscard]] Transform& get_transform() const;
 
         /*!
          * @brief Creates a component of the specified type in this actor
@@ -55,6 +55,11 @@ namespace sanity::engine {
         template <typename ComponentType, typename... Args>
         ComponentType& add_component(Args&&... args);
 
+        template <typename ComponentType>
+        [[nodiscard]] bool has_component() const;
+
+        [[nodiscard]] bool has_component(GUID guid) const;
+
         /*!
          * @brief Retrieves a reference to one of this actor's components
          *
@@ -62,7 +67,7 @@ namespace sanity::engine {
          * destroyed
          *
          * @tparam ComponentType Type of the component to get
-         * 
+         *
          * @return A reference to the component
          */
         template <typename ComponentType>
@@ -86,6 +91,11 @@ namespace sanity::engine {
         component_class_ids.push_back(_uuidof(ComponentType));
 
         return component;
+    }
+
+    template <typename ComponentType>
+    bool Actor::has_component() const {
+        return registry->has<ComponentType>(entity);
     }
 
     template <typename ComponentType>

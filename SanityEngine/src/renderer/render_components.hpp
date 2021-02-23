@@ -145,4 +145,6 @@ namespace sanity::engine::renderer {
     void draw_component_properties(LightComponent& light);
 
     void draw_component_properties(SkyComponent& sky);
+
+	void draw_component_properties(FluidVolumeComponent& volume);
 } // namespace sanity::engine::renderer

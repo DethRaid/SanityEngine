@@ -1,9 +1,13 @@
 #include "actor.hpp"
 
 #include "core/components.hpp"
+#include "renderer/render_components.hpp"
+#include "rx/core/log.h"
 #include "ui/property_drawers.hpp"
 
 namespace sanity::engine {
+    RX_LOG("Actor", logger);
+
     void Actor::add_tag(const Rx::String& tag) {
         if(auto* num_stacks = tags.find(tag); num_stacks != nullptr) {
             (*num_stacks)++;
@@ -35,6 +39,37 @@ namespace sanity::engine {
     Transform& Actor::get_transform() const {
         auto& transform_component = registry->get<TransformComponent>(entity);
         return transform_component.transform;
+    }
+
+    bool Actor::has_component(const GUID guid) const {
+        if(guid == __uuidof(TransformComponent)) {
+            return has_component<TransformComponent>();
+
+        } else if(guid == __uuidof(renderer::StandardRenderableComponent)) {
+            return has_component<renderer::StandardRenderableComponent>();
+
+        } else if(guid == __uuidof(renderer::PostProcessingPassComponent)) {
+            return has_component<renderer::PostProcessingPassComponent>();
+
+        } else if(guid == __uuidof(renderer::RaytracingObjectComponent)) {
+            return has_component<renderer::RaytracingObjectComponent>();
+
+        } else if(guid == __uuidof(renderer::CameraComponent)) {
+            return has_component<renderer::CameraComponent>();
+
+        } else if(guid == __uuidof(renderer::LightComponent)) {
+            return has_component<renderer::LightComponent>();
+
+        } else if(guid == __uuidof(renderer::SkyComponent)) {
+            return has_component<renderer::SkyComponent>();
+
+        } else if(guid == __uuidof(renderer::FluidVolumeComponent)) {
+            return has_component<renderer::FluidVolumeComponent>();
+        }
+
+        logger->error("Unknown component type %s", guid);
+
+        return false;
     }
 
     Actor& create_actor(entt::registry& registry, const Rx::String& name) {
