@@ -46,7 +46,7 @@ namespace sanity::editor::ui {
         if(scene_output_texture_handle.is_valid()) {
             const auto scene_output_texture_handle_u64 = reinterpret_cast<Uint64>(scene_output_texture);
             const auto scene_output_texture_handle_index = static_cast<Uint32>(scene_output_texture_handle_u64);
-            scene_output_texture_handle = TextureHandle(scene_output_texture_handle_index, scene_output_texture_handle.storage);
+            scene_output_texture_handle = TextureHandle(scene_output_texture_handle_index);
 
             renderer->schedule_texture_destruction(scene_output_texture_handle);
 

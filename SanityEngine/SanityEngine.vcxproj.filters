@@ -230,9 +230,6 @@
     <ClInclude Include="src\renderer\rhi\helpers.hpp">
       <Filter>src\renderer\rhi</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\rhi\mesh_data_store.hpp">
-      <Filter>src\renderer\rhi</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp">
       <Filter>src\renderer\rhi</Filter>
     </ClInclude>
@@ -443,6 +440,9 @@
     </ClInclude>
     <ClInclude Include="src\renderer\ping_pong_texture.hpp" />
     <ClInclude Include="src\renderer\rhi\per_frame_buffer.hpp" />
+    <ClInclude Include="src\renderer\mesh_data_store.hpp">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -479,9 +479,6 @@
       <Filter>src\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\rhi\helpers.cpp">
-      <Filter>src\renderer\rhi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp">
       <Filter>src\renderer\rhi</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\rhi\render_backend.cpp">
@@ -651,6 +648,9 @@
     </ClCompile>
     <ClCompile Include="src\renderer\ping_pong_texture.cpp" />
     <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp" />
+    <ClCompile Include="src\renderer\mesh_data_store.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

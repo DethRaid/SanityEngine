@@ -47,15 +47,31 @@ namespace sanity::engine::renderer {
                 fluid_sim_dispatches.push_back(dispatch);
 
                 const auto& density_textures = fluid_volume.density_texture[frame_idx];
-            	
-            	const auto initial_state = GpuFluidVolumeState{.density_textures = {density_textures}};
+                const auto& temperature_textures = fluid_volume.temperature_texture[frame_idx];
+                const auto& reaction_textures = fluid_volume.reaction_texture[frame_idx];
+                const auto& velocity_textures = fluid_volume.velocity_texture[frame_idx];
+                const auto& pressure_textures = fluid_volume.velocity_texture[frame_idx];
 
+                const auto initial_state = GpuFluidVolumeState{.density_textures = {density_textures[0], density_textures[1]},
+                                                               .temperature_textures = {temperature_textures[0], temperature_textures[1]},
+                                                               .reaction_textures = {reaction_textures[0], reaction_textures[1]},
+                                                               .velocity_textures = {velocity_textures[0], velocity_textures[1]},
+                                                               .pressure_textures = {pressure_textures[0], pressure_textures[1]},
+                                                               .size = fluid_volume.size,
+                                                               .dissipation = {fluid_volume.density_dissipation,
+                                                                               fluid_volume.temperature_dissipation,
+                                                                               1.0,
+                                                                               fluid_volume.velocity_dissipation},
+                                                               .decay = {0.f, 0.f, fluid_volume.reaction_decay, 0.f},
+                                                               .buoyancy = fluid_volume.buoyancy,
+                                                               .weight = fluid_volume.weight};
+                fluid_volume_states.push_back(initial_state);
 
                 set_resource_usage(density_textures[0], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
                 set_resource_usage(density_textures[1], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
             });
 
-        fluid_sim_dispatch_command_buffers.upload_data_to_active_buffer(fluid_sim_dispatches);
+        fluid_sim_dispatch_command_buffers.write(fluid_sim_dispatches);
     }
 
     void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
@@ -157,7 +173,7 @@ namespace sanity::engine::renderer {
         impulse_params_array.set_buffers(impulse_params_buffers);
     }
 
-    void FluidSimPass::set_buffer_indices(ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) const {
+    void FluidSimPass::set_buffer_indices(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) const {
         const auto& frame_constants_buffer = renderer->get_frame_constants_buffer(frame_idx);
         commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                               frame_constants_buffer.index,
@@ -169,119 +185,84 @@ namespace sanity::engine::renderer {
                                               RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
     }
 
-    void FluidSimPass::apply_advection(ID3D12GraphicsCommandList4* commands) {
+    void FluidSimPass::execute_simulation_step(
+        ID3D12GraphicsCommandList* commands,
+        const BufferHandle data_buffer_handle,
+        ID3D12PipelineState* pipeline,
+        const Rx::Function<void(GpuFluidVolumeState&, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers)> synchronize_volume) {
+        commands->SetPipelineState(pipeline);
+
+        commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                              data_buffer_handle.index,
+                                              RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
+
+        const auto& dispatch_buffer_handle = fluid_sim_dispatch_command_buffers.get_active_buffer();
+        const auto& dispatch_buffer = renderer->get_buffer(dispatch_buffer_handle);
+        commands->ExecuteIndirect(fluid_sim_dispatch_signature.Get(),
+                                  static_cast<UINT>(fluid_sim_dispatches.size()),
+                                  dispatch_buffer->resource.Get(),
+                                  0,
+                                  nullptr,
+                                  0);
+
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
+        barriers.reserve(fluid_volume_states.size());
+
+        fluid_volume_states.each_fwd([&](GpuFluidVolumeState& state) { synchronize_volume(state, barriers); });
+
+        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+    }
+
+    void FluidSimPass::apply_advection(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Advection");
 
-        commands->SetPipelineState(advection_pipeline.Get());
-
-        advection_params_array.upload_data_to_active_buffer(fluid_volume_states);
+        advection_params_array.write(fluid_volume_states);
         const auto& data_buffer_handle = advection_params_array.get_active_buffer();
-        commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                              data_buffer_handle.index,
-                                              RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
 
-        const auto& dispatch_buffer_handle = fluid_sim_dispatch_command_buffers.get_active_buffer();
-        const auto& dispatch_buffer = renderer->get_buffer(dispatch_buffer_handle);
-        commands->ExecuteIndirect(fluid_sim_dispatch_signature.Get(),
-                                  static_cast<UINT>(fluid_sim_dispatches.size()),
-                                  dispatch_buffer->resource.Get(),
-                                  0,
-                                  nullptr,
-                                  0);
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
-        barriers.reserve(fluid_volume_states.size());
-
-        auto barrier_and_swap = [&](TextureHandle handles[2]) {
-            const auto& texture = renderer->get_texture(handles[1]);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(texture.resource.Get()));
-
-            Rx::Utility::swap(handles[0], handles[1]);
-        };
-
-        fluid_volume_states.each_fwd([&](GpuFluidVolumeState& volume) {
-            barrier_and_swap(volume.density_textures);
-            barrier_and_swap(volume.temperature_textures);
-            barrier_and_swap(volume.reaction_textures);
-            barrier_and_swap(volume.velocity_textures);
-        });
-
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        execute_simulation_step(commands,
+                                data_buffer_handle,
+                                advection_pipeline.Get(),
+                                [&](GpuFluidVolumeState& volume, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) {
+                                    barrier_and_swap(volume.density_textures, barriers);
+                                    barrier_and_swap(volume.temperature_textures, barriers);
+                                    barrier_and_swap(volume.reaction_textures, barriers);
+                                    barrier_and_swap(volume.velocity_textures, barriers);
+                                });
     }
 
-    void FluidSimPass::apply_buoyancy(ID3D12GraphicsCommandList4* commands) {
+    void FluidSimPass::apply_buoyancy(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Bouyancy");
 
-        commands->SetPipelineState(buoyancy_pipeline.Get());
-
-        buoyancy_params_array.upload_data_to_active_buffer(fluid_volume_states);
+        buoyancy_params_array.write(fluid_volume_states);
         const auto data_buffer_handle = buoyancy_params_array.get_active_buffer();
-        commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                              data_buffer_handle.index,
-                                              RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
 
-        const auto& dispatch_buffer_handle = fluid_sim_dispatch_command_buffers.get_active_buffer();
-        const auto& dispatch_buffer = renderer->get_buffer(dispatch_buffer_handle);
-        commands->ExecuteIndirect(fluid_sim_dispatch_signature.Get(),
-                                  static_cast<UINT>(fluid_sim_dispatches.size()),
-                                  dispatch_buffer->resource.Get(),
-                                  0,
-                                  nullptr,
-                                  0);
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
-        barriers.reserve(fluid_volume_states.size());
-
-        auto barrier_and_swap = [&](TextureHandle handles[2]) {
-            const auto& texture = renderer->get_texture(handles[1]);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(texture.resource.Get()));
-
-            Rx::Utility::swap(handles[0], handles[1]);
-        };
-
-        fluid_volume_states.each_fwd([&](GpuFluidVolumeState& volume) { barrier_and_swap(volume.velocity_textures); });
-
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        execute_simulation_step(commands,
+                                data_buffer_handle,
+                                buoyancy_pipeline.Get(),
+                                [&](GpuFluidVolumeState& state, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) {
+                                    barrier_and_swap(state.velocity_textures, barriers);
+                                });
     }
 
-    void FluidSimPass::apply_impulse(ID3D12GraphicsCommandList4* commands) {
+    void FluidSimPass::apply_impulse(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Impulse");
 
-        commands->SetPipelineState(impulse_pipeline.Get());
-
-        impulse_params_array.upload_data_to_active_buffer(fluid_volume_states);
+        impulse_params_array.write(fluid_volume_states);
         const auto data_buffer_handle = impulse_params_array.get_active_buffer();
-        commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                              data_buffer_handle.index,
-                                              RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
 
-        const auto& dispatch_buffer_handle = fluid_sim_dispatch_command_buffers.get_active_buffer();
-        const auto& dispatch_buffer = renderer->get_buffer(dispatch_buffer_handle);
-        commands->ExecuteIndirect(fluid_sim_dispatch_signature.Get(),
-                                  static_cast<UINT>(fluid_sim_dispatches.size()),
-                                  dispatch_buffer->resource.Get(),
-                                  0,
-                                  nullptr,
-                                  0);
-
-        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
-        barriers.reserve(fluid_volume_states.size());
-
-        auto barrier_and_swap = [&](TextureHandle handles[2]) {
-            const auto& texture = renderer->get_texture(handles[1]);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(texture.resource.Get()));
-
-            Rx::Utility::swap(handles[0], handles[1]);
-        };
-
-        fluid_volume_states.each_fwd([&](GpuFluidVolumeState& volume) {
-            barrier_and_swap(volume.reaction_textures);
-            barrier_and_swap(volume.temperature_textures);
+        execute_simulation_step(commands, data_buffer_handle, impulse_pipeline.Get(), [&](auto& state, auto& barriers) {
+            barrier_and_swap(state.reaction_textures, barriers);
+            barrier_and_swap(state.temperature_textures, barriers);
         });
+    }
 
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+    void FluidSimPass::barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const {
+        const auto& texture = renderer->get_texture(handles[1]);
+        barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(texture.resource.Get()));
+
+        Rx::Utility::swap(handles[0], handles[1]);
     }
 } // namespace sanity::engine::renderer

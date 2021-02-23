@@ -3,15 +3,14 @@
 #include <d3d12.h>
 #include <dxgi.h>
 
-#include "mesh_data_store.hpp"
-#include "pix3.h"
-#include "raytracing_structs.hpp"
-#include "render_pipeline_state.hpp"
-#include "resources.hpp"
+#include "renderer/mesh_data_store.hpp"
+#include "renderer/rhi/raytracing_structs.hpp"
+#include "renderer/rhi/render_pipeline_state.hpp"
+#include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
-	class Renderer;
-	struct RenderTargetBeginningAccess;
+    class Renderer;
+    struct RenderTargetBeginningAccess;
     struct RenderTargetEndingAccess;
 
     constexpr uint64_t FENCE_UNSIGNALED = 0;

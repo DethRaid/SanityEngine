@@ -15,7 +15,7 @@ namespace sanity::engine::renderer {
         void advance_frame();
 
         template <typename DataType>
-        void upload_data_to_active_buffer(const Rx::Vector<DataType>& data);
+        void write(const Rx::Vector<DataType>& data);
 
         [[nodiscard]] BufferHandle get_active_buffer() const;
 
@@ -25,7 +25,7 @@ namespace sanity::engine::renderer {
     };
 
     template <typename DataType>
-    void PerFrameBuffer::upload_data_to_active_buffer(const Rx::Vector<DataType>& data) {
+    void PerFrameBuffer::write(const Rx::Vector<DataType>& data) {
         const auto& active_buffer = get_active_buffer();
 
     	memcpy(active_buffer->mapped_ptr, data.data(), data.size() * sizeof(DataType));

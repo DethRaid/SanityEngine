@@ -1,9 +1,9 @@
 #pragma once
 
 #include "interop.hpp"
-#include "renderer/rhi/resources.hpp"
 
 #if __cplusplus
+#include "renderer/rhi/resources.hpp"
 #include "renderer/handles.hpp"
 
 namespace sanity::engine::renderer {
@@ -43,7 +43,7 @@ namespace sanity::engine::renderer {
         /**
          * @brief Location of a reaction emitter, relative to the fluid volume, expressed in NDC
          */
-        float3 emitter_location;
+        float3 emitter_location{0.f, -0.8f, 0.f};
 
         /**
          * @brief Radius of the emitter, again expressed relative to the fluid volume
@@ -53,9 +53,9 @@ namespace sanity::engine::renderer {
          * Eventually we'll have support for arbitrarily shaped emitters, and multiple emitters, and really cool things that will make
          * everyone jealous
          */
-        float emitter_radius;
+        float emitter_radius{0.1f};
 
-    	float emitter_strength;
+    	float emitter_strength{1.f};
     };
 
     struct FluidSimDispatch {

@@ -460,25 +460,7 @@ namespace sanity::engine::renderer {
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
         FluidVolume new_volume;
 
-        const auto texture_size = glm::uvec3(glm::vec3(create_info.size) * create_info.voxels_per_meter);
-
-        const auto density_temperature_reaction_phi_texture_create_info = TextureCreateInfo{.name = create_info.name,
-                                                                                            .usage = TextureUsage::UnorderedAccess,
-                                                                                            .format = TextureFormat::Rgba32F,
-                                                                                            .width = texture_size.x,
-                                                                                            .height = texture_size.y,
-                                                                                            .depth = texture_size.z};
-        new_volume.texture_1_handle = create_texture(density_temperature_reaction_phi_texture_create_info);
-
-        const auto velocity_pressure_texture_create_info = TextureCreateInfo{.name = create_info.name,
-                                                                             .usage = TextureUsage::UnorderedAccess,
-                                                                             .format = TextureFormat::Rg32F,
-                                                                             .width = texture_size.x,
-                                                                             .height = texture_size.y,
-                                                                             .depth = texture_size.z};
-        new_volume.texture_2_handle = create_texture(velocity_pressure_texture_create_info);
-
-        new_volume.size = create_info.size;
+       // TODO
 
         const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()));
 
@@ -523,7 +505,7 @@ namespace sanity::engine::renderer {
                 Rx::abort("Maximum number of lights already in use! Unable to upload any more");
             }
 
-            const auto handle = LightHandle(next_free_light_index, &lights);
+            const auto handle = LightHandle(next_free_light_index);
             next_free_light_index++;
 
             return handle;
@@ -557,9 +539,7 @@ namespace sanity::engine::renderer {
     BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
 
     const RaytracingScene& Renderer::get_raytracing_scene() const { return raytracing_scene; }
-
-    BufferHandle Renderer::get_fluid_volumes_buffer(const Uint32 frame_idx) const { return fluid_volume_buffers[frame_idx]; }
-
+    
     RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
                                                             const Rx::Vector<PlacedMesh>& meshes,
@@ -650,28 +630,7 @@ namespace sanity::engine::renderer {
             next_unused_model_matrix_per_frame.emplace_back(Rx::make_ptr<Rx::Concurrency::Atomic<Uint32>>(RX_SYSTEM_ALLOCATOR, 0_u32));
         }
     }
-
-    void Renderer::create_fluid_volume_buffers() {
-        ZoneScoped;
-
-        all_fluid_volumes.reserve(MAX_NUM_FLUID_VOLUMES);
-
-        const auto num_gpu_frames = backend->get_max_num_gpu_frames();
-
-        auto create_info = BufferCreateInfo{.usage = BufferUsage::ConstantBuffer, .size = MAX_NUM_FLUID_VOLUMES * sizeof(FluidVolume)};
-
-        for(Uint32 i = 0; i < num_gpu_frames; i++) {
-            create_info.name = Rx::String::format("Fluid volume buffer %d", i);
-            const auto fluid_volume_buffer = create_buffer(create_info);
-            if(fluid_volume_buffer.is_valid()) {
-                fluid_volume_buffers.push_back(fluid_volume_buffer);
-
-            } else {
-                logger->error("Could not create buffer %s", create_info.name);
-            }
-        }
-    }
-
+    
     void Renderer::create_material_data_buffers() {
         ZoneScoped;
 
@@ -841,23 +800,7 @@ namespace sanity::engine::renderer {
 
         camera_matrix_buffers->upload_data(frame_idx);
     }
-
-    void Renderer::upload_fluid_volume_data(const Uint32 frame_idx) {
-        ZoneScoped;
-
-        const auto& buffer_handle = fluid_volume_buffers[frame_idx];
-        const auto& buffer = get_buffer(buffer_handle);
-        auto* fluid_volume_write_ptr = static_cast<GpuFluidVolumeState*>(buffer->mapped_ptr);
-
-        all_fluid_volumes.each_fwd([&](const FluidVolume& volume) {
-            fluid_volume_write_ptr->texture_1_idx = volume.texture_1_handle.index;
-            fluid_volume_write_ptr->texture_2_idx = volume.texture_2_handle.index;
-            fluid_volume_write_ptr->size = volume.size;
-
-            fluid_volume_write_ptr++;
-        });
-    }
-
+    
     void Renderer::upload_material_data(const Uint32 frame_idx) {
         ZoneScoped;
 

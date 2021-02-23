@@ -3,7 +3,7 @@
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "renderer/mesh.hpp"
-#include "resources.hpp"
+#include "renderer/rhi/resources.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 
@@ -15,7 +15,8 @@ struct StandardVertex {
 };
 
 namespace sanity::engine::renderer {
-    class MeshDataStore;
+	class Renderer;
+	class MeshDataStore;
     class ResourceCommandList;
     class RenderBackend;
 
@@ -70,7 +71,7 @@ namespace sanity::engine::renderer {
 
     class MeshDataStore {
     public:
-        MeshDataStore(RenderBackend& device_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in);
+        MeshDataStore(Renderer& renderer_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in);
 
         MeshDataStore(const MeshDataStore& other) = delete;
         MeshDataStore& operator=(const MeshDataStore& other) = delete;
@@ -80,11 +81,13 @@ namespace sanity::engine::renderer {
 
         ~MeshDataStore();
 
-        [[nodiscard]] const Rx::Vector<VertexBufferBinding>& get_vertex_bindings() const;
+        [[nodiscard]] const BufferHandle& get_vertex_buffer_handle() const;
 
-        [[nodiscard]] const BufferHandle& get_vertex_buffer() const;
+        [[nodiscard]] const BufferHandle& get_index_buffer_handle() const;
 
-        [[nodiscard]] const BufferHandle& get_index_buffer() const;
+    	[[nodiscard]] const Buffer& get_vertex_buffer() const;
+
+    	[[nodiscard]] const Buffer& get_index_buffer() const;
 
         /*!
          * \brief Prepares the vertex and index buffers to receive new mesh data
@@ -94,11 +97,11 @@ namespace sanity::engine::renderer {
         void bind_to_command_list(ID3D12GraphicsCommandList4* commands) const;
 
     private:
-        RenderBackend* device;
+        Renderer* renderer;
 
-        BufferHandle vertex_buffer;
+        BufferHandle vertex_buffer_handle;
 
-        BufferHandle index_buffer;
+        BufferHandle index_buffer_handle;
 
         Rx::Vector<VertexBufferBinding> vertex_bindings{};
 

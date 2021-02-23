@@ -85,7 +85,7 @@ namespace sanity::engine::renderer {
      */
     class Renderer {
     public:
-        inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000, nullptr};
+        inline static const TextureHandle BACKBUFFER_HANDLE{0xF0000000};
 
         explicit Renderer(GLFWwindow* window);
 
@@ -184,8 +184,6 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] const RaytracingScene& get_raytracing_scene() const;
 
-        [[nodiscard]] BufferHandle get_fluid_volumes_buffer(Uint32 frame_idx) const;
-
     private:
         std::chrono::high_resolution_clock::time_point start_time;
 
@@ -203,7 +201,6 @@ namespace sanity::engine::renderer {
 
         Rx::Map<Rx::String, FluidVolumeHandle> fluid_volume_name_to_handle;
         Rx::Vector<FluidVolume> all_fluid_volumes;
-        Rx::Vector<BufferHandle> fluid_volume_buffers;
 
         FrameConstants frame_constants;
         Rx::Vector<BufferHandle> frame_constants_buffers;
@@ -246,9 +243,7 @@ namespace sanity::engine::renderer {
         void allocate_resource_descriptors();
 
         void create_per_frame_buffers();
-
-        void create_fluid_volume_buffers();
-
+        
         void create_material_data_buffers();
 
         void create_light_buffers();
@@ -265,9 +260,7 @@ namespace sanity::engine::renderer {
 #pragma endregion
 
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
-
-        void upload_fluid_volume_data(Uint32 frame_idx);
-
+        
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
@@ -329,11 +322,5 @@ namespace sanity::engine::renderer {
     RenderPassType* RenderpassHandle<RenderPassType>::get() const {
         auto* renderpass = this->operator->()->get();
         return static_cast<RenderPassType*>(renderpass);
-    }
-
-    template <typename DataType>
-    BufferHandle Renderer::yeet_data_onto_gpu(const Rx::Vector<DataType>& data) {
-        const auto data_size = data.size() * sizeof(DataType);
-        const auto staging_buffer = backend->get_staging_buffer(data_size);
     }
 } // namespace sanity::engine::renderer

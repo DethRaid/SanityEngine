@@ -2,6 +2,8 @@
 
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
+#include "pix3.h"
+#include "renderer.hpp"
 #include "renderer/rhi/helpers.hpp"
 #include "renderer/rhi/render_backend.hpp"
 #include "rx/core/log.h"
@@ -14,8 +16,8 @@ namespace sanity::engine::renderer {
         const auto& index_buffer = mesh_store->get_index_buffer();
         const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
+        auto* vertex_resource = vertex_buffer.resource.Get();
+        auto* index_resource = index_buffer.resource.Get();
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -43,8 +45,8 @@ namespace sanity::engine::renderer {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-            auto* vertex_resource = vertex_buffer->resource.Get();
-            auto* index_resource = index_buffer->resource.Get();
+            auto* vertex_resource = vertex_buffer.resource.Get();
+            auto* index_resource = index_buffer.resource.Get();
 
             auto previous_resource_state = D3D12_RESOURCE_STATE_COPY_DEST;
             if(state == State::BuildRaytracingGeometry) {
@@ -78,8 +80,8 @@ namespace sanity::engine::renderer {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-            auto* vertex_resource = vertex_buffer->resource.Get();
-            auto* index_resource = index_buffer->resource.Get();
+            auto* vertex_resource = vertex_buffer.resource.Get();
+            auto* index_resource = index_buffer.resource.Get();
 
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
             barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -95,26 +97,28 @@ namespace sanity::engine::renderer {
         }
     }
 
-    MeshDataStore::MeshDataStore(RenderBackend& device_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in)
-        : device{&device_in}, vertex_buffer{Rx::Utility::move(vertex_buffer_in)}, index_buffer{Rx::Utility::move(index_buffer_in)} {
-
-        vertex_bindings.reserve(4);
-        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, location), sizeof(StandardVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, normal), sizeof(StandardVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, color), sizeof(StandardVertex)});
-        vertex_bindings.push_back(VertexBufferBinding{*vertex_buffer, offsetof(StandardVertex, texcoord), sizeof(StandardVertex)});
-    }
+    MeshDataStore::MeshDataStore(Renderer& renderer_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in)
+        : renderer{&renderer_in},
+          vertex_buffer_handle{Rx::Utility::move(vertex_buffer_in)},
+          index_buffer_handle{Rx::Utility::move(index_buffer_in)} {}
 
     MeshDataStore::~MeshDataStore() {
-        device->schedule_buffer_destruction(*vertex_buffer);
-        device->schedule_buffer_destruction(*index_buffer);
+        auto& backend = renderer->get_render_backend();
+
+        const auto& vertex_buffer = renderer->get_buffer(vertex_buffer_handle);
+        const auto& index_buffer = renderer->get_buffer(index_buffer_handle);
+
+        backend.schedule_buffer_destruction(*vertex_buffer);
+        backend.schedule_buffer_destruction(*index_buffer);
     }
 
-    const Rx::Vector<VertexBufferBinding>& MeshDataStore::get_vertex_bindings() const { return vertex_bindings; }
+    const BufferHandle& MeshDataStore::get_vertex_buffer_handle() const { return vertex_buffer_handle; }
 
-    const BufferHandle& MeshDataStore::get_vertex_buffer() const { return vertex_buffer; }
+    const BufferHandle& MeshDataStore::get_index_buffer_handle() const { return index_buffer_handle; }
 
-    const BufferHandle& MeshDataStore::get_index_buffer() const { return index_buffer; }
+    const Buffer& MeshDataStore::get_vertex_buffer() const { return *renderer->get_buffer(vertex_buffer_handle); }
+
+    const Buffer& MeshDataStore::get_index_buffer() const { return *renderer->get_buffer(index_buffer_handle); }
 
     MeshUploader MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) { return MeshUploader{commands, this}; }
 
@@ -128,6 +132,8 @@ namespace sanity::engine::renderer {
 
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
 
+    	auto& backend = renderer->get_render_backend();
+
         const auto vertex_data_size = static_cast<Uint32>(vertices.size() * sizeof(StandardVertex));
         const auto index_data_size = static_cast<Uint32>(indices.size() * sizeof(Uint32));
 
@@ -135,19 +141,22 @@ namespace sanity::engine::renderer {
         Rx::Vector<Uint32> offset_indices;
         offset_indices.reserve(indices.size());
 
-    	logger->verbose("Offsetting indices by %d", next_vertex_offset);
+        logger->verbose("Offsetting indices by %d", next_vertex_offset);
 
         indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
-        auto* vertex_resource = vertex_buffer->resource.Get();
-        auto* index_resource = index_buffer->resource.Get();
+    	const auto& vertex_buffer = get_vertex_buffer();
+        const auto& index_buffer = get_index_buffer();
+
+        auto* vertex_resource = vertex_buffer.resource.Get();
+        auto* index_resource = index_buffer.resource.Get();
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 
-        upload_data_with_staging_buffer(commands, *device, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
+        upload_data_with_staging_buffer(commands, backend, vertex_resource, vertices.data(), vertex_data_size, next_free_vertex_byte);
 
         upload_data_with_staging_buffer(commands,
-                                        *device,
+                                        backend,
                                         index_resource,
                                         offset_indices.data(),
                                         index_data_size,
@@ -185,9 +194,11 @@ namespace sanity::engine::renderer {
 
         commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
 
+    	const auto& index_buffer = get_index_buffer();
+
         D3D12_INDEX_BUFFER_VIEW index_view{};
-        index_view.BufferLocation = index_buffer->resource->GetGPUVirtualAddress();
-        index_view.SizeInBytes = static_cast<Uint32>(index_buffer->size);
+        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
+        index_view.SizeInBytes = static_cast<Uint32>(index_buffer.size);
         index_view.Format = DXGI_FORMAT_R32_UINT;
 
         commands->IASetIndexBuffer(&index_view);

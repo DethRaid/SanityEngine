@@ -132,6 +132,8 @@ namespace sanity::engine::renderer {
 
     struct __declspec(uuid("{6763FAED-5C17-40E1-871F-0115E60F21EA}")) FluidVolumeComponent {
         FluidVolumeHandle volume{};
+    	
+        glm::uvec3 size;
     };
 
     void draw_component_properties(StandardRenderableComponent& renderable);

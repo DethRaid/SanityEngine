@@ -131,7 +131,19 @@ namespace sanity::engine::renderer {
 
     	FluidVolumeTexture pressure_texture;
 
-        glm::uvec3 size;    	
+        glm::uvec3 size;
+
+        float density_dissipation{0.999f};
+    	
+    	float temperature_dissipation{0.995f};
+
+    	float reaction_decay{0.01f};
+
+    	float velocity_dissipation{0.995f};
+
+    	float buoyancy{};
+
+    	float weight{};
     };
 	
     using FluidVolumeHandle = GpuResourceHandle<FluidVolume>;

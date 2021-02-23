@@ -535,8 +535,11 @@ namespace sanity::editor::import {
             auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
 
-            const auto& vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
-            const auto& index_buffer = renderer->get_static_mesh_store().get_index_buffer();
+            const auto& vertex_buffer_handle = renderer->get_static_mesh_store().get_vertex_buffer();
+            const auto& index_buffer_handle = renderer->get_static_mesh_store().get_index_buffer();
+
+            const auto& vertex_buffer = renderer->get_buffer(vertex_buffer_handle);
+            const auto& index_buffer = renderer->get_buffer(index_buffer_handle);
 
             Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
