@@ -28,5 +28,5 @@ namespace sanity::engine {
         [[nodiscard]] const Transform* operator->() const;
     };
     
-    void draw_component_editor(TransformComponent& transform);
+    void draw_component_properties(TransformComponent& transform);
 } // namespace sanity::engine

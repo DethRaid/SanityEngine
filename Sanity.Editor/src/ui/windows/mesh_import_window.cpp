@@ -23,12 +23,12 @@ namespace sanity::editor::ui {
     void SceneImportWindow::draw_contents() {
         auto& import_settings = metadata.import_settings;
 
-        draw_property_editor("Import meshes", import_settings.import_meshes);
-        draw_property_editor("Scaling factor", import_settings.scaling_factor);
-        draw_property_editor("Import materials", import_settings.import_materials);
-        draw_property_editor("Import lights", import_settings.import_lights);
-        draw_property_editor("Import entities", import_settings.import_empties);
-        draw_property_editor("Import object hierarchies", import_settings.import_object_hierarchy);
+        draw_property("Import meshes", import_settings.import_meshes);
+        draw_property("Scaling factor", import_settings.scaling_factor);
+        draw_property("Import materials", import_settings.import_materials);
+        draw_property("Import lights", import_settings.import_lights);
+        draw_property("Import entities", import_settings.import_empties);
+        draw_property("Import object hierarchies", import_settings.import_object_hierarchy);
 
         // Intentionally not drawing a property editor for source_file - source_file gets set automatically when you
         // import a mesh

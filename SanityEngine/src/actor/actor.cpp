@@ -50,9 +50,9 @@ namespace sanity::engine {
         return actor_component;
     }
 
-    void draw_component_editor(Actor& entity) {
-        ui::draw_property_editor("name", entity.name);
-        ui::draw_property_editor("tags", entity.tags);
+    void draw_component_properties(Actor& entity) {
+        ui::draw_property("name", entity.name);
+        ui::draw_property("tags", entity.tags);
     }
 
 } // namespace sanity::engine

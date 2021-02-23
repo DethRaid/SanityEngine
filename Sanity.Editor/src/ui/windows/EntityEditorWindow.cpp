@@ -9,7 +9,7 @@
 using namespace sanity::engine::ui;
 
 namespace sanity::editor::ui {
-    void draw_component_editor(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry);
+    void draw_component(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry);
 
     EntityEditorWindow::EntityEditorWindow(const entt::entity entity_in, entt::registry& registry_in)
         : Window{"Entity Editor"}, entity{entity_in}, registry{&registry_in} {
@@ -33,26 +33,39 @@ namespace sanity::editor::ui {
 
     void EntityEditorWindow::draw_contents() {
         const auto sanity_entity = registry->get<engine::Actor>(entity);
-        sanity_entity.component_class_ids.each_fwd([&](const GUID class_id) { draw_component_editor(class_id, entity, *registry); });
+
+        ImGui::Text("%s", sanity_entity.name.data());
+
+        if(ImGui::Button("Add Component")) {
+            // Open add component.... window? selection?
+        }
+
+        sanity_entity.component_class_ids.each_fwd([&](const GUID class_id) {
+            ImGui::Separator();
+            draw_component(class_id, entity, *registry);
+        });
     }
 
 #define DRAW_COMPONENT_EDITOR(Type)                                                                                                        \
     if(component_type_id == _uuidof(Type)) {                                                                                               \
         auto& component = registry.get<Type>(entity);                                                                                      \
-        draw_component_editor(component);                                                                                                  \
+        if(ImGui::CollapsingHeader(class_name.data())) {                                                                                   \
+            ImGui::Indent();                                                                                                               \
+            draw_component_properties(component);                                                                                          \
+            ImGui::Unindent();                                                                                                             \
+        }                                                                                                                                  \
     }
 
-    void draw_component_editor(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry) {
+    void draw_component(const GUID& component_type_id, const entt::entity& entity, entt::registry& registry) {
         const auto class_name = engine::g_engine->get_type_reflector().get_name_of_type(component_type_id);
-        // @formatter:off
+
         DRAW_COMPONENT_EDITOR(engine::Actor)
-        else DRAW_COMPONENT_EDITOR(engine::TransformComponent)
-        else DRAW_COMPONENT_EDITOR(engine::renderer::StandardRenderableComponent)
-        else DRAW_COMPONENT_EDITOR(engine::renderer::PostProcessingPassComponent)
-        else DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
-        else DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
-        else DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
-    	else DRAW_COMPONENT_EDITOR(engine::renderer::SkyComponent);
-        // @formatter:on            
+        DRAW_COMPONENT_EDITOR(engine::TransformComponent)
+        DRAW_COMPONENT_EDITOR(engine::renderer::StandardRenderableComponent)
+        DRAW_COMPONENT_EDITOR(engine::renderer::PostProcessingPassComponent)
+        DRAW_COMPONENT_EDITOR(engine::renderer::RaytracingObjectComponent)
+        DRAW_COMPONENT_EDITOR(engine::renderer::CameraComponent)
+        DRAW_COMPONENT_EDITOR(engine::renderer::LightComponent)
+        DRAW_COMPONENT_EDITOR(engine::renderer::SkyComponent);
     }
 } // namespace sanity::editor::ui

@@ -77,7 +77,7 @@ namespace sanity::engine {
      */
     [[nodiscard]] Actor& create_actor(entt::registry& registry, const Rx::String& name = "New Actor");
 
-    void draw_component_editor(Actor& entity);
+    void draw_component_properties(Actor& entity);
 
     template <typename ComponentType, typename... Args>
     ComponentType& Actor::add_component(Args&&... args) {

@@ -134,15 +134,15 @@ namespace sanity::engine::renderer {
         FluidVolumeHandle volume{};
     };
 
-    void draw_component_editor(StandardRenderableComponent& renderable);
+    void draw_component_properties(StandardRenderableComponent& renderable);
 
-    void draw_component_editor(PostProcessingPassComponent& post_processing);
+    void draw_component_properties(PostProcessingPassComponent& post_processing);
 
-    void draw_component_editor(RaytracingObjectComponent& raytracing_object);
+    void draw_component_properties(RaytracingObjectComponent& raytracing_object);
 
-    void draw_component_editor(CameraComponent& camera);
+    void draw_component_properties(CameraComponent& camera);
 
-    void draw_component_editor(LightComponent& light);
+    void draw_component_properties(LightComponent& light);
 
-    void draw_component_editor(SkyComponent& sky);
+    void draw_component_properties(SkyComponent& sky);
 } // namespace sanity::engine::renderer

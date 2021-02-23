@@ -22,5 +22,5 @@ namespace sanity::engine {
 
     const Transform* TransformComponent::operator->() const { return &transform; }
 
-    void draw_component_editor(TransformComponent& transform) { ui::draw_property_editor("transform", transform.transform); }
+    void draw_component_properties(TransformComponent& transform) { ui::draw_property("transform", transform.transform); }
 } // namespace sanity::engine
