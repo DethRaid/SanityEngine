@@ -246,16 +246,22 @@ namespace sanity::engine::renderer {
             TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
             PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
 
-            render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->collect_work(registry, frame_idx); });
+            {
+                ZoneScopedN("Collect renderpass work");
+                render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->collect_work(registry, frame_idx); });
+            }
 
-            for(Uint32 i = 0; i < render_passes.size(); i++) {
-                Rx::Ptr<RenderPass>& render_pass = render_passes[i];
+            {
+                ZoneScopedN("Record renderpass work");
+                for(Uint32 i = 0; i < render_passes.size(); i++) {
+                    Rx::Ptr<RenderPass>& render_pass = render_passes[i];
 
-                issue_pre_pass_barriers(command_list.Get(), i, render_pass);
+                    issue_pre_pass_barriers(command_list.Get(), i, render_pass);
 
-                render_pass->record_work(command_list.Get(), registry, frame_idx);
+                    render_pass->record_work(command_list.Get(), registry, frame_idx);
 
-                issue_post_pass_barriers(command_list.Get(), i, render_pass);
+                    issue_post_pass_barriers(command_list.Get(), i, render_pass);
+                }
             }
         }
     }
@@ -274,7 +280,7 @@ namespace sanity::engine::renderer {
         }
 
         const auto idx = static_cast<Uint32>(all_buffers.size());
-        const auto handle = BufferHandle(idx, &all_buffers);
+        const auto handle = BufferHandle(idx);
 
         buffer_name_to_handle.insert(create_info.name, handle);
         all_buffers.push_back(*buffer);
@@ -317,7 +323,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info) {
         const auto idx = static_cast<Uint32>(all_textures.size());
-        const auto handle = TextureHandle(idx, &all_textures);
+        const auto handle = TextureHandle(idx);
 
         auto image = backend->create_texture(create_info);
         if(image) {
@@ -454,8 +460,8 @@ namespace sanity::engine::renderer {
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
         FluidVolume new_volume;
 
-    	const auto texture_size = glm::uvec3(glm::vec3(create_info.size) * create_info.voxels_per_meter);
-    	
+        const auto texture_size = glm::uvec3(glm::vec3(create_info.size) * create_info.voxels_per_meter);
+
         const auto density_temperature_reaction_phi_texture_create_info = TextureCreateInfo{.name = create_info.name,
                                                                                             .usage = TextureUsage::UnorderedAccess,
                                                                                             .format = TextureFormat::Rgba32F,
@@ -474,12 +480,14 @@ namespace sanity::engine::renderer {
 
         new_volume.size = create_info.size;
 
-        const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()), &all_fluid_volumes);
+        const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()));
 
         all_fluid_volumes.push_back(new_volume);
 
         return handle;
     }
+
+    FluidVolume& Renderer::get_fluid_volume(const FluidVolumeHandle& handle) { return all_fluid_volumes[handle.index]; }
 
     void Renderer::set_scene_output_texture(const TextureHandle output_texture_handle) {
         ZoneScoped;
@@ -497,7 +505,7 @@ namespace sanity::engine::renderer {
             return handle;
         }
 
-        const auto handle = StandardMaterialHandle(static_cast<Uint32>(standard_materials.size()), &standard_materials);
+        const auto handle = StandardMaterialHandle(static_cast<Uint32>(standard_materials.size()));
         standard_materials.push_back(material);
 
         return handle;
@@ -564,7 +572,7 @@ namespace sanity::engine::renderer {
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
 
-        return RaytracingAsHandle(handle_idx, &raytracing_geometries);
+        return RaytracingAsHandle(handle_idx);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE Renderer::get_resource_array_gpu_descriptor(const Uint32 frame_idx) const {
@@ -838,7 +846,8 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         const auto& buffer_handle = fluid_volume_buffers[frame_idx];
-        auto* fluid_volume_write_ptr = static_cast<GpuFluidVolume*>(buffer_handle->mapped_ptr);
+        const auto& buffer = get_buffer(buffer_handle);
+        auto* fluid_volume_write_ptr = static_cast<GpuFluidVolumeState*>(buffer->mapped_ptr);
 
         all_fluid_volumes.each_fwd([&](const FluidVolume& volume) {
             fluid_volume_write_ptr->texture_1_idx = volume.texture_1_handle.index;
@@ -853,7 +862,8 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         const auto& buffer_handle = material_device_buffers[frame_idx];
-        memcpy(buffer_handle->mapped_ptr, standard_materials.data(), standard_materials.size() * sizeof(StandardMaterial));
+        const auto& buffer = get_buffer(buffer_handle);
+        memcpy(buffer->mapped_ptr, standard_materials.data(), standard_materials.size() * sizeof(StandardMaterial));
     }
 
     void Renderer::update_resource_array_descriptors(ID3D12GraphicsCommandList* cmds, const Uint32 frame_idx) {

@@ -115,6 +115,9 @@
     <Filter Include="src\renderer\hlsl">
       <UniqueIdentifier>{14e08386-4132-41ee-96da-f8742b8f4c76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\fluid">
+      <UniqueIdentifier>{cacfe73a-164b-4d7c-bad9-9dd7a8df3e72}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -129,9 +132,6 @@
     </None>
     <None Include="..\vcpkg.json" />
     <None Include="..\README.md" />
-    <None Include="data\shaders\inc\load_standard_material.hlsl">
-      <Filter>shaders\inc</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\adapters\tracy.hpp">
@@ -441,6 +441,8 @@
     <ClInclude Include="src\renderer\hlsl\fluid_sim.hpp">
       <Filter>src\renderer\hlsl</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\ping_pong_texture.hpp" />
+    <ClInclude Include="src\renderer\rhi\per_frame_buffer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -647,6 +649,8 @@
     <ClCompile Include="src\renderer\gpu_resource_pool.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\ping_pong_texture.cpp" />
+    <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -727,6 +731,12 @@
     </FxCompile>
     <FxCompile Include="data\shaders\postprocessing.pixel.hlsl">
       <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\inc\load_standard_material.hlsl">
+      <Filter>shaders\inc</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\fluid\advection.compute.hlsl">
+      <Filter>shaders\fluid</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

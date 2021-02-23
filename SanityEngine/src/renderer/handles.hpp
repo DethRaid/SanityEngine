@@ -5,16 +5,14 @@
 #include "rx/core/abort.h"
 #include "rx/core/vector.h"
 
-namespace sanity::engine::renderer {	
+namespace sanity::engine::renderer {
     template <typename ResourceType>
-    struct GpuResourceHandle {    	
+    struct GpuResourceHandle {
         Uint32 index{INVALID_RESOURCE_HANDLE};
 
-        Rx::Vector<ResourceType>* storage{nullptr};
-
         GpuResourceHandle() = default;
-        
-        explicit GpuResourceHandle(Uint32 index_in, Rx::Vector<ResourceType>* storage_in);
+
+        explicit GpuResourceHandle(Uint32 index_in);
 
         GpuResourceHandle(const GpuResourceHandle<ResourceType>& other) = default;
         GpuResourceHandle& operator=(const GpuResourceHandle<ResourceType>& other) = default;
@@ -27,36 +25,13 @@ namespace sanity::engine::renderer {
         [[nodiscard]] bool operator==(const GpuResourceHandle& other) const = default;
 
         [[nodiscard]] bool is_valid() const;
-
-        [[nodiscard]] ResourceType* operator->() const;
-
-        [[nodiscard]] ResourceType& operator*() const;
     };
 
     template <typename ResourceType>
-    GpuResourceHandle<ResourceType>::GpuResourceHandle(const Uint32 index_in, Rx::Vector<ResourceType>* storage_in)
-        : index{index_in}, storage{storage_in} {}
+    GpuResourceHandle<ResourceType>::GpuResourceHandle(const Uint32 index_in) : index{index_in} {}
 
     template <typename ResourceType>
     bool GpuResourceHandle<ResourceType>::is_valid() const {
-        return index != INVALID_RESOURCE_HANDLE && storage != nullptr && index < storage->size();
-    }
-
-    template <typename ResourceType>
-    ResourceType* GpuResourceHandle<ResourceType>::operator->() const {
-        if(!is_valid()) {
-            return nullptr;
-        }
-
-        return &(*storage)[index];
-    }
-
-    template <typename ResourceType>
-    ResourceType& GpuResourceHandle<ResourceType>::operator*() const {
-        if(!is_valid()) {
-            Rx::abort("Invalid handle");
-        }
-
-        return (*storage)[index];
+        return index != INVALID_RESOURCE_HANDLE;
     }
 } // namespace sanity::engine::renderer

@@ -17,6 +17,7 @@ namespace D3D12MA {
 using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
+	
     struct Buffer {
         Rx::String name;
 
@@ -86,7 +87,7 @@ namespace sanity::engine::renderer {
     };
 
     using TextureHandle = GpuResourceHandle<Texture>;
-
+	
     struct RenderTarget : Texture {
         D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
     };
@@ -115,7 +116,25 @@ namespace sanity::engine::renderer {
     	float voxels_per_meter{4};
 
         // TODO: Information about what kind of fluid
+    };	
+
+    using FluidVolumeTexture = Rx::Vector<TextureHandle[2]>;
+	
+    struct FluidVolume {
+        FluidVolumeTexture density_texture;
+
+    	FluidVolumeTexture temperature_texture;
+
+    	FluidVolumeTexture reaction_texture;
+
+    	FluidVolumeTexture velocity_texture;
+
+    	FluidVolumeTexture pressure_texture;
+
+        glm::uvec3 size;    	
     };
+	
+    using FluidVolumeHandle = GpuResourceHandle<FluidVolume>;
 
     [[nodiscard]] Uint32 size_in_bytes(TextureFormat format);
 

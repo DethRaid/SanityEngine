@@ -3,6 +3,7 @@
 #if __cplusplus
 #include "core/types.hpp"
 #include "glm/glm.hpp"
+#include "renderer/rhi/resources.hpp"
 
 // ReSharper disable CppInconsistentNaming
 
@@ -16,4 +17,7 @@ using float4 = glm::vec4;
 using float4x4 = glm::mat4;
 
 // ReSharper restore CppInconsistentNaming
+
+static_assert(sizeof(sanity::engine::renderer::TextureHandle) == sizeof(uint));
+static_assert(sizeof(sanity::engine::renderer::BufferHandle) == sizeof(uint));
 #endif

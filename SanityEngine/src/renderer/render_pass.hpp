@@ -38,11 +38,11 @@ namespace sanity::engine {
 
             /**
              * @brief Records this pass's work into a GPU command list
-             * 
+             *
              * @param commands Command list to record work to
              * @param registry EnTT registry for the world. Hopefully eventually only collect_work will need this
              * @param frame_idx Index of the GPU frame to record work for
-            */
+             */
             virtual void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
 
             [[nodiscard]] const Rx::Map<TextureHandle, Rx::Optional<BeginEndState>>& get_texture_states() const;
@@ -56,6 +56,8 @@ namespace sanity::engine {
              */
             void set_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES states);
 
+            void set_resource_usage(const Rx::Vector<TextureHandle>& handles, D3D12_RESOURCE_STATES states);
+
             /*!
              * \brief Describes how this renderpass will use a resource
              *
@@ -67,6 +69,20 @@ namespace sanity::engine {
              * \param end_states The states that this resource will be in when this render pass ends
              */
             void set_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states);
+
+            /*!
+             * \brief Describes how this renderpass will use a resource
+             *
+             * This method allows you to set a different begin and end state of a resource. You are expected to get the
+             * resource from its begin state to its end state within your override of `render`
+             *
+             * \param handles A handle to the texture to mark the usage of
+             * \param begin_states The states that the resource must be in when this render pass begins
+             * \param end_states The states that this resource will be in when this render pass ends
+             */
+            void set_resource_usage(const Rx::Vector<TextureHandle>& handles,
+                                    D3D12_RESOURCE_STATES begin_states,
+                                    D3D12_RESOURCE_STATES end_states);
 
             /**
              * @brief Removes the usage information for this resources

@@ -453,6 +453,18 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <None Include="..\README.md" />
     <None Include="..\vcpkg.json" />
+    <FxCompile Include="data\shaders\fluid\advection.compute.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">4.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="data\shaders\inc\filters.hlsli">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
@@ -465,7 +477,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </FxCompile>
-    <None Include="data\shaders\inc\load_standard_material.hlsl" />
+    <FxCompile Include="data\shaders\inc\load_standard_material.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </FxCompile>
     <None Include="extern\imgui-node-editor\imgui_bezier_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_extra_math.inl" />
     <None Include="extern\imgui-node-editor\imgui_node_editor_internal.inl" />
@@ -539,6 +554,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\lights.hpp" />
     <ClInclude Include="src\renderer\material.hpp" />
     <ClInclude Include="src\renderer\mesh.hpp" />
+    <ClInclude Include="src\renderer\ping_pong_texture.hpp" />
     <ClInclude Include="src\renderer\renderer.hpp" />
     <ClInclude Include="src\renderer\render_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\fluid_sim_pass.hpp" />
@@ -556,6 +572,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\rhi\framebuffer.hpp" />
     <ClInclude Include="src\renderer\rhi\helpers.hpp" />
     <ClInclude Include="src\renderer\rhi\mesh_data_store.hpp" />
+    <ClInclude Include="src\renderer\rhi\per_frame_buffer.hpp" />
     <ClInclude Include="src\renderer\rhi\raytracing_structs.hpp" />
     <ClInclude Include="src\renderer\rhi\render_backend.hpp" />
     <ClInclude Include="src\renderer\rhi\render_pipeline_state.hpp" />
@@ -617,6 +634,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\player\flycam_controller.cpp" />
     <ClCompile Include="src\renderer\camera_matrix_buffer.cpp" />
     <ClCompile Include="src\renderer\gpu_resource_pool.cpp" />
+    <ClCompile Include="src\renderer\ping_pong_texture.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\render_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\fluid_sim_pass.cpp" />
@@ -630,6 +648,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\renderer\rhi\helpers.cpp" />
     <ClCompile Include="src\renderer\rhi\mesh_data_store.cpp" />
+    <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp" />
     <ClCompile Include="src\renderer\rhi\render_backend.cpp" />
     <ClCompile Include="src\renderer\rhi\resources.cpp" />
     <ClCompile Include="src\renderer\single_pass_downsampler.cpp" />

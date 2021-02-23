@@ -16,6 +16,10 @@ namespace sanity::engine::renderer {
         set_resource_usage(handle, states, states);
     }
 
+    void RenderPass::set_resource_usage(const Rx::Vector<TextureHandle>& handles, D3D12_RESOURCE_STATES states) {
+        handles.each_fwd([&](const TextureHandle& handle) { set_resource_usage(handle, states); });
+    }
+
     void RenderPass::set_resource_usage(const TextureHandle handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states) {
         if(auto* usage_ptr = texture_states.find(handle); usage_ptr != nullptr) {
             *usage_ptr = Rx::Pair{begin_states, end_states};
@@ -23,6 +27,12 @@ namespace sanity::engine::renderer {
         }
 
         texture_states.insert(handle, Rx::Pair{begin_states, end_states});
+    }
+
+    void RenderPass::set_resource_usage(const Rx::Vector<TextureHandle>& handles,
+                                        D3D12_RESOURCE_STATES begin_states,
+                                        D3D12_RESOURCE_STATES end_states) {
+        handles.each_fwd([&](const TextureHandle& handle) { set_resource_usage(handle, begin_states, end_states); });
     }
 
     void RenderPass::clear_resource_usage(const TextureHandle handle) {

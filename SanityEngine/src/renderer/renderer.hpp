@@ -126,6 +126,8 @@ namespace sanity::engine::renderer {
         void schedule_texture_destruction(const TextureHandle& texture_handle);
 
         [[nodiscard]] FluidVolumeHandle create_fluid_volume(const FluidVolumeCreateInfo& create_info);
+            	
+        [[nodiscard]] FluidVolume& get_fluid_volume(const FluidVolumeHandle& handle);
 
         /*!
          * \brief Sets the image that the 3D scene will be rendered to
@@ -327,5 +329,11 @@ namespace sanity::engine::renderer {
     RenderPassType* RenderpassHandle<RenderPassType>::get() const {
         auto* renderpass = this->operator->()->get();
         return static_cast<RenderPassType*>(renderpass);
+    }
+
+    template <typename DataType>
+    BufferHandle Renderer::yeet_data_onto_gpu(const Rx::Vector<DataType>& data) {
+        const auto data_size = data.size() * sizeof(DataType);
+        const auto staging_buffer = backend->get_staging_buffer(data_size);
     }
 } // namespace sanity::engine::renderer

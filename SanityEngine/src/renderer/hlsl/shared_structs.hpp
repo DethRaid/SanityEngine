@@ -29,6 +29,8 @@ namespace sanity::engine::renderer {
         float time_since_start;
         uint frame_count;
 
+    	float ambient_temperature;
+
         uint camera_buffer_index;
         uint light_buffer_index;
         uint vertex_data_buffer_index;
