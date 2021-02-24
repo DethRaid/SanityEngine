@@ -3,6 +3,8 @@
 #include <chrono>
 #include <queue>
 
+
+#include "renderer.hpp"
 #include "core/Prelude.hpp"
 #include "core/VectorHandle.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
@@ -20,6 +22,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
+#include "renderpasses/fluid_sim_pass.hpp"
 
 namespace std {
     namespace filesystem {
@@ -231,6 +234,7 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
 
+        RenderpassHandle<FluidSimPass> fluid_sim_pass_handle;
         RenderpassHandle<ObjectsPass> forward_pass_handle;
         RenderpassHandle<DenoiserPass> denoiser_pass_handle;
         RenderpassHandle<PostprocessingPass> postprocessing_pass_handle;
@@ -239,7 +243,7 @@ namespace sanity::engine::renderer {
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;
 
-#pragma region Initialization
+        #pragma region Initialization
         void create_static_mesh_storage();
 
         void allocate_resource_descriptors();

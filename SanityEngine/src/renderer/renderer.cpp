@@ -24,6 +24,7 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
+#include "renderpasses/fluid_sim_pass.hpp"
 
 namespace sanity::engine::renderer {
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
@@ -817,7 +818,11 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_render_passes() {
-        render_passes.reserve(4);
+        render_passes.reserve(5);
+
+    	render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this));
+        fluid_sim_pass_handle = RenderpassHandle<FluidSimPass>::make_from_last_element(render_passes);
+    	
         render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         forward_pass_handle = RenderpassHandle<ObjectsPass>::make_from_last_element(render_passes);
 

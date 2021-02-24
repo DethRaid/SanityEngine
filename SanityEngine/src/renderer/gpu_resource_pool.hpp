@@ -2,6 +2,7 @@
 
 #include "core/types.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/rhi/per_frame_buffer.hpp"
 #include "renderer/rhi/resources.hpp"
 #include "rx/core/vector.h"
 
@@ -23,7 +24,7 @@ namespace sanity::engine::renderer {
     template <typename ResourceType>
     class GpuResourcePool {
     public:
-        explicit GpuResourcePool(Uint32 capacity_in, Rx::Vector<BufferHandle> device_storage_in);
+        explicit GpuResourcePool(Uint32 capacity_in, PerFrameBuffer storage_in);
 
         GpuResourcePool(const GpuResourcePool& other) = delete;
         GpuResourcePool& operator=(const GpuResourcePool& other) = delete;
@@ -44,13 +45,12 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<ResourceType> host_storage;
 
-        Rx::Vector<BufferHandle> device_storage;
+        PerFrameBuffer device_storage;
     };
 
     template <typename ResourceType>
-    GpuResourcePool<ResourceType>::GpuResourcePool(Uint32 capacity_in, Rx::Vector<BufferHandle> device_storage_in)
-        : device_storage{Rx::Utility::move(device_storage_in)}
-    {
+    GpuResourcePool<ResourceType>::GpuResourcePool(Uint32 capacity_in, PerFrameBuffer storage_in)
+        : device_storage{Rx::Utility::move(storage_in)} {
         host_storage.reserve(capacity_in);
     }
 } // namespace sanity::engine::renderer

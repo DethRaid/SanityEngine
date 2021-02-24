@@ -1,3 +1,11 @@
+/**
+ * @file fluid_sim_pass.cpp
+ *
+ * @brief CPU-side implementation of a fluid simulation
+ *
+ * @note Mostly adapted from https://github.com/Scrawk/GPU-GEMS-3D-Fluid-Simulation/blob/master/Assets/FluidSim3D/Scripts/FireFluidSim.cs
+ */
+
 #include "fluid_sim_pass.hpp"
 
 #include "Tracy.hpp"
@@ -10,6 +18,14 @@
 #include "renderer/rhi/d3d12_private_data.hpp"
 
 namespace sanity::engine::renderer {
+    RX_CONSOLE_IVAR(
+        num_pressure_iterations,
+        "fluidSim.numPressureIterations",
+        "Number of iterations for the pressure solver. Higher numbers give higher quality smoke and water at the expensive of runtime performance",
+        1,
+        32,
+        10);
+
     FluidSimPass::FluidSimPass(Renderer& renderer_in) : renderer{&renderer_in} {
         ZoneScoped;
 
@@ -83,17 +99,56 @@ namespace sanity::engine::renderer {
         const auto& root_sig = backend.get_standard_root_signature();
         commands->SetComputeRootSignature(root_sig.Get());
 
-        set_buffer_indices(commands, frame_idx);
-
-        apply_advection(commands);
-
-        apply_buoyancy(commands);
-
-        apply_impulse(commands);
+        record_fire_simulation_updates(commands, frame_idx);
 
         // Assume that we only update fluid sims once per frame
+
+        advance_fire_sim_params_arrays();
+
         fluid_sim_dispatch_command_buffers.advance_frame();
+    }
+
+    void FluidSimPass::record_fire_simulation_updates(ID3D12GraphicsCommandList4* commands, const Uint32 frame_idx) {
+        set_buffer_indices(commands, frame_idx);
+
+        // Explanatory comments are from the original implementation at
+        // https://github.com/Scrawk/GPU-GEMS-3D-Fluid-Simulation/blob/master/Assets/FluidSim3D/Scripts/FireFluidSim.cs, edited only to fix
+        // typos
+
+        // First off advect any buffers that contain physical quantities like density or temperature by the velocity field. Advection is
+        // what moves values around.
+        apply_advection(commands);
+
+        // Apply the effect the sinking colder smoke has on the velocity field
+        apply_buoyancy(commands);
+
+        // Adds a certain amount of reaction (fire) and temperate
+        apply_impulse(commands);
+
+        // The smoke is formed when the reaction is extinguished. When the reaction amount falls below the extinguishment factor smoke is
+        // added
+        apply_extinguishment(commands);
+
+        // The fluid sim math tends to remove the swirling movement of fluids.
+        // This step will try and add it back in
+        compute_vorticity_confinement(commands);
+
+        // Compute the divergence of the velocity field. In fluid simulation the fluid is modeled as being incompressible meaning that the
+        // volume of the fluid does not change over time. The divergence is the amount the field has deviated from being divergence free
+        compute_divergence(commands);
+
+        // This computes the pressure needed to return the fluid to a divergence free condition
+        compute_pressure(commands);
+
+        // Subtract the pressure field from the velocity field enforcing the divergence free conditions
+        compute_projection(commands);
+    }
+
+    void FluidSimPass::advance_fire_sim_params_arrays() {
         advection_params_array.advance_frame();
+        buoyancy_params_array.advance_frame();
+        impulse_params_array.advance_frame();
+        extinguishment_params_array.advance_frame();
     }
 
     void FluidSimPass::load_shaders() {
@@ -137,6 +192,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<BufferHandle> advection_params_buffers{num_gpu_frames};
         Rx::Vector<BufferHandle> buoyancy_params_buffers{num_gpu_frames};
         Rx::Vector<BufferHandle> impulse_params_buffers{num_gpu_frames};
+        Rx::Vector<BufferHandle> extinguishment_params_buffers{num_gpu_frames};
 
         const auto fluid_sim_state_buffer_size = MAX_NUM_FLUID_VOLUMES * sizeof(GpuFluidVolumeState);
 
@@ -164,6 +220,12 @@ namespace sanity::engine::renderer {
                                                                      .usage = BufferUsage::ConstantBuffer,
                                                                      .size = fluid_sim_state_buffer_size};
             impulse_params_buffers[i] = renderer->create_buffer(impulse_buffer_create_info);
+
+            const auto extinguishment_buffer_name = Rx::String::format("Extinguishment Params Array buffer %d", i);
+            const auto extinguishment_buffer_create_info = BufferCreateInfo{.name = extinguishment_buffer_name,
+                                                                            .usage = BufferUsage::ConstantBuffer,
+                                                                            .size = fluid_sim_state_buffer_size};
+            extinguishment_params_buffers[i] = renderer->create_buffer(extinguishment_buffer_create_info);
         }
 
         fluid_sim_dispatch_command_buffers.set_buffers(dispatch_command_buffers);
@@ -171,6 +233,7 @@ namespace sanity::engine::renderer {
         advection_params_array.set_buffers(advection_params_buffers);
         buoyancy_params_array.set_buffers(buoyancy_params_buffers);
         impulse_params_array.set_buffers(impulse_params_buffers);
+        extinguishment_params_array.set_buffers(extinguishment_params_buffers);
     }
 
     void FluidSimPass::set_buffer_indices(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) const {
@@ -187,10 +250,13 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::execute_simulation_step(
         ID3D12GraphicsCommandList* commands,
-        const BufferHandle data_buffer_handle,
-        ID3D12PipelineState* pipeline,
+        const PerFrameBuffer& data_buffer,
+        const ComPtr<ID3D12PipelineState>& pipeline,
         const Rx::Function<void(GpuFluidVolumeState&, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers)> synchronize_volume) {
-        commands->SetPipelineState(pipeline);
+        const auto data_buffer_handle = data_buffer.get_active_buffer();
+        renderer->copy_data_to_buffer(data_buffer_handle, fluid_volume_states);
+
+        commands->SetPipelineState(pipeline.Get());
 
         commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                               data_buffer_handle.index,
@@ -217,45 +283,83 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Advection");
 
-        renderer->copy_data_to_buffer(advection_params_array.get_active_buffer(), fluid_volume_states);
-        const auto& data_buffer_handle = advection_params_array.get_active_buffer();
-
-        execute_simulation_step(commands,
-                                data_buffer_handle,
-                                advection_pipeline.Get(),
-                                [&](GpuFluidVolumeState& volume, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) {
-                                    barrier_and_swap(volume.density_textures, barriers);
-                                    barrier_and_swap(volume.temperature_textures, barriers);
-                                    barrier_and_swap(volume.reaction_textures, barriers);
-                                    barrier_and_swap(volume.velocity_textures, barriers);
-                                });
+        execute_simulation_step(commands, advection_params_array, advection_pipeline, [&](auto& volume, auto& barriers) {
+            barrier_and_swap(volume.density_textures, barriers);
+            barrier_and_swap(volume.temperature_textures, barriers);
+            barrier_and_swap(volume.reaction_textures, barriers);
+            barrier_and_swap(volume.velocity_textures, barriers);
+        });
     }
 
     void FluidSimPass::apply_buoyancy(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Bouyancy");
 
-        renderer->copy_data_to_buffer(buoyancy_params_array.get_active_buffer(), fluid_volume_states);
-        const auto data_buffer_handle = buoyancy_params_array.get_active_buffer();
-
-        execute_simulation_step(commands,
-                                data_buffer_handle,
-                                buoyancy_pipeline.Get(),
-                                [&](GpuFluidVolumeState& state, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) {
-                                    barrier_and_swap(state.velocity_textures, barriers);
-                                });
+        execute_simulation_step(commands, buoyancy_params_array, buoyancy_pipeline, [&](auto& state, auto& barriers) {
+            barrier_and_swap(state.velocity_textures, barriers);
+        });
     }
 
     void FluidSimPass::apply_impulse(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Impulse");
 
-        renderer->copy_data_to_buffer(impulse_params_array.get_active_buffer(), fluid_volume_states);
-        const auto data_buffer_handle = impulse_params_array.get_active_buffer();
-
-        execute_simulation_step(commands, data_buffer_handle, impulse_pipeline.Get(), [&](auto& state, auto& barriers) {
+        execute_simulation_step(commands, impulse_params_array, impulse_pipeline, [&](auto& state, auto& barriers) {
             barrier_and_swap(state.reaction_textures, barriers);
             barrier_and_swap(state.temperature_textures, barriers);
+        });
+    }
+
+    void FluidSimPass::apply_extinguishment(ID3D12GraphicsCommandList* commands) {
+        ZoneScoped;
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Extinguishment");
+
+        execute_simulation_step(commands, extinguishment_params_array, extinguishment_pipeline, [&](auto& state, auto& barriers) {
+            barrier_and_swap(state.density_textures, barriers);
+        });
+    }
+
+    void FluidSimPass::compute_vorticity_confinement(ID3D12GraphicsCommandList* commands) {
+        ZoneScoped;
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Vorticity Confinement");
+
+        execute_simulation_step(commands, vorticity_confinement_params_array, vorticity_pipeline, [&](auto& state, auto& barriers) {
+            const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(temp_data_texture.resource.Get()));
+        });
+
+        execute_simulation_step(commands, vorticity_confinement_params_array, confinement_pipeline, [&](auto& state, auto& barriers) {
+            barrier_and_swap(state.velocity_textures, barriers);
+        });
+    }
+
+    void FluidSimPass::compute_divergence(ID3D12GraphicsCommandList* commands) {
+        ZoneScoped;
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Divergence");
+
+        execute_simulation_step(commands, divergence_params_array, divergence_pipeline, [&](auto& state, auto& barriers) {
+            const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(temp_data_texture.resource.Get()));
+        });
+    }
+
+    void FluidSimPass::compute_pressure(ID3D12GraphicsCommandList* commands) {
+        ZoneScoped;
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Pressure");
+
+        for(auto i = 0; i < *num_pressure_iterations; i++) {
+            execute_simulation_step(commands, pressure_param_arrays[i], jacobi_pressure_solver_pipeline, [&](auto& state, auto& barriers) {
+                barrier_and_swap(state.pressure_textures, barriers);
+            });
+        }
+    }
+
+    void FluidSimPass::compute_projection(ID3D12GraphicsCommandList* commands) {
+        ZoneScoped;
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Projection");
+
+        execute_simulation_step(commands, projection_param_arrays, projection_pipeline, [&](auto& state, auto& barriers) {
+            barrier_and_swap(state.velocity_textures, barriers);
         });
     }
 

@@ -37,14 +37,29 @@ namespace sanity::engine::renderer {
         PerFrameBuffer advection_params_array;
         PerFrameBuffer buoyancy_params_array;
         PerFrameBuffer impulse_params_array;
+        PerFrameBuffer extinguishment_params_array;
+        PerFrameBuffer vorticity_confinement_params_array;
+        PerFrameBuffer divergence_params_array;
+        Rx::Vector<PerFrameBuffer> pressure_param_arrays;
+        PerFrameBuffer projection_param_arrays;
 
         ComPtr<ID3D12PipelineState> advection_pipeline;
         ComPtr<ID3D12PipelineState> buoyancy_pipeline;
         ComPtr<ID3D12PipelineState> impulse_pipeline;
+        ComPtr<ID3D12PipelineState> extinguishment_pipeline;
+        ComPtr<ID3D12PipelineState> vorticity_pipeline;
+        ComPtr<ID3D12PipelineState> confinement_pipeline;
+        ComPtr<ID3D12PipelineState> divergence_pipeline;
+        ComPtr<ID3D12PipelineState> jacobi_pressure_solver_pipeline;
+        ComPtr<ID3D12PipelineState> projection_pipeline;
 
         ComPtr<ID3D12CommandSignature> fluid_sim_dispatch_signature;
         Rx::Vector<FluidSimDispatch> fluid_sim_dispatches;
         PerFrameBuffer fluid_sim_dispatch_command_buffers;
+
+        void record_fire_simulation_updates(ID3D12GraphicsCommandList4* commands, Uint32 frame_idx);
+
+        void advance_fire_sim_params_arrays();
 
         void load_shaders();
 
@@ -56,8 +71,8 @@ namespace sanity::engine::renderer {
 
         void execute_simulation_step(
             ID3D12GraphicsCommandList* commands,
-            BufferHandle data_buffer_handle,
-            ID3D12PipelineState* pipeline,
+            const PerFrameBuffer& data_buffer,
+            const ComPtr<ID3D12PipelineState>& pipeline,
             Rx::Function<void(GpuFluidVolumeState&, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers)> synchronize_volume);
 
         void apply_advection(ID3D12GraphicsCommandList* commands);
@@ -65,6 +80,16 @@ namespace sanity::engine::renderer {
         void apply_buoyancy(ID3D12GraphicsCommandList* commands);
 
         void apply_impulse(ID3D12GraphicsCommandList* commands);
+
+        void apply_extinguishment(ID3D12GraphicsCommandList* commands);
+    	
+        void compute_vorticity_confinement(ID3D12GraphicsCommandList* commands);
+
+        void compute_divergence(ID3D12GraphicsCommandList* commands);
+
+        void compute_pressure(ID3D12GraphicsCommandList* commands);
+
+        void compute_projection(ID3D12GraphicsCommandList* commands);
 
         void barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const;
     };

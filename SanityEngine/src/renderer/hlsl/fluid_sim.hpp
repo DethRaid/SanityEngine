@@ -22,6 +22,7 @@ namespace sanity::engine::renderer {
         TextureHandle reaction_textures[2];
         TextureHandle velocity_textures[2];
         TextureHandle pressure_textures[2];
+        TextureHandle temp_data_buffer;
 
         uint3 size;
         uint padding;
