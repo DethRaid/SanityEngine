@@ -15,6 +15,7 @@
 #include "adapters/rex/rex_wrapper.hpp"
 #include "adapters/tracy.hpp"
 #include "core/constants.hpp"
+#include "pix3.h"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/helpers.hpp"
@@ -22,12 +23,10 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
-#include "settings.hpp"
 #include "windows/windows_helpers.hpp"
 
 namespace sanity::engine::renderer {
     RX_LOG("\033[32mRenderDevice\033[0m", logger);
-    RX_LOG("\033[32mD3D12 Debug\033[0m", d3d12_logger);
 
     RX_CONSOLE_BVAR(cvar_enable_debug_layers, "r.EnableDebugLayers", "Enable the D3D12 and DXGI debug layers", true);
 

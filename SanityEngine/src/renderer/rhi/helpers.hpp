@@ -47,13 +47,7 @@ namespace sanity::engine::renderer {
     Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs);
 
     Rx::String page_fault_output_to_string(const D3D12_DRED_PAGE_FAULT_OUTPUT1& page_fault_output);
-
-    RaytracingAccelerationStructure build_acceleration_structure_for_meshes(ID3D12GraphicsCommandList4* commands,
-                                                                            Renderer& device,
-                                                                            const Buffer& vertex_buffer,
-                                                                            const Buffer& index_buffer,
-                                                                            const Rx::Vector<PlacedMesh>& meshes);
-
+    
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,
                                          RenderBackend& device,
                                          ID3D12Resource* dst,

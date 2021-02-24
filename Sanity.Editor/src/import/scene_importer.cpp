@@ -8,10 +8,12 @@
 #include "Tracy.hpp"
 #include "actor/actor.hpp"
 #include "asset_registry/asset_registry.hpp"
+#include "core/components.hpp"
 #include "core/types.hpp"
 #include "entity/entity_operations.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "renderer/hlsl/standard_material.hpp"
+#include "renderer/mesh_data_store.hpp"
 #include "renderer/renderer.hpp"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
@@ -535,11 +537,8 @@ namespace sanity::editor::import {
             auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
 
-            const auto& vertex_buffer_handle = renderer->get_static_mesh_store().get_vertex_buffer();
-            const auto& index_buffer_handle = renderer->get_static_mesh_store().get_index_buffer();
-
-            const auto& vertex_buffer = renderer->get_buffer(vertex_buffer_handle);
-            const auto& index_buffer = renderer->get_buffer(index_buffer_handle);
+            const auto& vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
+            const auto& index_buffer = renderer->get_static_mesh_store().get_index_buffer();
 
             Rx::Vector<engine::renderer::RaytracingObject> raytracing_objects;
 
@@ -563,8 +562,8 @@ namespace sanity::editor::import {
                 // materials. This will be addressed in a future revision
 
                 const auto model_matrix = primitive_transform_component.get_local_matrix();
-                const auto as_handle = renderer->create_raytracing_geometry(*vertex_buffer,
-                                                                            *index_buffer,
+                const auto as_handle = renderer->create_raytracing_geometry(vertex_buffer,
+                                                                            index_buffer,
                                                                             Rx::Array{
                                                                                 engine::renderer::PlacedMesh{.mesh = primitive.mesh,
                                                                                                              .model_matrix = model_matrix}},

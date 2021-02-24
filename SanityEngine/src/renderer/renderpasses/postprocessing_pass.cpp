@@ -28,7 +28,8 @@ namespace sanity::engine::renderer {
     	const auto& scene_output_image_handle = denoiser_pass.get_output_texture();
         const auto material = PostprocessingMaterial{.scene_output_image = scene_output_image_handle.index};
 
-        memcpy(postprocessing_material_buffer_handle->mapped_ptr, &material, sizeof(PostprocessingMaterial));
+    	const auto& buffer = renderer->get_buffer(postprocessing_material_buffer_handle);
+        memcpy(buffer->mapped_ptr, &material, sizeof(PostprocessingMaterial));
 
         set_resource_usage(scene_output_image_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 

@@ -112,13 +112,13 @@ namespace sanity::engine::renderer {
         backend.schedule_buffer_destruction(*index_buffer);
     }
 
-    const BufferHandle& MeshDataStore::get_vertex_buffer_handle() const { return vertex_buffer_handle; }
+    BufferHandle MeshDataStore::get_vertex_buffer_handle() const { return vertex_buffer_handle; }
 
-    const BufferHandle& MeshDataStore::get_index_buffer_handle() const { return index_buffer_handle; }
+    BufferHandle MeshDataStore::get_index_buffer_handle() const { return index_buffer_handle; }
 
-    const Buffer& MeshDataStore::get_vertex_buffer() const { return *renderer->get_buffer(vertex_buffer_handle); }
+    Buffer MeshDataStore::get_vertex_buffer() const { return *renderer->get_buffer(vertex_buffer_handle); }
 
-    const Buffer& MeshDataStore::get_index_buffer() const { return *renderer->get_buffer(index_buffer_handle); }
+    Buffer MeshDataStore::get_index_buffer() const { return *renderer->get_buffer(index_buffer_handle); }
 
     MeshUploader MeshDataStore::begin_adding_meshes(ID3D12GraphicsCommandList4* commands) { return MeshUploader{commands, this}; }
 

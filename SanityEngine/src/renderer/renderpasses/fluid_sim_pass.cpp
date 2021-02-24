@@ -71,7 +71,7 @@ namespace sanity::engine::renderer {
                 set_resource_usage(density_textures[1], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
             });
 
-        fluid_sim_dispatch_command_buffers.write(fluid_sim_dispatches);
+        renderer->copy_data_to_buffer(fluid_sim_dispatch_command_buffers.get_active_buffer(), fluid_sim_dispatches);
     }
 
     void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
@@ -217,7 +217,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Advection");
 
-        advection_params_array.write(fluid_volume_states);
+        renderer->copy_data_to_buffer(advection_params_array.get_active_buffer(), fluid_volume_states);
         const auto& data_buffer_handle = advection_params_array.get_active_buffer();
 
         execute_simulation_step(commands,
@@ -235,7 +235,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Bouyancy");
 
-        buoyancy_params_array.write(fluid_volume_states);
+        renderer->copy_data_to_buffer(buoyancy_params_array.get_active_buffer(), fluid_volume_states);
         const auto data_buffer_handle = buoyancy_params_array.get_active_buffer();
 
         execute_simulation_step(commands,
@@ -250,7 +250,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Impulse");
 
-        impulse_params_array.write(fluid_volume_states);
+        renderer->copy_data_to_buffer(impulse_params_array.get_active_buffer(), fluid_volume_states);
         const auto data_buffer_handle = impulse_params_array.get_active_buffer();
 
         execute_simulation_step(commands, data_buffer_handle, impulse_pipeline.Get(), [&](auto& state, auto& barriers) {

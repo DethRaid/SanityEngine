@@ -4,7 +4,7 @@
 #include "entt/entity/fwd.hpp"
 #include "loading/asset_loader.hpp"
 #include "renderer/handles.hpp"
-#include "renderer/rhi/mesh_data_store.hpp"
+#include "renderer/mesh_data_store.hpp"
 #include "renderer/rhi/raytracing_structs.hpp"
 #include "renderer/hlsl/standard_material.hpp"
 #include "rx/core/map.h"

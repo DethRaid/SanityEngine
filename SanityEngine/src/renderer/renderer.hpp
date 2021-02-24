@@ -5,22 +5,21 @@
 
 #include "core/Prelude.hpp"
 #include "core/VectorHandle.hpp"
-#include "core/async/synchronized_resource.hpp"
-#include "hlsl/shared_structs.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/hlsl/shared_structs.hpp"
 #include "renderer/hlsl/standard_material.hpp"
+#include "renderer/mesh_data_store.hpp"
 #include "renderer/render_components.hpp"
 #include "renderer/renderpasses/ObjectsPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
-#include "rhi/mesh_data_store.hpp"
-#include "rhi/raytracing_structs.hpp"
-#include "rhi/render_backend.hpp"
-#include "rhi/render_pipeline_state.hpp"
+#include "renderer/rhi/raytracing_structs.hpp"
+#include "renderer/rhi/render_backend.hpp"
+#include "renderer/rhi/render_pipeline_state.hpp"
+#include "renderer/single_pass_downsampler.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
-#include "single_pass_downsampler.hpp"
 
 namespace std {
     namespace filesystem {
@@ -110,6 +109,9 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Rx::Optional<Buffer> get_buffer(const BufferHandle& handle) const;
 
+        template <typename DataType>
+        void copy_data_to_buffer(BufferHandle handle, const Rx::Vector<DataType>& data);
+
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info);
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
@@ -126,7 +128,7 @@ namespace sanity::engine::renderer {
         void schedule_texture_destruction(const TextureHandle& texture_handle);
 
         [[nodiscard]] FluidVolumeHandle create_fluid_volume(const FluidVolumeCreateInfo& create_info);
-            	
+
         [[nodiscard]] FluidVolume& get_fluid_volume(const FluidVolumeHandle& handle);
 
         /*!
@@ -243,7 +245,7 @@ namespace sanity::engine::renderer {
         void allocate_resource_descriptors();
 
         void create_per_frame_buffers();
-        
+
         void create_material_data_buffers();
 
         void create_light_buffers();
@@ -260,7 +262,7 @@ namespace sanity::engine::renderer {
 #pragma endregion
 
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
-        
+
         void upload_material_data(Uint32 frame_idx);
 
 #pragma region Renderpasses
@@ -322,5 +324,12 @@ namespace sanity::engine::renderer {
     RenderPassType* RenderpassHandle<RenderPassType>::get() const {
         auto* renderpass = this->operator->()->get();
         return static_cast<RenderPassType*>(renderpass);
+    }
+
+    template <typename DataType>
+    void Renderer::copy_data_to_buffer(const BufferHandle handle, const Rx::Vector<DataType>& data) {
+        const auto& buffer = get_buffer(handle);
+
+        memcpy(buffer->mapped_ptr, data.data(), data.size() * sizeof(DataType));
     }
 } // namespace sanity::engine::renderer

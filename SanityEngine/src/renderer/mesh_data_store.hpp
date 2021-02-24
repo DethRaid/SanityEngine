@@ -81,13 +81,13 @@ namespace sanity::engine::renderer {
 
         ~MeshDataStore();
 
-        [[nodiscard]] const BufferHandle& get_vertex_buffer_handle() const;
+        [[nodiscard]] BufferHandle get_vertex_buffer_handle() const;
 
-        [[nodiscard]] const BufferHandle& get_index_buffer_handle() const;
+        [[nodiscard]] BufferHandle get_index_buffer_handle() const;
 
-    	[[nodiscard]] const Buffer& get_vertex_buffer() const;
+    	[[nodiscard]] Buffer get_vertex_buffer() const;
 
-    	[[nodiscard]] const Buffer& get_index_buffer() const;
+    	[[nodiscard]] Buffer get_index_buffer() const;
 
         /*!
          * \brief Prepares the vertex and index buffers to receive new mesh data

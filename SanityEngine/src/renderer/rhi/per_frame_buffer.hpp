@@ -14,20 +14,10 @@ namespace sanity::engine::renderer {
 
         void advance_frame();
 
-        template <typename DataType>
-        void write(const Rx::Vector<DataType>& data);
-
         [[nodiscard]] BufferHandle get_active_buffer() const;
 
     private:
         Rx::Vector<BufferHandle> buffers;
         Uint32 active_buffer_idx{0};
     };
-
-    template <typename DataType>
-    void PerFrameBuffer::write(const Rx::Vector<DataType>& data) {
-        const auto& active_buffer = get_active_buffer();
-
-    	memcpy(active_buffer->mapped_ptr, data.data(), data.size() * sizeof(DataType));
-    }
 } // namespace sanity::engine::renderer

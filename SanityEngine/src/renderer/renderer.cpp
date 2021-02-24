@@ -61,8 +61,6 @@ namespace sanity::engine::renderer {
 
         create_per_frame_buffers();
 
-        create_fluid_volume_buffers();
-
         create_material_data_buffers();
 
         create_light_buffers();
@@ -114,9 +112,7 @@ namespace sanity::engine::renderer {
             }
 
             update_cameras(registry, frame_idx);
-
-            upload_fluid_volume_data(frame_idx);
-
+            
             upload_material_data(frame_idx);
 
             update_light_data_buffer(registry, frame_idx);
@@ -547,8 +543,75 @@ namespace sanity::engine::renderer {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
-        auto new_ray_geo = build_acceleration_structure_for_meshes(commands, *this, vertex_buffer, index_buffer, meshes);
+        Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
+        geom_descs.reserve(meshes.size());
+        meshes.each_fwd([&](const PlacedMesh& mesh) {
+            const auto transform_buffer = backend->get_staging_buffer(sizeof(glm::mat3x4));
+            const auto matrix = glm::mat4x3{glm::vec3{mesh.model_matrix[0]},
+                                            glm::vec3{mesh.model_matrix[1]},
+                                            glm::vec3{mesh.model_matrix[2]},
+                                            glm::vec3{mesh.model_matrix[3]}};
+            memcpy(transform_buffer.mapped_ptr, &mesh.model_matrix[0][0], sizeof(glm::mat4x3));
 
+            const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh.mesh;
+
+            auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+                                                            .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
+                                                            .Triangles = {.Transform3x4 = transform_buffer.resource->GetGPUVirtualAddress(),
+                                                                          .IndexFormat = DXGI_FORMAT_R32_UINT,
+                                                                          .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+                                                                          .IndexCount = num_indices,
+                                                                          .VertexCount = num_vertices,
+                                                                          .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
+                                                                                         (first_index * sizeof(Uint32)),
+                                                                          .VertexBuffer = {.StartAddress = vertex_buffer.resource
+                                                                                                               ->GetGPUVirtualAddress() +
+                                                                                                           (first_vertex *
+                                                                                                            sizeof(StandardVertex)),
+                                                                                           .StrideInBytes = sizeof(StandardVertex)}}};
+
+            geom_descs.push_back(Rx::Utility::move(geom_desc));
+            backend->return_staging_buffer(transform_buffer);
+        });
+
+        const auto build_as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
+            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+            .NumDescs = static_cast<UINT>(geom_descs.size()),
+            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+            .pGeometryDescs = geom_descs.data()};
+
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
+        backend->device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+
+        as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                        as_prebuild_info.ScratchDataSizeInBytes);
+        as_prebuild_info.ResultDataMaxSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+                                                          as_prebuild_info.ResultDataMaxSizeInBytes);
+
+        auto scratch_buffer = backend->get_scratch_buffer(static_cast<Uint32>(as_prebuild_info.ScratchDataSizeInBytes));
+
+        const auto result_buffer_create_info = BufferCreateInfo{.name = "BLAS Result Buffer",
+                                                                .usage = BufferUsage::RaytracingAccelerationStructure,
+                                                                .size = static_cast<Uint32>(as_prebuild_info.ResultDataMaxSizeInBytes)};
+
+        const auto result_buffer_handle = create_buffer(result_buffer_create_info);
+        const auto& result_buffer = get_buffer(result_buffer_handle);
+
+        const auto build_desc = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC{
+            .DestAccelerationStructureData = result_buffer->resource->GetGPUVirtualAddress(),
+            .Inputs = build_as_inputs,
+            .ScratchAccelerationStructureData = scratch_buffer.resource->GetGPUVirtualAddress()};
+
+        commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
+
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
+        commands->ResourceBarrier(1, &barrier);
+
+        backend->return_scratch_buffer(Rx::Utility::move(scratch_buffer));
+
+        auto new_ray_geo = RaytracingAccelerationStructure{.blas_buffer = result_buffer_handle};
+        
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
 
@@ -574,7 +637,7 @@ namespace sanity::engine::renderer {
 
         auto index_buffer = create_buffer(index_buffer_create_info);
 
-        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *backend, vertex_buffer, index_buffer);
+        static_mesh_storage = Rx::make_ptr<MeshDataStore>(RX_SYSTEM_ALLOCATOR, *this, vertex_buffer, index_buffer);
     }
 
     void Renderer::allocate_resource_descriptors() {
@@ -1046,8 +1109,8 @@ namespace sanity::engine::renderer {
 
         frame_constants.camera_buffer_index = camera_matrix_buffers->get_device_buffer_for_frame(frame_idx).index;
         frame_constants.light_buffer_index = light_device_buffers[frame_idx].index;
-        frame_constants.vertex_data_buffer_index = static_mesh_storage->get_vertex_buffer().index;
-        frame_constants.index_buffer_index = static_mesh_storage->get_index_buffer().index;
+        frame_constants.vertex_data_buffer_index = static_mesh_storage->get_vertex_buffer_handle().index;
+        frame_constants.index_buffer_index = static_mesh_storage->get_index_buffer_handle().index;
 
         frame_constants.noise_texture_idx = noise_texture_handle.index;
 

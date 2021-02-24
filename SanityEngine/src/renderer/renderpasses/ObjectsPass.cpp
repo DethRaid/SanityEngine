@@ -105,8 +105,9 @@ namespace sanity::engine::renderer {
 
         const auto& rt_scene = renderer->get_raytracing_scene();
         if(rt_scene.buffer.is_valid()) {
+            const auto& rt_buffer = renderer->get_buffer(rt_scene.buffer);
             commands->SetGraphicsRootShaderResourceView(RenderBackend::RAYTRACING_SCENE_ROOT_PARAMETER_INDEX,
-                                                        rt_scene.buffer->resource->GetGPUVirtualAddress());
+                                                        rt_buffer->resource->GetGPUVirtualAddress());
         }
     	
         commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX,
