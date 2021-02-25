@@ -234,11 +234,11 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
 
-        RenderpassHandle<FluidSimPass> fluid_sim_pass_handle;
-        RenderpassHandle<ObjectsPass> forward_pass_handle;
-        RenderpassHandle<DenoiserPass> denoiser_pass_handle;
-        RenderpassHandle<PostprocessingPass> postprocessing_pass_handle;
-        RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle;
+        RenderpassHandle<FluidSimPass> fluid_sim_pass_handle{nullptr, 0};
+        RenderpassHandle<ObjectsPass> forward_pass_handle{nullptr, 0};
+        RenderpassHandle<DenoiserPass> denoiser_pass_handle{nullptr, 0};
+        RenderpassHandle<PostprocessingPass> postprocessing_pass_handle{nullptr, 0};
+        RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle{nullptr, 0};
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;

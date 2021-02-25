@@ -1,20 +1,6 @@
 #include "inc/standard_root_signature.hlsl"
 #include "fluid_sim.hpp"
 
-float4 _Size;
-float _DeltaTime, _Dissipate, _Decay, _Forward;
-
-StructuredBuffer<float3> _Velocity;
-StructuredBuffer<float> _Obstacles;
-
-RWStructuredBuffer<float> _Write1f;
-StructuredBuffer<float> _Read1f;
-
-RWStructuredBuffer<float3> _Write3f;
-StructuredBuffer<float3> _Read3f;
-
-StructuredBuffer<float> _Phi_n_1_hat, _Phi_n_hat;
-
 [numthreads(FLUID_SIM_NUM_THREADS, FLUID_SIM_NUM_THREADS, FLUID_SIM_NUM_THREADS)]
 void main(uint3 id : SV_DispatchThreadID) {
 	const FrameConstants frame_constants = get_frame_constants();
@@ -39,14 +25,14 @@ void main(uint3 id : SV_DispatchThreadID) {
 	velocity_in.GetDimensions(volume_voxel_size.x, volume_voxel_size.y, volume_voxel_size.z);
 	const float3 my_uv = float3(id) / volume_voxel_size;
 
-	const float3 advection_offset = frame_constants.delta_time * velocity_in.Sample(bilinear_sampler, my_uv).xyz;
+	const float3 advection_offset = frame_constants.delta_time * velocity_in.SampleLevel(bilinear_sampler, my_uv, 0).xyz;
     const float3 advection_uv = my_uv + advection_offset;
 
 	float4 data;
-	data.x = density_in.Sample(bilinear_sampler, advection_uv).r;
-	data.y = temperature_in.Sample(bilinear_sampler, advection_uv).r;
-	data.z = reaction_in.Sample(bilinear_sampler, advection_uv).r;
-	data.w = velocity_in.Sample(bilinear_sampler, advection_uv).r;
+    data.x = density_in.SampleLevel(bilinear_sampler, advection_uv, 0).r;
+    data.y = temperature_in.SampleLevel(bilinear_sampler, advection_uv, 0).r;
+    data.z = reaction_in.SampleLevel(bilinear_sampler, advection_uv, 0).r;
+    data.w = velocity_in.SampleLevel(bilinear_sampler, advection_uv, 0).r;
 
 	data = data * fluid_volume.dissipation - fluid_volume.decay;
 	data.xyz = max(0, data.xyz);

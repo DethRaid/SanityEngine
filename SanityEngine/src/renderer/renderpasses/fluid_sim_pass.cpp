@@ -73,7 +73,7 @@ namespace sanity::engine::renderer {
                                                                .reaction_textures = {reaction_textures[0], reaction_textures[1]},
                                                                .velocity_textures = {velocity_textures[0], velocity_textures[1]},
                                                                .pressure_textures = {pressure_textures[0], pressure_textures[1]},
-                                                               .size = fluid_volume.size,
+                                                               .size = {fluid_volume.size, 0.f},
                                                                .dissipation = {fluid_volume.density_dissipation,
                                                                                fluid_volume.temperature_dissipation,
                                                                                1.0,
@@ -81,7 +81,7 @@ namespace sanity::engine::renderer {
                                                                .decay = {0.f, 0.f, fluid_volume.reaction_decay, 0.f},
                                                                .buoyancy = fluid_volume.buoyancy,
                                                                .weight = fluid_volume.weight,
-                .emitter_location = fluid_volume.emitter_location,
+                .emitter_location = {fluid_volume.emitter_location, 0.f},
                 .emitter_radius = fluid_volume.emitter_radius,
                 .emitter_strength = fluid_volume.emitter_strength};
                 fluid_volume_states.push_back(initial_state);
@@ -157,11 +157,41 @@ namespace sanity::engine::renderer {
     void FluidSimPass::load_shaders() {
         auto& backend = renderer->get_render_backend();
 
-        const auto advection_shader = load_shader("fluid/advection.compute");
+        const auto advection_shader = load_shader("fluid/apply_advection.compute");
         advection_pipeline = backend.create_compute_pipeline_state(advection_shader);
         set_object_name(advection_pipeline.Get(), "Fluid Sim Advection");
 
-    	
+        const auto buoyancy_shader = load_shader("fluid/apply_buoyancy.compute");
+        buoyancy_pipeline = backend.create_compute_pipeline_state(buoyancy_shader);
+        set_object_name(buoyancy_pipeline.Get(), "Fluid Sim Buoyancy");
+
+        // const auto impulse_shader = load_shader("fluid/apply_impulse.compute");
+        // impulse_pipeline = backend.create_compute_pipeline_state(impulse_shader);
+        // set_object_name(impulse_pipeline.Get(), "Fluid Sim Impulse");
+        // 
+        // const auto extinguishment_shader = load_shader("fluid/apply_extinguishment.compute");
+        // extinguishment_pipeline = backend.create_compute_pipeline_state(extinguishment_shader);
+        // set_object_name(extinguishment_pipeline.Get(), "Fluid Sim Extinguishment");
+    	// 
+        // const auto vorticity_shader = load_shader("fluid/compute_vorticity.compute");
+        // vorticity_pipeline = backend.create_compute_pipeline_state(vorticity_shader);
+        // set_object_name(vorticity_pipeline.Get(), "Fluid Sim Vorticity");
+        //     	
+        // const auto confinement_shader = load_shader("fluid/compute_confinement.compute");
+        // confinement_pipeline = backend.create_compute_pipeline_state(confinement_shader);
+        // set_object_name(confinement_pipeline.Get(), "Fluid Sim Confinement");
+        //     	
+        // const auto divergence_shader = load_shader("fluid/compute_divergence.compute");
+        // divergence_pipeline = backend.create_compute_pipeline_state(divergence_shader);
+        // set_object_name(divergence_pipeline.Get(), "Fluid Sim Advection");
+    	// 
+        // const auto pressure_shader = load_shader("fluid/jacobi_pressure_solver.compute");
+        // jacobi_pressure_solver_pipeline = backend.create_compute_pipeline_state(pressure_shader);
+        // set_object_name(jacobi_pressure_solver_pipeline.Get(), "Fluid Sim Advection");
+    	// 
+        // const auto projection_shader = load_shader("fluid/compute_projection.compute");
+        // projection_pipeline = backend.create_compute_pipeline_state(projection_shader);
+        // set_object_name(projection_pipeline.Get(), "Fluid Sim Advection");
     }
 
     void FluidSimPass::create_indirect_command_signature(RenderBackend& backend) {
@@ -182,7 +212,7 @@ namespace sanity::engine::renderer {
                                                             .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH}};
 
-        const D3D12_COMMAND_SIGNATURE_DESC command_signature_desc{.ByteStride = 0,
+        const D3D12_COMMAND_SIGNATURE_DESC command_signature_desc{.ByteStride = 24,
                                                                   .NumArgumentDescs = static_cast<UINT>(arguments.size()),
                                                                   .pArgumentDescs = arguments.data()};
         const auto& root_sig = backend.get_standard_root_signature();
@@ -281,7 +311,9 @@ namespace sanity::engine::renderer {
 
         fluid_volume_states.each_fwd([&](GpuFluidVolumeState& state) { synchronize_volume(state, barriers); });
 
-        commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+    	if(!barriers.is_empty()) {
+            commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
     }
 
     void FluidSimPass::apply_advection(ID3D12GraphicsCommandList* commands) {

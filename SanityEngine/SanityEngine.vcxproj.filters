@@ -739,6 +739,9 @@
     <FxCompile Include="data\shaders\fluid\apply_advection.compute.hlsl">
       <Filter>shaders\fluid</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\fluid\apply_buoyancy.compute.hlsl">
+      <Filter>shaders\fluid</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sanity.Engine.rc" />

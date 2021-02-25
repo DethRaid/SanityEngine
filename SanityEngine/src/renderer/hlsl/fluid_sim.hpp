@@ -24,8 +24,9 @@ namespace sanity::engine::renderer {
         TextureHandle pressure_textures[2];
         TextureHandle temp_data_buffer;
 
-        uint3 size;
-        uint padding;
+        uint4 size;
+
+    	uint4 voxel_size;
         
         float4 dissipation;
         
@@ -35,7 +36,7 @@ namespace sanity::engine::renderer {
 
         float weight;
         
-        float3 emitter_location;
+        float4 emitter_location;
         
         float emitter_radius;
 

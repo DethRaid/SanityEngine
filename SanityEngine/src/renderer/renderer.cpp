@@ -14,6 +14,7 @@
 #include "loading/shader_loading.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/render_components.hpp"
+#include "renderpasses/fluid_sim_pass.hpp"
 #include "renderpasses/postprocessing_pass.hpp"
 #include "renderpasses/ui_render_pass.hpp"
 #include "rhi/d3d12_private_data.hpp"
@@ -24,7 +25,6 @@
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
 #include "sanity_engine.hpp"
-#include "renderpasses/fluid_sim_pass.hpp"
 
 namespace sanity::engine::renderer {
     constexpr Uint32 MATERIAL_DATA_BUFFER_SIZE = 1 << 20;
@@ -42,11 +42,7 @@ namespace sanity::engine::renderer {
         : start_time{std::chrono::high_resolution_clock::now()},
           backend{make_render_device(window)},
           camera_matrix_buffers{Rx::make_ptr<CameraMatrixBuffer>(RX_SYSTEM_ALLOCATOR, *this)},
-          spd{Rx::make_ptr<SinglePassDownsampler>(RX_SYSTEM_ALLOCATOR, SinglePassDownsampler::Create(*backend))},
-          forward_pass_handle{nullptr, 0},
-          denoiser_pass_handle{nullptr, 0},
-          postprocessing_pass_handle{nullptr, 0},
-          imgui_pass_handle{nullptr, 0} {
+          spd{Rx::make_ptr<SinglePassDownsampler>(RX_SYSTEM_ALLOCATOR, SinglePassDownsampler::Create(*backend))} {
         ZoneScoped;
 
         int width, height;
@@ -113,7 +109,7 @@ namespace sanity::engine::renderer {
             }
 
             update_cameras(registry, frame_idx);
-            
+
             upload_material_data(frame_idx);
 
             update_light_data_buffer(registry, frame_idx);
@@ -457,7 +453,7 @@ namespace sanity::engine::renderer {
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
         FluidVolume new_volume;
 
-       // TODO
+        // TODO
 
         const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()));
 
@@ -536,7 +532,7 @@ namespace sanity::engine::renderer {
     BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
 
     const RaytracingScene& Renderer::get_raytracing_scene() const { return raytracing_scene; }
-    
+
     RaytracingAsHandle Renderer::create_raytracing_geometry(const Buffer& vertex_buffer,
                                                             const Buffer& index_buffer,
                                                             const Rx::Vector<PlacedMesh>& meshes,
@@ -612,7 +608,7 @@ namespace sanity::engine::renderer {
         backend->return_scratch_buffer(Rx::Utility::move(scratch_buffer));
 
         auto new_ray_geo = RaytracingAccelerationStructure{.blas_buffer = result_buffer_handle};
-        
+
         const auto handle_idx = static_cast<Uint32>(raytracing_geometries.size());
         raytracing_geometries.push_back(Rx::Utility::move(new_ray_geo));
 
@@ -694,7 +690,7 @@ namespace sanity::engine::renderer {
             next_unused_model_matrix_per_frame.emplace_back(Rx::make_ptr<Rx::Concurrency::Atomic<Uint32>>(RX_SYSTEM_ALLOCATOR, 0_u32));
         }
     }
-    
+
     void Renderer::create_material_data_buffers() {
         ZoneScoped;
 
@@ -820,9 +816,9 @@ namespace sanity::engine::renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(5);
 
-    	render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this));
+        render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this));
         fluid_sim_pass_handle = RenderpassHandle<FluidSimPass>::make_from_last_element(render_passes);
-    	
+
         render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         forward_pass_handle = RenderpassHandle<ObjectsPass>::make_from_last_element(render_passes);
 
@@ -868,7 +864,7 @@ namespace sanity::engine::renderer {
 
         camera_matrix_buffers->upload_data(frame_idx);
     }
-    
+
     void Renderer::upload_material_data(const Uint32 frame_idx) {
         ZoneScoped;
 
@@ -878,6 +874,7 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::update_resource_array_descriptors(ID3D12GraphicsCommandList* cmds, const Uint32 frame_idx) {
+    	ZoneScoped;
         const auto& resource_descriptors_range = resource_descriptors[frame_idx];
 
         // Intentional copy
