@@ -137,7 +137,7 @@ namespace sanity::engine::renderer {
         compute_vorticity_confinement(commands);
 
         // Compute the divergence of the velocity field. In fluid simulation the fluid is modeled as being incompressible meaning that the
-        // volume of the fluid does not change over time. The divergence is the amount the field has deviated from being divergence free
+        // volume of the fluid does not change over time. The divergence is the amount the field has deviated from being divergence free [you mean compression free?]
         compute_divergence(commands);
 
         // This computes the pressure needed to return the fluid to a divergence free condition
@@ -169,10 +169,10 @@ namespace sanity::engine::renderer {
         emitters_pipeline = backend.create_compute_pipeline_state(emitters_shader);
         set_object_name(emitters_pipeline.Get(), "Fluid Sim Emitters");
         
-        // const auto extinguishment_shader = load_shader("fluid/apply_extinguishment.compute");
-        // extinguishment_pipeline = backend.create_compute_pipeline_state(extinguishment_shader);
-        // set_object_name(extinguishment_pipeline.Get(), "Fluid Sim Extinguishment");
-    	// 
+        const auto extinguishment_shader = load_shader("fluid/apply_extinguishment.compute");
+        extinguishment_pipeline = backend.create_compute_pipeline_state(extinguishment_shader);
+        set_object_name(extinguishment_pipeline.Get(), "Fluid Sim Extinguishment");
+    	
         // const auto vorticity_shader = load_shader("fluid/compute_vorticity.compute");
         // vorticity_pipeline = backend.create_compute_pipeline_state(vorticity_shader);
         // set_object_name(vorticity_pipeline.Get(), "Fluid Sim Vorticity");

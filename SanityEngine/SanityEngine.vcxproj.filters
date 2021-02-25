@@ -745,6 +745,9 @@
     <FxCompile Include="data\shaders\fluid\apply_emitters.compute.hlsl">
       <Filter>shaders\fluid</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\fluid\apply_extinguishment.compute.hlsl">
+      <Filter>shaders\fluid</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sanity.Engine.rc" />

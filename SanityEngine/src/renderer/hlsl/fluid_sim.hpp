@@ -41,6 +41,10 @@ namespace sanity::engine::renderer {
         float emitter_radius;
 
     	float emitter_strength;
+
+    	float reaction_extinguishment;
+
+    	float density_extinguishment_amount;
     };
 
     struct FluidSimDispatch {
