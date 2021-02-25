@@ -126,7 +126,7 @@ namespace sanity::engine::renderer {
         apply_buoyancy(commands);
 
         // Adds a certain amount of reaction (fire) and temperate
-        apply_impulse(commands);
+        apply_emitters(commands);
 
         // The smoke is formed when the reaction is extinguished. When the reaction amount falls below the extinguishment factor smoke is
         // added
@@ -150,7 +150,7 @@ namespace sanity::engine::renderer {
     void FluidSimPass::advance_fire_sim_params_arrays() {
         advection_params_array.advance_frame();
         buoyancy_params_array.advance_frame();
-        impulse_params_array.advance_frame();
+        emitters_params_array.advance_frame();
         extinguishment_params_array.advance_frame();
     }
 
@@ -165,10 +165,10 @@ namespace sanity::engine::renderer {
         buoyancy_pipeline = backend.create_compute_pipeline_state(buoyancy_shader);
         set_object_name(buoyancy_pipeline.Get(), "Fluid Sim Buoyancy");
 
-        // const auto impulse_shader = load_shader("fluid/apply_impulse.compute");
-        // impulse_pipeline = backend.create_compute_pipeline_state(impulse_shader);
-        // set_object_name(impulse_pipeline.Get(), "Fluid Sim Impulse");
-        // 
+        const auto emitters_shader = load_shader("fluid/apply_emitters.compute");
+        emitters_pipeline = backend.create_compute_pipeline_state(emitters_shader);
+        set_object_name(emitters_pipeline.Get(), "Fluid Sim Emitters");
+        
         // const auto extinguishment_shader = load_shader("fluid/apply_extinguishment.compute");
         // extinguishment_pipeline = backend.create_compute_pipeline_state(extinguishment_shader);
         // set_object_name(extinguishment_pipeline.Get(), "Fluid Sim Extinguishment");
@@ -267,7 +267,7 @@ namespace sanity::engine::renderer {
 
         advection_params_array.set_buffers(advection_params_buffers);
         buoyancy_params_array.set_buffers(buoyancy_params_buffers);
-        impulse_params_array.set_buffers(impulse_params_buffers);
+        emitters_params_array.set_buffers(impulse_params_buffers);
         extinguishment_params_array.set_buffers(extinguishment_params_buffers);
     }
 
@@ -337,11 +337,11 @@ namespace sanity::engine::renderer {
         });
     }
 
-    void FluidSimPass::apply_impulse(ID3D12GraphicsCommandList* commands) {
+    void FluidSimPass::apply_emitters(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "Impulse");
 
-        execute_simulation_step(commands, impulse_params_array, impulse_pipeline, [&](auto& state, auto& barriers) {
+        execute_simulation_step(commands, emitters_params_array, emitters_pipeline, [&](auto& state, auto& barriers) {
             barrier_and_swap(state.reaction_textures, barriers);
             barrier_and_swap(state.temperature_textures, barriers);
         });

@@ -36,7 +36,7 @@ namespace sanity::engine::renderer {
 
         PerFrameBuffer advection_params_array;
         PerFrameBuffer buoyancy_params_array;
-        PerFrameBuffer impulse_params_array;
+        PerFrameBuffer emitters_params_array;
         PerFrameBuffer extinguishment_params_array;
         PerFrameBuffer vorticity_confinement_params_array;
         PerFrameBuffer divergence_params_array;
@@ -45,7 +45,7 @@ namespace sanity::engine::renderer {
 
         ComPtr<ID3D12PipelineState> advection_pipeline;
         ComPtr<ID3D12PipelineState> buoyancy_pipeline;
-        ComPtr<ID3D12PipelineState> impulse_pipeline;
+        ComPtr<ID3D12PipelineState> emitters_pipeline;
         ComPtr<ID3D12PipelineState> extinguishment_pipeline;
         ComPtr<ID3D12PipelineState> vorticity_pipeline;
         ComPtr<ID3D12PipelineState> confinement_pipeline;
@@ -79,7 +79,7 @@ namespace sanity::engine::renderer {
 
         void apply_buoyancy(ID3D12GraphicsCommandList* commands);
 
-        void apply_impulse(ID3D12GraphicsCommandList* commands);
+        void apply_emitters(ID3D12GraphicsCommandList* commands);
 
         void apply_extinguishment(ID3D12GraphicsCommandList* commands);
     	
