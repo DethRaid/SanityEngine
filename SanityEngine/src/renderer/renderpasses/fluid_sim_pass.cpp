@@ -173,14 +173,14 @@ namespace sanity::engine::renderer {
         extinguishment_pipeline = backend.create_compute_pipeline_state(extinguishment_shader);
         set_object_name(extinguishment_pipeline.Get(), "Fluid Sim Extinguishment");
     	
-        // const auto vorticity_shader = load_shader("fluid/compute_vorticity.compute");
-        // vorticity_pipeline = backend.create_compute_pipeline_state(vorticity_shader);
-        // set_object_name(vorticity_pipeline.Get(), "Fluid Sim Vorticity");
-        //     	
-        // const auto confinement_shader = load_shader("fluid/compute_confinement.compute");
-        // confinement_pipeline = backend.create_compute_pipeline_state(confinement_shader);
-        // set_object_name(confinement_pipeline.Get(), "Fluid Sim Confinement");
-        //     	
+        const auto vorticity_shader = load_shader("fluid/compute_vorticity.compute");
+        vorticity_pipeline = backend.create_compute_pipeline_state(vorticity_shader);
+        set_object_name(vorticity_pipeline.Get(), "Fluid Sim Vorticity");
+            	
+        const auto confinement_shader = load_shader("fluid/compute_confinement.compute");
+        confinement_pipeline = backend.create_compute_pipeline_state(confinement_shader);
+        set_object_name(confinement_pipeline.Get(), "Fluid Sim Confinement");
+            	
         // const auto divergence_shader = load_shader("fluid/compute_divergence.compute");
         // divergence_pipeline = backend.create_compute_pipeline_state(divergence_shader);
         // set_object_name(divergence_pipeline.Get(), "Fluid Sim Advection");
