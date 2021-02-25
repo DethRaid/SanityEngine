@@ -13,6 +13,6 @@ void main(uint3 id : SV_DispatchThreadID) {
 		const Texture3D density_in = textures3d[fluid_volume.density_textures[0]];
 		const RWTexture3D<float> density_out = uav_textures3d_r[fluid_volume.density_textures[2]];
 
-		density_out[id] = density_in[id] + fluid_volume.density_extinguishment_amount * reaction;
+		density_out[id] = density_in[id].r + fluid_volume.density_extinguishment_amount * reaction;
 	}
 }

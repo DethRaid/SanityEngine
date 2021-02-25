@@ -161,6 +161,12 @@ namespace sanity::engine::renderer {
         float emitter_radius{0.1f};
 
     	float emitter_strength{1.f};
+    	
+        float reaction_extinguishment{0.01f};
+    	
+        float density_extinguishment_amount{1.f};
+    	
+        float vorticity_strength{1.f};
     };
 	
     using FluidVolumeHandle = GpuResourceHandle<FluidVolume>;

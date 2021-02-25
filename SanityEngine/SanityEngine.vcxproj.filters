@@ -751,6 +751,9 @@
     <FxCompile Include="data\shaders\fluid\compute_vorticity.compute.hlsl">
       <Filter>shaders\fluid</Filter>
     </FxCompile>
+    <FxCompile Include="data\shaders\fluid\compute_confinement.compute.hlsl">
+      <Filter>shaders\fluid</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sanity.Engine.rc" />

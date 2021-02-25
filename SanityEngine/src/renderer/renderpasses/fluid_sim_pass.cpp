@@ -81,9 +81,13 @@ namespace sanity::engine::renderer {
                                                                .decay = {0.f, 0.f, fluid_volume.reaction_decay, 0.f},
                                                                .buoyancy = fluid_volume.buoyancy,
                                                                .weight = fluid_volume.weight,
-                .emitter_location = {fluid_volume.emitter_location, 0.f},
-                .emitter_radius = fluid_volume.emitter_radius,
-                .emitter_strength = fluid_volume.emitter_strength};
+												               .emitter_location = {fluid_volume.emitter_location, 0.f},
+												               .emitter_radius = fluid_volume.emitter_radius,
+												               .emitter_strength = fluid_volume.emitter_strength,
+												               .reaction_extinguishment = fluid_volume.reaction_extinguishment,
+												               .density_extinguishment_amount = fluid_volume.density_extinguishment_amount,
+												               .vorticity_strength = fluid_volume.vorticity_strength};
+            	
                 fluid_volume_states.push_back(initial_state);
 
                 set_resource_usage(density_textures[0], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -362,7 +366,10 @@ namespace sanity::engine::renderer {
 
         execute_simulation_step(commands, vorticity_confinement_params_array, vorticity_pipeline, [&](auto& state, auto& barriers) {
             const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(temp_data_texture.resource.Get()));
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(
+                temp_data_texture.resource.Get(), 
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
         });
 
         execute_simulation_step(commands, vorticity_confinement_params_array, confinement_pipeline, [&](auto& state, auto& barriers) {
@@ -376,7 +383,10 @@ namespace sanity::engine::renderer {
 
         execute_simulation_step(commands, divergence_params_array, divergence_pipeline, [&](auto& state, auto& barriers) {
             const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(temp_data_texture.resource.Get()));
+             barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(
+                temp_data_texture.resource.Get(), 
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
         });
     }
 

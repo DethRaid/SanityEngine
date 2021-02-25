@@ -45,6 +45,8 @@ namespace sanity::engine::renderer {
     	float reaction_extinguishment;
 
     	float density_extinguishment_amount;
+
+    	float vorticity_strength;
     };
 
     struct FluidSimDispatch {
