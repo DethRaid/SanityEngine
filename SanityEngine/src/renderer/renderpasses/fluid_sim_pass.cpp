@@ -26,17 +26,22 @@ namespace sanity::engine::renderer {
         32,
         10);
 
-    FluidSimPass::FluidSimPass(Renderer& renderer_in) : renderer{&renderer_in} {
+	static constexpr auto PARAMS_BUFFER_SIZE = MAX_NUM_FLUID_VOLUMES * sizeof(GpuFluidVolumeState);
+	
+    FluidSimPass::FluidSimPass(Renderer& renderer_in) : renderer{&renderer_in}, advection_params_array{"Fluid Sim Advection Params", PARAMS_BUFFER_SIZE, renderer_in},
+	buoyancy_params_array{"Fluid Sim Buoyancy Params", PARAMS_BUFFER_SIZE, renderer_in}, emitters_params_array{"Fluid Sim Emitter Params", PARAMS_BUFFER_SIZE, renderer_in},
+	extinguishment_params_array{"Fluid Sim Extinguishment Params", PARAMS_BUFFER_SIZE, renderer_in}, vorticity_confinement_params_array{"Fluid Sim Vorticity/Confinement Params", PARAMS_BUFFER_SIZE, renderer_in},
+	divergence_params_array{"Fluid Sim Divergence Params", PARAMS_BUFFER_SIZE, renderer_in}, projection_param_arrays{"Fluid Sim Projection Params", PARAMS_BUFFER_SIZE, renderer_in}{
         ZoneScoped;
-
-        auto& backend = renderer->get_render_backend();
-        const auto num_gpu_frames = backend.get_max_num_gpu_frames();
 
         load_shaders();
 
         create_indirect_command_signature(backend);
 
-        create_buffers(num_gpu_frames);
+    	pressure_param_arrays.reserve(*num_pressure_iterations);
+    	for(auto i = 0u; i < *num_pressure_iterations; i++) {
+    		pressure_param_arrays.emplace_back(Rx::String::format("Fluid Sim Pressure Params iteration %d", i), PARAMS_BUFFER_SIZE, renderer_in);
+    	}
     }
 
     void FluidSimPass::collect_work(entt::registry& registry, const Uint32 frame_idx) {
@@ -198,7 +203,9 @@ namespace sanity::engine::renderer {
         // set_object_name(projection_pipeline.Get(), "Fluid Sim Advection");
     }
 
-    void FluidSimPass::create_indirect_command_signature(RenderBackend& backend) {
+    void FluidSimPass::create_indirect_command_signature() {
+        auto& backend = renderer->get_render_backend();
+    	
         // TODO: Measure if the order I set the root constants in has a measurable performance impact
         const auto arguments = Rx::
             Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
@@ -223,57 +230,7 @@ namespace sanity::engine::renderer {
         backend.device->CreateCommandSignature(&command_signature_desc, root_sig.Get(), IID_PPV_ARGS(&fluid_sim_dispatch_signature));
     }
 
-    void FluidSimPass::create_buffers(const Uint32 num_gpu_frames) {
-        ZoneScoped;
-
-        Rx::Vector<BufferHandle> dispatch_command_buffers{num_gpu_frames};
-
-        Rx::Vector<BufferHandle> advection_params_buffers{num_gpu_frames};
-        Rx::Vector<BufferHandle> buoyancy_params_buffers{num_gpu_frames};
-        Rx::Vector<BufferHandle> impulse_params_buffers{num_gpu_frames};
-        Rx::Vector<BufferHandle> extinguishment_params_buffers{num_gpu_frames};
-
-        const auto fluid_sim_state_buffer_size = MAX_NUM_FLUID_VOLUMES * sizeof(GpuFluidVolumeState);
-
-        for(auto i = 0u; i < num_gpu_frames; i++) {
-            const auto dispatch_buffer_name = Rx::String::format("Fluid Sim Dispatch Commands buffer %d", i);
-            const auto dispatch_buffer_create_info = BufferCreateInfo{.name = dispatch_buffer_name,
-                                                                      .usage = BufferUsage::ConstantBuffer,
-                                                                      .size = MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDispatch)};
-            dispatch_command_buffers[i] = renderer->create_buffer(dispatch_buffer_create_info);
-
-            const auto advection_buffer_name = Rx::String::format("Advection Params Array buffer %d", i);
-            const auto advection_buffer_create_info = BufferCreateInfo{.name = advection_buffer_name,
-                                                                       .usage = BufferUsage::ConstantBuffer,
-                                                                       .size = fluid_sim_state_buffer_size};
-            advection_params_buffers[i] = renderer->create_buffer(advection_buffer_create_info);
-
-            const auto buoyancy_buffer_name = Rx::String::format("Buoyancy Params Array buffer %d", i);
-            const auto buoyancy_buffer_create_info = BufferCreateInfo{.name = buoyancy_buffer_name,
-                                                                      .usage = BufferUsage::ConstantBuffer,
-                                                                      .size = fluid_sim_state_buffer_size};
-            buoyancy_params_buffers[i] = renderer->create_buffer(buoyancy_buffer_create_info);
-
-            const auto impulse_buffer_name = Rx::String::format("Impulse Params Array buffer %d", i);
-            const auto impulse_buffer_create_info = BufferCreateInfo{.name = impulse_buffer_name,
-                                                                     .usage = BufferUsage::ConstantBuffer,
-                                                                     .size = fluid_sim_state_buffer_size};
-            impulse_params_buffers[i] = renderer->create_buffer(impulse_buffer_create_info);
-
-            const auto extinguishment_buffer_name = Rx::String::format("Extinguishment Params Array buffer %d", i);
-            const auto extinguishment_buffer_create_info = BufferCreateInfo{.name = extinguishment_buffer_name,
-                                                                            .usage = BufferUsage::ConstantBuffer,
-                                                                            .size = fluid_sim_state_buffer_size};
-            extinguishment_params_buffers[i] = renderer->create_buffer(extinguishment_buffer_create_info);
-        }
-
-        fluid_sim_dispatch_command_buffers.set_buffers(dispatch_command_buffers);
-
-        advection_params_array.set_buffers(advection_params_buffers);
-        buoyancy_params_array.set_buffers(buoyancy_params_buffers);
-        emitters_params_array.set_buffers(impulse_params_buffers);
-        extinguishment_params_array.set_buffers(extinguishment_params_buffers);
-    }
+  
 
     void FluidSimPass::set_buffer_indices(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) const {
         const auto& frame_constants_buffer = renderer->get_frame_constants_buffer(frame_idx);

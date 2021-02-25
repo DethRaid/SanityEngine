@@ -63,9 +63,7 @@ namespace sanity::engine::renderer {
 
         void load_shaders();
 
-        void create_indirect_command_signature(RenderBackend& backend);
-
-        void create_buffers(Uint32 num_gpu_frames);
+        void create_indirect_command_signature();
 
         void set_buffer_indices(ID3D12GraphicsCommandList* commands, Uint32 frame_idx) const;
 

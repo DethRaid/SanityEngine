@@ -4,13 +4,13 @@
 #include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
-    class PerFrameBuffer {
+	class Renderer;
+
+	class PerFrameBuffer {
     public:
         PerFrameBuffer() = default;
-
-        explicit PerFrameBuffer(Rx::Vector<BufferHandle> buffers_in);
-
-        void set_buffers(Rx::Vector<BufferHandle> buffers_in);
+		
+        explicit PerFrameBuffer(const Rx::String& name, Uint32 size, Renderer& renderer);
 
         void advance_frame();
 
