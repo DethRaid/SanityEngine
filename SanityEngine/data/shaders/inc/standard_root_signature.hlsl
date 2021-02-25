@@ -45,9 +45,11 @@ Texture2D textures[] : register(t16, space2);
 
 Texture3D textures3d[] : register(t16, space3);
 
-RWTexture3D<float4> uav_textures3d_rgba[] : register(u16, space4);
+RWTexture3D<float> uav_textures3d_r[] : register(u16, space4);
 
 RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space5);
+
+RWTexture3D<float4> uav_textures3d_rgba[] : register(u16, space6);
 
 // Helpers
 

@@ -900,7 +900,7 @@ namespace sanity::engine::renderer {
         root_parameters[RAYTRACING_SCENE_ROOT_PARAMETER_INDEX].InitAsShaderResourceView(0);
 
         // Resources
-        const Rx::Vector<D3D12_DESCRIPTOR_RANGE> resource_table_descriptor_ranges = Rx::Array{
+        const auto resource_table_descriptor_ranges = Rx::Array{
             // SRV buffers
             D3D12_DESCRIPTOR_RANGE{
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
@@ -952,6 +952,15 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 5,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+            },
+
+            // RWTexture3D<float4>
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+                .NumDescriptors = MAX_NUM_TEXTURES,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 6,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
         };

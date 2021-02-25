@@ -80,7 +80,10 @@ namespace sanity::engine::renderer {
                                                                                fluid_volume.velocity_dissipation},
                                                                .decay = {0.f, 0.f, fluid_volume.reaction_decay, 0.f},
                                                                .buoyancy = fluid_volume.buoyancy,
-                                                               .weight = fluid_volume.weight};
+                                                               .weight = fluid_volume.weight,
+                .emitter_location = fluid_volume.emitter_location,
+                .emitter_radius = fluid_volume.emitter_radius,
+                .emitter_strength = fluid_volume.emitter_strength};
                 fluid_volume_states.push_back(initial_state);
 
                 set_resource_usage(density_textures[0], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -157,6 +160,8 @@ namespace sanity::engine::renderer {
         const auto advection_shader = load_shader("fluid/advection.compute");
         advection_pipeline = backend.create_compute_pipeline_state(advection_shader);
         set_object_name(advection_pipeline.Get(), "Fluid Sim Advection");
+
+    	
     }
 
     void FluidSimPass::create_indirect_command_signature(RenderBackend& backend) {
@@ -364,9 +369,12 @@ namespace sanity::engine::renderer {
     }
 
     void FluidSimPass::barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const {
-        const auto& texture = renderer->get_texture(handles[1]);
-        barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(texture.resource.Get()));
+    	const auto& old_read_texture = renderer->get_texture(handles[0]);
+        const auto& old_write_texture = renderer->get_texture(handles[1]);
 
+    	barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+        barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+   	
         Rx::Utility::swap(handles[0], handles[1]);
     }
 } // namespace sanity::engine::renderer

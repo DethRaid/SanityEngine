@@ -26,37 +26,20 @@ namespace sanity::engine::renderer {
 
         uint3 size;
         uint padding;
-
-        /**
-         * @brief Dissipation values for density, temperature, reaction, and velocity
-         */
+        
         float4 dissipation;
-
-        /**
-         * @brief Decay amount for density, temperature, reaction, and velocity
-         */
+        
         float4 decay;
 
         float buoyancy;
 
         float weight;
+        
+        float3 emitter_location;
+        
+        float emitter_radius;
 
-        /**
-         * @brief Location of a reaction emitter, relative to the fluid volume, expressed in NDC
-         */
-        float3 emitter_location{0.f, -0.8f, 0.f};
-
-        /**
-         * @brief Radius of the emitter, again expressed relative to the fluid volume
-         *
-         * Radius of 1 means the emitter touches the sides of the volume
-         *
-         * Eventually we'll have support for arbitrarily shaped emitters, and multiple emitters, and really cool things that will make
-         * everyone jealous
-         */
-        float emitter_radius{0.1f};
-
-    	float emitter_strength{1.f};
+    	float emitter_strength;
     };
 
     struct FluidSimDispatch {
