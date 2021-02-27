@@ -44,7 +44,7 @@ float3 brdf(in SurfaceInfo surface, float3 l, const float3 v) {
 
     const float3 diffuse_color = surface.base_color.rgb * (1 - dielectric_f0) * (1 - surface.metalness);
 
-	// l.x *= -1;
+    // l.x *= -1;
 
     const float3 h = normalize(v + l);
 
@@ -59,7 +59,7 @@ float3 brdf(in SurfaceInfo surface, float3 l, const float3 v) {
 
     NoV = abs(NoV);
     NoL = saturate(NoL);
-    
+
     const float D = D_GGX(NoH, surface.roughness);
     const float3 F = F_Schlick(VoH, f0, 1.f);
     const float V = V_SmithGGXCorrelated(NoV, NoL, surface.roughness);
@@ -79,7 +79,7 @@ float3 brdf_single_ray(in SurfaceInfo surface, const float3 l, const float3 v) {
     const float dielectric_f0 = 0.04; // TODO: Get this from a texture
     const float3 f0 = lerp(dielectric_f0.xxx, surface.base_color.rgb, surface.metalness);
 
-    const float3 diffuse_color = surface.base_color.rgb * (1 - dielectric_f0) * (1 - surface.metalness);
+    const float3 diffuse_color = surface.base_color.rgb * (1 - f0) * (1 - surface.metalness);
 
     float3 h = normalize(v + l);
 
@@ -94,7 +94,7 @@ float3 brdf_single_ray(in SurfaceInfo surface, const float3 l, const float3 v) {
 
     NoV = abs(NoV);
     NoL = saturate(NoL);
-    
+
     float3 F = F_Schlick(VoH, f0, 1.f);
     float V = V_SmithGGXCorrelated(NoV, NoL, surface.roughness);
 

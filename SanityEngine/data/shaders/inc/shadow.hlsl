@@ -2,7 +2,7 @@
 
 #include "standard_root_signature.hlsl"
 
-#define NUM_SHADOW_RAYS 4
+#define NUM_SHADOW_RAYS 16
 
 #define SHADOW_RAY_BIAS 0.01
 
