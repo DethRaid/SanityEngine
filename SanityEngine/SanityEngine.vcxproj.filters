@@ -399,7 +399,7 @@
     <ClInclude Include="src\world\world.hpp">
       <Filter>src\world</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp">
+    <ClInclude Include="src\renderer\renderpasses\DirectLightingPass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp">
@@ -624,7 +624,7 @@
     <ClCompile Include="src\world\world.cpp">
       <Filter>src\world</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp">
+    <ClCompile Include="src\renderer\renderpasses\DirectLightingPass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp">

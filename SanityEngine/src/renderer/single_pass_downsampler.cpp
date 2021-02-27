@@ -54,6 +54,8 @@ namespace sanity::engine::renderer {
         const auto spd_pipeline = backend.create_compute_pipeline_state(compute_instructions, spd_root_sig);
         set_object_name(spd_pipeline.Get(), "SPD Compute Pipeline");
 
+
+
         return SinglePassDownsampler{spd_root_sig, spd_pipeline, backend};
     }
 
@@ -142,6 +144,8 @@ namespace sanity::engine::renderer {
                                                                       0);
             cmds->ResourceBarrier(1, &barrier);
         }
+
+        // TODO: Free descriptors
 
         backend->schedule_buffer_destruction(*global_counter_buffer);
     }

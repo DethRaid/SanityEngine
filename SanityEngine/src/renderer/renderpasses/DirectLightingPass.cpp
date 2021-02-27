@@ -1,4 +1,4 @@
-#include "ObjectsPass.hpp"
+#include "DirectLightingPass.hpp"
 
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
@@ -17,7 +17,7 @@ namespace sanity::engine::renderer {
 
     RX_LOG("ObjectsPass", logger);
 
-    ObjectsPass::ObjectsPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
+    DirectLightingPass::DirectLightingPass(Renderer& renderer_in, const glm::uvec2& render_resolution) : renderer{&renderer_in} {
         ZoneScoped;
         auto& device = renderer_in.get_render_backend();
 
@@ -61,14 +61,14 @@ namespace sanity::engine::renderer {
         set_resource_usage(depth_target_handle, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
-    ObjectsPass::~ObjectsPass() {
+    DirectLightingPass::~DirectLightingPass() {
         ZoneScoped;
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
 
         auto& device = renderer->get_render_backend();
     }
 
-    void ObjectsPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void DirectLightingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "ObjectsPass::render");
@@ -125,7 +125,7 @@ namespace sanity::engine::renderer {
         // copy_render_targets(commands);
     }
 
-    void ObjectsPass::create_framebuffer(const glm::uvec2& render_resolution) {
+    void DirectLightingPass::create_framebuffer(const glm::uvec2& render_resolution) {
         auto& device = renderer->get_render_backend();
 
         const auto color_target_create_info = TextureCreateInfo{
@@ -194,13 +194,13 @@ namespace sanity::engine::renderer {
         // downsampled_depth_target_handle = renderer->create_image(downsampled_depth_create_info);
     }
 
-    TextureHandle ObjectsPass::get_color_target_handle() const { return color_target_handle; }
+    TextureHandle DirectLightingPass::get_color_target_handle() const { return color_target_handle; }
 
-    TextureHandle ObjectsPass::get_object_id_texture() const { return object_id_target_handle; }
+    TextureHandle DirectLightingPass::get_object_id_texture() const { return object_id_target_handle; }
 
-    TextureHandle ObjectsPass::get_depth_target_handle() const { return depth_target_handle; }
+    TextureHandle DirectLightingPass::get_depth_target_handle() const { return depth_target_handle; }
 
-    void ObjectsPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
+    void DirectLightingPass::begin_render_pass(ID3D12GraphicsCommandList4* commands) const {
         const auto color_targets = std::array{color_target_access, object_id_target_access};
         commands->BeginRenderPass(static_cast<UINT>(color_targets.size()),
                                   color_targets.data(),
@@ -220,7 +220,7 @@ namespace sanity::engine::renderer {
         commands->RSSetScissorRects(1, &scissor_rect);
     }
 
-    void ObjectsPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void DirectLightingPass::draw_objects_in_scene(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
         PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_objects_in_scene");
 
@@ -248,7 +248,7 @@ namespace sanity::engine::renderer {
         });
     }
 
-    void ObjectsPass::draw_outlines(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) {
+    void DirectLightingPass::draw_outlines(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) {
         PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_outlines");
         commands->SetPipelineState(outline_pipeline->pso.Get());
 
@@ -276,7 +276,7 @@ namespace sanity::engine::renderer {
         });
     }
 
-    void ObjectsPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
+    void DirectLightingPass::draw_atmosphere(ID3D12GraphicsCommandList4* commands, entt::registry& registry) const {
         const auto atmosphere_view = registry.view<SkyComponent>();
         if(atmosphere_view.size() > 1) {
             logger->error("May only have one atmospheric sky component in a scene");
@@ -297,7 +297,7 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void ObjectsPass::copy_render_targets(ID3D12GraphicsCommandList4* commands) const {
+    void DirectLightingPass::copy_render_targets(ID3D12GraphicsCommandList4* commands) const {
         const auto& object_id_texture = renderer->get_texture(object_id_target_handle);
         const auto& depth_image = renderer->get_texture(depth_target_handle);
         const auto& downsampled_depth_image = renderer->get_texture(downsampled_depth_target_handle);

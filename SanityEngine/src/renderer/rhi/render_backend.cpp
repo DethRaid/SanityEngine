@@ -816,7 +816,7 @@ namespace sanity::engine::renderer {
 
         const auto total_num_buffers = *cvar_max_in_flight_gpu_frames * MAX_NUM_BUFFERS;
         const auto total_num_textures = *cvar_max_in_flight_gpu_frames * MAX_NUM_TEXTURES;
-        const auto num_bespoke_descriptors = 666; // Descriptors for the RT AS or idk whatever wants descriptors
+        const auto num_bespoke_descriptors = 65536; // Descriptors for the RT AS or single-pass downsampler or whatever else wants descriptors
 
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,

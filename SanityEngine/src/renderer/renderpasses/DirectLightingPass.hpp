@@ -16,11 +16,11 @@ namespace sanity::engine::renderer {
     class RenderBackend;
     class Renderer;
 
-    class ObjectsPass final : public RenderPass {
+    class DirectLightingPass final : public RenderPass {
     public:
-        explicit ObjectsPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
+        explicit DirectLightingPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 
-        ~ObjectsPass() override;
+        ~DirectLightingPass() override;
 
 #pragma region RenderPass
         void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;

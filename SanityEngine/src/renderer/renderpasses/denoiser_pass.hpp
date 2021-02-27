@@ -10,7 +10,7 @@
 #include "rx/core/ptr.h"
 
 namespace sanity::engine::renderer {
-    class ObjectsPass;
+    class DirectLightingPass;
     class Renderer;
 
     class DenoiserPass final : public RenderPass {
@@ -22,7 +22,7 @@ namespace sanity::engine::renderer {
          * \param render_resolution The resolution to render at. May or may not equal the final resolution
          * \param forward_pass the pass which this denoise pass will denoise the output of
          */
-        explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const ObjectsPass& forward_pass);
+        explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const DirectLightingPass& forward_pass);
 
         void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 
@@ -53,6 +53,6 @@ namespace sanity::engine::renderer {
 
         void create_textures_and_framebuffer(const glm::uvec2& render_resolution);
 
-        void create_material(const ObjectsPass& forward_pass);
+        void create_material(const DirectLightingPass& forward_pass);
     };
 } // namespace renderer

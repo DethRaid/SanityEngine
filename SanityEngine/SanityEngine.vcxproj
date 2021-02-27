@@ -678,7 +678,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\renderpasses\postprocessing_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\denoiser_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\LightClusterPass.hpp" />
-    <ClInclude Include="src\renderer\renderpasses\ObjectsPass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\DirectLightingPass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\ui_render_pass.hpp" />
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\rhi\command_list.hpp" />
@@ -757,7 +757,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\renderpasses\postprocessing_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\denoiser_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\LightClusterPass.cpp" />
-    <ClCompile Include="src\renderer\renderpasses\ObjectsPass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\DirectLightingPass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
     <ClCompile Include="src\renderer\render_components.cpp" />
     <ClCompile Include="src\renderer\rhi\compute_pipeline_state.cpp" />

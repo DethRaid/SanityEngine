@@ -819,15 +819,15 @@ namespace sanity::engine::renderer {
         render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this));
         fluid_sim_pass_handle = RenderpassHandle<FluidSimPass>::make_from_last_element(render_passes);
 
-        render_passes.push_back(Rx::make_ptr<ObjectsPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        forward_pass_handle = RenderpassHandle<ObjectsPass>::make_from_last_element(render_passes);
+        render_passes.push_back(Rx::make_ptr<DirectLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        direct_lighting_pass_handle = RenderpassHandle<DirectLightingPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<ObjectsPass&>(*render_passes[0])));
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<DirectLightingPass&>(*render_passes[1])));
         denoiser_pass_handle = RenderpassHandle<DenoiserPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(
-            Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[1])));
+            Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[2])));
         postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));

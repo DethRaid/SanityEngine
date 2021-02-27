@@ -45,7 +45,7 @@ namespace sanity::engine::renderer {
         create_indirect_command_signature();
 
         pressure_param_arrays.reserve(*num_pressure_iterations);
-        for(auto i = 0u; i < *num_pressure_iterations; i++) {
+        for(auto i = 0; i < *num_pressure_iterations; i++) {
             pressure_param_arrays.emplace_back(Rx::String::format("Fluid Sim Pressure Params iteration %d", i),
                                                static_cast<Uint32>(PARAMS_BUFFER_SIZE),
                                                renderer_in);

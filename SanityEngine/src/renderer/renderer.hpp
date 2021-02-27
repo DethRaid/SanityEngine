@@ -13,7 +13,7 @@
 #include "renderer/hlsl/standard_material.hpp"
 #include "renderer/mesh_data_store.hpp"
 #include "renderer/render_components.hpp"
-#include "renderer/renderpasses/ObjectsPass.hpp"
+#include "renderer/renderpasses/DirectLightingPass.hpp"
 #include "renderer/renderpasses/denoiser_pass.hpp"
 #include "renderer/rhi/raytracing_structs.hpp"
 #include "renderer/rhi/render_backend.hpp"
@@ -235,7 +235,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
 
         RenderpassHandle<FluidSimPass> fluid_sim_pass_handle{nullptr, 0};
-        RenderpassHandle<ObjectsPass> forward_pass_handle{nullptr, 0};
+        RenderpassHandle<DirectLightingPass> direct_lighting_pass_handle{nullptr, 0};
         RenderpassHandle<DenoiserPass> denoiser_pass_handle{nullptr, 0};
         RenderpassHandle<PostprocessingPass> postprocessing_pass_handle{nullptr, 0};
         RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle{nullptr, 0};
