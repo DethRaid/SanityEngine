@@ -100,7 +100,22 @@ namespace sanity::engine::renderer {
     MeshDataStore::MeshDataStore(Renderer& renderer_in, BufferHandle vertex_buffer_in, BufferHandle index_buffer_in)
         : renderer{&renderer_in},
           vertex_buffer_handle{Rx::Utility::move(vertex_buffer_in)},
-          index_buffer_handle{Rx::Utility::move(index_buffer_in)} {}
+          index_buffer_handle{Rx::Utility::move(index_buffer_in)} {
+        const auto& vertex_buffer = renderer->get_buffer(vertex_buffer_handle);
+
+        vertex_bindings = Rx::Array{VertexBufferBinding{.buffer = *vertex_buffer,
+                                                        .offset = offsetof(StandardVertex, location),
+                                                        .vertex_size = sizeof(StandardVertex)},
+                                    VertexBufferBinding{.buffer = *vertex_buffer,
+                                                        .offset = offsetof(StandardVertex, normal),
+                                                        .vertex_size = sizeof(StandardVertex)},
+                                    VertexBufferBinding{.buffer = *vertex_buffer,
+                                                        .offset = offsetof(StandardVertex, color),
+                                                        .vertex_size = sizeof(StandardVertex)},
+                                    VertexBufferBinding{.buffer = *vertex_buffer,
+                                                        .offset = offsetof(StandardVertex, texcoord),
+                                                        .vertex_size = sizeof(StandardVertex)}};
+    }
 
     MeshDataStore::~MeshDataStore() {
         auto& backend = renderer->get_render_backend();
@@ -132,7 +147,7 @@ namespace sanity::engine::renderer {
 
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());
 
-    	auto& backend = renderer->get_render_backend();
+        auto& backend = renderer->get_render_backend();
 
         const auto vertex_data_size = static_cast<Uint32>(vertices.size() * sizeof(StandardVertex));
         const auto index_data_size = static_cast<Uint32>(indices.size() * sizeof(Uint32));
@@ -145,7 +160,7 @@ namespace sanity::engine::renderer {
 
         indices.each_fwd([&](const Uint32 idx) { offset_indices.push_back(idx + next_vertex_offset); });
 
-    	const auto& vertex_buffer = get_vertex_buffer();
+        const auto& vertex_buffer = get_vertex_buffer();
         const auto& index_buffer = get_index_buffer();
 
         auto* vertex_resource = vertex_buffer.resource.Get();
@@ -177,29 +192,28 @@ namespace sanity::engine::renderer {
                 .num_indices = static_cast<Uint32>(indices.size())};
     }
 
-    void MeshDataStore::bind_to_command_list(ID3D12GraphicsCommandList4* commands) const {
+    void MeshDataStore::bind_to_command_list(ID3D12GraphicsCommandList* commands) const {
         // If we have more than 16 vertex attributes, we probably have bigger problems
         Rx::Array<D3D12_VERTEX_BUFFER_VIEW[16]> vertex_buffer_views{};
         for(Uint32 i = 0; i < vertex_bindings.size(); i++) {
             const auto& binding = vertex_bindings[i];
             const auto& buffer = static_cast<const Buffer>(binding.buffer);
 
-            D3D12_VERTEX_BUFFER_VIEW view{};
-            view.BufferLocation = buffer.resource->GetGPUVirtualAddress() + binding.offset;
-            view.SizeInBytes = static_cast<Uint32>(buffer.size - binding.offset);
-            view.StrideInBytes = binding.vertex_size;
+            const auto view = D3D12_VERTEX_BUFFER_VIEW{.BufferLocation = buffer.resource->GetGPUVirtualAddress() + binding.offset,
+                                                       .SizeInBytes = static_cast<Uint32>(buffer.size - binding.offset),
+                                                       .StrideInBytes = binding.vertex_size};
 
             vertex_buffer_views[i] = view;
         }
 
-        commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), vertex_buffer_views.data());
+        auto* views = vertex_buffer_views.data();
+        commands->IASetVertexBuffers(0, static_cast<UINT>(vertex_bindings.size()), views);
 
-    	const auto& index_buffer = get_index_buffer();
+        const auto& index_buffer = get_index_buffer();
 
-        D3D12_INDEX_BUFFER_VIEW index_view{};
-        index_view.BufferLocation = index_buffer.resource->GetGPUVirtualAddress();
-        index_view.SizeInBytes = static_cast<Uint32>(index_buffer.size);
-        index_view.Format = DXGI_FORMAT_R32_UINT;
+        const D3D12_INDEX_BUFFER_VIEW index_view{.BufferLocation = index_buffer.resource->GetGPUVirtualAddress(),
+                                                 .SizeInBytes = static_cast<Uint32>(index_buffer.size),
+                                                 .Format = DXGI_FORMAT_R32_UINT};
 
         commands->IASetIndexBuffer(&index_view);
 

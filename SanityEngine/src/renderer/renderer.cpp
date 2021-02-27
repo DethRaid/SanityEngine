@@ -230,6 +230,10 @@ namespace sanity::engine::renderer {
         }
     }
 
+    void Renderer::bind_global_resources(ID3D12GraphicsCommandList* command_list) const {
+        static_mesh_storage->bind_to_command_list(command_list);
+    }
+
     void Renderer::execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                              entt::registry& registry,
                                              const Uint32& frame_idx) {
@@ -246,6 +250,9 @@ namespace sanity::engine::renderer {
 
             {
                 ZoneScopedN("Record renderpass work");
+
+                bind_global_resources(command_list.Get());
+
                 for(Uint32 i = 0; i < render_passes.size(); i++) {
                     Rx::Ptr<RenderPass>& render_pass = render_passes[i];
 
@@ -822,8 +829,10 @@ namespace sanity::engine::renderer {
         render_passes.push_back(Rx::make_ptr<DirectLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         direct_lighting_pass_handle = RenderpassHandle<DirectLightingPass>::make_from_last_element(render_passes);
 
-        render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, static_cast<DirectLightingPass&>(*render_passes[1])));
+        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
+                                                           *this,
+                                                           output_framebuffer_size,
+                                                           static_cast<DirectLightingPass&>(*render_passes[1])));
         denoiser_pass_handle = RenderpassHandle<DenoiserPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(
@@ -874,7 +883,7 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::update_resource_array_descriptors(ID3D12GraphicsCommandList* cmds, const Uint32 frame_idx) {
-    	ZoneScoped;
+        ZoneScoped;
         const auto& resource_descriptors_range = resource_descriptors[frame_idx];
 
         // Intentional copy

@@ -94,7 +94,7 @@ namespace sanity::engine::renderer {
          */
         [[nodiscard]] MeshUploader begin_adding_meshes(ID3D12GraphicsCommandList4* commands);
 
-        void bind_to_command_list(ID3D12GraphicsCommandList4* commands) const;
+        void bind_to_command_list(ID3D12GraphicsCommandList* commands) const;
 
     private:
         Renderer* renderer;
@@ -103,7 +103,7 @@ namespace sanity::engine::renderer {
 
         BufferHandle index_buffer_handle;
 
-        Rx::Vector<VertexBufferBinding> vertex_bindings{};
+        Rx::Vector<VertexBufferBinding> vertex_bindings;
 
         /*!
          * \brief Index of the byte in the vertex buffer where the next mesh can be uploaded to

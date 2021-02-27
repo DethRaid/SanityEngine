@@ -119,10 +119,11 @@ namespace sanity::engine::renderer {
         const auto& root_sig = backend.get_standard_root_signature();
         commands->SetComputeRootSignature(root_sig.Get());
 
-        record_fire_simulation_updates(commands, frame_idx);
+        if(!fluid_volume_states.is_empty()) {
+            record_fire_simulation_updates(commands, frame_idx);
+        }
 
-        // Assume that we only update fluid sims once per frame
-
+        // Always advance the arrays to the next frame so we can keep everything consistent
         advance_fire_sim_params_arrays();
 
         fluid_sim_dispatch_command_buffers.advance_frame();
@@ -202,11 +203,11 @@ namespace sanity::engine::renderer {
         const auto divergence_shader = load_shader("fluid/compute_divergence.compute");
         divergence_pipeline = backend.create_compute_pipeline_state(divergence_shader);
         set_object_name(divergence_pipeline.Get(), "Fluid Sim Advection");
-        
+
         const auto pressure_shader = load_shader("fluid/jacobi_pressure_solver.compute");
         jacobi_pressure_solver_pipeline = backend.create_compute_pipeline_state(pressure_shader);
         set_object_name(jacobi_pressure_solver_pipeline.Get(), "Fluid Sim Advection");
-        
+
         const auto projection_shader = load_shader("fluid/compute_projection.compute");
         projection_pipeline = backend.create_compute_pipeline_state(projection_shader);
         set_object_name(projection_pipeline.Get(), "Fluid Sim Advection");

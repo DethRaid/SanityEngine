@@ -272,6 +272,8 @@ namespace sanity::engine::renderer {
 #pragma region Renderpasses
         void update_resource_array_descriptors(ID3D12GraphicsCommandList* cmds, Uint32 frame_idx);
 
+        void bind_global_resources(ID3D12GraphicsCommandList* command_list) const;
+
         void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
