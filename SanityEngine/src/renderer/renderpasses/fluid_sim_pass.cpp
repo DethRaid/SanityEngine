@@ -207,9 +207,9 @@ namespace sanity::engine::renderer {
         jacobi_pressure_solver_pipeline = backend.create_compute_pipeline_state(pressure_shader);
         set_object_name(jacobi_pressure_solver_pipeline.Get(), "Fluid Sim Advection");
         
-        // const auto projection_shader = load_shader("fluid/compute_projection.compute");
-        // projection_pipeline = backend.create_compute_pipeline_state(projection_shader);
-        // set_object_name(projection_pipeline.Get(), "Fluid Sim Advection");
+        const auto projection_shader = load_shader("fluid/compute_projection.compute");
+        projection_pipeline = backend.create_compute_pipeline_state(projection_shader);
+        set_object_name(projection_pipeline.Get(), "Fluid Sim Advection");
     }
 
     void FluidSimPass::create_indirect_command_signature() {
