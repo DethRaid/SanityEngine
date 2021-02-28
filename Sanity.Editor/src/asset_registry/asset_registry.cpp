@@ -1,5 +1,8 @@
 #include "asset_registry.hpp"
 
+#include <renderer/rhi/d3d12_private_data.hpp>
+
+
 #include "core/fs/path_ops.hpp"
 #include "loading/image_loading.hpp"
 #include "rx/core/log.h"
@@ -39,6 +42,7 @@ namespace sanity::editor {
         }
 
         auto cmds = renderer.get_render_backend().create_command_list();
+        engine::renderer::set_object_name(cmds.Get(), "Directory icon creation command list");
 
         directory_icon = renderer.create_texture(engine::renderer::TextureCreateInfo{.name = "Directory icon",
                                                                                  .usage = engine::renderer::TextureUsage::SampledTexture,
@@ -72,6 +76,7 @@ namespace sanity::editor {
                                                                    .width = width,
                                                                    .height = height};
         auto cmds = renderer.get_render_backend().create_command_list();
+        engine::renderer::set_object_name(cmds.Get(), Rx::String::format("%s creation commands", create_info.name));
         const auto icon_handle = renderer.create_texture(create_info, pixels, cmds.Get());
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
 

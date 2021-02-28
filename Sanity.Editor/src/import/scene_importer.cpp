@@ -4,6 +4,8 @@
 #include "scene_importer.hpp"
 
 #include <ranges>
+#include <renderer/rhi/d3d12_private_data.hpp>
+
 
 #include "Tracy.hpp"
 #include "actor/actor.hpp"
@@ -152,6 +154,7 @@ namespace sanity::editor::import {
         auto& backend = renderer->get_render_backend();
         // backend.begin_frame_capture();
         auto cmds = backend.create_command_list();
+        engine::renderer::set_object_name(cmds.Get(), Rx::String::format("Import glTF %s", scene_path.string()));
 
         if(import_settings.import_meshes) {
             meshes = import_all_meshes(scene, cmds.Get());

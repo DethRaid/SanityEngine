@@ -8,19 +8,19 @@
 #include "core/components.hpp"
 #include "core/constants.hpp"
 #include "entt/entity/registry.hpp"
-#include "hlsl/shared_structs.hpp"
 #include "imgui/imgui.h"
 #include "loading/image_loading.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
+#include "renderer/hlsl/shared_structs.hpp"
 #include "renderer/render_components.hpp"
-#include "renderpasses/fluid_sim_pass.hpp"
-#include "renderpasses/postprocessing_pass.hpp"
-#include "renderpasses/ui_render_pass.hpp"
-#include "rhi/d3d12_private_data.hpp"
-#include "rhi/d3dx12.hpp"
-#include "rhi/helpers.hpp"
-#include "rhi/render_backend.hpp"
+#include "renderer/renderpasses/fluid_sim_pass.hpp"
+#include "renderer/renderpasses/postprocessing_pass.hpp"
+#include "renderer/renderpasses/ui_render_pass.hpp"
+#include "renderer/rhi/d3d12_private_data.hpp"
+#include "renderer/rhi/d3dx12.hpp"
+#include "renderer/rhi/helpers.hpp"
+#include "renderer/rhi/render_backend.hpp"
 #include "rx/console/variable.h"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
@@ -98,7 +98,7 @@ namespace sanity::engine::renderer {
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
 
         auto command_list = backend->create_command_list(frame_idx);
-        command_list->SetName(L"Main Render Command List");
+        set_object_name(command_list.Get(), Rx::String::format("Main Render Command List for frame %d", frame_idx));
 
         {
             TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_all");
@@ -238,10 +238,10 @@ namespace sanity::engine::renderer {
                                              entt::registry& registry,
                                              const Uint32& frame_idx) {
         {
-            ZoneScopedN("Renderer::render_passes");
+            ZoneScoped;
 
-            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_passes");
-            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_passes");
+            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::execute_all_render_passes");
+            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "execute_all_render_passes");
 
             {
                 ZoneScopedN("Collect renderpass work");
@@ -458,9 +458,110 @@ namespace sanity::engine::renderer {
     }
 
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
-        FluidVolume new_volume;
+        const auto voxel_size = create_info.size * create_info.voxels_per_meter;
+        const auto voxel_size_pot = glm::uvec3{glm::ceil(glm::log2(voxel_size))};
 
-        // TODO
+        FluidVolume new_volume;
+        Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
+
+        new_volume.density_texture[0] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Density 0", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.density_texture[1] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Density 1", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.temperature_texture[0] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Temperature 0", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.temperature_texture[1] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Temperature 1", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.reaction_texture[0] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Reaction 0", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.reaction_texture[1] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Reaction 1", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.velocity_texture[0] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Velocity 0", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.velocity_texture[1] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Velocity 1", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.pressure_texture[0] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Pressure 0", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.pressure_texture[1] = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Pressure 1", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
+
+        new_volume.temp_texture = create_texture(TextureCreateInfo{
+            .name = Rx::String::format("%s Temp", create_info.name),
+            .usage = TextureUsage::UnorderedAccess,
+            .format = TextureFormat::R32F,
+            .width = voxel_size_pot.x,
+            .height = voxel_size_pot.y,
+            .depth = voxel_size_pot.z,
+        });
 
         const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()));
 
@@ -745,7 +846,7 @@ namespace sanity::engine::renderer {
         // load_noise_texture("data/textures/noise/RuthNoise.png");
 
         auto commands = backend->create_command_list();
-        commands->SetName(L"Renderer::create_builtin_images");
+        set_object_name(commands.Get(), "Renderer::create_builtin_images");
 
         {
             TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), "Renderer::create_builtin_images");
@@ -930,13 +1031,23 @@ namespace sanity::engine::renderer {
             }
 
             // V0: Bind all the textures as SRVs
-            const auto desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
-                                                              .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-                                                              .Shader4ComponentMapping = mapping,
-                                                              .Texture2D = D3D12_TEX2D_SRV{.MostDetailedMip = 0,
-                                                                                           .MipLevels = texture_desc.MipLevels,
-                                                                                           .PlaneSlice = 0,
-                                                                                           .ResourceMinLODClamp = 0}};
+            D3D12_SHADER_RESOURCE_VIEW_DESC desc;
+            if(texture.depth == 1) {
+                desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
+                                                       .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                                                       .Shader4ComponentMapping = mapping,
+                                                       .Texture2D = D3D12_TEX2D_SRV{.MostDetailedMip = 0,
+                                                                                    .MipLevels = texture_desc.MipLevels,
+                                                                                    .PlaneSlice = 0,
+                                                                                    .ResourceMinLODClamp = 0}};
+            } else {
+                desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
+                                                       .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D,
+                                                       .Shader4ComponentMapping = mapping,
+                                                       .Texture3D = D3D12_TEX3D_SRV{.MostDetailedMip = 0,
+                                                                                    .MipLevels = texture_desc.MipLevels,
+                                                                                    .ResourceMinLODClamp = 0}};
+            }
             device->CreateShaderResourceView(texture.resource.Get(), &desc, write_descriptor);
 
             write_descriptor.Offset(1, descriptor_size);

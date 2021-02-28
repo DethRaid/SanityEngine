@@ -438,8 +438,10 @@
     <ClInclude Include="src\renderer\hlsl\fluid_sim.hpp">
       <Filter>src\renderer\hlsl</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\rhi\per_frame_buffer.hpp" />
     <ClInclude Include="src\renderer\mesh_data_store.hpp">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\rhi\per_frame_buffer.hpp">
       <Filter>src\renderer</Filter>
     </ClInclude>
   </ItemGroup>
@@ -645,8 +647,10 @@
     <ClCompile Include="src\renderer\gpu_resource_pool.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp" />
     <ClCompile Include="src\renderer\mesh_data_store.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
   </ItemGroup>

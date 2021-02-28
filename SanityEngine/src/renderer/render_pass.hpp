@@ -56,7 +56,7 @@ namespace sanity::engine {
              */
             void set_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES states);
 
-            void set_resource_usage(const Rx::Vector<TextureHandle>& handles, D3D12_RESOURCE_STATES states);
+            void set_resource_usages(const Rx::Vector<TextureHandle>& handles, D3D12_RESOURCE_STATES states);
 
             /*!
              * \brief Describes how this renderpass will use a resource
@@ -80,7 +80,7 @@ namespace sanity::engine {
              * \param begin_states The states that the resource must be in when this render pass begins
              * \param end_states The states that this resource will be in when this render pass ends
              */
-            void set_resource_usage(const Rx::Vector<TextureHandle>& handles,
+            void set_resource_usages(const Rx::Vector<TextureHandle>& handles,
                                     D3D12_RESOURCE_STATES begin_states,
                                     D3D12_RESOURCE_STATES end_states);
 

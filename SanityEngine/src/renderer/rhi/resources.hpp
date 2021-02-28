@@ -7,8 +7,11 @@
 
 #include "core/types.hpp"
 #include "glm/glm.hpp"
+#include "per_frame_buffer.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/rhi/per_frame_buffer.hpp"
 #include "rx/core/string.h"
+#include "rx/core/utility/pair.h"
 
 namespace D3D12MA {
     class Allocation;
@@ -17,23 +20,6 @@ namespace D3D12MA {
 using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
-	
-    struct Buffer {
-        Rx::String name;
-
-        Uint64 size{0};
-
-        Uint64 alignment{0};
-
-        ComPtr<ID3D12Resource> resource;
-
-        D3D12MA::Allocation* allocation{nullptr};
-
-        void* mapped_ptr{nullptr};
-    };
-
-    using BufferHandle = GpuResourceHandle<Buffer>;
-
     /*!
      * \brief All the possible ways that one can use a buffer
      */
@@ -59,6 +45,29 @@ namespace sanity::engine::renderer {
         Uint32 size{0};
     };
 
+    struct Buffer {
+        Rx::String name;
+
+        Uint64 size{0};
+
+        Uint64 alignment{0};
+
+        ComPtr<ID3D12Resource> resource;
+
+        D3D12MA::Allocation* allocation{nullptr};
+
+        void* mapped_ptr{nullptr};
+    };
+
+    using BufferHandle = GpuResourceHandle<Buffer>;
+
+    class BufferRing : public ResourceRing<GpuResourceHandle<Buffer>> {
+    public:
+        BufferRing() = default;
+
+        explicit BufferRing(const Rx::String& name, Uint32 size, Renderer& renderer);
+    };
+
     enum class TextureUsage { RenderTarget, DepthStencil, SampledTexture, UnorderedAccess };
 
     enum class TextureFormat {
@@ -70,26 +79,6 @@ namespace sanity::engine::renderer {
         Depth32,
         Depth24Stencil8,
         Rg32F,
-    };
-
-    struct Texture {
-        Rx::String name;
-
-        Uint32 width{1};
-        Uint32 height{1};
-        Uint32 depth{1};
-
-        ComPtr<ID3D12Resource> resource;
-
-        D3D12MA::Allocation* allocation;
-
-        TextureFormat format;
-    };
-
-    using TextureHandle = GpuResourceHandle<Texture>;
-	
-    struct RenderTarget : Texture {
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
     };
 
     struct TextureCreateInfo {
@@ -108,44 +97,85 @@ namespace sanity::engine::renderer {
         bool enable_resource_sharing{false};
     };
 
+    struct Texture {
+        Rx::String name;
+
+        Uint32 width{1};
+        Uint32 height{1};
+        Uint32 depth{1};
+
+        ComPtr<ID3D12Resource> resource;
+
+        D3D12MA::Allocation* allocation;
+
+        TextureFormat format;
+    };
+
+    using TextureHandle = GpuResourceHandle<Texture>;
+
+    class TextureRing : public ResourceRing<TextureHandle> {
+    public:
+        explicit TextureRing() = default;
+
+        void add_texture(TextureHandle texture);
+    };
+
+    struct RenderTarget : Texture {
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv{};
+    };
+
     struct FluidVolumeCreateInfo {
         Rx::String name;
 
-        glm::uvec3 size;
+        glm::vec3 size;
 
-    	float voxels_per_meter{4};
+        /**
+         * @brief Number of voxels per meter in this fluid volume
+         *
+         * @note The actual size of the voxel textures is `size * voxels_per_meter` rounded up to the nearest power of two. Thus, think of
+         * this field as a suggestion
+         */
+        float voxels_per_meter{4};
 
         // TODO: Information about what kind of fluid
-    };	
+        // For now it's all fire
+    };
 
-    using FluidVolumeTexture = Rx::Vector<TextureHandle[2]>;
-	
+    class FluidVolumeResourceRing : public ResourceRing<Rx::Pair<TextureHandle, TextureHandle>> {
+    public:
+        FluidVolumeResourceRing() = default;
+
+        void add_buffer_pair(TextureHandle buffer0, TextureHandle buffer1);
+    };
+
     struct FluidVolume {
-        FluidVolumeTexture density_texture;
+        TextureHandle density_texture[2];
 
-    	FluidVolumeTexture temperature_texture;
+        TextureHandle temperature_texture[2];
 
-    	FluidVolumeTexture reaction_texture;
+        TextureHandle reaction_texture[2];
 
-    	FluidVolumeTexture velocity_texture;
+        TextureHandle velocity_texture[2];
 
-    	FluidVolumeTexture pressure_texture;
+        TextureHandle pressure_texture[2];
+
+        TextureHandle temp_texture;
 
         glm::uvec3 size;
 
         float density_dissipation{0.999f};
-    	
-    	float temperature_dissipation{0.995f};
 
-    	float reaction_decay{0.01f};
+        float temperature_dissipation{0.995f};
 
-    	float velocity_dissipation{0.995f};
+        float reaction_decay{0.01f};
 
-    	float buoyancy{};
+        float velocity_dissipation{0.995f};
 
-    	float weight{};
-    	
-    	  /**
+        float buoyancy{};
+
+        float weight{};
+
+        /**
          * @brief Location of a reaction emitter, relative to the fluid volume, expressed in NDC
          */
         glm::vec3 emitter_location{0.f, -0.8f, 0.f};
@@ -160,15 +190,15 @@ namespace sanity::engine::renderer {
          */
         float emitter_radius{0.1f};
 
-    	float emitter_strength{1.f};
-    	
+        float emitter_strength{1.f};
+
         float reaction_extinguishment{0.01f};
-    	
+
         float density_extinguishment_amount{1.f};
-    	
+
         float vorticity_strength{1.f};
     };
-	
+
     using FluidVolumeHandle = GpuResourceHandle<FluidVolume>;
 
     [[nodiscard]] Uint32 size_in_bytes(TextureFormat format);

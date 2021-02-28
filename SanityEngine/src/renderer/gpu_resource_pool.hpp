@@ -24,7 +24,7 @@ namespace sanity::engine::renderer {
     template <typename ResourceType>
     class GpuResourcePool {
     public:
-        explicit GpuResourcePool(Uint32 capacity_in, PerFrameBuffer storage_in);
+        explicit GpuResourcePool(Uint32 capacity_in, BufferRing storage_in);
 
         GpuResourcePool(const GpuResourcePool& other) = delete;
         GpuResourcePool& operator=(const GpuResourcePool& other) = delete;
@@ -45,11 +45,11 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<ResourceType> host_storage;
 
-        PerFrameBuffer device_storage;
+        BufferRing device_storage;
     };
 
     template <typename ResourceType>
-    GpuResourcePool<ResourceType>::GpuResourcePool(Uint32 capacity_in, PerFrameBuffer storage_in)
+    GpuResourcePool<ResourceType>::GpuResourcePool(Uint32 capacity_in, BufferRing storage_in)
         : device_storage{Rx::Utility::move(storage_in)} {
         host_storage.reserve(capacity_in);
     }

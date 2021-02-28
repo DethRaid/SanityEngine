@@ -8,6 +8,7 @@
 #include "imgui/imgui.h"
 #include "renderer/debugging/pix.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/rhi/d3d12_private_data.hpp"
 #include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/resources.hpp"
 #include "rx/core/log.h"
@@ -279,7 +280,7 @@ namespace sanity::engine {
 
         auto& device = renderer.get_render_backend();
         auto commands = device.create_command_list();
-        commands->SetName(L"DearImguiAdapter::create_font_texture");
+        renderer::set_object_name(commands.Get(), "DearImguiAdapter::create_font_texture");
 
         auto& io = ImGui::GetIO();
         unsigned char* pixels;

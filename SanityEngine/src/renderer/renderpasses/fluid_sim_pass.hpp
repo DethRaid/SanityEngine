@@ -20,6 +20,7 @@ namespace sanity::engine::renderer {
         void collect_work(entt::registry& registry, Uint32 frame_idx) override;
 
         void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void finalize_resources(ID3D12GraphicsCommandList* commands);
 
     private:
         Renderer* renderer{nullptr};
@@ -34,14 +35,14 @@ namespace sanity::engine::renderer {
          */
         Rx::Vector<GpuFluidVolumeState> fluid_volume_states;
 
-        PerFrameBuffer advection_params_array;
-        PerFrameBuffer buoyancy_params_array;
-        PerFrameBuffer emitters_params_array;
-        PerFrameBuffer extinguishment_params_array;
-        PerFrameBuffer vorticity_confinement_params_array;
-        PerFrameBuffer divergence_params_array;
-        Rx::Vector<PerFrameBuffer> pressure_param_arrays;
-        PerFrameBuffer projection_param_arrays;
+        BufferRing advection_params_array;
+        BufferRing buoyancy_params_array;
+        BufferRing emitters_params_array;
+        BufferRing extinguishment_params_array;
+        BufferRing vorticity_confinement_params_array;
+        BufferRing divergence_params_array;
+        Rx::Vector<BufferRing> pressure_param_arrays;
+        BufferRing projection_param_arrays;
 
         ComPtr<ID3D12PipelineState> advection_pipeline;
         ComPtr<ID3D12PipelineState> buoyancy_pipeline;
@@ -55,9 +56,9 @@ namespace sanity::engine::renderer {
 
         ComPtr<ID3D12CommandSignature> fluid_sim_dispatch_signature;
         Rx::Vector<FluidSimDispatch> fluid_sim_dispatches;
-        PerFrameBuffer fluid_sim_dispatch_command_buffers;
+        BufferRing fluid_sim_dispatch_command_buffers;
 
-        void record_fire_simulation_updates(ID3D12GraphicsCommandList4* commands, Uint32 frame_idx);
+        void record_fire_simulation_updates(ID3D12GraphicsCommandList* commands, Uint32 frame_idx);
 
         void advance_fire_sim_params_arrays();
 
@@ -69,7 +70,7 @@ namespace sanity::engine::renderer {
 
         void execute_simulation_step(
             ID3D12GraphicsCommandList* commands,
-            const PerFrameBuffer& data_buffer,
+            const BufferRing& data_buffer,
             const ComPtr<ID3D12PipelineState>& pipeline,
             Rx::Function<void(GpuFluidVolumeState&, Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers)> synchronize_volume);
 
@@ -90,5 +91,16 @@ namespace sanity::engine::renderer {
         void compute_projection(ID3D12GraphicsCommandList* commands);
 
         void barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const;
+
+        struct TextureCopyParams {
+            D3D12_TEXTURE_COPY_LOCATION source;
+            D3D12_TEXTURE_COPY_LOCATION dest;
+        };
+
+        void copy_read_texture_to_write_texture(TextureHandle read,
+                                            TextureHandle write,
+                                            Rx::Vector<D3D12_RESOURCE_BARRIER>& pre_copy_barriers,
+                                            Rx::Vector<TextureCopyParams>& copies,
+                                            Rx::Vector<D3D12_RESOURCE_BARRIER>& post_copy_barriers) const;
     };
 } // namespace sanity::engine::renderer

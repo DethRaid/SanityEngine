@@ -42,12 +42,12 @@ namespace sanity::engine::renderer {
     RX_CONSOLE_BVAR(cvar_break_on_validation_error,
                     "r.BreakOnValidationError",
                     "Whether to issue a breakpoint when the validation layer encounters an error",
-                    true);
+                    false);
 
     RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
                     "r.VerifyEveryCommandListSubmission",
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
-                    false);
+                    true);
 
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
 
@@ -193,7 +193,6 @@ namespace sanity::engine::renderer {
         Texture texture;
         texture.format = create_info.format;
 
-        D3D12_RESOURCE_STATES initial_state{D3D12_RESOURCE_STATE_COMMON};
         switch(create_info.usage) {
             case TextureUsage::RenderTarget:
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
@@ -210,14 +209,13 @@ namespace sanity::engine::renderer {
                 break;
 
             case TextureUsage::UnorderedAccess:
-                initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
                 desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
                 break;
         }
 
         const auto result = device_allocator->CreateResource(&alloc_desc,
                                                              &desc,
-                                                             initial_state,
+                                                             D3D12_RESOURCE_STATE_COMMON,
                                                              nullptr,
                                                              &texture.allocation,
                                                              IID_PPV_ARGS(&texture.resource));
@@ -816,7 +814,8 @@ namespace sanity::engine::renderer {
 
         const auto total_num_buffers = *cvar_max_in_flight_gpu_frames * MAX_NUM_BUFFERS;
         const auto total_num_textures = *cvar_max_in_flight_gpu_frames * MAX_NUM_TEXTURES;
-        const auto num_bespoke_descriptors = 65536; // Descriptors for the RT AS or single-pass downsampler or whatever else wants descriptors
+        const auto
+            num_bespoke_descriptors = 65536; // Descriptors for the RT AS or single-pass downsampler or whatever else wants descriptors
 
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -1274,7 +1273,7 @@ namespace sanity::engine::renderer {
             // TODO: Actually figure out how to use multiple queues
             direct_command_queue->ExecuteCommandLists(1, &d3d12_command_list);
 
-            if(cvar_verify_every_command_list_submission->get()) {
+            if(*cvar_verify_every_command_list_submission) {
                 auto command_list_done_fence = get_next_command_list_done_fence();
 
                 direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
@@ -1291,6 +1290,8 @@ namespace sanity::engine::renderer {
                     command_list_done_fences.push_back(command_list_done_fence);
 
                     CloseHandle(event);
+                } else {
+                    logger->error("Could not create an event to use to wait on command lists");
                 }
             }
 
@@ -1317,6 +1318,8 @@ namespace sanity::engine::renderer {
         Rx::Concurrency::ScopeLock l2{direct_command_allocators_mutex};
         command_allocators_to_reset_on_begin_frame[frame_idx].each_fwd([&](const ComPtr<ID3D12CommandAllocator>& allocator) {
             allocator->Reset();
+            log_dred_report();
+
             direct_command_allocators.push_back(allocator);
         });
 
@@ -1335,7 +1338,7 @@ namespace sanity::engine::renderer {
     void RenderBackend::transition_swapchain_texture_to_render_target() {
         ZoneScoped;
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
-        swapchain_cmds->SetName(L"RenderBackend::transition_swapchain_texture_to_render_target");
+        set_object_name(swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_render_target");
 
         {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_render_target");
@@ -1355,7 +1358,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
-        swapchain_cmds->SetName(L"RenderBackend::transition_swapchain_texture_to_presentable");
+        set_object_name(swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_presentable");
 
         {
             TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_presentable");
@@ -1510,6 +1513,8 @@ namespace sanity::engine::renderer {
 
         logger->error("Command history:\n%s", breadcrumb_output_to_string(breadcrumbs));
         logger->error(page_fault_output_to_string(page_faults).data());
+
+        logger->flush();
     }
 
     Rx::Ptr<RenderBackend> make_render_device(GLFWwindow* window) {

@@ -40,7 +40,7 @@ namespace sanity::engine::renderer {
 
     Rx::String resource_state_to_string(D3D12_RESOURCE_STATES state);
 
-    Rx::String breadcrumb_to_string(D3D12_AUTO_BREADCRUMB_OP op);
+    Rx::String breadcrumb_op_to_string(D3D12_AUTO_BREADCRUMB_OP op);
 
     Rx::String allocation_type_to_string(D3D12_DRED_ALLOCATION_TYPE type);
 

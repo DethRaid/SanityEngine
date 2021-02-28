@@ -56,6 +56,8 @@ namespace sanity::editor {
                 editor_camera.set_enabled(action == GLFW_PRESS);
             }
         });
+
+        create_actor(g_engine->get_entity_registry(), "Fluid Sim Test", ActorType::FluidVolume);
     }
 
     void SanityEditor::load_project(const std::filesystem::path& project_file, const bool should_scan_project_directory) {

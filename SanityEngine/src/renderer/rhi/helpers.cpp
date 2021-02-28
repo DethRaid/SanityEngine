@@ -26,9 +26,9 @@ namespace sanity::engine::renderer {
             case TextureFormat::R32UInt:
                 return DXGI_FORMAT_R32_UINT;
 
-        	case TextureFormat::Rg32F:
+            case TextureFormat::Rg32F:
                 return DXGI_FORMAT_R32G32_FLOAT;
-        	
+
             case TextureFormat::Rgba32F:
                 return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
@@ -340,6 +340,8 @@ namespace sanity::engine::renderer {
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
 
+        Uint32 indent_level = 0;
+
         while(cur_node != nullptr) {
             const auto command_list_name = [&]() -> Rx::String {
                 if(cur_node->pCommandListDebugNameW != nullptr) {
@@ -369,7 +371,7 @@ namespace sanity::engine::renderer {
             if(breadcrumb != D3D12_AUTO_BREADCRUMB_OP_SETMARKER) {
                 breadcrumb_output_string += Rx::String::format("\nMost recent operation: %s%s%s",
                                                                colors::INCOMPLETE_BREADCRUMB,
-                                                               breadcrumb_to_string(breadcrumb),
+                                                               breadcrumb_op_to_string(breadcrumb),
                                                                colors::DEFAULT_CONSOLE_COLOR);
             }
 
@@ -386,13 +388,27 @@ namespace sanity::engine::renderer {
                         color = colors::DEFAULT_CONSOLE_COLOR;
                     }
 
-                    breadcrumb_output_string += Rx::String::format("\n\t%s%s", color, breadcrumb_to_string(cur_node->pCommandHistory[i]));
+                    // I'm only slightly sorry
+                    Rx::String indent_string = "";
+                    for(auto i = 0u; i < indent_level; i++) {
+                        indent_string += "    ";
+                    }
+
+                    breadcrumb_output_string += Rx::String::format("\n%s%s%s",
+                                                                   indent_string,
+                                                                   color,
+                                                                   breadcrumb_op_to_string(cur_node->pCommandHistory[i]));
+                    if(cur_node->pCommandHistory[i] == D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT) {
+                        indent_level++;
+                    } else if(cur_node->pCommandHistory[i] == D3D12_AUTO_BREADCRUMB_OP_ENDEVENT) {
+                        indent_level--;
+                    }
 
                     if(cur_node->BreadcrumbContextsCount > 0) {
                         for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
                             const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
                             if(cur_breadcrumb_context.BreadcrumbIndex == i) {
-                                breadcrumb_output_string += Rx::String::format("\n\t\t%s%s",
+                                breadcrumb_output_string += Rx::String::format("\t%s%s",
                                                                                colors::CONTEXT_LABEL,
                                                                                Rx::WideString{reinterpret_cast<const Uint16*>(
                                                                                                   cur_breadcrumb_context.pContextString)}
@@ -450,7 +466,7 @@ namespace sanity::engine::renderer {
 
         return ss.str().c_str();
     }
-    
+
     void upload_data_with_staging_buffer(ID3D12GraphicsCommandList* commands,
                                          RenderBackend& device,
                                          ID3D12Resource* dst,
@@ -465,7 +481,7 @@ namespace sanity::engine::renderer {
         device.return_staging_buffer(Rx::Utility::move(staging_buffer));
     }
 
-    Rx::String breadcrumb_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
+    Rx::String breadcrumb_op_to_string(const D3D12_AUTO_BREADCRUMB_OP op) {
         switch(op) {
             case D3D12_AUTO_BREADCRUMB_OP_SETMARKER:
                 return "Set marker";
