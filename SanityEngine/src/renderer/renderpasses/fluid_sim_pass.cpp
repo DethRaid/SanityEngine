@@ -70,13 +70,13 @@ namespace sanity::engine::renderer {
 
                 auto& fluid_volume = renderer->get_fluid_volume(fluid_volume_component.volume);
 
-                const auto& volume_size = fluid_volume.size;
+                const auto& voxel_size = fluid_volume.get_voxel_size();
                 const auto dispatch = FluidSimDispatch{.fluid_volume_idx = fluid_volume_component.volume.index,
                                                        .entity_id = static_cast<uint>(entity),
                                                        .model_matrix_idx = model_matrix_index,
-                                                       .thread_group_count_x = volume_size.x / FLUID_SIM_NUM_THREADS,
-                                                       .thread_group_count_y = volume_size.y / FLUID_SIM_NUM_THREADS,
-                                                       .thread_group_count_z = volume_size.z / FLUID_SIM_NUM_THREADS};
+                                                       .thread_group_count_x = voxel_size.x / FLUID_SIM_NUM_THREADS,
+                                                       .thread_group_count_y = voxel_size.y / FLUID_SIM_NUM_THREADS,
+                                                       .thread_group_count_z = voxel_size.z / FLUID_SIM_NUM_THREADS};
                 fluid_sim_dispatches.push_back(dispatch);
 
                 const auto& density_textures = fluid_volume.density_texture;

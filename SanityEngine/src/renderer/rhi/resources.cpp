@@ -27,6 +27,11 @@ namespace sanity::engine::renderer {
         resources.emplace_back(buffer0, buffer1);
     }
 
+    glm::uvec3 FluidVolume::get_voxel_size() const {
+        const auto power = glm::ceil(glm::log2(glm::vec3{size} * voxels_per_meter));
+        return glm::uvec3{glm::pow(glm::vec3{2.f}, power)};
+    }
+
     Uint32 size_in_bytes(const TextureFormat format) {
         switch(format) {
             case TextureFormat::Rgba8:

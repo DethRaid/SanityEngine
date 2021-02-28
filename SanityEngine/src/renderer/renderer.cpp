@@ -458,109 +458,109 @@ namespace sanity::engine::renderer {
     }
 
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
-        const auto voxel_size = create_info.size * create_info.voxels_per_meter;
-        const auto voxel_size_pot = glm::uvec3{glm::ceil(glm::log2(voxel_size))};
+        
+        FluidVolume new_volume{.size = create_info.size, .voxels_per_meter = create_info.voxels_per_meter};
+        const auto voxel_size = new_volume.get_voxel_size();
 
-        FluidVolume new_volume;
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
 
         new_volume.density_texture[0] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Density 0", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.density_texture[1] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Density 1", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.temperature_texture[0] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Temperature 0", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.temperature_texture[1] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Temperature 1", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.reaction_texture[0] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Reaction 0", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.reaction_texture[1] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Reaction 1", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.velocity_texture[0] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Velocity 0", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.velocity_texture[1] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Velocity 1", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.pressure_texture[0] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Pressure 0", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.pressure_texture[1] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Pressure 1", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         new_volume.temp_texture = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Temp", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
             .format = TextureFormat::R32F,
-            .width = voxel_size_pot.x,
-            .height = voxel_size_pot.y,
-            .depth = voxel_size_pot.z,
+            .width = voxel_size.x,
+            .height = voxel_size.y,
+            .depth = voxel_size.z,
         });
 
         const auto handle = FluidVolumeHandle(static_cast<Uint32>(all_fluid_volumes.size()));

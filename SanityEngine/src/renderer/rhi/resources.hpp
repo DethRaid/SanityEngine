@@ -127,7 +127,7 @@ namespace sanity::engine::renderer {
     struct FluidVolumeCreateInfo {
         Rx::String name;
 
-        glm::vec3 size;
+        glm::vec3 size{1, 2, 1};
 
         /**
          * @brief Number of voxels per meter in this fluid volume
@@ -161,7 +161,9 @@ namespace sanity::engine::renderer {
 
         TextureHandle temp_texture;
 
-        glm::uvec3 size;
+        glm::vec3 size{1, 2, 1};
+
+        float voxels_per_meter{4};
 
         float density_dissipation{0.999f};
 
@@ -197,6 +199,8 @@ namespace sanity::engine::renderer {
         float density_extinguishment_amount{1.f};
 
         float vorticity_strength{1.f};
+
+        [[nodiscard]] glm::uvec3 get_voxel_size() const;
     };
 
     using FluidVolumeHandle = GpuResourceHandle<FluidVolume>;
