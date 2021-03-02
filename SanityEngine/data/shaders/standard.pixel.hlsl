@@ -1,7 +1,7 @@
 #include "inc/load_standard_material.hlsl"
 #include "inc/lighting.hlsl"
 
-struct VertexOutput {
+struct VertexShaderOutput {
     float4 location_ndc : SV_POSITION;
     float3 location_worldspace : WORLDPOS;
     float3 normal_worldspace : NORMAL;
@@ -14,7 +14,7 @@ struct PixelOutput {
     uint object_id : SV_TARGET1;
 };
 
-PixelOutput main(const VertexOutput input) {
+PixelOutput main(const VertexShaderOutput input) {
 	GET_CURRENT_DATA(StandardMaterial, material);
 	
     StandardVertex vertex;

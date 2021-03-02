@@ -3,7 +3,6 @@
 #include <concepts>
 
 #include <d3d12.h>
-#include <wrl/client.h>
 
 #include "core/types.hpp"
 #include "glm/glm.hpp"
@@ -16,8 +15,6 @@
 namespace D3D12MA {
     class Allocation;
 }
-
-using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
     /*!
@@ -104,7 +101,7 @@ namespace sanity::engine::renderer {
         Uint32 height{1};
         Uint32 depth{1};
 
-        ComPtr<ID3D12Resource> resource;
+        sanity::engine::ComPtr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
 

@@ -79,7 +79,7 @@ namespace sanity::engine::renderer {
                                                0,
                                                RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
     	
-        commands->SetPipelineState(postprocessing_pipeline->pso.Get());
+        commands->SetPipelineState(postprocessing_pipeline->pso);
         commands->DrawInstanced(3, 1, 0, 0);
 
         commands->EndRenderPass();

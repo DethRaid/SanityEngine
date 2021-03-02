@@ -84,7 +84,7 @@ namespace sanity::engine::renderer {
 
         // TODO: Instead of allocating and destroying buffers every frame, make a couple large buffers for the UI mesh data to live in
 
-        commands->SetPipelineState(ui_pipeline->pso.Get());
+        commands->SetPipelineState(ui_pipeline->pso);
 
         {
             const auto viewport = D3D12_VIEWPORT{.TopLeftX = draw_data->DisplayPos.x,

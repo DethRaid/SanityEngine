@@ -476,7 +476,7 @@ namespace sanity::engine::renderer {
         auto staging_buffer = device.get_staging_buffer(size);
         memcpy(staging_buffer.mapped_ptr, src, size);
 
-        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource.Get(), 0, size);
+        commands->CopyBufferRegion(dst, dst_offset, staging_buffer.resource, 0, size);
 
         device.return_staging_buffer(Rx::Utility::move(staging_buffer));
     }

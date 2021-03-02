@@ -6,8 +6,6 @@
 #include "renderer/rhi/per_frame_buffer.hpp"
 #include "renderer/rhi/render_backend.hpp"
 
-using Microsoft::WRL::ComPtr;
-
 namespace sanity::engine::renderer {
     class Renderer;
     /**

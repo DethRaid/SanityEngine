@@ -13,5 +13,5 @@ namespace renderer {
         ID3D12GraphicsCommandList4* operator->() const;
     };
 
-    inline ID3D12GraphicsCommandList4* CommandList::operator->() const { return cmds.Get(); }
+    inline ID3D12GraphicsCommandList4* CommandList::operator->() const { return cmds; }
 } // namespace renderer

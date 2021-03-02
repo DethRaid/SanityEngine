@@ -138,7 +138,7 @@ namespace sanity::engine::renderer {
         auto& backend = renderer->get_render_backend();
 
         const auto& root_sig = backend.get_standard_root_signature();
-        commands->SetComputeRootSignature(root_sig.Get());
+        commands->SetComputeRootSignature(root_sig);
 
         auto* heap = renderer->get_render_backend().get_cbv_srv_uav_heap();
         commands->SetDescriptorHeaps(1, &heap);
@@ -189,8 +189,6 @@ namespace sanity::engine::renderer {
 
         set_buffer_indices(commands, frame_idx);
 
-        logger->verbose("Begin fluid sim");
-
         // Explanatory comments are from the original implementation at
         // https://github.com/Scrawk/GPU-GEMS-3D-Fluid-Simulation/blob/master/Assets/FluidSim3D/Scripts/FireFluidSim.cs, edited only to fix
         // typos
@@ -198,44 +196,34 @@ namespace sanity::engine::renderer {
         // First off advect any buffers that contain physical quantities like density or temperature by the velocity field. Advection is
         // what moves values around.
         apply_advection(commands);
-        logger->verbose("Recorded advection commands");
 
         // Apply the effect the sinking colder smoke has on the velocity field
         apply_buoyancy(commands);
-        logger->verbose("Recorded buoyancy commands");
 
         // Adds a certain amount of reaction (fire) and temperate
         apply_emitters(commands);
-        logger->verbose("Recorded emitters commands");
 
         // The smoke is formed when the reaction is extinguished. When the reaction amount falls below the extinguishment factor smoke is
         // added
         apply_extinguishment(commands);
-        logger->verbose("Recorded extinguishment commands");
 
         // The fluid sim math tends to remove the swirling movement of fluids.
         // This step will try and add it back in
         compute_vorticity_confinement(commands);
-        logger->verbose("Recorded vorticity and confinement commands");
 
         // Compute the divergence of the velocity field. In fluid simulation the fluid is modeled as being incompressible meaning that the
         // volume of the fluid does not change over time. The divergence is the amount the field has deviated from being divergence free
         // [you mean compression free?]
         compute_divergence(commands);
-        logger->verbose("Recorded divergence commands");
 
         // This computes the pressure needed to return the fluid to a divergence free condition
         compute_pressure(commands);
-        logger->verbose("Recorded pressure commands");
 
         // Subtract the pressure field from the velocity field enforcing the divergence free conditions
         compute_projection(commands);
-        logger->verbose("Recorded projection commands");
 
         // Final barriers to keep everything shipshape
         finalize_resources(commands);
-
-        logger->verbose("Recorded finalizing commands");
     }
 
     void FluidSimPass::advance_fire_sim_params_arrays() {
@@ -250,39 +238,39 @@ namespace sanity::engine::renderer {
 
         const auto advection_shader = load_shader("fluid/apply_advection.compute");
         advection_pipeline = backend.create_compute_pipeline_state(advection_shader);
-        set_object_name(advection_pipeline.Get(), "Fluid Sim Advection");
+        set_object_name(advection_pipeline, "Fluid Sim Advection");
 
         const auto buoyancy_shader = load_shader("fluid/apply_buoyancy.compute");
         buoyancy_pipeline = backend.create_compute_pipeline_state(buoyancy_shader);
-        set_object_name(buoyancy_pipeline.Get(), "Fluid Sim Buoyancy");
+        set_object_name(buoyancy_pipeline, "Fluid Sim Buoyancy");
 
         const auto emitters_shader = load_shader("fluid/apply_emitters.compute");
         emitters_pipeline = backend.create_compute_pipeline_state(emitters_shader);
-        set_object_name(emitters_pipeline.Get(), "Fluid Sim Emitters");
+        set_object_name(emitters_pipeline, "Fluid Sim Emitters");
 
         const auto extinguishment_shader = load_shader("fluid/apply_extinguishment.compute");
         extinguishment_pipeline = backend.create_compute_pipeline_state(extinguishment_shader);
-        set_object_name(extinguishment_pipeline.Get(), "Fluid Sim Extinguishment");
+        set_object_name(extinguishment_pipeline, "Fluid Sim Extinguishment");
 
         const auto vorticity_shader = load_shader("fluid/compute_vorticity.compute");
         vorticity_pipeline = backend.create_compute_pipeline_state(vorticity_shader);
-        set_object_name(vorticity_pipeline.Get(), "Fluid Sim Vorticity");
+        set_object_name(vorticity_pipeline, "Fluid Sim Vorticity");
 
         const auto confinement_shader = load_shader("fluid/compute_confinement.compute");
         confinement_pipeline = backend.create_compute_pipeline_state(confinement_shader);
-        set_object_name(confinement_pipeline.Get(), "Fluid Sim Confinement");
+        set_object_name(confinement_pipeline, "Fluid Sim Confinement");
 
         const auto divergence_shader = load_shader("fluid/compute_divergence.compute");
         divergence_pipeline = backend.create_compute_pipeline_state(divergence_shader);
-        set_object_name(divergence_pipeline.Get(), "Fluid Sim Advection");
+        set_object_name(divergence_pipeline, "Fluid Sim Advection");
 
         const auto pressure_shader = load_shader("fluid/jacobi_pressure_solver.compute");
         jacobi_pressure_solver_pipeline = backend.create_compute_pipeline_state(pressure_shader);
-        set_object_name(jacobi_pressure_solver_pipeline.Get(), "Fluid Sim Advection");
+        set_object_name(jacobi_pressure_solver_pipeline, "Fluid Sim Advection");
 
         const auto projection_shader = load_shader("fluid/compute_projection.compute");
         projection_pipeline = backend.create_compute_pipeline_state(projection_shader);
-        set_object_name(projection_pipeline.Get(), "Fluid Sim Advection");
+        set_object_name(projection_pipeline, "Fluid Sim Advection");
     }
 
     void FluidSimPass::create_indirect_command_signature() {
@@ -309,7 +297,7 @@ namespace sanity::engine::renderer {
                                                                   .NumArgumentDescs = static_cast<UINT>(arguments.size()),
                                                                   .pArgumentDescs = arguments.data()};
         const auto& root_sig = backend.get_standard_root_signature();
-        backend.device->CreateCommandSignature(&command_signature_desc, root_sig.Get(), IID_PPV_ARGS(&fluid_sim_dispatch_signature));
+        backend.device->CreateCommandSignature(&command_signature_desc, root_sig, IID_PPV_ARGS(&fluid_sim_dispatch_signature));
     }
 
     void FluidSimPass::set_buffer_indices(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) const {
@@ -332,7 +320,7 @@ namespace sanity::engine::renderer {
         const auto data_buffer_handle = data_buffer.get_active_resource();
         renderer->copy_data_to_buffer(data_buffer_handle, fluid_volume_states);
 
-        commands->SetPipelineState(pipeline.Get());
+        commands->SetPipelineState(pipeline);
 
         commands->SetComputeRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                               data_buffer_handle.index,
@@ -340,9 +328,9 @@ namespace sanity::engine::renderer {
 
         const auto& dispatch_buffer_handle = fluid_sim_dispatch_command_buffers.get_active_resource();
         const auto& dispatch_buffer = renderer->get_buffer(dispatch_buffer_handle);
-        commands->ExecuteIndirect(fluid_sim_dispatch_signature.Get(),
+        commands->ExecuteIndirect(fluid_sim_dispatch_signature,
                                   static_cast<UINT>(fluid_sim_dispatches.size()),
-                                  dispatch_buffer->resource.Get(),
+                                  dispatch_buffer->resource,
                                   0,
                                   nullptr,
                                   0);
@@ -413,7 +401,7 @@ namespace sanity::engine::renderer {
                                 [&](GpuFluidVolumeState& state, auto& barriers) {
                                     const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
                                     barriers.push_back(
-                                        CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource.Get(),
+                                        CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource,
                                                                              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
                                 });
@@ -425,7 +413,7 @@ namespace sanity::engine::renderer {
                                     barrier_and_swap(state.velocity_textures, barriers);
 
                                     const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
-                                    barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource.Get(),
+                                    barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource,
                                                                                             D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                                             D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
                                 });
@@ -438,7 +426,7 @@ namespace sanity::engine::renderer {
 
         execute_simulation_step(commands, divergence_params_array, divergence_pipeline, [&](GpuFluidVolumeState& state, auto& barriers) {
             const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource.Get(),
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource,
                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
         });
@@ -462,7 +450,7 @@ namespace sanity::engine::renderer {
         barriers.reserve(fluid_volume_states.size());
         fluid_volume_states.each_fwd([&](const GpuFluidVolumeState& state) {
             const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
-            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource.Get(),
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource,
                                                                     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
         });
@@ -483,13 +471,11 @@ namespace sanity::engine::renderer {
     void FluidSimPass::barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const {
         const auto& old_read_texture = renderer->get_texture(handles[0]);
         const auto& old_write_texture = renderer->get_texture(handles[1]);
-
-        logger->verbose("Transitioning %s to shader resource, %s to unordered access", old_write_texture.name, old_read_texture.name);
-
-        barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource.Get(),
+        
+        barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource,
                                                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-        barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource.Get(),
+        barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource,
                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
@@ -505,24 +491,24 @@ namespace sanity::engine::renderer {
                                                           Rx::Vector<D3D12_RESOURCE_BARRIER>& post_copy_barriers) const {
         const auto old_read_texture = renderer->get_texture(read);
         const auto old_write_texture = renderer->get_texture(write);
-        pre_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource.Get(),
+        pre_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource,
                                                                          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                          D3D12_RESOURCE_STATE_COPY_SOURCE));
-        pre_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource.Get(),
+        pre_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource,
                                                                          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                          D3D12_RESOURCE_STATE_COPY_DEST));
 
-        copies.emplace_back(D3D12_TEXTURE_COPY_LOCATION{.pResource = old_read_texture.resource.Get(),
+        copies.emplace_back(D3D12_TEXTURE_COPY_LOCATION{.pResource = old_read_texture.resource,
                                                         .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                         .SubresourceIndex = 0},
-                            D3D12_TEXTURE_COPY_LOCATION{.pResource = old_write_texture.resource.Get(),
+                            D3D12_TEXTURE_COPY_LOCATION{.pResource = old_write_texture.resource,
                                                         .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                         .SubresourceIndex = 0});
 
-        post_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource.Get(),
+        post_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource,
                                                                           D3D12_RESOURCE_STATE_COPY_SOURCE,
                                                                           D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-        post_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource.Get(),
+        post_copy_barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_write_texture.resource,
                                                                           D3D12_RESOURCE_STATE_COPY_DEST,
                                                                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 

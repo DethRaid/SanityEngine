@@ -1,12 +1,9 @@
 #pragma once
 
 #include <d3d12.h>
-#include <wrl/client.h>
 
 #include "core/types.hpp"
 #include "rhi/render_backend.hpp"
-
-using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
     class RenderBackend;

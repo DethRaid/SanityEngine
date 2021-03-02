@@ -34,7 +34,7 @@ namespace sanity::engine::renderer {
         cvar_enable_gpu_based_validation,
         "r.EnableGpuBasedValidation",
         "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        true);
+        false);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 1, 8, 3);
@@ -42,12 +42,12 @@ namespace sanity::engine::renderer {
     RX_CONSOLE_BVAR(cvar_break_on_validation_error,
                     "r.BreakOnValidationError",
                     "Whether to issue a breakpoint when the validation layer encounters an error",
-                    false);
+                    true);
 
     RX_CONSOLE_BVAR(cvar_verify_every_command_list_submission,
                     "r.VerifyEveryCommandListSubmission",
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
-                    true);
+                    false);
 
     RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
 
@@ -170,7 +170,7 @@ namespace sanity::engine::renderer {
 
         buffer.name = create_info.name;
 
-        set_object_name(buffer.resource.Get(), create_info.name);
+        set_object_name(buffer.resource, create_info.name);
 
         return buffer;
     }
@@ -234,7 +234,7 @@ namespace sanity::engine::renderer {
         texture.width = static_cast<Uint32>(desc.Width);
         texture.height = desc.Height;
 
-        set_object_name(texture.resource.Get(), create_info.name);
+        set_object_name(texture.resource, create_info.name);
 
         return texture;
     }
@@ -242,7 +242,7 @@ namespace sanity::engine::renderer {
     DescriptorRange RenderBackend::create_rtv_handle(const Texture& texture) const {
         const auto handle = rtv_allocator->allocate_descriptors(1);
 
-        device->CreateRenderTargetView(texture.resource.Get(), nullptr, handle.cpu_handle);
+        device->CreateRenderTargetView(texture.resource, nullptr, handle.cpu_handle);
 
         return handle;
     }
@@ -256,7 +256,7 @@ namespace sanity::engine::renderer {
 
         const auto handle = dsv_allocator->allocate_descriptors(1);
 
-        device->CreateDepthStencilView(texture.resource.Get(), &desc, handle.cpu_handle);
+        device->CreateDepthStencilView(texture.resource, &desc, handle.cpu_handle);
 
         return handle;
     }
@@ -303,7 +303,7 @@ namespace sanity::engine::renderer {
     ComPtr<ID3D12PipelineState> RenderBackend::create_compute_pipeline_state(const Rx::Vector<Uint8>& compute_shader,
                                                                              const ComPtr<ID3D12RootSignature>& root_signature) const {
         const auto desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
-            .pRootSignature = root_signature.Get(),
+            .pRootSignature = root_signature,
             .CS =
                 {
                     .pShaderBytecode = compute_shader.data(),
@@ -318,13 +318,13 @@ namespace sanity::engine::renderer {
             return {};
         }
 
-        store_com_interface(pso.Get(), root_signature.Get());
+        store_com_interface(pso, root_signature);
 
         return pso;
     }
 
     Rx::Ptr<RenderPipelineState> RenderBackend::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
-        return create_pipeline_state(create_info, *standard_root_signature.Get());
+        return create_pipeline_state(create_info, *standard_root_signature);
     }
 
     ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_command_list(Rx::Optional<Uint32> frame_idx) {
@@ -349,7 +349,7 @@ namespace sanity::engine::renderer {
         }
 
         ComPtr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&cmds));
+        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -367,7 +367,7 @@ namespace sanity::engine::renderer {
         }
 
         commands->SetName(L"Unnamed Sanity Engine command list");
-        store_com_interface(commands, command_allocator.Get());
+        store_com_interface(commands, command_allocator);
         const auto gpu_frame_idx = GpuFrameIdx{*frame_idx};
         commands->SetPrivateData(PRIVATE_DATA_ATTRIBS(GpuFrameIdx), &gpu_frame_idx);
         command_lists_outside_render_device.fetch_add(1);
@@ -384,7 +384,7 @@ namespace sanity::engine::renderer {
 #endif
         }
 
-        const auto frame_idx = retrieve_object<GpuFrameIdx>(commands.Get()).idx;
+        const auto frame_idx = retrieve_object<GpuFrameIdx>(commands).idx;
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
@@ -422,7 +422,7 @@ namespace sanity::engine::renderer {
 
         flush_batched_command_lists();
 
-        direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[cur_gpu_frame_idx]);
+        direct_command_queue->Signal(frame_fences, frame_fence_values[cur_gpu_frame_idx]);
 
         {
             ZoneScopedN("present");
@@ -475,7 +475,7 @@ namespace sanity::engine::renderer {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             wait_for_frame(i);
-            direct_command_queue->Wait(frame_fences.Get(), frame_fence_values[i]);
+            direct_command_queue->Wait(frame_fences, frame_fence_values[i]);
         }
 
         wait_gpu_idle(0);
@@ -541,7 +541,7 @@ namespace sanity::engine::renderer {
         scratch_buffers_to_free[cur_gpu_frame_idx].push_back(Rx::Utility::move(buffer));
     }
 
-    ID3D12Device* RenderBackend::get_d3d12_device() const { return device.Get(); }
+    ID3D12Device* RenderBackend::get_d3d12_device() const { return device; }
 
     void RenderBackend::enable_debugging() {
         auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller));
@@ -634,7 +634,7 @@ namespace sanity::engine::renderer {
             }
 
             ComPtr<ID3D12Device> try_device;
-            auto res = D3D12CreateDevice(cur_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&try_device));
+            auto res = D3D12CreateDevice(cur_adapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&try_device));
             if(SUCCEEDED(res)) {
                 // check the features we care about
                 D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12_options;
@@ -718,7 +718,7 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not find a suitable D3D12 adapter");
         }
 
-        set_object_name(device.Get(), "D3D12 Device");
+        set_object_name(device, "D3D12 Device");
     }
 
     void RenderBackend::create_queues() {
@@ -735,10 +735,10 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not create graphics command queue");
         }
 
-        set_object_name(direct_command_queue.Get(), "Direct Queue");
+        set_object_name(direct_command_queue, "Direct Queue");
 
 #ifdef TRACY_ENABLE
-        tracy_context = TracyD3D12Context(device.Get(), direct_command_queue.Get());
+        tracy_context = TracyD3D12Context(device, direct_command_queue);
 #endif
 
         // TODO: Add an async compute queue, when the time comes
@@ -755,7 +755,7 @@ namespace sanity::engine::renderer {
                 logger->warning("Could not create a DMA queue on a non-UMA adapter, data transfers will have to use the graphics queue");
 
             } else {
-                set_object_name(async_copy_queue.Get(), "DMA queue");
+                set_object_name(async_copy_queue, "DMA queue");
             }
         }
     }
@@ -780,7 +780,7 @@ namespace sanity::engine::renderer {
 
         ComPtr<IDXGISwapChain1> swapchain1;
         auto hr = factory
-                      ->CreateSwapChainForHwnd(direct_command_queue.Get(), window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
+                      ->CreateSwapChainForHwnd(direct_command_queue, window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
         if(FAILED(hr)) {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
@@ -795,7 +795,7 @@ namespace sanity::engine::renderer {
         frame_fence_values.resize(cvar_max_in_flight_gpu_frames->get());
 
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
-        set_object_name(frame_fences.Get(), "Frame Synchronization Fence");
+        set_object_name(frame_fences, "Frame Synchronization Fence");
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
     }
@@ -820,16 +820,16 @@ namespace sanity::engine::renderer {
         const auto [new_cbv_srv_uav_heap,
                     new_cbv_srv_uav_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                                    total_num_buffers + total_num_textures + num_bespoke_descriptors);
-        set_object_name(new_cbv_srv_uav_heap.Get(), "CBV/SRV/UAV Heap");
+        set_object_name(new_cbv_srv_uav_heap, "CBV/SRV/UAV Heap");
 
         cbv_srv_uav_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, new_cbv_srv_uav_heap, new_cbv_srv_uav_size);
 
         const auto [rtv_heap, rtv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024);
-        set_object_name(rtv_heap.Get(), "RTV Heap");
+        set_object_name(rtv_heap, "RTV Heap");
         rtv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, rtv_heap, rtv_size);
 
         const auto [dsv_heap, dsv_size] = create_descriptor_heap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 32);
-        set_object_name(dsv_heap.Get(), "DSV Heap");
+        set_object_name(dsv_heap, "DSV Heap");
         dsv_allocator = Rx::make_ptr<DescriptorAllocator>(RX_SYSTEM_ALLOCATOR, dsv_heap, dsv_size);
     }
 
@@ -844,11 +844,11 @@ namespace sanity::engine::renderer {
 
             const auto rtv_handle = rtv_allocator->allocate_descriptors(1);
 
-            device->CreateRenderTargetView(swapchain_textures[i].Get(), nullptr, rtv_handle.cpu_handle);
+            device->CreateRenderTargetView(swapchain_textures[i], nullptr, rtv_handle.cpu_handle);
 
             swapchain_rtv_handles.push_back(rtv_handle);
 
-            set_object_name(swapchain_textures[i].Get(), Rx::String::format("Swapchain texture %d", i));
+            set_object_name(swapchain_textures[i], Rx::String::format("Swapchain texture %d", i));
         }
     }
 
@@ -878,8 +878,8 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         D3D12MA::ALLOCATOR_DESC allocator_desc{};
-        allocator_desc.pDevice = device.Get();
-        allocator_desc.pAdapter = adapter.Get();
+        allocator_desc.pDevice = device;
+        allocator_desc.pAdapter = adapter;
 
         const auto result = D3D12MA::CreateAllocator(&allocator_desc, &device_allocator);
         if(FAILED(result)) {
@@ -993,7 +993,7 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not create standard root signature");
         }
 
-        set_object_name(standard_root_signature.Get(), "Standard Root Signature");
+        set_object_name(standard_root_signature, "Standard Root Signature");
     }
 
     ComPtr<ID3D12RootSignature> RenderBackend::compile_root_signature(const D3D12_ROOT_SIGNATURE_DESC& root_signature_desc) const {
@@ -1112,7 +1112,7 @@ namespace sanity::engine::renderer {
         const auto desc = D3D12_COMMAND_SIGNATURE_DESC{.ByteStride = sizeof(IndirectDrawCommandWithRootConstant),
                                                        .NumArgumentDescs = static_cast<UINT>(argument_descs.size()),
                                                        .pArgumentDescs = argument_descs.data()};
-        device->CreateCommandSignature(&desc, standard_root_signature.Get(), IID_PPV_ARGS(&standard_drawcall_command_signature));
+        device->CreateCommandSignature(&desc, standard_root_signature, IID_PPV_ARGS(&standard_drawcall_command_signature));
     }
 
     Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> RenderBackend::get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const {
@@ -1255,7 +1255,7 @@ namespace sanity::engine::renderer {
             return {};
         }
 
-        set_object_name(pipeline->pso.Get(), create_info.name);
+        set_object_name(pipeline->pso, create_info.name);
 
         return pipeline;
     }
@@ -1265,7 +1265,7 @@ namespace sanity::engine::renderer {
         // Submit all the command lists we batched up
         auto& lists = command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
-            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands.Get());
+            auto* d3d12_command_list = static_cast<ID3D12CommandList*>(commands);
 
             // First implementation - run everything on the same queue, because it's easy
             // Eventually I'll come up with a fancy way to use multiple queues
@@ -1276,7 +1276,7 @@ namespace sanity::engine::renderer {
             if(*cvar_verify_every_command_list_submission) {
                 auto command_list_done_fence = get_next_command_list_done_fence();
 
-                direct_command_queue->Signal(command_list_done_fence.Get(), CPU_FENCE_SIGNALED);
+                direct_command_queue->Signal(command_list_done_fence, CPU_FENCE_SIGNALED);
 
                 // ReSharper disable once CppLocalVariableMayBeConst
                 HANDLE event = CreateEvent(nullptr, false, false, nullptr);
@@ -1295,7 +1295,7 @@ namespace sanity::engine::renderer {
                 }
             }
 
-            auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands.Get());
+            auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands);
             command_allocators_to_reset_on_begin_frame[cur_gpu_frame_idx].emplace_back(command_allocator);
         });
 
@@ -1338,13 +1338,13 @@ namespace sanity::engine::renderer {
     void RenderBackend::transition_swapchain_texture_to_render_target() {
         ZoneScoped;
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
-        set_object_name(swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_render_target");
+        set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_render_target");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_render_target");
+            TracyD3D12Zone(tracy_context, swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
+            PIXScopedEvent(swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_render_target");
 
-            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx].Get();
+            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx];
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_texture,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -1358,13 +1358,13 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
-        set_object_name(swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_presentable");
+        set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds.Get(), "RenderBackend::transition_swapchain_texture_to_presentable");
-            PIXScopedEvent(swapchain_cmds.Get(), PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
+            TracyD3D12Zone(tracy_context, swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
+            PIXScopedEvent(swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
 
-            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx].Get();
+            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx];
             D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_texture,
                                                                                                        D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                                                        D3D12_RESOURCE_STATE_PRESENT);
@@ -1401,7 +1401,7 @@ namespace sanity::engine::renderer {
 
     void RenderBackend::wait_gpu_idle(const uint64_t frame_index) {
         frame_fence_values[frame_index] += 3;
-        direct_command_queue->Signal(frame_fences.Get(), frame_fence_values[frame_index]);
+        direct_command_queue->Signal(frame_fences, frame_fence_values[frame_index]);
         wait_for_frame(frame_index);
     }
 
@@ -1435,7 +1435,7 @@ namespace sanity::engine::renderer {
         }
 
         const auto msg = Rx::String::format("Staging Buffer %d", staging_buffer_idx);
-        set_object_name(buffer.resource.Get(), msg);
+        set_object_name(buffer.resource, msg);
         staging_buffer_idx++;
 
         return buffer;
@@ -1465,7 +1465,7 @@ namespace sanity::engine::renderer {
         }
 
         scratch_buffer.size = num_bytes;
-        set_object_name(scratch_buffer.resource.Get(), Rx::String::format("Scratch buffer %d", scratch_buffer_counter));
+        set_object_name(scratch_buffer.resource, Rx::String::format("Scratch buffer %d", scratch_buffer_counter));
         scratch_buffer_counter++;
 
         return scratch_buffer;

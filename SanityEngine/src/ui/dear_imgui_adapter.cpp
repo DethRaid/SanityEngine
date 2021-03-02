@@ -280,7 +280,7 @@ namespace sanity::engine {
 
         auto& device = renderer.get_render_backend();
         auto commands = device.create_command_list();
-        renderer::set_object_name(commands.Get(), "DearImguiAdapter::create_font_texture");
+        renderer::set_object_name(commands, "DearImguiAdapter::create_font_texture");
 
         auto& io = ImGui::GetIO();
         unsigned char* pixels;
@@ -288,8 +288,8 @@ namespace sanity::engine {
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
         {
-            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), "DearImguiAdapter::create_font_texture");
-            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
+            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands, "DearImguiAdapter::create_font_texture");
+            PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
             const auto create_info = renderer::TextureCreateInfo{.name = "Dear ImGUI Font Atlas",
                                                                .usage = renderer::TextureUsage::SampledTexture,
@@ -297,7 +297,7 @@ namespace sanity::engine {
                                                                .width = static_cast<Uint32>(width),
                                                                .height = static_cast<Uint32>(height)};
 
-            font_atlas = renderer.create_texture(create_info, pixels, commands.Get());
+            font_atlas = renderer.create_texture(create_info, pixels, commands);
         }
 
         device.submit_command_list(Rx::Utility::move(commands));

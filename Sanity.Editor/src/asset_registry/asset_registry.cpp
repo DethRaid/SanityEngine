@@ -42,7 +42,7 @@ namespace sanity::editor {
         }
 
         auto cmds = renderer.get_render_backend().create_command_list();
-        engine::renderer::set_object_name(cmds.Get(), "Directory icon creation command list");
+        engine::renderer::set_object_name(cmds, "Directory icon creation command list");
 
         directory_icon = renderer.create_texture(engine::renderer::TextureCreateInfo{.name = "Directory icon",
                                                                                  .usage = engine::renderer::TextureUsage::SampledTexture,
@@ -50,7 +50,7 @@ namespace sanity::editor {
                                                                                  .width = width,
                                                                                  .height = height},
                                                pixels,
-                                               cmds.Get());
+                                               cmds);
 
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
     }
@@ -76,8 +76,8 @@ namespace sanity::editor {
                                                                    .width = width,
                                                                    .height = height};
         auto cmds = renderer.get_render_backend().create_command_list();
-        engine::renderer::set_object_name(cmds.Get(), Rx::String::format("%s creation commands", create_info.name));
-        const auto icon_handle = renderer.create_texture(create_info, pixels, cmds.Get());
+        engine::renderer::set_object_name(cmds, Rx::String::format("%s creation commands", create_info.name));
+        const auto icon_handle = renderer.create_texture(create_info, pixels, cmds);
         renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
 
         return icon_handle;

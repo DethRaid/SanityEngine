@@ -76,7 +76,7 @@ namespace sanity::engine::renderer {
 
         begin_render_pass(commands);
 
-        commands->SetGraphicsRootSignature(standard_pipeline->root_signature.Get());
+        commands->SetGraphicsRootSignature(standard_pipeline->root_signature);
 
         // TODO: Bind global resources at the beginning of the frame, after everything is converted to The Root Signature
         auto* heap = renderer->get_render_backend().get_cbv_srv_uav_heap();
@@ -224,7 +224,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
         PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_objects_in_scene");
 
-        commands->SetPipelineState(standard_pipeline->pso.Get());
+        commands->SetPipelineState(standard_pipeline->pso);
 
         const auto& mesh_storage = renderer->get_static_mesh_store();
         mesh_storage.bind_to_command_list(commands);
@@ -250,7 +250,7 @@ namespace sanity::engine::renderer {
 
     void DirectLightingPass::draw_outlines(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) {
         PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::draw_outlines");
-        commands->SetPipelineState(outline_pipeline->pso.Get());
+        commands->SetPipelineState(outline_pipeline->pso);
 
         const auto outline_view = registry.view<TransformComponent, StandardRenderableComponent, OutlineRenderComponent>();
         outline_view.each([&](const auto entity,
@@ -289,7 +289,7 @@ namespace sanity::engine::renderer {
                                                    static_cast<uint32_t>(atmosphere_entity),
                                                    RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
 
-            commands->SetPipelineState(atmospheric_sky_pipeline->pso.Get());
+            commands->SetPipelineState(atmospheric_sky_pipeline->pso);
 
             commands->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -304,23 +304,23 @@ namespace sanity::engine::renderer {
 
         {
             const auto barriers = std::array{
-                CD3DX12_RESOURCE_BARRIER::Transition(object_id_texture.resource.Get(),
+                CD3DX12_RESOURCE_BARRIER::Transition(object_id_texture.resource,
                                                      D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                      D3D12_RESOURCE_STATE_COPY_SOURCE),
-                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
+                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource,
                                                      D3D12_RESOURCE_STATE_DEPTH_WRITE,
                                                      D3D12_RESOURCE_STATE_COPY_SOURCE),
-                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
+                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource,
                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                      D3D12_RESOURCE_STATE_COPY_DEST),
             };
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        const D3D12_TEXTURE_COPY_LOCATION src_copy_location{.pResource = depth_image.resource.Get(),
+        const D3D12_TEXTURE_COPY_LOCATION src_copy_location{.pResource = depth_image.resource,
                                                             .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                             .SubresourceIndex = 0};
-        const D3D12_TEXTURE_COPY_LOCATION dst_copy_location{.pResource = downsampled_depth_image.resource.Get(),
+        const D3D12_TEXTURE_COPY_LOCATION dst_copy_location{.pResource = downsampled_depth_image.resource,
                                                             .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                             .SubresourceIndex = 0};
         const D3D12_BOX src_box{.left = 0,
@@ -333,19 +333,19 @@ namespace sanity::engine::renderer {
 
         {
             const auto barriers = std::array{
-                CD3DX12_RESOURCE_BARRIER::Transition(object_id_texture.resource.Get(),
+                CD3DX12_RESOURCE_BARRIER::Transition(object_id_texture.resource,
                                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
                                                      D3D12_RESOURCE_STATE_RENDER_TARGET),
-                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource.Get(),
+                CD3DX12_RESOURCE_BARRIER::Transition(depth_image.resource,
                                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
                                                      D3D12_RESOURCE_STATE_DEPTH_WRITE),
-                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource.Get(),
+                CD3DX12_RESOURCE_BARRIER::Transition(downsampled_depth_image.resource,
                                                      D3D12_RESOURCE_STATE_COPY_DEST,
                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
             };
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource.Get(), commands);
+        renderer->get_spd().generate_mip_chain_for_texture(downsampled_depth_image.resource, commands);
     }
 } // namespace sanity::engine::renderer

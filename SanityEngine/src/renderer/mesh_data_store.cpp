@@ -16,8 +16,8 @@ namespace sanity::engine::renderer {
         const auto& index_buffer = mesh_store->get_index_buffer();
         const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-        auto* vertex_resource = vertex_buffer.resource.Get();
-        auto* index_resource = index_buffer.resource.Get();
+        auto* vertex_resource = vertex_buffer.resource;
+        auto* index_resource = index_buffer.resource;
 
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
         barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -45,8 +45,8 @@ namespace sanity::engine::renderer {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-            auto* vertex_resource = vertex_buffer.resource.Get();
-            auto* index_resource = index_buffer.resource.Get();
+            auto* vertex_resource = vertex_buffer.resource;
+            auto* index_resource = index_buffer.resource;
 
             auto previous_resource_state = D3D12_RESOURCE_STATE_COPY_DEST;
             if(state == State::BuildRaytracingGeometry) {
@@ -80,8 +80,8 @@ namespace sanity::engine::renderer {
             const auto& index_buffer = mesh_store->get_index_buffer();
             const auto& vertex_buffer = mesh_store->get_vertex_buffer();
 
-            auto* vertex_resource = vertex_buffer.resource.Get();
-            auto* index_resource = index_buffer.resource.Get();
+            auto* vertex_resource = vertex_buffer.resource;
+            auto* index_resource = index_buffer.resource;
 
             Rx::Vector<D3D12_RESOURCE_BARRIER> barriers{2};
             barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_resource,
@@ -163,8 +163,8 @@ namespace sanity::engine::renderer {
         const auto& vertex_buffer = get_vertex_buffer();
         const auto& index_buffer = get_index_buffer();
 
-        auto* vertex_resource = vertex_buffer.resource.Get();
-        auto* index_resource = index_buffer.resource.Get();
+        auto* vertex_resource = vertex_buffer.resource;
+        auto* index_resource = index_buffer.resource;
 
         const auto index_buffer_byte_offset = static_cast<Uint32>(next_index_offset * sizeof(Uint32));
 

@@ -78,14 +78,33 @@ namespace Rx {
     }
 
     const char* FormatNormalize<glm::vec3>::operator()(const glm::vec3& data) {
-        sprintf_s(scratch, "(%f, %f, %f)", data.x, data.y, data.z);
+        sprintf_s(scratch, "(%f, %f, %f)", static_cast<double>(data.x), static_cast<double>(data.y), static_cast<double>(data.z));
 
         return scratch;
     }
 
-    const char* FormatNormalize<glm::qua<float, glm::defaultp>>::operator()(const glm::quat& data) {
+    const char* FormatNormalize<glm::vec4>::operator()(const glm::vec4& data)
+    {
+          sprintf_s(scratch, "(%f, %f, %f, %f)", static_cast<double>(data.x), static_cast<double>(data.y), static_cast<double>(data.z), static_cast<double>(data.w));
+
+        return scratch;
+    }
+
+    const char* FormatNormalize<glm::quat>::operator()(const glm::quat& data) {
         const auto euler = glm::eulerAngles(data);
-        sprintf_s(scratch, "(%f, %f, %f)", euler.x, euler.y, euler.z);
+        sprintf_s(scratch, "(%f, %f, %f)", static_cast<double>(euler.x), static_cast<double>(euler.y), static_cast<double>(euler.z));
+
+        return scratch;
+    }
+
+    const char* FormatNormalize<glm::mat4>::operator()(const glm::mat4& data)
+    {
+        auto formatter_0 = FormatNormalize<glm::vec4>{};
+        auto formatter_1 = FormatNormalize<glm::vec4>{};
+        auto formatter_2 = FormatNormalize<glm::vec4>{};
+        auto formatter_3 = FormatNormalize<glm::vec4>{};
+
+          sprintf_s(scratch, "\n[%s\n %s\n %s\n %s]", formatter_0(data[0]), formatter_1(data[1]), formatter_2(data[2]), formatter_3(data[3]));
 
         return scratch;
     }

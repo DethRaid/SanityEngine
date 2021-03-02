@@ -4,7 +4,7 @@ struct DearImGuiVertex {
     float4 color : Color;
 };
 
-struct VertexOutput {
+struct VertexShaderOutput {
     float4 position : SV_POSITION;
     float2 texcoord : TEXCOORD;
     float4 color : COLOR;
@@ -14,8 +14,8 @@ struct MaterialData {};
 
 #include "inc/standard_root_signature.hlsl"
 
-VertexOutput main(const DearImGuiVertex input) {
-	VertexOutput output;
+VertexShaderOutput main(const DearImGuiVertex input) {
+	VertexShaderOutput output;
 
 	const FrameConstants per_frame_data = get_frame_constants();
 	const uint2 render_size = per_frame_data.render_size;

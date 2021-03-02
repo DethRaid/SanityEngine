@@ -154,20 +154,20 @@ namespace sanity::editor::import {
         auto& backend = renderer->get_render_backend();
         // backend.begin_frame_capture();
         auto cmds = backend.create_command_list();
-        engine::renderer::set_object_name(cmds.Get(), Rx::String::format("Import glTF %s", scene_path.string()));
+        engine::renderer::set_object_name(cmds, Rx::String::format("Import glTF %s", scene_path.string()));
 
         if(import_settings.import_meshes) {
-            meshes = import_all_meshes(scene, cmds.Get());
+            meshes = import_all_meshes(scene, cmds);
         }
 
         if(import_settings.import_materials) {
-            materials = import_all_materials(scene, cmds.Get());
+            materials = import_all_materials(scene, cmds);
         }
 
         // Then, walk the node hierarchy, creating an hierarchy of entt::entities
         Rx::Optional<entt::entity> scene_entity{Rx::nullopt};
         if(import_settings.import_object_hierarchy) {
-            scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry, cmds.Get());
+            scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry, cmds);
         }
 
         backend.submit_command_list(Rx::Utility::move(cmds));

@@ -84,15 +84,15 @@ namespace sanity::engine {
         auto commands = device.create_command_list();
 
         const auto msg = Rx::String::format("load_texture_to_gpu(%s)", texture_name);
-        renderer::set_object_name(commands.Get(), msg);
+        renderer::set_object_name(commands, msg);
 
         renderer::TextureHandle handle_out{};
 
         {
-            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands.Get(), msg.data());
-            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, msg.data());
+            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands, msg.data());
+            PIXScopedEvent(commands, PIX_COLOR_DEFAULT, msg.data());
 
-            handle_out = renderer.create_texture(create_info, pixels, commands.Get());
+            handle_out = renderer.create_texture(create_info, pixels, commands);
         }
 
         device.submit_command_list(Rx::Utility::move(commands));

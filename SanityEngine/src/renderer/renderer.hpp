@@ -30,8 +30,6 @@ namespace std {
     }
 } // namespace std
 
-using Microsoft::WRL::ComPtr;
-
 struct GLFWwindow;
 
 namespace sanity::engine::renderer {
@@ -274,7 +272,7 @@ namespace sanity::engine::renderer {
 
         void bind_global_resources(ID3D12GraphicsCommandList* command_list) const;
 
-        void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
+        void execute_all_render_passes(engine::ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                      Uint32 render_pass_index,

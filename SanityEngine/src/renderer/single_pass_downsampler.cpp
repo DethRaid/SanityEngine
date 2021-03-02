@@ -47,12 +47,12 @@ namespace sanity::engine::renderer {
                                                     .pStaticSamplers = &static_sampler_desc};
 
         const auto spd_root_sig = backend.compile_root_signature(desc);
-        set_object_name(spd_root_sig.Get(), "SPD Root Signature");
+        set_object_name(spd_root_sig, "SPD Root Signature");
 
         const auto compute_instructions = load_shader("utility/single_pass_downsampler.compute");
 
         const auto spd_pipeline = backend.create_compute_pipeline_state(compute_instructions, spd_root_sig);
-        set_object_name(spd_pipeline.Get(), "SPD Compute Pipeline");
+        set_object_name(spd_pipeline, "SPD Compute Pipeline");
 
 
 
@@ -94,8 +94,8 @@ namespace sanity::engine::renderer {
         // Bind descriptor heap, root signature, and pipeline
         auto* descriptor_heap = backend->get_cbv_srv_uav_heap();
         cmds->SetDescriptorHeaps(1, &descriptor_heap);
-        cmds->SetComputeRootSignature(root_signature.Get());
-        cmds->SetPipelineState(pipeline.Get());
+        cmds->SetComputeRootSignature(root_signature);
+        cmds->SetPipelineState(pipeline);
 
         // Set parameters
         cmds->SetComputeRoot32BitConstant(ROOT_CONSTANTS_INDEX, num_mips, MIP_COUNT_ROOT_CONSTANT_OFFSET);
@@ -109,7 +109,7 @@ namespace sanity::engine::renderer {
 
         // Set counter to 0
         {
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource.Get(),
+            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource,
                                                                       D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                       D3D12_RESOURCE_STATE_COPY_DEST,
                                                                       0);
@@ -118,7 +118,7 @@ namespace sanity::engine::renderer {
             D3D12_WRITEBUFFERIMMEDIATE_PARAMETER param{.Dest = global_counter_buffer->resource->GetGPUVirtualAddress(), .Value = 0};
             cmds->WriteBufferImmediate(1, &param, nullptr);
 
-            D3D12_RESOURCE_BARRIER barriers[1] = {CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource.Get(),
+            D3D12_RESOURCE_BARRIER barriers[1] = {CD3DX12_RESOURCE_BARRIER::Transition(global_counter_buffer->resource,
                                                                                        D3D12_RESOURCE_STATE_COPY_DEST,
                                                                                        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                        0)};

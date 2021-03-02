@@ -540,3 +540,4 @@ vcpkg_installed/
 /Sanity.Game/content/tests/polygon
 /Sanity.Game/content/tests/swamp
 /SanityEngine/types.ifc
+*.scor*

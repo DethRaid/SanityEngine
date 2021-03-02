@@ -53,8 +53,20 @@ namespace Rx {
     };
 
     template <>
+    struct FormatNormalize<glm::vec4> {
+        char scratch[FormatSize<Float32>::size * 4 + sizeof "(, , , )" - 1];
+        const char* operator()(const glm::vec4& data);
+    };
+
+    template <>
     struct FormatNormalize<glm::quat> {
         char scratch[FormatSize<Float32>::size * 3 + sizeof "(, , )" - 1];
         const char* operator()(const glm::quat& data);
+    };
+
+    template <>
+    struct FormatNormalize<glm::mat4> {
+        char scratch[FormatSize<Float32>::size * 16 + sizeof "\n[\n \n \n \n ]" - 1];
+        const char* operator()(const glm::mat4& data);
     };
 } // namespace Rx

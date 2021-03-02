@@ -58,7 +58,7 @@ namespace sanity::engine::renderer {
             commands->BeginRenderPass(1, &render_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
         }
 
-        commands->SetPipelineState(denoising_pipeline->pso.Get());
+        commands->SetPipelineState(denoising_pipeline->pso);
 
     	commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX, denoiser_material_buffer_handle.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
         commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX, 0, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
@@ -70,21 +70,21 @@ namespace sanity::engine::renderer {
         const auto& denoised_image = renderer->get_texture(denoised_color_target_handle);
 
         {        	
-            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource.Get(),
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource,
                                                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                                                  D3D12_RESOURCE_STATE_COPY_DEST),
-                                            CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource.Get(),
+                                            CD3DX12_RESOURCE_BARRIER::Transition(denoised_image.resource,
                                                                                  D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                                  D3D12_RESOURCE_STATE_COPY_SOURCE)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
         {
-            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource.Get(),
+            const auto src_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = denoised_image.resource,
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
 
-            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource.Get(),
+            const auto dst_copy_location = D3D12_TEXTURE_COPY_LOCATION{.pResource = accumulation_image.resource,
                                                                        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
                                                                        .SubresourceIndex = 0};
 

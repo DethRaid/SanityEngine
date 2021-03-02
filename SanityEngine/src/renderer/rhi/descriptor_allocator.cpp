@@ -57,5 +57,5 @@ namespace sanity::engine::renderer {
 
     UINT DescriptorAllocator::get_descriptor_size() const { return descriptor_size; }
 
-    ID3D12DescriptorHeap* DescriptorAllocator::get_heap() const { return heap.Get(); }
+    ID3D12DescriptorHeap* DescriptorAllocator::get_heap() const { return heap; }
 } // namespace sanity::engine::renderer

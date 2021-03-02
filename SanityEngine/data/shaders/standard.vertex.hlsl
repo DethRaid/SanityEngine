@@ -5,7 +5,7 @@ struct StandardVertex {
     float2 texcoord : Texcoord;
 };
 
-struct VertexOutput {
+struct VertexShaderOutput {
     float4 location_ndc : SV_POSITION;
     float3 location_worldspace : WORLDPOS;
     float3 normal_worldspace : NORMAL;
@@ -13,12 +13,10 @@ struct VertexOutput {
     float2 texcoord : TEXCOORD;
 };
 
-struct MaterialData {};
-
 #include "inc/standard_root_signature.hlsl"
 
-VertexOutput main(StandardVertex input) {
-    VertexOutput output;
+VertexShaderOutput main(StandardVertex input) {
+    VertexShaderOutput output;
 
 	const float4x4 model_matrix = get_current_model_matrix();
     output.location_worldspace = mul(model_matrix, float4(input.location_modelspace, 1.0f)).xyz;

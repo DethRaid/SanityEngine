@@ -98,11 +98,11 @@ namespace sanity::engine::renderer {
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
 
         auto command_list = backend->create_command_list(frame_idx);
-        set_object_name(command_list.Get(), Rx::String::format("Main Render Command List for frame %d", frame_idx));
+        set_object_name(command_list, Rx::String::format("Main Render Command List for frame %d", frame_idx));
 
         {
-            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::render_all");
-            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "Renderer::render_all");
+            TracyD3D12Zone(RenderBackend::tracy_context, *command_list, "Renderer::render_all");
+            PIXScopedEvent(*command_list, PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
                 rebuild_raytracing_scene(command_list);
                 raytracing_scene_dirty = false;
@@ -116,9 +116,9 @@ namespace sanity::engine::renderer {
 
             update_frame_constants(registry, frame_idx);
 
-            command_list->SetGraphicsRootSignature(backend->get_standard_root_signature().Get());
+            command_list->SetGraphicsRootSignature(*backend->get_standard_root_signature());
 
-            update_resource_array_descriptors(command_list.Get(), frame_idx);
+            update_resource_array_descriptors(command_list, frame_idx);
 
             execute_all_render_passes(command_list, registry, frame_idx);
         }
@@ -144,7 +144,7 @@ namespace sanity::engine::renderer {
             }
 
             const auto& image = get_texture(texture_handle);
-            auto* resource = image.resource.Get();
+            auto* resource = *image.resource;
 
             if(const auto* previous_state = previous_resource_usages.find(texture_handle)) {
                 if(*previous_state == before_after_state->first) {
@@ -196,7 +196,7 @@ namespace sanity::engine::renderer {
             }
 
             const auto& image = get_texture(texture_handle);
-            auto* resource = image.resource.Get();
+            auto* resource = image.resource;
 
             if(const auto* next_state = next_resource_usages.find(texture_handle)) {
                 if(before_after_state->second == *next_state) {
@@ -234,14 +234,14 @@ namespace sanity::engine::renderer {
         static_mesh_storage->bind_to_command_list(command_list);
     }
 
-    void Renderer::execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
+    void Renderer::execute_all_render_passes(engine::ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                              entt::registry& registry,
                                              const Uint32& frame_idx) {
         {
             ZoneScoped;
 
-            TracyD3D12Zone(RenderBackend::tracy_context, command_list.Get(), "Renderer::execute_all_render_passes");
-            PIXScopedEvent(command_list.Get(), PIX_COLOR_DEFAULT, "execute_all_render_passes");
+            TracyD3D12Zone(RenderBackend::tracy_context, command_list, "Renderer::execute_all_render_passes");
+            PIXScopedEvent(command_list, PIX_COLOR_DEFAULT, "execute_all_render_passes");
 
             {
                 ZoneScopedN("Collect renderpass work");
@@ -251,16 +251,16 @@ namespace sanity::engine::renderer {
             {
                 ZoneScopedN("Record renderpass work");
 
-                bind_global_resources(command_list.Get());
+                bind_global_resources(command_list);
 
                 for(Uint32 i = 0; i < render_passes.size(); i++) {
                     Rx::Ptr<RenderPass>& render_pass = render_passes[i];
 
-                    issue_pre_pass_barriers(command_list.Get(), i, render_pass);
+                    issue_pre_pass_barriers(command_list, i, render_pass);
 
-                    render_pass->record_work(command_list.Get(), registry, frame_idx);
+                    render_pass->record_work(command_list, registry, frame_idx);
 
-                    issue_post_pass_barriers(command_list.Get(), i, render_pass);
+                    issue_post_pass_barriers(command_list, i, render_pass);
                 }
             }
         }
@@ -299,7 +299,7 @@ namespace sanity::engine::renderer {
             const auto staging_buffer = backend->get_staging_buffer(create_info.size);
             memcpy(staging_buffer.mapped_ptr, data, create_info.size);
 
-            cmds->CopyBufferRegion(buffer->resource.Get(), 0, staging_buffer.resource.Get(), 0, create_info.size);
+            cmds->CopyBufferRegion(buffer->resource, 0, staging_buffer.resource, 0, create_info.size);
         }
 
         return handle;
@@ -355,12 +355,12 @@ namespace sanity::engine::renderer {
         if(create_info.usage == TextureUsage::UnorderedAccess) {
             // Transition the image to COPY_DEST
             const auto barriers = Rx::Array{
-                CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)};
+                CD3DX12_RESOURCE_BARRIER::Transition(image.resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)};
 
             commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
-        const auto& staging_buffer = backend->get_staging_buffer_for_texture(image.resource.Get());
+        const auto& staging_buffer = backend->get_staging_buffer_for_texture(image.resource);
 
         const auto pixel_size = size_in_bytes(create_info.format);
 
@@ -370,7 +370,7 @@ namespace sanity::engine::renderer {
             .SlicePitch = static_cast<LONG_PTR>(create_info.width) * create_info.height * pixel_size,
         };
 
-        const auto result = UpdateSubresources(commands, image.resource.Get(), staging_buffer.resource.Get(), 0, 0, 1, &subresource);
+        const auto result = UpdateSubresources(commands, image.resource, staging_buffer.resource, 0, 0, 1, &subresource);
         if(result == 0) {
             logger->error("Could not upload texture data");
 
@@ -379,38 +379,38 @@ namespace sanity::engine::renderer {
 
         if(generate_mipmaps) {
             {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
 
                 commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
             }
 
-            spd->generate_mip_chain_for_texture(image.resource.Get(), commands);
+            spd->generate_mip_chain_for_texture(image.resource, commands);
 
             if(create_info.usage == TextureUsage::RenderTarget) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET)};
 
                 commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
             } else if(create_info.usage == TextureUsage::DepthStencil) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                      D3D12_RESOURCE_STATE_DEPTH_WRITE)};
 
                 commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
             } else if(create_info.usage == TextureUsage::SampledTexture) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource.Get(),
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                      D3D12_RESOURCE_STATE_GENERIC_READ)};
 
                 commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
             } else if(create_info.usage == TextureUsage::UnorderedAccess) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(image.resource.Get())};
+                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(image.resource)};
                 commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
             }
         }
@@ -710,7 +710,7 @@ namespace sanity::engine::renderer {
 
         commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(result_buffer->resource.Get());
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(*result_buffer->resource);
         commands->ResourceBarrier(1, &barrier);
 
         backend->return_scratch_buffer(Rx::Utility::move(scratch_buffer));
@@ -846,11 +846,11 @@ namespace sanity::engine::renderer {
         // load_noise_texture("data/textures/noise/RuthNoise.png");
 
         auto commands = backend->create_command_list();
-        set_object_name(commands.Get(), "Renderer::create_builtin_images");
+        set_object_name(*commands, "Renderer::create_builtin_images");
 
         {
-            TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), "Renderer::create_builtin_images");
-            PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
+            TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_builtin_images");
+            PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
 
             {
                 const auto pink_texture_create_info = TextureCreateInfo{.name = "Pink",
@@ -865,7 +865,7 @@ namespace sanity::engine::renderer {
                     pink_texture_pixel.push_back(0xFFFF00FF);
                 }
 
-                pink_texture_handle = create_texture(pink_texture_create_info, pink_texture_pixel.data(), commands.Get());
+                pink_texture_handle = create_texture(pink_texture_create_info, pink_texture_pixel.data(), commands);
             }
 
             {
@@ -883,7 +883,7 @@ namespace sanity::engine::renderer {
 
                 normal_roughness_texture_handle = create_texture(normal_roughness_texture_create_info,
                                                                  normal_roughness_texture_pixel.data(),
-                                                                 commands.Get());
+                                                                 commands);
             }
 
             {
@@ -901,7 +901,7 @@ namespace sanity::engine::renderer {
 
                 specular_emission_texture_handle = create_texture(specular_emission_texture_create_info,
                                                                   specular_emission_texture_pixel.data(),
-                                                                  commands.Get());
+                                                                  commands);
             }
         }
 
@@ -1009,7 +1009,7 @@ namespace sanity::engine::renderer {
                                                                                          .StructureByteStride = 0,
                                                                                          .Flags = D3D12_BUFFER_SRV_FLAG_RAW}};
 
-            device->CreateShaderResourceView(buffer.resource.Get(), &desc, write_descriptor);
+            device->CreateShaderResourceView(buffer.resource, &desc, write_descriptor);
 
             write_descriptor.Offset(1, descriptor_size);
         }
@@ -1048,7 +1048,7 @@ namespace sanity::engine::renderer {
                                                                                     .MipLevels = texture_desc.MipLevels,
                                                                                     .ResourceMinLODClamp = 0}};
             }
-            device->CreateShaderResourceView(texture.resource.Get(), &desc, write_descriptor);
+            device->CreateShaderResourceView(texture.resource, &desc, write_descriptor);
 
             write_descriptor.Offset(1, descriptor_size);
         }
@@ -1099,8 +1099,8 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        TracyD3D12Zone(RenderBackend::tracy_context, commands.Get(), "RebuildRaytracingScene");
-        PIXScopedEvent(commands.Get(), PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
+        TracyD3D12Zone(RenderBackend::tracy_context, commands, "RebuildRaytracingScene");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
@@ -1110,13 +1110,14 @@ namespace sanity::engine::renderer {
         }
 
         if(!raytracing_objects.is_empty()) {
+            logger->verbose("Building top-level acceleration structure for %u objects", raytracing_objects.size());
             constexpr auto max_num_objects = UINT32_MAX / sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
 
             RX_ASSERT(raytracing_objects.size() < max_num_objects, "May not have more than %u objects because uint32", max_num_objects);
 
             const auto instance_buffer_size = static_cast<Uint32>(raytracing_objects.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
             auto instance_buffer = backend->get_staging_buffer(instance_buffer_size);
-            set_object_name(instance_buffer.resource.Get(), "Raytracing instance description buffer");
+            set_object_name(instance_buffer.resource, "Raytracing instance description buffer");
             auto* instance_buffer_array = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(instance_buffer.mapped_ptr);
 
             for(Uint32 i = 0; i < raytracing_objects.size(); i++) {
@@ -1152,11 +1153,13 @@ namespace sanity::engine::renderer {
 
                 const auto& buffer = get_buffer(ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer->resource->GetGPUVirtualAddress();
+                
+                logger->verbose("Adding object BLAS=%u material=%u transform=%s", object.as_handle.index, object.material.handle, object.transform);
             }
 
             const auto as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
                 .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
-                .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+                .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD,
                 .NumDescs = static_cast<UINT>(raytracing_objects.size()),
                 .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
                 .InstanceDescs = instance_buffer.resource->GetGPUVirtualAddress(),
@@ -1186,7 +1189,7 @@ namespace sanity::engine::renderer {
 
             commands->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-            const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(as_buffer->resource.Get())};
+            const Rx::Vector<D3D12_RESOURCE_BARRIER> barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(*as_buffer->resource)};
             commands->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 
             raytracing_scene = {.buffer = as_buffer_handle};

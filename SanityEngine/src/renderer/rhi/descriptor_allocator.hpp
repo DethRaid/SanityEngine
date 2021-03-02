@@ -1,13 +1,10 @@
 #pragma once
 
 #include <d3d12.h>
-#include <wrl/client.h>
 
 #include "core/types.hpp"
 #include "d3dx12.hpp"
 #include "rx/core/vector.h"
-
-using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
 

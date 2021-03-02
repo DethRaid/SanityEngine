@@ -1,22 +1,18 @@
 #pragma once
 
-#include <wrl/client.h>
-
 #include "rx/core/types.h"
 #include "rx/math/mat4x4.h"
 #include "rx/math/vec2.h"
 #include "rx/math/vec3.h"
 #include "rx/math/vec4.h"
 
-using Microsoft::WRL::ComPtr;
-
 using Rx::Byte;
 using Rx::Size;
 
-using Rx::Uint8;
 using Rx::Uint16;
 using Rx::Uint32;
 using Rx::Uint64;
+using Rx::Uint8;
 
 using Int8 = Rx::Sint8;
 using Int16 = Rx::Sint16;
@@ -49,3 +45,116 @@ using Rx::operator""_u8;
 using Rx::operator""_u16;
 using Rx::operator""_u32;
 using Rx::operator""_u64;
+
+namespace sanity::engine {
+    template <typename TestType>
+    concept ComInterface = requires(TestType test_obj) {
+        { test_obj.AddRef() }
+        ->std::convertible_to<Uint32>;
+        { test_obj.Release() }
+        ->std::convertible_to<Uint32>;
+    };
+
+    /**
+     * @brief Smart pointer for COM types, such as all of D3D12
+     *
+     * I made my own because Microsoft::WRL::ComPtr is in `wrl/client.h`, and `wrl/client.h` takes a long time to compile
+     */
+    template <ComInterface ComType>
+    class ComPtr {
+    public:
+        ComPtr(const ComPtr& other);
+        [[nodiscard]] ComPtr& operator=(const ComPtr& other);
+
+        ComPtr(ComPtr&& old) noexcept;
+        [[nodiscard]] ComPtr& operator=(ComPtr&& old) noexcept;
+
+        ~ComPtr();
+
+        [[nodiscard]] ComType** operator&();
+
+        [[nodiscard]] ComType* operator*() const;
+
+        [[nodiscard]] ComType* operator->() const;
+
+        // ReSharper disable once CppNonExplicitConversionOperator
+        [[nodiscard]] operator ComType*() const;
+
+    private:
+        ComType* ptr{nullptr};
+
+        void add_ref();
+
+        void remove_ref();
+    };
+
+    template <ComInterface ComType>
+    ComPtr<ComType>::ComPtr(const ComPtr& other) : ptr{other.ptr} {
+        add_ref();
+    }
+
+    template <ComInterface ComType>
+    ComPtr<ComType>& ComPtr<ComType>::operator=(const ComPtr& other) {
+        this->~ComPtr();
+
+        ptr = other.ptr;
+        add_ref();
+
+        return *this;
+    }
+
+    template <ComInterface ComType>
+    ComPtr<ComType>::ComPtr(ComPtr&& old) noexcept : ptr{old.ptr} {
+        add_ref();
+
+        old.remove_ref();
+        old.ptr = nullptr;
+    }
+
+    template <ComInterface ComType>
+    ComPtr<ComType>& ComPtr<ComType>::operator=(ComPtr&& old) noexcept {
+        this->~ComPtr();
+
+        ptr = old.ptr;
+        add_ref();
+
+        old.remove_ref();
+        old.ptr = nullptr;
+
+        return *this;
+    }
+
+    template <ComInterface ComType>
+    ComPtr<ComType>::~ComPtr() {
+        remove_ref();
+    }
+
+    template <ComInterface ComType>
+    ComType** ComPtr<ComType>::operator&() {
+        return *ptr;
+    }
+
+    template <ComInterface ComType>
+    ComType* ComPtr<ComType>::operator->() const {
+        return ptr;
+    }
+
+    template <ComInterface ComType>
+    ComPtr<ComType>::operator ComType*() const {
+        return ptr;
+    }
+
+    template <ComInterface ComType>
+    void ComPtr<ComType>::add_ref() {
+        if(ptr != nullptr) {
+            ptr->AddRef();
+        }
+    }
+
+    template <ComInterface ComType>
+    void ComPtr<ComType>::remove_ref() {
+        if(ptr != nullptr) {
+            ptr->Release();
+        }
+    }
+} // namespace sanity::engine

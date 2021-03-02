@@ -1,7 +1,5 @@
 module;
 
-#include <wrl/client.h>
-
 #include "rx/core/types.h"
 #include "rx/math/mat4x4.h"
 #include "rx/math/vec2.h"

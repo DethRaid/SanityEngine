@@ -1,15 +1,12 @@
 #pragma once
 
 #include <d3d12.h>
-#include <wrl/client.h>
 
 #include "resources.hpp"
 #include "rx/core/array.h"
 #include "rx/core/optional.h"
 #include "rx/core/string.h"
 #include "rx/core/vector.h"
-
-using Microsoft::WRL::ComPtr;
 
 namespace sanity::engine::renderer {
     enum class PrimitiveType { Points, Lines, Triangles };
