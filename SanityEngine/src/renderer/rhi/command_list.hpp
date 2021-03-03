@@ -6,8 +6,8 @@
 
 namespace renderer {
     struct CommandList {
-        ComPtr<ID3D12GraphicsCommandList4> cmds;
-        ComPtr<ID3D12CommandAllocator> command_allocator;
+        sanity::engine::ComPtr<ID3D12GraphicsCommandList4> cmds;
+        sanity::engine::ComPtr<ID3D12CommandAllocator> command_allocator;
         Uint32 gpu_frame_idx;
 
         ID3D12GraphicsCommandList4* operator->() const;

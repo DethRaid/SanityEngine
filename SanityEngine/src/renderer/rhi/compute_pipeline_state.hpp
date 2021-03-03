@@ -2,9 +2,9 @@
 
 #include <d3d12.h>
 
-namespace sanity::engine::renderer {
-    using Microsoft::WRL::ComPtr;
+#include "core/types.hpp"
 
+namespace sanity::engine::renderer {
     struct ComputePipelineState {
         ComPtr<ID3D12PipelineState> pso;
         ComPtr<ID3D12RootSignature> root_signature;

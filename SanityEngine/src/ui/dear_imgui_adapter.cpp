@@ -288,8 +288,8 @@ namespace sanity::engine {
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
         {
-            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands, "DearImguiAdapter::create_font_texture");
-            PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
+            TracyD3D12Zone(renderer::RenderBackend::tracy_context, *commands, "DearImguiAdapter::create_font_texture");
+            PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
 
             const auto create_info = renderer::TextureCreateInfo{.name = "Dear ImGUI Font Atlas",
                                                                .usage = renderer::TextureUsage::SampledTexture,

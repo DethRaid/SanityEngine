@@ -89,8 +89,8 @@ namespace sanity::engine {
         renderer::TextureHandle handle_out{};
 
         {
-            TracyD3D12Zone(renderer::RenderBackend::tracy_context, commands, msg.data());
-            PIXScopedEvent(commands, PIX_COLOR_DEFAULT, msg.data());
+            TracyD3D12Zone(renderer::RenderBackend::tracy_context, *commands, msg.data());
+            PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, msg.data());
 
             handle_out = renderer.create_texture(create_info, pixels, commands);
         }

@@ -124,7 +124,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <Optimization>Disabled</Optimization>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <WarningLevel>Level3</WarningLevel>
@@ -140,7 +140,7 @@
       <PreprocessToFile>false</PreprocessToFile>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <PrecompiledHeaderFile>stdafx.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>${ProjectDir}src\core\stdafx.hpp</PrecompiledHeaderFile>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TRACY_ENABLE;RX_DEBUG;GLM_ENABLE_EXPERIMENTAL;_CRT_SECURE_NO_WARNINGS;GLM_FORCE_LEFT_HANDED;NOMINMAX;WIN32_LEAN_AND_MEAN;GLFW_DLL;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -648,6 +648,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\core\json\transform_json_conversion.hpp" />
     <ClInclude Include="src\core\reflection\type_reflection.hpp" />
     <ClInclude Include="src\core\RexJsonConversion.hpp" />
+    <ClInclude Include="src\core\stdafx.hpp" />
     <ClInclude Include="src\core\transform.hpp" />
     <ClInclude Include="src\core\VectorHandle.hpp" />
     <ClInclude Include="src\core\pix_colors.hpp" />

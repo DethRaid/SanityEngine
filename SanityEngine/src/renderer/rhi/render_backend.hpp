@@ -341,7 +341,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Rx::Vector<D3D12_SHADER_INPUT_BIND_DESC> get_bindings_from_shader(const Rx::Vector<Uint8>& shader) const;
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
-                                                                         ID3D12RootSignature& root_signature);
+                                                                         ID3D12RootSignature* root_signature);
 
         void flush_batched_command_lists();
 

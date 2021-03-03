@@ -3,7 +3,6 @@
 #include <chrono>
 #include <queue>
 
-
 #include "renderer.hpp"
 #include "core/Prelude.hpp"
 #include "core/VectorHandle.hpp"

@@ -145,7 +145,7 @@ float4 get_incoming_light(const in float3 ray_origin,
 
     } else {
         // Sample the atmosphere
-        const float3 sky_direction = surface_normal * float3(1, -1, -1);
+        const float3 sky_direction = direction * float3(1, -1, -1);
         const float3 sky = get_sky_in_direction(sky_direction);
         return float4(sky, 0);
     }

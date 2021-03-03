@@ -4,8 +4,8 @@
 #include "scene_importer.hpp"
 
 #include <ranges>
-#include <renderer/rhi/d3d12_private_data.hpp>
 
+#include <renderer/rhi/d3d12_private_data.hpp>
 
 #include "Tracy.hpp"
 #include "actor/actor.hpp"
@@ -579,7 +579,7 @@ namespace sanity::editor::import {
 
                 const auto ray_object = engine::renderer::RaytracingObject{.as_handle = as_handle,
                                                                            .material = ray_material,
-                                                                           .transform = primitive_transform_component.get_model_matrix(
+                                                                           .transform = parent_transform_component.get_model_matrix(
                                                                                registry)};
                 //,
                 //.transform = cached_transform.to_matrix()};

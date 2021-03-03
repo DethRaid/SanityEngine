@@ -318,13 +318,13 @@ namespace sanity::engine::renderer {
             return {};
         }
 
-        store_com_interface(pso, root_signature);
+        store_com_interface(pso, *root_signature);
 
         return pso;
     }
 
     Rx::Ptr<RenderPipelineState> RenderBackend::create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info) {
-        return create_pipeline_state(create_info, *standard_root_signature);
+        return create_pipeline_state(create_info, standard_root_signature);
     }
 
     ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_command_list(Rx::Optional<Uint32> frame_idx) {
@@ -367,7 +367,7 @@ namespace sanity::engine::renderer {
         }
 
         commands->SetName(L"Unnamed Sanity Engine command list");
-        store_com_interface(commands, command_allocator);
+        store_com_interface(commands, *command_allocator);
         const auto gpu_frame_idx = GpuFrameIdx{*frame_idx};
         commands->SetPrivateData(PRIVATE_DATA_ATTRIBS(GpuFrameIdx), &gpu_frame_idx);
         command_lists_outside_render_device.fetch_add(1);
@@ -581,7 +581,7 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not initialize DXGI");
         }
 
-        basic_factory.As(&factory);
+        factory = basic_factory.as<IDXGIFactory4>();
         if(!factory) {
             Rx::abort("DXGI is not at a new enough version, please update your graphics drivers");
         }
@@ -671,8 +671,8 @@ namespace sanity::engine::renderer {
 
                 device = try_device;
 
-                device.As(&device1);
-                device.As(&device5);
+                device1 = device.as<ID3D12Device1>();
+                device5 = device.as<ID3D12Device5>();
 
                 // Save information about the device
                 D3D12_FEATURE_DATA_ARCHITECTURE arch{};
@@ -689,7 +689,7 @@ namespace sanity::engine::renderer {
                 }
 
 #ifndef NDEBUG
-                device.As(&info_queue);
+                info_queue = device.as<ID3D12InfoQueue>();
                 if(info_queue && cvar_break_on_validation_error->get()) {
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
                     info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
@@ -779,13 +779,12 @@ namespace sanity::engine::renderer {
         };
 
         ComPtr<IDXGISwapChain1> swapchain1;
-        auto hr = factory
-                      ->CreateSwapChainForHwnd(direct_command_queue, window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
+        auto hr = factory->CreateSwapChainForHwnd(direct_command_queue, window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
         if(FAILED(hr)) {
             Rx::abort("Could not create swapchain: %s", to_string(hr));
         }
 
-        hr = swapchain1.As(&swapchain);
+        swapchain = swapchain1.as<IDXGISwapChain3>();
         if(FAILED(hr)) {
             Rx::abort("Could not get new swapchain interface, please update your drivers");
         }
@@ -1141,10 +1140,10 @@ namespace sanity::engine::renderer {
     }
 
     Rx::Ptr<RenderPipelineState> RenderBackend::create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
-                                                                      ID3D12RootSignature& root_signature) {
+                                                                      ID3D12RootSignature* root_signature) {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
-        desc.pRootSignature = &root_signature;
+        desc.pRootSignature = root_signature;
 
         desc.VS.BytecodeLength = create_info.vertex_shader.size();
         desc.VS.pShaderBytecode = create_info.vertex_shader.data();
@@ -1247,7 +1246,7 @@ namespace sanity::engine::renderer {
         }
 
         auto pipeline = Rx::make_ptr<RenderPipelineState>(RX_SYSTEM_ALLOCATOR);
-        pipeline->root_signature = ComPtr<ID3D12RootSignature>(&root_signature);
+        pipeline->root_signature = ComPtr<ID3D12RootSignature>(root_signature);
 
         const auto result = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipeline->pso));
         if(FAILED(result)) {
@@ -1341,13 +1340,13 @@ namespace sanity::engine::renderer {
         set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
-            PIXScopedEvent(swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_render_target");
+            TracyD3D12Zone(tracy_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
+            PIXScopedEvent(*swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_render_target");
 
-            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx];
-            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_texture,
-                                                                                                       D3D12_RESOURCE_STATE_PRESENT,
-                                                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET);
+            D3D12_RESOURCE_BARRIER
+            swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain_textures[cur_swapchain_idx],
+                                                                                D3D12_RESOURCE_STATE_PRESENT,
+                                                                                D3D12_RESOURCE_STATE_RENDER_TARGET);
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
         }
 
@@ -1361,13 +1360,13 @@ namespace sanity::engine::renderer {
         set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
 
         {
-            TracyD3D12Zone(tracy_context, swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
-            PIXScopedEvent(swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
+            TracyD3D12Zone(tracy_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
+            PIXScopedEvent(*swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
 
-            auto* cur_swapchain_texture = swapchain_textures[cur_swapchain_idx];
-            D3D12_RESOURCE_BARRIER swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(cur_swapchain_texture,
-                                                                                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                                       D3D12_RESOURCE_STATE_PRESENT);
+            D3D12_RESOURCE_BARRIER
+            swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain_textures[cur_swapchain_idx],
+                                                                                D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                                                D3D12_RESOURCE_STATE_PRESENT);
             swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
         }
 

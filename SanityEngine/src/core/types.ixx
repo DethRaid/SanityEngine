@@ -8,8 +8,6 @@ module;
 
 export module types;
 
-export using Microsoft::WRL::ComPtr;
-
 export using Rx::Byte;
 export using Rx::Size;
 

@@ -444,6 +444,9 @@
     <ClInclude Include="src\renderer\rhi\per_frame_buffer.hpp">
       <Filter>src\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\stdafx.hpp">
+      <Filter>src\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <activation.h>
+#include <guiddef.h>
+
 #include "rx/core/types.h"
 #include "rx/math/mat4x4.h"
 #include "rx/math/vec2.h"
@@ -47,12 +50,26 @@ using Rx::operator""_u32;
 using Rx::operator""_u64;
 
 namespace sanity::engine {
+    template <class _Ty, class = void>
+    struct _Add_reference { // add reference (non-referenceable type)
+        using _Lvalue = _Ty;
+        using _Rvalue = _Ty;
+    };
+
+    template <class _Ty>
+    using add_rvalue_reference_t = typename _Add_reference<_Ty>::_Rvalue;
+
+    template <class _From, class _To>
+    concept convertible_to = __is_convertible_to(_From, _To) && requires(add_rvalue_reference_t<_From> (&_Fn)()) {
+        static_cast<_To>(_Fn());
+    };
+
     template <typename TestType>
     concept ComInterface = requires(TestType test_obj) {
         { test_obj.AddRef() }
-        ->std::convertible_to<Uint32>;
+        ->convertible_to<Uint32>;
         { test_obj.Release() }
-        ->std::convertible_to<Uint32>;
+        ->convertible_to<Uint32>;
     };
 
     /**
@@ -63,11 +80,20 @@ namespace sanity::engine {
     template <ComInterface ComType>
     class ComPtr {
     public:
+        // ReSharper disable CppNonExplicitConvertingConstructor
+
+        ComPtr() = default;
+
+        template <typename OtherType>
+        ComPtr(OtherType* new_ptr);
+
         ComPtr(const ComPtr& other);
-        [[nodiscard]] ComPtr& operator=(const ComPtr& other);
+        ComPtr& operator=(const ComPtr& other);
 
         ComPtr(ComPtr&& old) noexcept;
-        [[nodiscard]] ComPtr& operator=(ComPtr&& old) noexcept;
+        ComPtr& operator=(ComPtr&& old) noexcept;
+
+        // ReSharper restore CppNonExplicitConvertingConstructor
 
         ~ComPtr();
 
@@ -80,6 +106,9 @@ namespace sanity::engine {
         // ReSharper disable once CppNonExplicitConversionOperator
         [[nodiscard]] operator ComType*() const;
 
+        template <typename QueryType>
+        [[nodiscard]] ComPtr<QueryType> as() const;
+
     private:
         ComType* ptr{nullptr};
 
@@ -87,6 +116,12 @@ namespace sanity::engine {
 
         void remove_ref();
     };
+
+    template <ComInterface ComType>
+    template <typename OtherType>
+    ComPtr<ComType>::ComPtr(OtherType* new_ptr) : ptr{new_ptr} {
+        add_ref();
+    }
 
     template <ComInterface ComType>
     ComPtr<ComType>::ComPtr(const ComPtr& other) : ptr{other.ptr} {
@@ -131,7 +166,12 @@ namespace sanity::engine {
 
     template <ComInterface ComType>
     ComType** ComPtr<ComType>::operator&() {
-        return *ptr;
+        return &ptr;
+    }
+
+    template <ComInterface ComType>
+    ComType* ComPtr<ComType>::operator*() const {
+        return ptr;
     }
 
     template <ComInterface ComType>
@@ -142,6 +182,18 @@ namespace sanity::engine {
     template <ComInterface ComType>
     ComPtr<ComType>::operator ComType*() const {
         return ptr;
+    }
+
+    template <ComInterface ComType>
+    template <typename QueryType>
+    ComPtr<QueryType> ComPtr<ComType>::as() const {
+        QueryType* query_obj{nullptr};
+        const auto result = ptr->QueryInterface(&query_obj);
+        if(FAILED(result)) {
+            return {};
+        }
+
+        return query_obj;
     }
 
     template <ComInterface ComType>

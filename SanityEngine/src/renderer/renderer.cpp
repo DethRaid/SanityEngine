@@ -196,7 +196,6 @@ namespace sanity::engine::renderer {
             }
 
             const auto& image = get_texture(texture_handle);
-            auto* resource = image.resource;
 
             if(const auto* next_state = next_resource_usages.find(texture_handle)) {
                 if(before_after_state->second == *next_state) {
@@ -204,7 +203,7 @@ namespace sanity::engine::renderer {
                 }
 
                 // Only issue a barrier if we need a state transition
-                auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource, before_after_state->second, *next_state);
+                auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(image.resource, before_after_state->second, *next_state);
 
                 // Issue the end of a split barrier cause we're the best
                 barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
@@ -216,7 +215,7 @@ namespace sanity::engine::renderer {
                     // no next usage so just barrier to COMMON
                     // No split barrier here, that'd be silly
 
-                    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
+                    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                before_after_state->second,
                                                                                D3D12_RESOURCE_STATE_COMMON);
 
@@ -240,8 +239,8 @@ namespace sanity::engine::renderer {
         {
             ZoneScoped;
 
-            TracyD3D12Zone(RenderBackend::tracy_context, command_list, "Renderer::execute_all_render_passes");
-            PIXScopedEvent(command_list, PIX_COLOR_DEFAULT, "execute_all_render_passes");
+            TracyD3D12Zone(RenderBackend::tracy_context, *command_list, "Renderer::execute_all_render_passes");
+            PIXScopedEvent(*command_list, PIX_COLOR_DEFAULT, "execute_all_render_passes");
 
             {
                 ZoneScopedN("Collect renderpass work");
@@ -458,7 +457,7 @@ namespace sanity::engine::renderer {
     }
 
     FluidVolumeHandle Renderer::create_fluid_volume(const FluidVolumeCreateInfo& create_info) {
-        
+
         FluidVolume new_volume{.size = create_info.size, .voxels_per_meter = create_info.voxels_per_meter};
         const auto voxel_size = new_volume.get_voxel_size();
 
@@ -660,6 +659,7 @@ namespace sanity::engine::renderer {
 
             const auto& [first_vertex, num_vertices, first_index, num_indices] = mesh.mesh;
 
+            // Don't offset the vertex buffer here. We add the vertex offset to the indices when importing the glTF primitive
             auto geom_desc = D3D12_RAYTRACING_GEOMETRY_DESC{.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
                                                             .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
                                                             .Triangles = {.Transform3x4 = transform_buffer.resource->GetGPUVirtualAddress(),
@@ -670,9 +670,7 @@ namespace sanity::engine::renderer {
                                                                           .IndexBuffer = index_buffer.resource->GetGPUVirtualAddress() +
                                                                                          (first_index * sizeof(Uint32)),
                                                                           .VertexBuffer = {.StartAddress = vertex_buffer.resource
-                                                                                                               ->GetGPUVirtualAddress() +
-                                                                                                           (first_vertex *
-                                                                                                            sizeof(StandardVertex)),
+                                                                                                               ->GetGPUVirtualAddress(),
                                                                                            .StrideInBytes = sizeof(StandardVertex)}}};
 
             geom_descs.push_back(Rx::Utility::move(geom_desc));
@@ -1099,8 +1097,8 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "RebuildRaytracingScene");
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
+        TracyD3D12Zone(RenderBackend::tracy_context, *commands, "RebuildRaytracingScene");
+        PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild
 
@@ -1153,8 +1151,11 @@ namespace sanity::engine::renderer {
 
                 const auto& buffer = get_buffer(ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer->resource->GetGPUVirtualAddress();
-                
-                logger->verbose("Adding object BLAS=%u material=%u transform=%s", object.as_handle.index, object.material.handle, object.transform);
+
+                logger->verbose("Adding object BLAS=%u material=%u transform=%s",
+                                object.as_handle.index,
+                                object.material.handle,
+                                object.transform);
             }
 
             const auto as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{
