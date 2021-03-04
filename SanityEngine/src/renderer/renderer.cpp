@@ -1151,11 +1151,6 @@ namespace sanity::engine::renderer {
 
                 const auto& buffer = get_buffer(ray_geo.blas_buffer);
                 desc.AccelerationStructure = buffer->resource->GetGPUVirtualAddress();
-
-                logger->verbose("Adding object BLAS=%u material=%u transform=%s",
-                                object.as_handle.index,
-                                object.material.handle,
-                                object.transform);
             }
 
             const auto as_inputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{

@@ -26,7 +26,8 @@ namespace sanity::engine::renderer {
          * @brief If the light is directional, this is the worldspace direction of the light. If the light is a sphere, tube, or rectangular
          * light, this is the worldspace location of the light
          */
-        glm::vec3 direction_or_location{glm::normalize(glm::vec3{0.049756793f, 0.59547983f, -0.994187036f})};
+        glm::vec3 direction_or_location{glm::normalize(glm::vec3{0.049756793f, 0.59547983f, -0.994187036f})};    // Direction for the test skybox
+        // glm::vec3 direction_or_location{glm::normalize(glm::vec3{0.f, 1.f, 0.f})};
 
         /*!
          * Angular size of the light, in radians. Only relevant for directional lights

@@ -1,11 +1,10 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "scene_importer.hpp"
 
 #include <ranges>
-
-#include <renderer/rhi/d3d12_private_data.hpp>
 
 #include "Tracy.hpp"
 #include "actor/actor.hpp"
@@ -17,6 +16,7 @@
 #include "renderer/hlsl/standard_material.hpp"
 #include "renderer/mesh_data_store.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/rhi/d3d12_private_data.hpp"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
 #include "sanity_engine.hpp"
@@ -589,9 +589,6 @@ namespace sanity::editor::import {
             });
 
             renderer->add_raytracing_objects_to_scene(raytracing_objects);
-
-        } else {
-            logger->error("Node %s references invalid mesh %d", node.name, node.mesh);
         }
     }
 
