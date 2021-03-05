@@ -197,7 +197,12 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
-        [[nodiscard]] TextureHandle get_z_buffer() const;
+        /**
+         * @brief Early-Z depth buffer
+         *
+         * This buffer gets filled in the first renderpass. Thus, work submitted 
+         */
+        [[nodiscard]] TextureHandle get_depth_buffer() const;
 
         [[nodiscard]] BufferHandle get_frame_constants_buffer(Uint32 frame_idx) const;
 
@@ -248,14 +253,14 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
 
-        RenderpassHandle<EarlyZPass> early_z_pass{};
+        RenderpassHandle<EarlyDepthPass> early_depth_test{};
         RenderpassHandle<FluidSimPass> fluid_sim_pass_handle{};
         RenderpassHandle<DirectLightingPass> direct_lighting_pass_handle{};
         RenderpassHandle<DenoiserPass> denoiser_pass_handle{};
         RenderpassHandle<PostprocessingPass> postprocessing_pass_handle{};
         RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle{};
 
-        TextureHandle z_buffer_handle;
+        TextureHandle depth_buffer_handle;
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;

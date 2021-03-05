@@ -447,7 +447,9 @@
     <ClInclude Include="src\core\stdafx.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\renderpasses\early_z_pass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\early_z_pass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -657,7 +659,9 @@
     <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\renderpasses\early_z_pass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\early_z_pass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

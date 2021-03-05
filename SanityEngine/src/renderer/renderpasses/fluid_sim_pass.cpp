@@ -399,7 +399,7 @@ namespace sanity::engine::renderer {
                                                    .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT, .Color = {0, 0, 0, 0}}}},
                                .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
-        const auto& depth_target_handle = renderer->get_z_buffer();
+        const auto& depth_target_handle = renderer->get_depth_buffer();
         const auto& depth_target = renderer->get_texture(depth_target_handle);
         const auto& depth_descriptor = backend.create_dsv_handle(depth_target);
         depth_access = D3D12_RENDER_PASS_DEPTH_STENCIL_DESC{

@@ -636,7 +636,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
-    TextureHandle Renderer::get_z_buffer() const { return z_buffer_handle; }
+    TextureHandle Renderer::get_depth_buffer() const { return depth_buffer_handle; }
 
     BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
 
@@ -924,9 +924,9 @@ namespace sanity::engine::renderer {
     void Renderer::create_render_passes() {
         render_passes.reserve(6);
 
-        render_passes.push_back(Rx::make_ptr<EarlyZPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        early_z_pass = RenderpassHandle<EarlyZPass>::make_from_last_element(render_passes);
-        z_buffer_handle = early_z_pass->get_z_buffer();
+        render_passes.push_back(Rx::make_ptr<EarlyDepthPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        early_depth_test = RenderpassHandle<EarlyDepthPass>::make_from_last_element(render_passes);
+        depth_buffer_handle = early_depth_test->get_depth_buffer();
 
         render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         fluid_sim_pass_handle = RenderpassHandle<FluidSimPass>::make_from_last_element(render_passes);
@@ -1036,7 +1036,9 @@ namespace sanity::engine::renderer {
 
             // V0: Bind all the textures as SRVs
             D3D12_SHADER_RESOURCE_VIEW_DESC desc;
-            if(texture.depth == 1) {
+
+            // Static analyzer doesn't realize one branch is 2D and the other is 3D
+            if(texture.depth == 1) {  // NOLINT(bugprone-branch-clone)
                 desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
                                                        .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
                                                        .Shader4ComponentMapping = mapping,
