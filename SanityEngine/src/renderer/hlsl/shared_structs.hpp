@@ -1,4 +1,6 @@
-#pragma once
+// Use ifndef because dxc doesn't support #pragma once https://github.com/microsoft/DirectXShaderCompiler/issues/676
+#ifndef SHARED_STRUCTS_HPP
+#define SHARED_STRUCTS_HPP
 
 #include "interop.hpp"
 
@@ -105,4 +107,6 @@ namespace sanity::engine::renderer {
     };
 #if __cplusplus
 }
+#endif
+
 #endif

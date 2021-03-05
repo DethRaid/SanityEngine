@@ -69,13 +69,14 @@ namespace sanity::engine::renderer {
 
     enum class TextureFormat {
         Rgba8,
-        R32F,
-        R32UInt,
         Rg16F,
+        Rgba16F,
+        R32F,
+        Rg32F,
         Rgba32F,
+        R32UInt,
         Depth32,
         Depth24Stencil8,
-        Rg32F,
     };
 
     struct TextureCreateInfo {

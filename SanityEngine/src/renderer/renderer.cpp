@@ -574,10 +574,10 @@ namespace sanity::engine::renderer {
     void Renderer::set_scene_output_texture(const TextureHandle output_texture_handle) {
         ZoneScoped;
 
-        postprocessing_pass_handle.get()->set_output_texture(output_texture_handle);
+        postprocessing_pass_handle->set_output_texture(output_texture_handle);
     }
 
-    TextureHandle Renderer::get_scene_output_texture() const { return postprocessing_pass_handle.get()->get_output_texture(); }
+    TextureHandle Renderer::get_scene_output_texture() const { return postprocessing_pass_handle->get_output_texture(); }
 
     StandardMaterialHandle Renderer::allocate_standard_material(const StandardMaterial& material) {
         if(!free_material_handles.is_empty()) {
@@ -635,6 +635,8 @@ namespace sanity::engine::renderer {
     TextureHandle Renderer::get_default_normal_texture() const { return normal_roughness_texture_handle; }
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
+
+    TextureHandle Renderer::get_z_buffer() const { return z_buffer_handle; }
 
     BufferHandle Renderer::get_frame_constants_buffer(const Uint32 frame_idx) const { return frame_constants_buffers[frame_idx]; }
 
@@ -920,9 +922,13 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_render_passes() {
-        render_passes.reserve(5);
+        render_passes.reserve(6);
 
-        render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this));
+        render_passes.push_back(Rx::make_ptr<EarlyZPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
+        early_z_pass = RenderpassHandle<EarlyZPass>::make_from_last_element(render_passes);
+        z_buffer_handle = early_z_pass->get_z_buffer();
+
+        render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         fluid_sim_pass_handle = RenderpassHandle<FluidSimPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(Rx::make_ptr<DirectLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
@@ -931,11 +937,11 @@ namespace sanity::engine::renderer {
         render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
                                                            *this,
                                                            output_framebuffer_size,
-                                                           static_cast<DirectLightingPass&>(*render_passes[1])));
+                                                           *(*direct_lighting_pass_handle)));
         denoiser_pass_handle = RenderpassHandle<DenoiserPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(
-            Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, static_cast<DenoiserPass&>(*render_passes[2])));
+            Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, *(*denoiser_pass_handle)));
         postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
@@ -1077,8 +1083,8 @@ namespace sanity::engine::renderer {
     Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_next_resource_states(const Uint32 cur_renderpass_index) const {
         const auto& used_resources = render_passes[cur_renderpass_index]->get_texture_states();
         auto next_states = Rx::Map<TextureHandle, D3D12_RESOURCE_STATES>{};
-
-        if(cur_renderpass_index > 0) {
+        
+        if(cur_renderpass_index < render_passes.size() - 1) {
             for(Int32 i = cur_renderpass_index + 1; i < render_passes.size(); i++) {
                 used_resources.each_key([&](const TextureHandle& texture) {
                     const auto& renderpass_resources = render_passes[i]->get_texture_states();

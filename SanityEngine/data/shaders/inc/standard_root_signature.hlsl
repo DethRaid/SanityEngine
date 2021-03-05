@@ -1,4 +1,6 @@
-#pragma once
+// Use ifndef because dxc doesn't support #pragma once https://github.com/microsoft/DirectXShaderCompiler/issues/676
+#ifndef STANDARD_ROOT_SIGNATURE_HPP
+#define STANDARD_ROOT_SIGNATURE_HPP 
 
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_SPHERE 1
@@ -89,3 +91,5 @@ float4x4 get_current_model_matrix() { return get_model_matrix(constants.model_ma
 	const Type varname = data_buffer.Load<Type>(read_offset);
 
 #define GET_CURRENT_DATA(Type, varname) GET_DATA(Type, constants.data_index, varname)
+
+#endif

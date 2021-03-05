@@ -27,7 +27,7 @@ namespace sanity::engine::renderer {
              .vertex_shader = load_shader("fullscreen.vertex"),
              .pixel_shader = load_shader("raytracing_accumulation.pixel"),
              .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
-             .render_target_formats = Rx::Array{TextureFormat::Rgba32F}});
+             .render_target_formats = Rx::Array{TextureFormat::Rgba16F}});
 
         create_textures_and_framebuffer(render_resolution);
 
@@ -103,7 +103,7 @@ namespace sanity::engine::renderer {
             const auto color_target_create_info = TextureCreateInfo{
                 .name = DENOISED_SCENE_RENDER_TARGET,
                 .usage = TextureUsage::RenderTarget,
-                .format = TextureFormat::Rgba32F,
+                .format = TextureFormat::Rgba16F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,
@@ -118,7 +118,7 @@ namespace sanity::engine::renderer {
             const auto accumulation_target_create_info = TextureCreateInfo{
                 .name = ACCUMULATION_RENDER_TARGET,
                 .usage = TextureUsage::SampledTexture,
-                .format = TextureFormat::Rgba32F,
+                .format = TextureFormat::Rgba16F,
                 .width = render_resolution.x,
                 .height = render_resolution.y,
                 .enable_resource_sharing = true,

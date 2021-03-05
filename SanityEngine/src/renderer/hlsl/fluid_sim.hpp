@@ -1,4 +1,6 @@
-#pragma once
+// Use ifndef because dxc doesn't support #pragma once https://github.com/microsoft/DirectXShaderCompiler/issues/676
+#ifndef FLUID_SIM_HPP
+#define FLUID_SIM_HPP
 
 #include "interop.hpp"
 #include "shared_structs.hpp"
@@ -66,11 +68,14 @@ namespace sanity::engine::renderer {
     struct FluidSimDraw {
         ObjectDrawData instance_data;
 
-        uint vertex_count;
+        uint index_count;
         uint instance_count;
+        uint first_index;
         uint first_vertex;
         uint first_instance;
     };
 #if __cplusplus
 }
+#endif
+
 #endif

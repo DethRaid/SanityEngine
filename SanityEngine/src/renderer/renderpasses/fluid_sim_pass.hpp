@@ -13,7 +13,7 @@ namespace sanity::engine::renderer {
      */
     class FluidSimPass : public RenderPass {
     public:
-        explicit FluidSimPass(Renderer& renderer_in);
+        explicit FluidSimPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 
         void prepare_work(entt::registry& registry, Uint32 frame_idx) override;
 
@@ -67,10 +67,13 @@ namespace sanity::engine::renderer {
         BufferHandle cube_vertex_buffer;
         BufferHandle cube_index_buffer;
         Rx::Ptr<RenderPipelineState> fire_fluid_pipeline;
-        ComPtr<ID3D12CommandSignature> fluid_volume_render_signature;
-        Rx::Vector<ObjectDrawData> fluid_sim_draws;
+        ComPtr<ID3D12CommandSignature> fluid_volume_draw_signature;
+        Rx::Vector<FluidSimDraw> fluid_sim_draws;
         BufferRing drawcalls;
         D3D12_RENDER_PASS_RENDER_TARGET_DESC fluid_target_access;
+        D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_access;
+
+        // init
 
         void record_fire_simulation_updates(ID3D12GraphicsCommandList* commands, Uint32 frame_idx);
 
@@ -84,9 +87,17 @@ namespace sanity::engine::renderer {
 
         void create_indirect_command_signatures();
 
-        void create_render_target();
+        void create_render_target(const glm::uvec2& render_resolution);
 
         void create_fluid_volume_geometry();
+
+        // runtime
+
+        void add_fluid_volume_dispatch(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data);
+
+        void add_fluid_volume_draw(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data);
+
+        void add_fluid_volume_state(const FluidVolume& fluid_volume);
 
         void set_buffer_indices(ID3D12GraphicsCommandList* commands, Uint32 frame_idx) const;
 

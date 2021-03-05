@@ -447,6 +447,7 @@
     <ClInclude Include="src\core\stdafx.hpp">
       <Filter>src\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\early_z_pass.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -656,6 +657,7 @@
     <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp">
       <Filter>src\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\early_z_pass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -770,7 +772,7 @@
     <FxCompile Include="data\shaders\fluid\compute_projection.compute.hlsl">
       <Filter>shaders\fluid</Filter>
     </FxCompile>
-    <FxCompile Include="data\shaders\fluid\fluid_volume.pixel.hlsl">
+    <FxCompile Include="data\shaders\fluid\fire.pixel.hlsl">
       <Filter>shaders\fluid</Filter>
     </FxCompile>
   </ItemGroup>

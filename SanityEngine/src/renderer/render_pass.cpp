@@ -59,6 +59,10 @@ namespace sanity::engine::renderer {
     }
 
     void RenderPass::clear_resource_usage(const TextureHandle handle) {
+        // Why set the texture's states to an empty optional, rather than simply remove it from the map?
+        // Rex maps do not like it when you constantly add and remove the same things from them. I've run into bugs from it before. This
+        // way, we never remove things from the map There is a potential memory usage problem... Perhaps we can compact the maps every so
+        // often
         if(auto* usage_ptr = texture_states.find(handle); usage_ptr != nullptr) {
             *usage_ptr = Rx::nullopt;
         }

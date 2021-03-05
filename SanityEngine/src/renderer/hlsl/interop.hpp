@@ -1,4 +1,6 @@
-#pragma once
+// Use ifndef because dxc doesn't support #pragma once https://github.com/microsoft/DirectXShaderCompiler/issues/676
+#ifndef INTEROP_HPP
+#define INTEROP_HPP
 
 #if __cplusplus
 #include "core/types.hpp"
@@ -21,4 +23,5 @@ using float4x4 = glm::mat4;
 
 static_assert(sizeof(sanity::engine::renderer::TextureHandle) == sizeof(uint));
 static_assert(sizeof(sanity::engine::renderer::BufferHandle) == sizeof(uint));
+#endif
 #endif

@@ -25,7 +25,7 @@ namespace sanity::engine::renderer {
             .name = "Standard material pipeline",
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
-            .render_target_formats = Rx::Array{TextureFormat::Rgba32F, TextureFormat::R32UInt},
+            .render_target_formats = Rx::Array{TextureFormat::Rgba16F, TextureFormat::R32UInt},
             .depth_stencil_format = TextureFormat::Depth32,
         });
         logger->verbose("Created standard pipeline");
@@ -35,7 +35,7 @@ namespace sanity::engine::renderer {
             .vertex_shader = load_shader("standard.vertex"),
             .pixel_shader = load_shader("standard.pixel"),
             .rasterizer_state = RasterizerState{.cull_mode = CullMode::Front},
-            .render_target_formats = Rx::Array{TextureFormat::Rgba32F, TextureFormat::R32UInt},
+            .render_target_formats = Rx::Array{TextureFormat::Rgba16F, TextureFormat::R32UInt},
             .depth_stencil_format = TextureFormat::Depth32,
         });
         logger->verbose("Created standard pipeline");
@@ -49,7 +49,7 @@ namespace sanity::engine::renderer {
                     .enable_depth_write = false,
                     .depth_func = CompareOp::Always,
                 },
-            .render_target_formats = Rx::Array{TextureFormat::Rgba32F, TextureFormat::R32UInt},
+            .render_target_formats = Rx::Array{TextureFormat::Rgba16F, TextureFormat::R32UInt},
             .depth_stencil_format = TextureFormat::Depth32,
         });
         logger->verbose("Created atmospheric pipeline");
@@ -131,7 +131,7 @@ namespace sanity::engine::renderer {
         const auto color_target_create_info = TextureCreateInfo{
             .name = SCENE_COLOR_RENDER_TARGET,
             .usage = TextureUsage::RenderTarget,
-            .format = TextureFormat::Rgba32F,
+            .format = TextureFormat::Rgba16F,
             .width = render_resolution.x,
             .height = render_resolution.y,
             .enable_resource_sharing = true,

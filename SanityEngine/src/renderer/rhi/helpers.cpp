@@ -20,6 +20,9 @@ namespace sanity::engine::renderer {
             case TextureFormat::Rg16F:
                 return DXGI_FORMAT_R16G16_FLOAT;
 
+            case TextureFormat::Rgba16F:
+                return DXGI_FORMAT_R16G16B16A16_FLOAT;
+
             case TextureFormat::R32F:
                 return DXGI_FORMAT_R32_FLOAT;
 

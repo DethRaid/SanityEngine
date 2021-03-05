@@ -48,6 +48,8 @@ namespace sanity::engine::renderer {
                 return 4;
 
             case TextureFormat::Rg32F:
+                [[fallthrough]];
+            case TextureFormat::Rgba16F:
                 return 8;
 
             case TextureFormat::Rgba32F:

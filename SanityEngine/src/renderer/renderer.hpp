@@ -3,9 +3,8 @@
 #include <chrono>
 #include <queue>
 
-#include "renderer.hpp"
 #include "core/Prelude.hpp"
-#include "core/VectorHandle.hpp"
+#include "renderer.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
 #include "renderer/handles.hpp"
 #include "renderer/hlsl/shared_structs.hpp"
@@ -18,10 +17,11 @@
 #include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "renderer/single_pass_downsampler.hpp"
+#include "renderpasses/early_z_pass.hpp"
+#include "renderpasses/fluid_sim_pass.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
-#include "renderpasses/fluid_sim_pass.hpp"
 
 namespace std {
     namespace filesystem {
@@ -37,18 +37,33 @@ namespace sanity::engine::renderer {
     class RenderCommandList;
 
     template <typename RenderPassType>
-    class RenderpassHandle : public VectorHandle<Rx::Ptr<RenderPass>> {
+    class RenderpassHandle {
     public:
         /**
          * @brief Makes a handle to the last render pass in the container
          */
         [[nodiscard]] static RenderpassHandle<RenderPassType> make_from_last_element(Rx::Vector<Rx::Ptr<RenderPass>>& container);
 
-        explicit RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, Size index_in);
+        RenderpassHandle() = default;
 
-        RenderPassType* get();
+        explicit RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>& container_in, Size index_in);
 
-        RenderPassType* get() const;
+        RenderPassType* operator*();
+
+        const RenderPassType* operator*() const;
+
+        RenderPassType* operator->();
+
+        const RenderPassType* operator->() const;
+
+        [[nodiscard]] Size get_index() const;
+
+    private:
+        Rx::Vector<Rx::Ptr<RenderPass>>* vector{nullptr};
+
+        Size index{};
+
+        RenderPass* get_renderpass() const;
     };
 
     /*!
@@ -182,6 +197,8 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
+        [[nodiscard]] TextureHandle get_z_buffer() const;
+
         [[nodiscard]] BufferHandle get_frame_constants_buffer(Uint32 frame_idx) const;
 
         [[nodiscard]] const RaytracingScene& get_raytracing_scene() const;
@@ -231,16 +248,19 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<Rx::Ptr<RenderPass>> render_passes;
 
-        RenderpassHandle<FluidSimPass> fluid_sim_pass_handle{nullptr, 0};
-        RenderpassHandle<DirectLightingPass> direct_lighting_pass_handle{nullptr, 0};
-        RenderpassHandle<DenoiserPass> denoiser_pass_handle{nullptr, 0};
-        RenderpassHandle<PostprocessingPass> postprocessing_pass_handle{nullptr, 0};
-        RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle{nullptr, 0};
+        RenderpassHandle<EarlyZPass> early_z_pass{};
+        RenderpassHandle<FluidSimPass> fluid_sim_pass_handle{};
+        RenderpassHandle<DirectLightingPass> direct_lighting_pass_handle{};
+        RenderpassHandle<DenoiserPass> denoiser_pass_handle{};
+        RenderpassHandle<PostprocessingPass> postprocessing_pass_handle{};
+        RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle{};
+
+        TextureHandle z_buffer_handle;
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;
 
-        #pragma region Initialization
+#pragma region Initialization
         void create_static_mesh_storage();
 
         void allocate_resource_descriptors();
@@ -271,7 +291,9 @@ namespace sanity::engine::renderer {
 
         void bind_global_resources(ID3D12GraphicsCommandList* command_list) const;
 
-        void execute_all_render_passes(engine::ComPtr<ID3D12GraphicsCommandList4>& command_list, entt::registry& registry, const Uint32& frame_idx);
+        void execute_all_render_passes(engine::ComPtr<ID3D12GraphicsCommandList4>& command_list,
+                                       entt::registry& registry,
+                                       const Uint32& frame_idx);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                      Uint32 render_pass_index,
@@ -310,23 +332,45 @@ namespace sanity::engine::renderer {
 
     template <typename RenderPassType>
     RenderpassHandle<RenderPassType> RenderpassHandle<RenderPassType>::make_from_last_element(Rx::Vector<Rx::Ptr<RenderPass>>& container) {
-        return RenderpassHandle<RenderPassType>{&container, container.size() - 1};
+        return RenderpassHandle<RenderPassType>{container, container.size() - 1};
     }
 
     template <typename RenderPassType>
-    RenderpassHandle<RenderPassType>::RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>* container_in, const Size index_in)
-        : VectorHandle(container_in, index_in) {}
+    RenderpassHandle<RenderPassType>::RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>& container_in, const Size index_in)
+        : vector{&container_in}, index{index_in} {}
 
     template <typename RenderPassType>
-    RenderPassType* RenderpassHandle<RenderPassType>::get() {
-        auto* renderpass = this->operator->()->get();
+    RenderPassType* RenderpassHandle<RenderPassType>::operator*() {
+        auto* renderpass = get_renderpass();
         return static_cast<RenderPassType*>(renderpass);
     }
 
     template <typename RenderPassType>
-    RenderPassType* RenderpassHandle<RenderPassType>::get() const {
-        auto* renderpass = this->operator->()->get();
+    const RenderPassType* RenderpassHandle<RenderPassType>::operator*() const {
+        auto* renderpass = get_renderpass();
         return static_cast<RenderPassType*>(renderpass);
+    }
+
+    template <typename RenderPassType>
+    RenderPassType* RenderpassHandle<RenderPassType>::operator->() {
+        auto* renderpass = get_renderpass();
+        return static_cast<RenderPassType*>(renderpass);
+    }
+
+    template <typename RenderPassType>
+    const RenderPassType* RenderpassHandle<RenderPassType>::operator->() const {
+        auto* renderpass = get_renderpass();
+        return static_cast<RenderPassType*>(renderpass);
+    }
+
+    template <typename RenderPassType>
+    Size RenderpassHandle<RenderPassType>::get_index() const {
+        return index;
+    }
+
+    template <typename RenderPassType>
+    RenderPass* RenderpassHandle<RenderPassType>::get_renderpass() const {
+        return (*vector)[index].get();
     }
 
     template <typename DataType>
