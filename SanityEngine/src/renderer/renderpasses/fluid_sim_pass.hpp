@@ -15,13 +15,16 @@ namespace sanity::engine::renderer {
     public:
         explicit FluidSimPass(Renderer& renderer_in);
 
-        void collect_work(entt::registry& registry, Uint32 frame_idx) override;
+        void prepare_work(entt::registry& registry, Uint32 frame_idx) override;
 
         void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
         void finalize_resources(ID3D12GraphicsCommandList* commands);
 
     private:
         Renderer* renderer{nullptr};
+
+        TextureHandle fluid_color_texture;
+        DescriptorRange fluid_color_rtv;
 
         /**
          * @brief All the fluid volumes we're updating this frame
@@ -42,6 +45,8 @@ namespace sanity::engine::renderer {
         Rx::Vector<BufferRing> pressure_param_arrays;
         BufferRing projection_param_arrays;
 
+        BufferRing rendering_params_array;
+
         ComPtr<ID3D12PipelineState> advection_pipeline;
         ComPtr<ID3D12PipelineState> buoyancy_pipeline;
         ComPtr<ID3D12PipelineState> emitters_pipeline;
@@ -56,13 +61,32 @@ namespace sanity::engine::renderer {
         Rx::Vector<FluidSimDispatch> fluid_sim_dispatches;
         BufferRing fluid_sim_dispatch_command_buffers;
 
+        /**
+         * @brief Unit cube with the origin in the middle of the bottom face
+         */
+        BufferHandle cube_vertex_buffer;
+        BufferHandle cube_index_buffer;
+        Rx::Ptr<RenderPipelineState> fire_fluid_pipeline;
+        ComPtr<ID3D12CommandSignature> fluid_volume_render_signature;
+        Rx::Vector<ObjectDrawData> fluid_sim_draws;
+        BufferRing drawcalls;
+        D3D12_RENDER_PASS_RENDER_TARGET_DESC fluid_target_access;
+
         void record_fire_simulation_updates(ID3D12GraphicsCommandList* commands, Uint32 frame_idx);
 
         void advance_fire_sim_params_arrays();
 
-        void load_shaders();
+        void create_pipelines();
 
-        void create_indirect_command_signature();
+        void create_simulation_pipelines();
+
+        void create_render_pipelines();
+
+        void create_indirect_command_signatures();
+
+        void create_render_target();
+
+        void create_fluid_volume_geometry();
 
         void set_buffer_indices(ID3D12GraphicsCommandList* commands, Uint32 frame_idx) const;
 
@@ -79,7 +103,7 @@ namespace sanity::engine::renderer {
         void apply_emitters(ID3D12GraphicsCommandList* commands);
 
         void apply_extinguishment(ID3D12GraphicsCommandList* commands);
-    	
+
         void compute_vorticity_confinement(ID3D12GraphicsCommandList* commands);
 
         void compute_divergence(ID3D12GraphicsCommandList* commands);
@@ -96,9 +120,9 @@ namespace sanity::engine::renderer {
         };
 
         void copy_read_texture_to_write_texture(TextureHandle read,
-                                            TextureHandle write,
-                                            Rx::Vector<D3D12_RESOURCE_BARRIER>& pre_copy_barriers,
-                                            Rx::Vector<TextureCopyParams>& copies,
-                                            Rx::Vector<D3D12_RESOURCE_BARRIER>& post_copy_barriers) const;
+                                                TextureHandle write,
+                                                Rx::Vector<D3D12_RESOURCE_BARRIER>& pre_copy_barriers,
+                                                Rx::Vector<TextureCopyParams>& copies,
+                                                Rx::Vector<D3D12_RESOURCE_BARRIER>& post_copy_barriers) const;
     };
 } // namespace sanity::engine::renderer

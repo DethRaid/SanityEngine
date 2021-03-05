@@ -118,7 +118,16 @@ namespace sanity::engine::renderer {
     };
 
     enum class InputAssemblerLayout {
+        /**
+         * @brief Each vertex is a StandardVertex
+         */
         StandardVertex,
+
+        /**
+         * @brief Dear ImGUI vertex
+         *
+         * Must be used by any pipeline that renders Dear ImGUI UI elements
+         */
         DearImGui,
     };
 
@@ -161,4 +170,4 @@ namespace sanity::engine::renderer {
          */
         BackbufferOutput,
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

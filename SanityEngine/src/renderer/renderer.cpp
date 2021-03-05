@@ -244,7 +244,7 @@ namespace sanity::engine::renderer {
 
             {
                 ZoneScopedN("Collect renderpass work");
-                render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->collect_work(registry, frame_idx); });
+                render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->prepare_work(registry, frame_idx); });
             }
 
             {

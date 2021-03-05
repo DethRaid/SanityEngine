@@ -1,10 +1,11 @@
 #pragma once
 
 #include "interop.hpp"
+#include "shared_structs.hpp"
 
 #if __cplusplus
-#include "renderer/rhi/resources.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/rhi/resources.hpp"
 
 namespace sanity::engine::renderer {
 #else
@@ -26,37 +27,49 @@ namespace sanity::engine::renderer {
 
         uint4 size;
 
-    	uint4 voxel_size;
-        
+        uint4 voxel_size;
+
         float4 dissipation;
-        
+
         float4 decay;
 
         float buoyancy;
 
         float weight;
-        
+
         float4 emitter_location;
-        
+
         float emitter_radius;
 
-    	float emitter_strength;
+        float emitter_strength;
 
-    	float reaction_extinguishment;
+        float reaction_extinguishment;
 
-    	float density_extinguishment_amount;
+        float density_extinguishment_amount;
 
-    	float vorticity_strength;
+        float vorticity_strength;
     };
 
+    /**
+     * @brief Indirect dispatch command for executing a single fluid sim dispatch
+     *
+     * All the different steps of the fluid simulation use the same parameters, so using the same struct for them isn't a problem
+     */
     struct FluidSimDispatch {
-        uint fluid_volume_idx;
-        uint entity_id;
-        uint model_matrix_idx;
+        ObjectDrawData instance_data;
 
         uint thread_group_count_x;
         uint thread_group_count_y;
         uint thread_group_count_z;
+    };
+
+    struct FluidSimDraw {
+        ObjectDrawData instance_data;
+
+        uint vertex_count;
+        uint instance_count;
+        uint first_vertex;
+        uint first_instance;
     };
 #if __cplusplus
 }

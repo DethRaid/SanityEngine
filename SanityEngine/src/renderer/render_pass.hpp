@@ -34,7 +34,7 @@ namespace sanity::engine {
              *
              * @note You can and should make calls to `set_resource_usage` in this method
              */
-            virtual void collect_work(entt::registry& registry, Uint32 frame_idx);
+            virtual void prepare_work(entt::registry& registry, Uint32 frame_idx);
 
             /**
              * @brief Records this pass's work into a GPU command list
@@ -47,6 +47,8 @@ namespace sanity::engine {
 
             [[nodiscard]] const Rx::Map<TextureHandle, Rx::Optional<BeginEndState>>& get_texture_states() const;
 
+            [[nodiscard]] const Rx::Map<BufferHandle, Rx::Optional<BeginEndState>>& get_buffer_states() const;
+
         protected:
             /*!
              * \brief Describes how this renderpass will use a resource
@@ -57,6 +59,12 @@ namespace sanity::engine {
             void set_resource_usage(TextureHandle handle, D3D12_RESOURCE_STATES states);
 
             void set_resource_usages(const Rx::Vector<TextureHandle>& handles, D3D12_RESOURCE_STATES states);
+
+            void set_resource_usage(const BufferHandle& handle, D3D12_RESOURCE_STATES states);
+
+            void set_resource_usage(const BufferHandle& handle, D3D12_RESOURCE_STATES begin_states, D3D12_RESOURCE_STATES end_states);
+
+            void set_resource_usage(const Rx::Vector<BufferHandle>& handles, D3D12_RESOURCE_STATES states);
 
             /*!
              * \brief Describes how this renderpass will use a resource
@@ -81,8 +89,8 @@ namespace sanity::engine {
              * \param end_states The states that this resource will be in when this render pass ends
              */
             void set_resource_usages(const Rx::Vector<TextureHandle>& handles,
-                                    D3D12_RESOURCE_STATES begin_states,
-                                    D3D12_RESOURCE_STATES end_states);
+                                     D3D12_RESOURCE_STATES begin_states,
+                                     D3D12_RESOURCE_STATES end_states);
 
             /**
              * @brief Removes the usage information for this resources
@@ -93,6 +101,7 @@ namespace sanity::engine {
 
         private:
             Rx::Map<TextureHandle, Rx::Optional<BeginEndState>> texture_states;
+            Rx::Map<BufferHandle, Rx::Optional<BeginEndState>> buffer_states;
         };
     } // namespace renderer
 } // namespace sanity::engine

@@ -30,6 +30,8 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] const ResourceType& get_active_resource() const;
 
+        [[nodiscard]] const Rx::Vector<ResourceType>& get_all_resources() const;
+
         virtual ~ResourceRing() = default;
 
     protected:
@@ -50,5 +52,10 @@ namespace sanity::engine::renderer {
     template <typename ResourceType>
     const ResourceType& ResourceRing<ResourceType>::get_active_resource() const {
         return resources[active_idx];
+    }
+
+    template <typename ResourceType>
+    const Rx::Vector<ResourceType>& ResourceRing<ResourceType>::get_all_resources() const {
+        return resources;
     }
 } // namespace sanity::engine::renderer

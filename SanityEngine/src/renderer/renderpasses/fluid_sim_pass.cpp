@@ -39,12 +39,14 @@ namespace sanity::engine::renderer {
           vorticity_confinement_params_array{"Fluid Sim Vorticity/Confinement Params", PARAMS_BUFFER_SIZE, renderer_in},
           divergence_params_array{"Fluid Sim Divergence Params", PARAMS_BUFFER_SIZE, renderer_in},
           projection_param_arrays{"Fluid Sim Projection Params", PARAMS_BUFFER_SIZE, renderer_in},
-          fluid_sim_dispatch_command_buffers{"Fluid Sim Dispatch Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDispatch), renderer_in} {
+          rendering_params_array{"Fluid Sim Rendering Params", PARAMS_BUFFER_SIZE, renderer_in},
+          fluid_sim_dispatch_command_buffers{"Fluid Sim Dispatch Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDispatch), renderer_in},
+          drawcalls{"Fire Render Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDraw), renderer_in} {
         ZoneScoped;
 
-        load_shaders();
+        create_pipelines();
 
-        create_indirect_command_signature();
+        create_indirect_command_signatures();
 
         pressure_param_arrays.reserve(*num_pressure_iterations);
         for(auto i = 0; i < *num_pressure_iterations; i++) {
@@ -52,15 +54,37 @@ namespace sanity::engine::renderer {
                                                static_cast<Uint32>(PARAMS_BUFFER_SIZE),
                                                renderer_in);
         }
+
+        create_render_target();
+
+        create_fluid_volume_geometry();
+
+        set_resource_usage(fluid_color_texture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        set_resource_usage(advection_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(buoyancy_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(emitters_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(extinguishment_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(vorticity_confinement_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(divergence_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(projection_param_arrays.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+        set_resource_usage(fluid_sim_dispatch_command_buffers.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+
+        set_resource_usage(cube_vertex_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        set_resource_usage(rendering_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(drawcalls.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     }
 
-    void FluidSimPass::collect_work(entt::registry& registry, const Uint32 frame_idx) {
+    void FluidSimPass::prepare_work(entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
+        fluid_sim_draws.clear();
         fluid_sim_dispatches.clear();
         fluid_volume_states.clear();
 
         const auto& fluid_sims_view = registry.view<TransformComponent, FluidVolumeComponent>();
+        fluid_sim_draws.reserve(fluid_sims_view.size());
         fluid_sim_dispatches.reserve(fluid_sims_view.size());
         fluid_volume_states.reserve(fluid_sims_view.size());
 
@@ -70,14 +94,17 @@ namespace sanity::engine::renderer {
 
                 auto& fluid_volume = renderer->get_fluid_volume(fluid_volume_component.volume);
 
+                const ObjectDrawData instance_data{.data_idx = fluid_volume_component.volume.index,
+                                                   .entity_id = static_cast<Uint32>(entity),
+                                                   .model_matrix_idx = model_matrix_index};
+
                 const auto& voxel_size = fluid_volume.get_voxel_size();
-                const auto dispatch = FluidSimDispatch{.fluid_volume_idx = fluid_volume_component.volume.index,
-                                                       .entity_id = static_cast<uint>(entity),
-                                                       .model_matrix_idx = model_matrix_index,
-                                                       .thread_group_count_x = voxel_size.x / FLUID_SIM_NUM_THREADS,
-                                                       .thread_group_count_y = voxel_size.y / FLUID_SIM_NUM_THREADS,
-                                                       .thread_group_count_z = voxel_size.z / FLUID_SIM_NUM_THREADS};
-                fluid_sim_dispatches.push_back(dispatch);
+                fluid_sim_dispatches.push_back(FluidSimDispatch{.instance_data = instance_data,
+                                                                .thread_group_count_x = voxel_size.x / FLUID_SIM_NUM_THREADS,
+                                                                .thread_group_count_y = voxel_size.y / FLUID_SIM_NUM_THREADS,
+                                                                .thread_group_count_z = voxel_size.z / FLUID_SIM_NUM_THREADS});
+
+                fluid_sim_draws.push_back(instance_data);
 
                 const auto& density_textures = fluid_volume.density_texture;
                 const auto& temperature_textures = fluid_volume.temperature_texture;
@@ -86,26 +113,26 @@ namespace sanity::engine::renderer {
                 const auto& pressure_textures = fluid_volume.pressure_texture;
                 const auto& temp_texture = fluid_volume.temp_texture;
 
-                const auto initial_state = GpuFluidVolumeState{.density_textures = {density_textures[0], density_textures[1]},
-                                                               .temperature_textures = {temperature_textures[0], temperature_textures[1]},
-                                                               .reaction_textures = {reaction_textures[0], reaction_textures[1]},
-                                                               .velocity_textures = {velocity_textures[0], velocity_textures[1]},
-                                                               .pressure_textures = {pressure_textures[0], pressure_textures[1]},
-                                                               .temp_data_buffer = temp_texture,
-                                                               .size = {fluid_volume.size, 0.f},
-                                                               .dissipation = {fluid_volume.density_dissipation,
-                                                                               fluid_volume.temperature_dissipation,
-                                                                               1.0,
-                                                                               fluid_volume.velocity_dissipation},
-                                                               .decay = {0.f, 0.f, fluid_volume.reaction_decay, 0.f},
-                                                               .buoyancy = fluid_volume.buoyancy,
-                                                               .weight = fluid_volume.weight,
-                                                               .emitter_location = {fluid_volume.emitter_location, 0.f},
-                                                               .emitter_radius = fluid_volume.emitter_radius,
-                                                               .emitter_strength = fluid_volume.emitter_strength,
-                                                               .reaction_extinguishment = fluid_volume.reaction_extinguishment,
-                                                               .density_extinguishment_amount = fluid_volume.density_extinguishment_amount,
-                                                               .vorticity_strength = fluid_volume.vorticity_strength};
+                const GpuFluidVolumeState initial_state{.density_textures = {density_textures[0], density_textures[1]},
+                                                        .temperature_textures = {temperature_textures[0], temperature_textures[1]},
+                                                        .reaction_textures = {reaction_textures[0], reaction_textures[1]},
+                                                        .velocity_textures = {velocity_textures[0], velocity_textures[1]},
+                                                        .pressure_textures = {pressure_textures[0], pressure_textures[1]},
+                                                        .temp_data_buffer = temp_texture,
+                                                        .size = {fluid_volume.size, 0.f},
+                                                        .dissipation = {fluid_volume.density_dissipation,
+                                                                        fluid_volume.temperature_dissipation,
+                                                                        1.0,
+                                                                        fluid_volume.velocity_dissipation},
+                                                        .decay = {0.f, 0.f, fluid_volume.reaction_decay, 0.f},
+                                                        .buoyancy = fluid_volume.buoyancy,
+                                                        .weight = fluid_volume.weight,
+                                                        .emitter_location = {fluid_volume.emitter_location, 0.f},
+                                                        .emitter_radius = fluid_volume.emitter_radius,
+                                                        .emitter_strength = fluid_volume.emitter_strength,
+                                                        .reaction_extinguishment = fluid_volume.reaction_extinguishment,
+                                                        .density_extinguishment_amount = fluid_volume.density_extinguishment_amount,
+                                                        .vorticity_strength = fluid_volume.vorticity_strength};
 
                 fluid_volume_states.push_back(initial_state);
 
@@ -130,7 +157,7 @@ namespace sanity::engine::renderer {
         renderer->copy_data_to_buffer(fluid_sim_dispatch_command_buffers.get_active_resource(), fluid_sim_dispatches);
     }
 
-    void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, const Uint32 frame_idx) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "FluidSimPass::record_work");
         PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "FluidSimPass::record_work");
@@ -146,8 +173,46 @@ namespace sanity::engine::renderer {
         const auto array_descriptor = renderer->get_resource_array_gpu_descriptor(frame_idx);
         commands->SetComputeRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, array_descriptor);
 
+        set_buffer_indices(commands, frame_idx);
+
         if(!fluid_volume_states.is_empty()) {
             record_fire_simulation_updates(commands, frame_idx);
+        }
+
+        // Record updates for other kinds of fluid volumes when I support them
+
+        const auto anything_to_render = !fluid_volume_states.is_empty();
+        if(anything_to_render) {
+            commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, array_descriptor);
+
+            commands->BeginRenderPass(1, &fluid_target_access, nullptr, D3D12_RENDER_PASS_FLAG_NONE);
+
+            if(!fluid_volume_states.is_empty()) {
+                renderer->copy_data_to_buffer(rendering_params_array.get_active_resource(), fluid_sim_draws);
+
+                commands->SetPipelineState(fire_fluid_pipeline->pso);
+
+                commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                       rendering_params_array.get_active_resource().index,
+                                                       RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
+
+                const auto& vertex_buffer_actual = renderer->get_buffer(cube_vertex_buffer);
+                const D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view{.BufferLocation = vertex_buffer_actual->resource->GetGPUVirtualAddress(),
+                                                                  .SizeInBytes = 6 * 4 * sizeof(float3),
+                                                                  .StrideInBytes = sizeof(float3)};
+                commands->IASetVertexBuffers(0, 1, &vertex_buffer_view);
+
+                const auto argument_buffer_handle = drawcalls.get_active_resource();
+                const auto& argument_buffer = renderer->get_buffer(argument_buffer_handle);
+                commands->ExecuteIndirect(fluid_volume_render_signature,
+                                          static_cast<UINT>(fluid_volume_states.size()),
+                                          argument_buffer->resource,
+                                          0,
+                                          nullptr,
+                                          0);
+            }
+
+            commands->EndRenderPass();
         }
 
         // Always advance the arrays to the next frame so we can keep everything consistent
@@ -186,8 +251,6 @@ namespace sanity::engine::renderer {
     void FluidSimPass::record_fire_simulation_updates(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) {
         TracyD3D12Zone(RenderBackend::tracy_context, commands, "FluidSimPass::record_fire_simulation_updates");
         PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "record_fire_simulation_updates");
-
-        set_buffer_indices(commands, frame_idx);
 
         // Explanatory comments are from the original implementation at
         // https://github.com/Scrawk/GPU-GEMS-3D-Fluid-Simulation/blob/master/Assets/FluidSim3D/Scripts/FireFluidSim.cs, edited only to fix
@@ -233,7 +296,13 @@ namespace sanity::engine::renderer {
         extinguishment_params_array.advance_frame();
     }
 
-    void FluidSimPass::load_shaders() {
+    void FluidSimPass::create_pipelines() {
+        create_simulation_pipelines();
+
+        create_render_pipelines();
+    }
+
+    void FluidSimPass::create_simulation_pipelines() {
         auto& backend = renderer->get_render_backend();
 
         const auto advection_shader = load_shader("fluid/apply_advection.compute");
@@ -273,11 +342,36 @@ namespace sanity::engine::renderer {
         set_object_name(projection_pipeline, "Fluid Sim Advection");
     }
 
-    void FluidSimPass::create_indirect_command_signature() {
+    void FluidSimPass::create_render_pipelines() {
+        auto& backend = renderer->get_render_backend();
+
+        const auto vertex_shader = load_shader("standard.vertex");
+        const auto pixel_shader = load_shader("fluid/fire.pixel");
+
+        if(vertex_shader.is_empty() || pixel_shader.is_empty()) {
+            logger->error("Could not load fire rendering pipelines");
+            return;
+        }
+
+        fire_fluid_pipeline = backend.create_render_pipeline_state(
+            RenderPipelineStateCreateInfo{.name = "Fire Render Pipeline",
+                                          .vertex_shader = vertex_shader,
+                                          .pixel_shader = pixel_shader,
+                                          .input_assembler_layout = InputAssemblerLayout::StandardVertex,
+                                          .blend_state = BlendState{.render_target_blends = Rx::Array{RenderTargetBlendState{
+                                                                        .enabled = true,
+                                                                    }}},
+                                          .rasterizer_state = {},
+                                          .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false},
+                                          .render_target_formats = Rx::Array{TextureFormat::Rgba32F},
+                                          .depth_stencil_format = TextureFormat::Depth32});
+    }
+
+    void FluidSimPass::create_indirect_command_signatures() {
         auto& backend = renderer->get_render_backend();
 
         // TODO: Measure if the order I set the root constants in has a measurable performance impact
-        const auto arguments = Rx::
+        const auto dispatch_args = Rx::
             Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
                                                .Constant = {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                                             .DestOffsetIn32BitValues = RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET,
@@ -293,11 +387,122 @@ namespace sanity::engine::renderer {
                                                             .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH}};
 
-        const D3D12_COMMAND_SIGNATURE_DESC command_signature_desc{.ByteStride = 24,
-                                                                  .NumArgumentDescs = static_cast<UINT>(arguments.size()),
-                                                                  .pArgumentDescs = arguments.data()};
+        const D3D12_COMMAND_SIGNATURE_DESC dispatch_command_desc{.ByteStride = 24,
+                                                                 .NumArgumentDescs = static_cast<UINT>(dispatch_args.size()),
+                                                                 .pArgumentDescs = dispatch_args.data()};
         const auto& root_sig = backend.get_standard_root_signature();
-        backend.device->CreateCommandSignature(&command_signature_desc, root_sig, IID_PPV_ARGS(&fluid_sim_dispatch_signature));
+        backend.device->CreateCommandSignature(&dispatch_command_desc, root_sig, IID_PPV_ARGS(&fluid_sim_dispatch_signature));
+
+        const auto draw_args = Rx::
+            Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
+                                               .Constant = {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                            .DestOffsetIn32BitValues = RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET,
+                                                            .Num32BitValuesToSet = 1}},
+                  D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
+                                               .Constant =
+                                                   {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                    .DestOffsetIn32BitValues = RenderBackend::MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET,
+                                                    .Num32BitValuesToSet = 1}},
+                  D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
+                                               .Constant = {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                            .DestOffsetIn32BitValues = RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET,
+                                                            .Num32BitValuesToSet = 1}},
+                  D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW}};
+        const D3D12_COMMAND_SIGNATURE_DESC draw_command_desc{.ByteStride = 7 * sizeof(Uint32),
+                                                             .NumArgumentDescs = static_cast<UINT>(draw_args.size()),
+                                                             .pArgumentDescs = draw_args.data()};
+        backend.device->CreateCommandSignature(&draw_command_desc, root_sig, IID_PPV_ARGS(&fluid_sim_dispatch_signature));
+    }
+
+    void FluidSimPass::create_render_target() {
+        const auto output_handle = renderer->get_scene_output_texture();
+        const auto& output = renderer->get_texture(output_handle);
+
+        fluid_color_texture = renderer->create_texture(TextureCreateInfo{
+            .name = "Fluid Volume Render Target",
+            .usage = TextureUsage::RenderTarget,
+            .format = TextureFormat::Rgba8,
+            .width = output.width,
+            .height = output.height,
+            .depth = output.depth,
+        });
+        const auto& render_target = renderer->get_texture(fluid_color_texture);
+        auto& backend = renderer->get_render_backend();
+        fluid_color_rtv = backend.create_rtv_handle(render_target);
+        fluid_target_access = {.cpuDescriptor = fluid_color_rtv.cpu_handle,
+                               .BeginningAccess = {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+                                                   .Clear = {.ClearValue = {.Format = DXGI_FORMAT_R32_FLOAT, .Color = {0, 0, 0, 0}}}},
+                               .EndingAccess = {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
+    }
+
+    void FluidSimPass::create_fluid_volume_geometry() {
+        // Our fluid volume render pipelines only care about vertex location, so we can ignore the other attributes for now
+
+        // +z face, then -z face, in proper winding order
+        const auto cube_vertices = Rx::Array{
+            StandardVertex{.location = {0.5f, 0.f, 0.5f}},
+            StandardVertex{.location = {0.5f, 1.f, 0.5f}},
+            StandardVertex{.location = {-0.5f, 1.f, 0.5f}},
+            StandardVertex{.location = {-0.5f, 0.f, 0.5f}},
+
+            StandardVertex{.location = {-0.5f, 0.f, -0.5f}},
+            StandardVertex{.location = {-0.5f, 1.f, -0.5f}},
+            StandardVertex{.location = {0.5f, 1.f, -0.5f}},
+            StandardVertex{.location = {0.5f, 0.f, -0.5f}},
+        };
+
+        const auto cube_indices = Rx::Array{// +z
+                                            0,
+                                            1,
+                                            2,
+                                            3,
+
+                                            // -z
+                                            4,
+                                            5,
+                                            6,
+                                            7,
+
+                                            // +x
+                                            7,
+                                            6,
+                                            1,
+                                            0,
+
+                                            // -x
+                                            4,
+                                            5,
+                                            2,
+                                            3,
+
+                                            // +y
+                                            1,
+                                            6,
+                                            5,
+                                            2,
+
+                                            // -y
+                                            4,
+                                            3,
+                                            0,
+                                            7};
+
+        auto& backend = renderer->get_render_backend();
+        auto commands = backend.create_command_list();
+
+        cube_vertex_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Vertices",
+                                                                      .usage = BufferUsage::VertexBuffer,
+                                                                      .size = static_cast<Uint32>(cube_vertices.size() *
+                                                                                                  sizeof(StandardVertex))},
+                                                     cube_vertices.data(),
+                                                     commands);
+        cube_index_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Indices",
+                                                                     .usage = BufferUsage::IndexBuffer,
+                                                                     .size = static_cast<Uint32>(cube_indices.size() * sizeof(Uint32))},
+                                                    cube_indices.data(),
+                                                    commands);
+
+        backend.submit_command_list(Rx::Utility::move(commands));
     }
 
     void FluidSimPass::set_buffer_indices(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) const {
@@ -471,7 +676,7 @@ namespace sanity::engine::renderer {
     void FluidSimPass::barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const {
         const auto& old_read_texture = renderer->get_texture(handles[0]);
         const auto& old_write_texture = renderer->get_texture(handles[1]);
-        
+
         barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(old_read_texture.resource,
                                                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS));

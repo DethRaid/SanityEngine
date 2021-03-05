@@ -47,10 +47,7 @@ float4 main(in VertexShaderOutput input) : SV_TARGET {
     GET_CURRENT_DATA(GpuFluidVolumeState, fluid_volume);
 
     Texture3D density_tex = textures3d[fluid_volume.density_textures[0]];
-
-    // Step through the volume, sampling the texture as needed
-    const float3 start_pos_worldspace = input.location_worldspace;
-
+    
     Ray ray;
     ray.origin = -view_camera.view[4].xyz;
     ray.direction = normalize(ray.origin - input.location_worldspace);

@@ -84,6 +84,17 @@ namespace sanity::engine::renderer {
         uint object_id;
     };
 
+    /**
+     * @brief Data for an object's drawcall
+     *
+     * Contains pointers to the object's data struct and model matrix, along with the object's entity ID
+     */
+    struct ObjectDrawData {
+        uint data_idx;
+        uint entity_id;
+        uint model_matrix_idx;
+    };
+
     struct IndirectDrawCommandWithRootConstant {
         uint constant;
         uint vertex_count;
