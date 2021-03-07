@@ -450,6 +450,15 @@
     <ClInclude Include="src\renderer\renderpasses\early_z_pass.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\hlsl\compositing.hpp">
+      <Filter>src\renderer\hlsl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\compositing_pass.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\renderpasses\renderpass_handle.hpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -662,6 +671,12 @@
     <ClCompile Include="src\renderer\renderpasses\early_z_pass.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\compositing_pass.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\renderpasses\renderpass_handle.cpp">
+      <Filter>src\renderer\renderpasses</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">
@@ -778,6 +793,9 @@
     </FxCompile>
     <FxCompile Include="data\shaders\fluid\fire.pixel.hlsl">
       <Filter>shaders\fluid</Filter>
+    </FxCompile>
+    <FxCompile Include="data\shaders\composite.compute.hlsl">
+      <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

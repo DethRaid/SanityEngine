@@ -184,6 +184,8 @@ namespace sanity::engine::renderer {
         fluid_sim_dispatch_command_buffers.advance_frame();
     }
 
+    TextureHandle FluidSimPass::get_color_target_handle() const { return fluid_color_texture; }
+
     void FluidSimPass::finalize_resources(ID3D12GraphicsCommandList* commands) {
         Rx::Vector<D3D12_RESOURCE_BARRIER> pre_copy_barriers;
         Rx::Vector<TextureCopyParams> copies;

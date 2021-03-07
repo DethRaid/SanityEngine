@@ -454,6 +454,18 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <None Include="..\README.md" />
     <None Include="..\vcpkg.json" />
+    <FxCompile Include="data\shaders\composite.compute.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">4.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="data\shaders\fluid\apply_advection.compute.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
@@ -672,6 +684,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\debugging\pix.hpp" />
     <ClInclude Include="src\renderer\gpu_resource_pool.hpp" />
     <ClInclude Include="src\renderer\handles.hpp" />
+    <ClInclude Include="src\renderer\hlsl\compositing.hpp" />
     <ClInclude Include="src\renderer\hlsl\constants.hpp" />
     <ClInclude Include="src\renderer\hlsl\fluid_sim.hpp" />
     <ClInclude Include="src\renderer\hlsl\interop.hpp" />
@@ -683,7 +696,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\mesh.hpp" />
     <ClInclude Include="src\renderer\mesh_data_store.hpp" />
     <ClInclude Include="src\renderer\renderer.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\compositing_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\early_z_pass.hpp" />
+    <ClInclude Include="src\renderer\renderpasses\renderpass_handle.hpp" />
     <ClInclude Include="src\renderer\render_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\fluid_sim_pass.hpp" />
     <ClInclude Include="src\renderer\renderpasses\postprocessing_pass.hpp" />
@@ -763,7 +778,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\gpu_resource_pool.cpp" />
     <ClCompile Include="src\renderer\mesh_data_store.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\compositing_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\early_z_pass.cpp" />
+    <ClCompile Include="src\renderer\renderpasses\renderpass_handle.cpp" />
     <ClCompile Include="src\renderer\render_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\fluid_sim_pass.cpp" />
     <ClCompile Include="src\renderer\renderpasses\postprocessing_pass.cpp" />

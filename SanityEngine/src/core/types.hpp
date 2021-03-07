@@ -1,6 +1,5 @@
 #pragma once
 
-#include <activation.h>
 #include <guiddef.h>
 
 #include "rx/core/types.h"

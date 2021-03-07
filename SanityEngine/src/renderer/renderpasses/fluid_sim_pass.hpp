@@ -18,7 +18,8 @@ namespace sanity::engine::renderer {
         void prepare_work(entt::registry& registry, Uint32 frame_idx) override;
 
         void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
-        void finalize_resources(ID3D12GraphicsCommandList* commands);
+
+        [[nodiscard]] TextureHandle get_color_target_handle() const;
 
     private:
         Renderer* renderer{nullptr};
@@ -135,5 +136,7 @@ namespace sanity::engine::renderer {
                                                 Rx::Vector<D3D12_RESOURCE_BARRIER>& pre_copy_barriers,
                                                 Rx::Vector<TextureCopyParams>& copies,
                                                 Rx::Vector<D3D12_RESOURCE_BARRIER>& post_copy_barriers) const;
+
+        void finalize_resources(ID3D12GraphicsCommandList* commands);
     };
 } // namespace sanity::engine::renderer

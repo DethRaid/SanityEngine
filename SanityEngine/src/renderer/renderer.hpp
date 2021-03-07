@@ -22,6 +22,7 @@
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
+#include "renderpasses/renderpass_handle.hpp"
 
 namespace std {
     namespace filesystem {
@@ -35,36 +36,6 @@ namespace sanity::engine::renderer {
     class DearImGuiRenderPass;
     class PostprocessingPass;
     class RenderCommandList;
-
-    template <typename RenderPassType>
-    class RenderpassHandle {
-    public:
-        /**
-         * @brief Makes a handle to the last render pass in the container
-         */
-        [[nodiscard]] static RenderpassHandle<RenderPassType> make_from_last_element(Rx::Vector<Rx::Ptr<RenderPass>>& container);
-
-        RenderpassHandle() = default;
-
-        explicit RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>& container_in, Size index_in);
-
-        RenderPassType* operator*();
-
-        const RenderPassType* operator*() const;
-
-        RenderPassType* operator->();
-
-        const RenderPassType* operator->() const;
-
-        [[nodiscard]] Size get_index() const;
-
-    private:
-        Rx::Vector<Rx::Ptr<RenderPass>>* vector{nullptr};
-
-        Size index{};
-
-        RenderPass* get_renderpass() const;
-    };
 
     /*!
      * \brief All the information needed to decide whether or not to issue a drawcall for an object
@@ -200,7 +171,7 @@ namespace sanity::engine::renderer {
         /**
          * @brief Early-Z depth buffer
          *
-         * This buffer gets filled in the first renderpass. Thus, work submitted 
+         * This buffer gets filled in the first renderpass. Thus, work submitted
          */
         [[nodiscard]] TextureHandle get_depth_buffer() const;
 
@@ -334,49 +305,6 @@ namespace sanity::engine::renderer {
         void update_frame_constants(entt::registry& registry, Uint32 frame_idx);
 #pragma endregion
     };
-
-    template <typename RenderPassType>
-    RenderpassHandle<RenderPassType> RenderpassHandle<RenderPassType>::make_from_last_element(Rx::Vector<Rx::Ptr<RenderPass>>& container) {
-        return RenderpassHandle<RenderPassType>{container, container.size() - 1};
-    }
-
-    template <typename RenderPassType>
-    RenderpassHandle<RenderPassType>::RenderpassHandle(Rx::Vector<Rx::Ptr<RenderPass>>& container_in, const Size index_in)
-        : vector{&container_in}, index{index_in} {}
-
-    template <typename RenderPassType>
-    RenderPassType* RenderpassHandle<RenderPassType>::operator*() {
-        auto* renderpass = get_renderpass();
-        return static_cast<RenderPassType*>(renderpass);
-    }
-
-    template <typename RenderPassType>
-    const RenderPassType* RenderpassHandle<RenderPassType>::operator*() const {
-        auto* renderpass = get_renderpass();
-        return static_cast<RenderPassType*>(renderpass);
-    }
-
-    template <typename RenderPassType>
-    RenderPassType* RenderpassHandle<RenderPassType>::operator->() {
-        auto* renderpass = get_renderpass();
-        return static_cast<RenderPassType*>(renderpass);
-    }
-
-    template <typename RenderPassType>
-    const RenderPassType* RenderpassHandle<RenderPassType>::operator->() const {
-        auto* renderpass = get_renderpass();
-        return static_cast<RenderPassType*>(renderpass);
-    }
-
-    template <typename RenderPassType>
-    Size RenderpassHandle<RenderPassType>::get_index() const {
-        return index;
-    }
-
-    template <typename RenderPassType>
-    RenderPass* RenderpassHandle<RenderPassType>::get_renderpass() const {
-        return (*vector)[index].get();
-    }
 
     template <typename DataType>
     void Renderer::copy_data_to_buffer(const BufferHandle handle, const Rx::Vector<DataType>& data) {
