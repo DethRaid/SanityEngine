@@ -123,7 +123,9 @@ namespace sanity::engine::renderer {
          */
         [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
-        void submit_command_list(ComPtr<ID3D12GraphicsCommandList4>&& commands);
+        void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
+        
+        void submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> commands) const;
 
         void begin_frame(uint64_t frame_count);
 

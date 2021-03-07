@@ -66,6 +66,8 @@ namespace sanity::engine::renderer {
 
         create_render_passes();
 
+        resource_command_lists.resize(backend->get_max_num_gpu_frames());
+
         logger->info("Constructed Renderer");
     }
 
@@ -90,6 +92,8 @@ namespace sanity::engine::renderer {
 
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
+
+        resource_command_lists[frame_idx] = backend->create_command_list();
     }
 
     void Renderer::render_frame(entt::registry& registry) {
@@ -265,7 +269,14 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void Renderer::end_frame() const { backend->end_frame(); }
+    void Renderer::end_frame() const
+    {
+        const auto frame_idx = backend->get_cur_gpu_frame_idx();
+        backend->submit_async_copy_commands(resource_command_lists[frame_idx]);
+
+
+        backend->end_frame();
+    }
 
     void Renderer::add_raytracing_objects_to_scene(const Rx::Vector<RaytracingObject>& new_objects) {
         raytracing_objects.append(new_objects);
@@ -287,7 +298,7 @@ namespace sanity::engine::renderer {
         return handle;
     }
 
-    BufferHandle Renderer::create_buffer(const BufferCreateInfo& create_info, const void* data, ID3D12GraphicsCommandList2* cmds) {
+    BufferHandle Renderer::create_buffer(const BufferCreateInfo& create_info, const void* data) {
         const auto handle = create_buffer(create_info);
         const auto buffer = get_buffer(handle);
 
@@ -298,6 +309,8 @@ namespace sanity::engine::renderer {
             const auto staging_buffer = backend->get_staging_buffer(create_info.size);
             memcpy(staging_buffer.mapped_ptr, data, create_info.size);
 
+            const auto frame_idx = backend->get_cur_gpu_frame_idx();
+            auto* cmds = get_async_copy_command_list(frame_idx);
             cmds->CopyBufferRegion(buffer->resource, 0, staging_buffer.resource, 0, create_info.size);
         }
 
@@ -338,15 +351,15 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info,
-                                           const void* image_data,
-                                           ID3D12GraphicsCommandList2* commands,
-                                           const bool generate_mipmaps) {
+    TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info, const void* image_data, const bool generate_mipmaps) {
         ZoneScoped;
 
+        const auto frame_idx = backend->get_cur_gpu_frame_idx();
+        auto* cmds = get_async_copy_command_list(frame_idx);
+
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, scope_name.data());
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, scope_name.data());
+        TracyD3D12Zone(RenderBackend::tracy_context, cmds, scope_name.data());
+        PIXScopedEvent(cmds, PIX_COLOR_DEFAULT, scope_name.data());
 
         const auto handle = create_texture(create_info);
         auto& image = all_textures[handle.index];
@@ -356,7 +369,7 @@ namespace sanity::engine::renderer {
             const auto barriers = Rx::Array{
                 CD3DX12_RESOURCE_BARRIER::Transition(image.resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)};
 
-            commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
         const auto& staging_buffer = backend->get_staging_buffer_for_texture(image.resource);
@@ -369,7 +382,7 @@ namespace sanity::engine::renderer {
             .SlicePitch = static_cast<LONG_PTR>(create_info.width) * create_info.height * pixel_size,
         };
 
-        const auto result = UpdateSubresources(commands, image.resource, staging_buffer.resource, 0, 0, 1, &subresource);
+        const auto result = UpdateSubresources(cmds, image.resource, staging_buffer.resource, 0, 0, 1, &subresource);
         if(result == 0) {
             logger->error("Could not upload texture data");
 
@@ -382,35 +395,35 @@ namespace sanity::engine::renderer {
                                                                                      D3D12_RESOURCE_STATE_COPY_DEST,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
 
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
             }
 
-            spd->generate_mip_chain_for_texture(image.resource, commands);
+            spd->generate_mip_chain_for_texture(image.resource, cmds);
 
             if(create_info.usage == TextureUsage::RenderTarget) {
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET)};
 
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
             } else if(create_info.usage == TextureUsage::DepthStencil) {
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                      D3D12_RESOURCE_STATE_DEPTH_WRITE)};
 
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
             } else if(create_info.usage == TextureUsage::SampledTexture) {
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                                                      D3D12_RESOURCE_STATE_GENERIC_READ)};
 
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
             } else if(create_info.usage == TextureUsage::UnorderedAccess) {
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(image.resource)};
-                commands->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
             }
         }
 
@@ -635,6 +648,10 @@ namespace sanity::engine::renderer {
     TextureHandle Renderer::get_default_normal_texture() const { return normal_roughness_texture_handle; }
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
+
+    ID3D12GraphicsCommandList4* Renderer::get_async_copy_command_list(const Uint32 frame_idx) const {
+        return *resource_command_lists[frame_idx];
+    }
 
     TextureHandle Renderer::get_depth_buffer() const { return depth_buffer_handle; }
 
@@ -934,14 +951,11 @@ namespace sanity::engine::renderer {
         render_passes.push_back(Rx::make_ptr<DirectLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
         direct_lighting_pass_handle = RenderpassHandle<DirectLightingPass>::make_from_last_element(render_passes);
 
-        render_passes.push_back(Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR,
-                                                           *this,
-                                                           output_framebuffer_size,
-                                                           *(*direct_lighting_pass_handle)));
+        render_passes.push_back(
+            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, *(*direct_lighting_pass_handle)));
         denoiser_pass_handle = RenderpassHandle<DenoiserPass>::make_from_last_element(render_passes);
 
-        render_passes.push_back(
-            Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, *(*denoiser_pass_handle)));
+        render_passes.push_back(Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, *(*denoiser_pass_handle)));
         postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>::make_from_last_element(render_passes);
 
         render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
@@ -1038,7 +1052,7 @@ namespace sanity::engine::renderer {
             D3D12_SHADER_RESOURCE_VIEW_DESC desc;
 
             // Static analyzer doesn't realize one branch is 2D and the other is 3D
-            if(texture.depth == 1) {  // NOLINT(bugprone-branch-clone)
+            if(texture.depth == 1) { // NOLINT(bugprone-branch-clone)
                 desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
                                                        .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
                                                        .Shader4ComponentMapping = mapping,
@@ -1085,7 +1099,7 @@ namespace sanity::engine::renderer {
     Rx::Map<TextureHandle, D3D12_RESOURCE_STATES> Renderer::get_next_resource_states(const Uint32 cur_renderpass_index) const {
         const auto& used_resources = render_passes[cur_renderpass_index]->get_texture_states();
         auto next_states = Rx::Map<TextureHandle, D3D12_RESOURCE_STATES>{};
-        
+
         if(cur_renderpass_index < render_passes.size() - 1) {
             for(Int32 i = cur_renderpass_index + 1; i < render_passes.size(); i++) {
                 used_resources.each_key([&](const TextureHandle& texture) {

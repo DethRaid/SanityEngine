@@ -39,19 +39,27 @@ RaytracingAccelerationStructure raytracing_scene : register(t0);
 
 // Register 16: Resource arrays
 
+// Space 0 - 15: buffers
+
 ByteAddressBuffer srv_buffers[] : register(t16, space0);
 
 RWByteAddressBuffer uav_buffers[] : register(u16, space1);
 
-Texture2D textures[] : register(t16, space2);
+// Space 16 - 31: Texture2D
 
-Texture3D textures3d[] : register(t16, space3);
+Texture2D textures[] : register(t16, space16);
 
-RWTexture3D<float> uav_textures3d_r[] : register(u16, space4);
+RWTexture2D uav_textures2d_rgba[] : register(t16, space20);
 
-RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space5);
+// Space 32 - 47: Texture3D
 
-RWTexture3D<float4> uav_textures3d_rgba[] : register(u16, space6);
+Texture3D textures3d[] : register(t16, space32);
+
+RWTexture3D<float> uav_textures3d_r[] : register(u16, space36);
+
+RWTexture3D<float2> uav_textures3d_rg[] : register(u16, space37);
+
+RWTexture3D<float4> uav_textures3d_rgba[] : register(u16, space38);
 
 // Helpers
 

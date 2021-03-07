@@ -19,10 +19,10 @@
 #include "renderer/single_pass_downsampler.hpp"
 #include "renderpasses/early_z_pass.hpp"
 #include "renderpasses/fluid_sim_pass.hpp"
+#include "renderpasses/renderpass_handle.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 #include "settings.hpp"
-#include "renderpasses/renderpass_handle.hpp"
 
 namespace std {
     namespace filesystem {
@@ -89,7 +89,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info);
 
-        [[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info, const void* data, ID3D12GraphicsCommandList2* cmds);
+        [[nodiscard]] BufferHandle create_buffer(const BufferCreateInfo& create_info, const void* data);
 
         [[nodiscard]] Rx::Optional<Buffer> get_buffer(const Rx::String& name) const;
 
@@ -102,7 +102,6 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
                                                    const void* image_data,
-                                                   ID3D12GraphicsCommandList2* commands,
                                                    bool generate_mipmaps = true);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_texture_handle(const Rx::String& name);
@@ -167,6 +166,8 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_normal_texture() const;
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
+
+        [[nodiscard]] ID3D12GraphicsCommandList4* get_async_copy_command_list(Uint32 frame_idx) const;
 
         /**
          * @brief Early-Z depth buffer
@@ -235,6 +236,7 @@ namespace sanity::engine::renderer {
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;
+        Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>> resource_command_lists;
 
 #pragma region Initialization
         void create_static_mesh_storage();

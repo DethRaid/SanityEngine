@@ -374,7 +374,7 @@ namespace sanity::engine::renderer {
         return commands;
     }
 
-    void RenderBackend::submit_command_list(ComPtr<ID3D12GraphicsCommandList4>&& commands) {
+    void RenderBackend::submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands) {
         const auto result = commands->Close();
         if(FAILED(result)) {
 #ifndef NDEBUG
@@ -388,6 +388,22 @@ namespace sanity::engine::renderer {
 
         Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
+    }
+
+    void RenderBackend::submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> commands) const
+    {
+        // Initial implementation simply submits to the main command queue. Eventually I might actually utilize async copy, we'll see
+         const auto result = commands->Close();
+        if(FAILED(result)) {
+#ifndef NDEBUG
+            Rx::abort("Could not close command list: %s", to_string(result));
+#else
+            logger->error("Could not close command list: %s", to_string(result));
+#endif
+        }
+
+        auto const* cmds = &commands;
+        async_copy_queue->ExecuteCommandLists(1, cmds);
     }
 
     void RenderBackend::begin_frame(const uint64_t frame_count) {
