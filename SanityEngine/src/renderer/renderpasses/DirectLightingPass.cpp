@@ -68,6 +68,20 @@ namespace sanity::engine::renderer {
         auto& device = renderer->get_render_backend();
     }
 
+    void DirectLightingPass::prepare_work(entt::registry& registry, Uint32 frame_idx) {
+        ZoneScoped;
+
+        const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
+
+        Rx::Vector<TextureHandle> all_material_textures;
+        all_material_textures.reserve(renderable_view.size());
+
+        renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable)
+        {
+            const auto& material = renderer->get_material(renderable.material);
+        });
+    }
+
     void DirectLightingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
@@ -109,7 +123,7 @@ namespace sanity::engine::renderer {
             commands->SetGraphicsRootShaderResourceView(RenderBackend::RAYTRACING_SCENE_ROOT_PARAMETER_INDEX,
                                                         rt_buffer->resource->GetGPUVirtualAddress());
         }
-    	
+
         commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX,
                                                  renderer->get_resource_array_gpu_descriptor(frame_idx));
 

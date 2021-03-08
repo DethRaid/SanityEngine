@@ -56,7 +56,6 @@ namespace sanity::engine::renderer {
 
     RenderBackend::RenderBackend(HWND window_handle, const glm::uvec2& window_size)
         : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
-          command_allocators_to_reset_on_begin_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           texture_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -328,28 +327,15 @@ namespace sanity::engine::renderer {
     }
 
     ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_render_command_list(Rx::Optional<Uint32> frame_idx) {
-        Rx::Concurrency::ScopeLock l{create_command_list_mutex};
-
         if(!frame_idx) {
             frame_idx = cur_gpu_frame_idx;
         }
 
         // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
-        ComPtr<ID3D12CommandAllocator> command_allocator;
-        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator));
-        if(result == DXGI_ERROR_DEVICE_REMOVED) {
-            log_dred_report();
-
-            const auto removed_reason = device->GetDeviceRemovedReason();
-            const auto msg = Rx::String::format("Device removed: %s", to_string(removed_reason));
-            logger->error(msg.data());
-        }
-        if(FAILED(result)) {
-            Rx::abort("Could not create command list: %s", to_string(result));
-        }
+        const auto command_allocator = direct_command_allocators[frame_idx];
 
         ComPtr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
+        const auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
         if(result == DXGI_ERROR_DEVICE_REMOVED) {
             log_dred_report();
 
@@ -371,19 +357,15 @@ namespace sanity::engine::renderer {
         const auto gpu_frame_idx = GpuFrameIdx{*frame_idx};
         commands->SetPrivateData(PRIVATE_DATA_ATTRIBS(GpuFrameIdx), &gpu_frame_idx);
         command_lists_outside_render_device.fetch_add(1);
+
         return commands;
     }
 
-    ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_copy_command_list() {
-        // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
-        ComPtr<ID3D12CommandAllocator> command_allocator;
-        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&command_allocator));
-        if(FAILED(result)) {
-            Rx::abort("Could not create command list: %s", to_string(result));
-        }
+    CopyCommandList RenderBackend::create_copy_command_list() {
+        const auto command_allocator = copy_command_allocators[cur_gpu_frame_idx];
 
         ComPtr<ID3D12CommandList> cmds;
-        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
+        const auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
         if(FAILED(result)) {
             Rx::abort("Could not create command list: %s", to_string(result));
         }
@@ -397,7 +379,8 @@ namespace sanity::engine::renderer {
         commands->SetName(L"Unnamed Sanity Engine command list");
         store_com_interface(commands, *command_allocator);
         command_lists_outside_render_device.fetch_add(1);
-        return commands;
+
+        return {*this, commands};
     }
 
     void RenderBackend::submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands) {
@@ -412,30 +395,24 @@ namespace sanity::engine::renderer {
 
         const auto frame_idx = retrieve_object<GpuFrameIdx>(commands).idx;
 
-        Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
 
-    void RenderBackend::submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> commands) const {
-        // Initial implementation simply submits to the main command queue. Eventually I might actually utilize async copy, we'll see
-        const auto result = commands->Close();
-        if(FAILED(result)) {
-#ifndef NDEBUG
-            Rx::abort("Could not close command list: %s", to_string(result));
-#else
-            logger->error("Could not close command list: %s", to_string(result));
-#endif
-        }
-
-        auto* cmds = static_cast<ID3D12CommandList*>(commands);
-        async_copy_queue->ExecuteCommandLists(1, &cmds);
+    void RenderBackend::submit_async_copy_commands(const ComPtr<ID3D12GraphicsCommandList4> cmds) const {
+        ID3D12CommandList* cmds_ptr = *cmds;
+        direct_command_queue->ExecuteCommandLists(1, &cmds_ptr);
     }
 
     void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
+        
+        // Synchronize copy queue
+        async_copy_queue->Signal(copy_queue_sync_fence, frame_count);
+        direct_command_queue->Wait(copy_queue_sync_fence, frame_count);
 
-        direct_command_queue->Signal(frame_fences, frame_fence_values[cur_gpu_frame_idx]);
+        direct_command_queue->Signal(direct_command_ready_fence, frame_fence_values[cur_gpu_frame_idx]);
 
+        // We wait on the direct queue, the direct queue waits on the copy queue, thus we implicitly wait on the copy queue
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
 
@@ -466,7 +443,7 @@ namespace sanity::engine::renderer {
         flush_batched_command_lists();
 
         {
-            ZoneScopedN("present");
+            ZoneScopedN("Present");
             auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
             if(result == DXGI_ERROR_DEVICE_HUNG || result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) {
                 log_dred_report();
@@ -485,6 +462,9 @@ namespace sanity::engine::renderer {
 #ifdef TRACY_ENABLE
         TracyD3D12NewFrame(renderer::RenderBackend::tracy_render_context);
         TracyD3D12Collect(renderer::RenderBackend::tracy_render_context);
+
+        TracyD3D12NewFrame(renderer::RenderBackend::tracy_copy_context);
+        TracyD3D12Collect(renderer::RenderBackend::tracy_copy_context);
 #endif
 
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % cvar_max_in_flight_gpu_frames->get();
@@ -516,7 +496,7 @@ namespace sanity::engine::renderer {
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
         for(Uint32 i = 0; i < num_gpu_frames; i++) {
             wait_for_frame(i);
-            direct_command_queue->Wait(frame_fences, frame_fence_values[i]);
+            direct_command_queue->Wait(direct_command_ready_fence, frame_fence_values[i]);
         }
 
         wait_gpu_idle(0);
@@ -778,18 +758,6 @@ namespace sanity::engine::renderer {
 
         set_object_name(direct_command_queue, "Render Queue");
 
-        D3D12_COMMAND_QUEUE_DESC copy_queue_desc{};
-        copy_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-        copy_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-        copy_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-
-        result = device->CreateCommandQueue(&copy_queue_desc, IID_PPV_ARGS(&direct_command_queue));
-        if(FAILED(result)) {
-            Rx::abort("Could not create copy command queue");
-        }
-
-        set_object_name(direct_command_queue, "Copy Queue");
-
         if(!is_uma) {
             // No need to care about DMA on UMA cause we can just map everything
             D3D12_COMMAND_QUEUE_DESC dma_queue_desc{};
@@ -846,10 +814,13 @@ namespace sanity::engine::renderer {
     void RenderBackend::create_gpu_frame_synchronization_objects() {
         frame_fence_values.resize(cvar_max_in_flight_gpu_frames->get());
 
-        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&frame_fences));
-        set_object_name(frame_fences, "Frame Synchronization Fence");
+        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&direct_command_ready_fence));
+        set_object_name(direct_command_ready_fence, "Direct Queue Fence");
 
         frame_event = CreateEvent(nullptr, false, false, nullptr);
+
+        device->CreateFence(1, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&copy_queue_sync_fence));
+        set_object_name(copy_queue_sync_fence, "Copy Queue Fence");
     }
 
     void RenderBackend::create_command_allocators() {
@@ -857,8 +828,26 @@ namespace sanity::engine::renderer {
 
         const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
 
-        Rx::Concurrency::ScopeLock l{direct_command_allocators_mutex};
-        direct_command_allocators.resize(num_gpu_frames);
+        direct_command_allocators.reserve(num_gpu_frames);
+        copy_command_allocators.reserve(num_gpu_frames);
+
+        for(auto i = 0; i < *cvar_max_in_flight_gpu_frames; i++) {
+            ComPtr<ID3D12CommandAllocator> direct_command_allocator;
+            auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&direct_command_allocator));
+            if(FAILED(result)) {
+                Rx::abort("Could not create direct command list %d: %s", i, to_string(result));
+            }
+
+            ComPtr<ID3D12CommandAllocator> copy_command_allocator;
+            // Direct for now, it's a hack until I recharge my refactor energy
+            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&copy_command_allocator));
+            if(FAILED(result)) {
+                Rx::abort("Could not create copy command list %d: %s", i, to_string(result));
+            }
+
+            direct_command_allocators.push_back(direct_command_allocator);
+            copy_command_allocators.push_back(copy_command_allocator);
+        }
     }
 
     void RenderBackend::create_descriptor_heaps() {
@@ -1322,7 +1311,9 @@ namespace sanity::engine::renderer {
     }
 
     void RenderBackend::flush_batched_command_lists() {
-        Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
+        // TODO: Insert barriers/fences/other synchronization things so that the copy commands finish before these command lists begin
+        // executing
+
         // Submit all the command lists we batched up
         auto& lists = command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
         lists.each_fwd([&](ComPtr<ID3D12GraphicsCommandList4>& commands) {
@@ -1355,9 +1346,6 @@ namespace sanity::engine::renderer {
                     logger->error("Could not create an event to use to wait on command lists");
                 }
             }
-
-            auto command_allocator = get_com_interface<ID3D12CommandAllocator>(commands);
-            command_allocators_to_reset_on_begin_frame[cur_gpu_frame_idx].emplace_back(command_allocator);
         });
 
         command_lists_outside_render_device.fetch_sub(lists.size());
@@ -1375,16 +1363,8 @@ namespace sanity::engine::renderer {
     void RenderBackend::reset_command_allocators_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
 
-        Rx::Concurrency::ScopeLock l{command_lists_by_frame_mutex};
-        Rx::Concurrency::ScopeLock l2{direct_command_allocators_mutex};
-        command_allocators_to_reset_on_begin_frame[frame_idx].each_fwd([&](const ComPtr<ID3D12CommandAllocator>& allocator) {
-            allocator->Reset();
-            log_dred_report();
-
-            direct_command_allocators.push_back(allocator);
-        });
-
-        command_allocators_to_reset_on_begin_frame[frame_idx] = {};
+        direct_command_allocators[frame_idx]->Reset();
+        copy_command_allocators[frame_idx]->Reset();
     }
 
     void RenderBackend::destroy_resources_for_frame(const Uint32 frame_idx) {
@@ -1436,15 +1416,15 @@ namespace sanity::engine::renderer {
     }
 
     void RenderBackend::wait_for_frame(const uint64_t frame_index) {
-        ZoneScoped;
+        ZoneScopedC(tracy::Color::MistyRose2);
         const auto desired_fence_value = frame_fence_values[frame_index];
-        const auto initial_fence_value = frame_fences->GetCompletedValue();
+        const auto initial_fence_value = direct_command_ready_fence->GetCompletedValue();
 
         if(initial_fence_value < desired_fence_value) {
             // If the fence's most recent value is not the value we want, then the GPU has not finished executing the frame and we need to
             // explicitly wait
 
-            frame_fences->SetEventOnCompletion(desired_fence_value, frame_event);
+            direct_command_ready_fence->SetEventOnCompletion(desired_fence_value, frame_event);
             const auto result = WaitForSingleObject(frame_event, INFINITE);
             if(result == WAIT_ABANDONED) {
                 logger->error("Waiting for GPU frame %u was abandoned", frame_index);
@@ -1462,7 +1442,7 @@ namespace sanity::engine::renderer {
 
     void RenderBackend::wait_gpu_idle(const uint64_t frame_index) {
         frame_fence_values[frame_index] += 3;
-        direct_command_queue->Signal(frame_fences, frame_fence_values[frame_index]);
+        direct_command_queue->Signal(direct_command_ready_fence, frame_fence_values[frame_index]);
         wait_for_frame(frame_index);
     }
 

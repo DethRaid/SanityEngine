@@ -342,10 +342,10 @@ namespace sanity::editor::import {
     Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene) const {
         ZoneScoped;
 
-        auto* cmds = renderer->get_resource_command_list();
+        auto cmds = renderer->get_render_backend().create_copy_command_list();
 
         auto& mesh_store = renderer->get_static_mesh_store();
-        const auto uploader = mesh_store.begin_adding_meshes(cmds);
+        const auto uploader = mesh_store.begin_adding_meshes(*cmds);
 
         Rx::Vector<GltfMesh> imported_meshes;
         imported_meshes.reserve(scene.meshes.size());
@@ -530,9 +530,9 @@ namespace sanity::editor::import {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
 
-            auto cmds = renderer->get_resource_command_list();
+            auto cmds = renderer->get_render_backend().create_copy_command_list();
 
-            auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
+            auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(*cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
 
             const auto& vertex_buffer = renderer->get_static_mesh_store().get_vertex_buffer();
@@ -565,7 +565,7 @@ namespace sanity::editor::import {
                                                                             Rx::Array{
                                                                                 engine::renderer::PlacedMesh{.mesh = primitive.mesh,
                                                                                                              .model_matrix = model_matrix}},
-                                                                            cmds);
+                                                                            *cmds);
 
                 auto& raytracing_object_component = primitive_actor.add_component<engine::renderer::RaytracingObjectComponent>();
                 raytracing_object_component.as_handle = as_handle;

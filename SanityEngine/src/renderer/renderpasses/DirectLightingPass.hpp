@@ -23,6 +23,8 @@ namespace sanity::engine::renderer {
         ~DirectLightingPass() override;
 
 #pragma region RenderPass
+        void prepare_work(entt::registry& registry, Uint32 frame_idx) override;
+
         void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
 #pragma endregion
 

@@ -120,7 +120,7 @@ namespace sanity::engine::renderer {
         /*!
          * \brief Sets the image that the 3D scene will be rendered to
          */
-        void set_scene_output_texture(TextureHandle output_texture_handle);
+        void set_scene_output_texture(TextureHandle output_texture_handle) const;
 
         /*!
          * \brief Gets the handle to the texture that the main scene view is rendered to
@@ -128,6 +128,8 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_scene_output_texture() const;
 
         [[nodiscard]] StandardMaterialHandle allocate_standard_material(const StandardMaterial& material);
+
+        [[nodiscard]] const StandardMaterial& get_material(const StandardMaterialHandle& handle) const;
 
         [[nodiscard]] const BufferHandle& get_standard_material_buffer_for_frame(Uint32 frame_idx) const;
 
@@ -167,8 +169,6 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle get_default_normal_texture() const;
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
-
-        [[nodiscard]] ID3D12GraphicsCommandList4* get_resource_command_list() const;
 
         /**
          * @brief Early-Z depth buffer
@@ -238,9 +238,9 @@ namespace sanity::engine::renderer {
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;
-        ComPtr<ID3D12GraphicsCommandList4> resource_command_list;   // Resource command list for the current frame
+        Rx::Vector<Rx::Vector<Buffer>> buffers_on_copy_queue;
 
-#pragma region Initialization
+        #pragma region Initialization
         void create_static_mesh_storage();
 
         void allocate_resource_descriptors();

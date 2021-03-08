@@ -459,6 +459,7 @@
     <ClInclude Include="src\renderer\renderpasses\renderpass_handle.hpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\rhi\copy_command_list.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">
@@ -677,6 +678,7 @@
     <ClCompile Include="src\renderer\renderpasses\renderpass_handle.cpp">
       <Filter>src\renderer\renderpasses</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\rhi\copy_command_list.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="extern\tracy\imgui\LICENSE.txt">

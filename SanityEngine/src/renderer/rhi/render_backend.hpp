@@ -7,6 +7,7 @@
 // Must be this low in the include order, because this header doesn't include all the things it needs
 #include <DXProgrammableCapture.h>
 
+#include "copy_command_list.hpp"
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
 #include "glm/glm.hpp"
@@ -39,6 +40,8 @@ namespace sanity::engine::renderer {
     struct CommandList;
     struct RenderPipelineStateCreateInfo;
 
+    enum class FramePhase {};
+
     struct __declspec(uuid("5A6A1D35-71A1-4DF5-81AA-EF05E0492280")) GpuFrameIdx {
         Uint32 idx;
     };
@@ -56,10 +59,10 @@ namespace sanity::engine::renderer {
         static constexpr Uint32 ROOT_CONSTANTS_ROOT_PARAMETER_INDEX = 0;
         static constexpr Uint32 RAYTRACING_SCENE_ROOT_PARAMETER_INDEX = 1;
         static constexpr Uint32 RESOURCES_ARRAY_ROOT_PARAMETER_INDEX = 2;
-    	
+
         static constexpr Uint32 FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants,
-                                                                                            frame_constants_buffer_index) /
-                                                                                   4;
+                                                                                             frame_constants_buffer_index) /
+                                                                                    4;
         static constexpr Uint32 CAMERA_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, camera_index) / 4;
         static constexpr Uint32 DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET = offsetof(StandardPushConstants, data_buffer_index) / 4;
         static constexpr Uint32 DATA_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, data_index) / 4;
@@ -124,11 +127,11 @@ namespace sanity::engine::renderer {
          */
         [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_render_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
 
-        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_copy_command_list();
+        [[nodiscard]] CopyCommandList create_copy_command_list();
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
-        
-        void submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> commands) const;
+
+        void submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> cmds) const;
 
         void begin_frame(uint64_t frame_count);
 
@@ -197,26 +200,29 @@ namespace sanity::engine::renderer {
         ComPtr<ID3D12InfoQueue> info_queue;
         DWORD debug_message_callback_cookie;
 
+        /**
+         * @brief Indicates when frame N - 3 has finished executing on the direct queue, and the GPU resources associated with our frame
+         * index are available for modification
+         */
+        ComPtr<ID3D12Fence> direct_command_ready_fence;
         ComPtr<ID3D12CommandQueue> direct_command_queue;
 
+        ComPtr<ID3D12Fence> copy_queue_sync_fence;
         ComPtr<ID3D12CommandQueue> async_copy_queue;
 
-        Rx::Concurrency::Mutex create_command_list_mutex;
         Rx::Concurrency::Atomic<Size> command_lists_outside_render_device{0};
 
-        Rx::Concurrency::Mutex direct_command_allocators_mutex;
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> direct_command_allocators;
+        Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
-        Rx::Concurrency::Mutex command_lists_by_frame_mutex;
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
-        Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> command_allocators_to_reset_on_begin_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_textures;
         Rx::Vector<DescriptorRange> swapchain_rtv_handles;
 
         HANDLE frame_event;
-        ComPtr<ID3D12Fence> frame_fences;
+
         Rx::Vector<uint64_t> frame_fence_values;
 
         Rx::Vector<Rx::Vector<Buffer>> buffer_deletion_list;
@@ -353,9 +359,6 @@ namespace sanity::engine::renderer {
         void return_staging_buffers_for_frame(Uint32 frame_idx);
 
         void reset_command_allocators_for_frame(Uint32 frame_idx);
-
-        template <GpuResource ResourceType>
-        void destroy_resource_immediate(const ResourceType& resource);
 
         void destroy_resources_for_frame(Uint32 frame_idx);
 

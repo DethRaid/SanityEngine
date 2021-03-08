@@ -709,6 +709,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\render_components.hpp" />
     <ClInclude Include="src\renderer\rhi\command_list.hpp" />
     <ClInclude Include="src\renderer\rhi\compute_pipeline_state.hpp" />
+    <ClInclude Include="src\renderer\rhi\copy_command_list.hpp" />
     <ClInclude Include="src\renderer\rhi\d3d12_private_data.hpp" />
     <ClInclude Include="src\renderer\rhi\d3dx12.hpp" />
     <ClInclude Include="src\renderer\rhi\descriptor_allocator.hpp" />
@@ -790,6 +791,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\renderer\renderpasses\ui_render_pass.cpp" />
     <ClCompile Include="src\renderer\render_components.cpp" />
     <ClCompile Include="src\renderer\rhi\compute_pipeline_state.cpp" />
+    <ClCompile Include="src\renderer\rhi\copy_command_list.cpp" />
     <ClCompile Include="src\renderer\rhi\descriptor_allocator.cpp" />
     <ClCompile Include="src\renderer\rhi\helpers.cpp" />
     <ClCompile Include="src\renderer\rhi\per_frame_buffer.cpp" />
