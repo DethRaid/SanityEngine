@@ -42,7 +42,7 @@ namespace sanity::engine::renderer {
                               Uint32 /* frame_idx */) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "DenoiserPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "DenoiserPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DenoiserPass::render");
 
         const auto& accumulation_image = renderer->get_texture(accumulation_target_handle);

@@ -71,7 +71,7 @@ namespace sanity::engine::renderer {
     void DirectLightingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "ObjectsPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "ObjectsPass::render");
         PIXScopedEvent(commands, forward_pass_color, "ObjectsPass::render");
 
         begin_render_pass(commands);

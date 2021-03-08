@@ -17,9 +17,9 @@ namespace sanity::engine {
 
     template <typename ComponentDataType>
     ComponentDataType* copy_and_pad_texture_data(ComponentDataType* original_data,
-                                               Uint32 width,
-                                               Uint32 height,
-                                               Uint32 original_num_components);
+                                                 Uint32 width,
+                                                 Uint32 height,
+                                                 Uint32 original_num_components);
 
     void* load_texture(const std::filesystem::path& texture_name, Uint32& width, Uint32& height, renderer::TextureFormat& format) {
         ZoneScoped;
@@ -79,34 +79,16 @@ namespace sanity::engine {
                                                              .format = format,
                                                              .width = width,
                                                              .height = height};
-
-        auto& device = renderer.get_render_backend();
-        auto commands = device.create_command_list();
-
-        const auto msg = Rx::String::format("load_texture_to_gpu(%s)", texture_name);
-        renderer::set_object_name(commands, msg);
-
-        renderer::TextureHandle handle_out{};
-
-        {
-            TracyD3D12Zone(renderer::RenderBackend::tracy_context, *commands, msg.data());
-            PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, msg.data());
-
-            handle_out = renderer.create_texture(create_info, pixels, commands);
-        }
-
-        device.submit_command_list(Rx::Utility::move(commands));
-
-        return handle_out;
+        return renderer.create_texture(create_info, pixels);
     }
 
     constexpr const Uint64 DESIRED_NUM_COMPONENTS = 4;
 
     template <typename ComponentDataType>
     ComponentDataType* copy_and_pad_texture_data(ComponentDataType* original_data,
-                                               const Uint32 width,
-                                               const Uint32 height,
-                                               const Uint32 original_num_components) {
+                                                 const Uint32 width,
+                                                 const Uint32 height,
+                                                 const Uint32 original_num_components) {
         ZoneScoped;
 
         const auto num_pixels = static_cast<Size>(width) * height;

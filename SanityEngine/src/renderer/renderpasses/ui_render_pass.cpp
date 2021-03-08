@@ -64,7 +64,7 @@ namespace sanity::engine::renderer {
 
         auto& device = renderer->get_render_backend();
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "DearImGuiRenderPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "DearImGuiRenderPass::render");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DearImGuiRenderPass::render");
         {
             const auto backbuffer_rtv_handle = device.get_backbuffer_rtv_handle();
@@ -101,7 +101,7 @@ namespace sanity::engine::renderer {
             for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
                 const auto* cmd_list = draw_data->CmdLists[i];
 
-                PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "DearImGuiRenderPass::render_ui::draw_imgui_list(%s)", cmd_list->_OwnerName);
+                PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "%s", cmd_list->_OwnerName);
 
                 const auto* imgui_vertices = cmd_list->VtxBuffer.Data;
                 const auto* imgui_indices = cmd_list->IdxBuffer.Data;

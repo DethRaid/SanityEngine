@@ -8,11 +8,11 @@
 
 namespace sanity::engine::renderer {
     class Renderer;
-    class DenoiserPass;
+    class CompositingPass;
 
     class PostprocessingPass final : public RenderPass {
     public:
-        explicit PostprocessingPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass);
+        explicit PostprocessingPass(Renderer& renderer_in, const CompositingPass& scene_compositing_pass);
 
         ~PostprocessingPass() override = default;
 

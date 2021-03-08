@@ -15,7 +15,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "renderer/hlsl/standard_material.hpp"
 #include "renderer/mesh_data_store.hpp"
-#include "renderer/renderer.hpp"
+#include "renderer/renderer.cpp"
 #include "renderer/rhi/d3d12_private_data.hpp"
 #include "rx/core/log.h"
 #include "rx/core/string.h"
@@ -151,33 +151,28 @@ namespace sanity::editor::import {
         // How to import a scene?
         // First, load all the meshes, textures, materials, and other primitives;
 
-        auto& backend = renderer->get_render_backend();
+        // auto& backend = renderer->get_render_backend();
         // backend.begin_frame_capture();
-        auto cmds = backend.create_command_list();
-        engine::renderer::set_object_name(cmds, Rx::String::format("Import glTF %s", scene_path.string()));
 
         if(import_settings.import_meshes) {
-            meshes = import_all_meshes(scene, cmds);
+            meshes = import_all_meshes(scene);
         }
 
         if(import_settings.import_materials) {
-            materials = import_all_materials(scene, cmds);
+            materials = import_all_materials(scene);
         }
 
         // Then, walk the node hierarchy, creating an hierarchy of entt::entities
         Rx::Optional<entt::entity> scene_entity{Rx::nullopt};
         if(import_settings.import_object_hierarchy) {
-            scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry, cmds);
+            scene_entity = import_object_hierarchy(scene, import_settings.scaling_factor, registry);
         }
-
-        backend.submit_command_list(Rx::Utility::move(cmds));
 
         // Finally, return the root entity
         return scene_entity;
     }
 
-    Rx::Vector<engine::renderer::StandardMaterialHandle> SceneImporter::import_all_materials(const tinygltf::Model& scene,
-                                                                                             ID3D12GraphicsCommandList4* cmds) {
+    Rx::Vector<engine::renderer::StandardMaterialHandle> SceneImporter::import_all_materials(const tinygltf::Model& scene) {
         ZoneScoped;
 
         Rx::Vector<engine::renderer::StandardMaterialHandle> imported_materials;
@@ -217,7 +212,7 @@ namespace sanity::editor::import {
             const auto normal_texture_idx{material.normalTexture.index};
 
             if(base_color_texture_idx != -1) {
-                if(const auto handle = import_texture(base_color_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(base_color_texture_idx, scene); handle.has_value()) {
                     sanity_material.base_color_texture_idx = handle->index;
 
                 } else {
@@ -229,7 +224,7 @@ namespace sanity::editor::import {
             }
 
             if(metalness_roughness_texture_idx != -1) {
-                if(const auto handle = import_texture(metalness_roughness_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(metalness_roughness_texture_idx, scene); handle.has_value()) {
                     sanity_material.metallic_roughness_texture_idx = handle->index;
 
                 } else {
@@ -241,7 +236,7 @@ namespace sanity::editor::import {
             }
 
             if(normal_texture_idx != -1) {
-                if(const auto handle = import_texture(normal_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(normal_texture_idx, scene); handle.has_value()) {
                     sanity_material.normal_texture_idx = handle->index;
 
                 } else {
@@ -253,7 +248,7 @@ namespace sanity::editor::import {
             }
 
             if(emission_texture_idx != -1) {
-                if(const auto handle = import_texture(emission_texture_idx, scene, cmds); handle.has_value()) {
+                if(const auto handle = import_texture(emission_texture_idx, scene); handle.has_value()) {
                     sanity_material.emission_texture_idx = handle->index;
 
                 } else {
@@ -274,8 +269,7 @@ namespace sanity::editor::import {
     }
 
     Rx::Optional<engine::renderer::TextureHandle> SceneImporter::import_texture(const Int32 texture_idx,
-                                                                                const tinygltf::Model& scene,
-                                                                                ID3D12GraphicsCommandList4* cmds) {
+                                                                                const tinygltf::Model& scene) {
         static Byte* padding_buffer{nullptr};
 
         ZoneScoped;
@@ -339,15 +333,16 @@ namespace sanity::editor::import {
                                                                      .width = static_cast<Uint32>(source_image.width),
                                                                      .height = static_cast<Uint32>(source_image.height)};
 
-        const auto handle = renderer->create_texture(create_info, image_data, cmds);
+        const auto handle = renderer->create_texture(create_info, image_data);
         loaded_textures.insert(texture_name, handle);
 
         return handle;
     }
 
-    Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene,
-                                                                         ID3D12GraphicsCommandList4* cmds) const {
+    Rx::Vector<SceneImporter::GltfMesh> SceneImporter::import_all_meshes(const tinygltf::Model& scene) const {
         ZoneScoped;
+
+        auto* cmds = renderer->get_resource_command_list();
 
         auto& mesh_store = renderer->get_static_mesh_store();
         const auto uploader = mesh_store.begin_adding_meshes(cmds);
@@ -510,8 +505,7 @@ namespace sanity::editor::import {
 
     entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& model,
                                                         const float import_scale,
-                                                        entt::registry& registry,
-                                                        ID3D12GraphicsCommandList4* cmds) {
+                                                        entt::registry& registry) {
         ZoneScoped;
 
         // Assume that the files we'll be importing have a single scene
@@ -523,7 +517,7 @@ namespace sanity::editor::import {
         // Add entities for all the nodes in the scene, and all their children
         for(const auto node_idx : default_scene.nodes) {
             const auto& node = model.nodes[node_idx];
-            create_entity_for_node(node, scene_entity.entity, import_scale, model, registry, cmds);
+            create_entity_for_node(node, scene_entity.entity, import_scale, model, registry);
         }
 
         return scene_entity.entity;
@@ -531,11 +525,12 @@ namespace sanity::editor::import {
 
     void SceneImporter::import_node_mesh(const tinygltf::Node& node,
                                          entt::registry& registry,
-                                         ID3D12GraphicsCommandList4* cmds,
                                          entt::entity node_entity) {
         if(node.mesh > -1 && static_cast<Size>(node.mesh) < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
+
+            auto cmds = renderer->get_resource_command_list();
 
             auto mesh_adder = renderer->get_static_mesh_store().begin_adding_meshes(cmds);
             mesh_adder.prepare_for_raytracing_geometry_build();
@@ -581,8 +576,7 @@ namespace sanity::editor::import {
                                                                            .material = ray_material,
                                                                            .transform = parent_transform_component.get_model_matrix(
                                                                                registry)};
-                //,
-                //.transform = cached_transform.to_matrix()};
+                
                 raytracing_objects.push_back(ray_object);
 
                 i++;
@@ -707,8 +701,7 @@ namespace sanity::editor::import {
                                                        const entt::entity& parent_entity,
                                                        const float import_scale,
                                                        const tinygltf::Model& model,
-                                                       entt::registry& registry,
-                                                       ID3D12GraphicsCommandList4* cmds) {
+                                                       entt::registry& registry) {
         ZoneScoped;
 
         auto& node_actor = engine::create_actor(registry, node.name.empty() ? "New Node" : node.name.c_str());
@@ -717,7 +710,7 @@ namespace sanity::editor::import {
         // Transform
         import_node_transform(node, parent_entity, import_scale, registry, node_actor);
 
-        import_node_mesh(node, registry, cmds, node_entity);
+        import_node_mesh(node, registry, node_entity);
 
         // Light
         import_node_light(node, model, registry, node_entity);
@@ -730,7 +723,7 @@ namespace sanity::editor::import {
             }
 
             const auto& child_node = model.nodes.at(child_node_idx);
-            create_entity_for_node(child_node, node_entity, import_scale, model, registry, cmds);
+            create_entity_for_node(child_node, node_entity, import_scale, model, registry);
         }
 
         return node_entity;

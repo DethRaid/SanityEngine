@@ -54,14 +54,12 @@ namespace sanity {
 
                 // Rx::Vector<engine::renderer::AnimationHandle> animations;
 
-                [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene,
-                                                                                                        ID3D12GraphicsCommandList4* cmds);
+                [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene);
 
                 [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> import_texture(Int32 texture_idx,
-                                                                                           const tinygltf::Model& scene,
-                                                                                           ID3D12GraphicsCommandList4* cmds);
+                                                                                           const tinygltf::Model& scene);
 
-                [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene, ID3D12GraphicsCommandList4* cmds) const;
+                [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene) const;
 
                 [[nodiscard]] static Rx::Optional<GltfPrimitive> get_data_from_primitive(const tinygltf::Primitive& primitive,
                                                                                          const tinygltf::Model& scene,
@@ -75,11 +73,9 @@ namespace sanity {
 
                 [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& model,
                                                                    float import_scale,
-                                                                   entt::registry& registry,
-                                                                   ID3D12GraphicsCommandList4* cmds);
+                                                                   entt::registry& registry);
                 void import_node_mesh(const tinygltf::Node& node,
                                       entt::registry& registry,
-                                      ID3D12GraphicsCommandList4* cmds,
                                       entt::entity node_entity);
 
                 void import_node_transform(const tinygltf::Node& node,
@@ -97,8 +93,7 @@ namespace sanity {
                                                     const entt::entity& parent_entity,
                                                     float import_scale,
                                                     const tinygltf::Model& model,
-                                                    entt::registry& registry,
-                                                    ID3D12GraphicsCommandList4* cmds);
+                                                    entt::registry& registry);
             };
         } // namespace import
     }     // namespace editor

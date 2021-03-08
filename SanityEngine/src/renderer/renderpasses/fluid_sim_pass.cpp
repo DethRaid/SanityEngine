@@ -116,7 +116,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, const Uint32 frame_idx) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "FluidSimPass::record_work");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "FluidSimPass::record_work");
         PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "FluidSimPass::record_work");
 
         auto& backend = renderer->get_render_backend();
@@ -214,7 +214,7 @@ namespace sanity::engine::renderer {
     }
 
     void FluidSimPass::record_fire_simulation_updates(ID3D12GraphicsCommandList* commands, const Uint32 frame_idx) {
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "FluidSimPass::record_fire_simulation_updates");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "FluidSimPass::record_fire_simulation_updates");
         PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "record_fire_simulation_updates");
 
         // Explanatory comments are from the original implementation at
@@ -467,23 +467,16 @@ namespace sanity::engine::renderer {
                                             3,
                                             0,
                                             7};
-
-        auto& backend = renderer->get_render_backend();
-        auto commands = backend.create_command_list();
-
+        
         cube_vertex_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Vertices",
                                                                       .usage = BufferUsage::VertexBuffer,
                                                                       .size = static_cast<Uint32>(cube_vertices.size() *
                                                                                                   sizeof(StandardVertex))},
-                                                     cube_vertices.data(),
-                                                     commands);
+                                                     cube_vertices.data());
         cube_index_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Indices",
                                                                      .usage = BufferUsage::IndexBuffer,
                                                                      .size = static_cast<Uint32>(cube_indices.size() * sizeof(Uint32))},
-                                                    cube_indices.data(),
-                                                    commands);
-
-        backend.submit_command_list(Rx::Utility::move(commands));
+                                                    cube_indices.data());
     }
 
     void FluidSimPass::add_fluid_volume_dispatch(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data) {
@@ -604,7 +597,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::apply_advection(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Advection");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Advection");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Advection");
 
         execute_simulation_step(commands, advection_params_array, advection_pipeline, [&](GpuFluidVolumeState& volume, auto& barriers) {
@@ -617,7 +610,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::apply_buoyancy(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Bouyancy");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Bouyancy");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Bouyancy");
 
         execute_simulation_step(commands, buoyancy_params_array, buoyancy_pipeline, [&](GpuFluidVolumeState& state, auto& barriers) {
@@ -627,7 +620,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::apply_emitters(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Impulse");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Impulse");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Impulse");
 
         execute_simulation_step(commands, emitters_params_array, emitters_pipeline, [&](GpuFluidVolumeState& state, auto& barriers) {
@@ -638,7 +631,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::apply_extinguishment(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Extinguishment");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Extinguishment");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Extinguishment");
 
         execute_simulation_step(commands,
@@ -649,7 +642,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::compute_vorticity_confinement(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Vorticity Confinement");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Vorticity Confinement");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Vorticity Confinement");
 
         execute_simulation_step(commands,
@@ -678,7 +671,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::compute_divergence(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Divergence");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Divergence");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Divergence");
 
         execute_simulation_step(commands, divergence_params_array, divergence_pipeline, [&](GpuFluidVolumeState& state, auto& barriers) {
@@ -691,7 +684,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::compute_pressure(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Pressure");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Pressure");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Pressure");
 
         for(auto i = 0; i < *num_pressure_iterations; i++) {
@@ -717,7 +710,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::compute_projection(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Projection");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Projection");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Projection");
 
         execute_simulation_step(commands, projection_param_arrays, projection_pipeline, [&](GpuFluidVolumeState& state, auto& barriers) {

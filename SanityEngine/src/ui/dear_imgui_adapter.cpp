@@ -147,7 +147,7 @@ namespace sanity::engine {
 
     void DearImguiAdapter::draw_ui(const entt::basic_view<entt::entity, entt::exclude_t<>, ui::UiComponent>& view) {
         ZoneScoped;
-        
+
         auto& io = ImGui::GetIO();
         IM_ASSERT(
             io.Fonts->IsBuilt() &&
@@ -163,7 +163,7 @@ namespace sanity::engine {
             io.DisplayFramebufferScale = ImVec2(static_cast<Float32>(display_w) / static_cast<Float32>(w),
                                                 static_cast<Float32>(display_h) / static_cast<Float32>(h));
         }
-        
+
         // Setup time step
         const auto current_time = glfwGetTime();
         io.DeltaTime = last_start_time > 0.0 ? static_cast<Float32>(current_time - last_start_time) : static_cast<Float32>(1.0f / 60.0f);
@@ -174,8 +174,7 @@ namespace sanity::engine {
 
         ImGui::NewFrame();
 
-        view.each([](const ui::UiComponent& component)
-        {
+        view.each([](const ui::UiComponent& component) {
             if(component.panel) {
                 component.panel->draw();
             }
@@ -278,29 +277,17 @@ namespace sanity::engine {
     void DearImguiAdapter::create_font_texture(renderer::Renderer& renderer) {
         ZoneScoped;
 
-        auto& device = renderer.get_render_backend();
-        auto commands = device.create_command_list();
-        renderer::set_object_name(commands, "DearImguiAdapter::create_font_texture");
-
         auto& io = ImGui::GetIO();
         unsigned char* pixels;
         int width, height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-        {
-            TracyD3D12Zone(renderer::RenderBackend::tracy_context, *commands, "DearImguiAdapter::create_font_texture");
-            PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, "DearImguiAdapter::create_font_texture");
-
-            const auto create_info = renderer::TextureCreateInfo{.name = "Dear ImGUI Font Atlas",
-                                                               .usage = renderer::TextureUsage::SampledTexture,
-                                                               .format = renderer::TextureFormat::Rgba8,
-                                                               .width = static_cast<Uint32>(width),
-                                                               .height = static_cast<Uint32>(height)};
-
-            font_atlas = renderer.create_texture(create_info, pixels, commands);
-        }
-
-        device.submit_command_list(Rx::Utility::move(commands));
+        const auto create_info = renderer::TextureCreateInfo{.name = "Dear ImGUI Font Atlas",
+                                                             .usage = renderer::TextureUsage::SampledTexture,
+                                                             .format = renderer::TextureFormat::Rgba8,
+                                                             .width = static_cast<Uint32>(width),
+                                                             .height = static_cast<Uint32>(height)};
+        font_atlas = renderer.create_texture(create_info, pixels);
 
         const uint64_t imgui_tex_id = font_atlas.index;
 

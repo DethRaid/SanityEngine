@@ -142,7 +142,7 @@ namespace sanity::engine::renderer {
                                  ID3D12GraphicsCommandList4* commands) {
         ZoneScoped;
 
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "MeshDataStore::add_mesh");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "MeshDataStore::add_mesh");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "MeshDataStore::add_mesh");
 
         logger->verbose("Adding mesh with %u vertices and %u indices", vertices.size(), indices.size());

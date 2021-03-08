@@ -70,7 +70,8 @@ namespace sanity::engine::renderer {
         static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, object_id) / 4;
 
 #ifdef TRACY_ENABLE
-        inline static tracy::D3D12QueueCtx* tracy_context{nullptr};
+        inline static tracy::D3D12QueueCtx* tracy_render_context{nullptr};
+        inline static tracy::D3D12QueueCtx* tracy_copy_context{nullptr};
 #endif
 
         ComPtr<ID3D12Device> device;
@@ -121,7 +122,9 @@ namespace sanity::engine::renderer {
          *
          * This method is internally synchronized. You can (in theory) call it safely from a multithreaded environment
          */
-        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_render_command_list(Rx::Optional<Uint32> frame_idx = Rx::nullopt);
+
+        [[nodiscard]] ComPtr<ID3D12GraphicsCommandList4> create_copy_command_list();
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
         

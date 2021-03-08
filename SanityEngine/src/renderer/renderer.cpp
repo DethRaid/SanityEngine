@@ -21,6 +21,7 @@
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/helpers.hpp"
 #include "renderer/rhi/render_backend.hpp"
+#include "renderpasses/compositing_pass.hpp"
 #include "rx/console/variable.h"
 #include "rx/core/abort.h"
 #include "rx/core/log.h"
@@ -52,6 +53,8 @@ namespace sanity::engine::renderer {
 
         output_framebuffer_size = {width, height};
 
+        resource_command_list = backend->create_copy_command_list();
+
         create_static_mesh_storage();
 
         allocate_resource_descriptors();
@@ -65,8 +68,6 @@ namespace sanity::engine::renderer {
         create_builtin_images();
 
         create_render_passes();
-
-        resource_command_lists.resize(backend->get_max_num_gpu_frames());
 
         logger->info("Constructed Renderer");
     }
@@ -93,7 +94,9 @@ namespace sanity::engine::renderer {
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
 
-        resource_command_lists[frame_idx] = backend->create_command_list();
+        if(resource_command_list) {
+            resource_command_list = backend->create_copy_command_list();
+        }
     }
 
     void Renderer::render_frame(entt::registry& registry) {
@@ -101,11 +104,11 @@ namespace sanity::engine::renderer {
 
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
 
-        auto command_list = backend->create_command_list(frame_idx);
+        auto command_list = backend->create_render_command_list(frame_idx);
         set_object_name(command_list, Rx::String::format("Main Render Command List for frame %d", frame_idx));
 
         {
-            TracyD3D12Zone(RenderBackend::tracy_context, *command_list, "Renderer::render_all");
+            TracyD3D12Zone(RenderBackend::tracy_render_context, *command_list, "Renderer::render_all");
             PIXScopedEvent(*command_list, PIX_COLOR_DEFAULT, "Renderer::render_all");
             if(raytracing_scene_dirty) {
                 rebuild_raytracing_scene(command_list);
@@ -243,7 +246,7 @@ namespace sanity::engine::renderer {
         {
             ZoneScoped;
 
-            TracyD3D12Zone(RenderBackend::tracy_context, *command_list, "Renderer::execute_all_render_passes");
+            TracyD3D12Zone(RenderBackend::tracy_render_context, *command_list, "Renderer::execute_all_render_passes");
             PIXScopedEvent(*command_list, PIX_COLOR_DEFAULT, "execute_all_render_passes");
 
             {
@@ -269,11 +272,9 @@ namespace sanity::engine::renderer {
         }
     }
 
-    void Renderer::end_frame() const
-    {
-        const auto frame_idx = backend->get_cur_gpu_frame_idx();
-        backend->submit_async_copy_commands(resource_command_lists[frame_idx]);
-
+    void Renderer::end_frame() const {
+        backend->submit_async_copy_commands(resource_command_list);
+        resource_command_list.~ComPtr();
 
         backend->end_frame();
     }
@@ -310,7 +311,7 @@ namespace sanity::engine::renderer {
             memcpy(staging_buffer.mapped_ptr, data, create_info.size);
 
             const auto frame_idx = backend->get_cur_gpu_frame_idx();
-            auto* cmds = get_async_copy_command_list(frame_idx);
+            auto* cmds = get_resource_command_list();
             cmds->CopyBufferRegion(buffer->resource, 0, staging_buffer.resource, 0, create_info.size);
         }
 
@@ -351,14 +352,13 @@ namespace sanity::engine::renderer {
         }
     }
 
-    TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info, const void* image_data, const bool generate_mipmaps) {
+    TextureHandle Renderer::create_texture(const TextureCreateInfo& create_info, const void* image_data) {
         ZoneScoped;
 
-        const auto frame_idx = backend->get_cur_gpu_frame_idx();
-        auto* cmds = get_async_copy_command_list(frame_idx);
+        auto* cmds = get_resource_command_list();
 
         const auto scope_name = Rx::String::format("create_image(\"%s\")", create_info.name);
-        TracyD3D12Zone(RenderBackend::tracy_context, cmds, scope_name.data());
+        TracyD3D12Zone(RenderBackend::tracy_copy_context, cmds, scope_name.data());
         PIXScopedEvent(cmds, PIX_COLOR_DEFAULT, scope_name.data());
 
         const auto handle = create_texture(create_info);
@@ -389,42 +389,40 @@ namespace sanity::engine::renderer {
             return pink_texture_handle;
         }
 
-        if(generate_mipmaps) {
-            {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
-                                                                                     D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
+        {
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
+                                                                                 D3D12_RESOURCE_STATE_COPY_DEST,
+                                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
 
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-            }
+            cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+        }
 
-            spd->generate_mip_chain_for_texture(image.resource, cmds);
+        spd->generate_mip_chain_for_texture(image.resource, cmds);
 
-            if(create_info.usage == TextureUsage::RenderTarget) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
-                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                     D3D12_RESOURCE_STATE_RENDER_TARGET)};
+        if(create_info.usage == TextureUsage::RenderTarget) {
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
+                                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                                 D3D12_RESOURCE_STATE_RENDER_TARGET)};
 
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
-            } else if(create_info.usage == TextureUsage::DepthStencil) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
-                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE)};
+        } else if(create_info.usage == TextureUsage::DepthStencil) {
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
+                                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                                 D3D12_RESOURCE_STATE_DEPTH_WRITE)};
 
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
-            } else if(create_info.usage == TextureUsage::SampledTexture) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
-                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                     D3D12_RESOURCE_STATE_GENERIC_READ)};
+        } else if(create_info.usage == TextureUsage::SampledTexture) {
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
+                                                                                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                                                 D3D12_RESOURCE_STATE_GENERIC_READ)};
 
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
+            cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
 
-            } else if(create_info.usage == TextureUsage::UnorderedAccess) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(image.resource)};
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-            }
+        } else if(create_info.usage == TextureUsage::UnorderedAccess) {
+            const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(image.resource)};
+            cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
         }
 
         return handle;
@@ -649,9 +647,7 @@ namespace sanity::engine::renderer {
 
     TextureHandle Renderer::get_default_metallic_roughness_texture() const { return specular_emission_texture_handle; }
 
-    ID3D12GraphicsCommandList4* Renderer::get_async_copy_command_list(const Uint32 frame_idx) const {
-        return *resource_command_lists[frame_idx];
-    }
+    ID3D12GraphicsCommandList4* Renderer::get_resource_command_list() const { return *resource_command_list; }
 
     TextureHandle Renderer::get_depth_buffer() const { return depth_buffer_handle; }
 
@@ -663,7 +659,7 @@ namespace sanity::engine::renderer {
                                                             const Buffer& index_buffer,
                                                             const Rx::Vector<PlacedMesh>& meshes,
                                                             ID3D12GraphicsCommandList4* commands) {
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_raytracing_geometry");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Renderer::create_raytracing_geometry");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Renderer::create_raytracing_geometry");
 
         Rx::Vector<D3D12_RAYTRACING_GEOMETRY_DESC> geom_descs;
@@ -862,67 +858,54 @@ namespace sanity::engine::renderer {
         load_noise_texture("data/textures/noise/LDR_RGBA_0.png");
         // load_noise_texture("data/textures/noise/RuthNoise.png");
 
-        auto commands = backend->create_command_list();
-        set_object_name(*commands, "Renderer::create_builtin_images");
-
         {
-            TracyD3D12Zone(RenderBackend::tracy_context, commands, "Renderer::create_builtin_images");
-            PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, "Renderer::create_builtin_images");
+            const auto pink_texture_create_info = TextureCreateInfo{.name = "Pink",
+                                                                    .usage = TextureUsage::SampledTexture,
+                                                                    .format = TextureFormat::Rgba8,
+                                                                    .width = 8,
+                                                                    .height = 8};
 
-            {
-                const auto pink_texture_create_info = TextureCreateInfo{.name = "Pink",
-                                                                        .usage = TextureUsage::SampledTexture,
-                                                                        .format = TextureFormat::Rgba8,
-                                                                        .width = 8,
-                                                                        .height = 8};
-
-                auto pink_texture_pixel = Rx::Vector<Uint32>{};
-                pink_texture_pixel.reserve(64);
-                for(Uint32 i = 0; i < 64; i++) {
-                    pink_texture_pixel.push_back(0xFFFF00FF);
-                }
-
-                pink_texture_handle = create_texture(pink_texture_create_info, pink_texture_pixel.data(), commands);
+            auto pink_texture_pixel = Rx::Vector<Uint32>{};
+            pink_texture_pixel.reserve(64);
+            for(Uint32 i = 0; i < 64; i++) {
+                pink_texture_pixel.push_back(0xFFFF00FF);
             }
 
-            {
-                const auto normal_roughness_texture_create_info = TextureCreateInfo{.name = "Default Normal",
-                                                                                    .usage = TextureUsage::SampledTexture,
-                                                                                    .format = TextureFormat::Rgba8,
-                                                                                    .width = 8,
-                                                                                    .height = 8};
-
-                auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
-                normal_roughness_texture_pixel.reserve(64);
-                for(Uint32 i = 0; i < 64; i++) {
-                    normal_roughness_texture_pixel.push_back(0x80FF8080);
-                }
-
-                normal_roughness_texture_handle = create_texture(normal_roughness_texture_create_info,
-                                                                 normal_roughness_texture_pixel.data(),
-                                                                 commands);
-            }
-
-            {
-                const auto specular_emission_texture_create_info = TextureCreateInfo{.name = "Default Metallic/Roughness",
-                                                                                     .usage = TextureUsage::SampledTexture,
-                                                                                     .format = TextureFormat::Rgba8,
-                                                                                     .width = 8,
-                                                                                     .height = 8};
-
-                auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
-                specular_emission_texture_pixel.reserve(64);
-                for(Uint32 i = 0; i < 64; i++) {
-                    specular_emission_texture_pixel.push_back(0x00A00000);
-                }
-
-                specular_emission_texture_handle = create_texture(specular_emission_texture_create_info,
-                                                                  specular_emission_texture_pixel.data(),
-                                                                  commands);
-            }
+            pink_texture_handle = create_texture(pink_texture_create_info, pink_texture_pixel.data());
         }
 
-        backend->submit_command_list(Rx::Utility::move(commands));
+        {
+            const auto normal_roughness_texture_create_info = TextureCreateInfo{.name = "Default Normal",
+                                                                                .usage = TextureUsage::SampledTexture,
+                                                                                .format = TextureFormat::Rgba8,
+                                                                                .width = 8,
+                                                                                .height = 8};
+
+            auto normal_roughness_texture_pixel = Rx::Vector<Uint32>{};
+            normal_roughness_texture_pixel.reserve(64);
+            for(Uint32 i = 0; i < 64; i++) {
+                normal_roughness_texture_pixel.push_back(0x80FF8080);
+            }
+
+            normal_roughness_texture_handle = create_texture(normal_roughness_texture_create_info, normal_roughness_texture_pixel.data());
+        }
+
+        {
+            const auto specular_emission_texture_create_info = TextureCreateInfo{.name = "Default Metallic/Roughness",
+                                                                                 .usage = TextureUsage::SampledTexture,
+                                                                                 .format = TextureFormat::Rgba8,
+                                                                                 .width = 8,
+                                                                                 .height = 8};
+
+            auto specular_emission_texture_pixel = Rx::Vector<Uint32>{};
+            specular_emission_texture_pixel.reserve(64);
+            for(Uint32 i = 0; i < 64; i++) {
+                specular_emission_texture_pixel.push_back(0x00A00000);
+            }
+
+            specular_emission_texture_handle = create_texture(specular_emission_texture_create_info,
+                                                              specular_emission_texture_pixel.data());
+        }
     }
 
     void Renderer::load_noise_texture(const std::filesystem::path& filepath) {
@@ -939,27 +922,22 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::create_render_passes() {
-        render_passes.reserve(6);
+        render_passes.reserve(16);
 
-        render_passes.push_back(Rx::make_ptr<EarlyDepthPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        early_depth_test = RenderpassHandle<EarlyDepthPass>::make_from_last_element(render_passes);
+        early_depth_test = add_pass<EarlyDepthPass>(output_framebuffer_size);
         depth_buffer_handle = early_depth_test->get_depth_buffer();
 
-        render_passes.push_back(Rx::make_ptr<FluidSimPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        fluid_sim_pass_handle = RenderpassHandle<FluidSimPass>::make_from_last_element(render_passes);
+        fluid_sim_pass_handle = add_pass<FluidSimPass>(output_framebuffer_size);
 
-        render_passes.push_back(Rx::make_ptr<DirectLightingPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size));
-        direct_lighting_pass_handle = RenderpassHandle<DirectLightingPass>::make_from_last_element(render_passes);
+        direct_lighting_pass_handle = add_pass<DirectLightingPass>(output_framebuffer_size);
 
-        render_passes.push_back(
-            Rx::make_ptr<DenoiserPass>(RX_SYSTEM_ALLOCATOR, *this, output_framebuffer_size, *(*direct_lighting_pass_handle)));
-        denoiser_pass_handle = RenderpassHandle<DenoiserPass>::make_from_last_element(render_passes);
+        denoiser_pass_handle = add_pass<DenoiserPass>(output_framebuffer_size, *(*direct_lighting_pass_handle));
 
-        render_passes.push_back(Rx::make_ptr<PostprocessingPass>(RX_SYSTEM_ALLOCATOR, *this, *(*denoiser_pass_handle)));
-        postprocessing_pass_handle = RenderpassHandle<PostprocessingPass>::make_from_last_element(render_passes);
+        compositing_pass_handle = add_pass<CompositingPass>(output_framebuffer_size, *(*denoiser_pass_handle), *(*fluid_sim_pass_handle));
 
-        render_passes.push_back(Rx::make_ptr<DearImGuiRenderPass>(RX_SYSTEM_ALLOCATOR, *this));
-        imgui_pass_handle = RenderpassHandle<DearImGuiRenderPass>::make_from_last_element(render_passes);
+        postprocessing_pass_handle = add_pass<PostprocessingPass>(*(*compositing_pass_handle));
+
+        imgui_pass_handle = add_pass<DearImGuiRenderPass>();
     }
 
     void Renderer::reload_builtin_shaders() { throw std::runtime_error{"Not implemented"}; }
@@ -1119,7 +1097,7 @@ namespace sanity::engine::renderer {
     }
 
     void Renderer::rebuild_raytracing_scene(const ComPtr<ID3D12GraphicsCommandList4>& commands) {
-        TracyD3D12Zone(RenderBackend::tracy_context, *commands, "RebuildRaytracingScene");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, *commands, "RebuildRaytracingScene");
         PIXScopedEvent(*commands, PIX_COLOR_DEFAULT, "Renderer::rebuild_raytracing_scene");
 
         // TODO: figure out how to update the raytracing scene without needing a full rebuild

@@ -103,7 +103,7 @@ namespace sanity::engine::renderer {
 
         staging_buffers.each_fwd([&](const Buffer& buffer) { buffer.allocation->Release(); });
 
-        TracyD3D12Destroy(tracy_context);
+        TracyD3D12Destroy(tracy_render_context);
 
         device_allocator->Release();
     }
@@ -327,7 +327,7 @@ namespace sanity::engine::renderer {
         return create_pipeline_state(create_info, standard_root_signature);
     }
 
-    ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_command_list(Rx::Optional<Uint32> frame_idx) {
+    ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_render_command_list(Rx::Optional<Uint32> frame_idx) {
         Rx::Concurrency::ScopeLock l{create_command_list_mutex};
 
         if(!frame_idx) {
@@ -374,6 +374,32 @@ namespace sanity::engine::renderer {
         return commands;
     }
 
+    ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_copy_command_list() {
+        // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
+        ComPtr<ID3D12CommandAllocator> command_allocator;
+        auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&command_allocator));
+        if(FAILED(result)) {
+            Rx::abort("Could not create command list: %s", to_string(result));
+        }
+
+        ComPtr<ID3D12CommandList> cmds;
+        result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
+        if(FAILED(result)) {
+            Rx::abort("Could not create command list: %s", to_string(result));
+        }
+
+        ID3D12GraphicsCommandList4* commands = nullptr;
+        cmds->QueryInterface(&commands);
+        if(!commands) {
+            Rx::abort("Could not cast to ID3D12GraphicsCommandList4: %s", to_string(result));
+        }
+
+        commands->SetName(L"Unnamed Sanity Engine command list");
+        store_com_interface(commands, *command_allocator);
+        command_lists_outside_render_device.fetch_add(1);
+        return commands;
+    }
+
     void RenderBackend::submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands) {
         const auto result = commands->Close();
         if(FAILED(result)) {
@@ -390,10 +416,9 @@ namespace sanity::engine::renderer {
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
 
-    void RenderBackend::submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> commands) const
-    {
+    void RenderBackend::submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> commands) const {
         // Initial implementation simply submits to the main command queue. Eventually I might actually utilize async copy, we'll see
-         const auto result = commands->Close();
+        const auto result = commands->Close();
         if(FAILED(result)) {
 #ifndef NDEBUG
             Rx::abort("Could not close command list: %s", to_string(result));
@@ -402,12 +427,14 @@ namespace sanity::engine::renderer {
 #endif
         }
 
-        auto const* cmds = &commands;
-        async_copy_queue->ExecuteCommandLists(1, cmds);
+        auto* cmds = static_cast<ID3D12CommandList*>(commands);
+        async_copy_queue->ExecuteCommandLists(1, &cmds);
     }
 
     void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
+
+        direct_command_queue->Signal(frame_fences, frame_fence_values[cur_gpu_frame_idx]);
 
         wait_for_frame(cur_gpu_frame_idx);
         frame_fence_values[cur_gpu_frame_idx] = frame_count;
@@ -438,8 +465,6 @@ namespace sanity::engine::renderer {
 
         flush_batched_command_lists();
 
-        direct_command_queue->Signal(frame_fences, frame_fence_values[cur_gpu_frame_idx]);
-
         {
             ZoneScopedN("present");
             auto result = swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
@@ -458,8 +483,8 @@ namespace sanity::engine::renderer {
         }
 
 #ifdef TRACY_ENABLE
-        TracyD3D12NewFrame(renderer::RenderBackend::tracy_context);
-        TracyD3D12Collect(renderer::RenderBackend::tracy_context);
+        TracyD3D12NewFrame(renderer::RenderBackend::tracy_render_context);
+        TracyD3D12Collect(renderer::RenderBackend::tracy_render_context);
 #endif
 
         cur_gpu_frame_idx = (cur_gpu_frame_idx + 1) % cvar_max_in_flight_gpu_frames->get();
@@ -751,13 +776,19 @@ namespace sanity::engine::renderer {
             Rx::abort("Could not create graphics command queue");
         }
 
-        set_object_name(direct_command_queue, "Direct Queue");
+        set_object_name(direct_command_queue, "Render Queue");
 
-#ifdef TRACY_ENABLE
-        tracy_context = TracyD3D12Context(device, direct_command_queue);
-#endif
+        D3D12_COMMAND_QUEUE_DESC copy_queue_desc{};
+        copy_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+        copy_queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+        copy_queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-        // TODO: Add an async compute queue, when the time comes
+        result = device->CreateCommandQueue(&copy_queue_desc, IID_PPV_ARGS(&direct_command_queue));
+        if(FAILED(result)) {
+            Rx::abort("Could not create copy command queue");
+        }
+
+        set_object_name(direct_command_queue, "Copy Queue");
 
         if(!is_uma) {
             // No need to care about DMA on UMA cause we can just map everything
@@ -774,6 +805,11 @@ namespace sanity::engine::renderer {
                 set_object_name(async_copy_queue, "DMA queue");
             }
         }
+
+#ifdef TRACY_ENABLE
+        tracy_render_context = TracyD3D12Context(device, direct_command_queue);
+        tracy_copy_context = TracyD3D12Context(device, async_copy_queue);
+#endif
     }
 
     void RenderBackend::create_swapchain(HWND window_handle, const glm::uvec2& window_size) {
@@ -797,7 +833,8 @@ namespace sanity::engine::renderer {
         ComPtr<IDXGISwapChain1> swapchain1;
         auto hr = factory->CreateSwapChainForHwnd(direct_command_queue, window_handle, &swapchain_desc, nullptr, nullptr, &swapchain1);
         if(FAILED(hr)) {
-            Rx::abort("Could not create swapchain: %s", to_string(hr));
+            const auto readable_result = to_string(hr);
+            Rx::abort("Could not create swapchain: %s", readable_result);
         }
 
         swapchain = swapchain1.as<IDXGISwapChain3>();
@@ -938,7 +975,16 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 2,
+                .RegisterSpace = 16,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+            },
+
+            // RWTexture2D<float4>
+            D3D12_DESCRIPTOR_RANGE{
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+                .NumDescriptors = MAX_NUM_TEXTURES,
+                .BaseShaderRegister = 16,
+                .RegisterSpace = 20,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -947,7 +993,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 3,
+                .RegisterSpace = 32,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -956,7 +1002,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 4,
+                .RegisterSpace = 36,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -965,7 +1011,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 5,
+                .RegisterSpace = 37,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
 
@@ -974,7 +1020,7 @@ namespace sanity::engine::renderer {
                 .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
-                .RegisterSpace = 6,
+                .RegisterSpace = 38,
                 .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
             },
         };
@@ -1352,11 +1398,11 @@ namespace sanity::engine::renderer {
 
     void RenderBackend::transition_swapchain_texture_to_render_target() {
         ZoneScoped;
-        auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
+        auto swapchain_cmds = create_render_command_list(cur_gpu_frame_idx);
         set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
 
         {
-            TracyD3D12Zone(tracy_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
+            TracyD3D12Zone(tracy_render_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_render_target");
             PIXScopedEvent(*swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_render_target");
 
             D3D12_RESOURCE_BARRIER
@@ -1372,11 +1418,11 @@ namespace sanity::engine::renderer {
     void RenderBackend::transition_swapchain_texture_to_presentable() {
         ZoneScoped;
 
-        auto swapchain_cmds = create_command_list(cur_gpu_frame_idx);
+        auto swapchain_cmds = create_render_command_list(cur_gpu_frame_idx);
         set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
 
         {
-            TracyD3D12Zone(tracy_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
+            TracyD3D12Zone(tracy_render_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
             PIXScopedEvent(*swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
 
             D3D12_RESOURCE_BARRIER

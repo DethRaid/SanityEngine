@@ -49,7 +49,7 @@ RWByteAddressBuffer uav_buffers[] : register(u16, space1);
 
 Texture2D textures[] : register(t16, space16);
 
-RWTexture2D uav_textures2d_rgba[] : register(t16, space20);
+RWTexture2D<float4> uav_textures2d_rgba[] : register(u16, space20);
 
 // Space 32 - 47: Texture3D
 

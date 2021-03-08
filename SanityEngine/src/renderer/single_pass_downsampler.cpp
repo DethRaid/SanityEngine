@@ -63,7 +63,7 @@ namespace sanity::engine::renderer {
         const auto texture_name = get_object_name(texture);
         ZoneScoped;
 
-        TracyD3D12Zone(RenderBackend::tracy_context, cmds, "SinglePassDownsampler::generate_mip_chain_for_texture");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, cmds, "SinglePassDownsampler::generate_mip_chain_for_texture");
 
         const auto device = backend->device;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <guiddef.h>
+#include <stddef.h>
 
 #include "rx/core/types.h"
 #include "rx/math/mat4x4.h"
@@ -129,6 +130,10 @@ namespace sanity::engine {
 
     template <ComInterface ComType>
     ComPtr<ComType>& ComPtr<ComType>::operator=(const ComPtr& other) {
+        if(this == &other) {
+            return *this;
+        }
+
         this->~ComPtr();
 
         ptr = other.ptr;

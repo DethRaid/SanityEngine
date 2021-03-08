@@ -10,7 +10,7 @@
 namespace sanity::engine::renderer {
     RX_LOG("PostprocessingPass", logger);
 
-    PostprocessingPass::PostprocessingPass(Renderer& renderer_in, const DenoiserPass& denoiser_pass) : renderer{&renderer_in} {
+    PostprocessingPass::PostprocessingPass(Renderer& renderer_in, const CompositingPass& scene_compositing_pass) : renderer{&renderer_in} {
         auto& device = renderer->get_render_backend();
 
         const auto create_info = RenderPipelineStateCreateInfo{
@@ -25,7 +25,7 @@ namespace sanity::engine::renderer {
         postprocessing_material_buffer_handle = renderer->create_buffer(
             {.name = "Postprocessing materials buffer", .usage = BufferUsage::ConstantBuffer, .size = sizeof(PostprocessingMaterial)});
         
-    	const auto& scene_output_image_handle = denoiser_pass.get_output_texture();
+    	const auto& scene_output_image_handle = scene_compositing_pass.get_output_handle();
         const auto material = PostprocessingMaterial{.scene_output_image = scene_output_image_handle.index};
 
     	const auto& buffer = renderer->get_buffer(postprocessing_material_buffer_handle);
@@ -42,7 +42,7 @@ namespace sanity::engine::renderer {
         }
 
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_context, commands, "PostprocessingPass::render");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "PostprocessingPass::render");
         PIXScopedEvent(commands, postprocessing_pass_color, "PostprocessingPass::render");
 
         auto& device = renderer->get_render_backend();

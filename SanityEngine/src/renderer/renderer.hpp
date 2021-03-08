@@ -3,6 +3,7 @@
 #include <chrono>
 #include <queue>
 
+#include "adapters/rex/rex_wrapper.hpp"
 #include "core/Prelude.hpp"
 #include "renderer.hpp"
 #include "renderer/camera_matrix_buffer.hpp"
@@ -17,6 +18,7 @@
 #include "renderer/rhi/render_backend.hpp"
 #include "renderer/rhi/render_pipeline_state.hpp"
 #include "renderer/single_pass_downsampler.hpp"
+#include "renderpasses/compositing_pass.hpp"
 #include "renderpasses/early_z_pass.hpp"
 #include "renderpasses/fluid_sim_pass.hpp"
 #include "renderpasses/renderpass_handle.hpp"
@@ -101,8 +103,7 @@ namespace sanity::engine::renderer {
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info);
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
-                                                   const void* image_data,
-                                                   bool generate_mipmaps = true);
+                                                   const void* image_data);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_texture_handle(const Rx::String& name);
 
@@ -167,7 +168,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle get_default_metallic_roughness_texture() const;
 
-        [[nodiscard]] ID3D12GraphicsCommandList4* get_async_copy_command_list(Uint32 frame_idx) const;
+        [[nodiscard]] ID3D12GraphicsCommandList4* get_resource_command_list() const;
 
         /**
          * @brief Early-Z depth buffer
@@ -229,6 +230,7 @@ namespace sanity::engine::renderer {
         RenderpassHandle<FluidSimPass> fluid_sim_pass_handle{};
         RenderpassHandle<DirectLightingPass> direct_lighting_pass_handle{};
         RenderpassHandle<DenoiserPass> denoiser_pass_handle{};
+        RenderpassHandle<CompositingPass> compositing_pass_handle{};
         RenderpassHandle<PostprocessingPass> postprocessing_pass_handle{};
         RenderpassHandle<DearImGuiRenderPass> imgui_pass_handle{};
 
@@ -236,7 +238,7 @@ namespace sanity::engine::renderer {
 
         ComPtr<ID3D12PipelineState> single_pass_denoiser_pipeline;
         Rx::Vector<DescriptorRange> resource_descriptors;
-        Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>> resource_command_lists;
+        ComPtr<ID3D12GraphicsCommandList4> resource_command_list;   // Resource command list for the current frame
 
 #pragma region Initialization
         void create_static_mesh_storage();
@@ -258,6 +260,9 @@ namespace sanity::engine::renderer {
         void reload_builtin_shaders();
 
         void reload_renderpass_shaders();
+
+        template <typename PassType, typename... Args>
+        [[nodiscard]] RenderpassHandle<PassType> add_pass(Args&&... args);
 #pragma endregion
 
         void update_cameras(entt::registry& registry, Uint32 frame_idx) const;
@@ -269,7 +274,7 @@ namespace sanity::engine::renderer {
 
         void bind_global_resources(ID3D12GraphicsCommandList* command_list) const;
 
-        void execute_all_render_passes(engine::ComPtr<ID3D12GraphicsCommandList4>& command_list,
+        void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                        entt::registry& registry,
                                        const Uint32& frame_idx);
 
@@ -313,5 +318,11 @@ namespace sanity::engine::renderer {
         const auto& buffer = get_buffer(handle);
 
         memcpy(buffer->mapped_ptr, data.data(), data.size() * sizeof(DataType));
+    }
+
+    template <typename PassType, typename... Args>
+    RenderpassHandle<PassType> Renderer::add_pass(Args&&... args) {
+        render_passes.push_back(Rx::make_ptr<PassType>(RX_SYSTEM_ALLOCATOR, *this, Rx::Utility::forward<Args>(args)...));
+        return RenderpassHandle<PassType>::make_from_last_element(render_passes);
     }
 } // namespace sanity::engine::renderer

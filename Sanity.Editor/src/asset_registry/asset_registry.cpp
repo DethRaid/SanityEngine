@@ -40,19 +40,13 @@ namespace sanity::editor {
             directory_icon = renderer.get_pink_texture();
             return;
         }
-
-        auto cmds = renderer.get_render_backend().create_command_list();
-        engine::renderer::set_object_name(cmds, "Directory icon creation command list");
-
+        
         directory_icon = renderer.create_texture(engine::renderer::TextureCreateInfo{.name = "Directory icon",
                                                                                  .usage = engine::renderer::TextureUsage::SampledTexture,
                                                                                  .format = format,
                                                                                  .width = width,
                                                                                  .height = height},
-                                               pixels,
-                                               cmds);
-
-        renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
+                                               pixels);
     }
 
     engine::renderer::TextureHandle load_icon_for_extension(const std::filesystem::path& extension) {
@@ -75,11 +69,6 @@ namespace sanity::editor {
                                                                    .format = format,
                                                                    .width = width,
                                                                    .height = height};
-        auto cmds = renderer.get_render_backend().create_command_list();
-        engine::renderer::set_object_name(cmds, Rx::String::format("%s creation commands", create_info.name));
-        const auto icon_handle = renderer.create_texture(create_info, pixels, cmds);
-        renderer.get_render_backend().submit_command_list(Rx::Utility::move(cmds));
-
-        return icon_handle;
+        return renderer.create_texture(create_info, pixels);
     }
 } // namespace sanity::editor
