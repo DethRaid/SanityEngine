@@ -131,7 +131,7 @@ namespace sanity::engine::renderer {
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
 
-        void submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> cmds) const;
+        void submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> cmds);
 
         void begin_frame(uint64_t frame_count);
 
@@ -216,6 +216,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
 
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> copy_command_lists_to_submit_on_end_frame;
 
         ComPtr<IDXGISwapChain3> swapchain;
         Rx::Vector<ComPtr<ID3D12Resource>> swapchain_textures;

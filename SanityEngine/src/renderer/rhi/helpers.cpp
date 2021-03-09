@@ -338,13 +338,81 @@ namespace sanity::engine::renderer {
         }
     }
 
+    void append_command_history_to_string(const D3D12_AUTO_BREADCRUMB_NODE1* cur_node,
+                                          const Rx::String& command_list_name,
+                                          const Rx::String command_queue_name,
+                                          const unsigned last_breadcrumb_idx,
+                                          Rx::String& breadcrumb_output_string) {
+        const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
+        breadcrumb_output_string += Rx::String::
+            format("Command list %s, executing on command queue %s, has completed on %d render operations",
+                   command_list_name,
+                   command_queue_name,
+                   last_breadcrumb_idx);
+
+        if(breadcrumb != D3D12_AUTO_BREADCRUMB_OP_SETMARKER) {
+            breadcrumb_output_string += Rx::String::format("\nMost recent operation: %s%s%s",
+                                                           colors::INCOMPLETE_BREADCRUMB,
+                                                           breadcrumb_op_to_string(breadcrumb),
+                                                           colors::DEFAULT_CONSOLE_COLOR);
+        }
+
+        Uint32 indent_level = 0;
+
+        if(cur_node->BreadcrumbCount > 0) {
+            for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
+                const char* color = colors::DEFAULT_CONSOLE_COLOR;
+                if(i < last_breadcrumb_idx) {
+                    color = colors::COMPLETED_BREADCRUMB;
+
+                } else if(i == last_breadcrumb_idx) {
+                    color = colors::INCOMPLETE_BREADCRUMB;
+
+                } else {
+                    color = colors::DEFAULT_CONSOLE_COLOR;
+                }
+
+                // I'm only slightly sorry
+                Rx::String indent_string = "";
+                for(auto indent_itr = 0u; indent_itr < indent_level; indent_itr++) {
+                    indent_string += "    ";
+                }
+
+                if(cur_node->pCommandHistory[i] != D3D12_AUTO_BREADCRUMB_OP_ENDEVENT) {
+                    breadcrumb_output_string += Rx::String::format("\n%s%s%s",
+                                                                   indent_string,
+                                                                   color,
+                                                                   breadcrumb_op_to_string(cur_node->pCommandHistory[i]));
+                }
+                if(cur_node->pCommandHistory[i] == D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT) {
+                    indent_level++;
+                } else if(cur_node->pCommandHistory[i] == D3D12_AUTO_BREADCRUMB_OP_ENDEVENT) {
+                    indent_level--;
+                }
+
+                if(cur_node->BreadcrumbContextsCount > 0) {
+                    for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
+                        const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
+                        if(cur_breadcrumb_context.BreadcrumbIndex == i) {
+                            breadcrumb_output_string += Rx::String::format("%s%s",
+                                                                           colors::CONTEXT_LABEL,
+                                                                           Rx::WideString{reinterpret_cast<const Uint16*>(
+                                                                                              cur_breadcrumb_context.pContextString)}
+                                                                               .to_utf8());
+                            break;
+                        }
+                    }
+                }
+                breadcrumb_output_string += "\033[m";
+            }
+        }
+    }
+
     Rx::String breadcrumb_output_to_string(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1& breadcrumbs) {
         Rx::String breadcrumb_output_string;
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
-
-        Uint32 indent_level = 0;
-
+        
         while(cur_node != nullptr) {
             const auto command_list_name = [&]() -> Rx::String {
                 if(cur_node->pCommandListDebugNameW != nullptr) {
@@ -364,64 +432,12 @@ namespace sanity::engine::renderer {
                                                 "Unknown command queue";
 
             const auto last_breadcrumb_idx = *cur_node->pLastBreadcrumbValue;
-            const auto& breadcrumb = cur_node->pCommandHistory[last_breadcrumb_idx];
-            breadcrumb_output_string += Rx::String::
-                format("Command list %s, executing on command queue %s, has completed on %d render operations",
-                       command_list_name,
-                       command_queue_name,
-                       last_breadcrumb_idx);
-
-            if(breadcrumb != D3D12_AUTO_BREADCRUMB_OP_SETMARKER) {
-                breadcrumb_output_string += Rx::String::format("\nMost recent operation: %s%s%s",
-                                                               colors::INCOMPLETE_BREADCRUMB,
-                                                               breadcrumb_op_to_string(breadcrumb),
-                                                               colors::DEFAULT_CONSOLE_COLOR);
-            }
-
-            if(cur_node->BreadcrumbCount > 0) {
-                for(Uint32 i = 0; i < cur_node->BreadcrumbCount; i++) {
-                    const char* color = colors::DEFAULT_CONSOLE_COLOR;
-                    if(i < last_breadcrumb_idx) {
-                        color = colors::COMPLETED_BREADCRUMB;
-
-                    } else if(i == last_breadcrumb_idx) {
-                        color = colors::INCOMPLETE_BREADCRUMB;
-
-                    } else {
-                        color = colors::DEFAULT_CONSOLE_COLOR;
-                    }
-
-                    // I'm only slightly sorry
-                    Rx::String indent_string = "";
-                    for(auto i = 0u; i < indent_level; i++) {
-                        indent_string += "    ";
-                    }
-
-                    breadcrumb_output_string += Rx::String::format("\n%s%s%s",
-                                                                   indent_string,
-                                                                   color,
-                                                                   breadcrumb_op_to_string(cur_node->pCommandHistory[i]));
-                    if(cur_node->pCommandHistory[i] == D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT) {
-                        indent_level++;
-                    } else if(cur_node->pCommandHistory[i] == D3D12_AUTO_BREADCRUMB_OP_ENDEVENT) {
-                        indent_level--;
-                    }
-
-                    if(cur_node->BreadcrumbContextsCount > 0) {
-                        for(Uint32 context_idx = 0; context_idx < cur_node->BreadcrumbContextsCount; context_idx++) {
-                            const auto& cur_breadcrumb_context = cur_node->pBreadcrumbContexts[context_idx];
-                            if(cur_breadcrumb_context.BreadcrumbIndex == i) {
-                                breadcrumb_output_string += Rx::String::format("\t%s%s",
-                                                                               colors::CONTEXT_LABEL,
-                                                                               Rx::WideString{reinterpret_cast<const Uint16*>(
-                                                                                                  cur_breadcrumb_context.pContextString)}
-                                                                                   .to_utf8());
-                                break;
-                            }
-                        }
-                    }
-                    breadcrumb_output_string += "\033[m";
-                }
+            if(last_breadcrumb_idx < cur_node->BreadcrumbCount) {
+                append_command_history_to_string(cur_node,
+                                                 command_list_name,
+                                                 command_queue_name,
+                                                 last_breadcrumb_idx,
+                                                 breadcrumb_output_string);
             }
 
             breadcrumb_output_string += "\n\033[40m";
@@ -490,7 +506,7 @@ namespace sanity::engine::renderer {
                 return "Set marker";
 
             case D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT:
-                return "Begin event";
+                return "";
 
             case D3D12_AUTO_BREADCRUMB_OP_ENDEVENT:
                 return "End event";

@@ -112,6 +112,7 @@ namespace sanity::engine::renderer {
             });
 
         renderer->copy_data_to_buffer(fluid_sim_dispatch_command_buffers.get_active_resource(), fluid_sim_dispatches);
+        drawcalls.get_all_resources().each_fwd([&](const BufferHandle& handle) { renderer->copy_data_to_buffer(handle, fluid_sim_draws); });
     }
 
     void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, const Uint32 frame_idx) {
@@ -140,11 +141,16 @@ namespace sanity::engine::renderer {
 
         const auto anything_to_render = !fluid_volume_states.is_empty();
         if(anything_to_render) {
+            TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "render");
+            PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "render");
+
             commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, array_descriptor);
 
             commands->BeginRenderPass(1, &fluid_target_access, &depth_access, D3D12_RENDER_PASS_FLAG_NONE);
 
             if(!fluid_volume_states.is_empty()) {
+                PIXScopedEvent(commands, PIX_COLOR(156, 57, 26), "fire");
+
                 renderer->copy_data_to_buffer(rendering_params_array.get_active_resource(), fluid_sim_draws);
 
                 commands->SetPipelineState(fire_fluid_pipeline->pso);
@@ -173,6 +179,8 @@ namespace sanity::engine::renderer {
                                           0,
                                           nullptr,
                                           0);
+
+                logger->verbose("Recorded %d fluid volumes. I")
             }
 
             commands->EndRenderPass();
@@ -436,10 +444,14 @@ namespace sanity::engine::renderer {
                                             0,
                                             1,
                                             2,
+                                            1,
+                                            2,
                                             3,
 
                                             // -z
                                             4,
+                                            5,
+                                            6,
                                             5,
                                             6,
                                             7,
@@ -448,10 +460,14 @@ namespace sanity::engine::renderer {
                                             7,
                                             6,
                                             1,
+                                            6,
+                                            1,
                                             0,
 
                                             // -x
                                             4,
+                                            5,
+                                            2,
                                             5,
                                             2,
                                             3,
@@ -460,14 +476,18 @@ namespace sanity::engine::renderer {
                                             1,
                                             6,
                                             5,
+                                            6,
+                                            5,
                                             2,
 
                                             // -y
                                             4,
                                             3,
                                             0,
+                                            3,
+                                            0,
                                             7};
-        
+
         cube_vertex_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Vertices",
                                                                       .usage = BufferUsage::VertexBuffer,
                                                                       .size = static_cast<Uint32>(cube_vertices.size() *

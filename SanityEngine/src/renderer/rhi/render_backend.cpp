@@ -56,6 +56,7 @@ namespace sanity::engine::renderer {
 
     RenderBackend::RenderBackend(HWND window_handle, const glm::uvec2& window_size)
         : command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
+          copy_command_lists_to_submit_on_end_frame{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           buffer_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           texture_deletion_list{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
           staging_buffers_to_free{static_cast<Size>(cvar_max_in_flight_gpu_frames->get())},
@@ -394,18 +395,24 @@ namespace sanity::engine::renderer {
         }
 
         const auto frame_idx = retrieve_object<GpuFrameIdx>(commands).idx;
-
+        
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
     }
 
-    void RenderBackend::submit_async_copy_commands(const ComPtr<ID3D12GraphicsCommandList4> cmds) const {
-        ID3D12CommandList* cmds_ptr = *cmds;
-        direct_command_queue->ExecuteCommandLists(1, &cmds_ptr);
+    void RenderBackend::submit_async_copy_commands(const ComPtr<ID3D12GraphicsCommandList4> cmds) {
+        copy_command_lists_to_submit_on_end_frame[cur_gpu_frame_idx].push_back(cmds);
     }
 
     void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
-        
+
+        auto& copy_lists = copy_command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
+        copy_lists.each_fwd([&](const ComPtr<ID3D12GraphicsCommandList4>& cmds) {
+            ID3D12CommandList* list = cmds;
+            direct_command_queue->ExecuteCommandLists(1, &list);
+        });
+        copy_lists.clear();
+
         // Synchronize copy queue
         async_copy_queue->Signal(copy_queue_sync_fence, frame_count);
         direct_command_queue->Wait(copy_queue_sync_fence, frame_count);
@@ -844,6 +851,9 @@ namespace sanity::engine::renderer {
             if(FAILED(result)) {
                 Rx::abort("Could not create copy command list %d: %s", i, to_string(result));
             }
+
+            set_object_name(direct_command_allocator, Rx::String ::format("Direct Command Queue %d", i));
+            set_object_name(copy_command_allocator, Rx::String ::format("Copy Command Queue %d", i));
 
             direct_command_allocators.push_back(direct_command_allocator);
             copy_command_allocators.push_back(copy_command_allocator);
@@ -1362,9 +1372,11 @@ namespace sanity::engine::renderer {
 
     void RenderBackend::reset_command_allocators_for_frame(const Uint32 frame_idx) {
         ZoneScoped;
-
+        
         direct_command_allocators[frame_idx]->Reset();
         copy_command_allocators[frame_idx]->Reset();
+
+        log_dred_report();
     }
 
     void RenderBackend::destroy_resources_for_frame(const Uint32 frame_idx) {
@@ -1536,7 +1548,6 @@ namespace sanity::engine::renderer {
         device->QueryInterface(&dred);
 
         if(!dred) {
-            logger->error("Could not retrieve DRED report");
             return;
         }
 
