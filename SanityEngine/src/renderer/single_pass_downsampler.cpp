@@ -5,6 +5,7 @@
 #include "loading/shader_loading.hpp"
 #include "rhi/d3d12_private_data.hpp"
 #include "rx/core/log.h"
+#include "single_pass_downsampler.hpp"
 
 #define A_CPU
 #include "ffx_a.h"
@@ -54,8 +55,6 @@ namespace sanity::engine::renderer {
         const auto spd_pipeline = backend.create_compute_pipeline_state(compute_instructions, spd_root_sig);
         set_object_name(spd_pipeline, "SPD Compute Pipeline");
 
-
-
         return SinglePassDownsampler{spd_root_sig, spd_pipeline, backend};
     }
 
@@ -84,10 +83,10 @@ namespace sanity::engine::renderer {
         // Set up descriptors
         const auto descriptor_table_handle = fill_descriptor_table(texture, device, num_mips);
 
-    	// Allowed usage of creating a non-bindless buffer, since this uses a bindy resource mode
+        // Allowed usage of creating a non-bindless buffer, since this uses a bindy resource mode
 
-    	// TODO: Convert SPD to use bindless resources
-    	
+        // TODO: Convert SPD to use bindless resources
+
         auto global_counter_buffer = backend->create_buffer(
             {.name = "SPD Global Counter", .usage = BufferUsage::UnorderedAccess, .size = sizeof(Uint32)});
 
@@ -156,7 +155,7 @@ namespace sanity::engine::renderer {
         : root_signature{Rx::Utility::move(root_signature_in)}, pipeline{Rx::Utility::move(pipeline_in)}, backend{&backend_in} {}
 
     DescriptorRange SinglePassDownsampler::fill_descriptor_table(ID3D12Resource* texture,
-                                                                 const ComPtr<ID3D12Device>& device,
+                                                                 ID3D12Device* device,
                                                                  const Uint32 num_mips) const {
         const auto& desc = texture->GetDesc();
 
@@ -165,7 +164,7 @@ namespace sanity::engine::renderer {
         const auto descriptor_size = descriptor_allocator.get_descriptor_size();
         const auto output_mips_descriptors = descriptor_allocator.allocate_descriptors(16);
         const auto first_cpu_descriptor_ptr = output_mips_descriptors.cpu_handle.ptr;
-        
+
         auto cur_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{output_mips_descriptors.cpu_handle};
 
         const auto mip_6_actual_slice = std::min(6u, num_mips);

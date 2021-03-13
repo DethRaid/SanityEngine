@@ -47,8 +47,6 @@ namespace sanity::engine::renderer {
                                        ComPtr<ID3D12PipelineState> pipeline_in,
                                        RenderBackend& backend_in);
 
-        [[nodiscard]] DescriptorRange fill_descriptor_table(ID3D12Resource* texture,
-                                                            const ComPtr<ID3D12Device>& device,
-                                                            Uint32 num_mips) const;
+        [[nodiscard]] DescriptorRange fill_descriptor_table(ID3D12Resource* texture, ID3D12Device* device, Uint32 num_mips) const;
     };
 } // namespace sanity::engine::renderer

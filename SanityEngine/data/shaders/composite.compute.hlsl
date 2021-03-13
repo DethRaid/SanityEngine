@@ -8,7 +8,7 @@ void main(const uint3 id : SV_DispatchThreadID) {
     const Texture2D scene_color_texture = textures[texture_indices.direct_lighting_idx];
     const Texture2D fluid_color_texture = textures[texture_indices.fluid_color_idx];
 
-    RWTexture2D<float4> output_texture = uav_textures2d_rgba[texture_indices.output_idx];
+    const RWTexture2D<float4> output_texture = uav_textures2d_rgba[texture_indices.output_idx];
     
     const float4 color_sample = scene_color_texture[id.xy];
     const float4 fluid_color_sample = fluid_color_texture[id.xy];

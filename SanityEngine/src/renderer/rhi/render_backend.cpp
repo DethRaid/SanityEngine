@@ -34,7 +34,7 @@ namespace sanity::engine::renderer {
         cvar_enable_gpu_based_validation,
         "r.EnableGpuBasedValidation",
         "Enables in-depth validation of operations on the GPU. This has a significant performance cost and should be used sparingly",
-        false);
+        true);
 
     RX_CONSOLE_IVAR(
         cvar_max_in_flight_gpu_frames, "r.MaxInFlightGpuFrames", "Maximum number of frames that the GPU may work on concurrently", 1, 8, 3);
@@ -81,8 +81,6 @@ namespace sanity::engine::renderer {
 
         create_gpu_frame_synchronization_objects();
 
-        create_command_allocators();
-
         create_descriptor_heaps();
 
         initialize_swapchain_descriptors();
@@ -94,6 +92,10 @@ namespace sanity::engine::renderer {
         create_pipeline_input_layouts();
 
         create_command_signatures();
+
+        const auto num_frames = static_cast<Size>(cvar_max_in_flight_gpu_frames->get());
+        in_use_direct_command_allocators.resize(num_frames);
+        in_use_copy_command_allocators.resize(num_frames);
 
         logger->info("Initialized D3D12 render device");
     }
@@ -180,9 +182,14 @@ namespace sanity::engine::renderer {
         if(format == DXGI_FORMAT_D32_FLOAT) {
             format = DXGI_FORMAT_R32_TYPELESS; // Create depth buffers with a TYPELESS format
         }
-        auto desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
-                                                 static_cast<Uint32>(round(create_info.width)),
-                                                 static_cast<Uint32>(round(create_info.height)));
+        D3D12_RESOURCE_DESC desc;
+        if(create_info.depth == 1 || create_info.depth == 0) {
+            desc = CD3DX12_RESOURCE_DESC::Tex2D(format,
+                                                static_cast<Uint32>(round(create_info.width)),
+                                                static_cast<Uint32>(round(create_info.height)));
+        } else {
+            desc = CD3DX12_RESOURCE_DESC::Tex3D(format, create_info.width, create_info.height, create_info.depth);
+        }
 
         D3D12MA::ALLOCATION_DESC alloc_desc{.HeapType = D3D12_HEAP_TYPE_DEFAULT};
 
@@ -231,8 +238,9 @@ namespace sanity::engine::renderer {
         //                 resource_state_to_string(initial_state));
 
         texture.name = create_info.name;
-        texture.width = static_cast<Uint32>(desc.Width);
+        texture.width = desc.Width;
         texture.height = desc.Height;
+        texture.depth = desc.DepthOrArraySize;
 
         set_object_name(texture.resource, create_info.name);
 
@@ -327,22 +335,50 @@ namespace sanity::engine::renderer {
         return create_pipeline_state(create_info, standard_root_signature);
     }
 
+    ComPtr<ID3D12CommandAllocator> RenderBackend::get_or_create_command_allocator(const D3D12_COMMAND_LIST_TYPE type) {
+        if(type == D3D12_COMMAND_LIST_TYPE_DIRECT && !direct_command_allocators.is_empty()) {
+            const auto allocator = direct_command_allocators.last();
+            direct_command_allocators.pop_back();
+            return allocator;
+        }
+
+        if(type == D3D12_COMMAND_LIST_TYPE_COPY && !copy_command_allocators.is_empty()) {
+            const auto allocator = copy_command_allocators.last();
+            copy_command_allocators.pop_back();
+            return allocator;
+        }
+
+        ComPtr<ID3D12CommandAllocator> allocator;
+        // Hardcode to direct command list for now
+        // TODO: Upgrade to a real copy command list at some point
+        const auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+        if(FAILED(result)) {
+            logger->error("Could not create command allocator of type %d: %s", D3D12_COMMAND_LIST_TYPE_DIRECT, result);
+            return {};
+        }
+
+        if(type == D3D12_COMMAND_LIST_TYPE_DIRECT) {
+            set_object_name(allocator, "Direct allocator");
+        } else if(type == D3D12_COMMAND_LIST_TYPE_COPY) {
+            set_object_name(allocator, "Copy allocator");
+        }
+
+        return allocator;
+    }
+
     ComPtr<ID3D12GraphicsCommandList4> RenderBackend::create_render_command_list(Rx::Optional<Uint32> frame_idx) {
         if(!frame_idx) {
             frame_idx = cur_gpu_frame_idx;
         }
 
         // auto command_allocator = get_direct_command_allocator_for_thread(frame_idx, thread_idx);
-        const auto command_allocator = direct_command_allocators[frame_idx];
+
+        const auto command_allocator = get_or_create_command_allocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+        command_allocator->Reset();
 
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
-        if(result == DXGI_ERROR_DEVICE_REMOVED) {
-            log_dred_report();
-
-            const auto removed_reason = device->GetDeviceRemovedReason();
-            logger->error("Device was removed because: %s", to_string(removed_reason));
-        }
+        log_dred_report();
         if(FAILED(result)) {
             Rx::abort("Could not create command list: %s", to_string(result));
         }
@@ -363,7 +399,8 @@ namespace sanity::engine::renderer {
     }
 
     CopyCommandList RenderBackend::create_copy_command_list() {
-        const auto command_allocator = copy_command_allocators[cur_gpu_frame_idx];
+        const auto command_allocator = get_or_create_command_allocator(D3D12_COMMAND_LIST_TYPE_COPY);
+        command_allocator->Reset();
 
         ComPtr<ID3D12CommandList> cmds;
         const auto result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator, nullptr, IID_PPV_ARGS(&cmds));
@@ -395,23 +432,23 @@ namespace sanity::engine::renderer {
         }
 
         const auto frame_idx = retrieve_object<GpuFrameIdx>(commands).idx;
-        
         command_lists_to_submit_on_end_frame[frame_idx].push_back(commands);
+
+        const auto allocator = get_com_interface<ID3D12CommandAllocator>(commands);
+        in_use_direct_command_allocators[frame_idx].push_back(allocator);
     }
 
-    void RenderBackend::submit_async_copy_commands(const ComPtr<ID3D12GraphicsCommandList4> cmds) {
+    void RenderBackend::submit_copy_command_list(const ComPtr<ID3D12GraphicsCommandList4> cmds) {
         copy_command_lists_to_submit_on_end_frame[cur_gpu_frame_idx].push_back(cmds);
+
+        const auto allocator = get_com_interface<ID3D12CommandAllocator>(cmds);
+        in_use_copy_command_allocators[cur_gpu_frame_idx].push_back(allocator);
     }
 
     void RenderBackend::begin_frame(const uint64_t frame_count) {
         ZoneScoped;
 
-        auto& copy_lists = copy_command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
-        copy_lists.each_fwd([&](const ComPtr<ID3D12GraphicsCommandList4>& cmds) {
-            ID3D12CommandList* list = cmds;
-            direct_command_queue->ExecuteCommandLists(1, &list);
-        });
-        copy_lists.clear();
+        flush_copy_command_lists();
 
         // Synchronize copy queue
         async_copy_queue->Signal(copy_queue_sync_fence, frame_count);
@@ -429,7 +466,11 @@ namespace sanity::engine::renderer {
         if(!in_init_phase) {
             return_staging_buffers_for_frame(cur_gpu_frame_idx);
 
-            reset_command_allocators_for_frame(cur_gpu_frame_idx);
+            copy_command_allocators.append(in_use_copy_command_allocators[cur_gpu_frame_idx]);
+            direct_command_allocators.append(in_use_direct_command_allocators[cur_gpu_frame_idx]);
+
+            in_use_copy_command_allocators[cur_gpu_frame_idx].clear();
+            in_use_direct_command_allocators[cur_gpu_frame_idx].clear();
 
             destroy_resources_for_frame(cur_gpu_frame_idx);
         }
@@ -697,10 +738,7 @@ namespace sanity::engine::renderer {
 
                 adapter = cur_adapter;
 
-                device = try_device;
-
-                device1 = device.as<ID3D12Device1>();
-                device5 = device.as<ID3D12Device5>();
+                device = try_device.as<ID3D12Device5>();
 
                 // Save information about the device
                 D3D12_FEATURE_DATA_ARCHITECTURE arch{};
@@ -830,41 +868,11 @@ namespace sanity::engine::renderer {
         set_object_name(copy_queue_sync_fence, "Copy Queue Fence");
     }
 
-    void RenderBackend::create_command_allocators() {
-        ZoneScoped;
-
-        const auto num_gpu_frames = static_cast<Uint32>(cvar_max_in_flight_gpu_frames->get());
-
-        direct_command_allocators.reserve(num_gpu_frames);
-        copy_command_allocators.reserve(num_gpu_frames);
-
-        for(auto i = 0; i < *cvar_max_in_flight_gpu_frames; i++) {
-            ComPtr<ID3D12CommandAllocator> direct_command_allocator;
-            auto result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&direct_command_allocator));
-            if(FAILED(result)) {
-                Rx::abort("Could not create direct command list %d: %s", i, to_string(result));
-            }
-
-            ComPtr<ID3D12CommandAllocator> copy_command_allocator;
-            // Direct for now, it's a hack until I recharge my refactor energy
-            result = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&copy_command_allocator));
-            if(FAILED(result)) {
-                Rx::abort("Could not create copy command list %d: %s", i, to_string(result));
-            }
-
-            set_object_name(direct_command_allocator, Rx::String ::format("Direct Command Queue %d", i));
-            set_object_name(copy_command_allocator, Rx::String ::format("Copy Command Queue %d", i));
-
-            direct_command_allocators.push_back(direct_command_allocator);
-            copy_command_allocators.push_back(copy_command_allocator);
-        }
-    }
-
     void RenderBackend::create_descriptor_heaps() {
         ZoneScoped;
 
         const auto total_num_buffers = *cvar_max_in_flight_gpu_frames * MAX_NUM_BUFFERS;
-        const auto total_num_textures = *cvar_max_in_flight_gpu_frames * MAX_NUM_TEXTURES;
+        const auto total_num_textures = *cvar_max_in_flight_gpu_frames * MAX_NUM_TEXTURES * 2;
         const auto
             num_bespoke_descriptors = 65536; // Descriptors for the RT AS or single-pass downsampler or whatever else wants descriptors
 
@@ -962,7 +970,7 @@ namespace sanity::engine::renderer {
 
             // UAV buffers
             D3D12_DESCRIPTOR_RANGE{
-                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
                 .NumDescriptors = MAX_NUM_BUFFERS,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 1,
@@ -975,7 +983,7 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 16,
-                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS + SRV_OFFSET,
             },
 
             // RWTexture2D<float4>
@@ -984,7 +992,7 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 20,
-                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS + UAV_OFFSET,
             },
 
             // Texture3D
@@ -993,7 +1001,7 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 32,
-                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS + SRV_OFFSET,
             },
 
             // RWTexture3D<float4>
@@ -1002,7 +1010,7 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 36,
-                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS + UAV_OFFSET,
             },
 
             // RWTexture3D<float2>
@@ -1011,7 +1019,7 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 37,
-                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS + UAV_OFFSET,
             },
 
             // RWTexture3D<float4>
@@ -1020,7 +1028,7 @@ namespace sanity::engine::renderer {
                 .NumDescriptors = MAX_NUM_TEXTURES,
                 .BaseShaderRegister = 16,
                 .RegisterSpace = 38,
-                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS,
+                .OffsetInDescriptorsFromTableStart = MAX_NUM_BUFFERS + UAV_OFFSET,
             },
         };
         root_parameters[RESOURCES_ARRAY_ROOT_PARAMETER_INDEX].InitAsDescriptorTable(static_cast<UINT>(
@@ -1320,6 +1328,16 @@ namespace sanity::engine::renderer {
         return pipeline;
     }
 
+    void RenderBackend::flush_copy_command_lists() {
+        auto& copy_lists = copy_command_lists_to_submit_on_end_frame[cur_gpu_frame_idx];
+        copy_lists.each_fwd([&](const ComPtr<ID3D12GraphicsCommandList4>& cmds) {
+            ID3D12CommandList* list = cmds;
+            direct_command_queue->ExecuteCommandLists(1, &list);
+        });
+        command_lists_outside_render_device.fetch_sub(copy_lists.size());
+        copy_lists.clear();
+    }
+
     void RenderBackend::flush_batched_command_lists() {
         // TODO: Insert barriers/fences/other synchronization things so that the copy commands finish before these command lists begin
         // executing
@@ -1368,15 +1386,6 @@ namespace sanity::engine::renderer {
         auto& staging_buffers_for_frame = staging_buffers_to_free[frame_idx];
         staging_buffers.append(staging_buffers_for_frame);
         staging_buffers_for_frame.clear();
-    }
-
-    void RenderBackend::reset_command_allocators_for_frame(const Uint32 frame_idx) {
-        ZoneScoped;
-        
-        direct_command_allocators[frame_idx]->Reset();
-        copy_command_allocators[frame_idx]->Reset();
-
-        log_dred_report();
     }
 
     void RenderBackend::destroy_resources_for_frame(const Uint32 frame_idx) {

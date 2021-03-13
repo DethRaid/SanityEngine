@@ -11,7 +11,7 @@ namespace sanity::engine::renderer {
         if(cmds) {
             cmds->Close();
 
-            backend->submit_async_copy_commands(cmds);
+            backend->submit_copy_command_list(cmds);
         }
     }
 

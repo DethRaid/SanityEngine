@@ -53,12 +53,32 @@ namespace sanity::engine::renderer {
 
     void DearImGuiRenderPass::set_background_color(const Vec4f& color) { background_color = color; }
 
+    void DearImGuiRenderPass::prepare_work(entt::registry& registry, Uint32 frame_idx)
+    {
+        ImDrawData* draw_data = ImGui::GetDrawData();
+        if(draw_data == nullptr) {
+            return;
+        }
+
+        for(int32_t i = 0; i < draw_data->CmdListsCount; i++) {
+            const auto* cmd_list = draw_data->CmdLists[i];
+
+            for(const auto& cmd : cmd_list->CmdBuffer) {
+                if(!cmd.UserCallback) {
+                    const auto imgui_data_idx = reinterpret_cast<Uint64>(cmd.TextureId);
+                    const auto data_idx = static_cast<Uint32>(imgui_data_idx);
+                    const auto texture_handle = TextureHandle{data_idx};
+                    set_resource_usage(texture_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+                }
+            }
+        }
+    }
+
     void DearImGuiRenderPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
         ZoneScoped;
 
         ImDrawData* draw_data = ImGui::GetDrawData();
         if(draw_data == nullptr) {
-            // Nothing to draw? Don't draw it
             return;
         }
 
@@ -72,10 +92,11 @@ namespace sanity::engine::renderer {
             const auto backbuffer_access = D3D12_RENDER_PASS_RENDER_TARGET_DESC{.cpuDescriptor = backbuffer_rtv_handle,
                                                                                 .BeginningAccess =
                                                                                     {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
-                                                                                     .Clear = {.ClearValue = {.Color = {background_color.r,
-                                                                                                                        background_color.g,
-                                                                                                                        background_color.b,
-                                                                                                                        background_color.a}}}},
+                                                                                     .Clear =
+                                                                                         {.ClearValue = {.Color = {background_color.r,
+                                                                                                                   background_color.g,
+                                                                                                                   background_color.b,
+                                                                                                                   background_color.a}}}},
                                                                                 .EndingAccess = {
                                                                                     .Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE}};
 
@@ -137,9 +158,11 @@ namespace sanity::engine::renderer {
                         cmd.UserCallback(cmd_list, &cmd);
 
                     } else {
-                        const auto imgui_material_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
-                        const auto material_idx = static_cast<Uint32>(imgui_material_idx);
-                        commands->SetGraphicsRoot32BitConstant(0, material_idx, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
+                        const auto imgui_data_idx = reinterpret_cast<uint64_t>(cmd.TextureId);
+                        const auto data_idx = static_cast<Uint32>(imgui_data_idx);
+                        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                               data_idx,
+                                                               RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
                         const auto& clip_rect = cmd.ClipRect;
                         const auto pos = draw_data->DisplayPos;

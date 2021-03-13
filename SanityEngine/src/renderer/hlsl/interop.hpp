@@ -2,6 +2,9 @@
 #ifndef INTEROP_HPP
 #define INTEROP_HPP
 
+#define SRV_OFFSET 0
+#define UAV_OFFSET 65536
+
 #if __cplusplus
 #include "core/types.hpp"
 #include "glm/glm.hpp"
@@ -24,4 +27,5 @@ using float4x4 = glm::mat4;
 static_assert(sizeof(sanity::engine::renderer::TextureHandle) == sizeof(uint));
 static_assert(sizeof(sanity::engine::renderer::BufferHandle) == sizeof(uint));
 #endif
+
 #endif

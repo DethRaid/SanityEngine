@@ -277,6 +277,25 @@ namespace sanity::engine::renderer {
         return d3d12_access;
     }
 
+    bool can_promote_from_common(const D3D12_RESOURCE_STATES states) {
+        const auto promotable_states_mask = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+                                            D3D12_RESOURCE_STATE_COPY_DEST | D3D12_RESOURCE_STATE_COPY_SOURCE;
+        const auto only_has_promotable_states = (states & promotable_states_mask) != 0;
+
+        return only_has_promotable_states;
+    }
+
+    bool can_decay_to_common(const D3D12_RESOURCE_STATES states) {
+        const auto has_ua = (states & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) == D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        const auto has_depth_write = (states & D3D12_RESOURCE_STATE_DEPTH_WRITE) == D3D12_RESOURCE_STATE_DEPTH_WRITE;
+        const auto has_depth_read = (states & D3D12_RESOURCE_STATE_DEPTH_READ) == D3D12_RESOURCE_STATE_DEPTH_READ;
+        const auto has_copy_dest = (states & D3D12_RESOURCE_STATE_COPY_DEST) == D3D12_RESOURCE_STATE_COPY_DEST;
+        const auto has_render_target = (states & D3D12_RESOURCE_STATE_RENDER_TARGET) == D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+        // If the resource doesn't have any write states, it gets promoted to common
+        return !(has_ua || has_depth_write || has_depth_read || has_copy_dest || has_render_target);
+    }
+
     Rx::String resource_state_to_string(const D3D12_RESOURCE_STATES state) {
         switch(state) {
             case D3D12_RESOURCE_STATE_COMMON:
@@ -412,7 +431,7 @@ namespace sanity::engine::renderer {
         Rx::String breadcrumb_output_string;
 
         const auto* cur_node = breadcrumbs.pHeadAutoBreadcrumbNode;
-        
+
         while(cur_node != nullptr) {
             const auto command_list_name = [&]() -> Rx::String {
                 if(cur_node->pCommandListDebugNameW != nullptr) {

@@ -39,7 +39,7 @@ namespace sanity::engine::renderer {
         Rx::String name{};
 
         BufferUsage usage;
-        Uint32 size{0};
+        Uint64 size{0};
     };
 
     struct Buffer {
@@ -100,9 +100,9 @@ namespace sanity::engine::renderer {
 
         Uint32 width{1};
         Uint32 height{1};
-        Uint32 depth{1};
+        Uint16 depth{1};
 
-        sanity::engine::ComPtr<ID3D12Resource> resource;
+        ComPtr<ID3D12Resource> resource;
 
         D3D12MA::Allocation* allocation;
 

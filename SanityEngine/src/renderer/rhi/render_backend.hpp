@@ -70,16 +70,14 @@ namespace sanity::engine::renderer {
                                                                                           model_matrix_buffer_index) /
                                                                                  4;
         static constexpr Uint32 MODEL_MATRIX_INDEX_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, model_matrix_index) / 4;
-        static constexpr Uint32 OBJECT_ID_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, object_id) / 4;
+        static constexpr Uint32 ENTITY_ID_ROOT_CONSTANT_OFFSET = offsetof(StandardPushConstants, object_id) / 4;
 
 #ifdef TRACY_ENABLE
         inline static tracy::D3D12QueueCtx* tracy_render_context{nullptr};
         inline static tracy::D3D12QueueCtx* tracy_copy_context{nullptr};
 #endif
-
-        ComPtr<ID3D12Device> device;
-        ComPtr<ID3D12Device1> device1;
-        ComPtr<ID3D12Device5> device5;
+        
+        ComPtr<ID3D12Device5> device;
 
         RenderBackend(HWND window_handle, const glm::uvec2& window_size);
 
@@ -117,6 +115,8 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_render_pipeline_state(const RenderPipelineStateCreateInfo& create_info);
 
+        [[nodiscard]] ComPtr<ID3D12CommandAllocator> get_or_create_command_allocator(D3D12_COMMAND_LIST_TYPE type);
+
         /*!
          * \brief Creates a new command list
          *
@@ -131,7 +131,7 @@ namespace sanity::engine::renderer {
 
         void submit_command_list(ComPtr<ID3D12GraphicsCommandList4> commands);
 
-        void submit_async_copy_commands(ComPtr<ID3D12GraphicsCommandList4> cmds);
+        void submit_copy_command_list(ComPtr<ID3D12GraphicsCommandList4> cmds);
 
         void begin_frame(uint64_t frame_count);
 
@@ -214,6 +214,9 @@ namespace sanity::engine::renderer {
 
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> direct_command_allocators;
         Rx::Vector<ComPtr<ID3D12CommandAllocator>> copy_command_allocators;
+
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> in_use_direct_command_allocators;
+        Rx::Vector<Rx::Vector<ComPtr<ID3D12CommandAllocator>>> in_use_copy_command_allocators;
 
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> command_lists_to_submit_on_end_frame;
         Rx::Vector<Rx::Vector<ComPtr<ID3D12GraphicsCommandList4>>> copy_command_lists_to_submit_on_end_frame;
@@ -332,8 +335,6 @@ namespace sanity::engine::renderer {
 
         void create_gpu_frame_synchronization_objects();
 
-        void create_command_allocators();
-
         void create_descriptor_heaps();
 
         void initialize_swapchain_descriptors();
@@ -355,11 +356,11 @@ namespace sanity::engine::renderer {
         [[nodiscard]] Rx::Ptr<RenderPipelineState> create_pipeline_state(const RenderPipelineStateCreateInfo& create_info,
                                                                          ID3D12RootSignature* root_signature);
 
+        void flush_copy_command_lists();
+
         void flush_batched_command_lists();
 
         void return_staging_buffers_for_frame(Uint32 frame_idx);
-
-        void reset_command_allocators_for_frame(Uint32 frame_idx);
 
         void destroy_resources_for_frame(Uint32 frame_idx);
 

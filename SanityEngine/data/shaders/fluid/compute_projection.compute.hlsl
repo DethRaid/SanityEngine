@@ -37,7 +37,7 @@ void main(const int3 id : SV_DispatchThreadID) {
     const float D = pressure_in[voxel_idx_back].x;
     const float U = pressure_in[voxel_idx_front].x;
 	
-	const Texture3D velocity_in = textures3d[fluid_volume.velocity_textures[1]];
+	const Texture3D velocity_in = textures3d[fluid_volume.velocity_textures[0]];
 	const float3 velocity = velocity_in[id].xyz;
 	
 	const RWTexture3D<float4> velocity_out = uav_textures3d_rgba[fluid_volume.velocity_textures[1]];

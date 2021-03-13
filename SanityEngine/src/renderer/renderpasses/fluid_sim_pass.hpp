@@ -8,6 +8,37 @@
 
 namespace sanity::engine::renderer {
     class Renderer;
+
+    /**
+     * @brief Indirect dispatch command for executing a single fluid sim dispatch
+     *
+     * All the different steps of the fluid simulation use the same parameters, so using the same struct for them isn't a problem
+     */
+    struct FluidSimDispatch {
+        uint data_idx;
+        uint model_matrix_idx;
+        uint entity_id;
+
+        uint thread_group_count_x;
+        uint thread_group_count_y;
+        uint thread_group_count_z;
+    };
+
+    struct FluidSimDraw {
+        uint data_idx;
+        uint model_matrix_idx;
+        uint entity_id;
+
+        uint index_count;
+        uint instance_count;
+        uint first_index;
+        uint first_vertex;
+        uint first_instance;
+    };
+
+    static_assert(sizeof(FluidSimDispatch) == sizeof(uint) * 6);
+    static_assert(sizeof(FluidSimDraw) == sizeof(uint) * 8);
+
     /**
      * @brief Executes all fluid simulations, including fire, smoke, and water
      */

@@ -51,29 +51,6 @@ namespace sanity::engine::renderer {
 
         float vorticity_strength;
     };
-
-    /**
-     * @brief Indirect dispatch command for executing a single fluid sim dispatch
-     *
-     * All the different steps of the fluid simulation use the same parameters, so using the same struct for them isn't a problem
-     */
-    struct FluidSimDispatch {
-        ObjectDrawData instance_data;
-
-        uint thread_group_count_x;
-        uint thread_group_count_y;
-        uint thread_group_count_z;
-    };
-
-    struct FluidSimDraw {
-        ObjectDrawData instance_data;
-
-        uint index_count;
-        uint instance_count;
-        uint first_index;
-        uint first_vertex;
-        uint first_instance;
-    };
 #if __cplusplus
 }
 #endif

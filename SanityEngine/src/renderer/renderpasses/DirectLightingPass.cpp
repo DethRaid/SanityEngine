@@ -251,7 +251,7 @@ namespace sanity::engine::renderer {
 
             // TODO: Record drawcalls into an indirect command buffer rather than recording into the command list
 
-            commands->SetGraphicsRoot32BitConstant(0, static_cast<uint32_t>(entity), RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0, static_cast<uint32_t>(entity), RenderBackend::ENTITY_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetGraphicsRoot32BitConstant(0, renderable.material.index, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
@@ -274,7 +274,7 @@ namespace sanity::engine::renderer {
             // TODO: Culling and whatnot
 
             const auto entity_id = static_cast<uint32_t>(entity);
-            commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+            commands->SetGraphicsRoot32BitConstant(0, entity_id, RenderBackend::ENTITY_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetGraphicsRoot32BitConstant(0, outline.material.index, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
@@ -301,7 +301,7 @@ namespace sanity::engine::renderer {
             const auto atmosphere_entity = atmosphere_view.front();
             commands->SetGraphicsRoot32BitConstant(0,
                                                    static_cast<uint32_t>(atmosphere_entity),
-                                                   RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET);
+                                                   RenderBackend::ENTITY_ID_ROOT_CONSTANT_OFFSET);
 
             commands->SetPipelineState(atmospheric_sky_pipeline->pso);
 

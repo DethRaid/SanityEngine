@@ -60,17 +60,25 @@ namespace sanity::engine::renderer {
         create_fluid_volume_geometry();
 
         set_resource_usage(fluid_color_texture, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        set_resource_usage(advection_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(buoyancy_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(emitters_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(extinguishment_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(vorticity_confinement_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(divergence_params_array.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(projection_param_arrays.get_all_resources(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(advection_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(buoyancy_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(emitters_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(extinguishment_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(vorticity_confinement_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(divergence_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(projection_param_arrays.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
         set_resource_usage(fluid_sim_dispatch_command_buffers.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
         set_resource_usage(cube_vertex_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        set_resource_usage(cube_index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
         set_resource_usage(rendering_params_array.get_all_resources(),
                            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
         set_resource_usage(drawcalls.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
@@ -144,6 +152,8 @@ namespace sanity::engine::renderer {
             TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "render");
             PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "render");
 
+            set_buffer_indices(commands, frame_idx);
+
             commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, array_descriptor);
 
             commands->BeginRenderPass(1, &fluid_target_access, &depth_access, D3D12_RENDER_PASS_FLAG_NONE);
@@ -179,8 +189,6 @@ namespace sanity::engine::renderer {
                                           0,
                                           nullptr,
                                           0);
-
-                logger->verbose("Recorded %d fluid volumes. I")
             }
 
             commands->EndRenderPass();
@@ -348,7 +356,6 @@ namespace sanity::engine::renderer {
     void FluidSimPass::create_indirect_command_signatures() {
         auto& backend = renderer->get_render_backend();
 
-        // TODO: Measure if the order I set the root constants in has a measurable performance impact
         const auto dispatch_args = Rx::
             Array{D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
                                                .Constant = {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
@@ -361,11 +368,11 @@ namespace sanity::engine::renderer {
                                                     .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
                                                .Constant = {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                            .DestOffsetIn32BitValues = RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET,
+                                                            .DestOffsetIn32BitValues = RenderBackend::ENTITY_ID_ROOT_CONSTANT_OFFSET,
                                                             .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH}};
 
-        const D3D12_COMMAND_SIGNATURE_DESC dispatch_command_desc{.ByteStride = 24,
+        const D3D12_COMMAND_SIGNATURE_DESC dispatch_command_desc{.ByteStride = static_cast<UINT>(sizeof(FluidSimDispatch)),
                                                                  .NumArgumentDescs = static_cast<UINT>(dispatch_args.size()),
                                                                  .pArgumentDescs = dispatch_args.data()};
         const auto& root_sig = backend.get_standard_root_signature();
@@ -383,7 +390,7 @@ namespace sanity::engine::renderer {
                                                     .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT,
                                                .Constant = {.RootParameterIndex = RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                            .DestOffsetIn32BitValues = RenderBackend::OBJECT_ID_ROOT_CONSTANT_OFFSET,
+                                                            .DestOffsetIn32BitValues = RenderBackend::ENTITY_ID_ROOT_CONSTANT_OFFSET,
                                                             .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED}};
         const D3D12_COMMAND_SIGNATURE_DESC draw_command_desc{.ByteStride = static_cast<UINT>(sizeof(FluidSimDraw)),
@@ -501,20 +508,23 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::add_fluid_volume_dispatch(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data) {
         const auto& voxel_size = fluid_volume.get_voxel_size();
-        fluid_sim_dispatches.push_back(FluidSimDispatch{.instance_data = instance_data,
+        fluid_sim_dispatches.push_back(FluidSimDispatch{.data_idx = instance_data.data_idx,
+                                                        .model_matrix_idx = instance_data.model_matrix_idx,
+                                                        .entity_id = instance_data.entity_id,
                                                         .thread_group_count_x = voxel_size.x / FLUID_SIM_NUM_THREADS,
                                                         .thread_group_count_y = voxel_size.y / FLUID_SIM_NUM_THREADS,
                                                         .thread_group_count_z = voxel_size.z / FLUID_SIM_NUM_THREADS});
     }
 
     void FluidSimPass::add_fluid_volume_draw(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data) {
-        const FluidSimDraw draw{.instance_data = instance_data,
-                                .index_count = 24,
-                                .instance_count = 1,
-                                .first_index = 0,
-                                .first_vertex = 0,
-                                .first_instance = 0};
-        fluid_sim_draws.push_back(draw);
+        fluid_sim_draws.push_back(FluidSimDraw{.data_idx = instance_data.data_idx,
+                                               .model_matrix_idx = instance_data.model_matrix_idx,
+                                               .entity_id = instance_data.entity_id,
+                                               .index_count = 24,
+                                               .instance_count = 1,
+                                               .first_index = 0,
+                                               .first_vertex = 0,
+                                               .first_instance = 0});
     }
 
     void FluidSimPass::add_fluid_volume_state(const FluidVolume& fluid_volume) {

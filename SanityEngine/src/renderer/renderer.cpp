@@ -68,7 +68,7 @@ namespace sanity::engine::renderer {
         create_builtin_images();
 
         create_render_passes();
-        
+
         logger->info("Constructed Renderer");
     }
 
@@ -331,9 +331,9 @@ namespace sanity::engine::renderer {
         const auto idx = static_cast<Uint32>(all_textures.size());
         const auto handle = TextureHandle(idx);
 
-        auto image = backend->create_texture(create_info);
-        if(image) {
-            all_textures.push_back(*image);
+        auto texture = backend->create_texture(create_info);
+        if(texture) {
+            all_textures.push_back(*texture);
             texture_name_to_index.insert(create_info.name, handle);
 
             // logger->verbose("Created texture %s with index %u", create_info.name, idx);
@@ -396,34 +396,18 @@ namespace sanity::engine::renderer {
 
             spd->generate_mip_chain_for_texture(image.resource, *cmds);
 
-            if(create_info.usage == TextureUsage::RenderTarget) {
+            {
                 const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
                                                                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                     D3D12_RESOURCE_STATE_RENDER_TARGET)};
+                                                                                     D3D12_RESOURCE_STATE_COMMON)};
 
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-
-            } else if(create_info.usage == TextureUsage::DepthStencil) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
-                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE)};
-
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-
-            } else if(create_info.usage == TextureUsage::SampledTexture) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(image.resource,
-                                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                                                     D3D12_RESOURCE_STATE_GENERIC_READ)};
-
-                cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
-
-            } else if(create_info.usage == TextureUsage::UnorderedAccess) {
-                const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::UAV(image.resource)};
                 cmds->ResourceBarrier(static_cast<Uint32>(barriers.size()), barriers.data());
             }
         }
 
-        backend->submit_command_list(cmds);
+        cmds->Close();
+
+        backend->submit_copy_command_list(cmds);
 
         return handle;
     }
@@ -531,7 +515,7 @@ namespace sanity::engine::renderer {
         new_volume.velocity_texture[0] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Velocity 0", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
-            .format = TextureFormat::R32F,
+            .format = TextureFormat::Rgba32F,
             .width = voxel_size.x,
             .height = voxel_size.y,
             .depth = voxel_size.z,
@@ -540,7 +524,7 @@ namespace sanity::engine::renderer {
         new_volume.velocity_texture[1] = create_texture(TextureCreateInfo{
             .name = Rx::String::format("%s Velocity 1", create_info.name),
             .usage = TextureUsage::UnorderedAccess,
-            .format = TextureFormat::R32F,
+            .format = TextureFormat::Rgba32F,
             .width = voxel_size.x,
             .height = voxel_size.y,
             .depth = voxel_size.z,
@@ -700,7 +684,7 @@ namespace sanity::engine::renderer {
             .pGeometryDescs = geom_descs.data()};
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO as_prebuild_info{};
-        backend->device5->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
+        backend->device->GetRaytracingAccelerationStructurePrebuildInfo(&build_as_inputs, &as_prebuild_info);
 
         as_prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                         as_prebuild_info.ScratchDataSizeInBytes);
@@ -768,7 +752,8 @@ namespace sanity::engine::renderer {
         resource_descriptors.resize(num_gpu_frames);
 
         for(auto i = 0u; i < num_gpu_frames; i++) {
-            resource_descriptors[i] = descriptors.allocate_descriptors(MAX_NUM_BUFFERS + MAX_NUM_TEXTURES);
+            // SRV buffers, SRV textures, UAV textures
+            resource_descriptors[i] = descriptors.allocate_descriptors(MAX_NUM_BUFFERS + MAX_NUM_TEXTURES + MAX_NUM_TEXTURES);
         }
     }
 
@@ -984,7 +969,7 @@ namespace sanity::engine::renderer {
         const auto& resource_descriptors_range = resource_descriptors[frame_idx];
 
         // Intentional copy
-        auto write_descriptor = resource_descriptors_range.cpu_handle;
+        auto srv_descriptor = resource_descriptors_range.cpu_handle;
 
         auto* device = backend->get_d3d12_device();
         const auto descriptor_size = backend->get_cbv_srv_uav_allocator().get_descriptor_size();
@@ -1005,12 +990,14 @@ namespace sanity::engine::renderer {
                                                                                          .StructureByteStride = 0,
                                                                                          .Flags = D3D12_BUFFER_SRV_FLAG_RAW}};
 
-            device->CreateShaderResourceView(buffer.resource, &desc, write_descriptor);
+            device->CreateShaderResourceView(buffer.resource, &desc, srv_descriptor);
 
-            write_descriptor.Offset(1, descriptor_size);
+            srv_descriptor.Offset(1, descriptor_size);
         }
 
-        write_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{resource_descriptors_range.cpu_handle, MAX_NUM_BUFFERS, descriptor_size};
+        srv_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{resource_descriptors_range.cpu_handle, MAX_NUM_BUFFERS, descriptor_size};
+        auto uav_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{srv_descriptor, UAV_OFFSET, descriptor_size};
+        
         for(int i = 0u; i < all_textures.size(); i++) {
             const auto& texture = all_textures[i];
             if(!texture.resource) {
@@ -1026,29 +1013,47 @@ namespace sanity::engine::renderer {
                 mapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(0, 0, 0, 0);
             }
 
-            // V0: Bind all the textures as SRVs
-            D3D12_SHADER_RESOURCE_VIEW_DESC desc;
+            // V0.5: Create both SVR and UAV descriptors for all the textures
+            D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc;
+            D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc;
 
             // Static analyzer doesn't realize one branch is 2D and the other is 3D
             if(texture.depth == 1) { // NOLINT(bugprone-branch-clone)
-                desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
-                                                       .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-                                                       .Shader4ComponentMapping = mapping,
-                                                       .Texture2D = D3D12_TEX2D_SRV{.MostDetailedMip = 0,
-                                                                                    .MipLevels = texture_desc.MipLevels,
-                                                                                    .PlaneSlice = 0,
-                                                                                    .ResourceMinLODClamp = 0}};
-            } else {
-                desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
-                                                       .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D,
-                                                       .Shader4ComponentMapping = mapping,
-                                                       .Texture3D = D3D12_TEX3D_SRV{.MostDetailedMip = 0,
-                                                                                    .MipLevels = texture_desc.MipLevels,
-                                                                                    .ResourceMinLODClamp = 0}};
-            }
-            device->CreateShaderResourceView(texture.resource, &desc, write_descriptor);
+                srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
+                                                           .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                                                           .Shader4ComponentMapping = mapping,
+                                                           .Texture2D = D3D12_TEX2D_SRV{.MostDetailedMip = 0,
+                                                                                        .MipLevels = texture_desc.MipLevels,
+                                                                                        .PlaneSlice = 0,
+                                                                                        .ResourceMinLODClamp = 0}};
 
-            write_descriptor.Offset(1, descriptor_size);
+                uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = format,
+                                                            .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+                                                            .Texture2D = D3D12_TEX2D_UAV{.MipSlice = 0, .PlaneSlice = 0}};
+
+            } else {
+                srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{.Format = format,
+                                                           .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D,
+                                                           .Shader4ComponentMapping = mapping,
+                                                           .Texture3D = D3D12_TEX3D_SRV{.MostDetailedMip = 0,
+                                                                                        .MipLevels = texture_desc.MipLevels,
+                                                                                        .ResourceMinLODClamp = 0}};
+
+                uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{.Format = format,
+                                                            .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D,
+                                                            .Texture3D = D3D12_TEX3D_UAV{.MipSlice = 0,
+                                                                                         .FirstWSlice = 0,
+                                                                                         .WSize = texture_desc.DepthOrArraySize}};
+            }
+
+            device->CreateShaderResourceView(texture.resource, &srv_desc, srv_descriptor);
+
+            if((texture_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS) != 0) {
+                device->CreateUnorderedAccessView(texture.resource, nullptr, &uav_desc, uav_descriptor);
+            }
+
+            srv_descriptor.Offset(1, descriptor_size);
+            uav_descriptor.Offset(1, descriptor_size);
         }
     }
 
@@ -1162,7 +1167,7 @@ namespace sanity::engine::renderer {
             };
 
             D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};
-            backend->device5->GetRaytracingAccelerationStructurePrebuildInfo(&as_inputs, &prebuild_info);
+            backend->device->GetRaytracingAccelerationStructurePrebuildInfo(&as_inputs, &prebuild_info);
 
             prebuild_info.ScratchDataSizeInBytes = ALIGN(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
                                                          prebuild_info.ScratchDataSizeInBytes);
