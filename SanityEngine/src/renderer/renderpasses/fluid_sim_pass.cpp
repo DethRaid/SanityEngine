@@ -152,7 +152,15 @@ namespace sanity::engine::renderer {
             TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "render");
             PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "render");
 
-            set_buffer_indices(commands, frame_idx);
+           const auto& frame_constants_buffer = renderer->get_frame_constants_buffer(frame_idx);
+            commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                  frame_constants_buffer.index,
+                                                  RenderBackend::FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
+
+            const auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
+            commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                                  model_matrix_buffer.index,
+                                                  RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
             commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, array_descriptor);
 
