@@ -183,6 +183,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalIncludeDirectories>E:\Documents\SanityEngine\SanityEngine\data\shaders;E:\Documents\SanityEngine\SanityEngine\src\renderer\hlsl;$(ProjectDir)extern\FidelityFX-SPD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
+      <DisableOptimizations>true</DisableOptimizations>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Heap Corruption|x64'">

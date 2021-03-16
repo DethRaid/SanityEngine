@@ -171,14 +171,14 @@ namespace sanity::engine::renderer {
 
         float velocity_dissipation{0.995f};
 
-        float buoyancy{};
+        float buoyancy{0.001f};
 
-        float weight{};
+        float weight{0.001f};
 
         /**
          * @brief Location of a reaction emitter, relative to the fluid volume, expressed in NDC
          */
-        glm::vec3 emitter_location{0.f, -0.8f, 0.f};
+        glm::vec3 emitter_location{0.f, 0.2f, 0.f};
 
         /**
          * @brief Radius of the emitter, again expressed relative to the fluid volume
@@ -188,7 +188,7 @@ namespace sanity::engine::renderer {
          * Eventually we'll have support for arbitrarily shaped emitters, and multiple emitters, and really cool things that will make
          * everyone jealous
          */
-        float emitter_radius{0.1f};
+        float emitter_radius{0.5f};
 
         float emitter_strength{1.f};
 

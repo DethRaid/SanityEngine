@@ -8,7 +8,7 @@ void main( uint3 id : SV_DispatchThreadID ) {
 	const FrameConstants frame_constants = get_frame_constants();
 	GET_CURRENT_DATA(GpuFluidVolumeState, fluid_volume);
 		
-	const float3 emitter_to_voxel = id / (fluid_volume.size.xyz - 1.f) - fluid_volume.emitter_location.xyz;
+	const float3 emitter_to_voxel = float3(id) / (fluid_volume.size.xyz - 1.f) - fluid_volume.emitter_location.xyz;
 	const float mag = dot(emitter_to_voxel, emitter_to_voxel);
 	const float rad2 = fluid_volume.emitter_radius * fluid_volume.emitter_radius;
 	const float amount = exp2(-mag/rad2) * fluid_volume.emitter_strength * frame_constants.delta_time;

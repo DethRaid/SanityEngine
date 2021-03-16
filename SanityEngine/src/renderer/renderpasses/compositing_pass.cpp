@@ -1,6 +1,5 @@
 #include "compositing_pass.hpp"
 
-
 #include "TracyD3D12.hpp"
 #include "loading/shader_loading.hpp"
 #include "renderer/hlsl/compositing.hpp"
@@ -25,7 +24,10 @@ namespace sanity::engine::renderer {
         create_pipeline();
     }
 
-    void CompositingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) {
+    void CompositingPass::record_work(ID3D12GraphicsCommandList4* commands,
+                                      entt::registry& registry,
+                                      const Uint32 frame_idx,
+                                      const float delta_time) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "CompositingPass::record_work");
         PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "CompositingPass::record_work");

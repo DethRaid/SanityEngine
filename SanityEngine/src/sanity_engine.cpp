@@ -160,30 +160,30 @@ namespace sanity::engine {
         const auto frame_duration = frame_timer.elapsed();
         frame_timer.start();
 
-        const auto frame_duration_seconds = static_cast<Float32>(frame_duration.total_seconds());
+        const auto render_delta_time = static_cast<Float32>(frame_duration.total_seconds());
 
-        accumulator += frame_duration_seconds;
+        accumulator += render_delta_time;
 
-        const auto delta_time = simulation_timestep->get();
+        const auto tick_delta_time = simulation_timestep->get();
 
         frame_count++;
         renderer->begin_frame(frame_count);
 
-        while(accumulator >= delta_time) {
+        while(accumulator >= tick_delta_time) {
             ZoneScopedN("Simulation tick");
 
             // if(player_controller) {
             //     player_controller->update_player_transform(delta_time);
             // }
 
-            tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(delta_time); });
+            tick_functions.each_fwd([&](const Rx::Function<void(Float32)>& tick_function) { tick_function(tick_delta_time); });
 
             for(const auto& system : systems | std::views::values) {
-                system->tick(delta_time);
+                system->tick(tick_delta_time);
             }
 
-            accumulator -= delta_time;
-            time_since_application_start += delta_time;
+            accumulator -= tick_delta_time;
+            time_since_application_start += tick_delta_time;
         }
 
         // TODO: The final touch from https://gafferongames.com/post/fix_your_timestep/
@@ -192,12 +192,14 @@ namespace sanity::engine {
         if(glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE) {
 #endif
             // Only render when the window is visible
-            render();
+            render(render_delta_time);
 #ifdef NDEBUG
         }
 #endif
 
-        framerate_tracker.add_frame_time(frame_duration_seconds);
+        renderer->end_frame();
+
+        framerate_tracker.add_frame_time(render_delta_time);
     }
 
     TypeReflection& SanityEngine::get_type_reflector() { return type_reflector; }
@@ -290,12 +292,11 @@ namespace sanity::engine {
         logger->info("Created flycam");
     }
 
-    void SanityEngine::render() {
+    void SanityEngine::render(const float delta_time) {
         imgui_adapter->draw_ui(global_registry.view<ui::UiComponent>());
 
-        renderer->render_frame(global_registry);
+        renderer->render_frame(global_registry, delta_time);
 
-        renderer->end_frame();
     }
 
     void initialize_g_engine(const std::filesystem::path& executable_directory) { g_engine = new SanityEngine{executable_directory}; }

@@ -14,10 +14,10 @@ struct Ray {
     float3 origin;
     float3 direction;
 
-    float3 at(float t) const;
+    float3 at(float t);
 };
 
-float3 Ray::at(const float t) const { return origin + direction * t; }
+float3 Ray::at(const float t) { return origin + direction * t; }
 
 struct AABB {
     float3 min;
@@ -41,6 +41,7 @@ bool intersectBox(Ray r, AABB aabb, out float t0, out float t1) {
 #define NUM_STEPS 8
 
 float4 main(in VertexShaderOutput input) : SV_TARGET {
+
     const FrameConstants frame_constants = get_frame_constants();
     const Camera view_camera = get_current_camera();
     const float4x4 model_matrix = get_current_model_matrix();
@@ -49,7 +50,7 @@ float4 main(in VertexShaderOutput input) : SV_TARGET {
     Texture3D density_tex = textures3d[fluid_volume.density_textures[0]];
     
     Ray ray;
-    ray.origin = -view_camera.view[4].xyz;
+    ray.origin = -view_camera.view[3].xyz;
     ray.direction = normalize(ray.origin - input.location_worldspace);
 
     AABB box;
@@ -61,9 +62,9 @@ float4 main(in VertexShaderOutput input) : SV_TARGET {
     float t0, t1;
     bool intersects = intersectBox(ray, box, t0, t1);
     if(!intersects) {
-        return float4(0.f, 0.f, 0.f, 0.f);
+        return float4(1.f, 0.f, 1.f, 1.f);
     }
-
+    
     const float3 p0 = ray.at(t0);
     const float3 p1 = ray.at(t1);
     const float3 ray_segment = p1 - p0;
@@ -77,6 +78,6 @@ float4 main(in VertexShaderOutput input) : SV_TARGET {
     }
 
     density /= NUM_STEPS;
-
-    return float4(density.xxx, 1.f);
+    
+    return float4(1.f, 0.0, 0.0, density);
 }

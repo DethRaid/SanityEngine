@@ -19,9 +19,9 @@ namespace sanity::engine::renderer {
 
         void set_background_color(const Vec4f& color);
 
-        void prepare_work(entt::registry& registry, Uint32 frame_idx) override;
+        void prepare_work(entt::registry& registry, Uint32 frame_idx, float delta_time) override;
 
-        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, float delta_time) override;
 
     private:
         Renderer* renderer;

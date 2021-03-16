@@ -95,7 +95,7 @@ namespace sanity::engine::renderer {
         next_unused_model_matrix_per_frame[frame_idx]->store(0);
     }
 
-    void Renderer::render_frame(entt::registry& registry) {
+    void Renderer::render_frame(entt::registry& registry, const float delta_time) {
         ZoneScoped;
 
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
@@ -117,13 +117,13 @@ namespace sanity::engine::renderer {
 
             update_light_data_buffer(registry, frame_idx);
 
-            update_frame_constants(registry, frame_idx);
+            update_frame_constants(registry, frame_idx, delta_time);
 
             command_list->SetGraphicsRootSignature(*backend->get_standard_root_signature());
 
             update_resource_array_descriptors(command_list, frame_idx);
 
-            execute_all_render_passes(command_list, registry, frame_idx);
+            execute_all_render_passes(command_list, registry, frame_idx, delta_time);
         }
 
         backend->submit_command_list(Rx::Utility::move(command_list));
@@ -236,9 +236,10 @@ namespace sanity::engine::renderer {
         static_mesh_storage->bind_to_command_list(command_list);
     }
 
-    void Renderer::execute_all_render_passes(engine::ComPtr<ID3D12GraphicsCommandList4>& command_list,
+    void Renderer::execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                              entt::registry& registry,
-                                             const Uint32& frame_idx) {
+                                             const Uint32 frame_idx,
+                                             const float delta_time) {
         {
             ZoneScoped;
 
@@ -247,7 +248,7 @@ namespace sanity::engine::renderer {
 
             {
                 ZoneScopedN("Collect renderpass work");
-                render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->prepare_work(registry, frame_idx); });
+                render_passes.each_fwd([&](const Rx::Ptr<RenderPass>& pass) { pass->prepare_work(registry, frame_idx, delta_time); });
             }
 
             {
@@ -260,7 +261,7 @@ namespace sanity::engine::renderer {
 
                     issue_pre_pass_barriers(command_list, i, render_pass);
 
-                    render_pass->record_work(command_list, registry, frame_idx);
+                    render_pass->record_work(command_list, registry, frame_idx, delta_time);
 
                     issue_post_pass_barriers(command_list, i, render_pass);
                 }
@@ -997,7 +998,7 @@ namespace sanity::engine::renderer {
 
         srv_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{resource_descriptors_range.cpu_handle, MAX_NUM_BUFFERS, descriptor_size};
         auto uav_descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE{srv_descriptor, UAV_OFFSET, descriptor_size};
-        
+
         for(int i = 0u; i < all_textures.size(); i++) {
             const auto& texture = all_textures[i];
             if(!texture.resource) {
@@ -1226,12 +1227,15 @@ namespace sanity::engine::renderer {
         memcpy(dst, lights.data(), lights.size() * sizeof(GpuLight));
     }
 
-    void Renderer::update_frame_constants(entt::registry& registry, const Uint32 frame_idx) {
+    void Renderer::update_frame_constants(entt::registry& registry, const Uint32 frame_idx, const float delta_time) {
         ZoneScoped;
 
         frame_constants.render_size = output_framebuffer_size;
+        frame_constants.delta_time = delta_time;
         frame_constants.elapsed_time = 0;
         frame_constants.frame_count = g_engine->get_frame_count();
+
+        frame_constants.ambient_temperature = 20.f;
 
         frame_constants.camera_buffer_index = camera_matrix_buffers->get_device_buffer_for_frame(frame_idx).index;
         frame_constants.light_buffer_index = light_device_buffers[frame_idx].index;

@@ -24,11 +24,11 @@ namespace sanity::engine::renderer {
 
         postprocessing_material_buffer_handle = renderer->create_buffer(
             {.name = "Postprocessing materials buffer", .usage = BufferUsage::ConstantBuffer, .size = sizeof(PostprocessingMaterial)});
-        
-    	const auto& scene_output_image_handle = scene_compositing_pass.get_output_handle();
+
+        const auto& scene_output_image_handle = scene_compositing_pass.get_output_handle();
         const auto material = PostprocessingMaterial{.scene_output_image = scene_output_image_handle.index};
 
-    	const auto& buffer = renderer->get_buffer(postprocessing_material_buffer_handle);
+        const auto& buffer = renderer->get_buffer(postprocessing_material_buffer_handle);
         memcpy(buffer->mapped_ptr, &material, sizeof(PostprocessingMaterial));
 
         set_resource_usage(scene_output_image_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -36,7 +36,10 @@ namespace sanity::engine::renderer {
         logger->verbose("Initialized backbuffer output pass");
     }
 
-    void PostprocessingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, Uint32 /* frame_idx */) {
+    void PostprocessingPass::record_work(ID3D12GraphicsCommandList4* commands,
+                                         entt::registry& /* registry */,
+                                         Uint32 /* frame_idx */,
+                                         float /* delta_time */) {
         if(!output_texture_handle.is_valid()) {
             return;
         }
@@ -78,7 +81,7 @@ namespace sanity::engine::renderer {
         commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                                0,
                                                RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
-    	
+
         commands->SetPipelineState(postprocessing_pipeline->pso);
         commands->DrawInstanced(3, 1, 0, 0);
 

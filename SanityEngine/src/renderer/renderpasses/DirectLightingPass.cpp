@@ -63,12 +63,13 @@ namespace sanity::engine::renderer {
 
     DirectLightingPass::~DirectLightingPass() {
         ZoneScoped;
+
         // delete the scene framebuffer, atmospheric sky pipeline, and other resources we own
 
         auto& device = renderer->get_render_backend();
     }
 
-    void DirectLightingPass::prepare_work(entt::registry& registry, Uint32 frame_idx) {
+    void DirectLightingPass::prepare_work(entt::registry& registry, const Uint32 frame_idx, const float delta_time) {
         ZoneScoped;
 
         const auto& renderable_view = registry.view<TransformComponent, StandardRenderableComponent>();
@@ -76,13 +77,17 @@ namespace sanity::engine::renderer {
         Rx::Vector<TextureHandle> all_material_textures;
         all_material_textures.reserve(renderable_view.size());
 
-        renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable)
-        {
+        renderable_view.each([&](const auto entity, const TransformComponent& transform, const StandardRenderableComponent& renderable) {
             const auto& material = renderer->get_material(renderable.material);
+
+            // TODO: Record indirect draw commands, mark resource states, etc
         });
     }
 
-    void DirectLightingPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, const Uint32 frame_idx) {
+    void DirectLightingPass::record_work(ID3D12GraphicsCommandList4* commands,
+                                         entt::registry& registry,
+                                         const Uint32 frame_idx,
+                                         const float delta_time) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "ObjectsPass::render");

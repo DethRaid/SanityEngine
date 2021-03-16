@@ -123,7 +123,7 @@ namespace sanity::engine {
 #pragma region Update loop
         std::unordered_map<std::string, std::unique_ptr<System>> systems;
 
-        void render();
+        void render(float delta_time);
 #pragma endregion
 
 #pragma region Diagnostics

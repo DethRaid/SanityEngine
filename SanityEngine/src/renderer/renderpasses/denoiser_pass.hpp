@@ -24,7 +24,7 @@ namespace sanity::engine::renderer {
          */
         explicit DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const DirectLightingPass& forward_pass);
 
-        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, float delta_time) override;
 
         [[nodiscard]] TextureHandle get_output_texture() const;
 
@@ -55,4 +55,4 @@ namespace sanity::engine::renderer {
 
         void create_material(const DirectLightingPass& forward_pass);
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

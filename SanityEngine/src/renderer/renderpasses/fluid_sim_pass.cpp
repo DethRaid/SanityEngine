@@ -62,7 +62,7 @@ namespace sanity::engine::renderer {
         set_resource_states();
     }
 
-    void FluidSimPass::prepare_work(entt::registry& registry, const Uint32 frame_idx) {
+    void FluidSimPass::prepare_work(entt::registry& registry, const Uint32 frame_idx, const float delta_time) {
         ZoneScoped;
 
         fluid_sim_draws.clear();
@@ -101,7 +101,10 @@ namespace sanity::engine::renderer {
         drawcalls.get_all_resources().each_fwd([&](const BufferHandle& handle) { renderer->copy_data_to_buffer(handle, fluid_sim_draws); });
     }
 
-    void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands, entt::registry& /* registry */, const Uint32 frame_idx) {
+    void FluidSimPass::record_work(ID3D12GraphicsCommandList4* commands,
+                                   entt::registry& /* registry */,
+                                   const Uint32 frame_idx,
+                                   const float delta_time) {
         ZoneScoped;
         TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "FluidSimPass::record_work");
         PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "FluidSimPass::record_work");
@@ -489,11 +492,11 @@ namespace sanity::engine::renderer {
 
                                             // -y
                                             4,
+                                            0,
                                             3,
-                                            0,
                                             4,
-                                            0,
-                                            7};
+                                            7,
+                                            0};
 
         cube_vertex_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Vertices",
                                                                       .usage = BufferUsage::VertexBuffer,
@@ -676,8 +679,8 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::apply_emitters(ID3D12GraphicsCommandList* commands) {
         ZoneScoped;
-        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Impulse");
-        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Impulse");
+        TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "Emitters");
+        PIXScopedEvent(commands, PIX_COLOR_DEFAULT, "Emitters");
 
         execute_simulation_step(commands, emitters_params_array, emitters_pipeline, [&](GpuFluidVolumeState& state, auto& barriers) {
             barrier_and_swap(state.reaction_textures, barriers);

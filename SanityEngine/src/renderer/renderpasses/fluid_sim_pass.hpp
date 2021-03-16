@@ -42,13 +42,13 @@ namespace sanity::engine::renderer {
     /**
      * @brief Executes all fluid simulations, including fire, smoke, and water
      */
-    class FluidSimPass : public RenderPass {
+    class FluidSimPass final : public RenderPass {
     public:
         explicit FluidSimPass(Renderer& renderer_in, const glm::uvec2& render_resolution);
 
-        void prepare_work(entt::registry& registry, Uint32 frame_idx) override;
+        void prepare_work(entt::registry& registry, Uint32 frame_idx, float delta_time) override;
 
-        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, float delta_time) override;
 
         [[nodiscard]] TextureHandle get_color_target_handle() const;
 

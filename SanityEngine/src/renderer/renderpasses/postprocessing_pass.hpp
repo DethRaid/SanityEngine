@@ -16,11 +16,11 @@ namespace sanity::engine::renderer {
 
         ~PostprocessingPass() override = default;
 
-        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) override;
+        void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx, float delta_time) override;
 
-    	void set_output_texture(TextureHandle new_output_texture_handle);
+        void set_output_texture(TextureHandle new_output_texture_handle);
 
-    	[[nodiscard]] TextureHandle get_output_texture() const;
+        [[nodiscard]] TextureHandle get_output_texture() const;
 
     private:
         Renderer* renderer{nullptr};
@@ -30,9 +30,9 @@ namespace sanity::engine::renderer {
         Rx::Ptr<RenderPipelineState> postprocessing_pipeline;
 
         BufferHandle postprocessing_material_buffer_handle;
-    	
+
         TextureHandle output_texture_handle{};
-    	
+
         DescriptorRange output_rtv_handle{};
     };
-} // namespace renderer
+} // namespace sanity::engine::renderer

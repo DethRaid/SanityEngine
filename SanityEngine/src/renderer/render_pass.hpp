@@ -34,7 +34,7 @@ namespace sanity::engine {
              *
              * @note You can and should make calls to `set_resource_usage` in this method
              */
-            virtual void prepare_work(entt::registry& registry, Uint32 frame_idx);
+            virtual void prepare_work(entt::registry& registry, Uint32 frame_idx, float delta_time);
 
             /**
              * @brief Records this pass's work into a GPU command list
@@ -42,8 +42,13 @@ namespace sanity::engine {
              * @param commands Command list to record work to
              * @param registry EnTT registry for the world. Hopefully eventually only collect_work will need this
              * @param frame_idx Index of the GPU frame to record work for
+             * @param delta_time The time the the engine took to complete the previous frame. This isn't necessarily the time between the
+             * user seeing different frames, or the time since last render, but it's close enough
              */
-            virtual void record_work(ID3D12GraphicsCommandList4* commands, entt::registry& registry, Uint32 frame_idx) = 0;
+            virtual void record_work(ID3D12GraphicsCommandList4* commands,
+                                     entt::registry& registry,
+                                     Uint32 frame_idx,
+                                     float delta_time) = 0;
 
             [[nodiscard]] const Rx::Map<TextureHandle, Rx::Optional<BeginEndState>>& get_texture_states() const;
 

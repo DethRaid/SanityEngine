@@ -83,7 +83,7 @@ namespace sanity::engine::renderer {
 
         void begin_frame(uint64_t frame_count);
 
-        void render_frame(entt::registry& registry);
+        void render_frame(entt::registry& registry, float delta_time);
 
         void end_frame() const;
 
@@ -102,8 +102,7 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info);
 
-        [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info,
-                                                   const void* image_data);
+        [[nodiscard]] TextureHandle create_texture(const TextureCreateInfo& create_info, const void* image_data);
 
         [[nodiscard]] Rx::Optional<TextureHandle> get_texture_handle(const Rx::String& name);
 
@@ -240,7 +239,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<DescriptorRange> resource_descriptors;
         Rx::Vector<Rx::Vector<Buffer>> buffers_on_copy_queue;
 
-        #pragma region Initialization
+#pragma region Initialization
         void create_static_mesh_storage();
 
         void allocate_resource_descriptors();
@@ -276,7 +275,8 @@ namespace sanity::engine::renderer {
 
         void execute_all_render_passes(ComPtr<ID3D12GraphicsCommandList4>& command_list,
                                        entt::registry& registry,
-                                       const Uint32& frame_idx);
+                                       const Uint32 frame_idx,
+                                       float delta_time);
 
         void issue_pre_pass_barriers(ID3D12GraphicsCommandList* command_list,
                                      Uint32 render_pass_index,
@@ -309,7 +309,7 @@ namespace sanity::engine::renderer {
 
         void update_light_data_buffer(entt::registry& registry, Uint32 frame_idx);
 
-        void update_frame_constants(entt::registry& registry, Uint32 frame_idx);
+        void update_frame_constants(entt::registry& registry, Uint32 frame_idx, float delta_time);
 #pragma endregion
     };
 

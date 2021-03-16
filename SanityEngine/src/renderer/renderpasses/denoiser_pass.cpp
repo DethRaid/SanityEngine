@@ -3,8 +3,8 @@
 #include "Tracy.hpp"
 #include "TracyD3D12.hpp"
 #include "loading/shader_loading.hpp"
-#include "renderer/renderer.hpp"
 #include "renderer/hlsl/postprocessing_structs.hpp"
+#include "renderer/renderer.hpp"
 #include "renderer/rhi/d3dx12.hpp"
 #include "renderer/rhi/helpers.hpp"
 #include "renderer/rhi/render_backend.hpp"
@@ -13,7 +13,7 @@
 namespace sanity::engine::renderer {
     constexpr const char* ACCUMULATION_RENDER_TARGET = "Accumulation target";
     constexpr const char* DENOISED_SCENE_RENDER_TARGET = "Denoised scene color target";
-    
+
     RX_LOG("Postprocessing Pass", logger);
 
     DenoiserPass::DenoiserPass(Renderer& renderer_in, const glm::uvec2& render_resolution, const DirectLightingPass& forward_pass)
@@ -38,8 +38,9 @@ namespace sanity::engine::renderer {
     }
 
     void DenoiserPass::record_work(ID3D12GraphicsCommandList4* commands,
-                              entt::registry& /* registry */,
-                              Uint32 /* frame_idx */) {
+                                   entt::registry& /* registry */,
+                                   Uint32 /* frame_idx */,
+                                   float /* delta_time */) {
         ZoneScoped;
 
         TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "DenoiserPass::render");
@@ -60,8 +61,12 @@ namespace sanity::engine::renderer {
 
         commands->SetPipelineState(denoising_pipeline->pso);
 
-    	commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX, denoiser_material_buffer_handle.index, RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
-        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX, 0, RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                               denoiser_material_buffer_handle.index,
+                                               RenderBackend::DATA_BUFFER_INDEX_ROOT_PARAMETER_OFFSET);
+        commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
+                                               0,
+                                               RenderBackend::DATA_INDEX_ROOT_CONSTANT_OFFSET);
 
         commands->DrawInstanced(3, 1, 0, 0);
 
@@ -69,7 +74,7 @@ namespace sanity::engine::renderer {
 
         const auto& denoised_image = renderer->get_texture(denoised_color_target_handle);
 
-        {        	
+        {
             const auto barriers = Rx::Array{CD3DX12_RESOURCE_BARRIER::Transition(accumulation_image.resource,
                                                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                                                  D3D12_RESOURCE_STATE_COPY_DEST),
@@ -144,10 +149,10 @@ namespace sanity::engine::renderer {
                         scene_depth_target_handle.index);
 
         denoiser_material_buffer_handle = renderer->create_buffer({.name = "Denoiser material buffer",
-                                                         .usage = BufferUsage::ConstantBuffer,
-                                                         .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
+                                                                   .usage = BufferUsage::ConstantBuffer,
+                                                                   .size = static_cast<Uint32>(sizeof(AccumulationMaterial))});
         const auto& denoiser_material_buffer = renderer->get_buffer(denoiser_material_buffer_handle);
 
         memcpy(denoiser_material_buffer->mapped_ptr, &accumulation_material, sizeof(AccumulationMaterial));
     }
-} // namespace renderer
+} // namespace sanity::engine::renderer

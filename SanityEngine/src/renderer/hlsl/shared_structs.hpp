@@ -32,7 +32,10 @@ namespace sanity::engine::renderer {
         float elapsed_time;
         uint frame_count;
 
-    	float ambient_temperature;
+        /**
+         * @brief Ambient temperature of the scene, expressed in degrees Celsius
+         */
+        float ambient_temperature;
 
         uint camera_buffer_index;
         uint light_buffer_index;
@@ -44,11 +47,11 @@ namespace sanity::engine::renderer {
 
         uint2 render_size;
     };
-	
+
     struct PostprocessingMaterial {
         uint scene_output_image;
     };
-	
+
     struct StandardPushConstants {
         /*!
          * \brief Index of the per-frame-data buffer
