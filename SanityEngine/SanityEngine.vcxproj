@@ -688,6 +688,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="src\renderer\hlsl\constants.hpp" />
     <ClInclude Include="src\renderer\hlsl\fluid_sim.hpp" />
     <ClInclude Include="src\renderer\hlsl\interop.hpp" />
+    <ClInclude Include="src\renderer\hlsl\mesh_data.hpp" />
     <ClInclude Include="src\renderer\hlsl\postprocessing_structs.hpp" />
     <ClInclude Include="src\renderer\hlsl\shared_structs.hpp" />
     <ClInclude Include="src\renderer\hlsl\standard_material.hpp" />

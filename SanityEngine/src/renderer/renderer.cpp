@@ -88,7 +88,7 @@ namespace sanity::engine::renderer {
         const auto ns_since_start = std::chrono::duration_cast<std::chrono::nanoseconds>(duration_since_start).count();
         const auto time_since_start = static_cast<double>(ns_since_start) / 1000000000.0;
 
-        frame_constants.time_since_start = static_cast<Float32>(time_since_start);
+        frame_constants.elapsed_time = static_cast<Float32>(time_since_start);
         frame_constants.frame_count = static_cast<Uint32>(frame_count);
 
         const auto frame_idx = backend->get_cur_gpu_frame_idx();
@@ -1230,7 +1230,7 @@ namespace sanity::engine::renderer {
         ZoneScoped;
 
         frame_constants.render_size = output_framebuffer_size;
-        frame_constants.time_since_start = 0;
+        frame_constants.elapsed_time = 0;
         frame_constants.frame_count = g_engine->get_frame_count();
 
         frame_constants.camera_buffer_index = camera_matrix_buffers->get_device_buffer_for_frame(frame_idx).index;

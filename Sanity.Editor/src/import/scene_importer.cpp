@@ -268,8 +268,7 @@ namespace sanity::editor::import {
         return imported_materials;
     }
 
-    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::import_texture(const Int32 texture_idx,
-                                                                                const tinygltf::Model& scene) {
+    Rx::Optional<engine::renderer::TextureHandle> SceneImporter::import_texture(const Int32 texture_idx, const tinygltf::Model& scene) {
         static Byte* padding_buffer{nullptr};
 
         ZoneScoped;
@@ -393,7 +392,7 @@ namespace sanity::editor::import {
 
         const auto fixed_indices = detail::flip_triangle_winding_order(indices);
 
-        const auto mesh = uploader.add_mesh(vertices, fixed_indices);
+        const auto mesh = uploader.add_mesh(vertices, indices);
         return GltfPrimitive{.mesh = mesh, .material_idx = primitive.material};
     }
 
@@ -430,8 +429,8 @@ namespace sanity::editor::import {
         return {};
     }
 
-    Rx::Vector<StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
-                                                                          const tinygltf::Model& scene) {
+    Rx::Vector<engine::renderer::StandardVertex> SceneImporter::get_vertices_from_primitive(const tinygltf::Primitive& primitive,
+                                                                                            const tinygltf::Model& scene) {
         Rx::String all_attributes;
         for(const auto& attribute_name : primitive.attributes | std::views::keys) {
             all_attributes = Rx::String::format("%s, %s", all_attributes, attribute_name);
@@ -479,7 +478,7 @@ namespace sanity::editor::import {
 
         const auto& positions_accessor = scene.accessors[positions_itr->second];
 
-        Rx::Vector<StandardVertex> vertices;
+        Rx::Vector<engine::renderer::StandardVertex> vertices;
         vertices.reserve(positions_accessor.count);
 
         for(Uint32 i = 0; i < positions_accessor.count; i++) {
@@ -497,15 +496,15 @@ namespace sanity::editor::import {
                 texcoord_read_ptr++;
             }
 
-            vertices.push_back(StandardVertex{.location = location, .normal = {normal.x, normal.y, -normal.z}, .texcoord = texcoord});
+            vertices.push_back(engine::renderer::StandardVertex{.location = {-location.x, location.y, location.z},
+                                                                .normal = {-normal.x, normal.y, normal.z},
+                                                                .texcoord = texcoord});
         }
 
         return vertices;
     }
 
-    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& model,
-                                                        const float import_scale,
-                                                        entt::registry& registry) {
+    entt::entity SceneImporter::import_object_hierarchy(const tinygltf::Model& model, const float import_scale, entt::registry& registry) {
         ZoneScoped;
 
         // Assume that the files we'll be importing have a single scene
@@ -523,9 +522,7 @@ namespace sanity::editor::import {
         return scene_entity.entity;
     }
 
-    void SceneImporter::import_node_mesh(const tinygltf::Node& node,
-                                         entt::registry& registry,
-                                         entt::entity node_entity) {
+    void SceneImporter::import_node_mesh(const tinygltf::Node& node, entt::registry& registry, entt::entity node_entity) {
         if(node.mesh > -1 && static_cast<Size>(node.mesh) < meshes.size()) {
             const auto& mesh = meshes[node.mesh];
             Uint32 i{0};
@@ -576,7 +573,7 @@ namespace sanity::editor::import {
                                                                            .material = ray_material,
                                                                            .transform = parent_transform_component.get_model_matrix(
                                                                                registry)};
-                
+
                 raytracing_objects.push_back(ray_object);
 
                 i++;

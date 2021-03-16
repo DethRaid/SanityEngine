@@ -123,6 +123,8 @@ namespace sanity::engine::renderer {
 
         void create_fluid_volume_geometry();
 
+        void set_resource_states();
+
         // runtime
 
         void add_fluid_volume_dispatch(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data);

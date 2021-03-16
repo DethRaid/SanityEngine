@@ -12,11 +12,14 @@
 
 // ReSharper disable CppInconsistentNaming
 
+using byte4 = Uint32;
+
 using uint = Uint32;
 using uint2 = glm::uvec2;
 using uint3 = glm::uvec3;
 using uint4 = glm::uvec4;
 
+using float2 = Vec2f;
 using float3 = glm::vec3;
 using float4 = glm::vec4;
 
@@ -26,6 +29,24 @@ using float4x4 = glm::mat4;
 
 static_assert(sizeof(sanity::engine::renderer::TextureHandle) == sizeof(uint));
 static_assert(sizeof(sanity::engine::renderer::BufferHandle) == sizeof(uint));
+
+#define LOCATION_SEMANTIC
+#define NORMAL_SEMANTIC
+#define COLOR_SEMANTIC
+#define TEXCOORD_SEMANTIC
+
+#else
+
+#define byte4 float4
+
+#define LOCATION_SEMANTIC : Position;
+#define NORMAL_SEMANTIC : Normal;
+#define COLOR_SEMANTIC : Color;
+#define TEXCOORD_SEMANTIC : Texcoord;
+
+
+
+
 #endif
 
 #endif

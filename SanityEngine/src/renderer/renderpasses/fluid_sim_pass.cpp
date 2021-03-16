@@ -59,29 +59,7 @@ namespace sanity::engine::renderer {
 
         create_fluid_volume_geometry();
 
-        set_resource_usage(fluid_color_texture, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        set_resource_usage(advection_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(buoyancy_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(emitters_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(extinguishment_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(vorticity_confinement_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(divergence_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(projection_param_arrays.get_all_resources(),
-                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-        set_resource_usage(fluid_sim_dispatch_command_buffers.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
-
-        set_resource_usage(cube_vertex_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        set_resource_usage(cube_index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-        set_resource_usage(rendering_params_array.get_all_resources(),
-                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        set_resource_usage(drawcalls.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+        set_resource_states();
     }
 
     void FluidSimPass::prepare_work(entt::registry& registry, const Uint32 frame_idx) {
@@ -152,15 +130,15 @@ namespace sanity::engine::renderer {
             TracyD3D12Zone(RenderBackend::tracy_render_context, commands, "render");
             PIXScopedEvent(commands, PIX_COLOR(224, 96, 54), "render");
 
-           const auto& frame_constants_buffer = renderer->get_frame_constants_buffer(frame_idx);
+            const auto& frame_constants_buffer = renderer->get_frame_constants_buffer(frame_idx);
             commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                  frame_constants_buffer.index,
-                                                  RenderBackend::FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
+                                                   frame_constants_buffer.index,
+                                                   RenderBackend::FRAME_CONSTANTS_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
             const auto& model_matrix_buffer = renderer->get_model_matrix_for_frame(frame_idx);
             commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
-                                                  model_matrix_buffer.index,
-                                                  RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
+                                                   model_matrix_buffer.index,
+                                                   RenderBackend::MODEL_MATRIX_BUFFER_INDEX_ROOT_CONSTANT_OFFSET);
 
             commands->SetGraphicsRootDescriptorTable(RenderBackend::RESOURCES_ARRAY_ROOT_PARAMETER_INDEX, array_descriptor);
 
@@ -172,6 +150,20 @@ namespace sanity::engine::renderer {
                 renderer->copy_data_to_buffer(rendering_params_array.get_active_resource(), fluid_sim_draws);
 
                 commands->SetPipelineState(fire_fluid_pipeline->pso);
+
+                const auto& render_texture = renderer->get_texture(fluid_color_texture);
+
+                D3D12_VIEWPORT viewport{};
+                viewport.MinDepth = 0;
+                viewport.MaxDepth = 1;
+                viewport.Width = static_cast<float>(render_texture.width);
+                viewport.Height = static_cast<float>(render_texture.height);
+                commands->RSSetViewports(1, &viewport);
+
+                D3D12_RECT scissor_rect{};
+                scissor_rect.right = static_cast<LONG>(render_texture.width);
+                scissor_rect.bottom = static_cast<LONG>(render_texture.height);
+                commands->RSSetScissorRects(1, &scissor_rect);
 
                 commands->SetGraphicsRoot32BitConstant(RenderBackend::ROOT_CONSTANTS_ROOT_PARAMETER_INDEX,
                                                        rendering_params_array.get_active_resource().index,
@@ -356,7 +348,7 @@ namespace sanity::engine::renderer {
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false}}},
                                           .rasterizer_state = {},
-                                          .depth_stencil_state = {.enable_depth_test = true, .enable_depth_write = false},
+                                          .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
                                           .render_target_formats = Rx::Array{TextureFormat::Rgba16F},
                                           .depth_stencil_format = TextureFormat::Depth32});
     }
@@ -512,6 +504,32 @@ namespace sanity::engine::renderer {
                                                                      .usage = BufferUsage::IndexBuffer,
                                                                      .size = static_cast<Uint32>(cube_indices.size() * sizeof(Uint32))},
                                                     cube_indices.data());
+    }
+
+    void FluidSimPass::set_resource_states() {
+        set_resource_usage(fluid_color_texture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        set_resource_usage(advection_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(buoyancy_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(emitters_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(extinguishment_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(vorticity_confinement_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(divergence_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(projection_param_arrays.get_all_resources(),
+                           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+        set_resource_usage(fluid_sim_dispatch_command_buffers.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+
+        set_resource_usage(cube_vertex_buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        set_resource_usage(cube_index_buffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        set_resource_usage(rendering_params_array.get_all_resources(),
+                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        set_resource_usage(drawcalls.get_all_resources(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     }
 
     void FluidSimPass::add_fluid_volume_dispatch(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data) {

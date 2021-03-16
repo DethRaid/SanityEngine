@@ -49,7 +49,7 @@ namespace sanity::engine::renderer {
                     "If enabled, SanityEngine will wait for every command list to check for device removed errors",
                     false);
 
-    RX_CONSOLE_BVAR(cvar_use_warp_driver, "r.UseWapDriver", "Force using the Microsoft reference DirectX driver", false);
+    RX_CONSOLE_BVAR(cvar_force_warp_adapter, "r.UseWapDriver", "Force using Microsoft's reference DirectX driver", false);
 
     void print_debug_message(
         D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR description, void* context);
@@ -238,7 +238,7 @@ namespace sanity::engine::renderer {
         //                 resource_state_to_string(initial_state));
 
         texture.name = create_info.name;
-        texture.width = desc.Width;
+        texture.width = static_cast<Uint32>(desc.Width);
         texture.height = desc.Height;
         texture.depth = desc.DepthOrArraySize;
 
@@ -677,7 +677,7 @@ namespace sanity::engine::renderer {
         }
 
         {
-            if(cvar_use_warp_driver->get()) {
+            if(cvar_force_warp_adapter->get()) {
                 ComPtr<IDXGIAdapter> cur_adapter;
                 const auto result = factory->EnumWarpAdapter(IID_PPV_ARGS(&cur_adapter));
 

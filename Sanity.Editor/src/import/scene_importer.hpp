@@ -4,9 +4,10 @@
 #include "entt/entity/fwd.hpp"
 #include "loading/asset_loader.hpp"
 #include "renderer/handles.hpp"
+#include "renderer/hlsl/mesh_data.hpp"
+#include "renderer/hlsl/standard_material.hpp"
 #include "renderer/mesh_data_store.hpp"
 #include "renderer/rhi/raytracing_structs.hpp"
-#include "renderer/hlsl/standard_material.hpp"
 #include "rx/core/map.h"
 #include "rx/core/optional.h"
 #include "rx/core/vector.h"
@@ -56,8 +57,7 @@ namespace sanity {
 
                 [[nodiscard]] Rx::Vector<engine::renderer::StandardMaterialHandle> import_all_materials(const tinygltf::Model& scene);
 
-                [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> import_texture(Int32 texture_idx,
-                                                                                           const tinygltf::Model& scene);
+                [[nodiscard]] Rx::Optional<engine::renderer::TextureHandle> import_texture(Int32 texture_idx, const tinygltf::Model& scene);
 
                 [[nodiscard]] Rx::Vector<GltfMesh> import_all_meshes(const tinygltf::Model& scene) const;
 
@@ -68,15 +68,13 @@ namespace sanity {
                 [[nodiscard]] static Rx::Vector<Uint32> get_indices_from_primitive(const tinygltf::Primitive& primitive,
                                                                                    const tinygltf::Model& scene);
 
-                [[nodiscard]] static Rx::Vector<StandardVertex> get_vertices_from_primitive(const tinygltf::Primitive& primitive,
-                                                                                            const tinygltf::Model& scene);
+                [[nodiscard]] static Rx::Vector<engine::renderer::StandardVertex> get_vertices_from_primitive(const tinygltf::Primitive& primitive,
+                                                                                                              const tinygltf::Model& scene);
 
                 [[nodiscard]] entt::entity import_object_hierarchy(const tinygltf::Model& model,
                                                                    float import_scale,
                                                                    entt::registry& registry);
-                void import_node_mesh(const tinygltf::Node& node,
-                                      entt::registry& registry,
-                                      entt::entity node_entity);
+                void import_node_mesh(const tinygltf::Node& node, entt::registry& registry, entt::entity node_entity);
 
                 void import_node_transform(const tinygltf::Node& node,
                                            const entt::entity& parent_entity,

@@ -460,6 +460,9 @@
       <Filter>src\renderer\renderpasses</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\rhi\copy_command_list.hpp" />
+    <ClInclude Include="src\renderer\hlsl\mesh_data.hpp">
+      <Filter>src\renderer\hlsl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adapters\rex\rex_wrapper.cpp">

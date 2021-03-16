@@ -2,21 +2,15 @@
 
 #include "core/Prelude.hpp"
 #include "core/types.hpp"
+#include "renderer/hlsl/mesh_data.hpp"
 #include "renderer/mesh.hpp"
 #include "renderer/rhi/resources.hpp"
 #include "rx/core/ptr.h"
 #include "rx/core/vector.h"
 
-struct StandardVertex {
-    Vec3f location{};
-    Vec3f normal{};
-    Uint32 color{0xFFFFFFFF};
-    Vec2f texcoord{};
-};
-
 namespace sanity::engine::renderer {
-	class Renderer;
-	class MeshDataStore;
+    class Renderer;
+    class MeshDataStore;
     class ResourceCommandList;
     class RenderBackend;
 
@@ -85,9 +79,9 @@ namespace sanity::engine::renderer {
 
         [[nodiscard]] BufferHandle get_index_buffer_handle() const;
 
-    	[[nodiscard]] Buffer get_vertex_buffer() const;
+        [[nodiscard]] Buffer get_vertex_buffer() const;
 
-    	[[nodiscard]] Buffer get_index_buffer() const;
+        [[nodiscard]] Buffer get_index_buffer() const;
 
         /*!
          * \brief Prepares the vertex and index buffers to receive new mesh data

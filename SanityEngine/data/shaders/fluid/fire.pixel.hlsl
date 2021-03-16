@@ -41,6 +41,8 @@ bool intersectBox(Ray r, AABB aabb, out float t0, out float t1) {
 #define NUM_STEPS 8
 
 float4 main(in VertexShaderOutput input) : SV_TARGET {
+    return 1.f;
+
     const FrameConstants frame_constants = get_frame_constants();
     const Camera view_camera = get_current_camera();
     const float4x4 model_matrix = get_current_model_matrix();

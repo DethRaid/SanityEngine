@@ -29,7 +29,7 @@ namespace sanity::engine::renderer {
 
     struct FrameConstants {
         float delta_time;
-        float time_since_start;
+        float elapsed_time;
         uint frame_count;
 
     	float ambient_temperature;

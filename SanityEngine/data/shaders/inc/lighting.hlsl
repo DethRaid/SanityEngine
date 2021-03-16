@@ -1,14 +1,12 @@
 #pragma once
 
-#include "load_standard_material.hlsl"
 #include "atmospheric_scattering.hlsl"
 #include "brdf.hlsl"
+#include "load_standard_material.hlsl"
 #include "noise.hlsli"
 #include "shadow.hlsl"
 #include "sky.hlsl"
 #include "standard_root_signature.hlsl"
-
-#define BYTES_PER_VERTEX 9
 
 #define STANDARD_ROUGHNESS 0.01
 
@@ -18,46 +16,9 @@
 
 #define LIGHTING_RAY_FLAGS RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
 
-uint3 get_indices(uint triangle_index) {
-    const uint base_index = (triangle_index * 3);
-    const int address = (base_index * 4);
-    
-	FrameConstants data = get_frame_constants();
-	ByteAddressBuffer indices = srv_buffers[data.index_buffer_index];
-    return indices.Load3(address);
-}
+#define BYTES_PER_VERTEX sizeof(StandardVertex)
 
-StandardVertex get_vertex(int address) {    
-	FrameConstants data = get_frame_constants();
-	ByteAddressBuffer vertices = srv_buffers[data.vertex_data_buffer_index];
-	
-    StandardVertex v;
-    v.location = asfloat(vertices.Load3(address));
-    address += (3 * 4);
-    v.normal = asfloat(vertices.Load3(address));
-    address += (3 * 4);
-    v.color = asfloat(vertices.Load4(address));
-    address += (4); // Vertex colors are only only one byte per component
-    v.texcoord = asfloat(vertices.Load2(address));
 
-    return v;
-}
-
-StandardVertex get_vertex_attributes(uint triangle_index, float2 barycentrics) {
-    uint3 indices = get_indices(triangle_index);
-
-    StandardVertex v0 = get_vertex((indices[0] * BYTES_PER_VERTEX) * 4);
-    StandardVertex v1 = get_vertex((indices[1] * BYTES_PER_VERTEX) * 4);
-    StandardVertex v2 = get_vertex((indices[2] * BYTES_PER_VERTEX) * 4);
-
-    StandardVertex v;
-    v.location = v0.location + barycentrics.x * (v1.location - v0.location) + barycentrics.y * (v2.location - v0.location);
-    v.normal = v0.normal + barycentrics.x * (v1.normal - v0.normal) + barycentrics.y * (v2.normal - v0.normal);
-    v.color = v0.color + barycentrics.x * (v1.color - v0.color) + barycentrics.y * (v2.color - v0.color);
-    v.texcoord = v0.texcoord + barycentrics.x * (v1.texcoord - v0.texcoord) + barycentrics.y * (v2.texcoord - v0.texcoord);
-
-    return v;
-}
 
 struct SanityRayHit {
     float3 position;
@@ -113,7 +74,7 @@ float4 get_incoming_light(const in float3 ray_origin,
     RayDesc ray;
     ray.Origin = ray_origin;
     ray.TMin = 0.01f * (1.0 - cos_theta); // Slight offset so we don't self-intersect
-    ray.Direction = direction * float3(1.f, 1.f, -1.f);
+    ray.Direction = direction;// *float3(1.f, 1.f, -1.f);
     ray.TMax = 1000; // TODO: Pass this in with a CB
 
     // Set up work
@@ -135,7 +96,7 @@ float4 get_incoming_light(const in float3 ray_origin,
 
         uint material_id = query.CommittedInstanceContributionToHitGroupIndex();
         GET_DATA(StandardMaterial, material_id, hit_material)
-    	material = hit_material;
+        material = hit_material;
 
         const SurfaceInfo surface = get_surface_info(vertex, material);
 
@@ -145,7 +106,7 @@ float4 get_incoming_light(const in float3 ray_origin,
 
     } else {
         // Sample the atmosphere
-        const float3 sky_direction = direction * float3(1, -1, -1);
+        const float3 sky_direction = direction * float3(-1, 1, -1);
         const float3 sky = get_sky_in_direction(sky_direction);
         return float4(sky, 0);
     }
@@ -338,6 +299,6 @@ float3 get_total_reflected_light(const Camera camera, const SurfaceInfo surface)
     const float3 direct_light = direct_analytical_light(surface, sun, -view_vector_worldspace, noise_texcoord);
     const float3 indirect_light = raytrace_global_illumination(surface, view_vector_worldspace, noise_texcoord, sun);
     const float3 reflection = raytrace_reflections(surface, view_vector_worldspace, noise_texcoord, sun);
-    
+
     return direct_light + indirect_light + reflection;
 }

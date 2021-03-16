@@ -2,14 +2,8 @@
 
 #include "constants.hpp"
 #include "inc/normalmapping.hlsl"
+#include "mesh_data.hpp"
 #include "standard_material.hpp"
-
-struct StandardVertex {
-    float3 location : Position;
-    float3 normal : Normal;
-    float4 color : Color;
-    float2 texcoord : Texcoord;
-};
 
 struct SurfaceInfo {
     float3 location;
@@ -27,7 +21,7 @@ struct SurfaceInfo {
 
 #include "standard_root_signature.hlsl"
 
-SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMaterial material) {	
+SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMaterial material) {
     SurfaceInfo surface;
     surface.location = vertex.location;
 
@@ -40,7 +34,7 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMa
         surface.base_color = material.base_color_value;
     }
 
-	surface.base_color *= vertex.color;
+    surface.base_color *= vertex.color;
 
     // TODO: Separate shader (or a shader variant) for alpha-tested objects
     // if(base_color.a == 0) {
@@ -56,14 +50,14 @@ SurfaceInfo get_surface_info(const in StandardVertex vertex, const in StandardMa
         FrameConstants data = get_frame_constants();
         ByteAddressBuffer cameras = srv_buffers[data.camera_buffer_index];
         const float3 view_vector = vertex.location - cameras.Load<Camera>(constants.camera_index * sizeof(Camera)).view[2].xyz;
-    	
+
         const float3x3 normal_matrix = cotangent_frame(vertex.normal, view_vector, vertex.texcoord);
         surface.normal = normalize(mul(surface.normal, normal_matrix));
-            	
+
     } else {
         surface.normal = vertex.normal;
     }
-        
+
     if(material.metallic_roughness_texture_idx != 0 && material.metallic_roughness_texture_idx != INVALID_RESOURCE_HANDLE) {
         Texture2D metallic_roughness_texture = textures[material.metallic_roughness_texture_idx];
         const float4 metallic_roughness = metallic_roughness_texture.Sample(bilinear_sampler, vertex.texcoord);
