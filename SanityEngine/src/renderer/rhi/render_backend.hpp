@@ -366,8 +366,6 @@ namespace sanity::engine::renderer {
 
         void transition_swapchain_texture_to_render_target();
 
-        void transition_swapchain_texture_to_presentable();
-
         void wait_for_frame(uint64_t frame_index);
 
         void wait_gpu_idle(uint64_t frame_index);

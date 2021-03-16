@@ -486,8 +486,6 @@ namespace sanity::engine::renderer {
         // Flush our logs before the debug layer issues any breakpoints
         Rx::Log::flush();
 
-        transition_swapchain_texture_to_presentable();
-
         flush_batched_command_lists();
 
         {
@@ -1415,27 +1413,7 @@ namespace sanity::engine::renderer {
 
         submit_command_list(Rx::Utility::move(swapchain_cmds));
     }
-
-    void RenderBackend::transition_swapchain_texture_to_presentable() {
-        ZoneScoped;
-
-        auto swapchain_cmds = create_render_command_list(cur_gpu_frame_idx);
-        set_object_name(swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
-
-        {
-            TracyD3D12Zone(tracy_render_context, *swapchain_cmds, "RenderBackend::transition_swapchain_texture_to_presentable");
-            PIXScopedEvent(*swapchain_cmds, PIX_COLOR_DEFAULT, "RenderBackend::transition_swapchain_texture_to_presentable");
-
-            D3D12_RESOURCE_BARRIER
-            swapchain_transition_barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain_textures[cur_swapchain_idx],
-                                                                                D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                D3D12_RESOURCE_STATE_PRESENT);
-            swapchain_cmds->ResourceBarrier(1, &swapchain_transition_barrier);
-        }
-
-        submit_command_list(Rx::Utility::move(swapchain_cmds));
-    }
-
+    
     void RenderBackend::wait_for_frame(const uint64_t frame_index) {
         ZoneScopedC(tracy::Color::MistyRose2);
         const auto desired_fence_value = frame_fence_values[frame_index];

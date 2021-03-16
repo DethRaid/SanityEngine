@@ -6,7 +6,7 @@
 RX_LOG("RenderPass", logger);
 
 namespace sanity::engine::renderer {
-    void RenderPass::prepare_work(entt::registry& registry, Uint32 frame_idx) {
+    void RenderPass::prepare_work(entt::registry& registry, const Uint32 frame_idx, const float delta_time) {
         // Default empty implementation so I don't have to change my existing render passes... yet
     }
 
