@@ -171,8 +171,8 @@ namespace sanity::engine::renderer {
 
                 const auto& vertex_buffer_actual = renderer->get_buffer(cube_vertex_buffer);
                 const D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view{.BufferLocation = vertex_buffer_actual->resource->GetGPUVirtualAddress(),
-                                                                  .SizeInBytes = 6 * 4 * sizeof(float3),
-                                                                  .StrideInBytes = sizeof(float3)};
+                                                                  .SizeInBytes = 8 * sizeof(StandardVertex),
+                                                                  .StrideInBytes = sizeof(StandardVertex)};
                 commands->IASetVertexBuffers(0, 1, &vertex_buffer_view);
 
                 const auto& index_buffer_actual = renderer->get_buffer(cube_index_buffer);
@@ -347,7 +347,7 @@ namespace sanity::engine::renderer {
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false}}},
-                                          .rasterizer_state = {},
+                                          .rasterizer_state = {.front_face_counter_clockwise = true},
                                           .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
                                           .render_target_formats = Rx::Array{TextureFormat::Rgba16F},
                                           .depth_stencil_format = TextureFormat::Depth32});
@@ -451,7 +451,7 @@ namespace sanity::engine::renderer {
                                             0,
                                             1,
                                             2,
-                                            1,
+                                            0,
                                             2,
                                             3,
 
@@ -459,7 +459,7 @@ namespace sanity::engine::renderer {
                                             4,
                                             5,
                                             6,
-                                            5,
+                                            4,
                                             6,
                                             7,
 
@@ -467,23 +467,23 @@ namespace sanity::engine::renderer {
                                             7,
                                             6,
                                             1,
-                                            6,
+                                            7,
                                             1,
                                             0,
 
                                             // -x
                                             4,
-                                            5,
                                             2,
                                             5,
-                                            2,
+                                            4,
                                             3,
+                                            2,
 
                                             // +y
                                             1,
                                             6,
                                             5,
-                                            6,
+                                            1,
                                             5,
                                             2,
 
@@ -491,7 +491,7 @@ namespace sanity::engine::renderer {
                                             4,
                                             3,
                                             0,
-                                            3,
+                                            4,
                                             0,
                                             7};
 
@@ -546,7 +546,7 @@ namespace sanity::engine::renderer {
         fluid_sim_draws.push_back(FluidSimDraw{.data_idx = instance_data.data_idx,
                                                .model_matrix_idx = instance_data.model_matrix_idx,
                                                .entity_id = instance_data.entity_id,
-                                               .index_count = 24,
+                                               .index_count = 36,
                                                .instance_count = 1,
                                                .first_index = 0,
                                                .first_vertex = 0,

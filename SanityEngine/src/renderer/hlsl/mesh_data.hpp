@@ -15,6 +15,8 @@ namespace sanity::engine::renderer {
     };
 
 #if __cplusplus
+    static_assert(sizeof(StandardVertex) == 8 * sizeof(float) + sizeof(Uint32));
+    static_assert(alignof(StandardVertex) == 4);
 }
 #endif
 

@@ -39,7 +39,7 @@ static_assert(sizeof(sanity::engine::renderer::BufferHandle) == sizeof(uint));
 
 #define byte4 float4
 
-#define LOCATION_SEMANTIC : Position;
+#define LOCATION_SEMANTIC : POSITION;
 #define NORMAL_SEMANTIC : Normal;
 #define COLOR_SEMANTIC : Color;
 #define TEXCOORD_SEMANTIC : Texcoord;
