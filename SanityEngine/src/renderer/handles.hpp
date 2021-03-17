@@ -12,7 +12,9 @@ namespace sanity::engine::renderer {
 
         GpuResourceHandle() = default;
 
-        explicit GpuResourceHandle(Uint32 index_in);
+        // ReSharper disable CppNonExplicitConvertingConstructor
+        GpuResourceHandle(Uint32 index_in);
+        // ReSharper restore CppNonExplicitConvertingConstructor
 
         GpuResourceHandle(const GpuResourceHandle<ResourceType>& other) = default;
         GpuResourceHandle& operator=(const GpuResourceHandle<ResourceType>& other) = default;
@@ -22,6 +24,10 @@ namespace sanity::engine::renderer {
 
         ~GpuResourceHandle() = default;
 
+        // ReSharper disable CppNonExplicitConversionOperator
+        [[nodiscard]] operator Uint32() const;
+        // ReSharper restore CppNonExplicitConversionOperator
+
         [[nodiscard]] bool operator==(const GpuResourceHandle& other) const = default;
 
         [[nodiscard]] bool is_valid() const;
@@ -29,6 +35,11 @@ namespace sanity::engine::renderer {
 
     template <typename ResourceType>
     GpuResourceHandle<ResourceType>::GpuResourceHandle(const Uint32 index_in) : index{index_in} {}
+
+    template <typename ResourceType>
+    GpuResourceHandle<ResourceType>::operator Uint32() const {
+        return index;
+    }
 
     template <typename ResourceType>
     bool GpuResourceHandle<ResourceType>::is_valid() const {

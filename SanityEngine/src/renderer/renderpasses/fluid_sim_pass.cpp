@@ -212,8 +212,8 @@ namespace sanity::engine::renderer {
 
         if(*num_pressure_iterations % 2 == 1) {
             fluid_volume_states.each_fwd([&](GpuFluidVolumeState& state) {
-                copy_read_texture_to_write_texture(state.pressure_textures[0],
-                                                   state.pressure_textures[1],
+                copy_read_texture_to_write_texture(TextureHandle{state.pressure_textures[0]},
+                                                   TextureHandle{state.pressure_textures[1]},
                                                    pre_copy_barriers,
                                                    copies,
                                                    post_copy_barriers);
@@ -350,7 +350,7 @@ namespace sanity::engine::renderer {
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false}}},
-                                          .rasterizer_state = {.front_face_counter_clockwise = true},
+                                          .rasterizer_state = {.cull_mode = CullMode::Front, .front_face_counter_clockwise = true},
                                           .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
                                           .render_target_formats = Rx::Array{TextureFormat::Rgba16F},
                                           .depth_stencil_format = TextureFormat::Depth32});
@@ -584,7 +584,7 @@ namespace sanity::engine::renderer {
             temp_texture,
         };
         set_resource_usages(write_textures, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
+        
         const GpuFluidVolumeState initial_state{.density_textures = {density_textures[0], density_textures[1]},
                                                 .temperature_textures = {temperature_textures[0], temperature_textures[1]},
                                                 .reaction_textures = {reaction_textures[0], reaction_textures[1]},
@@ -592,6 +592,7 @@ namespace sanity::engine::renderer {
                                                 .pressure_textures = {pressure_textures[0], pressure_textures[1]},
                                                 .temp_data_buffer = temp_texture,
                                                 .size = {fluid_volume.size, 0.f},
+                                                .voxel_size = {fluid_volume.get_voxel_size(), 0u},
                                                 .dissipation = {fluid_volume.density_dissipation,
                                                                 fluid_volume.temperature_dissipation,
                                                                 1.0,
@@ -758,7 +759,7 @@ namespace sanity::engine::renderer {
         Rx::Vector<D3D12_RESOURCE_BARRIER> barriers;
         barriers.reserve(fluid_volume_states.size());
         fluid_volume_states.each_fwd([&](const GpuFluidVolumeState& state) {
-            const auto& temp_data_texture = renderer->get_texture(state.temp_data_buffer);
+            const auto& temp_data_texture = renderer->get_texture(TextureHandle{state.temp_data_buffer});
             barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(temp_data_texture.resource,
                                                                     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                                                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
@@ -777,7 +778,7 @@ namespace sanity::engine::renderer {
         });
     }
 
-    void FluidSimPass::barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const {
+    void FluidSimPass::barrier_and_swap(Uint32 handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const {
         const auto& old_read_texture = renderer->get_texture(handles[0]);
         const auto& old_write_texture = renderer->get_texture(handles[1]);
 

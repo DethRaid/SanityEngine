@@ -157,7 +157,7 @@ namespace sanity::engine::renderer {
 
         void compute_projection(ID3D12GraphicsCommandList* commands);
 
-        void barrier_and_swap(TextureHandle handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const;
+        void barrier_and_swap(Uint32 handles[2], Rx::Vector<D3D12_RESOURCE_BARRIER>& barriers) const;
 
         struct TextureCopyParams {
             D3D12_TEXTURE_COPY_LOCATION source;
