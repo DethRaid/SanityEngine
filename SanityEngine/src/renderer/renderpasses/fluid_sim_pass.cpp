@@ -350,7 +350,7 @@ namespace sanity::engine::renderer {
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false},
                                                                                              RenderTargetBlendState{.enabled = false}}},
-                                          .rasterizer_state = {.cull_mode = CullMode::Front, .front_face_counter_clockwise = true},
+                                          .rasterizer_state = {.cull_mode = CullMode::Front},
                                           .depth_stencil_state = {.enable_depth_test = false, .enable_depth_write = false},
                                           .render_target_formats = Rx::Array{TextureFormat::Rgba16F},
                                           .depth_stencil_format = TextureFormat::Depth32});
@@ -452,51 +452,51 @@ namespace sanity::engine::renderer {
 
         const auto cube_indices = Rx::Array{// +z
                                             0,
+                                            2,
                                             1,
-                                            2,
                                             0,
-                                            2,
                                             3,
+                                            2,
 
                                             // -z
                                             4,
+                                            6,
                                             5,
-                                            6,
                                             4,
-                                            6,
                                             7,
+                                            6,
 
                                             // +x
                                             7,
+                                            1,
                                             6,
-                                            1,
                                             7,
-                                            1,
                                             0,
+                                            1,
 
                                             // -x
                                             4,
-                                            2,
                                             5,
-                                            4,
-                                            3,
                                             2,
+                                            4,
+                                            2,
+                                            3,
 
                                             // +y
                                             1,
+                                            5,
                                             6,
-                                            5,
                                             1,
-                                            5,
                                             2,
+                                            5,
 
                                             // -y
                                             4,
-                                            0,
                                             3,
+                                            0,
                                             4,
-                                            7,
-                                            0};
+                                            0,
+                                            7};
 
         cube_vertex_buffer = renderer->create_buffer(BufferCreateInfo{.name = "Fluid Volume Vertices",
                                                                       .usage = BufferUsage::VertexBuffer,
