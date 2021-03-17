@@ -14,7 +14,7 @@ namespace sanity::engine::renderer {
      *
      * All the different steps of the fluid simulation use the same parameters, so using the same struct for them isn't a problem
      */
-    struct FluidSimDispatch {
+    struct FluidSimDispatchCommand {
         uint data_idx;
         uint model_matrix_idx;
         uint entity_id;
@@ -24,7 +24,7 @@ namespace sanity::engine::renderer {
         uint thread_group_count_z;
     };
 
-    struct FluidSimDraw {
+    struct FluidSimDrawCommand {
         uint data_idx;
         uint model_matrix_idx;
         uint entity_id;
@@ -36,8 +36,8 @@ namespace sanity::engine::renderer {
         uint first_instance;
     };
 
-    static_assert(sizeof(FluidSimDispatch) == sizeof(uint) * 6);
-    static_assert(sizeof(FluidSimDraw) == sizeof(uint) * 8);
+    static_assert(sizeof(FluidSimDispatchCommand) == sizeof(uint) * 6);
+    static_assert(sizeof(FluidSimDrawCommand) == sizeof(uint) * 8);
 
     /**
      * @brief Executes all fluid simulations, including fire, smoke, and water
@@ -90,7 +90,7 @@ namespace sanity::engine::renderer {
         ComPtr<ID3D12PipelineState> projection_pipeline;
 
         ComPtr<ID3D12CommandSignature> fluid_sim_dispatch_signature;
-        Rx::Vector<FluidSimDispatch> fluid_sim_dispatches;
+        Rx::Vector<FluidSimDispatchCommand> fluid_sim_dispatches;
         BufferRing fluid_sim_dispatch_command_buffers;
 
         /**
@@ -100,7 +100,7 @@ namespace sanity::engine::renderer {
         BufferHandle cube_index_buffer;
         Rx::Ptr<RenderPipelineState> fire_fluid_pipeline;
         ComPtr<ID3D12CommandSignature> fluid_volume_draw_signature;
-        Rx::Vector<FluidSimDraw> fluid_sim_draws;
+        Rx::Vector<FluidSimDrawCommand> fluid_sim_draws;
         BufferRing drawcalls;
         D3D12_RENDER_PASS_RENDER_TARGET_DESC fluid_target_access;
         D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depth_access;

@@ -120,8 +120,13 @@ namespace sanity::engine {
 
             auto& renderer = g_engine->get_renderer();
 
-            const auto fluid_info = renderer::FluidVolumeCreateInfo{.name = name, .size = {10, 10, 10}};
+            const auto scale = 1.f;
+
+            const auto fluid_info = renderer::FluidVolumeCreateInfo{.name = name, .size = glm::vec3{scale}};
             volume.volume = renderer.create_fluid_volume(fluid_info);
+
+            auto& transform = actor.get_transform();
+            transform.scale = glm::vec3{scale};
         }
 
         return actor;

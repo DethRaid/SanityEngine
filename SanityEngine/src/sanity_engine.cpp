@@ -284,7 +284,7 @@ namespace sanity::engine {
         player = player_actor.entity;
 
         auto& transform_component = player_actor.get_component<TransformComponent>();
-        transform_component.transform.location.y = 1.63f;
+        transform_component.transform.location = {0.f, 1.63f, 2.f};
         transform_component.transform.rotation = glm::angleAxis(0.0f, glm::vec3{1, 0, 0});
 
         player_actor.add_component<renderer::CameraComponent>();

@@ -40,8 +40,8 @@ namespace sanity::engine::renderer {
           divergence_params_array{"Fluid Sim Divergence Params", PARAMS_BUFFER_SIZE, renderer_in},
           projection_param_arrays{"Fluid Sim Projection Params", PARAMS_BUFFER_SIZE, renderer_in},
           rendering_params_array{"Fluid Sim Rendering Params", PARAMS_BUFFER_SIZE, renderer_in},
-          fluid_sim_dispatch_command_buffers{"Fluid Sim Dispatch Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDispatch), renderer_in},
-          drawcalls{"Fire Render Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDraw), renderer_in} {
+          fluid_sim_dispatch_command_buffers{"Fluid Sim Dispatch Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDispatchCommand), renderer_in},
+          drawcalls{"Fire Render Commands", MAX_NUM_FLUID_VOLUMES * sizeof(FluidSimDrawCommand), renderer_in} {
         ZoneScoped;
 
         create_pipelines();
@@ -150,7 +150,7 @@ namespace sanity::engine::renderer {
             if(!fluid_volume_states.is_empty()) {
                 PIXScopedEvent(commands, PIX_COLOR(156, 57, 26), "fire");
 
-                renderer->copy_data_to_buffer(rendering_params_array.get_active_resource(), fluid_sim_draws);
+                renderer->copy_data_to_buffer(rendering_params_array.get_active_resource(), fluid_volume_states);
 
                 commands->SetPipelineState(fire_fluid_pipeline->pso);
 
@@ -375,7 +375,7 @@ namespace sanity::engine::renderer {
                                                             .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH}};
 
-        const D3D12_COMMAND_SIGNATURE_DESC dispatch_command_desc{.ByteStride = static_cast<UINT>(sizeof(FluidSimDispatch)),
+        const D3D12_COMMAND_SIGNATURE_DESC dispatch_command_desc{.ByteStride = static_cast<UINT>(sizeof(FluidSimDispatchCommand)),
                                                                  .NumArgumentDescs = static_cast<UINT>(dispatch_args.size()),
                                                                  .pArgumentDescs = dispatch_args.data()};
         const auto& root_sig = backend.get_standard_root_signature();
@@ -396,7 +396,7 @@ namespace sanity::engine::renderer {
                                                             .DestOffsetIn32BitValues = RenderBackend::ENTITY_ID_ROOT_CONSTANT_OFFSET,
                                                             .Num32BitValuesToSet = 1}},
                   D3D12_INDIRECT_ARGUMENT_DESC{.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED}};
-        const D3D12_COMMAND_SIGNATURE_DESC draw_command_desc{.ByteStride = static_cast<UINT>(sizeof(FluidSimDraw)),
+        const D3D12_COMMAND_SIGNATURE_DESC draw_command_desc{.ByteStride = static_cast<UINT>(sizeof(FluidSimDrawCommand)),
                                                              .NumArgumentDescs = static_cast<UINT>(draw_args.size()),
                                                              .pArgumentDescs = draw_args.data()};
         backend.device->CreateCommandSignature(&draw_command_desc, root_sig, IID_PPV_ARGS(&fluid_volume_draw_signature));
@@ -537,7 +537,7 @@ namespace sanity::engine::renderer {
 
     void FluidSimPass::add_fluid_volume_dispatch(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data) {
         const auto& voxel_size = fluid_volume.get_voxel_size();
-        fluid_sim_dispatches.push_back(FluidSimDispatch{.data_idx = instance_data.data_idx,
+        fluid_sim_dispatches.push_back(FluidSimDispatchCommand{.data_idx = instance_data.data_idx,
                                                         .model_matrix_idx = instance_data.model_matrix_idx,
                                                         .entity_id = instance_data.entity_id,
                                                         .thread_group_count_x = voxel_size.x / FLUID_SIM_NUM_THREADS,
@@ -546,7 +546,7 @@ namespace sanity::engine::renderer {
     }
 
     void FluidSimPass::add_fluid_volume_draw(const FluidVolume& fluid_volume, const ObjectDrawData& instance_data) {
-        fluid_sim_draws.push_back(FluidSimDraw{.data_idx = instance_data.data_idx,
+        fluid_sim_draws.push_back(FluidSimDrawCommand{.data_idx = instance_data.data_idx,
                                                .model_matrix_idx = instance_data.model_matrix_idx,
                                                .entity_id = instance_data.entity_id,
                                                .index_count = 36,

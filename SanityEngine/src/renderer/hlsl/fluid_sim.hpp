@@ -16,16 +16,16 @@ namespace sanity::engine::renderer {
 
 #define FLUID_SIM_NUM_THREADS 8
 
-    // TODO: Separate structs for the per-dispatch state and the per-simulation parameters
+    // TODO: Separate structs for the per-dispatch state and the per-volume parameters
     struct GpuFluidVolumeState {
         // Index 0 is the read texture, index 1 is the write texture
 
-        TextureHandle density_textures[2];
-        TextureHandle temperature_textures[2];
-        TextureHandle reaction_textures[2];
-        TextureHandle velocity_textures[2];
-        TextureHandle pressure_textures[2];
-        TextureHandle temp_data_buffer;
+        uint density_textures[2];
+        uint temperature_textures[2];
+        uint reaction_textures[2];
+        uint velocity_textures[2];
+        uint pressure_textures[2];
+        uint temp_data_buffer;
 
         uint4 size;
 

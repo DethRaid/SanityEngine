@@ -33,7 +33,7 @@ namespace sanity::engine::renderer {
 
         set_resource_usage(scene_output_image_handle, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-        logger->verbose("Initialized backbuffer output pass");
+        logger->verbose("Initialized postprocessing pass");
     }
 
     void PostprocessingPass::record_work(ID3D12GraphicsCommandList4* commands,
